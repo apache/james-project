@@ -36,7 +36,7 @@
 James v2.2.0 is the current release, and the latest in the James v2 series.
 Both <a href="http://james.apache.org/download.cgi">binary and source</a> distributions are available.</p>
       <p>James v2.2.0 is a major update to the James platform, with many new features, functional improvements, and bug fixes.
-See the <a href="changelog.html">Change Log</a> for a detailed list of changes.  <b>All
+See the <a href="2.2.0/changelog.html">Change Log</a> for a detailed list of changes.  <b>All
 users are urged to upgrade to v2.2.0 as soon as possible</b>.</p>
       <p>Any bugs found in James are dealt with promptly.  Please provide feedback on the james-user and james-dev mailing lists.</p>
       <p>

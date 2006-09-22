@@ -20,11 +20,11 @@
 <document>
 
  <properties>
-  <title>James 2.1 - Table of Contents</title>
+  <title>James 2.1/2.2 - Table of Contents</title>
  </properties>
 
 <body>
-<section name="James 2.1">
+<section name="James 2.1/2.2 Documentation">
 <p>
 The Java Apache Mail Enterprise Server (a.k.a. Apache James) is a 100% pure Java SMTP and POP3 Mail 
 server and NNTP News server designed to be a complete and portable enterprise mail engine 
