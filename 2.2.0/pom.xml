@@ -35,6 +35,14 @@
   <url>http://james.apache.org/server/2.2.0/index.html</url>
   <inceptionYear>2006</inceptionYear>
 
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/sandbox/james-project/server/2.2.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/sandbox/james-project/server/2.2.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/sandbox/james-project/server/2.2.0</url>
+  </scm>
+
+
   <distributionManagement>
     <site>
       <id>james-server-website</id>
