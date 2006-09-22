@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.1 - Provided Matchers</title>
+ </properties>
+
+<body>
+
+<section name="Matchers">
+
+<p>James provides a number of implemented Matchers for use by James administrators in their 
+configurations.  These are primarily matchers that members of the James developer or user 
+communities have found useful in their own configurations.  A description of how to configure 
+Matchers and use them in the James SpoolManager can be found <a href="spoolmanager_configuration_2_1.html">here</a>.</p>
+
+<subsection name="All">
+<p>Description: This matcher is the trivial one - it matches all mails being processed.  All recipients are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="AttachmentFileNameIs">
+<p>Description: It can be used to refuse emails with SCR, PIF, EXE etc. attachments.
+It matches mails that has a file attachment with a file name meeting one of the supplied filters.
+All recipients are returned.</p>
+<p>Configuration string: A comma or space delimited list of file names. 
+File names may start with a wildcard '*'. Example: *.scr,*.bat,*.pif,*.pi,*.com,*.exe</p>
+</subsection>
+<subsection name="CommandForListserv">
+<p>Description: The CommandForListserv matcher is used as a simple filter to recognize emails that are list server 
+commands.  It will match any email addressed to the list server host, as well as any email that is addressed
+to a user named &lt;prefix&gt;-on or &lt;prefix&gt;-off on any host.  Only those matching recipients will be returned.</p>
+<p>Configuration string: An email address of the form &lt;prefix&gt;@&lt;host&gt;, where host is the hostname used for the listserver and prefix is the command prefix.</p>
+</subsection>
+<subsection name="FetchedFrom">
+<p>Description: A matcher intended for use with the FetchPOP server.  It matches a custom header (X-fetched-from) that is 
+set by the FetchPOP server.  FetchPOP sets this header to the name of the FetchPOP task which originally fetched
+the message.  All recipients are returned.</p>
+<p>Configuration string: The name of the FetchPOP task which originally fetched the message.</p>
+</subsection>
+<subsection name="HasAttachment">
+<p>Description: Matches those messages with a MIME type of "multipart/mixed".  All recipients are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="HasHabeasWarrantMark">
+<p>Description: Matches mails that have the Habeas Warrant (see http://www.habeas.com for details).  All recipients are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="HasHeader">
+<p>Description: Matches mails that have the specified header.  All recipients are returned.</p>
+<p>Configuration string: The name of the header whose presence determines the match.</p>
+</subsection>
+<subsection name="HasMailAttribute">
+<p>Description: Matches mails that have the specified Mail Attribute.  All 
+recipients are returned.</p>
+<p>Configuration string: The name of the Mail Attribute to match. For example:<br/>
+<pre><code>
+&lt;mailet match="HasMailAttribute=name" class=&quot;&lt;any-class&gt;&quot;&gt;
+</code></pre>
+</p>
+</subsection>
+<subsection name="HasMailAttributeWithValue">
+<p>Description: Matches mails that have the specified Mail Attribute and the
+specified MailAttribute value. All recipients are returned.</p>
+<p>MailAttributes are types of Object whereas the value specified in the Matcher
+condition is of type String. The toString() method is used to obtain a String
+representation of the Mail Attribute value for matching. The 
+String.equals(String) method tests for a match.</p>
+<p>Configuration string: The name of the Mail Attribute to be matched,  a comma
+and then the String value to be matched. For example:<br/>
+<pre><code>
+&lt;mailet match="HasMailAttributeWithValue=name, value" class=&quot;&lt;any-class&gt;&quot;&gt;
+</code></pre>
+</p>
+</subsection>
+<subsection name="HasMailAttributeWithValueRegex">
+<p>Description: Matches mails that have the specified Mail Attribute and 
+a MailAttribute value that matches the specified regular expression.
+All recipients are returned.</p>
+<p>MailAttributes are types of Object whereas the value specified in the Matcher
+condition is of type String. The toString() method is used to obtain a String
+representation of the Mail Attribute value for matching. The regular
+expression must follow Perl5 syntax.</p>
+<p>Configuration string: The name of the Mail Attribute to be matched,  a comma
+and then the regular expression used to match the value against. For example:<br/>
+<pre><code>
+&lt;mailet match="HasMailAttributeWithValueRegex=name, regex" class=&quot;&lt;any-class&gt;&quot;&gt;
+</code></pre>
+</p>
+</subsection>
+<subsection name="HostIs">
+<p>Description: Matches mails that are sent to email addresses on hosts that are in the configuration list.  Only 
+recipients that are on one of the hosts are returned.</p>
+<p>Configuration string: A list of host names, comma or space delimited.</p>
+</subsection>
+<subsection name="HostIsLocal">
+<p>Description: Matches mails that are sent to email addresses on local hosts.  Only 
+recipients that are on one of the local hosts are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="InSpammerBlacklist">
+<p>Description: Checks the mail against one of a number of mail-abuse.org IP lists.</p>
+<p>Configuration string: One of three strings - "blackholes.mail-abuse.org", "relays.mail-abuse.org", or "dialups.mail-abuse.org".</p>
+</subsection>
+<subsection name="IsSingleRecipient">
+<p>Description: Matches those messages sent to only a single recipient.  The single recipient is returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="NESSpamCheck">
+<p>Description: A matcher derived from a Netscape Mail Server spam filter.  If the matcher detects headers that 
+indicate spam, the message is matched.  All recipients are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="RecipientIs">
+<p>Description: Matches mails that are sent to one of the recipients on a specified list.  Only 
+matching recipients are returned.</p>
+<p>Configuration string: A list of recipient addresses, comma, tab, or space delimited.</p>
+</subsection>
+<subsection name="RecipientIsLocal">
+<p>Description: Matches mails that are sent to email addresses on local hosts with users that have local acccunts.  Only 
+matching recipients are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="RelayLimit">
+<p>Description: Counts the number of Received headers in the mail (each of which represents a server 
+in the relay chain).  If the number equals or exceeds the specified limit, the mail is 
+matched.  All recipients are returned.</p>
+<p>Configuration string: a positive integer that is the limit on the number of relays.</p>
+</subsection>
+<subsection name="RemoteAddrInNetwork">
+<p>Description: Checks the remote address from which the mail was received against the configured list.  If the address matches one on the list, the matcher considers it a match.  All recipients are returned.</p>
+<p>Configuration string: A list of domain names, IP addresses, or wildcarded IP subnets of any class.  The 
+list may be comma or space delimited.</p>
+</subsection>
+<subsection name="RemoteAddrNotInNetwork">
+<p>Description: Checks the remote address from which the mail was received against the configured list.  If the address doesn't match one on the list, the matcher considers it a match.  All recipients are returned.</p>
+<p>Configuration string: A list of domain names, IP addresses, or wildcarded IP subnets of any class.  The 
+list may be comma or space delimited.</p>
+</subsection>
+<subsection name="SenderInFakeDomain">
+<p>Description: Matches mails where the host name in the address of the sender cannot be resolved.  All 
+recipients are returned.</p>
+<p>Configuration string: None.</p>
+</subsection>
+<subsection name="SenderIs">
+<p>Description: Matches mails that are sent by one of the senders on a specified list.  All 
+recipients are returned.</p>
+<p>Configuration string: A list of sender addresses, comma, tab, or space delimited.</p>
+</subsection>
+<subsection name="SizeGreaterThan">
+<p>Description: Matches emails with a total message size (headers and body) greater than the specified limit.  All recipients are returned.</p>
+<p>Configuration string: a positive integer followed by an 'm' or a 'k'.  This is the maximum message size permitted specified in megabytes or kilobytes respectively.</p>
+</subsection>
+<subsection name="SubjectIs">
+<p>Description: Matches emails with the specified subject.  All recipients are returned.</p>
+<p>Configuration string: The string against which mail subject headers are matched.</p>
+</subsection>
+<subsection name="SubjectStartsWith">
+<p>Description: Matches emails whose subject header starts with the specified string.  All recipients are returned.</p>
+<p>Configuration string: The string against which mail subject headers are matched.</p>
+</subsection>
+<subsection name="UserIs">
+<p>Description: Matches mails that are sent to email addresses that have userids that are in the configuration list.  Only 
+matching recipients are returned.</p>
+<p>Configuration string: A list of user names, comma or space delimited.</p>
+</subsection>
+</section>
+</body>
+</document>

@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+ <properties>
+  <title>James 2.3 - Release Announcement</title>
+ </properties>
+<body>
+<section name="Release Announcement">
+<p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce the release 
+of version 2.3 of the Apache James server.</p>
+
+<p>James is a 100% pure Java Mail and News server designed to be a complete and portable enterprise 
+mail engine solution.  James supports currently available IETF protocols, including SMTP,POP3 and NNTP 
+, and it and IMAP are targeted for full functionality in v3).  James 
+is able to store user and message data either in a file-system or a JDBC-compatible database, 
+allowing fast, reliable, even real-time replicated storage.</p>
+
+<p>James provides a powerful, flexible mail application engine through support for the Apache Mailet 
+API.  With its Mailet pipeline architecture, James can be used not only to provide standard e-mail 
+services, but also to implement custom e-mail applications.</p>
+
+<p>The James mail server is deployed in production environments and has proven itself to be a robust 
+and high performance mail solution.  Tests indicate that version 2.3 is able to maintain a constant 
+mail throughput rate of thousands of messages/minute for continuous periods.</p>
+
+<p>The James Community is also happy to announce the beginning of the design phase for James version 
+3.0.  Features tentatively slated for that version include enhancements to nearly every area of 
+functionality, including full IMAP support, improved mailing list capabilities, fastfail support, 
+smtp-api for developing own fastfail filters and the next revision of the Mailet API.  This is expected
+to be an exciting time in James development.  We are actively 
+looking for eager, capable developers to contribute to James.  If you're interesting in contributing 
+to the James project, please subscribe to the James developer mailing list.</p>
+
+<p>Information about James can be found at the <a href="http://james.apache.org/">James web site</a> 
+at http://james.apache.org/.  Users interested in subscribing to the James 
+<a href="mailto:server-user-subscribe@james.apache.org">user</a> and 
+<a href="mailto:server-dev-subscribe@james.apache.org">developer</a> mailings lists should send emails 
+to server-user-subscribe@james.apache.org and server-dev-subscribe@james.apache.org, respectively</p>
+</section>
+</body>
+</document>

@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Upgrading</title>
+ </properties>
+<body>
+<section name="Upgrading Comments">
+<p>James upgrading involves a number of steps, each of which is described in some detail in the 
+following sections.  But as this sequence of steps has confused some users in the past, additional 
+comments seem warranted.</p>
+<p>It is important to realize that the James configuration files are not unpacked from the James 
+distribution until the first time James is started.  This is a consequence of the design of the 
+Avalon Phoenix container used to run James.  Once James has been started, the distribution will 
+be unpacked.  The server should be stopped, the configuration files edited, and the server restarted.</p>
+<p>So the Upgrading sequence is: <b>1) Start, 2) Stop, 3) Move 4) Edit, 5) Restart</b>.</p>
+</section>
+<section name="Copy mailboxes and users">
+<subsection name="Copy mailboxes and users">
+<p>Remove the apps/james/var directory and copy the apps/james/var directory of the old james 
+installation in this place.</p>
+</subsection>
+</section>
+<section name="Copy and modify config.xml">
+<subsection name="Remove the fetchpop block">
+<p>It's necessary to remove the fetchpop block in config.xml because fetchpop was removed in 2.3.</p>
+</subsection>
+<subsection name="Move mailet and matcher packages config">
+<p>Move &lt;mailetpackages&gt; and &lt;matcherpackages&gt; outside of the &lt;spoolmanager&gt; block.</p>
+</subsection>
+<subsection name="Add necessary mailets">
+<p>Add the following line as the first mailet of the "root" processor:</p>
+<source> 
+&lt;mailet match="All" class="PostmasterAlias"/&gt;
+</source> 
+<p>This was hardcoded in 2.2.0 and previous. Now we made it configurable.</p>
+</subsection>
+<subsection name="Move the spoolrepository config">
+<p>Move the spoolrepository out of the mailstore. Its also necessary to change the config syntax. For example:</p>
+<source>
+&lt;spoolRepository&gt;
+  &lt;repository destinationURL="db://maildb/spool/spool" type="SPOOL"/&gt;
+&lt;/spoolRepository&gt;
+</source>
+Must converted to
+<source>
+&lt;spoolrepository destinationURL="db://maildb/spool/spool" type="SPOOL"/&gt;
+</source>
+
+</subsection>
+<subsection name="Move the objectstore">
+<p>Move the objectstore config into the mailstore config.</p>
+</subsection>
+<subsection name="Add SSL to server-sockets">
+<p> To be able to use SSL you need to add this SSL config to the server-sockets block:</p>
+<source> 
+&lt;!--
+&lt;factory name="ssl" class="org.apache.avalon.cornerstone.blocks.sockets.TLSServerSocketFactory"&gt;
+  &lt;ssl-factory&gt;
+    &lt;keystore&gt;
+      &lt;file&gt;conf/keystore/&lt;/file&gt;
+      &lt;password&gt;secret&lt;/password&gt;
+      &lt;key-password&gt;keysecret&lt;/key-password&gt;
+      &lt;type&gt;JKS&lt;/type&gt;
+      &lt;protocol&gt;TLS&lt;/protocol&gt;
+      &lt;algorithm&gt;SunX509&lt;/algorithm&gt;
+      &lt;authenticate-client&gt;false&lt;/authenticate-client&gt;
+    &lt;/keystore&gt;
+  &lt;/ssl-factory&gt;
+&lt;/factory&gt;
+--&gt;
+</source> 
+</subsection>
+</section>
+<section name="Modify costum mailets if necessary">
+<p> Please note the following things that were changed. So maybe it's necessary for you to change some stuff in your mailets. </p>
+<subsection name="Avalon updates">
+<ul>
+<li>avalon Component has been replaced by avalon Service</li>
+<li>avalon Composable has been replaced by avalon Serviceable</li>
+<li>avalon ComponentManager has been replaced by avalon ServiceManager</li>
+</ul>
+</subsection>
+<subsection name="Cornerstone updates">
+<ul>
+<li>MailStore interface has been removed: mailets looking up the MailStore should now lookup
+a Store (org.apache.avalon.cornerstone.services.store.Store)</li>
+</ul>
+</subsection>
+</section>
+<section name="Start James">
+<p> Now you should be able to start james without problems.</p>
+</section>
+</body>
+</document>

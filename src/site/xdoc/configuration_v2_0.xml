@@ -1,0 +1,716 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Configuration</title>
+  <author email="sergek@lokitech.com">Serge Knystautas</author>
+ </properties>
+
+<body>
+
+<section name="Configuration">
+
+<p>
+<blockquote>
+        <p>This document explains the JAMES.conf.xml file for James 2.0
+          <br>JAMES 2.0 uses a date-stamped version of Avalon from late September 2001.
+          The lib directory includes jars with date-stamped names for the Avalon libraries.
+          </br>
+        </p>
+</blockquote>
+</p>
+
+</section>
+
+<section name="James Server Configuration">
+  <subsection name="James Configuration">
+    <p>
+        These tag elements control the JAMES spooling and identification
+        settings.
+    </p>
+    <table border="1">
+        <tr>
+            <th>&lt;name&gt;</th>
+            <th>default value</th>
+            <th>meaning</th>
+        </tr>
+        <tr>
+            <td> postmaster </td>
+            <td> Postmaster@localhost </td>
+            <td> Is the source of error replies and the email users will mail to for any problem.  You
+            should change this to an address that can receive incoming messages.</td>
+        </tr>
+    <tr>
+            <td> helloName</td>
+            <td> attribute autodetect=TRUE and value of 'myMailServer'  </td>
+            <td> The name by which James will identify itself in SMTP and POP3
+            greetings. If autodetect is TRUE James will attempt to detect
+            automatically the name, failing which it will use 'localhost'. If
+            autodetect is not TRUE, James will use the specified name or
+            'localhost' if none is specified. Look in jamesinfo.log for
+            lines like "[...] Local host is: [servername] and [...] Hello Name is: [machine name]"</td>
+        </tr>
+        <tr>
+            <td> servernames/servername</td>
+            <td> attribute autodetect=TRUE and last value of 'localhost'</td>
+            <td> A list of host names James will consider as local. Any user [user]@[servername]
+            will be considered to be local. If autodetect is TRUE James will attempt to detect
+            automatically the name and use any names specified. Look in jamesinfo.log for a line like "[...] Handling mail for:: [domain/host]"</td>
+        </tr>
+        <tr>
+            <td> spoolRepository </td>
+            <td> file://var/mail/spool/ </td>
+            <td> This is the path where incoming messages are stored before beeing processed. </td>
+        </tr>
+        <tr>
+            <td> inboxRepository </td>
+            <td> file://var/mail/localinbox/ </td>
+            <td> This is the root for local users inbox. Each user will have a personal folder
+            [inboxRepository]/[user] </td>
+        </tr>
+        <tr>
+            <td> spoolmanagerthreads </td>
+            <td> 5 </td>
+            <td> This is the number of thread that work polling mails from the spool and take care
+            of processing them. </td>
+        </tr>
+    </table>
+  </subsection>
+
+  <subsection name="SMTP Server Configuration">
+   <p>
+      These tag elements affect the SMTP listener (for incoming messages).
+   </p>
+
+    <table border="1">
+        <tr>
+            <th>&lt;name&gt;</th>
+            <th>default value</th>
+            <th>meaning</th>
+        </tr>
+        <tr>
+            <td> port </td>
+            <td> 25 </td>
+            <td> The port we are listening to. </td>
+        </tr>
+        <tr>
+            <td> bind </td>
+            <td> N.A. </td>
+            <td> Specific IP addresses that you wish to bind this service to. </td>
+        </tr>
+        <tr>
+            <td> smtphandler </td>
+            <td> N.A. </td>
+            <td> Parent for all SMTPHandler configuations. </td>
+        </tr>
+        <tr>
+            <td> connectiontimeout </td>
+            <td> 120000 </td>
+            <td> If nothing is received from an open connection for more than {timeout] mills
+            the connection is closed. </td>
+        </tr>
+    </table>
+  </subsection>
+
+  <subsection name="POP3 Server Configuration">
+    <p>
+       These tag elements affect the POP3 server (for message retrieval)
+    </p>
+    <table border="1">
+        <tr>
+            <th>&lt;name&gt;</th>
+            <th>default value</th>
+            <th>meaning</th>
+        </tr>
+        <tr>
+            <td> port </td>
+            <td> 110 </td>
+            <td> The port we are listening to. </td>
+        </tr>
+        <tr>
+            <td> bind </td>
+            <td> N.A. </td>
+            <td> Specific IP addresses that you wish to bind this service to. </td>
+        </tr>
+        <tr>
+            <td> useTLS </td>
+            <td> false </td>
+            <td> Whether you wish to require/use TLS (SSL) on this port. </td>
+        </tr>
+        <tr>
+            <td> pop3handler </td>
+            <td> N.A. </td>
+            <td> Parent for all POP3Handler configuations. </td>
+        </tr>
+        <tr>
+            <td> connectiontimeout </td>
+            <td> 120000 </td>
+            <td> If nothing is received from an open connection for more than {timeout] mills
+            the connection is closed. </td>
+        </tr>
+    </table>
+  </subsection>
+
+  <subsection name="Users Manager Configuration">
+    <p>
+       These tag elements affect the configuration of the list of local users.
+    </p>
+    <table border="1">
+        <tr>
+            <th>&lt;name&gt;</th>
+            <th>default value</th>
+            <th>meaning</th>
+        </tr>
+        <tr>
+            <td> repository </td>
+            <td> file://var/users/ </td>
+            <td> The path where local mail account informations are stored. </td>
+        </tr>
+    </table>
+  </subsection>
+
+  <subsection name="Remote Manager Configuration">
+    <p>
+       These tag elements affect the remote manager, a telnet based utility
+       to manage the User Manager.
+    </p>
+    <table border="1">
+        <tr>
+            <th>&lt;name&gt;</th>
+            <th>default value</th>
+            <th>meaning</th>
+        </tr>
+        <tr>
+            <td> port </td>
+            <td> 4555 </td>
+            <td> The port we are listening to. </td>
+        </tr>
+        <tr>
+            <td> bind </td>
+            <td> N.A. </td>
+            <td> Specific IP addresses that you wish to bind this service to. </td>
+        </tr>
+        <tr>
+            <td> useTLS </td>
+            <td> false </td>
+            <td> Whether you wish to require/use TLS (SSL) on this port. </td>
+        </tr>
+        <tr>
+            <td> administrator_accounts </td>
+            <td> N.A. </td>
+            <td> The parent of &lt;account&gt; </td>
+        </tr>
+        <tr>
+            <td> account </td>
+            <td> login="root" password="root" </td>
+            <td> A list of root account to administer JAMES. </td>
+        </tr>
+        <tr>
+            <td> connectiontimeout </td>
+            <td> 120000 </td>
+            <td> If nothing is received from an open connection for more than {timeout] mills</td>
+        </tr>
+    </table>
+  </subsection>
+
+  <subsection name="Transport Configuration">
+    <p>
+       These tag elements affect SMTP remote delivery, specifically, DNS
+       lookup functionality.
+    </p>
+   <table border="1">
+        <tr>
+            <th>&lt;name&gt;</th>
+            <th>default value</th>
+            <th>meaning</th>
+        </tr>
+        <tr>
+            <td> dnsServer/servers/server </td>
+            <td> N.A. </td>
+            <td> This is a list of DNS to resolve external address. </td>
+        </tr>
+        <tr>
+            <td> authoritative </td>
+            <td> false </td>
+            <td> Whether to require authoritative (non-cached) DNS records. Should always be false
+            unless you understand the implications. </td>
+        </tr>
+        <tr>
+            <td> repository </td>
+            <td> file://var/mail/delayed/ </td>
+            <td> This is a temp repository path shared with the name of "TMP_REPOSITORY".
+            It is used by the RemoteDelivery Mailet to store mail for futher delivery.
+            (Note: this is not very elegant and will probally change soon) </td>
+        </tr>
+        <tr>
+            <td> mailets </td>
+            <td> rootpath="org.apache.james.transport.mailets." </td>
+            <td> This is the parent node for all mailet configurations. The rootpath specify
+            where mailet repository is. (Note: need to plug more than one repository) </td>
+        </tr>
+    </table>
+  </subsection>
+</section>
+
+<section name="The Mailet processor pipeline">
+  <p>
+     This is James sitemap. It defines how each incoming mail will be
+     processed. Incoming mails begins their process at the first mailet in the
+     pipe. Each step is described by a &lt;servet&gt; tag with some attributes:
+         &lt;mailet match="[matchClass]=[matchParameters]"
+                    class="[mailetClass]"&gt;.
+     The Matcher class split the mail into two Collections: one with all recipients
+     matching conditions and the other with all recipient not matching. All information
+     in the mail except recipients cloned so the message that both matching and not matching
+     are identical (again except recipients). The matching recipients and mail will be passed to
+     the specified mailet for processing. After processing both mails, the
+     untouched not-matching mail and the processed matching mail, each go to next step in
+     the processor. Some mailets will indicate the mail should be consumed and no continue processing.
+     The Null mailet for example will simply consume any incoming mail as will the RemoteDelivery
+     since after delivery the mail needs no more processing.
+  </p>
+
+  <subsection name="Matchers">
+    <p>
+       The Matcher interface defines how match class should work. Their work is
+       to split a Vector of recipients into two: the ones matching a specified
+       condition and all others.
+       Currently implemented matchers:
+    </p>
+    <table border="1">
+        <tr>
+            <th>class name</th>
+            <th>parameter</th>
+            <th>action</th>
+            <th>example</th>
+        </tr>
+        <tr>
+            <td> All </td>
+            <td> none </td>
+            <td> match all recipients. </td>
+            <td> match="All" </td>
+        </tr>
+        <tr>
+            <td> HasAttachment </td>
+            <td> none </td>
+            <td> match all recipients if the message has an attachment (if content type is multipart/mixed). </td>
+            <td> match="All" </td>
+        </tr>
+        <tr>
+            <td> HostIs </td>
+            <td> comma separated list of hosts names </td>
+            <td> match all recipients belonging to one of the specified hosts </td>
+            <td> match="HostIs=myHost.mydom.org,yourHost" </td>
+        </tr>
+        <tr>
+            <td> HostIsLocal </td>
+            <td> none </td>
+            <td> check recipients's hosts against the list of host names set in configuration for localhost
+            (see &lt;servername&gt;). </td>
+            <td> match="HostIsLocal" </td>
+        </tr>
+        <tr>
+            <td> InSpammerBlacklist </td>
+            <td> DNS zone with blacklist </td>
+            <td> match all recipients if mail received from an IP address on the blacklist. </td>
+            <td> match="InSpammerBlacklist=blackholes.mail-abuse.org" </td>
+        </tr>
+        <tr>
+            <td> IsSingleRecipient </td>
+            <td> none </td>
+            <td> match mail if only has 1 recipient. </td>
+            <td> match="IsSingleRecipient" </td>
+        </tr>
+        <tr>
+            <td> NESSpamCheck </td>
+            <td> none </td>
+            <td> match all recipients if mail matches various spam detection rules. </td>
+            <td> match="NESSpamCheck" </td>
+        </tr>
+        <tr>
+            <td> RecipientIs </td>
+            <td> comma separated list of recipients </td>
+            <td> match all recipients defined in condition. </td>
+            <td> match="RecipientIs=root@localhost,admin@localhost" </td>
+        </tr>
+        <tr>
+            <td> RecipientIsLocal </td>
+            <td> none </td>
+            <td> match recipient which host is local (see HostIsLocal) and that are recognized by the
+            Users Manager to be local accounts. </td>
+            <td> match="RecipientIsLocal" </td>
+        </tr>
+        <tr>
+            <td> RelayLimit </td>
+            <td> Maximum number of hops. </td>
+            <td> match all recipients if the message has more than the specified number of SMTP hops.
+            Important to prevent race conditions in SMTP delivery.
+            </td>
+            <td> match="RelayLimit=30" </td>
+        </tr>
+        <tr>
+            <td> RemoteAddrInNetwork </td>
+            <td> comma separated list of network addresses </td>
+            <td> match all recipients if the message was received from an IP address that matches the
+            comma separated list.  Wildcards are supposed, e.g., 192.168.0.* is a valid option.
+            </td>
+            <td> match="RemoteAddrInNetwork=127.0.0.1,192.168.*" </td>
+        </tr>
+        <tr>
+            <td> RemoteAddrNotInNetwork </td>
+            <td> comma separated list of network addresses </td>
+            <td> match all recipients if the message was not received from an IP address that matches
+            the comma separated list.  Wildcards are supposed, e.g., 192.168.0.* is a valid option.
+            </td>
+            <td> match="RemoteAddrNotInNetwork=127.0.0.1,192.168.*" </td>
+        </tr>
+        <tr>
+            <td> SenderInFakeDomain </td>
+            <td> none </td>
+            <td> match recipients who's domain name portion of their email address is invalid.  Queries
+            for A, CNAME, and MX record entries. </td>
+            <td> match="SenderInFakeDomain" </td>
+        </tr>
+        <tr>
+            <td> SenderIs </td>
+            <td> comma separated list of address. </td>
+            <td> match all recipients if sender is in the condition string, else match none. </td>
+            <td> match="SenderIs=badBay@badhost" </td>
+        </tr>
+        <tr>
+            <td> SizeGreaterThan </td>
+            <td> number of bytes.  supports 'k' and 'm' suffixes. </td>
+            <td> match all recipients if message is larger than the given number of bytes, kilobytes, or megabytes. </td>
+            <td> match="SizeGreaterThan=1m" </td>
+        </tr>
+        <tr>
+            <td> SubjectIs </td>
+            <td> comma separated list of address. </td>
+            <td> match all recipients if the subject is equal to the condition string, else match none. </td>
+            <td> match="SubjectIs=REMOVE" </td>
+        </tr>
+        <tr>
+            <td> SubjectStartsWith </td>
+            <td> comma separated list of address. </td>
+            <td> match all recipients if the subject starts with the condition string, else match none. </td>
+            <td> match="SubjectStartsWith: [ADV]" </td>
+        </tr>
+        <tr>
+            <td> UserIs </td>
+            <td> comma separated list of accounts </td>
+            <td> match all recipients defined in condition regardless of host. </td>
+            <td> match="UserIs=root,admin" </td>
+        </tr>
+    </table>
+    <p>
+       Some examples:
+       <br>
+         - &lt;mailet match="RecipientIsLocal"
+                     class="LocalDelivery"&gt;
+       </br>
+       <br>
+        - &lt;mailet match="UserIs=root"
+                     class="Forward"&gt;
+       </br>
+       <br>
+        - &lt;mailet match="SenderIs=badBoy@myhost,badGirl@yourhost"
+                     class="Null"&gt;
+       </br>
+    </p>
+  </subsection>
+
+  <subsection name="Mailet">
+    <p>
+       Mailet are classes that process a message. They are
+       passed a Mail object on which they can perform any kind of task.
+       Clever use of mailets allow you to write an email-based application.
+       Simple mailets provide basic mail functionality like mail forwarding,
+       mailing list, "I'm on vacation" message, mail logging etc. As simply as
+       these mailet, you can write and deploy your own mailet to perform any kind of task.
+      <br>
+         Here you are some of the mailets bundled with James along with their configuration:
+       </br>
+    </p>
+    <b>Null</b>
+    <blockquote>
+        Consume any incoming mail. No configuration needed.
+        <br>
+        &lt;mailet match="SenderIs=badBoy@badhost" class="Null"&gt;
+        &lt;/mailet&gt;
+        </br>
+    </blockquote>
+    <b>debug.Identity</b>
+    <blockquote>
+         Leave any incoming mail untouched. A debug mailet
+         (not really useful).
+         No configuration needed.
+            <br>
+            &lt;mailet match="All" class="Identity"&gt;
+            &lt;/mailet&gt;</br>
+    </blockquote>
+    <b>Forward</b>
+    <blockquote>
+            <br>
+            Replace the recipient list with recipient specified in
+            configurations.</br>
+            <br>
+            &lt;mailet match="RecipientIs=root@localhost"
+            class="Forward"&gt;</br>
+      <blockquote>
+       <br>
+              &lt;forwardto&gt; green@blue.org &lt;/forwardto&gt;
+              &lt;forwardto&gt; red@yellow.com &lt;/forwardto&gt;
+       </br>
+      </blockquote>
+            &lt;/mailet&gt;
+    </blockquote>
+
+    <b>ToProcessor</b>
+    <blockquote>
+      Sends the incoming mail object to a new processor pipeline.
+      <code>root</code> and <code>error</code> are special processors that
+      should always be defined.
+      <br>
+        &lt;mailet match="RecipientIsLocal" class="ToProcessor"&gt;
+      </br>
+      <blockquote>
+              &lt;processor&gt; localdelivery &lt;/processor&gt;
+      </blockquote>
+          &lt;/mailet&gt;
+    </blockquote>
+
+    <b>ServerTime</b>
+    <blockquote>
+      Replies to the sender with a short message with the current time.
+      No configuration needed.
+      <br>
+        &lt;mailet match="RecipientIs=time@localhost" class="ServerTime"&gt;
+      </br>
+      &lt;/mailet&gt;
+    </blockquote>
+
+    <b>ToRepository</b>
+    <blockquote>
+      Stores mails in the specified MailRepository. Useful for mail logging
+      etc.  If the passThrough parameter is false the mail will be consumed, if true
+      it will be returned untouched to the pipe.
+      <br>
+        &lt;mailet match="RecipientIs=root@localhost"
+                   class="ToRepository"&gt;
+      </br>
+      <blockquote>
+        <br>
+          &lt;repositoryPath&gt; file://var/mail/logAdmin
+                &lt;/repositoryPath&gt;
+        </br>
+        <br>
+          &lt;passThrough&gt; true &lt;/passThrough&gt; (default false)
+        </br>
+      </blockquote>
+            &lt;/mailet&gt;
+    </blockquote>
+
+    <b>LocalDelivery</b>
+    <blockquote>
+      Store mail in the local inbox, one folder for each user.
+      <br>
+        &lt;mailet match="RecipientIsLocal" class="LocalDelivery"&gt;
+      </br>
+        &lt;/mailet&gt;
+    </blockquote>
+
+    <b>RemoteDelivery</b>
+    
+ Relays mails to remote hosts. "delayTime" is the time in mills the 
+  mailet will wait before retrying sending a mail which fail at first time. "maxRetries" 
+  is the number of retries before sending back to sender the mail. <br>
+          &lt;mailet match="!RecipientIsLocal" class="RemoteDelivery"&gt;
+        </br>
+      <blockquote>
+        <br>
+            &lt;delayTime&gt; 21600000 &lt;/delayTime&gt;
+        </br>
+        <br>
+            &lt;maxRetries&gt; 5 &lt;/maxRetries&gt;
+        </br>
+      </blockquote>
+            
+  <p>&lt;/mailet&gt; </p>
+   
+    <b>Redirect</b>
+  <dl>  <dt>A mailet providing configurable redirection services<br></br>
+      This mailet can produce listserver, forward and notify behaviour, with the 
+      original message intact, attached, appended or left out altogether.<br></br>
+      This built in functionality is controlled by the configuration as laid out 
+      below.</dt>
+  </dl>
+  <p>However it is also designed to be easily subclassed to make authoring redirection 
+    mailets simple. <br></br>
+    By extending it and overriding one or more of its methods new behaviour can 
+    be quickly created without the author having to address any other issue than 
+    the relevant one. For more information see the javadocs</p>
+  <p>The configuration parameters are:</p>
+  <table  border="1" >
+  <tr>
+            <th>param</th>
+            <th>desc</th>
+            
+        </tr>
+    <tr> 
+      <td>&lt;recipients&gt;</td>
+      <td>A comma delimited list of email addresses for recipients of this message, 
+        it will use the &quot;to&quot; list if not specified. These addresses 
+        will only appear in the To: header if no &quot;to&quot; list is supplied.</td>
+    </tr>
+    <tr> 
+      <td>&lt;to&gt;</td>
+      <td>A comma delimited list of addresses to appear in the To: header, the 
+        email will only be delivered to these addresses if they are in the recipients 
+        list.<br>
+        </br>
+        The recipients list will be used if this is not supplied</td>
+    </tr>
+    <tr> 
+      <td>&lt;sender&gt;</td>
+      <td>A single email address to appear in the From: header <br>
+        </br>
+        It can include constants &quot;sender&quot; and &quot;postmaster&quot;</td>
+    </tr>
+    <tr> 
+      <td>&lt;message&gt;</td>
+      <td>A text message to be the body of the email. Can be omitted.</td>
+    </tr>
+    <tr> 
+      <td>&lt;inline&gt;</td>
+      <td> 
+        <p>One of the following items:</p>
+        <ul>
+          <li>unaltered     The original message is the new 
+            message, for forwarding/aliasing</li>
+          <li>heads          The 
+            headers of the original message are appended to the message</li>
+          <li>body           The 
+            body of the original is appended to the new message</li>
+          <li>all               Both 
+            headers and body are appended</li>
+          <li>none           Neither 
+            body nor headers are appended</li>
+        </ul>
+      </td>
+    </tr>
+    <tr> 
+      <td>&lt;attachment&gt;</td>
+      <td> 
+        <p>One of the following items:</p>
+        <ul>
+          <li>heads      The headers of the original 
+            are attached as text</li>
+          <li>body       The body of the original 
+            is attached as text</li>
+          <li>all           Both 
+            headers and body are attached as a single text file</li>
+          <li>none       Nothing is attached</li>
+          <li>message  The original message is attached as type message/rfc822, 
+            this means that it can, in many cases, be opened, resent, fw'd, replied 
+            to etc by email client software.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr> 
+      <td>&lt;passThrough&gt;</td>
+      <td>TRUE or FALSE, if true the original message continues in the mailet 
+        processor after this mailet is finished. False causes the original to 
+        be stopped.</td>
+    </tr>
+    <tr> 
+      <td>&lt;attachError&gt;</td>
+      <td>TRUE or FALSE, if true any error message available to the mailet is 
+        appended to the message body (except in the case of inline == unaltered)</td>
+    </tr>
+    <tr> 
+      <td>&lt;replyto&gt;</td>
+      <td>A single email address to appear in the Rely-To: header, can also be 
+        &quot;sender&quot; or &quot;postmaster&quot;, this header is not set if 
+        this is omited.</td>
+    </tr>
+    <tr> 
+      <td>&lt;prefix&gt;</td>
+      <td>An optional subject prefix prepended to the original message subject, 
+        for example..<br>
+        </br>
+        Undeliverable mail:</td>
+    </tr>
+    <tr> 
+      <td>&lt;static&gt;</td>
+      <td> 
+        <p>TRUE or FALSE, if this is true it hints to the mailet that none of 
+          the parameters are set dynamically, and therefore they can be set once 
+          in the init method.<br></br>
+          False tells the mailet to call all the &quot;getters&quot; for every 
+          mail processed.</p>
+        <p>This defaults to false.<br></br>
+          It should be TRUE in all cases, except where one of the getter methods 
+          has been overriden to provide dynamic values, such as a listserve which 
+          might override getRecipients() to get a list from a users repository.</p>
+      </td>
+    </tr>
+  </table>
+<table border="1">
+  <tr><th>
+  <p>Example, creates a distribution list:</p></th></tr><tr><td>
+  <p> &lt;mailet match=&quot;RecipientIs=test@localhost&quot; class=&quot;Redirect&quot;&gt;<br></br>
+    &lt;recipients&gt;x@localhost, y@localhost, z@localhost&lt;/recipients&gt;<br></br>
+    &lt;to&gt;list@localhost&lt;/to&gt;<br></br>
+    &lt;sender&gt;owner@localhost&lt;/sender&gt;<br></br>
+    &lt;message&gt;sent on from James&lt;/message&gt;<br></br>
+    &lt;inline&gt;unaltered&lt;/inline&gt;<br></br>
+    &lt;passThrough&gt;FALSE&lt;/passThrough&gt;<br></br>
+    &lt;replyto&gt;postmaster&lt;/replyto&gt;<br></br>
+    &lt;prefix&gt;[test mailing]&lt;/prefix&gt;<br></br>
+    &lt;static&gt;TRUE&lt;/static&gt;<br></br>
+    &lt;passThrough&gt;FALSE&lt;/passThrough&gt;<br></br>
+    &lt;/mailet&gt;<br></br>
+  </p></td></tr></table>
+<table border="1">
+  <tr><th>
+  
+  <p>and this sends a spam notification to the postmaster <br></br>with the original message 
+    attached as a message, and a subject prefix:</p></th></tr><tr><td>
+  <p> &lt;mailet match=&quot;All&quot; class=&quot;Redirect&quot;&gt;<br></br>
+    &lt;recipients&gt;x@localhost&lt;/recipients&gt;<br></br>
+    &lt;sender&gt;postmaster&lt;/sender&gt;<br></br>
+    &lt;message&gt;Message marked as spam:<br></br>
+    &lt;/message&gt;<br></br>
+    &lt;inline&gt;heads&lt;/inline&gt;<br></br>
+    &lt;attachment&gt;message&lt;/attachment&gt;<br></br>
+    &lt;passThrough&gt;FALSE&lt;/passThrough&gt;<br></br>
+    &lt;attachError&gt;TRUE&lt;/attachError&gt;<br></br>
+    &lt;replyto&gt;postmaster&lt;/replyto&gt;<br></br>
+    &lt;prefix&gt;[spam notification]&lt;/prefix&gt;<br></br>
+    &lt;static&gt;TRUE&lt;/static&gt;<br></br>
+    &lt;passThrough&gt;FALSE&lt;/passThrough&gt;<br></br>
+    &lt;/mailet&gt;</p>
+</td></tr></table>
+  </subsection>
+</section>
+
+</body>
+</document>

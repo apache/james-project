@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Installation</title>
+ </properties>
+<body>
+<section name="Requirements">
+<p>James requires a Java Runtime Environment of Java version 1.4 or higher installed to run the 
+James application.  The exact JREs available depend on the platform.  A JRE must be downloaded and
+installed before James can run.  In addition, the environment variable JAVA_HOME must be set to
+the JRE home directory before running James.</p>
+<p>
+On Unix platforms, root access will be required to run James.  On these platforms, access to ports 
+below 1024 is generally restricted to the root user.  As SMTP, POP3, and NNTP all need to open 
+server sockets on such ports in standard configurations, James requires root access.
+</p>
+<p>
+Obviously James also requires sufficient disk space, processor power, and network bandwidth.  But, 
+other than what's been discussed here, it has no additional special requirements.</p>
+</section>
+<section name="Installation Comments">
+<p>James installation involves a number of steps, each of which is described in some detail in the 
+following sections.  But as this sequence of steps has confused some users in the past, additional 
+comments seem warranted.</p>
+<p>It is important to realize that the James configuration files are not unpacked from the James 
+distribution until the first time James is started.  This is a consequence of the design of the 
+Avalon Phoenix container used to run James.  Once James has been started, the distribution will 
+be unpacked.  The server should be stopped, the configuration files edited, and the server restarted.</p>
+<p>So the installation sequence is: <b>1) Start, 2) Stop, 3) Edit, 4) Restart</b>.</p>
+</section>
+<section name="Installing the Binary">
+<subsection name="Installing a Stand-alone James Server">
+<p>Obtain the full James binary distribution from the <a href="http://james.apache.org/download.cgi">James 
+release mirrors</a>.  Unpack the archive into your James installation directory.  Go to the bin subdirectory of the 
+installation directory and run the "run" script (either run.sh or run.bat, depending on your platform).  The configuration
+file is now unpacked and available for editing.</p>
+</subsection>
+<subsection name="Deploying a James Server in a Pre-Existing Phoenix Container">
+<p><strong>Warning!</strong> - James requires Phoenix version 4.0.x to run.  There is a known issue with logging in Phoenix 4.0, so version 
+4.0.1 or higher is strongly recommended.  Before attempting to deploy James in a Phoenix container, please make sure
+it meets these version criteria.</p>
+<p>Deploying James in Phoenix is fairly easy.  Obtain the james.sar file from the <a href="http://james.apache.org/download.cgi">James 
+release mirrors</a>.  It can be found in the "Other Binaries" 
+area of the distribution directory.  After downloading the james.sar,
+simply place it in the apps subdirectory of your Phoenix installation.  Restart Phoenix, and the james.sar should unpack and you
+will be ready to configure your James installation.</p>
+</subsection>
+</section>
+
+<section name="Initial Configuration">
+<p>
+After installing the binary, the next step is to adjust the initial configuration.  The server should be stopped, and then 
+configuration can proceed.  The most essential configuration is set in the config.xml file.  This file can be 
+found in the apps/james/SAR-INF subdirectory of the installation directory.</p>
+<p>The out of the box configuration makes certain assumptions and has some default values that are unlikely to 
+be appropriate for real-world servers.  There are a few issues that should be addressed immediately upon installation:
+</p>
+<ul>
+<li>RemoteManager Administrator Account - Before the RemoteManager service can be used to add users to this server 
+installation an administrator account must be created.  More information can be found <a href="remotemanager_configuration_2_3.html">here</a>.</li>
+<li>DNS Servers - James needs to have access to a DNS server for domain resolution.  The out of the box 
+configuration assumes that there is a DNS server on localhost.  In general administrators will have to change 
+the configuration to point to a valid DNS server.  This can be done by adjusting the dnsserver configuration 
+block in the config.xml.  More information can be found <a href="serverwide_configuration_2_3.html">here</a>.</li>
+<li>Managed Domain Names/IP Addresses - Out of the box, James only handles mail that is sent to recipients at 
+localhost.  It will attempt to deliver all other email to remote SMTP servers.  To allow James to handle email 
+for your domain or IP address, you simply need to add the appropriate domain name or IP address to the servernames 
+section of the config.xml.  More information can be found <a href="serverwide_configuration_2_3.html">here</a>.</li>
+<li>Postmaster Address - More information can be found <a href="serverwide_configuration_2_3.html">here</a>.</li>
+</ul>
+<p>In addition to adjusting these parameters, you may wish to consult the documentation for a discussion of
+common configurations.  A list of such configurations, as well as the steps necessary to configure them, can
+be found <a href="documentation_2_3.html">here</a>.</p>
+</section>
+<section name="Starting James with Your Configuration">
+<p>Once you have edited the configuration file you will need to restart James so that the changes take 
+effect.  When James starts, a list of the James services and the ports on which they are listening should 
+be displayed on the console.  Additional information about the system configuration is printed in the James log files 
+upon startup.</p>
+<p>Finally, after configuration is complete, it will be necessary to create user accounts before the James server 
+will be fully operational.  Instructions on creating user accounts can be found 
+<a href="adding_users_2_3.html">here</a>.</p>
+</section>
+
+</body>
+</document>

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Using Authenticated SMTP</title>
+ </properties>
+
+<body>
+<section name="Authenticated SMTP (SMTP AUTH)">
+<p>Authenticated SMTP is a method of securing your SMTP server.  With SMTP AUTH enabled senders who wish to 
+relay mail through the SMTP server (that is, send mail that is eventually to be delivered to another SMTP 
+server) must authenticate themselves to James before sending their message.  Mail that is to be delivered 
+locally does not require authentication.  This method ensures that spammers cannot use your SMTP server
+to send unauthorized mail, while still enabling users who may not have fixed IP addresses to send their 
+messages.</p>
+<p>Mail servers that allow spammers to send unauthorized email are known as open relays.  So SMTP AUTH
+is a mechanism for ensuring that your server is not an open relay .</p>
+<p>At this time James only supports simple user name / password authentication.</p>
+<subsection name="Configuring James for Authenticated SMTP">
+<p>Configuring James for Authentication SMTP is a multi-step process.  It requires several adjustments of 
+the config.xml.  To enable SMTP AUTH, do the following:</p>
+<p>First, as mentioned above, SMTP AUTH requires that James be able to distinguish between mail intended 
+for local delivery and mail intended for remote delivery.  James makes this determination by matching the 
+domain to which the mail was sent against the &lt;servernames&gt; element of the James configuration block.  Any 
+local domains should be explicitly listed as &lt;servername&gt; elements in this section.</p>
+<p>Second, James is configured out of the box so as to not serve as an open relay for spammers.  This is done 
+by restricting the IP addresses from which mail will be accepted using the RemoteAddrNotInNetwork mailet.  This
+restriction must be lifted before users can send from arbitrary clients.  To do this, comment out or remove the 
+mailet tag containing the class attribute "RemoteAddrNotInNetwork".  This tag can be found in the spoolmanager 
+configuration block, in the root processor configuration.</p>
+<p>Third, set the authRequired element of the smtpserver configuration block to "true".</p>
+<p>Fourth, if you wish to ensure that authenticated users can only send email from their own account, you may
+optionally set the verifyIdentity element of the smtpserver configuration block to "true".</p>
+<p>Fifth, restart James.  This will pull in all of your configuration changes.</p>
+</subsection>
+<subsection name="Verifying Your Configuration">
+<p>Finally, you need to verify that your configuration was done correctly.  This step is 
+<strong>important</strong> and should not be skipped.</p>
+<p>Verify that you have not inadvertantly configured your server as an open relay. This is most easily 
+accomplished by using the service provided at <a href="http://www.ordb.org">ORDB.org</a>.  ORDB.org will 
+check your mail server and inform you if it is an open relay.</p>
+<p>It is extremely important that your server not be configured as an open relay.  Aside from potential 
+costs associated with usage by spammers, connections from servers that are determined to be open relays 
+are routinely rejected by SMTP servers.  This can severely impede the ability of your mail server to 
+send mail.</p>
+<p>Of course it is also necessary to confirm that users and log in and send 
+mail through your server.  This can be accomplished using any standard mail client (i.e. Outlook, 
+Eudora, Evolution).</p>
+</subsection>
+</section>
+</body>
+</document>

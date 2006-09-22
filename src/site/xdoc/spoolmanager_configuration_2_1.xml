@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.1 - Configuring the SpoolManager</title>
+ </properties>
+
+<body>
+<section name="SpoolManager Configuration">
+<p>The SpoolManager is controlled by a single configuration block in the config.xml.
+The spoolmanager tag defines the boundaries of the configuration block.  The behavior of 
+the SpoolManager, most importantly the routing of mail messages through the processor tree,
+is controlled by this block.</p>
+
+<p>The spoolmanager tag has a few simple children.  These are:</p>
+<ul>
+<li><strong>threads</strong> - This is a required positive integer element.  It specifies 
+the number of threads the SpoolManager will use to process messages in the spool.  This 
+parameter tends to substantially impact performance, so it is advisable to tune it in production 
+configurations.</li>
+<li><strong>mailetpackages</strong> - This is a required container tag.  It contains some number 
+of <strong>mailetpackage</strong> children.  The body of each of these <strong>mailetpackage</strong> 
+elements is a Java package name.  It is these packages that contain the classes to be instantiated
+as mailets.</li>
+<li><strong>matcherpackages</strong> - This is a required container tag.  It contains some number 
+of <strong>matcherpackage</strong> children.  The body of each of these <strong>matcherpackage</strong> 
+elements is a Java package name.  It is these packages that contain the classes to be instantiated
+as matchers.</li>
+</ul>
+
+<p>The remaining SpoolManager configuration elements are complex enough to require a more in-depth
+discussion.</p>
+
+<subsection name="Processor Configuration">
+<p>In addition to the child elements discussed above, the SpoolManager tag can have several 
+<strong>processor</strong> children.  It is these tags and their children that define the processor tree 
+for the SpoolManager.</p>
+<p>Each processor has a required attribute, <strong>name</strong>.  The value of this attribute must be 
+unique for each processor tag.  The name of a processor is significant.  Certain processors are required 
+(specifically root and error).  The name "ghost" is forbidden as a processor name, as it is used to denote 
+a message that should not undergo any further processing.</p>
+<p>The James SpoolManager creates a correspondance between processor names and the "state" of a mail as defined 
+in the Mailet API.  Specifically, after each mailet processes a mail, the state of the message is examined.  If
+the state has been changed, the message does not continue in the current processor.  If the new state is "ghost"
+then processing of that message terminates completely.  If the new state is anything else, the message is 
+re-routed to the processor with the name matching the new state.</p>
+<p>The root processor is a required processor.  All new messages that the SpoolManager finds on the spool are 
+directed to this processor.</p>
+<p>The error processor is another required processor.  Under certain circumstances James itself will redirect messages
+to the error processor.  It is also the standard processor to which mailets redirect messages when an error
+condition is encountered.</p>
+<p>The transport and spam processors are two useful, but optional, processors that are included in the out of
+the box configuration.  These processors include logic for actual mail delivery and spam handling respectively.  More
+information on these processors can be found in the default config.xml.</p>
+<p>Each processor element has zero or more <strong>mailet</strong> child elements.  Each of these elements describes a 
+matcher/mailet pair.  The ordering of the <strong>mailet</strong> children is crucial to the configuration, as 
+it is the order in which pairs will be traversed in the processor.</p>
+<p>It is this <strong>mailet</strong> element that is at the core of the SpoolManager configuration.</p>
+</subsection>
+<subsection name="The Mailet Tag">
+<p>Consider the following simple <strong>mailet</strong> tag:</p>
+&lt;mailet match="RemoteAddrNotInNetwork=127.0.0.1" class="ToProcessor"&gt;<br/>
+&lt;processor&gt;spam&lt;/processor&gt;<br/>
+&lt;/mailet&gt;<br/>
+<p>The mailet tag has two required attributes, <strong>match</strong> and <strong>class</strong>.</p>
+<p>The <strong>match</strong> attribute is set to the value of the specific Matcher class to be instantiated with a an 
+optional argument.  If present, the argument is separated from the Matcher class name by an '='.  Semantic 
+interpretation of the argument is left to the particular mailet.</p>
+<p>The <strong>class</strong> attribute is set to the value of the Mailet class that is to be instantiated.</p>
+<p>Finally, the children of the <strong>mailet</strong> tag define the configuration that is passed to the Mailet.  The 
+tags used in this section should have no attributes or children.  The names and bodies of the elements will be passed to 
+the mailet as (name, value) pairs.</p>
+<p>So in the example above, a Matcher instance of RemoteAddrNotInNetwork would be instantiated, and the value "127.0.0.1" 
+would be passed to the matcher.  The Mailet of the pair will be an instance of ToProcessor, and it will be passed the (name, value) 
+pair of ("processor", "spam").</p>
+<p>James includes a number of pre-packaged Mailets and Matchers.  A list of provided Mailets may be found 
+<a href="provided_mailets_2_1.html">here</a>.  A list of provided Matchers may be found <a href="provided_matchers_2_1.html">here</a>.</p>
+</subsection>
+</section>
+</body>
+</document>

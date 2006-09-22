@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+ <properties>
+  <title>James 2.3 - Creating Mailing Lists</title>
+ </properties>
+<body>
+
+<section name="How To Create Mailing Lists">
+<p>One of the frequent questions on the James-User Mailing List is how
+to create a mailing list. This document explains one way of using the
+currently supplied Matchers and Mailets in James v2.3.</p>
+
+<p>Basically, the process requires creating two &lt;mailet&gt; entries
+and a repository.  The first mailet handles list commands (currently
+only <i>list-name</i>-on and <i>list-name</i>-off).  The second mailet
+handles list messages.  The repository will hold the e-mail addresses
+of list subscribers.</p>
+
+<p>The mailets go into the processor chain (e.g., at the top of the
+<i>transport</i> processor), the repository goes into the
+&lt;users-store&gt; block.</p>
+
+<subsection name="Setting up the Mailets">
+
+<p>You need to setup two mailets.</p>
+
+<p>The first mailet that you need to setup is an instance of the <a
+href="provided_mailets_2_3.html#AvalonListservManager">Avalon Listserv
+Manager</a> mailet.  This will handle subscribing and unsubscribing.
+[Note: the current code does not support confirmed opt-in, just basic
+commands.]  The <a
+href="provided_matchers_2_3.html#CommandForListserv">CommandForListserv</a>
+matcher is used to invoke match messages containing commands for the
+mailing list.</p>
+
+<p>The second mailet is an instance of the <a
+href="provided_mailets_2_3.html#AvalonListserv">Avalon Listserv</a>
+mailet.  That mailet actually receives messages for the list and
+causes them to be distributed.  The <a
+href="provided_matchers_2_3.html#RecipientIs">RecipientIs</a> matcher
+is used to match messages intended for the mailing list.</p>
+
+<p>The following illustrates the two &lt;mailet&gt; elements that need to be added:</p>
+
+<source>
+  &lt;mailet match="CommandForListserv=<i>list-name</i>@<i>domain</i>"
+          class="AvalonListservManager"&gt;
+    &lt;repositoryName&gt;<i>list-name</i>&lt;/repositoryName&gt;
+  &lt;/mailet&gt;
+
+  &lt;mailet match="RecipientIs=<i>list-name</i>@<i>domain</i>" class="AvalonListserv"&gt;
+    &lt;repositoryName&gt;<i>list-name</i>&lt;/repositoryName&gt;
+    ... list options ...
+  &lt;/mailet&gt;
+</source>
+
+</subsection>
+
+<subsection name="Setting up the Repository">
+
+<p>The mailing list mailets need a repository within which to store
+the subscriber list.  There is a separate repository for each mailing
+list, and is completely independent of the user repository used by
+James to manage e-mail accounts.  This is configured in the
+&lt;users-store&gt; block of config.xml.</p>
+
+<p>The following illustrates a database-backed repository using JDBC
+with the ListUsersJdbcRepository class.  Notice that there will be a
+single table, <i>lists</i>, created in the db://maildb resource
+defined elsewhere.  There are currently two columns: the list name and
+the list subscriber.</p>
+
+<source>
+  &lt;repository name="<i>list-name</i>"
+                 class="org.apache.james.userrepository.ListUsersJdbcRepository"
+                 destinationURL="db://maildb/lists/<i>list-name</i>"&gt;
+    &lt;sqlFile&gt;file://conf/sqlResources.xml&lt;/sqlFile&gt;
+  &lt;/repository&gt;
+</source>
+
+<p>The following illustrates a file-system repository using the
+UsersFileRepository class. [Note: the destination URL is a child
+element when configuring a file-system repository, and an attribute
+when configuring a database-backed repository.  This inconsistency
+will be addressed in a future version of James.]</p>
+
+<source>
+  &lt;repository name="<i>list-name</i>"
+                 class="org.apache.james.userrepository.UsersFileRepository"&gt;
+    &lt;destination URL="file://var/lists/<i>list-name</i>/" /&gt; 
+  &lt;/repository&gt;
+</source>
+
+</subsection>
+</section>
+</body>
+</document>

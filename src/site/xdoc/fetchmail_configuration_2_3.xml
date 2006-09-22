@@ -1,0 +1,967 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+ <properties>
+  <title>James 2.3 - fetchmail Configuration</title>
+ </properties>
+
+ <body>
+<section name="fetchmail">
+<p>fetchmail acts as a gateway between an external message store such as an IMAP
+or POP3 server and James. Mail is fetched from the external message store and
+injected into the James input spool.</p>
+
+<p>fetchmail  is useful when delivery via standard SMTP is not an option, as a
+means of consolidating mail delivered to several external accounts into a single
+James account, or to apply the mail processing capabilities of James to mail 
+stored in an external message store.</p>
+
+<p>fetchmail has several configuration options that control the fetching and 
+filtering of mail injected into the James input spool. Once there, James' 
+flexible mail processing engine can be used to further process the mail, just as
+if it had been delivered via standard SMTP.</p>
+
+<p>
+<a href="#How fetchmail Works">How fetchmail Works</a><br/>
+<a href="#fetchmail Configuration Parameters">fetchmail Configuration Parameters</a><br/>
+<a href="#fetchmail Examples">fetchmail Examples</a><br/>
+<a href="#fetchmail Caveats">fetchmail Caveats</a>
+</p>
+</section>
+
+<section name="How fetchmail Works">
+<p>Mail is delivered by periodically running fetch tasks that read messages from
+an external message store and injects them into the James input spool. Fetch 
+tasks run concurrently.</p>
+
+<p>A set of filters applies to each fetch task. Each filter provides the ability
+to reject a message that matches the filter criteria. Rejected messages are not
+injected into the James input spool; they are either marked as seen or deleted.
+When a filter is configured to accept a message that matches its criteria, 
+messages are marked with a MailAttribute. This MailAttribute can be detected 
+within the James matcher/mailet chain, allowing further processing as 
+required.</p>
+
+<p>Each fetch task is associated with a single host server. Accounts are defined
+to the fetch task for each mailbox on the server from which mail is to be
+fetched. Accounts run consecutively.</p>
+
+<p>Optionally, the fetch task can be configured with an &lt;alllocal&gt; Account that
+generates an Account entry for each user defined in the James user repository.
+This removes the requirement to manually add or remove Account entries to the 
+fetchmail configuration each time a James user is added or removed. Currently 
+this is only useful if the server supports virtual mailboxes that allow the same
+password to apply to all users within a domain.</p>
+
+<p>Accounts can be configured to deliver all mail for an Account to a specified
+recipient or to deduce the intended recipient from the mail headers.</p>
+
+<p>Accounts are normally configured to deliver all mail for an Account to a 
+specified recipient, ignoring the recipient in the mail headers. This works well
+in the majority of cases where a mailbox is guaranteed to contain mail for a sole
+mailbox recipient.</p>
+
+<p>Accounts are configured to deduce the intended recipient from the mail headers
+when a mailbox contains mail for several users, typically all users in a domain.
+Used alone, this is not foolproof as there are circumstances when a single unique
+recipient cannot be deduced from the mail headers alone. Used in conjunction with
+an appropriately configured &lt;alllocal&gt; account, it is always possible to deduce 
+the intended recipient when the recipient is a James user.</p>
+</section>
+
+<section name="fetchmail Configuration Parameters">
+<p>The fetchmail configuration parameters are part of the James configuration, 
+whose base file is <code>config.xml</code>. For clarity and flexibility, the 
+fetchmail configuration parameters are stored in the file 
+<code>james-fetchmail.xml</code>, which is referenced within 
+<code>config.xml</code>.</p>
+
+<p>The configuration parameters are described below.</p>
+
+<subsection name="fetchmail">
+<p>The configuration block delimited by the <strong>fetchmail</strong> tag 
+controls fetchmail.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>enabled</strong></dt>
+<dd>A boolean. If &quot;true&quot;, the fetch tasks will be run periodically. If &quot;false&quot;, 
+no fetch tasks will be run. The default is &quot;false&quot;.</dd>
+</dl>
+</p>
+
+<p>The tag has these child tags (minimum cardinality, maximum cardinality):
+<ul>
+<li><strong><a href="#fetch">fetch</a></strong> (0, *)</li>
+</ul>
+</p>
+
+<p>
+<source>
+&lt;fetchmail enabled=&quot;true&quot;&gt;
+...
+&lt;/fetchmail&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="fetch">
+<p>The <strong>fetch</strong> tag defines a fetch task to be run 
+periodically. Fetch tasks run concurrently.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>name</strong></dt>
+<dd>A string uniquely identifying the fetch task.</dd>
+</dl>
+</p>
+
+<p>The tag has these child tags (minimum cardinality, maximum cardinality):
+<ul>
+<li><strong><a href="#accounts">accounts</a></strong> (1, 1)</li>
+<li><strong><a href="#blacklist">blacklist</a></strong> (1, 1)</li>
+<li><strong><a href="#defaultdomain">defaultdomain</a></strong> (0, 1)</li>
+<li><strong><a href="#fetchall">fetchall</a></strong> (1, 1)</li>
+<li><strong><a href="#fetched">fetched</a></strong> (1, 1)</li>
+<li><strong><a href="#host">host</a></strong> (1, 1)</li>
+<li><strong><a href="#interval">interval</a></strong> (1, 1)</li>
+<li><strong><a href="#javaMailFolderName">javaMailFolderName</a></strong> (1, 1)</li>
+<li><strong><a href="#javaMailProperties">javaMailProperties</a></strong> (0, 1)</li>
+<li><strong><a href="#javaMailProviderName">javaMailProviderName</a></strong> (1, 1)</li>
+<li><strong><a href="#maxmessagesize">maxmessagesize</a></strong> (0, 1)</li>
+<li><strong><a href="#recipientnotfound">recipientnotfound</a></strong> (1, 1)</li>
+<li><strong><a href="#recursesubfolders">recursesubfolders</a></strong> (1, 1)</li>
+<li><strong><a href="#remoteReceivedHeader">remoteReceivedHeader</a></strong> (0, 1)</li>
+<li><strong><a href="#remoterecipient">remoterecipient</a></strong> (1, 1)</li>
+<li><strong><a href="#undeliverable">undeliverable</a></strong> (1, 1)</li>
+<li><strong><a href="#userundefined">userundefined</a></strong> (1, 1)</li>
+</ul>
+</p>
+
+<p>
+<source>
+&lt;fetch name=&quot;mydomain.com&quot;&gt;
+...
+&lt;/fetch&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="accounts">
+<p>The <strong>accounts</strong> tag declares the accounts from which mail will 
+be fetched by the fetch task. Accounts run concurrently.</p>
+
+<p>The tag has these child tags (minimum cardinality, maximum cardinality):
+<ul>
+<li><strong><a href="#account">account</a></strong> (0, *)</li>
+<li><strong><a href="#alllocal">alllocal</a></strong> (0, 1)</li>
+</ul>
+</p>
+
+<p>
+<source>
+&lt;accounts&gt;
+...
+&lt;/accounts&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="blacklist">
+<p>The <strong>blacklist</strong> tag declares a list of recipient addresses 
+for whom mail will be rejected and what happens to the rejected mail.</p>
+
+<p>The tag value is a tab, comma or space delimited list of recipient 
+addresses, eg: <code>wibble@mydomain.com, flobble@mydomain.com</code>.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>reject</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for recipients in the blacklist will
+not be injected into the James input spool. If &quot;false&quot;, mail for
+recipients in the blacklist will be injected into the James input spool with the
+Mail Attribute <code>org.apache.james.fetchmail.isBlacklistedRecipient</code>
+added to the mail.</dd>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for recipients in the blacklist will be
+left on the server. If &quot;false&quot;, mail for recipients in the blacklist 
+will be marked for deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for recipients in the blacklist will be
+marked as seen on the server. If &quot;false&quot;, mail for recipients in the blacklist 
+will not be marked as seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;blacklist 
+    reject=&quot;true&quot; 
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;&gt;
+wibble@mydomain.com, flobble@mydomain.com
+&lt;/blacklist&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="defaultdomain">
+<p>The <strong>defaultdomain</strong> tag declares the domain name to be 
+appended to the <code>From:</code> header of a mail that has a valid user part
+but is missing the domain part.</p>
+
+<p>If not specified, the default behaviour is to append the canonical host name
+of the James server.</p>
+
+<p>The tag value is the name of the server to append. The name must be a server
+declared in the <strong>servernames</strong> tag of the <strong>James</strong>
+block in the configuration or the name <code>localhost</code>.</p>
+
+<p>
+<source>
+&lt;defaultdomain&gt;
+    mydomain.com
+&lt;/defaultdomain&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="fetchall">
+<p>The <strong>fetchall</strong> tag declares if all mail should be fetched from
+the server, or just unseen mail.</p>
+
+<p>The tag value is a boolean. If true, all mail is fetched. If false, only 
+unseen mail is fetched.</p>
+
+<p>
+<source>
+&lt;fetchall&gt;false&lt;/fetchall&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="fetched">
+<p>The <strong>fetched</strong> tag declares what will happen to mail on the
+external server that is successfully injected into the James input spool.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail injected into the James input spool 
+will be left on the server. If &quot;false&quot;, mail injected into the James
+input spool will be marked for deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail injected into the James input spool 
+will be marked as seen on the server. If &quot;false&quot;, mail injected into
+the James input spool will not be marked as seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;fetched leaveonserver=&quot;true&quot; markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="host">
+<p>The <strong>host</strong> tag declares the IP address of the external
+server from which mail is fetched.</p>
+
+<p>The tag value is the DNS name or IP address literal of the external
+server.</p>
+
+<p>
+<source>
+&lt;host&gt;pop3.server.com&lt;/host&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="interval">
+<p>The <strong>interval</strong> tag declares the period between invocations of
+the fetch tasks. If a fetch task is still active from a previous invocation
+when the period expires, the new invocation is skipped over.</p>
+
+<p>The tag value is an integer representing the number of milliseconds to elapse
+between invocations of the fetch tasks.</p>
+
+<p>
+<source>
+&lt;interval&gt;60000&lt;/interval&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="javaMailFolderName">
+<p>The <strong>javaMailFolderName</strong> tag declares the name of the root 
+folder on the external server from which mail is fetched.</p>
+
+<p>The tag value is the cAsE-sEnSiTiVe name of the root folder on the external
+server from which mail is fetched. For POP3 servers this is always 
+<code>INBOX</code>.</p>
+
+<p>
+<source>
+&lt;javaMailFolderName&gt;INBOX&lt;/javaMailFolderName&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="javaMailProperties">
+<p>The <strong>javaMailProperties</strong> tag declares the properties to be
+applied to the JavaMail Session used by the fetch task. These override the
+properties answered by <code>System.getProperties()</code>. Many JavaMail
+properties are specific to the JavaMail Provider selected by the 
+<a href="#javaMailProviderName">javaMailProviderName</a> tag.</p>
+
+<p><strong>Relying on the default values selected by the Provider can be
+inappropriate.</strong> For instance, the default connection and I/O timeout 
+values of infinite for the default IMAP and POP3 Providers is rarely what is
+required. Consult the documentation of the Provider for details and options.</p>
+
+<p>Documentation for the default Provider for IMAP is located
+<a href="http://java.sun.com/products/javamail/javadocs/com/sun/mail/imap/package-summary.html">
+here</a>.</p>
+
+<p>Documentation for the default Provider for POP3 is located
+<a href="http://java.sun.com/products/javamail/javadocs/com/sun/mail/pop3/package-summary.html">
+here</a>.</p>
+
+<p>Details of how to change a Provider are located
+<a href="http://java.sun.com/products/javamail/javadocs/javax/mail/Session.html">
+here</a>.</p>
+
+<p>The tag has these child tags (minimum cardinality, maximum cardinality):
+<ul>
+<li><strong><a href="#property">property</a></strong> (0, *)</li>
+</ul>
+</p>
+
+<p>
+<source>
+&lt;javaMailProperties&gt;
+...
+&lt;/javaMailProperties&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="javaMailProviderName">
+<p>The <strong>javaMailProviderName</strong> tag selects the JavaMail protocol
+Provider used to interact with the external server.</p>
+
+<p>The tag value is the name of a JavaMail supported protocol, such as 
+<code>pop3</code> or <code>imap</code>. The name is used to select the default
+Provider for the protocol.</p>
+
+<p>
+<source>
+&lt;javaMailProviderName&gt;pop3&lt;/javaMailProviderName&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="maxmessagesize">
+<p>The <strong>maxmessagesize</strong> tag declares the maximum permitted message
+size for messages injected into the James input spool and what happens to fetched
+messages that exceed this size.</p>
+<p>The tag has these attributes:
+<dl>
+<dt><strong>limit</strong></dt>
+<dd>An integer. The maximum message size expressed in Kilobytes. If 0, there is
+no limit.</dd>
+<dt><strong>reject</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail whose message size exceeds the maximum
+permitted size will not be injected into the James input spool. If 
+&quot;false&quot;, mail whose message size exceeds the maximum permitted size will
+have its contents removed, an explanatory error message and the Mail Attribute
+<code>org.apache.james.fetchmail.isMaxMessageSizeExceeded</code> added prior to 
+injection into the James input spool, (see below for the location of an example).</dd>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail whose message size exceeds the maximum
+permitted size will be left on the server. If &quot;false&quot;, mail whose message
+size exceeds the maximum permitted size will be marked for deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail whose message size exceeds the maximum
+permitted size will be marked as seen on the server. If &quot;false&quot;,
+mail whose message size exceeds the maximum permitted size will not be marked as
+seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;maxmessagesize 
+    limit=&quot;4096&quot;
+    reject=&quot;false&quot;
+    leaveonserver=&quot;false&quot;
+    markseen=&quot;false&quot;/&gt;
+</source>
+</p>
+
+<p>An example configuration using James mailet processing to bounce fetched
+messages that exceed the maximum permitted size can be found in the file
+<code>$PHOENIX_HOME/apps/james/conf/samples/fetchmail/maxMessageSize.xml</code>.
+</p>
+</subsection>
+
+<subsection name="recipientnotfound">
+<p>The <strong>recipientnotfound</strong> tag declares what happens to mail for
+which a sole intended recipient cannot be found when attempting to determine
+the recipient from the mail headers.</p>
+
+<p>In configurations with more than one account per fetch task, processing of
+matched mail can be deferred to the next run of the fetch task. This gives 
+other accounts that may be able to determine a sole intended recipient an
+opportunity to do so before recipientnotfound processing is invoked.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>defer</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for which a sole intended recipient 
+cannot be determined is left unprocessed until the next run of the fetch task.
+If &quot;false&quot;, mail for which a sole intended recipient cannot be
+determined is processed immediately.</dd>
+<dt><strong>reject</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for which a sole intended recipient 
+cannot be determined will not be injected into the James input spool. If 
+&quot;false&quot;, mail for which a sole intended recipient cannot be 
+determined will be injected into the James input spool using the recipient
+attribute of the current account and with the Mail Attribute 
+<code>org.apache.james.fetchmail.isRecipientNotFound</code> added to the
+mail.</dd>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for which a sole intended recipient 
+cannot be determined will be left on the server. If &quot;false&quot;, mail for
+which a sole intended recipient cannot be determined will be marked for 
+deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for which a sole intended recipient 
+cannot be determined will be marked as seen on the server. If &quot;false&quot;,
+mail for which a sole intended recipient cannot be determined will not be marked
+as seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;recipientnotfound 
+    defer=&quot;true&quot;
+    reject=&quot;true&quot;
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="recursesubfolders">
+<p>The <strong>recursesubfolders</strong> tag declares if mail should be fetched 
+from sub-folders of the root folder, or just the root folder.</p>
+
+<p>The tag value is a boolean. If true, mail is fetched from the root folder and
+its subfolders. If false, mail is fetched from just the root folder.</p>
+
+<p>
+<source>
+&lt;recursesubfolders&gt;false&lt;/recursesubfolders&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="remoteReceivedHeader">
+<p>The <strong>remoteReceivedHeader</strong> tag declares the zero based
+index of the RFC2822 compliant RECEIVED header used to determine the address and
+host name of the remote MTA that sent a fetched message and what happens to 
+messages when the specified header is invalid.</p>
+
+<p>Typically, the first (index = 0) RECEIVED header is for the local MTA that 
+delivered the message to the message store and the second (index = 1) RECEIVED
+header is for the remote MTA that delivered the message to the local MTA. When
+this configuration applies, the <strong>remoteReceivedHeaderIndex</strong> should
+be set to <strong>1</strong>.
+</p>
+
+<p>To verify the correct setting, examine the RECEIVED headers for messages
+delivered to the configured message store and locate the first one containing a
+remote domain in the'from' field. Remembering that zero based indexing is used,
+if this the second header, use an index of 1, if this is the third header, use an
+index of 2, and so forth.</p>
+
+<p>Matchers such as InSpammerBlacklist use the remote address and/or remote host
+name to identify illegitimate remote MTAs. If you do not use such matchers, the
+<strong>remoteReceivedHeaderIndex</strong> tag may be omitted or the default
+index value of -1 can be specified. This causes the remote address to be set to
+<code>127.0.0.1</code> and the remote host name to be set to
+<code>localhost</code>. Matchers almost always considered these values to be
+legitimate.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>index</strong></dt>
+<dd>An integer whose meaning is described above.
+</dd>
+<dt><strong>reject</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail whose specified recieved header is invalid
+will not be injected into the James input spool. If &quot;false&quot;, mail whose 
+specified recieved header is invalid will be injected into the James input spool with 
+the Mail Attribute <code>org.apache.james.fetchmail.isInvalidReceivedHeader</code>
+added to the mail, the remote address set to <code>127.0.0.1</code> and the remote 
+host name set to <code>localhost</code>.
+</dd>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail whose specified recieved header is invalid
+will be left on the server. If &quot;false&quot;, mail whose specified recieved header
+is invalid will be marked for deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail whose specified recieved header is invalid
+will be marked as seen on the server. If &quot;false&quot;, mail whose specified
+recieved header is invalid will not be marked as seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;remoteReceivedHeader
+    index=&quot;1&quot; 
+    reject=&quot;true&quot;
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+
+<p>An example configuration using James mailet processing to notify the postmaster
+of fetched messages that contain an invalid Received header can be found in the file
+<code>$PHOENIX_HOME/apps/james/conf/samples/fetchmail/remoteReceivedHeader.xml</code>.
+</p>
+</subsection>
+
+<subsection name="remoterecipient">
+<p>The <strong>remoterecipient</strong> tag declares what happens to mail for
+which the domain part of the recipient is remote. A domain is remote if it is 
+not a server declared in the <strong>servernames</strong> tag of the
+<strong>James</strong> block in the configuration.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>reject</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for remote recipients will not be 
+injected into the James input spool. If &quot;false&quot;, mail for remote
+recipients will be injected into the James input spool with the Mail Attribute 
+<code>org.apache.james.fetchmail.isRemoteRecipient</code> added to the mail.
+</dd>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for remote recipients will be left on
+the server. If &quot;false&quot;, mail for remote recipients will be marked for 
+deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for remote recipients will be marked as
+seen on the server. If &quot;false&quot;, mail for remote recipients will not be
+marked as seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;remoterecipient 
+    reject=&quot;true&quot;
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="undeliverable">
+<p>The <strong>undeliverable</strong> tag declares what happens to mail that
+cannot be delivered.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail that cannot be delivered will be left
+on the server. If &quot;false&quot;, mail that cannot be delivered will be
+marked for deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for that cannot be delivered will be
+marked as seen on the server. If &quot;false&quot;, mail that cannot be
+delivered will not be marked as seen.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;undeliverable
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="userundefined">
+<p>The <strong>userundefined</strong> tag declares what happens to mail for
+which the recipient is not defined as a James user.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>reject</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for recipients who are not defined as
+James users will not be injected into the James input spool. If 
+&quot;false&quot;, mail for recipients who are not defined as James users will
+be injected into the James input spool with the Mail Attribute 
+<code>org.apache.james.fetchmail.isUserUndefined</code> added to the mail.
+</dd>
+<dt><strong>leaveonserver</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for recipients who are not defined as
+James users will be left on the server. If &quot;false&quot;, mail for 
+recipients who are not defined as James users will be marked for deletion.</dd>
+<dt><strong>markseen</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail for recipients who are not defined as
+James users will be marked as seen on the server. If &quot;false&quot;, mail
+for recipients who are not defined as James users will not be marked as seen.
+</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;userundefined
+    reject=&quot;true&quot;
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="account">
+<p>The <strong>account</strong> tag declares an account on the external server
+from which mail should be fetched.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>user</strong></dt>
+<dd>The string to be passed as the user when connecting to the external server.
+</dd>
+<dt><strong>password</strong></dt>
+<dd>The string to be passed as the password when connecting to the external 
+server.</dd>
+<dt><strong>recipient</strong></dt>
+<dd>The recipient to whom messages will be delivered when the intended recipient
+cannot be determined or when the intended recipient is to be ignored.</dd>
+<dt><strong>ignorercpt-header</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail is always delivered to the recipient
+declared in the <strong>recipient</strong> attribute above. If 
+&quot;false&quot;, the intended recipient is determined from the mail headers or
+the process declared by the <strong>recipientnotfound</strong> tag.
+</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;account
+    user=&quot;myaccount&quot;
+    password=&quot;mypassword&quot;
+    recipient=&quot;user@localhost&quot;
+    ignorercpt-header=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="alllocal">
+<p>The <strong>alllocal</strong> tag declares the parameters to be applied to
+dynamic accounts. The set of dynamic accounts is refreshed each time the fetch
+task runs by combining the <strong>alllocal</strong> tag attributes with each of
+the currently defined James users to create an account for every James user.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>userprefix</strong></dt>
+<dd>The string to be added before the James user when constructing the string
+passed as the user when connecting to the external server.
+</dd>
+<dt><strong>usersuffix</strong></dt>
+<dd>The string to be added after the James user when constructing the string
+passed as the user when connecting to the external server.
+</dd>
+<dt><strong>password</strong></dt>
+<dd>The string to be passed as the password when connecting to the external 
+server.</dd>
+<dt><strong>recipientprefix</strong></dt>
+<dd>The string to be added before the James user when constructing the recipient
+to whom messages will be delivered when the intended recipient cannot be 
+determined or when the intended recipient is to be ignored.</dd>
+<dt><strong>recipientsuffix</strong></dt>
+<dd>The string to be added after the James user when constructing the recipient
+to whom messages will be delivered when the intended recipient cannot be 
+determined or when the intended recipient is to be ignored.</dd>
+<dt><strong>ignorercpt-header</strong></dt>
+<dd>A boolean. If &quot;true&quot;, mail is always delivered to the recipient
+constructed from the <strong>recipientprefix</strong> and 
+<strong>recipientsuffix</strong> attributes above and the James user. If 
+&quot;false&quot;, the intended recipient is determined from the mail headers or
+the process declared by the <strong>recipientnotfound</strong> tag.
+</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;alllocal
+    userprefix=&quot;&quot;
+    usersuffix=&quot;@external.domain.com&quot;
+    password=&quot;mypassword&quot;
+    recipientprefix=&quot;&quot;
+    recipientsuffix=&quot;@mydomain.com&quot;
+    ignorercpt-header=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="property">
+<p>The <strong>property</strong> tag declares a name/value pair.</p>
+
+<p>The tag has these attributes:
+<dl>
+<dt><strong>name</strong></dt>
+<dd>The name of the property.
+</dd>
+<dt><strong>value</strong></dt>
+<dd>The value of the property.</dd>
+</dl>
+</p>
+
+<p>
+<source>
+&lt;property
+    name=&quot;mail.pop3.connectiontimeout&quot;
+    value=&quot;180000&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+</section>
+
+<section name="fetchmail Examples">
+<p>Full sources to the examples discussed below can be found in the directory
+<code>$PHOENIX_HOME/apps/james/conf/samples/fetchmail</code>.</p>
+
+<subsection name="One Account, One User">
+<p>When all mail for an account is to be delivered to a single user, 
+configure each account to ignore the recipient in the mail headers and deliver
+to the specified recipient. The <strong>accounts</strong> block looks like 
+this:</p>
+
+<p>
+<source>
+&lt;accounts&gt;
+    &lt;account
+        user=&quot;user1@external.domain.com&quot;
+        password=&quot;password1&quot;
+        recipient=&quot;user1@localhost&quot;
+        ignorercpt-header=&quot;true&quot;/&gt;
+
+    &lt;account
+        user=&quot;user2@external.domain.com&quot;
+        password=&quot;password2&quot;
+        recipient=&quot;user2@localhost&quot;
+        ignorercpt-header=&quot;true&quot;/&gt;
+
+    &lt;account
+        user=&quot;user3@external.domain.com&quot;
+        password=&quot;password3&quot;
+        recipient=&quot;user3@localhost&quot;
+        ignorercpt-header=&quot;true&quot;/&gt;
+&lt;/accounts&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="One Account, Many Users">
+<p>When an account contains mail to be delivered to many users, configure each
+account to determine the recipient from the mail headers and deliver to that 
+user. The <strong>accounts</strong> block looks like this:</p>
+
+<p>
+<source>
+&lt;accounts&gt;
+    &lt;account
+        user=&quot;global@external.domain.com&quot;
+        password=&quot;password&quot;
+        recipient=&quot;fetchmail@localhost&quot;
+        ignorercpt-header=&quot;false&quot;/&gt;
+&lt;/accounts&gt;
+</source>
+</p>
+
+<p>The <strong>recipientnotfound</strong> tag is used to declare what happens 
+when the recipient cannot be determined from the mail headers. In the example 
+below, mail is injected into the spool using the recipient declared in the
+<strong>account</strong> tag:</p>
+
+<p>
+<source>
+&lt;recipientnotfound
+    defer=&quot;false&quot;
+    reject=&quot;false&quot;
+    leaveonserver=&quot;false&quot;
+    markseen=&quot;false&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="One Account, One User - Dynamic">
+<p>When an external server supports virtual mailboxes, fetchmail's dynamic 
+account facility can be used. This greatly simplifies user configuration as 
+the fetchmail accounts for users are automatically synchronized with those
+defined in the James user repository. This guarantees that mail for all local 
+users will be fetched and delivered.</p>
+
+<p>Currently, there is a limitation that all virtual accounts and the global
+account must share the same password.</p>
+
+<p>The <strong>alllocal</strong> tag declares the parameters for the dynamic 
+accounts. The <strong>accounts</strong> block below will deliver mail for 
+<code>user1@external.domain.com</code> to <code>user1@localhost</code>, 
+<code>user2@external.domain.com</code> to <code>user2@localhost</code>,
+<code>userZ@external.domain.com</code> to <code>userZ@localhost</code> etc.:</p>
+
+<p>
+<source>
+&lt;accounts&gt;
+    &lt;alllocal
+        userprefix=&quot;&quot;
+        usersuffix=&quot;@external.domain.com&quot;
+        password=&quot;mypassword&quot;
+        recipientprefix=&quot;&quot;
+        recipientsuffix=&quot;@localhost&quot;
+        ignorercpt-header=&quot;true&quot;/&gt;
+&lt;/accounts&gt;
+</source>
+</p>
+</subsection>
+
+<subsection name="One Account, Many Users - Dynamic">
+<p>The 
+<a href="#One Account, One User - Dynamic">One Account, One User - Dynamic</a>
+example guarantees delivery of mail for all local users, but leaves other mail
+on the external server unprocessed. The 
+<a href="#One Account, Many Users">One Account, Many Users</a> example
+processes all mail on the external server, but cannot guarantee delivery to the
+intended recipient. By combining the two, it is possible to guarantee the 
+delivery of mail for all local users and process all mail.</p>
+
+<p>In the snippet below, the <strong>alllocal</strong> tag declares dynamic
+accounts for all local users and the <strong>account</strong> tag configures an
+account to fetch all mail.</p>
+
+<p>The <strong>recipientnotfound</strong> tag rejects mail for which a recipient
+cannot be determined. By the time this processing is activated, the dynamic 
+accounts will have processed mail for all local users, so the mail can 
+only be mail for non-local users or newly arrived mail for local users. It is 
+not possible to know which, but we want to leave mail for local users to be
+dealt with by the dynamic accounts. The next time the dynamic accounts run any
+newly arrived mail for local users will be processed. The remainder will be for
+non-local users and can now be safely dealt with.</p>
+
+<p>The <code>&lt;recipientnotfound defer=&quot;true&quot;</code> attribute 
+enables deferal of the processing of messages for which the recipient cannot be
+determined to the next iteration of the fetch task, and is used here. The 
+relevant tags are:</p>
+
+<p>
+<source>
+&lt;accounts&gt;
+    &lt;alllocal
+        userprefix=&quot;&quot;
+        usersuffix=&quot;@external.domain.com&quot;
+        password=&quot;mypassword&quot;
+        recipientprefix=&quot;&quot;
+        recipientsuffix=&quot;@localhost&quot;
+        ignorercpt-header=&quot;true&quot;/&gt;
+
+    &lt;account
+        user=&quot;global@external.domain.com&quot;
+        password=&quot;password&quot;
+        recipient=&quot;fetchmail@localhost&quot;
+        ignorercpt-header=&quot;false&quot;/&gt;
+&lt;/accounts&gt;
+
+&lt;recipientnotfound
+    defer=&quot;true&quot;
+    reject=&quot;true&quot;
+    leaveonserver=&quot;true&quot;
+    markseen=&quot;true&quot;/&gt;
+</source>
+</p>
+</subsection>
+
+</section>
+
+<section name="fetchmail Caveats">
+<p>These are some things to be aware of when using fetchmail:
+<ul>
+<li>As noted in the
+<a href="#One Account, One User - Dynamic">One Account, One User - Dynamic</a>
+example, all virtual accounts and the global account must share the same 
+password. A future version might associate each James user to a set of account
+credentials.
+</li>
+
+<li>When using dynamic accounts, an account is generated and an attempt made to
+fetch mail for all James users defined to James even if there is no such mailbox
+on the server. This is inefficient but not fatal. The solution is the same as 
+described above.
+</li>
+
+<li>When using dynamic accounts, as described in the
+<a href="#One Account, Many Users - Dynamic">One Account, Many Users - Dynamic</a>
+example, the user name used to fetch the mail for all accounts must not be
+defined as a James user. If it is, a dynamic account will be generated for it
+and fetch all the mail before the account declared to process mail for all users
+has an opportunity to run!
+</li>
+
+<li>The now deprecated fetchPOP interacted with the <code>FetchedFrom</code> 
+matcher to detect mail injected by fetchPOP. This will not work with fetchmail. 
+Compared to fetchPOP, there are far fewer occasions when mail injected by 
+fetchmail requires special processing. When it does, use the HasMailAttribute 
+matcher to match the attribute named 
+<code>org.apache.james.fetchmail.taskName</code> to detect all mail injected by
+fetchmail. To detect mail injected by a specific fetch task, use one of the 
+HasMailAttributeWithValue matchers to match on the attribute name and the
+attribute value. The attribute value is the name of the fetch task that 
+injected the mail.
+</li>
+
+<li>The POP3 protocol does not enforce support of any of the Flags associated 
+with messages other than DELETED. This means that 
+<code>markseen=&quot;true&quot;</code> will most likely have no effect and 
+therefore, the <strong>fetchall</strong> tag will be inoperative. In this 
+situation, the only way to avoid repeatedly fetching the same mail is to delete
+it from the server using <code>leaveonserver=&quot;false&quot;/&gt;</code>.
+</li>
+</ul>
+</p>
+</section>
+
+
+</body>
+
+</document>

@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Adding Users</title>
+ </properties>
+
+<body>
+<section name="Creating User Accounts">
+<p>User accounts are shared across services.  A common user repository is shared across James 
+services.  That is, once you've created a POP3 mail account and set a password, that same 
+account is available for authenticated SMTP and NNTP.</p>
+<subsection name="Before You Add Accounts">
+<p>In James, user accounts are created throught the RemoteManager.  So, after installation is complete, the first step to adding users 
+is to configure the RemoteManager.  More information on RemoteManager configuration can be found 
+<a href="remotemanager_configuration_2_3.html">here</a>.  You will need to have configured at least one administrator account and 
+ensured that the RemoteManager is enabled.</p>
+<p>Also, you need to make sure that your user repository configuration is correct before adding any users.  If 
+you change your user repository type (i.e. file to database) or the configuration of your user repository 
+(i.e. the file or database URL) after you have added users, you may lose your user data.  Please change these 
+values with care.</p>
+<p>After you've done this, restart James to ensure that any changes you've made in the configuration are incorporated into 
+the running system.  You are now ready to create user accounts.</p>
+</subsection>
+<p>Once James is up and listening, adding a user is simple:</p>
+1.  Telnet to the host and port on which the RemoteManager is listening.  For command-line telnet clients 
+this is generally done by typing "telnet &lt;host&gt; &lt;pass&gt;" where &lt;host&gt; is the James 
+hostname and &lt;port&gt; is the RemoteManager port specified in the James config.xml.<br/><br/>
+2.  You will be prompted for your administrator userid and password.  Enter the values you specified 
+in the James config.xml.<br/><br/>
+3.  After logging in, type "adduser &lt;user&gt; &lt;password&gt;" where &lt;user&gt; is the user name 
+and &lt;password&gt; is the password of the account you wish to create.  Please note that the user name 
+should NOT be a complete email address.  Rather, all email addresses of the form &lt;user&gt;@&lt;domain&gt; 
+(where &lt;domain&gt; is any of the values specified in the &lt;servernames&gt; block) will be delivered to 
+this account by default.  Mailet configuration can change this default behavior.<br/><br/>
+4.  Repeat step 3 for all user accounts you wish to create.
+<p>That's it.  Your user accounts are now created and can be used by all James services.</p>
+</section>
+</body>
+</document>

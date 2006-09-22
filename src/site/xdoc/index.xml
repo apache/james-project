@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+  <properties>
+    <title>Overview</title>
+    <author email="site-dev@james.apache.org">James Project Web Team</author>
+  </properties>
+  <body>
+    <section name="What is it?">
+      <p>The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure <b>Java SMTP and POP3 Mail server and NNTP News server</b>.  We have designed James to be a complete and portable enterprise mail engine solution based on currently available open protocols. </p>
+      <p>James is also a <i>mail application platform</i>.  We have developed a Java API to let you write Java code to process emails that we call the mailet API.  A <b>mailet</b> can generate an automatic reply, update a database, prevent spam, build a message archive, or whatever you can imagine.  A <b>matcher</b> determines whether your mailet should process an email in the server.  The James project hosts the Mailet API, and James provides an implementation of this mail application platform API.</p>
+      <p>James is based upon the Apache Avalon application framework, formerly a product of the Apache Avalon project (see "news" below).</p>
+      <p>James requires Java 1.4 (For further information you may want to search the web, our <a href="http://www.mail-archive.com/server-dev@james.apache.org/">dev</a> and <a href="http://www.mail-archive.com/server-user@james.apache.org/">user</a> mail archives or our <a href="http://wiki.apache.org/james">wiki</a>).</p>
+    </section>
+    <section name="releases">
+      <p>
+        <b>Latest and Stable: James v2.2.0</b>
+        <br/>
+James v2.2.0 is the current release, and the latest in the James v2 series.
+Both <a href="http://james.apache.org/download.cgi">binary and source</a> distributions are available.</p>
+      <p>James v2.2.0 is a major update to the James platform, with many new features, functional improvements, and bug fixes.
+See the <a href="changelog.html">Change Log</a> for a detailed list of changes.  <b>All
+users are urged to upgrade to v2.2.0 as soon as possible</b>.</p>
+      <p>Any bugs found in James are dealt with promptly.  Please provide feedback on the james-user and james-dev mailing lists.</p>
+      <p>
+        <b>Get your hands on the latest versions..</b>
+        <br/>We put significant milestones, and potential release candidates in the <a href="http://people.apache.org/dist/james/">download area.</a>
+        <br/>Whilst the quality of these versions cannot be guaranteed they may contain important bug fixes and cool new features.<br/>
+      </p>
+    </section>
+    <section name="Feature Status">
+      <table>
+        <tr>
+          <th>Item</th>
+          <th>Status</th>
+          <th>Since</th>
+          <th>First released</th>
+        </tr>
+        <tr>
+          <td>SMTP server</td>
+          <td>Stable</td>
+          <td>1.0</td>
+          <td>0.95</td>
+        </tr>
+        <tr>
+          <td>Mailet Engine</td>
+          <td>Stable</td>
+          <td>1.2</td>
+          <td>0.95</td>
+        </tr>
+        <tr>
+          <td>FileSystem mailboxes/spool</td>
+          <td>Stable</td>
+          <td>1.2</td>
+          <td>1.0</td>
+        </tr>
+        <tr>
+          <td>RDBMS mailboxes/spool</td>
+          <td>Stable</td>
+          <td>1.2</td>
+          <td>1.2</td>
+        </tr>
+        <tr>
+          <td>POP3 server</td>
+          <td>Stable</td>
+          <td>1.1</td>
+          <td>1.0</td>
+        </tr>
+        <tr>
+          <td>RDBMS - Users</td>
+          <td>Stable</td>
+          <td>1.2.1</td>
+          <td>1.2.1</td>
+        </tr>
+        <tr>
+          <td>LDAP Support - Users</td>
+          <td>Experimental</td>
+          <td>1.2</td>
+          <td>1.2</td>
+        </tr>
+        <tr>
+          <td>TLS Support - POP3</td>
+          <td>Experimental</td>
+          <td>1.2</td>
+          <td>1.2</td>
+        </tr>
+        <tr>
+          <td>Remote Manager</td>
+          <td>Stable</td>
+          <td>1.0</td>
+          <td>1.0</td>
+        </tr>
+        <tr>
+          <td>TLS Support - Remote Manager</td>
+          <td>Stable</td>
+          <td>1.2</td>
+          <td>1.2</td>
+        </tr>
+        <tr>
+          <td>NNTP server</td>
+          <td>Experimental</td>
+          <td>1.2</td>
+          <td>1.2</td>
+        </tr>
+        <tr>
+          <td>FetchPOP</td>
+          <td>Deprecated</td>
+          <td>2.3</td>
+          <td>2.1</td>
+        </tr>
+      </table>
+    </section>
+  </body>
+</document>

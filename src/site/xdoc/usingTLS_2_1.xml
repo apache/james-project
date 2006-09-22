@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.1 - Using TLS</title>
+ </properties>
+
+<body>
+
+<section name="James 2.1 - Using TLS">
+
+<p>
+This document explains how to enable James 2.1 services to use Transport Layer Security (TLS) for encrypted client-server communication.</p>
+
+<subsection name="Making TLS/SSL Server Sockets Available Inside James">
+<p>James uses the Sun Java Secure Sockets Extension (JSSE) infrastructure to provide TLS/SSL 
+sockets.  JSSE comes packaged with several vendor Java distributions (i.e. Sun Java 1.4.x, 
+IBM Java 1.3.x).  For these distributions, please follow the vendor provided instructions for
+configuring the JVM to use JSSE services.</p>
+
+<p>If you are using a Java distribution that does not include JSSE as part of the 
+distribution you will need to download the JSSE package separately.  It can be obtained from 
+<a href="http://java.sun.com/jsse">here</a>.  Please follow Sun's instructions for installation 
+and configuration of JSSE.</p>
+<p>In either case, you will need to statically define a JSSE TLS provider.  In general, this 
+is the default installation.</p>
+<p>Once you've installed JSSE, James still needs to be configured to take advantage of the JSSE
+functionality.</p>
+</subsection>
+<subsection name="Certificate Keystores">
+<p>To use TLS/SSL inside James you will need a certificate keystore.</p>
+</subsection>
+<subsection name="Configuring the Server Socket Factory">
+<p>The out of the box configuration file contains a template for the SSL configuration in place.  Specifically, 
+in the sockets block, under the server-sockets element, there is a commented out factory with the 
+name "ssl".  The first step to configuring the server socket factory is uncommenting out this element.</p>
+<p>The factory element contains several children.  Of these, it should only be necessary to adjust two or three children.</p>
+<p>The required file element specifies the location of the keystore to be used by the factory.  This is specified
+as a file path using Unix-style formatting.  The path is taken to be relative to the apps/james/ subdirectory of
+the application installation directory unless an absolute path is specified.</p>
+<p>The password element should be set to the keystore password.  This password should have been specified 
+when the keystore was created, and it is required to open the keystore.  This value is required.</p>
+<p>Finally, it may be necessary to adjust the type element.  This element can take on any keystore type 
+supported by the JSSE provider being used (see the JSSE documentation for details).  The out of the box 
+configuration specifies JKS (Java Keystore).</p>
+<p>The remaining children should not need to be deleted or adjusted.</p>
+</subsection>
+<subsection name="Configuring a Service to Use TLS">
+<p>Each of the services - <a href="smtp_configuration_2_1.html">SMTP</a>, 
+<a href="pop3_configuration_2_1.html">POP3</a>, <a href="nntp_configuration_2_1.html">NNTP</a>, 
+and <a href="remotemanager_configuration_2_1.html">RemoteManager</a> - supports use of TLS.  Each of
+these services has an optional boolean configuration element <b>useTLS</b> which is used to toggle 
+use of TLS for the service.  When this value is set to true, that particular service will use the "ssl" 
+server socket factory to spawn server sockets.</p>
+</subsection>
+<subsection name="Verifying a TLS-enabled James Service">
+<p>After you've configured a particular service to use TLS/SSL connections, the service port 
+should no longer accept unencrypted TCP/IP connections.  This can be tested by using a telnet 
+client to directly connect to the service port.  The telnet connection should simply hang until 
+the client times out.</p>
+<p>
+To validate that the port is properly accepting SSL connections an SSL client can be used to 
+open a connection to the service port.  One such client is OpenSSL, available from the 
+<a href="http://www.openssl.org">OpenSSL web site</a>.  Follow the instructions provided with 
+the SSL client to create a connection to the service port.  Upon connection, the usual 
+service greeting should appear.</p>
+</subsection>
+</section>
+
+</body>
+</document>

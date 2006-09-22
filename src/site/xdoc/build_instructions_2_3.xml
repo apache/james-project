@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Building James</title>
+</properties>
+<body>
+<p>This step is not necessary to use the standard out of the box version of James.  A 
+pre-built binary version of James is available from the James download directory.  But 
+if you wish to customize the James source code, it will be necessary for you to build the 
+distribution yourself.
+</p>
+<section name="Getting the Source Code">
+<p>There are two ways to get the James source code.</p>
+<p>1. Download the source distribution - the source is available from the 
+<a href="http://james.apache.org/download.cgi">James release mirrors</a>.
+Simply choose the version of James you'd like to download, and pick the source distribution appropriate for your platform.
+</p>
+<p>2. Get the source code using SVN - this method gives you access to the cutting edge code 
+base.  Instructions on how to use SVN to get the James source code (the jakarta-james distribution) 
+can be found <a href="http://www.apache.org/dev/version-control.html">here</a>.
+James server repository is <a href="http://svn.apache.org/repos/asf/james/server/">here</a>.
+</p>
+</section>
+<section name="Required Tools">
+<p>To run the build you need two third-party tools.</p>
+<p>1. Java Development Kit - You must have a JDK of Java version 1.4 or higher installed to build the 
+James distribution.  The exact JDKs available depend on the platform.  A JDK must be downloaded and
+installed before the build can run.</p>
+<p>2. Ant - This is a Java-tailored, XML-configured, extensible build or make system. You need ant (1.6+) in order
+to build James. You can get the latest version of Ant <a href="http://ant.apache.org/">here</a>. </p>
+</section>
+<section name="Building the Distribution">
+<p>In the top level directory of the source distribution you can use  ant, simple set the environment variable
+JAVA_HOME to the base directory of the  JDK.  Then run the build with any of the following command line arguments:
+<ul>
+<li>clean - deletes the build directory, making the system ready for a clean build.</li>
+<li>compile - compiles the source code.</li>
+<li>dist - generates all the James distributions, packed.</li>
+<li>dist-lite - generates all the James distributions, unpacked.  This is the default argument.</li>
+<li>javadocs - builds the James javadocs.</li>
+<li>usage - prints out the usage instructions for the script.</li>
+<li>website - builds the entirety of the James website.</li>
+<li>xdocs - creates the documentaion for James.</li>
+<li>run-unit-tests - run unit tests for James.</li>
+</ul>
+</p>
+<p>All build products are output in the dist subdirectory of the James source distribution directory.  There 
+is also a build subdirectory of the James source distribution directory that is created during the build process.  Both 
+of these directories will be deleted if you run build with the clean argument.</p>
+<p> <strong>Warning!</strong> Any changes you've made in the 'dist' directory 
+will be lost after a recompilation. If you are making changes to the config.xml 
+or other files, we recommend you backup and then change the copies in src to 
+avoid losing work. </p>
+</section>
+
+</body>
+</document>

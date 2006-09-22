@@ -1,0 +1,706 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>ChangeLog</title>
+  <author email="site-dev@james.apache.org">James Project Web Team</author>
+ </properties>
+
+<body>
+
+<p>This is a living document that records what was done between releases.  As always, thank you to everyone who contributed code, documentation, bug reports, and feedback.
+</p>
+<section name="Version 3.0">
+<p>No release date. Planned changes:</p>
+<p>The latest list of changes is available in our <a href="https://issues.apache.org/jira/browse/JAMES?report=com.atlassian.jira.plugin.system.project:changelog-panel">JIRA changelog</a> and <a href="https://issues.apache.org/jira/browse/JAMES?report=com.atlassian.jira.plugin.system.project:roadmap-panel">JIRA roadmap</a>.  The changelog lists changes already in test builds, and the roadmap indicates what's in SVN or scheduled to be fixed by a certain release.</p>
+<ul>
+<li>All enhancements from James v2.3</li>
+<li>Mailet API improvements</li>
+<li>And <a href="http://wiki.apache.org/james/JamesV3">more</a></li>
+</ul>
+</section>
+<section name="Version 2.3.0rc1">
+<p>Released 25 July 2006</p>
+<p>Detail</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-566'>JAMES-566</a>] - Fastfail DNSRBL blacklisted messages are rejected even if the sender user is successfully SMTP AUTHenticated</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-570'>JAMES-570</a>] - James insert a Return-Path: null in outgoing email</li>
+</ul>
+<subsection name="Task"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-568'>JAMES-568</a>] - reorganize download area structure</li>
+</ul>
+</section>
+<section name="Version 2.3.0b3">
+<p>Released 15 July 2006</p>
+<p>Detail</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-554'>JAMES-554</a>] - Set the right svn property for excutable files</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-559'>JAMES-559</a>] - Message body get lost after call saveChanges() and move to other processor</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-560'>JAMES-560</a>] - SetMimeHeader not throw an MessagingException if needed config values missed</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-561'>JAMES-561</a>] - User aliasing does not work</li>
+</ul>
+</section>
+<section name="Version 2.3.0b2">
+<p>Unreleased</p>
+<p>Detail</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-527'>JAMES-527</a>] - data-source for default derby maildb is configured with a relative path</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-535'>JAMES-535</a>] - Denial of service (CPU consumption) via a long argument to the MAIL command.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-538'>JAMES-538</a>] - Original headers are lost when trying to alter headers of a cloned message</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-540'>JAMES-540</a>] - catch lifecycle problems for handlers</li>
+</ul>
+<subsection name="Improvement"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-553'>JAMES-553</a>] - Upgrade to Derby 10.1.3.1</li>
+</ul>
+<subsection name="New Feature"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-537'>JAMES-537</a>] - Add ConfigOption to disable the RemoteManager</li>
+</ul>
+<subsection name="Task"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-496'>JAMES-496</a>] - Add a default hardcoded configuration for the SMTPHandlerChain</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-529'>JAMES-529</a>] - Add a GenericAddFooter for use in AddFooter and CommandListservFooter</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-536'>JAMES-536</a>] - Decide what to do with repository implementations configured by default (db/dbfile/file)</li>
+</ul>
+</section>
+<section name="Version 2.3.0b1">
+<p>Released 9 June 2006</p>
+<p>Details</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-499'>JAMES-499</a>] - Inconsistent usage of the lastUpdated field for Mail objects</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-505'>JAMES-505</a>] - ClassCastException in UsersRepositoryAliasingForwarding using file based users store</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-512'>JAMES-512</a>] - OutOfMemoryError -- object not released.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-522'>JAMES-522</a>] - Having the ClamAVScan mailet configured, but clamd unavailable when JAMES starts, keeps JAMES from starting.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-524'>JAMES-524</a>] - James fails to create mysql tables with mysql-4.1.</li>
+</ul>
+                
+<subsection name="Task"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-513'>JAMES-513</a>] - Rename AddHeader and AddHeaderHandler</li>
+</ul>
+</section>
+<section name="Version 2.3.0a3">
+<p>Details</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-456'>JAMES-456</a>] - AddFooter mailet javax.mail.internet.ParseException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-474'>JAMES-474</a>] - NullPointerException and bodymessage lost with weird configurations in message spooling</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-489'>JAMES-489</a>] - ArrayIndexOutOfBoundsException in RemoteDelivery when an mail has errorstate and error_message 0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-490'>JAMES-490</a>] - Javamail 1.4 regression: SocketFetcher changed to require SocketFactory implementation</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-501'>JAMES-501</a>] - sendmail.py get not include in build</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-503'>JAMES-503</a>] - SpoolManager locking issues</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-504'>JAMES-504</a>] - RemoteDelivery threads do not unlock delayed mails</li>
+</ul>
+</section>
+<section name="Version 2.3.0a2">
+<p>Details</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-368'>JAMES-368</a>] - AddFooter couldn't process mails which MimeType is multipart/related</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-419'>JAMES-419</a>] - NPE during 8bit conversion of non-mime messages</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-434'>JAMES-434</a>] - NPE on empty sender and AUTHenticated user</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-443'>JAMES-443</a>] - AddFooter and Encoding issues</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-446'>JAMES-446</a>] - NPE while fetching mail (FetchMail)</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-447'>JAMES-447</a>] - ClassCastException when storing multipart message without Msg ID</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-452'>JAMES-452</a>] - Broken messages after passing james</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-455'>JAMES-455</a>] - AddFooter mailet throw UnsupportedEncodingException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-458'>JAMES-458</a>] - SSL not working in James 2.3.0a1</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-459'>JAMES-459</a>] - Incompatible/Duplicate excalibur-cli-1.0.jar library in classpath</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-460'>JAMES-460</a>] - Running James as an NT service</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-462'>JAMES-462</a>] - Error in message.getLineCount (Error using NotifyPostmaster with James 2.3)</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-466'>JAMES-466</a>] - java.sql.SQLException: Error reading from InputStream java.io.IOException in current trunk</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-467'>JAMES-467</a>] - corrupt messages in james trunk</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-470'>JAMES-470</a>] - DNSRBLHandler config error</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-473'>JAMES-473</a>] - AddHeaderHandler configure bug</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-475'>JAMES-475</a>] - SQLException on james trunk after build and without modifications of config.xml</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-476'>JAMES-476</a>] - NPE in RemoteDelivery</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-482'>JAMES-482</a>] - incorrect state on duplicate mail (LinearProcessor)</li>
+</ul>
+    
+<subsection name="Improvement"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-158'>JAMES-158</a>] - Stream body in JDBCMailRepository.store(Mail)</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-299'>JAMES-299</a>] - Support for SMTP auth to gateway server in RemoteDelivery mailet</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-371'>JAMES-371</a>] - Speed improvement in SpoolManager</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-438'>JAMES-438</a>] - add GenericMailet.getInitParameter(name,default)</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-440'>JAMES-440</a>] - Improve DBCP: provide more DBCP options, like removeAbandoned</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-441'>JAMES-441</a>] - Add an option to support aliases (CNAME) for MX records</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-445'>JAMES-445</a>] - Enforcement for HELO/EHLO commands before MAIL</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-450'>JAMES-450</a>] - "LocalUsers" user repository should be wired in the assembly and not hardcoded in components</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-469'>JAMES-469</a>] - Make SMTP message queuing configurable (as an Handler)</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-477'>JAMES-477</a>] - Configure option to disable heloEhloEnforcement to be compatible with james &lt; 2.3.0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-478'>JAMES-478</a>] - Only check against RBL if the client is not allowed to relay</li>
+</ul>
+    
+<subsection name="New Feature"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-427'>JAMES-427</a>] - [PATCH] Introduce Unit Testing</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-437'>JAMES-437</a>] - add failed recipient address to log when authorization fails</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-465'>JAMES-465</a>] - Check for valid sender domain in mail from</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-468'>JAMES-468</a>] - Limit MaxRcpt per Email</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-471'>JAMES-471</a>] - Tarpit support</li>
+</ul>
+        
+<subsection name="Task"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-416'>JAMES-416</a>] - Upgrade to javamail-1.3.3</li>
+</ul>
+        
+<subsection name="Wish"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-451'>JAMES-451</a>] - Check for valid domain in HELO</li>
+</ul>
+</section>
+<section name="Version 2.3.0a1">
+<p>Released 15 February 2006</p>
+<p>
+James 2.3.0a1 is "storage" compatible with 2.2.0 (It uses the same files/db formats of James 2.2.0). Configuration should be updated following this instructions. Mailets developed against 2.2.0 are not binary compatible with 2.3.0 but rebuilding mailets in 2.3.0a1 should be an easy task: just replace "Component"s with "Service"s and replace "MailStore" with "Store" and rebuild. Below are some highlights of features and changes already available:
+<ul>
+<li>Phoenix container upgraded to the latest trunk: better classpath management for mailets</li>
+<li>Derby support: also made it the default storage engine</li>
+<li>JavaMail 1.3.2 (not JavaMail 1.3.3 because of known bugs with Base64 encoding)</li>
+<li>Upgraded dependencies to the latest known stable releases (dnsjava, excalibur components, cornerstone, etc.)</li>
+<li>Removed FetchPop</li>
+<li>Command pattern for SMTPServer configuration (make it easier for developers to customize fastfail)</li>
+<li>Increased components granularity/flexibility: many top level components have been refactored to be more modular (look at the new assembly.xml)</li>
+<li>SMTP server now supports 8BITMIME, ENHANCEDSTATUSCODES, PIPELINING</li>
+<li>Introduced a few experimental S/MIME and Bayesian matcher/mailets</li>
+<li>Fixed more than 40 bugs against 2.2.0</li>
+<li>And much more!</li>
+</ul>
+</p>
+<p>Details</p>
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-138'>JAMES-138</a>] - Don't keep all mailboxes in-memory forever</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-152'>JAMES-152</a>] - When a Received header is invalid mail may be created with a null remote address and host name</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-154'>JAMES-154</a>] - fetchmail config. files not copied to .sar</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-237'>JAMES-237</a>] - J2 1.5'enum' is a keyword</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-250'>JAMES-250</a>] - fail to start if installed under a "bin" directory</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-264'>JAMES-264</a>] - mail list loop caused by using Return-Path</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-286'>JAMES-286</a>] - Exceeding maximum value with MAIL SIZE causes NullPointerException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-295'>JAMES-295</a>] - Missing sqlDefs wont be detected</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-296'>JAMES-296</a>] - James does not handle Source Routing</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-300'>JAMES-300</a>] - Fetchmail can't fetch mails</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-305'>JAMES-305</a>] - AttachmentFileNameIs never matches if the message is S/MIME signed</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-306'>JAMES-306</a>] - AttachmentFileNameIs may throw  UnsupportedEncodingException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-311'>JAMES-311</a>] - Nntp very picky with clients</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-312'>JAMES-312</a>] - AttachmentFileNameIs matcher may throw an Exception examining a multipart/alternative message</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-316'>JAMES-316</a>] - java.lang.ArrayIndexOutOfBoundsException from RemoteDelivery</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-317'>JAMES-317</a>] - FromProcessor doesn't delete, throws ClassCastException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-318'>JAMES-318</a>] - java.lang.NullPointerException when host is unknown</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-320'>JAMES-320</a>] - Some messages cause POP3 output stream to freeze on RETR.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-323'>JAMES-323</a>] - using toUppercase, toLowerCase, equalsIgnoreCase without specifying the locale is a bug</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-328'>JAMES-328</a>] - TOP &lt;msg&gt; 0 does not return a terminator on error</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-329'>JAMES-329</a>] - DefaultUsersJdbcRepository readUserFromResultSet incorrect</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-337'>JAMES-337</a>] - Exception when FromRepository tries to delete a message</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-343'>JAMES-343</a>] - James does not compile using Sun JDK 5.0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-356'>JAMES-356</a>] - MimeMessageWrapper does not handle multiline headers</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-359'>JAMES-359</a>] - remote address from Received header is not handled</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-361'>JAMES-361</a>] - DSNBounce often report the dsn Status 5.5.0 incorrectly</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-372'>JAMES-372</a>] - Inboxes deleted during OutOfMemoryError</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-378'>JAMES-378</a>] - DSNBounce creates not rfc1894 compliant notifications</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-379'>JAMES-379</a>] - MailImpl.duplicate() should also clone attributes and not only the container HashMap</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-380'>JAMES-380</a>] - ESMTP Compliance fix</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-383'>JAMES-383</a>] - new posts hanging</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-387'>JAMES-387</a>] - Exception in BayesianAnalysis</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-396'>JAMES-396</a>] - Wrong column order (IMHO) in primary key definition for SpoolRepositories.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-413'>JAMES-413</a>] - James does not resolve CNAME DNS registrations</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-417'>JAMES-417</a>] - ClassCastException handling the recipients after a DSNBounce</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-418'>JAMES-418</a>] - Loader uses wrong method to obtain class loader/doesn't set context class loader</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-420'>JAMES-420</a>] - Sometimes messages are delayed or stalled in the spool</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-421'>JAMES-421</a>] - MailImpls sharing MimeMessages / LinearProcessor not cloning it after a partial match.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-428'>JAMES-428</a>] - Deadlock in ServerConnection</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-430'>JAMES-430</a>] - MailImpl#writeContentTo leaks thread</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-431'>JAMES-431</a>] - Line ending and CRLF.CRLF issues in POP3 and SMTP</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-435'>JAMES-435</a>] - James Service Wrapper displays wrong James version</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-436'>JAMES-436</a>] - James trunk cannot be built with jdk1.4</li>
+</ul>
+    
+<subsection name="Improvement"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-270'>JAMES-270</a>] - Add MailAttributes to indicate when default values have been applied</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-303'>JAMES-303</a>] - AttachmentFileNameIs matcher should be able to analyze zip file attachments</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-321'>JAMES-321</a>] - Comments on configuri</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-333'>JAMES-333</a>] - Build Broken in HEAD revision</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-338'>JAMES-338</a>] - Upgrade to JavaMail 1.3.2</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-357'>JAMES-357</a>] - DSNBounce should be configured by default</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-360'>JAMES-360</a>] - Support for Additional "received for" headers: e.g. X-Envelope-To</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-363'>JAMES-363</a>] - Move PostmasterAlias from code to james-confix.xml</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-369'>JAMES-369</a>] - Always announce AUTH capability to clients</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-375'>JAMES-375</a>] - RFC 1854 - Command Pipelining support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-377'>JAMES-377</a>] - rfc2034 ENHANCEDSTATUSCODES compliance</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-388'>JAMES-388</a>] - Upgrade to dnsjava 2.0.0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-389'>JAMES-389</a>] - Invert "precompilation" logic for jdbc3</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-395'>JAMES-395</a>] - Support latest hsqldb in sqlResources.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-398'>JAMES-398</a>] - Add SMIME mailets for signature verification and message decrypt</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-399'>JAMES-399</a>] - Update bouncycastle to 129 and remove jdk13 compatibility</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-407'>JAMES-407</a>] - James inprotocol handling framework</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-410'>JAMES-410</a>] - Re-enable EHLO support in RemoteDelivery</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-411'>JAMES-411</a>] - update Mailet's Mail to support most of the current james mailets</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-412'>JAMES-412</a>] - Increase James component granularity / flexibility</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-414'>JAMES-414</a>] - Add more flexibility to LocalDelivery</li>
+</ul>
+    
+<subsection name="New Feature"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-257'>JAMES-257</a>] - S/MIME Matchers/Mailets</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-258'>JAMES-258</a>] - Add Bayesian Filtering</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-381'>JAMES-381</a>] - Configurable RBL support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-390'>JAMES-390</a>] - Add derby support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-423'>JAMES-423</a>] - Give the remote manager a service promt</li>
+</ul>
+        
+<subsection name="Task"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-149'>JAMES-149</a>] - Add soft-fail to unresolved received from domains</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-190'>JAMES-190</a>] - Apache license 2.0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-391'>JAMES-391</a>] - Move "candidates" libraries to the official lib / remove unused libraries</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-392'>JAMES-392</a>] - Resolve deprecation use from MailetAPI for the next release</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-393'>JAMES-393</a>] - Use Derby and db providers by default instead of file repositories.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-394'>JAMES-394</a>] - Remove OLD mm.mysql driver (not compatible with newer MySQL db)</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-400'>JAMES-400</a>] - Move previous SMIME matcher/mailets to the new "smime" subpackages</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-406'>JAMES-406</a>] - Investigate about libraries upgradability (cornerstone/excalibur/avalon/phoenix)</li>
+</ul>
+
+</section>
+<section name="Version 2.2.0">
+<p>Released 15 June 2004</p>
+<p>
+Below are some highlights of features and changes already available:
+<ul>
+<li>mbox support</li>
+<li>Mail attributes</li>
+<li>JavaMail 1.3.1</li>
+<li>dnsjava 1.6.2, includes auto-discover DNS servers</li>
+<li>FetchMAIL, deprecating FetchPop</li>
+<li>Quotas</li>
+<li>Extensive message redirect system</li>
+<li>Improved network address handling</li>
+<li>Multiple remote delivery gateway servers</li>
+<li>Many performance improvements</li>
+<li>Many new matchers and mailets</li>
+<li>Many bug fixes</li>
+<li>And much more!</li>
+</ul>
+</p>
+<p>Details</p>
+
+<subsection name="Bug"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-9'>JAMES-9</a>] - JamesSpoolManager doesn't shutdown gracefully</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-62'>JAMES-62</a>] - Spooler loops and add message many times</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-72'>JAMES-72</a>] - SMTP Handler DATA buffering issue</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-96'>JAMES-96</a>] - Mailet container should not trap exceptions in init()</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-109'>JAMES-109</a>] - run.bat created wrong temp dir</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-128'>JAMES-128</a>] - Fix problem when invalid domain name is passed to NetMatcher</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-133'>JAMES-133</a>] - NullPointerException at org.apache.james.mailrepository.AvalonMailRepository.store</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-135'>JAMES-135</a>] - NPE on nonexistant mailing-list repository</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-142'>JAMES-142</a>] - RemoteDelivery only tries one of multiple A record entries.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-144'>JAMES-144</a>] - POP3Handler breaks with message numbers out of bounds</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-147'>JAMES-147</a>] - Update libraries</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-150'>JAMES-150</a>] - NullPointer Exception when mail does not contain any Received: headers</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-151'>JAMES-151</a>] - connectionLimit on services ignored</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-152'>JAMES-152</a>] - When a Received header is invalid mail may be created with a null remote address and host name</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-153'>JAMES-153</a>] - Looping MessageException causes system stall</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-156'>JAMES-156</a>] - AbstractStorageQuota matcher subclasses never match when recipient alias is used</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-157'>JAMES-157</a>] - AbstractQuotaMatcher subclasses should not match when reverse path is NULL</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-163'>JAMES-163</a>] - RemoteManager buffering issues</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-167'>JAMES-167</a>] - Remote delivery counting retries wrong</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-170'>JAMES-170</a>] - Postmaster address should be case insensitive</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-176'>JAMES-176</a>] - MySQL query not using index for string comparison</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-178'>JAMES-178</a>] - MailAddress can spit OutOfBoundsException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-182'>JAMES-182</a>] - Fix the TMPDIR path under windows/cygwin use of script</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-187'>JAMES-187</a>] - Bug with DNS entries with 0 TTL</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-189'>JAMES-189</a>] - Remote delivery sometimes not trying all MX records</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-191'>JAMES-191</a>] - HasAttachment has false positives and negatives</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-192'>JAMES-192</a>] - MSSQL mail table create bug</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-193'>JAMES-193</a>] - MailetConfig does not implement getInitParameterNames()</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-194'>JAMES-194</a>] - DNS occassional null pointer</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-199'>JAMES-199</a>] - Bounce not using null sender</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-200'>JAMES-200</a>] - MailetConfig throws exception for empty getInitAttribute</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-202'>JAMES-202</a>] - Proper POP3 response to QUIT</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-203'>JAMES-203</a>] - File protocol URL with JDK 1.4.2</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-207'>JAMES-207</a>] - Exception handling when fetching message, stranding connection</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-208'>JAMES-208</a>] - Regex code is not thread-safe</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-215'>JAMES-215</a>] - Javadoc corrections in mailet API</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-230'>JAMES-230</a>] - File stream repository may strand resource</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-233'>JAMES-233</a>] - SMTP AUTH PLAIN doesn't work</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-236'>JAMES-236</a>] - java.lang.NullPointerException iterating over SMTP hosts</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-238'>JAMES-238</a>] - Missing Date: header with CommandListserv</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-239'>JAMES-239</a>] - CommandListserv corrupts Subject: header</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-240'>JAMES-240</a>] - LinearProcessor.verifyMailAddresses should  catch java.lang.ArrayStoreException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-243'>JAMES-243</a>] - FromRepository does not reset mail state</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-247'>JAMES-247</a>] - James Does Not Work With Oracle DB For Spool Repository</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-249'>JAMES-249</a>] - getSMTPHostAddresses doesn't resolve when MX RHS is CNAME</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-251'>JAMES-251</a>] - ClassCastException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-253'>JAMES-253</a>] - deadlock in mordred connection pool</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-255'>JAMES-255</a>] - SMTPHandler logs exceptions that abort the connection only at DEBUG level</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-261'>JAMES-261</a>] - Text error in config.xml</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-262'>JAMES-262</a>] - Invalid link in james-fetchmail.xml</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-265'>JAMES-265</a>] - org.xbill.DNS.Address not resolving addresses in some configurations</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-267'>JAMES-267</a>] - NullPointerException in Fetchmail when there are no From: or Sender: headers</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-268'>JAMES-268</a>] - Spooler.accept(...) can leave locked messages and leak memory</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-269'>JAMES-269</a>] - AvalonMailRepository emits spurious "so we're deleting it... good riddance" messages due to synchronization</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-271'>JAMES-271</a>] - can't  resolve when MX record direct an ip</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-276'>JAMES-276</a>] - The url for the ENTITY declarations in config.xml should be just "../conf/file-name"</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-278'>JAMES-278</a>] - Remove references to Jakarta where no longer accurate</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-280'>JAMES-280</a>] - DNSServer does not cleanup DNS cache cleaner thread.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-281'>JAMES-281</a>] - Return-Path twice in header</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-282'>JAMES-282</a>] - Partial message may be delivered if client disconnects</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-294'>JAMES-294</a>] - Database Pool becomes exhausted after a short time when heavily polled</li>
+</ul>
+    
+<subsection name="Improvement"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-99'>JAMES-99</a>] - RFC1894 format notification</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-161'>JAMES-161</a>] - Quota framework</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-162'>JAMES-162</a>] - Partial send support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-169'>JAMES-169</a>] - Network-based authorization for SMTP AUTH</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-171'>JAMES-171</a>] - Improve support for character encoded subjects in mailing lists</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-172'>JAMES-172</a>] - New thread pool implementation</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-173'>JAMES-173</a>] - Control number of rows returned in JDBCSpoolRepository</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-174'>JAMES-174</a>] - Improve performance on message size</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-177'>JAMES-177</a>] - DNS settings autodiscovery</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-179'>JAMES-179</a>] - Reduce memory footprint of sql resouces</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-180'>JAMES-180</a>] - Faster listing usernames</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-181'>JAMES-181</a>] - Better CRLF handling in protocols</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-183'>JAMES-183</a>] - Overhauled Redirect mailet</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-184'>JAMES-184</a>] - New network matcher classes</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-188'>JAMES-188</a>] - Improved error handling in processors</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-198'>JAMES-198</a>] - New listserv code.</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-204'>JAMES-204</a>] - Upgrade to JavaMail 1.3.1</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-205'>JAMES-205</a>] - New database connection pooler</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-210'>JAMES-210</a>] - Upgrade to dnsjava 1.4.0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-212'>JAMES-212</a>] - Batch delete from mail repository</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-214'>JAMES-214</a>] - Better PID handling</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-217'>JAMES-217</a>] - Upgrade to dnsjava 1.4.1</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-218'>JAMES-218</a>] - showalias and showforwarding commands</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-221'>JAMES-221</a>] - SenderInFakeDomain network setting</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-222'>JAMES-222</a>] - Make file mail repository sort FIFO</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-225'>JAMES-225</a>] - Upgrade to dnsjava 1.4.2</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-226'>JAMES-226</a>] - Simplify connection tracking</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-227'>JAMES-227</a>] - Upgrade to dnsjava 1.4.3</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-228'>JAMES-228</a>] - Upgrade to DBCP 1.1</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-232'>JAMES-232</a>] - JMX exposes more server information</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-234'>JAMES-234</a>] - Improved bounce from RemoteDelivery</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-283'>JAMES-283</a>] - James should use default backLog value when creating a ServerSocket</li>
+</ul>
+    
+<subsection name="New Feature"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-164'>JAMES-164</a>] - Matcher: AttachmentFileNameIs</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-165'>JAMES-165</a>] - Matcher: RecipientIs with regex support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-166'>JAMES-166</a>] - Remote delivery support multiple gateway servers</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-168'>JAMES-168</a>] - Fast-fail for relay attempts</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-175'>JAMES-175</a>] - Mailet class reloading</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-185'>JAMES-185</a>] - SenderHostIs matcher</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-186'>JAMES-186</a>] - Optional newsgroup filtering</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-195'>JAMES-195</a>] - Matcher: CompareNumericHeaderValue</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-196'>JAMES-196</a>] - SenderIsRegex</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-197'>JAMES-197</a>] - SenderIsNull</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-201'>JAMES-201</a>] - Mail attribute support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-206'>JAMES-206</a>] - SMTPAuthSuccessful and SMTPAuthUserIs</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-209'>JAMES-209</a>] - FetchMAIL service</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-211'>JAMES-211</a>] - mbox support</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-216'>JAMES-216</a>] - HasMailAttributeWithValue</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-220'>JAMES-220</a>] - FromRepository to reprocess emails</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-231'>JAMES-231</a>] - Flexible retry schedule for RemoteDelivery</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-279'>JAMES-279</a>] - DSNBounce mailet</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-289'>JAMES-289</a>] - Ingres db repository support should be added</li>
+</ul>
+        
+<subsection name="Task"></subsection>
+<ul>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-149'>JAMES-149</a>] - Add soft-fail to unresolved received from domains</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-190'>JAMES-190</a>] - Apache license 2.0</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-213'>JAMES-213</a>] - Mail repository throw MessagingException instead of RuntimeException</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-223'>JAMES-223</a>] - Remove stack traces to console</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-252'>JAMES-252</a>] - Upgrade to dnsjava 1.6.2</li>
+<li>[<a href='http://issues.apache.org/jira/browse/JAMES-277'>JAMES-277</a>] - Generate mailet.jar as separate from core james.jar</li>
+</ul>
+
+</section>
+
+<section name="Version 2.1.3">
+<p>Released 12 May 2003</p>
+<ul>
+<li>[NjB] (code) Fixed stream handling in MimeMessageWrapper to address a JavaMail issue introduced in v2.1.2</li>
+<li>[NjB] (code) Fixes to AddFooter for text/html parts</li>
+<li>[MI,PG,NjB] (code) Fixes to AddFooter for MimeMultipart messages</li>
+<li>[NjB] (code) Changed ExtraDotOutputStream to enforce RFC 2821 #2.3.7</li>
+<li>[NjB] (code) Corrected allowable characters for localpart of address</li>
+<li>[NjB] (update) Removed generated files from source distributions</li>
+<li>[PG]  (code) Corrrected handling of NNTP messages to avoid character encoding issues</li>
+<li>[NjB] (code) James.getId bug - courtesy of Sid Stuart</li>
+<li>[KS}  (code) Added NNTP linecounting support</li>
+<li>[KS}  (code) Fixed NNTP authentication</li>
+<li>[HJ]  (code) Fixed bug 18726 (optional socket factory to specify outgoing bind address)</li>
+<li>[NjB] (code) Fixed bug 19418 (changed notify/wait code in spooler)</li>
+<li>[NjB] (code) Fixed bug 18307 (NotifySender headers)</li>
+<li>[NjB] (code) Fixed bug with non-InternetAddress addresses  - courtesy of Steen Jansdal</li>
+<li>[NjB] (code) Fixed bug in NotifySender with complex MIME messages</li>
+<li>[SK, NjB] (code) Added Delivered-To header in LocalDelivery</li>
+<li>[NjB] (code) Fixed Bug 15428 - check for valid user before attempting removal</li>
+</ul>
+</section>
+
+<section name="Version 2.1.2">
+<p>Released 21 February 2003</p>
+<ul>
+<li>[NjB] (code) Fixed handling of permanent/temporary errors in RemoteDelivery</li>
+<li>[NjB] (code) Fixed bug where connect error could cause outgoing mail to be discarded.</li>
+<li>[PG]  (code) Fixed the bounce() method to add the original message as a message MIME type with an attachment disposition.</li>
+</ul>
+</section>
+
+<section name="Version 2.1.1">
+<p>Released 11 February 2003</p>
+<ul>
+<li>[KL] (code) SMTP AUTH compatibility change</li>
+<li>[NjB] (code) Changed MimeMessageWrapper to use the raw stream when possible</li>
+<li>[NjB] (code) Fixed synchronization bug in AvalonMailRepository</li>
+<li>[NjB] (update) Updated Avalon LogKit</li>
+<li>[NjB] (code) Infinite loops are interruptable</li>
+<li>[HB, NjB] (code) Fixed NNTP crossposting</li>
+<li>[NjB] (code) Fixed synchronizaion bug in file repository</li>
+<li>[NjB] (code) Enabled log rotation</li>
+<li>[NjB] (doc) Fixed broken links</li>
+<li>[DA, NjB]  (update) Updated JavaMail and JAF</li>
+<li>[NjB] (code) Updated sqlResources.xml for PostgreSQL with patch from simon </li>
+<li>[NjB] (code) Reorder primary key for JDBCMailRepository to optimize queries using just the repository name.</li>
+<li>[PG,HB]  (code) NNTP dot stuffing fix</li>
+<li>[PG]  (code) NNTP OVER/XOVER fix</li>
+<li>[NjB] (code) Experimental RegexMatcher classes</li>
+</ul>
+</section>
+
+<section name="Version 2.1">
+<p>Released 29 December 2002</p>
+<ul>
+<li>(AK) (doc) Added LDAP RFCs.</li>
+<li>(PG) (code) Fixed platform-specific performance issue with the POP3 server delivery.</li>
+<li>(PG) (code) Fixed bug where RemoteDelivery did not iterate through all MX records on connect failure.</li>
+<li>(PG) (update) Updated James to use the Avalon Framework version 4.1.3.</li>
+<li>(PG) (update) Updated James to use Avalon Phoenix version 4.0.1.</li>
+<li>(PG) (doc) Added extensive commenting - specifically Javadoced the vast majority of methods.</li>
+<li>(PG,AI) (code) Added a James specific abstract Service implementation.  Unified configuration, logging, as well as enabling the use of thread pools and socket types on a per service basis.</li>
+<li>(NjB) (code) Corrected JDBCMailRepository to obey stated contract.</li>
+<li>(NjB,PG) (code) Adjusted service handlers to flush socket output streams to ensure prompt client interactions.</li>
+<li>(PG) (code) Adjusted the NNTP server so that it better conforms to the NNTP specification (see bug #13564 for details).</li>
+<li>(PG) (code) Corrected a typo that had been disabling NNTP using SSL functionality.</li>
+<li>(PG) (code) Corrected an architectural flaw in the NNTP server implemenation that disabled NNTP authentication.</li>
+<li>(NjB) (code) Fixed a bug in the GenericListserv subject normalization.  Neatened the code to make later modifications easier.</li>
+<li>(BW) (code) Fixed a bug in the RemoteDelivery mailet that caused the mailet to unnecessarily split the recipient list when using a gateway.</li>
+<li>(NjB,PG) (code) Added object pooling for service handlers to substantially improve performance.</li>
+<li>(AI,PG) (code) Added a new Watchdog interface to effectively support connection timeouts.  An implementation of the interface was added that uses a second thread per connection to ensure timeouts.</li>
+<li>(NjB,PG) (code) Resolved a memory leak in the source - a list of files to be deleted was being maintained that was unnecessary.  The file to be deleted is now deleted immediately after it is no longer needed.</li>
+<li>(PG) (code) Changed the code to ensure that all thread pool threads are returned to the thread pool in a non-interrupted state.</li>
+<li>(PG) (code) Centralized the file/directory lookup code inside James and fixed it so that it handled absolute URLs properly.</li>
+<li>(AI,PG) (code) Added a more substantial connection manager.  This connection manager allows us to limit the maximum number of client connections per server socket.  It also allows us to set the socket timeout for client sockets explicitly.</li>
+<li>(DA,PG) (code) Added enabled/disabled switch to main server components.</li>
+<li>(DA) (code) Added new FetchPOP functionality, to allow James to consolidate mail from a number of POP3 servers in a single server.</li>
+<li>(DA) (doc) Added documentation to demonstrate how to configure James as a universal sendmail relay.</li>
+<li>(NjB) (code) Made subject prefix bracketing in GenericListserv configurable.</li>
+<li>(NjB) (code) Added the HasHeader matcher.</li>
+<li>(NjB) (code) Added the JDBCVirtualUserTable mailet.</li>
+<li>(NjB) (code) Enhanced the RemoteAddrInNetwork and RemoteAddrNotInNetwork to accept domain names.</li>
+<li>(PG) (update) Fixed the log configuration so that AM and PM entries are properly distinguishable by default.</li>
+<li>(NjB) (code) Added a configurable debug parameter to several mailets to allow a more granular control of debug logging.</li>
+<li>(NjB) (code) Added the Habeas warrant mailet and matcher.</li>
+<li>(NjB,PG) (update) Changed the server configuration to default log at INFO level.  Adjusted logging statements so that they are log level appropriate.</li>
+<li>(PG) (code) Fixed a critical bug in the dbfile implementation.  Fixed repository implementation so that db repositories do not behave as dbfile repositories.</li>
+<li>(NjB) (code) Fixed MimeMessageWrapper so that mail headers are properly updated when headers are set on the wrapper.</li>
+<li>(PG) (code) Added UNSETFORWARDING functionality to the RemoteManager.</li>
+<li>(PG) (code) Closed an open relay hole involving an empty Sender header.</li>
+<li>(PG) (code) Fixed Oracle specific bug that limited us to messages of 4K or less in the repository.</li>
+<li>(SS,NjB,PG) (code) Ensured that a number of database and I/O resources are properly closed under all conditions.</li>
+<li>(NjB) (code) Changed default column sizes for JDBC repositories to be RFC compliant.</li>
+<li>(NjB) (code) Fixed exception handling in JdbcDataSource when getConnection() fails.</li>
+<li>(PG) (code) Fixed NotifySender/NotifyPostmaster to be more robust against ill-formed headers in the email being forwarded.</li>
+<li>(SD,SS3) (code) Made a substantial performance enhancement to the LinearProcessor such that mail changes are not persisted to the store until necessary.  Also reduced synchronization scope.</li>
+<li>(PG) (code) Converted String concatenation to the use of StringBuffers throughout the code base.</li>
+<li>(PG) (code) Fixed date formatting to be thread safe.</li>
+<li>(NjB) (code) Fixed InSpammerBlacklist</li>
+<li>(PH) (update) Upgrade James to the Avalon 4.0/4.1 actual releases.</li>
+<li>(NjB,SK) (update) Fixed MailImpl.duplicate to include remote addr, remote host, and last updated fields.</li>
+<li>(CB2) (update) Fixed NNTP server bug where the NEXT command was not being properly dispatched and handled.</li>
+<li>(SK) (update) Cleaned up error handling in LocalDelivery.</li>
+<li>(SS2) (code) Changed the default configuration so that log files are appending by default.</li>
+<li>(SS2) (update) Reported the lack of in.close in MimeMessageSource.getSize(), which was causing stranded file handles, especially during large POP3 sessions.</li>
+<li>(AI) (update) Matcher config implementation object now properly set with matcher name.</li>
+</ul>
+</section>
+<section name="Version 2.0a3">
+<p>Released 20 April 2002</p>
+<ul>
+<li>(DA) (update) Fixed POP3 message size bug that prevented retrieval</li>
+<li>(SK) (code) FileRepository should no longer produce 0-byte files.  It checks that the source is different than the target, or confirm it is in memory before saving to disk.</li>
+<li>(SK) (update) Removed check that connection is not closed before returning it.  The pooler is already confirming the connection was open before putting it in the pool, so this was a big unnecessary performance drain.</li>
+<li>(SK) (update) Fixed the delay in the JDBC mail spool repository as it wasn't rechecking correctly after it emptied the spool.</li>
+<li>(SS2) (code) Added dot-stuffing in POP3 message delivery to fix problems with Netscape and other mail clients and to comply with RFC.</li>
+<li>(JK) (code) Fixed bounce method to use the Return-Path header if there is one.</li>
+<li>(SK) (update) Improved handling of delivery error messages when the remote server returns a specific 5XY complaint.</li>
+<li>(SK) (code) Better diagnosing of temporary vs. permanent delivery exceptions, most notably "Could not connect to host.." is a temporary exception.</li>
+<li>(SK) (code) Remote SMTP delivery now sets the remote hostname using the servername configuration setting (uses the first one).</li>
+<li>(SK) (update) Have it cleanly (not print stack trace) if the remote manager handler has io/socket exceptions.</li>
+<li>(SK) (update) Support in "IsSenderInFakeDomain" to handle null senders properly (was producing a false positive in this case).</li>
+<li>(PH) (update) Added releaseConnection method to BaseConnectionHandler as per Paul H's bug report.</li>
+<li>(SK) (update) Reordered 250 SMTP responses to fix Mac client issue per Giles Chanot's bug report.</li>
+</ul>
+</section>
+
+<section name="Version 2.0a2">
+<p>Released 1 December 2001</p>
+<ul>
+<li>(*) (update) Moved to Avalon snapshot of November 2001</li>
+<li>(DA) (update) Fixed POP3 message size bug that prevented retrieval</li>
+<li>(SK) (code) Added Mordred database connection pooling.  It is the marriage of Town's db pooling code and Excalibur's configuration.</li>
+<li>(SK) (update) Changed MailImpl.getSize() to getMessageSize() and from int to long.</li>
+<li>(SK) (docs) Small updates to documentation</li>
+<li>(SK) (code) Added JDBCListserv, straight JDBC implementation of old TownListserv that extends GenericListserv</li>
+<li>(SK) (update) Patched bug in GenericListserv for when subject was null</li>
+<li>(SK) (update) Got mailets/matchers to load from something besides james.bar</li>
+<li>(SK) (code) Added scheduler notification during SMTP DATA reception and POP3 RETR sending so the connection handler doesn't time out connection while data is being transfered.</li>
+<li>(SK) (code) Support &lt;gatewayPort&gt; setting on RemoteDelivery to send all messages to a non-port 25 SMTP server.  Only makes sense when &lt;gateway&gt; is also set.</li>
+<li>(EP) (update) Used getAsBooleanValue in various configuration methods to make code more readable.</li>
+<li>(SS) (update) Added support for Oracle database for mail and spool JDBC repositories.</li>
+</ul>
+</section>
+
+<section name="Version 2.0a1">
+<p>Released 26 October 2001</p>
+<ul>
+<li>(CB,*) (update) Moved to Avalon snapshot of 9-25-2001.</li>
+<li>(HB) (code) Added NNTP service.</li>
+<li>(SK) (update) Greatly improved multi-threading support for repositories and SMTP reception.</li>
+<li>(JB) (code) SMTP AUTH support</li>
+<li>(SK) (update) Support null senders, i.e., MAIL RCPT: &lt;&gt;.</li>
+<li>(DD,SK) (update) Converted Town mail and user repositories to straight JDBC ones, using Excalibur connection pooling and configurable SQL statements per DB.</li>
+<li>(SK) (update) Messages are no longer loaded until absolutely necessary.</li>
+<li>(GB) (update) Fixed exception being thrown on MailAddress parsing.</li>
+<li>(CB) (update) Rebuilt CVS tree after hack and moved src to src/java.</li>
+<li>(DA) (code) New extensible, flexible Redirect mailet that handles notifications and forwarding.</li>
+<li>(SK) (code) JDBC Alias mailet.</li>
+<li>(various) (docs) Added a whole bunch of related RFCs to the webdocs.</li>
+<li>(DA) (update) Add date to bounced emails.</li>
+<li>(HB) (update) Updated DNS library and started process to move it to Avalon service.</li>
+<li>(various) (update) More checks to fix "stuck file" problem in Avalon mail repository.</li>
+<li>(MP) (code) Limit the size of a message on reception (rather than waiting until processors).</li>
+<li>(SK) (update) Fixed dot-stuffing in SMTP reception/delivery.</li>
+<li>(SK) (update) Improved how Return-Path and Received headers are generated during SMTP reception.</li>
+<li>(SK) (update) More efficient remote delivery code, better error messages, and gateway parameter to route all messages to a single target.</li>
+<li>(DA) (update) Fixed timezone bug in RFC822DateFormat</li>
+<li>(MP) (update) Patch to support username@[yyy.yyy.yyy.yyy] addresses</li>
+<li>(GB) (update) Patch to fix size calculation from headers</li>
+<li>(RS) (image) Contributed James logo</li>
+<li>(SK) (update) Changed MailetException to extend MessagingException, and Mailet.init() throws MailetException.</li>
+</ul>
+</section>
+
+<section name="Version 1.2.1">
+<p>Released 13 December 2000</p>
+<ul>
+<li>(SK,SR,CB) (update) Fix for "stuck file" problem in Avalon mail repository.</li>
+<li>(SK) (design) Made usernames case insensitive on MailAddress</li>
+<li>(SK) (code) Complete rewrite of processor code to send through Mail object through matchers and mailets.  Design might be less efficient but easier to understand and more flexible for later improvements to API.  Also no longer "loses" IP address and error message information when Mail object go from one processor/state to the next (ToProcessor changed as well now that processor works).</li>
+<li>(SK) (update) Updated to JavaMail 1.2</li>
+<li>(SK) (update) Changed instantiation of recipients on a Mail object to a Set (HashSet) whenever possible in preparation for the API having this change.</li>
+<li>(IS) (code) Added UsersTownRepository to let you maintain user lists in a database</li>
+<li>(SR) (update) In POP3 handler, properly includes headers in calculating size of messages.</li>
+<li>(SK) (update) Removed "synchronized" attribute on many methods in town and file spool repositories.  Should significantly boost performance and multithreaded capabilities.</li>
+<li>(SK) (code) Optimization of town mail repository, introduction of JamesMimeMessageInputStream and the James MimeMessage.  Should significantly reduce the number of unnecessary parses or saves on MimeMessages in server.</li>
+<li>(SR) (update) Properly calculates hashCode for MailAddress so duplicates do not exist in Hashmaps</li>
+<li>(SR) (update) Hardcoded serialVerUID on MailAddress and MailImpl to that of James 1.2 release so future releases can continue to use mail stored in earlier releases.</li>
+<li>(IS) (update) Added ability on NotifySender and NotifyPostmaster to attach informative notice.</li>
+<li>(SK) (update) GenericListservManager now requires existsAddress() which it uses to prevent someone already on the list from subscribing or someone not on the list from removing themselves.</li>
+<li>(SK) (update) Changed User repository for file to *always* end the destination with a File.separator.  Otherwise if people mixed usage of this, it would crash the repositories with confusing error messages.  Child repositories were already properly created with a terminating File.separator.</li>
+<li>(SK) (code) New matcher: IsSingleRecipient</li>
+<li>(SK) (code) Added spam blacklist checking for 3 spam blacklists that make this available in a simple DNS lookup check.  All free services through mail-abuse.org.  Added to default configuration in config.xml</li>
+<li>(PU) (code) Added first testing program.  This would recreate file stuck problem.  Would be good to build collection of testing utilities in this new package.</li>
+<li>(SK) (docs) Documented what all the jars are in the lib directory (what they're called, where they're from)</li>
+</ul>
+</section>
+
+<section name="Version 1.2">
+<p>Released 16 October 2000</p>
+<ul>
+<li>(SK) (design) Abstracted mailet API to be Avalon (implementation) independent</li>
+<li>(CB) (code) Abstracted mail repository in JAMES/Avalon to allow more varied implementations.</li>
+<li>(SK) (code) Database implementations of mail repositories</li>
+<li>(SK) (code) Changed remote delivery to use an outgoing spool with a specified number of delivery threads</li>
+<li>(CB) (code) Experimental implementation of LDAP user manager</li>
+<li>(SK) (update) Reworked mailets and matchers to fit new API and added many more classes</li>
+<li>(CB, SK) (update) Fixed some bugs in POP3 server</li>
+<li>(CB) (update) Added full TLS support in POP3 (POP3S)</li>
+<li>(SK) (update) Fixed sorting of MX records so it attempts delivery in correct order</li>
+<li>(SK) (update) Changed remote manager to not allow a login if an admin account's password is empty,
+    and sets the root account's password empty by default (so you have to set one... prevents someone
+    from knowing the password to your system out of the box)</li>
+</ul>
+</section>
+<section name="Version 1.1">
+<p>Release 27 July 2000</p>
+<ul>
+<li>(??) (code) Unknown changes</li>
+<li>(SK) (code) Made DNS functionality a separate block</li>
+</ul>
+</section>
+
+<section name="Version 1.0">
+<p>Released 26 February 2000</p>
+<ul>
+<li>(SK, FB) (code) Added DNS stuff to remote delivery.</li>
+<li>(FB) (code) Add some autodetect support for easier configuration.</li>
+<li>(FB) (code) Add support for Mailet.</li>
+<li>(FB) (update) Add Mailet interface draft.</li>
+</ul>
+</section>
+
+<section name="Version 0.9.5">
+<p>Released early 2000</p>
+<ul>
+<li>(FB) (update) Split the SMTP Server in a protocol handler and a MailServer available to
+    all Avalon blocks.</li>
+<li>(FB) (update) Tune MessageContainer class.</li>
+</ul>
+</section>
+
+<section name="Version 0.9-dev">
+<p>Unknown release date</p>
+<ul>
+<li>(FB) (update) Based on much code from Serge Knystautas first implementation of JAMES on
+    top of the Avalon framework.</li>
+</ul>
+</section>
+
+<section name="Contributors">
+<p>Check out our <a href="weare.html">Who We Are</a> page to see who to thank.</p>
+</section>
+</body>
+</document>
+

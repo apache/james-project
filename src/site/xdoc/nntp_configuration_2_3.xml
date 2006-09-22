@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Configuring the NNTP Service</title>
+ </properties>
+
+<body>
+<section name="NNTP Configuration">
+<p>The NNTP service is controlled by a two configuration blocks in the config.xml.  These are the nntpserver block and the nntp-repository block.</p>
+<subsection name="The nntpserver block">
+<p>The nntpserver tag defines the boundaries of the configuration block.  It encloses 
+much of the relevant configuration for the NNTP server.</p>
+
+<p>This tag has an optional boolean attribute - <strong>enabled</strong> - that defines whether the service is active or not.  The value defaults to "true" if
+not present.</p>
+<p>The standard children of the nntpserver tag are:</p>
+<ul>
+<li><strong>port</strong> - This is an optional integer value.  This value is the port on which this NNTP server is configured 
+to listen.If the tag or value is omitted, the value will default to the standard NNTP port, 119.</li>
+<li><strong>bind</strong> - This is an optional value.  If present, this value is a string describing 
+the IP address to which this service should be bound.  If the tag or value is absent then the service 
+will bind to all network interfaces for the machine.</li>
+<li><strong>useTLS</strong> - This is an optional boolean value.  If this value is true, then the "ssl"
+server socket factory is used to generate the server socket for this service.  If it is false, the 
+"plain" server socket factory is used.  In either case this behavior is overridden by the serverSocketType 
+tag which is described under the expert configuration options.</li>
+<li><strong>handler</strong> - This is an artifact preserved for backwards compatibility.  This tag 
+was used to group related parameters.  It should disappear in future versions.</li>
+<ul>
+<li><strong>helloName</strong> - This is a required tag with an optional body that defines the server name 
+used in the initial service greeting.  The tag may have an optional attribute - <strong>autodetect</strong>.  If 
+the autodetect attribute is present and true, the service will use the local hostname
+returned by the Java libraries.  If autodetect is absent or false, the body of the tag will be used.  In
+this case, if no body is present, the value "localhost" will be used.</li>
+<li><strong>connectionTimeout</strong> - This is an optional tag with a non-negative integer body.  </li>
+<li><strong>authRequired</strong> - This is an optional tag with a boolean body.  If true, then the server will 
+require authentication before allowing the client to view news articles.  If this tag is absent, or the value 
+is false then the client will not be prompted for authentication.  Only simple user/password authentication is
+supported at this time.</li>
+</ul>
+</ul>
+<p>There are a few additional children of the nntpserver tag that are appropriate for advanced 
+configurations.  These should only be used by expert administrators.  All tags in this group are optional.</p>
+<ul>
+<li><strong>serverSocketFactory</strong> - This is an optional tag with a string body.  If the tag is present, 
+the body must be the name of one of the server socket factories specified in the socket manager block.  Any other 
+value will result in an error.  If present, this tag overrides the useTLS tag.</li>
+<li><strong>threadGroup</strong> - This is an optional tag with a string body.  If the tag is present, 
+the body must be the name of one of the thread groups specified in the thread manager block.  Any other 
+value will result in an error.  This tag is best used to fine tune thread allocation between the services.</li>
+<li><strong>connectionLimit</strong> - The connectionLimit parameter specifies the maximum number of client 
+connections that this service will allow.  If no value is specified, the value defaults to that specified in 
+the connectionmanager block.  A value of 0 means that there is no limit imposed 
+by the service, although resource limitations imposed by other components 
+(i.e. max # of threads) may serve to limit the number of open connections.</li>
+</ul>
+</subsection>
+<subsection name="The nntp-repository block">
+The remainder of the NNTP service configuration is controlled by the nntp-repository configuration block.  This
+section of configuration data relates to the server-side NNTP article repository.
+<ul>
+<li><strong>readOnly</strong> - This is a required boolean tag.  If the value is true, posting will not be 
+permitted by the NNTP server.</li>
+<li><strong>rootPath</strong> - This is a required string tag.  It must be in the form of a URL with a "file:" prefix.  This 
+specifies the root directory for the NNTP repository.  Groups hosted on the NNTP server will be represented as 
+folders under this root, and articles will be stored in the appropriate folders.</li>
+<li><strong>tempPath</strong> - This is a required string tag.  It must be in the form of a URL with a "file:" prefix.  This 
+specifies the directory where the NNTP server will store posted articles before they are added to the spool.</li>
+<li><strong>articleIDPath</strong> - This is a required string tag.  It must be in the form of a URL with a "file:" prefix.  This 
+specifies the directory where the NNTP server will store the mappings between article ID and the groups containing that article.</li>
+<li><strong>articleIDDomainSuffix</strong> - This is a required string tag.  It is the suffix appended to all article IDs generated
+by this NNTP server.</li>
+<li><strong>newsgroups</strong> - This is a required container tag.  It has a single <strong>newsgroup</strong> child for each newsgroup 
+hosted on the server.  The body of each of those <strong>newsgroup</strong> tags is the name of the newsgroup.</li>
+</ul>
+</subsection>
+</section>
+</body>
+</document>

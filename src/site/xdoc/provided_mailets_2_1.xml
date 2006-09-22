@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.1 - Provided Mailets</title>
+ </properties>
+
+<body>
+
+<section name="Mailets">
+
+<p>James provides a number of implemented Mailets for use by James administrators in their 
+configurations.  These are primarily mailets that members of the James developer or user 
+communities have found useful in their own configurations.  A description of how to configure 
+Mailets and use them in the James SpoolManager can be found <a href="spoolmanager_configuration_2_1.html">here</a>.</p>
+
+<subsection name="AddFooter">
+<p>Description: This mailet adds a text footer to the message.</p>
+<p>Parameters:
+<ul>
+<li><strong>text</strong> (required) - the text that will be added as a footer to the message.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="AddHabeasWarrantMark">
+<p>Description: This mailet adds a Habeas warrant mark (see <a href="http://habeas.com">http://habeas.com</a> for details) to the message.</p>
+<p>Parameters: None.</p>
+</subsection>
+<subsection name="AddHeader">
+<p>Description: This mailet adds a text header to the message.</p>
+<p>Parameters:
+<ul>
+<li><strong>name</strong> (required) - the name of the header to be added to the message.</li>
+<li><strong>value</strong> (required) - the text that will be added as a header to the message.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="AvalonListserv">
+<p>Provides basic list server functionality.  Implements basic filters for emails sent to the list, 
+including restriction of senders to members, diallowing attachments in list messages, and subject line 
+processing</p>
+<p>Parameters:
+<ul>
+<li><strong>repositoryName</strong> (required) - the name of the user repository that contains the users 
+for this list.</li>
+<li><strong>membersonly</strong> (optional) - whether only members of the list can send messages to this 
+list.  Defaults to false.</li>
+<li><strong>attachmentsallowed</strong> (optional) - whether attachments are allowed in messages sent to this 
+list.  Defaults to true.</li>
+<li><strong>replytolist</strong> (optional) - whether the reply-to address for all messages sent to this 
+list is set to the list address.  Defaults to true.</li>
+<li><strong>subjectprefix</strong> (optional) - a String value.  If set, this value is prepended to the subject
+line of all messages sent to the list.</li>
+<li><strong>autobracket</strong> (optional) - a boolean value.  If a subjectprefix is set, this value determines 
+whether the prefix is bracketed before being prepended to the subject line.  Defaults to true.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="AvalonListservManager">
+<p>Processes list management commands of the form &lt;list-name&gt;-on@&lt;host&gt; and 
+&lt;list-name&gt;-off@&lt;host&gt; where &lt;list-name&gt; and lt;host&gt; are arbitrary.  Note 
+that this should be used in tandem with a CommandForListserv matcher to ensure that only commands 
+intended for a specific list are processed.</p>
+<p>Parameters:
+<ul>
+<li><strong>repositoryName</strong> (required) - the name of the user repository that contains the users 
+for this list.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="Forward">
+<p>Description: This mailet forwards the message to a set of recipients.</p>
+<p>Parameters:
+<ul>
+<li><strong>forwardto</strong> (required) - a comma delimited list of email addresses.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="JDBCAlias">
+<p>Description: This mailet does alias translation for email addresses stored in a database table.</p>
+<p>Parameters:
+<ul>
+<li><strong>mappings</strong> (required) - a URL of the form db://&lt;data-source&gt;/&lt;table&gt;, where 
+&lt;table&gt; is the table in the database containing the alias info and &lt;data-source&gt; is the name 
+of the data-source in config.xml that is to be used.</li>
+<li><strong>source_column</strong> (required) - the column containing the aliases.</li>
+<li><strong>target_column</strong> (required) - the column containing the alias targets.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="JDBCVirtualUserTable">
+<p>Description: This mailet does complex alias translation for email addresses stored in a database table.</p>
+<p>Parameters:
+<ul>
+<li><strong>table</strong> (required) - the URL describing the database table.  This URL has the form 
+db://&lt;data-source&gt;/&lt;table&gt; where &lt;data-source&gt; and &lt;table&gt; are the names of 
+the data-source as defined in config.xml and the table in the database.</li>
+<li><strong>sqlquery</strong> (optional) - the text of the SQL query used by the mailet to do user
+lookup.  The default is "select VirtualUserTable.target_address from VirtualUserTable, VirtualUserTable as VUTDomains where (VirtualUserTable.user like ? or VirtualUserTable.user like '\\%') and (VirtualUserTable.domain like ? or (VirtualUserTable.domain like '\\%' and VUTDomains.domain like ?)) order by concat(VirtualUserTable.user,'@',VirtualUserTable.domain) desc limit 1"</li>
+</ul>
+</p>
+</subsection>
+<subsection name="LocalDelivery">
+<p>Description: This mailet delivers messages to local mailboxes.</p>
+<p>Parameters: None.</p>
+</subsection>
+<subsection name="NotifyPostmaster">
+<p>Description: This mailet forwards the message as an attachment to the James postmaster.</p>
+<p>Parameters:
+<ul>
+<li><strong>sendingAddress</strong> (optional) - the address from which the forwarded email will be 
+sent.  Defaults to the postmaster address.</li>
+<li><strong>notice</strong> (optional) - the text message that will accompany the forwarded message.  Defaults 
+to "We were unable to deliver the attached message because of an error in the mail server."</li>
+<li><strong>attachStackTrace</strong> (optional) - whether an error stack trace is attached to the forwarded message.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="NotifySender">
+<p>Description: This mailet forwards the message as an attachment to the original sender.</p>
+<p>Parameters:
+<ul>
+<li><strong>sendingAddress</strong> (optional) - the address from which the forwarded email will be 
+sent.  Defaults to the postmaster address.</li>
+<li><strong>notice</strong> (optional) - the text message that will accompany the forwarded message.  Defaults 
+to "We were unable to deliver the attached message because of an error in the mail server."</li>
+<li><strong>attachStackTrace</strong> (optional) - whether an error stack trace is attached to the forwarded message.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="Null">
+<p>Description: This mailet ends processing for this mail.</p>
+<p>Parameters: None.</p>
+</subsection>
+<subsection name="PostmasterAlias">
+<p>Description: Intercepts all mails addressed to postmaster@&lt;domain&gt; where &lt;domain&gt; is one
+of the domains managed by this James server and substitutes the configured James postmaster address for
+the original recipient address.  This mailet is inserted automatically by James at the head of the root
+processor.</p>
+<p>Parameters: None.</p>
+</subsection>
+
+<subsection name="Redirect">
+<p>Description: A mailet providing powerful, configurable redirection services.<br/>
+      This mailet can produce listserver, forward and notify behaviour, with the
+      original message intact, attached, appended or left out altogether.<br/>
+      This built in functionality is controlled by the configuration as described
+      <a href="javadocs/org/apache/james/transport/mailets/Redirect.html">here</a>.</p>
+<p>It is also intended to be easily subclassed to make providing bespoke redirection
+    mailets simple. <br/>
+    By extending it and overriding one or more of its methods new behaviour can
+    be quickly created without the author having to address any other issue than
+    the relevant one. For more information see the javadocs
+    <a href="javadocs/org/apache/james/transport/mailets/Redirect.html">here</a>.</p>
+<p>Parameters: <a href="javadocs/org/apache/james/transport/mailets/Redirect.html">See javadocs.</a></p>
+</subsection>
+
+<subsection name="RemoteDelivery">
+<p>Manages delivery of messages to recipients on remote SMTP hosts.</p>
+<p>Parameters:
+<ul>
+<li><strong>outgoing</strong> (required) - The URL for the repository that will hold messages being processed
+by the RemoteDelivery Mailet.</li>
+<li><strong>delayTime</strong> (optional) - a non-negative Long value that is the time in
+milliseconds between redelivery attempts for a particular mail.  Defaults to six hours.</li>
+<li><strong>maxRetries</strong> (optional) - a non-negative Integer value that is number of times
+the Mailet will attempt to deliver a particular mail.  Defaults to five.</li>
+<li><strong>timeout</strong> (optional) - The SMTP connection timeout for SMTP connections generated
+by this Mailet.  Defaults to 60 seconds.</li>
+<li><strong>deliveryThreads</strong> (optional) - The number of threads this Mailet will use to generate
+SMTP connections.</li>
+<li><strong>gateway</strong> (optional) - The host name of the SMTP server 
+to be used as a gateway for this server.  If this value is set, then all 
+messages will be delivered to the gateway server, regardless of recipient 
+address.  To specify more than one gateway server, add multiple gateway tags, 
+each containing one value.  If more than one server is specified, they will be 
+tried in order until one is successful.  In addition the port may be specified 
+for each gateway in the format &lt;host&gt;:&lt;port&gt;.  If this 
+value is unset, delivery will occur to SMTP servers resolved by MX lookup.</li>
+<li><strong>gatewayPort</strong> (optional) - The default port number of the 
+SMTP server to be used as a gateway for this server.  This value will be 
+employed when a gateway is set <em>and</em> the gateway value does not specify 
+a port as described above.</li>
+<li><strong>bind</strong> (optional) - If present, this value is a string 
+describing the local IP address to which the mailet should be bound while 
+delivering emails. If the tag is absent then the service will bind to the 
+default local address of the machine. This tag is useful for multihomed machines.<br/>
+Note: Currently you must use the same IP address for all of those RemoteDelivery 
+instances where you explicitly supply a bind address.</li>
+<li><strong>debug</strong> (optional) - a boolean value (true/false) indicating whether debugging is
+on.  Defaults to false.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="ServerTime">
+<p>Description: This mailet sends a message to the sender of the original mail message with a server timestamp.</p>
+<p>Parameters: None.</p>
+</subsection>
+<subsection name="ToProcessor">
+<p>Redirects processing of the mail message to the specified processor.</p>
+<p>Parameters:
+<ul>
+<li><strong>processor</strong> (required) - the name of the processor to which the message
+is to be redirected.</li>
+<li><strong>noticeText</strong> (optional) - a String value that, if present,
+is set as the error message of the redirected message.  If this value is not
+present, no error message is set.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="ToRepository">
+<p>Places a copy of the message in the specified repository.</p>
+<p>Parameters:
+<ul>
+<li><strong>repositoryPath</strong> (required) - the URL of the repository to which the message
+is to be added.</li>
+<li><strong>passThrough</strong> (optional) - a boolean value (true/false) indicating whether
+processing should continue on the message is on.  If false, the original message is GHOSTed.  Defaults to false.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="UseHeaderRecipients">
+<p>Description: Ignores the recipients associated with the Mail interface.  Instead, it regenerates the
+mail recipients from the MimeMessage headers (To, Cc, Bcc) and inserts a new message at the queue root
+these new recipients.  The original message is GHOSTed.</p>
+<p>Parameters:
+<ul>
+<li><strong>debug</strong> (optional) - a boolean value (true/false) indicating whether debugging is
+on.  Defaults to false.</li>
+</ul>
+</p>
+</subsection>
+</section>
+</body>
+</document>

@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Component Summary</title>
+ </properties>
+
+<body>
+
+<section name="The James Server">
+
+<p>James is an open source project intended to produce a robust, flexible, and powerful 
+enterprise class server that provides email and email-related services.  It is also designed to
+be highly customizable, allowing administrators to configure James to process email in a 
+nearly endless variety of fashions.</p>
+
+<p>The James server is built on top of the Avalon Framework.  The standard James distribution 
+deploys inside the Phoenix Avalon Framework container.  In addition to providing a robust 
+server architecuture for James, the use of Phoenix allows James administrators to deploy 
+their own applications inside the container.  These applications can then be accessed during 
+mail processing.</p>
+
+<p>The James server is implemented as a complete collection of servers and related components that, taken together,
+provide an email solution.  These components are described below.</p>
+
+</section>
+<section name="POP3 Service">
+
+<p>The POP3 protocol allows users to retrieve email messages.  It is the method
+most commonly used by email clients to download and manage email messages.</p>
+
+<p>The James version of the POP3 service is a simple and straightforward implementation that 
+provides full compliance with the specification and maximum compatibility with common
+POP3 clients.  In addition, James can be configured to require SSL/TLS connections for
+POP3 client connecting to the server.</p>
+
+<p>More information on configuring the POP3 service can be found <a href="pop3_configuration_2_3.html">here</a>.</p>
+
+</section>
+<section name="SMTP Service">
+
+<p>SMTP (Simple Mail Transport Protocol) is the standard method of sending and delivering 
+email on the internet.  James provides a full-function implementation of the SMTP specification,
+with support for some optional features such as message size limits, SMTP auth, and encrypted 
+client/server communication.</p>
+
+<p>More information on configuring the SMTP service can be found <a href="smtp_configuration_2_3.html">here</a>.</p>
+
+</section>
+<section name="NNTP Service">
+
+<p>NNTP is used by clients to store messages on and retrieve messages from news servers.  James provides 
+the server side of this interaction by implementing the NNTP specification as well as an appropriate 
+repository for storing news messages.  The server implementation is simple and straightforward, but 
+supports some additional features such as NNTP authentication and encrypted client/server communication.</p>
+
+<p>More information on configuring the NNTP service can be found <a href="nntp_configuration_2_3.html">here</a>.</p>
+
+</section>
+<section name="FetchMail">
+
+<p>FetchMail, unlike the other James components, is not an implementation of an RFC.  Instead, it's a 
+component that allows the administrator to configure James to retrieve email from a number of POP3 
+servers and deliver them to the local spool.  This is useful for consolidating mail delivered to a
+number of accounts on different machines to a single account.</p>
+
+<p>More information on configuring FetchMail can be found <a href="fetchpop_configuration_2_3.html">here</a>.</p>
+</section>
+<section name="The SpoolManager, Matchers, and Mailets">
+
+<p>James separates the services that deliver mail to James (i.e. SMTP, FetchMail) 
+from the engine that processes mail after it is received by James.  The 
+SpoolManager component is James' mail processing engine.  James' SpoolManager component 
+is a Mailet container.  It is these mailets and matchers that actually carry out mail processing.</p>
+
+<p>More on the structure of the SpoolManager and the Mailet API can be found <a href="spoolmanager_2_3.html">here</a>.</p>
+
+</section>
+<section name="Repositories">
+
+<p>James uses a number of different repositories to both store message data (email, news messages) and 
+user information.  User repositories store user information, including user names, authentication 
+information, and aliases.  Mail repositories store messages that have been delivered locally.  Spool 
+repositories store messages that are still being processed.  Finally, news repositories are used to
+store news messages.  Aside from what type of data they store, repositories are distinguished by 
+where they store data.  There are three types of storage - File, Database, and DBFile.</p>
+
+</section>
+<section name="RemoteManager">
+
+<p>James provides a simple telnet-based interface for control.  Through this interface you can add 
+and delete users, configure per-user aliases and forward addresses, and shut down the server.</p>
+
+<p>More on the configuring the RemoteManager can be found <a href="remotemanager_configuration_2_3.html">here</a>.</p>
+
+</section>
+</body>
+</document>

@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.1 - Writing a Custom Matcher</title>
+ </properties>
+
+<body>
+<section name="Writing a Custom Matcher">
+<p>Implementing a custom matcher is generally a simple task, most of whose complexity 
+lies in coding the actual work to be done by the matcher.  This is largely due to the 
+simplicity of the Matcher interface and the fact that a couple of abstract Matcher template
+classes are provided in the Mailet package.  These two classes, GenericMatcher and 
+GenericRecipientMatcher, greatly simplfy the task of Matcher authoring.</p>
+<p>As discussed elsewhere in this manual, the Matcher interface does not simply match 
+or not match a particular message.  Rather, it returns some subset of the original message
+recipients as a result of the match(Mail) method.  This leads to the two different abstract
+Matcher implementations.</p>
+<p>The first, GenericMatcher, is intended for matchers where recipient evaluation is not 
+necessary.  Basically, you should subclass this implementation if your matcher is going to 
+return all or none of the recipients.</p>
+<p>When subclassing this class, there are four methods that potentially need to be 
+overridden.  These are getMatcherInfo(), init(), match(Mail), and destroy().  More on these 
+anon.</p>
+<p>The second implementation, GenericRecipientMatcher, is intended for those matchers where 
+each recipient is evaluated individually.  It is a subclass of GenericMatcher, and inherits 
+most of its behavior from that class.  The only major difference is that subclasses are 
+expected to override matchRecipient(MailAddress) rather than match(Mail).</p>
+<subsection name="Configuration">
+<p>Matchers are passed a single String as part of their configuration.  Interpretation of this 
+list is left entirely to the body of the Matcher.  This String value is available in 
+the body of the Matcher through use of the getCondition() method of the 
+GenericMatcher class.  This method returns the String value passed to the Matcher, and returns 
+null if no value is set.  The method getCondition() is available inside the init(), destroy(), match(Mail), 
+and matchRecipient(MailAddress) methods.</p>
+</subsection>
+<subsection name="Logging">
+<p>There is a simple logging mechanism provided by the Mailet API.  It does not support 
+logging levels, so any log filtering will have to be implemented in the Matcher code.  
+Logging is done by calling one of the two logging methods on GenericMatcher/GenericRecipientMatcher - log(String) 
+or log(String,Throwable).  Logging is available inside the init(), destroy(), match(Mail), 
+and matchRecipient(MailAddress) methods.</p>
+<p>The value of getMatcherInfo() for the Matcher is prepended to the log entries for that 
+Matcher.  So it may be desirable for you to override this method so you can distinguish Matcher
+log entries by Matcher.</p>
+</subsection>
+<subsection name="Initialization">
+<p>As part of the Matcher lifecycle, a Matcher is guaranteed to be initialized immediately after 
+being instantiated.  This happens once and only once for each Matcher instance.  The 
+Initialization phase is where configuration parsing and per-Matcher resource creation generally 
+take place.  Depending on your Matcher, it may or may not be necessary to do any initialization 
+of the Matcher.  Initialization logic is implemented by overriding the init() method of 
+GenericMatcher/GenericRecipientMatcher.</p>
+</subsection>
+<subsection name="Matching">
+<p>It is the matching phase where the Matcher's work is done.  The exact form of this phase largely 
+depends on which Matcher superclass is subclassed.</p>
+<p>If GenericMatcher is being subclassed, it is the match(Mail) that is implemented.  As described 
+above, this method returns a Collection of MailAddresses that is a subset of the original 
+recipients for the Mail object.</p>
+<p>If it is a purely recipient-filtering Matcher, then the GenericRecipientMatcher should be
+subclassed.  In this case, developers must provide an implementation of the 
+matchRecipient(MailAddress) method.  This method returns true if the recipient matches,
+and false otherwise.</p>
+</subsection>
+<subsection name="Destruction">
+<p>As part of the Matcher lifecycle, a Matcher is guaranteed to be destroyed when the container 
+cleans up the Matcher.  This happens once and only once for each Matcher instance.  The 
+Destruction phase is where per-Matcher resource release generally takes place.  Depending 
+on your Matcher, it may or may not be necessary to do any destruction 
+of the Matcher.  Destruction logic is implemented by overriding the destroy() method of 
+GenericMatcher/GenericRecipientMatcher.</p>
+</subsection>
+</section>
+<section name="Deploying a Custom Matcher">
+<p>Once a Matcher has been successfully implemented there are only a couple of 
+additional steps necessary to actually deploy the Matcher.</p>
+<subsection name="Adding Your Matcher to the Classpath">
+<p>
+The Matcher must be added to James' classpath so that the Matcher can be loaded by James.  There 
+are two ways to add a custom Matcher to the classpath so that James will be able to load the 
+Matcher.  These are:
+</p>
+<p>
+1. Download the source distribution, add a jar file containing the custom files to the lib 
+directory of the unpacked source distribution, and build a new .sar file by following the 
+directions <a href="build_instructions_2_1.html">here</a>.  This new .sar file will now 
+include your custom classes.
+</p>
+<p>
+or
+</p>
+<p>
+2. Place a jar file containing the custom class files in the lib subdirectory of the James
+installation.  It will also be necessary to unpack the JavaMail and James jar files from 
+the provided .sar file and add them to this directory.
+</p>
+</subsection>
+<subsection name="James Configuration">
+<p>Configuration of the processor chain is discussed 
+<a href="spoolmanager_configuration_2_1.html">elsewhere</a> in this documentation.  The 
+details of configuring matcher deployment is discussed at length.  Here we will only comment 
+that it is important to add the appropriate matcher package for your custom matcher to the 
+&lt;matcherpackages&gt; list and that the name of your matcher should not conflict with any of 
+the matchers described <a href="provided_matchers_2_1.html">here</a>.
+</p>
+</subsection>
+</section>
+</body>
+</document>

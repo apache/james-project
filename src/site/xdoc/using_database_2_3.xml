@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Using a Database</title>
+ </properties>
+
+<body>
+<section name="Database Configuration">
+<p>James has the capacity to use a JDBC-compatible database for storage of both message and user 
+data.  This section explains how to configure James to utilize a database for storage.</p>
+<subsection name="Requirements">
+<p>Using James with a database backend has certain requirements.  Database configuration is 
+extremely vendor-specific, so we can only state the requirements in general terms.</p>
+<p>There must be a database instance accessible from the James server.  An account with appropriate
+privileges (select, insert, delete into tables, and on initial startup creation of tables) and
+with sufficient quota for the data to be inserted into the database must be available.  Also,
+since James will use JDBC to access the database, an appropriate JDBC driver must be 
+available for installation.</p>
+<p>It is important to verify the functionality of the database before attempting to configure 
+James to use it as a repository.  This will help ensure that configuration issues are properly
+identified.</p>
+</subsection>
+<subsection name="Connection Configuration">
+<p>Configuring the Phoenix container to work with JDBC is the first step in enabling James database support.</p>
+<p>First, Phoenix must be able to load the JDBC classes.  To make these classes available to Phoenix, place the 
+jar/zip files for the JDBC driver in the lib subdirectory of the James installation directory.  Any additional 
+libraries upon which the JDBC library depends that are not part of the standard Java distribution should also be
+added to this directory.</p>
+<p>Please note that a MySQL driver is included as part of the James distribution and
+so there is no need to add such a driver to the lib directory.</p>
+<p>Second, the config.xml must be modified so that Phoenix initializes the database connections.  The relevant 
+configuration is in the database-connections block.  The database-connections tag has only a single child tag, 
+data-sources.  This latter tag is a simple container tag for a number of child elements.  It is these child 
+elements, <strong>data-source</strong> elements, that define the database connections.</p>
+<p>Each <strong>data-source</strong> tag has a required attribute, <strong>name</strong>.  This value 
+must be unique to each <strong>data-source</strong> element.  It is this <strong>name</strong> that will 
+be used to specify the database connection in other parts of the config.xml file.</p>
+<p>The <strong>data-source</strong> element has five children, all of whom are required.
+<ul>
+<li><strong>driver</strong> - The class name of the database driver to be used.</li>
+<li><strong>dburl</strong> - The JDBC connection URL for your database/driver.</li>
+<li><strong>user</strong> - The user id of the database account to be used by this connection.</li>
+<li><strong>password</strong> - The password of the database account to be used by this connection.</li>
+<li><strong>max</strong> - The maximum number of JDBC connections to be used concurrently by this data-source.</li>
+</ul>
+</p>
+
+<p>Generally, you simply configure these entries in the config.xml
+file, which are commented, in order to use a database with James.  You
+would then use the db: or dbfile: prefix instead of the file: prefix
+for a particular repository.  You are currently free to mix and match
+your use of these different storage types for different repositories.
+See <a href="repositories_2_3.html">Repository Configuration</a> for
+more details.  A sample configuration is described below.</p>
+
+</subsection>
+<subsection name="SQL Statement Configuration">
+<p>The precise SQL statements used by James to modify and view data stored in the database are specified in
+an external configuration file.  The sqlResources.xml file 
+(which can be found in the apps/james/conf directory) is a sample configuration file that contains the SQL
+statements used by James.  The purpose of each of these statements, as well as the repository with which 
+they are associated, is documented in situ.</p>
+
+<p>If you are using a SQL database with unusual SQL commands or data types, you may
+need to add special entries to this file.  The James team
+does try to keep sqlResources.xml updated, so if you do run into a
+special case, please let us know.</p>
+
+<p>Also, if the database tables are not created a priori, but rather are to be created by James
+upon startup, special attention should be paid to the "create table" statements in this file.  Such
+statements tend to be both very database and very database instance specific.</p>
+</subsection>
+<subsection name="Sample James Configuration">
+
+<p>The config.xml file has commented out examples for MySQL and
+MSSQL data sources, and for each of the standard repositories.  For
+example, to use MySQL, you would uncomment and adjust the following
+data-source element.</p>
+
+<p>You must create the database, in this case named
+<strong>mail</strong>, the user, and assign the user privileges.
+You may create the tables before running James or, if you so choose, James 
+will automatically create the tables it needs.  In the latter case the user 
+must have table creation privileges.</p>
+
+<source>
+&lt;data-source name="maildb" class="org.apache.james.util.mordred.JdbcDataSource"&gt;
+  &lt;driver&gt;org.gjt.mm.mysql.Driver&lt;/driver&gt;
+  &lt;dburl&gt;jdbc:mysql://127.0.0.1/mail&lt;/dburl&gt;
+  &lt;user&gt;username&lt;/user&gt;
+  &lt;password&gt;password&lt;/password&gt;
+  &lt;max&gt;20&lt;/max&gt;
+&lt;/data-source&gt;
+</source>
+
+<p>Once the data-source element has been created, it can be referenced elsewhere in the config.xml 
+file.  For example, the following element tells James to use the maildb data-source and dbfile 
+storage mechanism for the message spool:</p>
+
+<source>
+&lt;spoolRepository&gt;
+   &lt;repository destinationURL="dbfile://maildb/spool/spool" type="SPOOL"/&gt;
+&lt;/spoolRepository&gt;
+</source>
+
+<p>The following element tells James to store mailboxes in a the maildb data-source:</p>
+
+<source>
+&lt;inboxRepository&gt;
+   &lt;repository destinationURL="db://maildb/inbox/" type="MAIL"/&gt;
+&lt;/inboxRepository&gt;
+</source>
+
+<p>The configuration file contains further examples.</p>
+</subsection>
+<subsection name="Known Issues">
+<p>There are some vendor-specific subtleties in using databases with James that have been observed 
+by some users.  These issues (and methods to resolve them) are recorded on the 
+<a href="FAQ.html">James FAQ</a> as they are reported.  Please consult the FAQ if you encounter any 
+difficulties.</p>
+</subsection>
+</section>
+</body>
+</document>

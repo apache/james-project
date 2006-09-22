@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Global Server Configuration</title>
+ </properties>
+
+<body>
+<section name="Global Server Configuration">
+<p>There are a number of global configuration blocks that do not fall into any one 
+component.  They have effects that are global in scope across the server.  Some of 
+these blocks are crucial, while others can be ignored by any but the most sophisticated 
+server administrators.</p>
+<subsection name="The James Block">
+<p>This configuration block is defined by the <strong>James</strong> tag.  All administrators 
+need to adjust this configuration block upon installation.  It no attributes, but several 
+children, all of which are required.
+<ul>
+<li><strong>postmaster</strong> - the body of this element is the address that the server 
+will consider its postmaster address.  This address will be listed as the sender address 
+of all error messages that originate from James.  Also, all messages addressed to 
+postmaster@&lt;servername&gt;, where &lt;servername&gt; is one of the domain names whose 
+mail is being handled by James, will be redirected to this email address.</li>
+<li><strong>usernames</strong> - this element has no body, but instead has three required 
+boolean attributes.  These are <strong>ignoreCase</strong>, <strong>enabledAliases</strong>, 
+and <strong>enableForwarding</strong>.  The first of these determines whether email user names
+will be treated as case-insensitive or not.  The second attribute configures whether local user
+aliasing will be enabled.  Finally, the value of the third attribute determines whether forwarding 
+to potentially remote users will be enabled.</li>
+<li><strong>servernames</strong> - this element determines exactly which mail domains and IP 
+addresses the server will treat as local.  It has two boolean attributes - 
+<strong>autodetect</strong> and <strong>autodetectIP</strong>.  The first attribute, if true,
+causes the server to attempt to determine its own host name and add that to the list of local
+mail domains.  The second attribute causes the server to attempt to determine its own IP 
+address and add it to the list of local mail domains.  In addition to these attributes, this 
+tag has zero or more <strong>servername</strong> children.</li>
+<ul>
+<li><strong>servername</strong> - a single host name or IP address that should be added to the list of 
+mail domains that the server considers local.</li>
+</ul>
+<li><strong>inboxRepository</strong> - This is a simple container tag which contains a single child element.</li>
+<ul>
+<li><strong>repository</strong> - this defines the mail repository that will be used to store 
+mail delivered locally.  This element has no body.  The required attribute <strong>type</strong> 
+is always set to "MAIL".  The required attribute <strong>repositoryURL</strong> addresses the
+repository as described in <a href="repositories_2_3.html">the repository configuration section</a>.</li>
+</ul>
+</ul>
+</p>
+</subsection>
+<subsection name="The Connectionmanager Block">
+<p>
+This block controls general connection management.  There are two elements.
+<ul>
+<li><strong>idle-timeout</strong> - the number of milliseconds that it will take for idle 
+client connections managed by this connection manager to be marked at timed out.  If no 
+value is specified, the value defaults to 5 minutes, 300000 milliseconds.  A value of 0 
+means that client sockets will not timeout.</li>
+<li><strong>max-connections</strong> - The max-connections parameter specifies the default 
+maximum number of client connections that this connection manager will allow per managed 
+server socket.  This value can be overridden by each individual service.  If no value is 
+specified, the value defaults to 30.  A value of 0 means that there is no limit imposed 
+by the connection manager, although resource limitations imposed by other components 
+(i.e. max # of threads) may serve to limit the number of open connections.</li>
+</ul>
+</p>
+</subsection>
+<subsection name="The Objectstorage Block">
+<p>This block controls the low level file repository to file mapping.  There is no need to modify this.</p>
+</subsection>
+<subsection name="The Socketmanager Block">
+<p>This block controls the socket types available inside James.  Unless you are intending to enable SSL, it 
+shouldn't be necessary for you to adjust this block.  For modifications to this block that are required to
+enable TLS, see <a href="usingTLS_2_1.html">the using TLS section</a>.</p>
+</subsection>
+<subsection name="The Threadmanager Block">
+<p>This block controls the thread pools available inside James.  Only expert administators should modify 
+this configuration.</p>
+</subsection>
+</section>
+</body>
+</document>

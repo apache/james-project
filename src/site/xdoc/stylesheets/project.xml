@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<site name="James Site" href="http://james.apache.org/">
+  <title>Apache James - Mail and News server</title>
+  <logo href="/images/james-logo.jpg">James - Java Apache Mail Enterprise Server</logo>
+  <body>
+    <navbar name="lhs">
+      <menu name="James">
+        <item name="Overview" href="/index.html"/>
+        <item name="James FAQ" href="/FAQ.html"/>
+        <item name="Mailing Lists" href="/mail.html"/>
+        <item name="Wiki" href="http://wiki.apache.org/james"/>
+      </menu>
+      <menu name="Downloads">
+        <item name="Releases" href="http://james.apache.org/download.cgi"/>
+      </menu>
+      <menu name="Documentation">
+        <item name="James" href="/documentation_2_1.html"/>
+        <item name="Design" href="/design_objectives.html"/>
+        <item name="Document Archive" href="/document_archive.html"/>
+      </menu>
+      <menu name="Documentation 2.3B">
+        <item name="James" href="/documentation_2_3.html"/>
+        <item name="Design" href="/design_objectives_2_3.html"/>
+        <item name="James Javadocs" href="/javadocs/index.html"/>
+        <item name="Mailet Javadocs" href="/mailet/index.html"/>
+        <item name="Useful RFCs" href="/rfclist.html"/>
+      </menu>
+    </navbar>
+    <navbar name="rhs">
+      <menu name="Project">
+        <item name="Bug Database " href="http://issues.apache.org/jira/browse/JAMES"/>
+        <item name="Source Code" href="http://svn.apache.org/"/>
+        <item name="Who We Are" href="/weare.html"/>
+        <item name="Contributing" href="/contribute.html"/>
+        <item name="Standards" href="/code-standards.html"/>
+        <item name="License" href="/license.html"/>
+        <item name="Changelog" href="/changelog.html"/>
+        <item name="TODO" href="/todo.html"/>
+      </menu>
+      <menu name="Translated">
+        <item name="Japanese (web)" href="http://james.terra-intl.com/"/>
+      </menu>
+      <menu name="Related Projects">
+        <item name="jSPF" href="http://james.apache.org/jspf/index.html"/>
+        <item name="Jakarta" href="http://jakarta.apache.org/index.html"/>
+        <item name="Ant" href="http://ant.apache.org/index.html"/>
+        <item name="Avalon" href="http://avalon.apache.org/index.html"/>
+      </menu>
+      <menu name="Useful Information">
+        <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
+        <item name="Reference Library" href="http://jakarta.apache.org/site/library.html"/>
+        <item name="Apache" href="http://apache.org/foundation/faq.html"/>
+      </menu>
+    </navbar>
+  </body>
+</site>

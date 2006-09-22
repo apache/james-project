@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Migrating from Avalon database connections to DataSource</title>
+  <author email="serge@apache.org">Serge Knystautas</author>
+ </properties>
+
+<body>
+
+<section name="Migrating from Avalon database connections to DataSource">
+
+<p>
+  In James version 2.3, we expose database connections via the javax.sql.DataSource.  This document describes how to update code using James previous database connectivity (Avalon's DataSourceComponent).
+</p>
+<ol>
+<li>Remove references to DataSourceSelector.</li>
+<li>Change references of DataSourceComponent to DataSource</li>
+<li>Add imports:
+<source>
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+</source>
+</li>
+<li>Change how the datasource is looked up
+<br />
+Replace:
+<source>
+    ComponentManager componentManager = (ComponentManager)getMailetContext().getAttribute(Constants.AVALON_COMPONENT_MANAGER);
+    // Get the DataSourceSelector service
+    DataSourceSelector datasources = (DataSourceSelector)componentManager.lookup(DataSourceSelector.ROLE);
+    // Get the data-source required.
+    datasource = (DataSourceComponent)datasources.select(datasourceName);
+</source>
+with
+<source>
+    InitialContext ctx = new InitialContext();
+    datasource = (DataSource) ctx.lookup("java:comp/env/jdbc/" + datasourceName);
+</source>
+Then update exception handling appropriately.
+</li>
+</ol>
+ <p>
+   That's all there is to it.  Enjoy!
+ </p>
+
+</section>
+</body>
+</document>

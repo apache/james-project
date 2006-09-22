@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James 2.3 - Configuring the RemoteManager</title>
+ </properties>
+
+<body>
+<section name="RemoteManager Configuration">
+<p>The RemoteManager is controlled by a configuration block in the config.xml.
+The remotemanager tag defines the boundaries of the configuration block.  It encloses 
+all the relevant configuration for the RemoteManager.  The behavior of the RemoteManager is
+controlled by the attributes and children of this tag.</p>
+
+<p>This tag has an optional boolean attribute - <strong>enabled</strong> - that defines whether the service is active or not.  The value defaults to "true" if
+not present.</p>
+<p>The standard children of the remotemanager tag are:</p>
+<ul>
+<li><strong>port</strong> - This is an optional integer value.  This value is the port on which this POP3 server is configured 
+to listen.If the tag or value is omitted, the value will default to 4555.</li>
+<li><strong>bind</strong> - This is an optional value.  If present, this value is a string describing 
+the IP address to which this service should be bound.  If the tag or value is absent then the service 
+will bind to all network interfaces for the machine.</li>
+<li><strong>useTLS</strong> - This is an optional boolean value.  If this value is true, then the "ssl"
+server socket factory is used to generate the server socket for this service.  If it is false, the 
+"plain" server socket factory is used.  In either case this behavior is overridden by the serverSocketType 
+tag which is described under the expert configuration options.</li>
+<li><strong>handler</strong> - This is an artifact preserved for backwards compatibility.  This tag 
+was used to group related parameters.  It should disappear in future versions.</li>
+<ul>
+<li><strong>helloName</strong> - This is a required tag with an optional body that defines the server name 
+used in the initial service greeting.  The tag may have an optional attribute - <strong>autodetect</strong>.  If 
+the autodetect attribute is present and true, the service will use the local hostname
+returned by the Java libraries.  If autodetect is absent or false, the body of the tag will be used.  In
+this case, if no body is present, the value "localhost" will be used.</li>
+<li><strong>administrator_accounts</strong> - This is an required container tag.  It contains 
+one or more <strong>administrator_account</strong> elements, each of which has a <strong>login</strong> attribute 
+and a <strong>password</strong> attribute.  These two attributes correspond to the login id and password for the 
+administrative account respectively.  Obviously, for security reasons, these should be set upon James installation.</li>
+<li><strong>connectionTimeout</strong> - This is an optional tag with an integer body.  </li>
+</ul>
+</ul>
+<p>There are a few additional children of the pop3server tag that are appropriate for advanced 
+configurations.  These should only be used by expert administrators.  All tags in this group are optional.</p>
+<ul>
+<li><strong>serverSocketFactory</strong> - This is an optional tag with a string body.  If the tag is present, 
+the body must be the name of one of the server socket factories specified in the socket manager block.  Any other 
+value will result in an error.  If present, this tag overrides the useTLS tag.</li>
+<li><strong>threadGroup</strong> - This is an optional tag with a string body.  If the tag is present, 
+the body must be the name of one of the thread groups specified in the thread manager block.  Any other 
+value will result in an error.  This tag is best used to fine tune thread allocation between the services.</li>
+<li><strong>connectionLimit</strong> - The connectionLimit parameter specifies the maximum number of client 
+connections that this service will allow.  If no value is specified, the value defaults to that specified in 
+the connectionmanager block.  A value of 0 means that there is no limit imposed 
+by the service, although resource limitations imposed by other components 
+(i.e. max # of threads) may serve to limit the number of open connections.</li>
+</ul>
+</section>
+</body>
+</document>

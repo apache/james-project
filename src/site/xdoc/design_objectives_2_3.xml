@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+  <properties>
+    <title>Design Objectives</title>
+    <author email="site-dev@james.apache.org">James Project Web Team</author>
+  </properties>
+  <body>
+    <section name="Design Objectives">
+      
+      <subsection name="features">
+        <p>These are some of the currently implemented features:</p>
+        <p>
+          <i>
+            <b>Complete portability</b>
+          </i>  Apache James is be a 100% pure Java application
+       based on the Java 2 platform and the JavaMail 1.4 API.
+  </p>
+        <p>
+          <i>
+            <b>Protocol abstraction</b>
+          </i>  Unlike other mail engines, protocols are seen only
+       like "communication languages" ruling comunications between clients and
+       the server. Apache James is not be tied to any particular protocol but
+       follow an abstracted server design (like JavaMail did on the
+       client side)</p>
+        <p>
+          <i>
+            <b>Complete solution</b>
+          </i>  the mail system is able to handle both mail
+       transport and storage in a single server application. Apache James
+       works alone without the need for any other server or solution.</p>
+        <p>
+          <i>
+            <b>Mailet support</b>
+          </i>  Apache James supports the Apache Mailet API. A Mailet
+       is a discrete piece of mail-processing logic which is incorporated into
+       a Mailet-compliant mail-server's processing. This easy-to-write,
+       easy-to-use pattern allows developers to build powerful customized mail
+       systems. Examples of the services a Mailet might provide include: a
+       mail-to-fax or mail-to-phone transformer, a filter, a language translator, a mailing
+       list manager, etc. Several Mailets are included in the JAMES
+       distribution (see <a href="documentation_2_3.html">documentation</a>).</p>
+        <p>
+          <i>
+            <b>Resource abstraction</b>
+          </i>  Like protocols, resources are abstracted and,
+       accessed through defined interfaces (JavaMail for transport, JDBC for
+       spool storage or user accounts in RDBMS's, Apache Mailet API). The server is
+       highly modular and reuse solutions from other projects.</p>
+        <p>
+          <i>
+            <b>Secure and multi-threaded design</b>
+          </i>  Based on the technology developed
+       for the Apache JServ servlet engine, Apache James has a careful,
+       security-oriented, full multi-threaded design, to allow performance,
+       scalability and mission-critical use.</p>
+        <p>Anything else you may want if you help us write it :-)</p>
+      </subsection>
+      <subsection name="standards compliance">
+        <p>It is the existence of published "open" standards which 
+allows independant teams to develop interoperable software.
+<br/>James attempts to support a number of these standards most of which are 
+IETF RFC's and in the areas covered by these standards the published standard 
+is our requirements document.
+<br/>This sometimes leads to confusion where behaviour is not 
+the subject of a relevant standard, or conflict where common 
+(de-facto) behaviour is actually at odds with a supported standard.
+<br/>We believe that it is our responsibility to adhere to the published standard. 
+If we allow our implementation to deviate it means that we are tacitly encouraging 
+the situation whereby interoperability is no longer guarenteed by standards 
+compliance alone, but also requires access to undocumented and possibly 
+even commercially licenced technology. There is no easy route for a 
+newcomer to aquire these secrets, and interoperabilty 
+becomes something only available to the elite.
+        </p>
+        <p>The James policy for issues of non-compliance tries to tread the fine line
+between a pragmatic acceptance of other people's misinterpretation of the
+RFC's and an evangelical defence of open standards as the key to freedom of interoperation.
+        </p>
+        <p>
+In practice this policy is that certain well argued of cases of
+non-compliance which can be *safely* worked around, will be tolerated by
+James.
+</p>
+        <p>
+In cases (like jira issue JAMES-344 ) where variance from a published standard is
+required it is desirable that this functionality is disabled in James by default,
+it must be prominently and clearly documented that this causes James 
+to violate the relevant standard, and should be enabled by explicit 
+configuration, making its use a conscious decision of the user rather 
+than an decision taken by the James team.
+</p>
+        <p>
+In cases where the required behaviour is not within the scope of any standard which
+James claims to support (such as behaviour which is a de-facto standard or
+an <i>internet draft</i> RFC but not yet subject of a <i>standards track</i> RFC) it is
+acceptable to implement the behaviour so long as it is adequately
+documented (for instance by refrence to an <i>internet draft</i> or 
+other public document) and users can be clear about what to expect from James.
+</p>
+      </subsection>
+    </section>
+  </body>
+</document>
