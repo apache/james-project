@@ -94,7 +94,7 @@ section of the config.xml.  More information can be found <a href="serverwide_co
 </ul>
 <p>In addition to adjusting these parameters, you may wish to consult the documentation for a discussion of
 common configurations.  A list of such configurations, as well as the steps necessary to configure them, can
-be found <a href="documentation_2_1.html">here</a>.</p>
+be found <a href="index.html">here</a>.</p>
 </section>
 <section name="Starting James with Your Configuration">
 <p>Once you have edited the configuration file you will need to restart James so that the changes take 
