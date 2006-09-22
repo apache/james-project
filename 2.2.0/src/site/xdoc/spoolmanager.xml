@@ -49,7 +49,7 @@ the original mail is duplicated.  The recipients for one message are set to the 
 and that message is processed by the mailet.  The recipients for the other mail are set to the
 non-matching recipients, and that message is not processed by the mailet.</p>
 
-<p>More on matchers and mailets can be found <a href="mailet_api_2_1.html">here</a>.</p>
+<p>More on matchers and mailets can be found <a href="mailet_api.html">here</a>.</p>
 
 <p>One level up from the matchers and mailets are the processors.  Each processor 
 is a list of matcher/mailet pairs.  During mail processing, mail messages will be 
@@ -72,7 +72,7 @@ being redirected from one processor to another.  Mail messages are driven throug
 the processor tree until they reach the end of a processor or are marked completed 
 by a mailet.</p>
 
-<p>More on configuration of the SpoolManager can be found <a href="spoolmanager_configuration_2_1.html">here</a>.</p>
+<p>More on configuration of the SpoolManager can be found <a href="spoolmanager_configuration.html">here</a>.</p>
 
 <p>Much of the power of James lies in the SpoolManager component.  Custom matchers and 
 mailets can be easily developed to address an administrator's particular needs.  The 

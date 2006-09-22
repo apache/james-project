@@ -44,8 +44,8 @@ repository or SMTP server.</p>
 <p>The Javadoc for the Mailet API can be found <a href="mailet/index.html">here</a>.</p>
 -->
 <p>James bundles a number of Matchers and Mailets in its distribution.  Descriptions of provided matchers 
-can be found <a href="provided_matchers_2_1.html">here</a>, while descriptions of provided mailets can be found 
-<a href="provided_mailets_2_1.html">here</a>.</p>
+can be found <a href="provided_matchers.html">here</a>, while descriptions of provided mailets can be found 
+<a href="provided_mailets.html">here</a>.</p>
 </section>
 </body>
 </document>

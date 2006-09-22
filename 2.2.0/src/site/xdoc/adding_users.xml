@@ -31,7 +31,7 @@ account is available for authenticated SMTP and NNTP.</p>
 <subsection name="Before You Add Accounts">
 <p>In James, user accounts are created throught the RemoteManager.  So, after installation is complete, the first step to adding users 
 is to configure the RemoteManager.  More information on RemoteManager configuration can be found 
-<a href="remotemanager_configuration_2_1.html">here</a>.  You will need to have configured at least one administrator account and 
+<a href="remotemanager_configuration.html">here</a>.  You will need to have configured at least one administrator account and 
 ensured that the RemoteManager is enabled.</p>
 <p>Also, you need to make sure that your user repository configuration is correct before adding any users.  If 
 you change your user repository type (i.e. file to database) or the configuration of your user repository 

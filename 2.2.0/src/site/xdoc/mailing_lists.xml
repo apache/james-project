@@ -43,19 +43,19 @@ of list subscribers.</p>
 <p>You need to setup two mailets.</p>
 
 <p>The first mailet that you need to setup is an instance of the <a
-href="provided_mailets_2_1.html#AvalonListservManager">Avalon Listserv
+href="provided_mailets.html#AvalonListservManager">Avalon Listserv
 Manager</a> mailet.  This will handle subscribing and unsubscribing.
 [Note: the current code does not support confirmed opt-in, just basic
 commands.]  The <a
-href="provided_matchers_2_1.html#CommandForListserv">CommandForListserv</a>
+href="provided_matchers.html#CommandForListserv">CommandForListserv</a>
 matcher is used to invoke match messages containing commands for the
 mailing list.</p>
 
 <p>The second mailet is an instance of the <a
-href="provided_mailets_2_1.html#AvalonListserv">Avalon Listserv</a>
+href="provided_mailets.html#AvalonListserv">Avalon Listserv</a>
 mailet.  That mailet actually receives messages for the list and
 causes them to be distributed.  The <a
-href="provided_matchers_2_1.html#RecipientIs">RecipientIs</a> matcher
+href="provided_matchers.html#RecipientIs">RecipientIs</a> matcher
 is used to match messages intended for the mailing list.</p>
 
 <p>The following illustrates the two &lt;mailet&gt; elements that need to be added:</p>

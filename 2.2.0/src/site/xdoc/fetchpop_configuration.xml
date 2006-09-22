@@ -26,7 +26,7 @@
 <body>
 <section name="FetchPOP Is Being Deprecated">
 <p>FetchPOP is being deprecated.
-<a href="fetchmail_configuration_2_2.html">fetchMail</a> provides a superset of
+<a href="fetchmail_configuration.html">fetchMail</a> provides a superset of
 FetchPOP's functionality and is the preferred solution.</p>
 </section>
 
@@ -57,7 +57,7 @@ routing of mail.  Some scenarios are described below with suggested configuratio
 <subsection name="Handling All Mail for a Domain">
 <p>This is the intended primary use of FetchPOP.
 If all mail for a domain being fetched is ultimately being handled by this server then it is enough to add
-the domain name as a servername to the servernames section described <a href="serverwide_configuration_2_1.html">here</a>.
+the domain name as a servername to the servernames section described <a href="serverwide_configuration.html">here</a>.
 <br/>This is the simplest solution and is used where James is being used to redistribute all mail from the
 free catch-all POP accounts provided by many domain registration/hosting companies.</p>
 </subsection>
@@ -80,7 +80,7 @@ following</p>
 <p>where <i>fetchtaskname</i> is the name of the FetchPOP task being matched and <i>fetchprocessor</i> is the name of the fetched mail 
 processor can be used to this purpose.  The fetched mail processor should contain mailets which will filter 
 and forward mail to real local or remote users.  This can be achieved in the usual fashion as described in the 
-<a href="spoolmanager_configuration_2_1.html">SpoolManager configuration section</a> and in the out of the box 
+<a href="spoolmanager_configuration.html">SpoolManager configuration section</a> and in the out of the box 
 configuration file.</p>
 </subsection>
  <subsection name="Catching Undeliverable Mail">

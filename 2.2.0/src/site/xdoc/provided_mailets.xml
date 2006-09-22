@@ -30,7 +30,7 @@
 <p>James provides a number of implemented Mailets for use by James administrators in their 
 configurations.  These are primarily mailets that members of the James developer or user 
 communities have found useful in their own configurations.  A description of how to configure 
-Mailets and use them in the James SpoolManager can be found <a href="spoolmanager_configuration_2_1.html">here</a>.</p>
+Mailets and use them in the James SpoolManager can be found <a href="spoolmanager_configuration.html">here</a>.</p>
 
 <subsection name="AddFooter">
 <p>Description: This mailet adds a text footer to the message.</p>

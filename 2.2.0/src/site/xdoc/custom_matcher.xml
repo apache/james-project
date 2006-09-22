@@ -102,7 +102,7 @@ Matcher.  These are:
 <p>
 1. Download the source distribution, add a jar file containing the custom files to the lib 
 directory of the unpacked source distribution, and build a new .sar file by following the 
-directions <a href="build_instructions_2_1.html">here</a>.  This new .sar file will now 
+directions <a href="build_instructions.html">here</a>.  This new .sar file will now 
 include your custom classes.
 </p>
 <p>
@@ -116,11 +116,11 @@ the provided .sar file and add them to this directory.
 </subsection>
 <subsection name="James Configuration">
 <p>Configuration of the processor chain is discussed 
-<a href="spoolmanager_configuration_2_1.html">elsewhere</a> in this documentation.  The 
+<a href="spoolmanager_configuration.html">elsewhere</a> in this documentation.  The 
 details of configuring matcher deployment is discussed at length.  Here we will only comment 
 that it is important to add the appropriate matcher package for your custom matcher to the 
 &lt;matcherpackages&gt; list and that the name of your matcher should not conflict with any of 
-the matchers described <a href="provided_matchers_2_1.html">here</a>.
+the matchers described <a href="provided_matchers.html">here</a>.
 </p>
 </subsection>
 </section>

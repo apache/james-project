@@ -69,7 +69,7 @@ file, which are commented, in order to use a database with James.  You
 would then use the db: or dbfile: prefix instead of the file: prefix
 for a particular repository.  You are currently free to mix and match
 your use of these different storage types for different repositories.
-See <a href="repositories_2_1.html">Repository Configuration</a> for
+See <a href="repositories.html">Repository Configuration</a> for
 more details.  A sample configuration is described below.</p>
 
 </subsection>

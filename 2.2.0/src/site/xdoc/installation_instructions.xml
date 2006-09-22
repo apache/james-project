@@ -81,16 +81,16 @@ be appropriate for real-world servers.  There are a few issues that should be ad
 </p>
 <ul>
 <li>RemoteManager Administrator Account - Before the RemoteManager service can be used to add users to this server 
-installation an administrator account must be created.  More information can be found <a href="remotemanager_configuration_2_1.html">here</a>.</li>
+installation an administrator account must be created.  More information can be found <a href="remotemanager_configuration.html">here</a>.</li>
 <li>DNS Servers - James needs to have access to a DNS server for domain resolution.  The out of the box 
 configuration assumes that there is a DNS server on localhost.  In general administrators will have to change 
 the configuration to point to a valid DNS server.  This can be done by adjusting the dnsserver configuration 
-block in the config.xml.  More information can be found <a href="serverwide_configuration_2_1.html">here</a>.</li>
+block in the config.xml.  More information can be found <a href="serverwide_configuration.html">here</a>.</li>
 <li>Managed Domain Names/IP Addresses - Out of the box, James only handles mail that is sent to recipients at 
 localhost.  It will attempt to deliver all other email to remote SMTP servers.  To allow James to handle email 
 for your domain or IP address, you simply need to add the appropriate domain name or IP address to the servernames 
-section of the config.xml.  More information can be found <a href="serverwide_configuration_2_1.html">here</a>.</li>
-<li>Postmaster Address - More information can be found <a href="serverwide_configuration_2_1.html">here</a>.</li>
+section of the config.xml.  More information can be found <a href="serverwide_configuration.html">here</a>.</li>
+<li>Postmaster Address - More information can be found <a href="serverwide_configuration.html">here</a>.</li>
 </ul>
 <p>In addition to adjusting these parameters, you may wish to consult the documentation for a discussion of
 common configurations.  A list of such configurations, as well as the steps necessary to configure them, can
@@ -103,7 +103,7 @@ be displayed on the console.  Additional information about the system configurat
 upon startup.</p>
 <p>Finally, after configuration is complete, it will be necessary to create user accounts before the James server 
 will be fully operational.  Instructions on creating user accounts can be found 
-<a href="adding_users_2_1.html">here</a>.</p>
+<a href="adding_users.html">here</a>.</p>
 </section>
 
 </body>

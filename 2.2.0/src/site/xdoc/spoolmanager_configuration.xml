@@ -92,7 +92,7 @@ the mailet as (name, value) pairs.</p>
 would be passed to the matcher.  The Mailet of the pair will be an instance of ToProcessor, and it will be passed the (name, value) 
 pair of ("processor", "spam").</p>
 <p>James includes a number of pre-packaged Mailets and Matchers.  A list of provided Mailets may be found 
-<a href="provided_mailets_2_1.html">here</a>.  A list of provided Matchers may be found <a href="provided_matchers_2_1.html">here</a>.</p>
+<a href="provided_mailets.html">here</a>.  A list of provided Matchers may be found <a href="provided_matchers.html">here</a>.</p>
 </subsection>
 </section>
 </body>

@@ -36,7 +36,7 @@ these can be easily overridden to provide useful functionality.</p>
 <p>In general, the only four methods that you should need to implement are init(), destroy(), 
 getMailetInfo(), and service(Mail).  And only the last is required in all cases.</p>
 <subsection name="Configuration">
-<p>As described in the <a href="spoolmanager_configuration_2_1.html">SpoolManager configuration 
+<p>As described in the <a href="spoolmanager_configuration.html">SpoolManager configuration 
 section</a>, mailets are configured with a set of String (name, value) pairs.  These values are
 passed into the Mailet upon initialization (although the details of this process are hidden by 
 the GenericMailet implementation).  GenericMailet provides access to this configuration 
@@ -91,7 +91,7 @@ Mailet.  These are:
 <p>
 1. Download the source distribution, add a jar file containing the custom files to the lib 
 directory of the unpacked source distribution, and build a new .sar file by following the 
-directions <a href="build_instructions_2_1.html">here</a>.  This new .sar file will now 
+directions <a href="build_instructions.html">here</a>.  This new .sar file will now 
 include your custom classes.
 </p>
 <p>
@@ -105,11 +105,11 @@ the provided .sar file and add them to this directory.
 </subsection>
 <subsection name="James Configuration">
 <p>Configuration of the processor chain is discussed 
-<a href="spoolmanager_configuration_2_1.html">elsewhere</a> in this documentation.  The 
+<a href="spoolmanager_configuration.html">elsewhere</a> in this documentation.  The 
 details of configuring mailet deployment is discussed at length.  Here we will only comment 
 that it is important to add the appropriate mailet package for your custom mailet to the 
 &lt;mailetpackages&gt; list and that the name of your mailet should not conflict with any of 
-the mailets described <a href="provided_mailets_2_1.html">here</a>.
+the mailets described <a href="provided_mailets.html">here</a>.
 </p>
 </subsection>
 </section>

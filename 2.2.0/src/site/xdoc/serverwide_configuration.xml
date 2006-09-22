@@ -61,7 +61,7 @@ mail domains that the server considers local.</li>
 <li><strong>repository</strong> - this defines the mail repository that will be used to store 
 mail delivered locally.  This element has no body.  The required attribute <strong>type</strong> 
 is always set to "MAIL".  The required attribute <strong>repositoryURL</strong> addresses the
-repository as described in <a href="repositories_2_1.html">the repository configuration section</a>.</li>
+repository as described in <a href="repositories.html">the repository configuration section</a>.</li>
 </ul>
 </ul>
 </p>
@@ -89,7 +89,7 @@ by the connection manager, although resource limitations imposed by other compon
 <subsection name="The Socketmanager Block">
 <p>This block controls the socket types available inside James.  Unless you are intending to enable SSL, it 
 shouldn't be necessary for you to adjust this block.  For modifications to this block that are required to
-enable TLS, see <a href="usingTLS_2_1.html">the using TLS section</a>.</p>
+enable TLS, see <a href="usingTLS.html">the using TLS section</a>.</p>
 </subsection>
 <subsection name="The Threadmanager Block">
 <p>This block controls the thread pools available inside James.  Only expert administators should modify 
