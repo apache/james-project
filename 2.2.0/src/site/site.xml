@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?><project name="James Server 2.2.0">
+  <bannerLeft>
+    <name>James Server</name>
+    <src>images/james-server-logo.gif</src>
+    <href>http://james.apache.org/server/</href>
+  </bannerLeft>
+  <bannerRight>
+    <name>The Apache Software Foundation</name>
+    <src>images/asf-logo-reduced.gif</src>
+    <href>http://www.apache.org/</href>
+  </bannerRight>
+  <body>
+    <menu name="Concepts">
+      <item name="Summary" href="/summary.html" />
+      <item name="SpoolManager" href="/spoolmanager.html" />
+      <item name="Repositories" href="/repositories.html" />
+      <item name="The Mailet API" href="/mailet_api.html" />
+    </menu>
+    <menu name="How to...">
+      <item name="Build James" href="/build_instructions.html" />
+      <item name="Install James" href="/installation_instructions.html" />
+    </menu>
+    <menu name="Configuration">
+      <item name="DNS Server" href="/dns_configuration.html" />
+      <item name="POP3 Server" href="/pop3_configuration.html" />
+      <item name="SMTP Server" href="/smtp_configuration.html" />
+      <item name="NNTP Server" href="/nntp_configuration.html" />
+      <item name="FetchPOP" href="/fetchpop_configuration.html" />
+      <item name="FetchMail" href="/fetchmail_configuration.html" />
+      <item name="RemoteManager" href="/remotemanager_configuration.html" />
+      <item name="Repository" href="/repositories.html" />
+      <item name="SpoolManager" href="/spoolmanager_configuration.html" />
+      <item name="Server-wide" href="/serverwide_configuration.html" />
+      <item name="Adding Users" href="/adding_users.html" />
+      <item name="Provided Matchers" href="/provided_matchers.html" />
+      <item name="Provided Mailets" href="/provided_mailets.html" />
+    </menu>
+    <menu name="Common Configurations">
+      <item name="Using SMTP AUTH" href="/smtp_auth.html" />
+      <item name="Using a Database with James" href="/using_database.html" />
+      <item name="Using TLS/SSL" href="/usingTLS.html" />
+      <item name="James and Sendmail" href="/james_and_sendmail.html" />
+      <item name="Creating Mailing Lists" href="/mailing_lists.html" />
+    </menu>
+    <menu name="Customization">
+      <item name="How to write a custom Matcher" href="/custom_matcher.html" />
+      <item name="How to write a custom Mailet" href="/custom_mailet.html" />
+    </menu>
+    <menu name="Project">
+      <item name="Changelog" href="/changelog.html" />
+    </menu>
+  </body>
+</project>
