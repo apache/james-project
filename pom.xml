@@ -35,7 +35,7 @@
   <modules>
     <module>2.2.0</module>
   </modules>
-  <url>http://james.apache.org/server/index.html</url>
+  <url>http://james.apache.org/server/</url>
   <inceptionYear>2006</inceptionYear>
 
   <scm>
