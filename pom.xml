@@ -39,9 +39,9 @@
   <inceptionYear>2006</inceptionYear>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/sandbox/james-project/server</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/sandbox/james-project/server</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/sandbox/james-project/server</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/server</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/server</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/server</url>
   </scm>
 
   <distributionManagement>

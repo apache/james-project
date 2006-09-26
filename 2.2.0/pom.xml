@@ -37,9 +37,9 @@
 
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/sandbox/james-project/server/2.2.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/sandbox/james-project/server/2.2.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/sandbox/james-project/server/2.2.0</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/server/2.2.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/server/2.2.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/server/2.2.0</url>
   </scm>
 
 
