@@ -48,9 +48,9 @@
 
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/maven-skin</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/maven-skin</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/maven-skin</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk/maven-skin</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk/maven-skin</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/trunk/maven-skin</url>
   </scm>
 
 </project>
