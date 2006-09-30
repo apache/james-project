@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Using JDBC</title>
+  <author email="charlesb@apache.org">Charles Benett</author>
+ </properties>
+
+<body>
+
+<section name="James 2.0 - Using JDBC">
+
+  <p>
+    This document explains how to enable JAMES 2.0 to use database storage via JDBC. Based on ReadMe notes by Darrell DeBoer and ??.
+  </p>
+</section>
+
+<section name="Goals">
+
+  <p>Main Goals.
+    <ul>
+      <li>use Avalon and Cornerstone DataSource components for connection  serving and pooling (done)</li>
+      <li>Remove hard-coded SQL statements from UsersJdbcRepository (done)</li>
+      <li>'SqlResources.java' - detect db product from jdbc connection and select appropriate SQL statements from SQL definition file for specific product (done)</li>
+      <li>Simpler to create database-backed UserRepository implementations for different User implementations (done)</li>
+      <li>Simplify UserRepository specification in config - make it URL:// based, like MailRepository. (done)</li>
+      <li>Consolidate existing UserRepository implementations - refactor out common functionality (TODO)</li>
+      <li>Have UserStore serve up repository implementations based on: storage, User implementation, and location. (TODO)</li>
+    </ul>
+  </p>
+  <p>Other Goals (reuse development in JdbcMailRepository):
+    <ul>
+      <li>use Avalon and Cornerstone DataSource components in JdbcMailRepository (done)</li>
+      <li>Use SqlResources.java to provide db-specific SQL to JdbcMailRepository (done)</li>
+      <li>Automatic table generation for JdbcMailRepository (done)</li>
+      <li>Get rid of the separate database .properties files. (done)</li>
+    </ul>
+  </p>
+
+</section>
+
+<section name="USE INSTRUCTIONS">
+
+  <p>
+    The main configuration is setting up the "database-connections" section of the 
+config file. There's an example there using MySql - I haven't yet tested on 
+other databases (although the SQL statements haven't changed much, so I 
+imagine it will still work on other platforms).
+  </p>
+  <p>
+The only config properties you should need to set are:
+    <ul>
+        <li> &lt;driver&gt; Class name of database driver to use &lt;/driver&gt;</li>
+        <li> &lt;dburl&gt; the jdbc connection string for your database &lt;/dburl&gt;</li>
+        <li> &lt;user&gt; database user &lt;/user&gt;</li>
+        <li> &lt;password&gt; database password &lt;/password&gt;</li>
+    </ul>
+  </p>
+</section>
+
+<section name="TEST INSTRUCTIONS (FOR USER REPOSITORIES)">
+  <p>
+    <ul>
+        <li>Telnet to the remote manager: "telnet localhost 4555".</li>
+        <li>Do some user management - type "help" for options.</li>
+        <li>type "use list-james", to switch to the repository for this list.</li>
+        <li>list the users</li>
+        <li>send an email to "james-on@localhost"</li>
+        <li>list the users again</li>
+    </ul>
+(note: some user management commands fail for repositories other than "LocalUsers").
+ </p>
+
+</section>
+
+<section name="MAIL REPOSITORY">
+  <p>
+Mail repositories are now configured primarily by their "destinationURL" 
+property. This has the format "db://datasource/table[/repository]". Other
+config such as the "sqlFile" (where to find sqlResources.xml, and the "filestore"
+for mixed storage, can also be included, or can be left to defaults (see below).
+  </p>
+  <p>
+Each repository registered in the MailStore can now take a "config" section,
+which is the default configuration used by the MailStore when creating a repository 
+of that class. This allows us to have a configurable JDBCMailRepository, without
+needing to specify config everywhere it's used. I've set up the SPOOL repository 
+to use mixed storage (a filestore in addition to the database), but the MAIL 
+repository to use pure db storage.
+  </p>
+  <p>
+The new config has been tested with "inbox" and "spool" repositories, but it's not 
+yet tested with the "error", "spam" and "outgoing" repositories.
+  </p>
+  <p>
+The statements in the SqlResources.xml file have been tested on MySQL and M$SQL. 
+Only M$ has the optimised "getMessageSize" SQL, but this is optional. 
+  </p>
+  <p>
+You no longer have to manually create the tables required - this is automatic.
+Create Table statements are included for M$SQL and MySQL; we'll need to add others
+for other db products.
+ </p>
+
+</section>
+
+<section name="USERS REPOSITORY">
+  <p>
+I've added an "AbstractJdbcUsersRepository", which takes care of most of the work
+of a JdbcUsersRepository, making it pretty easy to add new ones. The abstract
+implementation doesn't have knowledge of User implementations, this is restricted to
+overridden methods in concrete UsersRepository implementations.
+   </p>
+  <p>
+The AbstractJdbcUsersRepository obtains SQL statements via an "SqlResources" object,
+which reads an sql definition file, finds the appropriate &lt;sqlDefs&gt; element, and
+provides the sql strings contained. In addition, the SqlResources class handles
+2 other things:
+     <ul>
+        <li>
+    a) Parameter replacement in SQL (eg replace all occurances of ${table} within
+       an sql statement with the parameter value for "table". Currently, all 
+       parameters are taken from the configuration &lt;sqlParameters&gt; element. It
+       is also possible to define parameters (defaults, if you like) within the 
+       sql definition file itself (a &lt;parameters&gt; element).</li>
+        <li>    b) Examines the Jdbc Connection to determine what database product is being
+       used. SQL statements specific to a db product (eg mysql) can then be used
+       automatically. (Detection is done by regexp matches on 
+       Connection.getMetaData.getDatabaseProductName())</li>
+           </ul>
+I've added 3 concrete subclasses of AbstractJdbcUserRepository: for DefaultUser,
+DefaultJamesUser, and "ListUser" (which for now is nothing more than a name). These
+give an example of how little work there is to implement a new repository. The
+ListUsersJdbcRepository can store multiple lists of names in a single table.
+  </p>
+  <p>
+I've made a simple modification to "RemoteManagerHandler", to allow testing. The
+"use [userRepositoryName]" command will switch the Remote manager to manage the
+named repository. This isn't really intended for production, makes for easier testing.
+The "james-config.xml" included in the proposal sets up 4 JDBC repositories: 
+    <ul>
+        <li> "localUsers" - a JamesUsersJdbcRepository.</li>
+        <li> "list-james" - a ListUsersJdbcRepository, used by the ListServ mailet.</li>
+        <li> "list-test" - another ListUsersJdbcRepositor, for testing.</li>
+        <li> "default-users" - a DefaultUsersJdbcRepository, for testing.</li>
+    </ul>
+  </p>
+  <p>
+Note that in order for the Avalon DataSource components to work, I've included
+an upgraded "avalon-excalibur.jar" in the proposal.
+
+ </p>
+
+</section>
+</body>
+</document>

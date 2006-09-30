@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.james</groupId>
+  <artifactId>james-project</artifactId>
+  <name>Apache JAMES Project</name>
+  <version>1.1-SNAPSHOT</version>
+  <description>
+    The Apache JAMES Project
+  </description>
+
+  <modules>
+    <module>maven-skin</module>
+    <module>server</module>
+  </modules>
+  
+  <url>http://james.apache.org/</url>
+  <inceptionYear>2006</inceptionYear>
+  <packaging>pom</packaging>
+
+  <dependencies>
+  </dependencies>
+
+  <organization>
+    <name>The Apache Software Foundation</name>
+    <url>http://www.apache.org</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>http://issues.apache.org/jira/browse/JAMES</url>
+  </issueManagement>
+
+  <developers>
+    <developer>
+      <id>bago</id>
+      <name>Stefano Bagnara</name>
+      <email>apache at bago.org</email>
+      <timezone>2</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>norman</id>
+      <name>Norman Maurer</name>
+      <email>nm at byteaction.de</email>
+      <timezone>2</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>serge</id>
+      <name>Serge Knystautas</name>
+      <email>sergek at lokitech.com</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>benrdf</id>
+      <name>Bernd Fondermann</name>
+      <email>bf_jak at brainlounge.de</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sbrewin</id>
+      <name>Steve Brewin</name>
+      <email>sbrewin at synsys.com</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>hilmer</id>
+      <name>S�ren Hilmer</name>
+      <email>sh at widetrail.dk</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>noel</id>
+      <name>Noel J. Bergman</name>
+      <email>noel at devtech.com</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>danny</id>
+      <name>Danny Angus</name>
+      <email>danny at apache.org</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>adc</id>
+      <name>Alan D. Cabrera</name>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/trunk</url>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>apache.releases</id>
+      <name>Apache Release Distribution Repository</name>
+      <url>scp://people.apache.org/www/people.apache.org/repo/m2-ibiblio-rsync-repository</url>
+    </repository>
+    <snapshotRepository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
+    </snapshotRepository>
+    <!-- Each project must override this with their own -->
+    <site>
+      <id>james-website</id>
+      <url>scp://minotaur.apache.org/www/james.apache.org/</url>
+    </site>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Apache Main M2 Repository</name>
+      <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>central-m1</id>
+      <name>Apache Main M1 Repository</name>
+      <url>http://people.apache.org/repo/m1-ibiblio-rsync-repository</url>
+      <layout>legacy</layout>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Snapshot Repository</name>
+      <url>http://people.apache.org/repo/m2-snapshot-repository</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+  </repositories>
+  
+  <mailingLists>
+    <mailingList>
+      <name>Apache James Website Developement</name>
+      <subscribe>site-dev-subscribe@james.apache.org</subscribe>
+      <unsubscribe>site-dev-unsubscribe@james.apache.org</unsubscribe>
+      <post>site-dev@james.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
+    </mailingList>
+  </mailingLists>
+
+</project>

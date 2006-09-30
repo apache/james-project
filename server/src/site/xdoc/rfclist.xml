@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>James - RFC Directory</title>
+ </properties>
+
+<body>
+<section name="RFC Directory">
+<p>This document contains a list of and links to RFCs relevant to James.</p>
+<subsection name="General RFCs">
+<a href="rfclist/basic/rfc0822.txt">RFC 822: Mail Message Format</a><br/>
+<a href="rfclist/basic/rfc1123.txt">RFC 1123: Requirements for Internet Hosts -- Application and Support (updated by RFC 2821)</a><br/>
+<a href="rfclist/basic/rfc2045.txt">RFC 2045: Multipurpose Internet Mail Extensions (MIME) Part One: Format of Internet Message Bodies</a><br/>
+<a href="rfclist/basic/rfc2822.txt">RFC 2822: Internet Message Format</a><br/>
+</subsection>
+<subsection name="SMTP RFCs">
+<a href="rfclist/smtp/rfc0821.txt">RFC 821: SMTP Protocol</a><br/>
+<a href="rfclist/smtp/rfc0974.txt">RFC 974: Mail Routing and the Domain System</a><br/>
+<a href="rfclist/smtp/rfc1652.txt">RFC 1652: SMTP Service Extension for 8bit-MIMEtransport (elective, but widely adopted)</a><br/>
+<a href="rfclist/smtp/rfc1830.txt">RFC 1830: SMTP Service Extensions for Transmission of Large and Binary MIME Messages (experimental, but cool idea)</a><br/>
+<a href="rfclist/smtp/rfc1869.txt">RFC 1869: SMTP Service Extensions</a><br/>
+<a href="rfclist/smtp/rfc1870.txt">RFC 1870: SMTP Service Extension for Message Size Declaration</a><br/>
+<a href="rfclist/smtp/rfc1891.txt">RFC 1891: SMTP Service Extension for Delivery Status Notifications (elective)</a><br/>
+<a href="rfclist/smtp/rfc1893.txt">RFC 1893: Enhanced Mail System Status Codes (experimental)</a><br/>
+<a href="rfclist/smtp/rfc1985.txt">RFC 1985: SMTP Service Extension for Remote Message Queue Starting (elective)</a><br/>
+<a href="rfclist/smtp/rfc2034.txt">RFC 2034: SMTP Service Extension for Returning Enhanced Error Codes (elective)</a><br/>
+<a href="rfclist/smtp/rfc2142.txt">RFC 2142: Mailbox Names For Common Services, Roles And Functions</a><br/>
+<a href="rfclist/smtp/rfc2197.txt">RFC 2197: SMTP Service Extension for Command Pipelining (elective)</a><br/>
+<a href="rfclist/smtp/rfc2554.txt">RFC 2554: SMTP Service Extension for Authentication</a><br/>
+<a href="rfclist/smtp/rfc2821.txt">RFC 2821: Simple Mail Transfer Protocol (obsoletes RFC 821)</a><br/>
+</subsection>
+<subsection name="POP3 RFCs">
+<a href="rfclist/pop3/rfc1725.txt">RFC 1725: POP3 Protocol</a><br/>
+<a href="rfclist/pop3/rfc1734.txt">RFC 1734: POP3 AUTHentication command</a><br/>
+<a href="rfclist/pop3/rfc1939.txt">RFC 1939: POP3 Protocol (obsoletes RFC 1725)</a><br/>
+<!-- Add RFC 1082, 2449, 2595, 3206 -->
+</subsection>
+<subsection name="IMAP RFCs">
+<a href="rfclist/imap4/rfc1731.txt">RFC 1731: IMAP4 Authentication Mechanisms</a><br/>
+<a href="rfclist/imap4/rfc2060.txt">RFC 2060: IMAP Version 4rev1</a><br/>
+<a href="rfclist/imap4/rfc2086.txt">RFC 2086: IMAP4 ACL extension</a><br/>
+<a href="rfclist/imap4/rfc2087.txt">RFC 2087: IMAP4 QUOTA extension</a><br/>
+<a href="rfclist/imap4/rfc2088.txt">RFC 2088: IMAP4 non-synchronizing literals</a><br/>
+<a href="rfclist/imap4/rfc2177.txt">RFC 2177: IMAP4 IDLE command</a><br/>
+<a href="rfclist/imap4/rfc2180.txt">RFC 2180: IMAP4 Multi-accessed Mailbox Practice</a><br/>
+<a href="rfclist/imap4/rfc2192.txt">RFC 2192: IMAP URL Scheme</a><br/>
+<a href="rfclist/imap4/rfc2193.txt">RFC 2193: IMAP4 Mailbox Referrals</a><br/>
+<a href="rfclist/imap4/rfc2195.txt">RFC 2195: IMAP/POP AUTHorize Extension for Simple Challenge/Response</a><br/>
+<a href="rfclist/imap4/rfc2221.txt">RFC 2221: IMAP4 Login Referrals</a><br/>
+<a href="rfclist/imap4/rfc2342.txt">RFC 2342: IMAP4 Namespace (elective)</a><br/>
+<a href="rfclist/imap4/rfc2359.txt">RFC 2359: IMAP4 UIDPLUS extension (elective)</a><br/>
+<a href="rfclist/imap4/rfc2595.txt">RFC 2595: Using TLS with IMAP, POP and ACAP</a><br/>
+<a href="rfclist/imap4/rfc2683.txt">RFC 2683: IMAP4 Implementation Recommendations</a><br/>
+</subsection>
+<subsection name="NNTP RFCs">
+<a href="rfclist/nntp/rfc0977.txt">RFC 977 : NNTP Protocol</a><br/>
+<a href="rfclist/nntp/rfc1036.txt">RFC 1036: Format of News Messages</a><br/>
+<a href="rfclist/nntp/rfc2980.txt">RFC 2980: Common NNTP Extensions</a><br/>
+<a href="http://www.academ.com/academ/nntp/">NNTP Working Group</a><br/>
+</subsection>
+<subsection name="LDAP RFCs">
+<a href="rfclist/ldap/rfc3377.txt">RFC 3377 : Lightweight Directory Access Protocol (v3): Technical Specification</a><br/>
+<a href="rfclist/ldap/rfc2251.txt">RFC 2251 : Lightweight Directory Access Protocol (v3)</a><br/>
+<a href="rfclist/ldap/rfc2252.txt">RFC 2252 : Lightweight Directory Access Protocol (v3): Attribute Syntax Definitions</a><br/>
+<a href="rfclist/ldap/rfc2253.txt">RFC 2253 : Lightweight Directory Access Protocol (v3): UTF-8 String Representation of Distinguished Names</a><br/>
+<a href="rfclist/ldap/rfc2254.txt">RFC 2254 : The String Representation of LDAP Search Filters</a><br/>
+<a href="rfclist/ldap/rfc2255.txt">RFC 2255 : The LDAP URL Format</a><br/>
+<a href="rfclist/ldap/rfc2256.txt">RFC 2256 : A Summary of the X.500(96) User Schema for use with LDAPv3</a><br/>
+<a href="rfclist/ldap/rfc2829.txt">RFC 2829 : Authentication Methods for LDAP</a><br/>
+<a href="rfclist/ldap/rfc2830.txt">RFC 2830 : Lightweight Directory Access Protocol (v3): Extension for Transport Layer Security</a><br/>
+</subsection>
+</section>
+</body>
+</document>
