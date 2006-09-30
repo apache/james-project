@@ -1,0 +1,5 @@
+# /robots.txt file for http://james.apache.org
+
+User-agent: *
+Disallow: /CVS
+Disallow: /images
