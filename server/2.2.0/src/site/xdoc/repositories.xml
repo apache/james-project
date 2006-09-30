@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Repositories</title>
+ </properties>
+
+<body>
+<section name="Repositories">
+
+<p>James uses a number of different repositories to both store message data (email, news messages) and 
+user information.  User repositories store user information, including user names, authentication 
+information, and aliases.  Mail repositories store messages that have been delivered locally.  Spool 
+repositories store messages that are still being processed.  Finally, news repositories are used to
+store news messages.</p>
+
+</section>
+<section name="Storage Types">
+
+<p>Aside from the type of data they store, repositories are distinguished by 
+where they store data.  There are three types of storage - File, Database, and DBFile.</p>
+<subsection name="File Repositories">
+
+<p>File-based repositories store all data in the file system.  In general, these repositories are extremely
+simple to configure, but may compare poorly in terms of performance when compared to other repository
+types.  File repositories are not recommended for large or performance-critical configurations.  In the
+default configuration, all repositories are file repositories.</p>
+
+<p>File repository paths typically begin with the prefix "file".  Paths are relative to the application
+base directory, unless the path begins with a slash.  As an example, assume that James is running in 
+/usr/james/phoenix/apps/james.  Then "file://var/mail/spool/" would refer to the directory /usr/james/phoenix/apps/james/var/mail/spool.  
+And "file:///var/mail/spool/" (note the extra '/') would refer to the directory /var/mail/spool.</p>
+
+<p>All repository types (mail, spool, user, and news) have file-based implementations.  No special configuration is required to enable file-based repositories</p>
+
+</subsection>
+<subsection name="Database (JDBC) Repositories">
+
+<p>Database repositories store all data in an administrator-supplied database.  Configuration is somewhat
+more complex, requiring that the administrator adjust the data-connections section.  Detailed directions 
+are included in the sample configuration file.  The administrator will need to know the JDBC driver class,
+the appropriate URL for use with his database, and a valid username/password for the database.</p>
+
+<p>If the administrator wants to configure a database other than MySQL, it will be necessary to add the jar 
+or zip file containing the JDBC driver classes to the lib subdirectory of the installation directory.  This
+will allow Phoenix to properly load the driver when it is initializing the database repository.  The MySQL
+driver is pre-packaged with James.</p>
+
+<p>Database repository paths typically begin with the prefix "db".  The format is "db://&lt;data-source&gt;/&lt;table&gt;" 
+where &lt;data-source&gt; is the name of the data-source defined in the data-connections section.  And &lt;table&gt; is 
+the particular table associated with the repository.</p>
+
+<p>Mail, spool, and user repositories have JDBC-based implementations.</p>
+
+</subsection>
+<subsection name="DBFile Repositories">
+
+<p>This is a special repository type used only for mail repositories.  DBFile repositories store the body of
+a mail message in the file system, while headers are stored in the database.  This allows the administrator 
+to minimize the size of data stored in the database, while conserving most of the performance of the 
+database repository.</p>
+
+<p>Only mail repositories have dbfile-based implementations.</p>
+</subsection>
+
+</section>
+</body>
+</document>
