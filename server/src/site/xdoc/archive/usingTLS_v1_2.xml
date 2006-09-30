@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Using TLS</title>
+  <author email="charles@benett1.demon.co.uk">Charles Benett</author>
+ </properties>
+
+<body>
+
+<section name="James 1.2.1 - Using TLS">
+
+  <p>
+    This document explains how to enable JAMES 1.2.1 to use Transport Layer
+    Security (TLS) (ie SSL).
+  </p>
+</section>
+
+<section name="Obtain JSSE">
+
+  <p>
+    Obtain JSSE source from java.sun.com. Follow their installation directions.
+    We assume that you install JSSE as a standard extension, with a static
+    provider definition. (See notes with JSSE distribution)
+  </p>
+  <p>
+    Note that the US export restrictions still apply to JSSE
+    (at version 1.0.2), so while both the international and domestic versions
+    offer the same level of crypto, the international version does not take
+    alternative providers.
+  </p>
+
+</section>
+
+<section name="Enable TLS">
+
+  <p>
+    Using JAMES with TLS. You need to do three things over and above the
+    normal operation of James: 
+    <ul>
+      <li>In Avalon.conf.xml, uncomment the TLS listener defintion.</li>
+      <li>In JAMES.conf.xml, uncomment the &lt;useTLS&gt;TRUE&lt;/useTLS&gt; element
+        for the service you want to use TLS. It is currently available for
+        remote manager and POP3. (If using POP3 over TLS, it is probably best
+        to change port to 995, which is the IANA designated POP3S port).</li>
+      <li> Ensure that avalonTestKeys is in the conf directory. You may need
+        to manually extract this from the Avalon.jar (with: jar xvf Avalon.jar
+        conf/avalonTestKeys). Note that this is a self-signed certificate for
+        test purposes only. You can specify a different server certificate in
+        the Avalon.conf.xml file.</li>
+    </ul>
+  </p>
+  <p>
+    Start James
+  </p>
+</section>
+
+<section name="Verify TLS-enabled JAMES">
+  <p>
+    (Positive Test) Use an SSL client to open a socket to the appropriate port.
+    I used openssl from www.openssl.org to test this.
+    E.g. openssl s_client -connect localhost:4555. You should see the normal
+    remote manager or POP3 server greeting and have normal  operation. 
+    <br>
+      - If, using openssl s_client, you get a connection refused/ error no
+      111, just try again. This probably means you got to the port before it
+      was ready.
+    </br>
+ </p>
+  <p>
+   (Negative Test) telnet to port 4555 (ie without SSL). This should hang the
+   telnet client. It should also lock port 4555 until the connection times out,
+   I think.
+  </p>
+</section>
+
+</body>
+</document>
