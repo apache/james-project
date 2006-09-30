@@ -1,0 +1,338 @@
+
+
+
+
+
+Network Working Group                                        D. Crocker
+Request for Comments: 2142                     Internet Mail Consortium
+Cateogry: Standards Track                                      May 1997
+
+
+                             MAILBOX NAMES FOR
+                   COMMON SERVICES, ROLES AND FUNCTIONS
+
+Status of this Memo
+
+   This document specifies an Internet standards track protocol for the
+   Internet community, and requests discussion and suggestions for
+   improvements.  Please refer to the current edition of the "Internet
+   Official Protocol Standards" (STD 1) for the standardization state
+   and status of this protocol.  Distribution of this memo is unlimited.
+
+ABSTRACT
+
+   This specification enumerates and describes Internet mail addresses
+   (mailbox name @ host reference) to be used when contacting personnel
+   at an organization.  Mailbox names are provided for both operations
+   and business functions.  Additional mailbox names and aliases are not
+   prohibited, but organizations which support email exchanges with the
+   Internet are encouraged to support AT LEAST each mailbox name for
+   which the associated function exists within the organization.
+
+1.  RATIONALE AND SCOPE
+
+   Various Internet documents have specified mailbox names to be used
+   when reaching the operators of the new service; for example, [RFC822
+   6.3, C.6] requires the presence of a <POSTMASTER@domain> mailbox name
+   on all hosts that have an SMTP server.  Other protocols have defacto
+   standards for well known mailbox names, such as <USENET@domain> for
+   NNTP (see [RFC977]), and <WEBMASTER@domain> for HTTP (see [HTTP]).
+   Defacto standards also exist for well known mailbox names which have
+   nothing to do with a particular protocol, e.g., <ABUSE@domain> and
+   <TROUBLE@domain>.
+
+   The purpose of this memo is to aggregate and specify the basic set of
+   mailbox names which organizations need to support.  Most
+   organizations do not need to support the full set of mailbox names
+   defined here, since not every organization will implement the all of
+   the associated services.  However, if a given service is offerred,
+   then the associated mailbox name(es) must be supported, resulting in
+   delivery to a recipient appropriate for the referenced service or
+   role.
+
+
+
+
+
+Crocker                     Standards Track                     [Page 1]
+
+RFC 2142                     Mailbox Names                      May 1997
+
+
+   If a host is not configured to accept mail directly, but it
+   implements a service for which this specification defines a mailbox
+   name, that host must have an MX RR set (see [RFC974]) and the mail
+   exchangers specified by this RR set must recognize the referenced
+   host's domain name as "local" for the purpose of accepting mail bound
+   for the defined mailbox name.  Note that this is true even if the
+   advertised domain name is not the same as the host's domain name; for
+   example, if an NNTP server's host name is DATA.RAMONA.VIX.COM yet it
+   advertises the domain name VIX.COM in its "Path:" headers, then mail
+   must be deliverable to both <USENET@VIX.COM> and
+   <USENET@DATA.RAMONA.VIX.COM>, even though these addresses might be
+   delivered to different final destinations.
+
+   The scope of a well known mailbox name is its domain name.  Servers
+   accepting mail on behalf of a domain must accept and correctly
+   process mailbox names for that domain, even if the server, itself,
+   does not support the associated service.  So, for example, if an NNTP
+   server advertises the organization's top level domain in "Path:"
+   headers (see [RFC977]) the mail exchangers for that top level domain
+   must accept mail to <USENET@domain> even if the mail exchanger hosts
+   do not, themselves, serve the NNTP protocol.
+
+2.  INVARIANTS
+
+   For well known names that are not related to specific protocols, only
+   the organization's top level domain name are required to be valid.
+   For example, if an Internet service provider's domain name is
+   COMPANY.COM, then the <ABUSE@COMPANY.COM> address must be valid and
+   supported, even though the customers whose activity generates
+   complaints use hosts with more specific domain names like
+   SHELL1.COMPANY.COM.  Note, however, that it is valid and encouraged
+   to support mailbox names for sub-domains, as appropriate.
+
+   Mailbox names must be recognized independent of character case.  For
+   example, POSTMASTER, postmaster, Postmaster, PostMaster, and even
+   PoStMaStEr are to be treated the same, with delivery to the same
+   mailbox.
+
+   Implementations of these well known names need to take account of the
+   expectations of the senders who will use them.  Sending back an
+   automatic mail acknowledgement is usually helpful (though we suggest
+   caution against the possibility of "duelling mail robots" and the
+   resulting mail loops).
+
+
+
+
+
+
+
+
+Crocker                     Standards Track                     [Page 2]
+
+RFC 2142                     Mailbox Names                      May 1997
+
+
+3.  BUSINESS-RELATED MAILBOX NAMES
+
+   These names are related to an organization's line-of-business
+   activities.  The INFO name is often tied to an autoresponder, with a
+   range of standard files available.
+
+   MAILBOX        AREA                USAGE
+   -----------    ----------------    ---------------------------
+   INFO           Marketing           Packaged information about the
+                                      organization, products, and/or
+                                      services, as appropriate
+   MARKETING      Marketing           Product marketing and
+                                      marketing communications
+   SALES          Sales               Product purchase information
+   SUPPORT        Customer Service    Problems with product or
+                                      service
+
+
+4.  NETWORK OPERATIONS MAILBOX NAMES
+
+   Operations addresses are intended to provide recourse for customers,
+   providers and others who are experiencing difficulties with the
+   organization's Internet service.
+
+   MAILBOX        AREA                USAGE
+   -----------    ----------------    ---------------------------
+   ABUSE          Customer Relations  Inappropriate public behaviour
+   NOC            Network Operations  Network infrastructure
+   SECURITY       Network Security    Security bulletins or queries
+
+
+5.  SUPPORT MAILBOX NAMES FOR SPECIFIC INTERNET SERVICES
+
+   For major Internet protocol services, there is a mailbox defined for
+   receiving queries and reports.  (Synonyms are included, here, due to
+   their extensive installed base.)
+
+   MAILBOX        SERVICE             SPECIFICATIONS
+   -----------    ----------------    ---------------------------
+   POSTMASTER     SMTP                [RFC821], [RFC822]
+   HOSTMASTER     DNS                 [RFC1033-RFC1035]
+   USENET         NNTP                [RFC977]
+   NEWS           NNTP                Synonym for USENET
+   WEBMASTER      HTTP                [RFC 2068]
+   WWW            HTTP                Synonym for WEBMASTER
+   UUCP           UUCP                [RFC976]
+   FTP            FTP                 [RFC959]
+
+
+
+
+Crocker                     Standards Track                     [Page 3]
+
+RFC 2142                     Mailbox Names                      May 1997
+
+
+6.  MAILING LIST ADMINISTRATION MAILBOX
+
+   Mailing lists have an administrative mailbox name to which add/drop
+   requests and other meta-queries can be sent.
+
+   For a mailing list whose submission mailbox name is:
+
+      <LIST@DOMAIN>
+
+   there MUST be the administrative mailbox name:
+
+      <LIST-REQUEST@DOMAIN>
+
+   Distribution List management software, such as MajorDomo and
+   Listserv, also have a single mailbox name associated with the
+   software on that system -- usually the name of the software -- rather
+   than a particular list on that system.  Use of such mailbox names
+   requires participants to know the type of list software employed at
+   the site.  This is problematic.  Consequently:
+
+      LIST-SPECIFIC (-REQUEST) MAILBOX NAMES ARE REQUIRED,
+      INDEPENDENT OF THE AVAILABILITY OF GENERIC LIST SOFTWARE
+      MAILBOX NAMES.
+
+7.  DOMAIN NAME SERVICE ADMINISTRATION MAILBOX
+
+   In DNS (see [RFC1033], [RFC1034] and [RFC1035]), the Start Of
+   Authority record (SOA RR) has a field for specifying the mailbox name
+   of the zone's administrator.
+
+   This field must be a simple word without metacharacters (such as "%"
+   or "!" or "::"), and a mail alias should be used on the relevant mail
+   exchanger hosts to direct zone administration mail to the appropriate
+   mailbox.
+
+   For simplicity and regularity, it is strongly recommended that the
+   well known mailbox name HOSTMASTER always be used
+   <HOSTMASTER@domain>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Crocker                     Standards Track                     [Page 4]
+
+RFC 2142                     Mailbox Names                      May 1997
+
+
+8.  AUTONOMOUS SYSTEM MAILBOX
+
+   Several Internet registries implement mailing lists for Autonomous
+   System contacts.  So, for example, mail sent to <AS3557@RA.NET> will
+   at the time of this writing reach the technical contact for
+   Autonomous System 3557 in the BGP4 (see [RFC1654], [RFC1655] and
+   [RFC1656]).
+
+   Not all Autonomous Systems are registered with all registries,
+   however, and so undeliverable mailbox names under this scheme should
+   be treated as an inconvenience rather than as an error or a standards
+   violation.
+
+9.  SECURITY CONSIDERATIONS
+
+   Denial of service attacks (flooding a mailbox with junk) will be
+   easier after this document becomes a standard, since more systems
+   will support the same set of mailbox names.
+
+10. REFERENCES
+
+   [RFC821] Postel, J., "Simple Mail Transfer Protocol", STD 10, RFC
+   821, Information Sciences Institute, August 1982.
+
+   [RFC822] Crocker, D., "Standard for the format of ARPA Internet text
+   messages", STD 11, RFC 822, University of Delaware, August 1982.
+
+   [RFC959] Postel, J., and J. Reynolds, "File Transfer Protocol (FTP)",
+   STD 9, RFC 959, Information Sciences Institute, October 1985.
+
+   [RFC974] Partridge, C., "Mail routing and the domain system", STD 14,
+   RFC 974, CSNET CIC BBN Laboratories Inc, January 1986.
+
+   [RFC976] Horton, M., "UUCP mail interchange format standard", RFC
+   976, Bell Laboratories, February 1986.
+
+   [RFC977] Kantor, B., et al, "Network News Transfer Protocol: A
+   Proposed Standard for the Stream-Based Transmission of News", RFC
+   977, University of California, February 1986.
+
+   [RFC1033] Lottor, M., "Domain administrators operations guide", RFC
+   1033, SRI International, November 1987.
+
+   [RFC1034] Mockapetris, P., "Domain names - concepts and facilities",
+   STD 13, RFC 1035, USC/Information Sciences Institute, November 1987.
+
+
+
+
+
+
+Crocker                     Standards Track                     [Page 5]
+
+RFC 2142                     Mailbox Names                      May 1997
+
+
+   [RFC1035] Mockapetris, P., "Domain Names - Implementation and
+   Specification" STD 13, RFC 1035, USC/Information Sciences Institute,
+   November 1987.
+
+   [RFC1654] Rekhter, Y., et al, "A Border Gateway Protocol 4 (BGP- 4)",
+   RFC 1654, T.J. Watson Research Center, IBM Corp., July 1994.
+
+   [RFC1655] Rekhter, Y., et al, "Application of the Border Gateway
+   Protocol in the Internet", RFC 1655, T.J. Watson Research Center, IBM
+   Corp., July 1994.
+
+   [RFC1656] Traina, P., "BGP-4 Protocol Document Roadmap and
+   Implementation Experience", RFC 1656, cisco Systems, July 1994.
+
+   [HTTP] Berners-Lee, T., et al, "Hypertext Transfer Protocol --
+   HTTP/1.0", RFC 1945, May 1996.
+
+11. ACKNOWLEDGEMENTS
+
+   This specification derived from an earlier draft written by Paul
+   Vixie.  Thanks to Stan Barber, Michael Dillon, James Aldridge, J.  D.
+   Falk, Peter Kaminski, Brett Watson, Russ Wright, Neal McBurnett, and
+   Ed Morin for their comments on that draft.
+
+12. AUTHOR'S ADDRESS
+
+   Dave Crocker
+   Internet Mail Consortium
+   127 Segre Ave.
+   Santa Cruz, CA
+
+   Phone: +1 408 246 8253
+   EMail: dcrocker@imc.org
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Crocker                     Standards Track                     [Page 6]
+

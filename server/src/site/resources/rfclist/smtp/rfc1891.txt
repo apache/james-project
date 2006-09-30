@@ -1,0 +1,521 @@
+
+
+
+
+
+Network Working Group                                           K. Moore
+Request for Comments: 1891                       University of Tennessee
+Category: Standards Track                                   January 1996
+
+
+                         SMTP Service Extension
+                   for Delivery Status Notifications
+
+Status of this Memo
+
+   This document specifies an Internet standards track protocol for the
+   Internet community, and requests discussion and suggestions for
+   improvements.  Please refer to the current edition of the "Internet
+   Official Protocol Standards" (STD 1) for the standardization state
+   and status of this protocol.  Distribution of this memo is unlimited.
+
+1. Abstract
+
+   This memo defines an extension to the SMTP service, which allows an
+   SMTP client to specify (a) that delivery status notifications (DSNs)
+   should be generated under certain conditions, (b) whether such
+   notifications should return the contents of the message, and (c)
+   additional information, to be returned with a DSN, that allows the
+   sender to identify both the recipient(s) for which the DSN was
+   issued, and the transaction in which the original message was sent.
+
+   Any questions, comments, and reports of defects or ambiguities in
+   this specification may be sent to the mailing list for the NOTARY
+   working group of the IETF, using the address
+   <notifications@cs.utk.edu>.  Requests to subscribe to the mailing
+   list should be addressed to <notifications-request@cs.utk.edu>.
+   Implementors of this specification are encouraged to subscribe to the
+   mailing list, so that they will quickly be informed of any problems
+   which might hinder interoperability.
+
+   NOTE: This document is a Proposed Standard.  If and when this
+   protocol is submitted for Draft Standard status, any normative text
+   (phrases containing SHOULD, SHOULD NOT, MUST, MUST NOT, or MAY) in
+   this document will be re-evaluated in light of implementation
+   experience, and are thus subject to change.
+
+2. Introduction
+
+   The SMTP protocol [1] requires that an SMTP server provide
+   notification of delivery failure, if it determines that a message
+   cannot be delivered to one or more recipients.  Traditionally, such
+   notification consists of an ordinary Internet mail message (format
+   defined by [2]), sent to the envelope sender address (the argument of
+
+
+
+Moore                       Standards Track                     [Page 1]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+   the SMTP MAIL command), containing an explanation of the error and at
+   least the headers of the failed message.
+
+   Experience with large mail distribution lists [3] indicates that such
+   messages are often insufficient to diagnose problems, or even to
+   determine at which host or for which recipients a problem occurred.
+   In addition, the lack of a standardized format for delivery
+   notifications in Internet mail makes it difficult to exchange such
+   notifications with other message handling systems.
+
+   Such experience has demonstrated a need for a delivery status
+   notification service for Internet electronic mail, which:
+
+(a) is reliable, in the sense that any DSN request will either be
+    honored at the time of final delivery, or result in a response
+    that indicates that the request cannot be honored,
+
+(b) when both success and failure notifications are requested,
+    provides an unambiguous and nonconflicting indication of whether
+    delivery of a message to a recipient succeeded or failed,
+
+(c) is stable, in that a failed attempt to deliver a DSN should never
+    result in the transmission of another DSN over the network,
+
+(d) preserves sufficient information to allow the sender to identify
+    both the mail transaction and the recipient address which caused
+    the notification, even when mail is forwarded or gatewayed to
+    foreign environments, and
+
+(e) interfaces acceptably with non-SMTP and non-822-based mail
+    systems, both so that notifications returned from foreign mail
+    systems may be useful to Internet users, and so that the
+    notification requests from foreign environments may be honored.
+    Among the requirements implied by this goal are the ability to
+    request non-return-of-content, and the ability to specify whether
+    positive delivery notifications, negative delivery notifications,
+    both, or neither, should be issued.
+
+   In an attempt to provide such a service, this memo uses the mechanism
+   defined in [4] to define an extension to the SMTP protocol.  Using
+   this mechanism, an SMTP client may request that an SMTP server issue
+   or not issue a delivery status notification (DSN) under certain
+   conditions.  The format of a DSN is defined in [5].
+
+
+
+
+
+
+
+
+Moore                       Standards Track                     [Page 2]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+3. Framework for the Delivery Status Notification Extension
+
+   The following service extension is therefore defined:
+
+(1) The name of the SMTP service extension is "Delivery Status
+    Notification";
+
+(2) the EHLO keyword value associated with this extension is "DSN",
+    the meaning of which is defined in section 4 of this memo;
+
+(3) no parameters are allowed with this EHLO keyword value;
+
+(4) two optional parameters are added to the RCPT command, and two
+    optional parameters are added to the MAIL command:
+
+    An optional parameter for the RCPT command, using the
+    esmtp-keyword "NOTIFY", (to specify the conditions under which a
+    delivery status notification should be generated), is defined in
+    section 5.1,
+
+    An optional parameter for the RCPT command, using the
+    esmtp-keyword "ORCPT", (used to convey the "original"
+    (sender-specified) recipient address), is defined in section 5.2,
+    and
+
+    An optional parameter for the MAIL command, using the
+    esmtp-keyword "RET", (to request that DSNs containing an
+    indication of delivery failure either return the entire contents
+    of a message or only the message headers), is defined in section
+    5.3,
+
+    An optional parameter for the MAIL command, using the
+    esmtp-keyword "ENVID", (used to propagate an identifier for this
+    message transmission envelope, which is also known to the sender
+    and will, if present, be returned in any DSNs issued for this
+    transmission), is defined in section 5.4;
+
+(5) no additional SMTP verbs are defined by this extension.
+
+   The remainder of this memo specifies how support for the extension
+   effects the behavior of a message transfer agent.
+
+4.  The Delivery Status Notification service extension
+
+   An SMTP client wishing to request a DSN for a message may issue the
+   EHLO command to start an SMTP session, to determine if the server
+   supports any of several service extensions.  If the server responds
+   with code 250 to the EHLO command, and the response includes the EHLO
+
+
+
+Moore                       Standards Track                     [Page 3]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+   keyword DSN, then the Delivery Status Notification extension (as
+   described in this memo) is supported.
+
+   Ordinarily, when an SMTP server returns a positive (2xx) reply code
+   in response to a RCPT command, it agrees to accept responsibility for
+   either delivering the message to the named recipient, or sending a
+   notification to the sender of the message indicating that delivery
+   has failed.  However, an extended SMTP ("ESMTP") server which
+   implements this service extension will accept an optional NOTIFY
+   parameter with the RCPT command. If present, the NOTIFY parameter
+   alters the conditions for generation of delivery status notifications
+   from the default (issue notifications only on failure) specified in
+   [1].  The ESMTP client may also request (via the RET parameter)
+   whether the entire contents of the original message should be
+   returned (as opposed to just the headers of that message), along with
+   the DSN.
+
+   In general, an ESMTP server which implements this service extension
+   will propagate delivery status notification requests when relaying
+   mail to other SMTP-based MTAs which also support this extension, and
+   make a "best effort" to ensure that such requests are honored when
+   messages are passed into other environments.
+
+   In order that any delivery status notifications thus generated will
+   be meaningful to the sender, any ESMTP server which supports this
+   extension will attempt to propagate the following information to any
+   other MTAs that are used to relay the message, for use in generating
+   DSNs:
+
+(a) for each recipient, a copy of the original recipient address, as
+    used by the sender of the message.
+
+    This address need not be the same as the mailbox specified in the
+    RCPT command.  For example, if a message was originally addressed
+    to A@B.C and later forwarded to A@D.E, after such forwarding has
+    taken place, the RCPT command will specify a mailbox of A@D.E.
+    However, the original recipient address remains A@B.C.
+
+    Also, if the message originated from an environment which does not
+    use Internet-style user@domain addresses, and was gatewayed into
+    SMTP, the original recipient address will preserve the original
+    form of the recipient address.
+
+(b) for the entire SMTP transaction, an envelope identification
+    string, which may be used by the sender to associate any delivery
+    status notifications with the transaction used to send the
+    original message.
+
+
+
+
+Moore                       Standards Track                     [Page 4]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+5.  Additional parameters for RCPT and MAIL commands
+
+   The extended RCPT and MAIL commands are issued by a client when it
+   wishes to request a DSN from the server, under certain conditions,
+   for a particular recipient.  The extended RCPT and MAIL commands are
+   identical to the RCPT and MAIL commands defined in [1], except that
+   one or more of the following parameters appear after the sender or
+   recipient address, respectively.  The general syntax for extended
+   SMTP commands is defined in [4].
+
+   NOTE: Although RFC 822 ABNF is used to describe the syntax of these
+   parameters, they are not, in the language of that document,
+   "structured field bodies".  Therefore, while parentheses MAY appear
+   within an emstp-value, they are not recognized as comment delimiters.
+
+   The syntax for "esmtp-value" in [4] does not allow SP, "=", control
+   characters, or characters outside the traditional ASCII range of 1-
+   127 decimal to be transmitted in an esmtp-value.  Because the ENVID
+   and ORCPT parameters may need to convey values outside this range,
+   the esmtp-values for these parameters are encoded as "xtext".
+   "xtext" is formally defined as follows:
+
+     xtext = *( xchar / hexchar )
+
+     xchar = any ASCII CHAR between "!" (33) and "~" (126) inclusive,
+          except for "+" and "=".
+
+; "hexchar"s are intended to encode octets that cannot appear
+; as ASCII characters within an esmtp-value.
+
+     hexchar = ASCII "+" immediately followed by two upper case
+          hexadecimal digits
+
+When encoding an octet sequence as xtext:
+
++ Any ASCII CHAR between "!" and "~" inclusive, except for "+" and "=",
+  MAY be encoded as itself.  (A CHAR in this range MAY instead be
+  encoded as a "hexchar", at the implementor's discretion.)
+
++ ASCII CHARs that fall outside the range above must be encoded as
+  "hexchar".
+
+5.1  The NOTIFY parameter of the ESMTP RCPT command
+
+   A RCPT command issued by a client may contain the optional esmtp-
+   keyword "NOTIFY", to specify the conditions under which the SMTP
+   server should generate DSNs for that recipient.  If the NOTIFY
+   esmtp-keyword is used, it MUST have an associated esmtp-value,
+
+
+
+Moore                       Standards Track                     [Page 5]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+   formatted according to the following rules, using the ABNF of RFC
+   822:
+
+     notify-esmtp-value = "NEVER" / 1#notify-list-element
+
+     notify-list-element = "SUCCESS" / "FAILURE" / "DELAY"
+
+Notes:
+
+a. Multiple notify-list-elements, separated by commas, MAY appear in a
+   NOTIFY parameter; however, the NEVER keyword MUST appear by itself.
+
+b. Any of the keywords NEVER, SUCCESS, FAILURE, or DELAY may be spelled
+   in any combination of upper and lower case letters.
+
+The meaning of the NOTIFY parameter values is generally as follows:
+
++ A NOTIFY parameter value of "NEVER" requests that a DSN not be
+  returned to the sender under any conditions.
+
++ A NOTIFY parameter value containing the "SUCCESS" or "FAILURE"
+  keywords requests that a DSN be issued on successful delivery or
+  delivery failure, respectively.
+
++ A NOTIFY parameter value containing the keyword "DELAY" indicates the
+  sender's willingness to receive "delayed" DSNs.  Delayed DSNs may be
+  issued if delivery of a message has been delayed for an unusual amount
+  of time (as determined by the MTA at which the message is delayed),
+  but the final delivery status (whether successful or failure) cannot
+  be determined.  The absence of the DELAY keyword in a NOTIFY parameter
+  requests that a "delayed" DSN NOT be issued under any conditions.
+
+   The actual rules governing interpretation of the NOTIFY parameter are
+   given in section 6.
+
+   For compatibility with SMTP clients that do not use the NOTIFY
+   facility, the absence of a NOTIFY parameter in a RCPT command may be
+   interpreted as either NOTIFY=FAILURE or NOTIFY=FAILURE,DELAY.
+
+5.2 The ORCPT parameter to the ESMTP RCPT command
+
+   The ORCPT esmtp-keyword of the RCPT command is used to specify an
+   "original" recipient address that corresponds to the actual recipient
+   to which the message is to be delivered.  If the ORCPT esmtp-keyword
+   is used, it MUST have an associated esmtp-value, which consists of
+   the original recipient address, encoded according to the rules below.
+   The ABNF for the ORCPT parameter is:
+
+
+
+
+Moore                       Standards Track                     [Page 6]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+     orcpt-parameter = "ORCPT=" original-recipient-address
+
+     original-recipient-address = addr-type ";" xtext
+
+     addr-type = atom
+
+   The "addr-type" portion MUST be an IANA-registered electronic mail
+   address-type (as defined in [5]), while the "xtext" portion contains
+   an encoded representation of the original recipient address using the
+   rules in section 5 of this document.  The entire ORCPT parameter MAY
+   be up to 500 characters in length.
+
+   When initially submitting a message via SMTP, if the ORCPT parameter
+   is used, it MUST contain the same address as the RCPT TO address
+   (unlike the RCPT TO address, the ORCPT parameter will be encoded as
+   xtext).  Likewise, when a mailing list submits a message via SMTP to
+   be distributed to the list subscribers, if ORCPT is used, the ORCPT
+   parameter MUST match the new RCPT TO address of each recipient, not
+   the address specified by the original sender of the message.)
+
+   The "addr-type" portion of the original-recipient-address is used to
+   indicate the "type" of the address which appears in the ORCPT
+   parameter value.  However, the address associated with the ORCPT
+   keyword is NOT constrained to conform to the syntax rules for that
+   "addr-type".
+
+   Ideally, the "xtext" portion of the original-recipient-address should
+   contain, in encoded form, the same sequence of characters that the
+   sender used to specify the recipient.  However, for a message
+   gatewayed from an environment (such as X.400) in which a recipient
+   address is not a simple string of printable characters, the
+   representation of recipient address must be defined by a
+   specification for gatewaying between DSNs and that environment.
+
+5.3 The RET parameter of the ESMTP MAIL command
+
+   The RET esmtp-keyword on the extended MAIL command specifies whether
+   or not the message should be included in any failed DSN issued for
+   this message transmission.  If the RET esmtp-keyword is used, it MUST
+   have an associated esmtp-value, which is one of the following
+   keywords:
+
+   FULL  requests that the entire message be returned in any "failed"
+         delivery status notification issued for this recipient.
+
+   HDRS  requests that only the headers of the message be returned.
+
+
+
+
+
+Moore                       Standards Track                     [Page 7]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+   The FULL and HDRS keywords may be spelled in any combination of upper
+   and lower case letters.
+
+   If no RET parameter is supplied, the MTA MAY return either the
+   headers of the message or the entire message for any DSN containing
+   indication of failed deliveries.
+
+   Note that the RET parameter only applies to DSNs that indicate
+   delivery failure for at least one recipient.  If a DSN contains no
+   indications of delivery failure, only the headers of the message
+   should be returned.
+
+5.4  The ENVID parameter to the ESMTP MAIL command
+
+   The ENVID esmtp-keyword of the SMTP MAIL command is used to specify
+   an "envelope identifier" to be transmitted along with the message and
+   included in any DSNs issued for any of the recipients named in this
+   SMTP transaction.  The purpose of the envelope identifier is to allow
+   the sender of a message to identify the transaction for which the DSN
+   was issued.
+
+   The ABNF for the ENVID parameter is:
+
+     envid-parameter = "ENVID=" xtext
+
+   The ENVID esmtp-keyword MUST have an associated esmtp-value.  No
+   meaning is assigned by the mail system to the presence or absence of
+   this parameter or to any esmtp-value associated with this parameter;
+   the information is used only by the sender or his user agent.  The
+   ENVID parameter MAY be up to 100 characters in length.
+
+5.5 Restrictions on the use of Delivery Status Notification parameters
+
+   The RET and ENVID parameters MUST NOT appear more than once each in
+   any single MAIL command.  If more than one of either of these
+   parameters appears in a MAIL command, the ESMTP server SHOULD respond
+   with "501 syntax error in parameters or arguments".
+
+   The NOTIFY and ORCPT parameters MUST NOT appear more than once in any
+   RCPT command.  If more than one of either of these parameters appears
+   in a RCPT command, the ESMTP server SHOULD respond with "501 syntax
+   error in parameters or arguments".
+
+6. Conformance requirements
+
+   The Simple Mail Transfer Protocol (SMTP) is used by Message Transfer
+   Agents (MTAs) when accepting, relaying, or gatewaying mail, as well
+   as User Agents (UAs) when submitting mail to the mail transport
+
+
+
+Moore                       Standards Track                     [Page 8]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+   system.  The DSN extension to SMTP may be used to allow UAs to convey
+   the sender's requests as to when DSNs should be issued.  A UA which
+   claims to conform to this specification must meet certain
+   requirements as described below.
+
+   Typically, a message transfer agent (MTA) which supports SMTP will
+   assume, at different times, both the role of a SMTP client and an
+   SMTP server, and may also provide local delivery, gatewaying to
+   foreign environments, forwarding, and mailing list expansion.  An MTA
+   which, when acting as an SMTP server, issues the DSN keyword in
+   response to the EHLO command, MUST obey the rules below for a
+   "conforming SMTP client" when acting as a client, and a "conforming
+   SMTP server" when acting as a server.  The term "conforming MTA"
+   refers to an MTA which conforms to this specification, independent of
+   its role of client or server.
+
+6.1 SMTP protocol interactions
+
+   The following rules apply to SMTP transactions in which any of the
+   ENVID, NOTIFY, RET, or ORCPT keywords are used:
+
+(a) If an SMTP client issues a MAIL command containing a valid ENVID
+    parameter and associated esmtp-value and/or a valid RET parameter
+    and associated esmtp-value, a conforming SMTP server MUST return
+    the same reply-code as it would to the same MAIL command without
+    the ENVID and/or RET parameters.  A conforming SMTP server MUST
+    NOT refuse a MAIL command based on the absence or presence of
+    valid ENVID or RET parameters, or on their associated
+    esmtp-values.
+
+    However, if the associated esmtp-value is not valid (i.e. contains
+    illegal characters), or if there is more than one ENVID or RET
+    parameter in a particular MAIL command, the server MUST issue the
+    reply-code 501 with an appropriate message (e.g.  "syntax error in
+    parameter").
+
+(b) If an SMTP client issues a RCPT command containing any valid
+    NOTIFY and/or ORCPT parameters, a conforming SMTP server MUST
+    return the same response as it would to the same RCPT command
+    without those NOTIFY and/or ORCPT parameters.  A conforming SMTP
+    server MUST NOT refuse a RCPT command based on the presence or
+    absence of any of these parameters.
+
+    However, if any of the associated esmtp-values are not valid, or
+    if there is more than one of any of these parameters in a
+    particular RCPT command, the server SHOULD issue the response "501
+    syntax error in parameter".
+
+
+
+
+Moore                       Standards Track                     [Page 9]
+
+RFC 1891           SMTP Delivery Status Notifications       January 1996
+
+
+6.2 Handling of messages received via SMTP
+
+   This section describes how a conforming MTA should handle any
+   messages received via SMTP.
+
+   NOTE: A DSN MUST NOT be returned to the sender for any message for
+   which the return address from the SMTP MAIL command was NULL ("<>"),
+   even if the sender's address is available from other sources (e.g.
+   the message header).  However, the MTA which would otherwise issue a
+   DSN SHOULD inform the local postmaster of delivery failures through
+   some appropriate mechanism that will not itself
+
