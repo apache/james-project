@@ -36,7 +36,9 @@
     <menu name="James Server" inherit="top">
       <item name="Overview" href="/index.html" />
       <item name="Objectives" href="/design_objectives.html" />
-      <item name="James FAQ" href="/FAQ.html" />
+      <item name="James FAQ" href="/FAQ.html">
+        <item name="James and Sendmail" href="/james_and_sendmail.html" />
+      </item>
       <item name="Wiki" href="http://wiki.apache.org/james" />
       <item name="Useful RFCs" href="/rfclist.html" />
     </menu>

@@ -39,7 +39,6 @@
       <item name="Using SMTP AUTH" href="/smtp_auth.html" />
       <item name="Using a Database with James" href="/using_database.html" />
       <item name="Using TLS/SSL" href="/usingTLS.html" />
-      <item name="James and Sendmail" href="/james_and_sendmail.html" />
       <item name="Creating Mailing Lists" href="/mailing_lists.html" />
     </menu>
     <menu name="Customization">
