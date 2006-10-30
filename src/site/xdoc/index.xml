@@ -23,7 +23,7 @@
     </div></div>
     <subsection name="2006">
      <h4>JAMES Server 2.3.0 Final Released</h4>
-     <p>James PMC is proud to announce the <a href="http://people.apache.org/dist/james/server/">availability</a> of the long awaited final release of JAMES Server 2.3.0. More informations on what's new can be found in the <a href="/server/2.3.0/changelog.html">changelog</a>. - Oct/2006</p>
+     <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the long awaited final release of JAMES Server 2.3.0. More informations on what's new can be found in the <a href="/server/2.3.0/changelog.html">changelog</a>. - Oct/2006</p>
      <h4>jSPF 0.9 b3 Released</h4>
      <p>James PMC is proud to announce the <a href="http://people.apache.org/dist/james/jspf/">availability</a> of the third beta of jspf 0.9. This version has start to use the official spf testsuite to fix all rfc issues. - Sep/2006</p>
      <h4>JAMES Server 2.3.0 RC3 Released</h4>
