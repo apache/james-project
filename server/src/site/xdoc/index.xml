@@ -119,10 +119,10 @@ users are urged to upgrade to v2.3.0 as soon as possible</b>.</p>
           <td>1.2</td>
         </tr>
         <tr>
-          <td>FetchPOP</td>
-          <td>Deprecated</td>
-          <td>2.3</td>
-          <td>2.1</td>
+          <td>FetchMail</td>
+          <td>Stable</td>
+          <td>2.2</td>
+          <td>2.2</td>
         </tr>
       </table>
     </section>
