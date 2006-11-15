@@ -112,8 +112,7 @@ you are using Outlook or Outlook Express or Eudora, chances are that you
 are sending HTML email by default. There is usually a setting that will 
 allow you to send "Plain Text" email. If you are using Microsoft 
 products to send email, there are several bugs in the software that 
-prevent you from turning off the sending of HTML email. Please read this 
-<a href="./micromail.html">page</a> as well... </p>
+prevent you from turning off the sending of HTML email.</p>
       <p>
         <strong> Watch where you are sending email. </strong>
         <br/> The majority of our mailing 
@@ -139,9 +138,7 @@ only see part of the conversation. </p>
     </section>
     <section name="Archives">
       <p> There are several sites on the net that archive and 
-provide searching for our mailing lists in HTML readable format. If a 
-list is not there, then feel free to take initiative and submit it for 
-us via <a href="./mail2.html#general">jakarta-general</a> mailing list. 
+provide searching for our mailing lists in HTML readable format.
 </p>
       <p>
         <ul>

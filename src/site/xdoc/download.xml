@@ -68,7 +68,7 @@ list of mirrors</a>.</p>
 
 <p>This release has many enhancements and bug fixes over the previous
 release.  See the <a
-href="http://james.apache.org/changelog.html">Change Log</a>
+href="server/2.3.0/changelog.html">Change Log</a>
 for a detailed list of changes.  Some of the earlier defects could
 turn a James mail server into an Open Relay.  All users of James are urged to upgrade to James v2.3.0 as soon as
 possible.</p>
