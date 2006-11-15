@@ -85,17 +85,12 @@ V. Common Configurations
 <li><a href="smtp_auth.html">Using SMTP AUTH</a></li>
 <li><a href="using_database.html">Using a Database with James</a></li>
 <li><a href="usingTLS.html">Using TLS/SSL</a></li>
-<li><a href="james_and_sendmail.html">James and Sendmail</a></li>
 <li><a href="mailing_lists.html">Creating Mailing Lists</a></li>
 </ul>
 VI. Customizing James
 <ul>
 <li><a href="custom_matcher.html">How to write a custom Matcher</a></li>
 <li><a href="custom_mailet.html">How to write a custom Mailet</a></li>
-</ul>
-V. Other Information
-<ul>
-<li><a href="FAQ.html">The James FAQ</a></li>
 </ul>
 </p>
 </subsection>
