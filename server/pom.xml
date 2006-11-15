@@ -84,8 +84,8 @@
     </mailingList>
     <mailingList>
       <name>James General List</name>
-      <subscribe>server-general-subscribe@james.apache.org</subscribe>
-      <unsubscribe>server-general-unsubscribe@james.apache.org</unsubscribe>
+      <subscribe>general-subscribe@james.apache.org</subscribe>
+      <unsubscribe>general-unsubscribe@james.apache.org</unsubscribe>
       <archive>http://www.mail-archive.com/general%40james.apache.org/</archive>
     </mailingList>
   </mailingLists>
