@@ -38,7 +38,7 @@ configuring the JVM to use JSSE services.</p>
 
 <p>If you are using a Java distribution that does not include JSSE as part of the 
 distribution you will need to download the JSSE package separately.  It can be obtained from 
-<a href="http://java.sun.com/jsse">here</a>.  Please follow Sun's instructions for installation 
+<a href="http://java.sun.com/products/jsse">here</a>.  Please follow Sun's instructions for installation 
 and configuration of JSSE.</p>
 <p>In either case, you will need to statically define a JSSE TLS provider.  In general, this 
 is the default installation.</p>
