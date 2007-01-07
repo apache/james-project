@@ -24,7 +24,7 @@
   </properties>
   <body>
     <section name="This list">
-      <p>Special thanks go to the following people for their contributions to this project.  We also appreciate documentation, feedback, and bug reports.  This is a living document that describes the key contributors to James. Last Updated July 2006.</p>
+      <p>Special thanks go to the following people for their contributions to this project.  We also appreciate documentation, feedback, and bug reports.  This is a living document that describes the key contributors to James. Last Updated January 2007.</p>
     </section>
     <section name="Active Commiters">
       <p>
@@ -61,7 +61,10 @@
       <p>
         <b>Bernd Fondermann (bf_jak at brainlounge.de) [BF]</b>
       </p>
-
+      <p>
+        <b>Robert Burrell Donkin (rdonkin at apache.org) [RBD]</b>
+      </p>
+      
     </section>
     <section name="Alumni and Other Contributors">
     <p>Many people have had a hand in James' success over the years, here we'd like to give credit to those who have made a difference and to those who have left.</p>
