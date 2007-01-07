@@ -135,6 +135,15 @@
       <name>Alan D. Cabrera</name>
       <timezone>-8</timezone>
     </developer>
+    <developer>
+      <id>rdonkin</id>
+      <name>Robert Burrell Donkin</name>
+      <email>rdonkin at apache.org</email>
+      <timezone></timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
   </developers>
 
   <scm>
