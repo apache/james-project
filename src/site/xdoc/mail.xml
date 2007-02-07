@@ -241,9 +241,7 @@ all. <b>Do not send mail to this list with James software problems</b>
           <a href="mailto:mailet-api-unsubscribe@james.apache.org">Unsubscribe</a>
           <a href="mail.html">Guidelines</a>
         </p>
-        <p> This is the public list discussing all <a href="http://james.apache.org/server/2.3.0/mailet_api.html">Mailet API</a>		
-	related topics.
-	</p>
+        <p> This is the public list for the Mailet API subproject, discussing all <a href="http://james.apache.org/server/2.3.0/mailet_api.html">Mailet API</a> design and implementation related topics. Questions about using Mailets and their configuration should be addressed to the server-user list.</p>
       </subsection>
     </section>
   </body>

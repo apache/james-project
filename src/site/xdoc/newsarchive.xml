@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<document>
+  <properties>
+    <title>News Archive</title>
+    <author email="site-dev@james.apache.org">JAMES Project Web Team</author>
+  </properties>
+  <body>
+ <section><iframe src="http://www.apache.org/ads/halfbanner.html"
+style="border-width:0;" frameborder="0" scrolling="no"
+width="250" height="70"></iframe></section>
+    <section name="News">
+    <subsection name="2007">
+        <a name="02012007"><h4>Feb/2007 - Feathercast features James</h4></a>
+        <p>James PMC member and commiter <a href="http://people.apache.org/list_A.html">Danny Angus</a> was interviewed about James by David Reid for Feathercast episode 24. You can download the podcast from <a href="http://feathercast.org/?p=39">here</a>.</p>
+        <a name="01012007"><h4>Jan/2007 - Mailet API to become a sub-project</h4></a>
+        <p>The James commiters have voted to promote the Mailet API to its own James sub-project.<br/>
+        This move will provide a clearer division between development of the API and development of James server, and we hope this will encourage more participation from external projects.</p>
+        <p>The effort will start small, by releasing the current version, and move on to look at the enhancements we've been discussing over on <a href="http://james.apache.org/mail.html">the mailet api list</a> where we will extend a warm welcome to anyone who has something to contribute.</p>
+        <p>Eventually we hope to extend the scope of the sub-project to include things like a Reference Implementation independent of James Server and suitable for embedding, an SDK, and possibly a TCK.
+        </p>
+    </subsection>
+    <subsection name="2006">
+     <a name="00102006"/><h4>Oct/2006 - JAMES Server 2.3.0 Final Released</h4>
+     <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the long awaited final release of JAMES Server 2.3.0. More informations on what's new can be found in the <a href="/server/2.3.0/changelog.html">changelog</a>.</p>
+     <a name="00092006"/><h4>Sep/2006 - jSPF 0.9 b3 Released</h4>
+     <p>James PMC is proud to announce the <a href="http://people.apache.org/dist/james/jspf/">availability</a> of the third beta of jspf 0.9. This version has start to use the official spf testsuite to fix all rfc issues.</p>
+     <a name="01082006"/><h4>Aug/2006 - JAMES Server 2.3.0 RC3 Released</h4>
+     <p>James PMC is proud to announce the <a href="http://people.apache.org/dist/james/server/">availability</a> of the third, and hopefully last, release candidate of JAMES Server 2.3.0. More informations on what's new can be found in the <a href="/server/2.3.0/changelog.html">changelog</a>.</p>
+     <p>New development roadmaps are being discussed right now, so stay tuned for 2.3.0 final and for the following news. - Sep/2006</p>
+     <a name="00082006"/><h4>Aug/2006 - JAMES Products website revamped</h4>
+     <p>We just finished a major update of james products to be able to publish each product specific site under this new website structure</p>
+     <a name="01072006"/><h4>Jul/2006 - JAMES Server 2.3.0 on the way</h4>
+     <p>After a long time of development we have released the first <a href="http://people.apache.org/dist/james/server/">release candidate</a> of JAMES Server 2.3.0. After a period of user testing version 2.3.0 will be released.</p>
+     <a name="00072006"/><h4>Jul/2006 - New project JAMES jSPF</h4>
+     <p>JAMES PMC is happy to announce that we are working on a Java implementation of the SPF specification. The first <a href="http://people.apache.org/dist/james/jspf/">betas</a> are already available for download.</p>
+    </subsection>
+    <subsection name="2005">
+     <h4>JAMES PMC react to the closure of Apache Avalon.</h4>
+      <p>JAMES PMC would like to reassure all of our users that JAMES Server is alive and well. All of the James team have kept abreast of the Avalon developments culminating in the closure of the Avalon project and dispersal of its codebase. We are are keen to stress that this has little impact on our ability to support and develop Server in both the short and long terms.<br/>Over the coming months we will be finalising and publishing a road map for JAMES Server which will address all of the specific concerns raised by Avalon's closure, but rest assured JAMES Server' future is safe, and we have enthusiasm and plans aplenty.<br/> In the meantime we would like to extend our best wishes to all our friends from Avalon, here's luck with your future projects guys!<br/> If you are at all concerned please subscribe to the server-user mailing list and raise your points there. - 05/Jan/2005</p>
+
+      <h4>JAMES product sources have moved to "Subversion"</h4>
+      <p>Subversion is a version control system like CVS, but it has advantages over CVS for Apache Software Foundation (ASF) projects.<br/> In common with all other ASF projects we have reviewed our use of CVS and migrated our code to Subversion.<br/>
+Have a look at this <a href="server/FAQ.html#17">FAQ</a> for further details. - 05/Jan/2005</p>
+      <p/>
+      </subsection>
+    </section>
+  </body>
+</document>

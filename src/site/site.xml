@@ -66,7 +66,7 @@
       <item name="Postage" href="/postage/index.html" />
     </links>
     
-    <menu name="Products">
+    <menu name="Sub Projects">
       <item name="Server" href="/server/index.html" />
       <item name="jSPF" href="/jspf/index.html" />
       <item name="Mime4J" href="/mime4j/index.html" />
@@ -75,13 +75,14 @@
     </menu>
 
     <menu name="About">
-      <item name="Overview" href="/index.html"/>
-      <item name="Mailing Lists" href="/mail.html"/>
-      <item name="Wiki" href="http://wiki.apache.org/james"/>
-      <item name="Who We Are" href="/weare.html"/>
-      <item name="Contributing" href="/contribute.html"/>
-      <item name="Standards" href="/code-standards.html"/>
-      <item name="License" href="/license.html"/>
+      <item name="News" href="/newsarchive.html" />
+      <item name="Overview" href="/index.html" />
+      <item name="Mailing Lists" href="/mail.html" />
+      <item name="Wiki" href="http://wiki.apache.org/james" />
+      <item name="Who We Are" href="/weare.html" />
+      <item name="Contributing" href="/contribute.html" />
+      <item name="Standards" href="/code-standards.html" />
+      <item name="License" href="/license.html" />
     </menu>
 
     <menu name="Downloads" inherit="bottom">
