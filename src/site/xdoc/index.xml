@@ -11,7 +11,7 @@ width="250" height="70"></iframe></section>
     <section name="What is James?">
         <p>The Apache JAMES Project delivers a rich set of open source solutions, written in Java, related to internet mail and news.</p>
       <p>JAMES is organized into subprojects with JAMES Server and the Mailet API as their core.</p> 
-      <p>Apache JAMEs is a project of The Apache Software Foundation (ASF) which encourages a collaborative, consensus-based development process under an open software license.</p>
+      <p>Apache JAMES is a project of The Apache Software Foundation (ASF) which encourages a collaborative, consensus-based development process under an open software license.</p>
       <p>The ASF maintains other Java projects which may also be of interest. These are detailed on the ASF Projects page.</p>
       <p>We recommended that users of JAMES products subscribe to the JAMES users mailing list.</p>
     </section>
@@ -19,7 +19,7 @@ width="250" height="70"></iframe></section>
     <i>Read all the news in full in the <a href="newsarchive.html">News Archive</a></i><br/>
     <i>Or click the titles to read the full story</i>
     <subsection name="2007">
-        <a href="newsarchive.html#02012007"><strong>Feb/2007 - Feathercast features James</strong></a><br/>
+        <a href="newsarchive.html#02012007"><strong>Feb/2007 - Feathercast features JAMES</strong></a><br/>
         <a href="newsarchive.html#01012007"><strong>Jan/2007 - Mailet API to become sub-project</strong></a><br/>
     <p></p>
     </subsection>
