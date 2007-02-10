@@ -11,7 +11,7 @@ width="250" height="70"></iframe></section>
     <section name="News">
     <subsection name="2007">
         <a name="02092007"><h4>Feb/2007 - jSPF-0.9b4 released</h4></a>
-        <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/jspf/beta">availability</a> of the forth beta of jspf 0.9. This version pass all tests in the last official release of the <a href="http://www.openspf.org/svn/project/test-suite/rfc4408-tests-2007.01.yml">spf testsuite</a>.</p>
+        <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/jspf/beta">availability</a> of the fourth beta of jspf 0.9. This version pass all tests in the last official release of the <a href="http://www.openspf.org/svn/project/test-suite/rfc4408-tests-2007.01.yml">spf testsuite</a>.</p>
         <a name="02012007"><h4>Feb/2007 - Feathercast features James</h4></a>
         <p>James PMC member and commiter <a href="http://people.apache.org/list_A.html">Danny Angus</a> was interviewed about James by David Reid for Feathercast episode 24. You can download the podcast from <a href="http://feathercast.org/?p=39">here</a>.</p>
         <a name="01012007"><h4>Jan/2007 - Mailet API to become a sub-project</h4></a>
