@@ -5,10 +5,12 @@
     <author email="site-dev@james.apache.org">JAMES Project Web Team</author>
   </properties>
   <body>
- <section><iframe src="http://www.apache.org/ads/halfbanner.html"
-style="border-width:0;" frameborder="0" scrolling="no"
-width="250" height="70"></iframe></section>
-    <section name="News">
+  	<section name="News">
+        <div id="apacheconspacer">
+          <div id="apacheconbox">
+            <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
+          </div>
+        </div>
     <subsection name="2007">
         <a name="02092007"><h4>Feb/2007 - jSPF-0.9b4 released</h4></a>
         <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/jspf/beta">availability</a> of the fourth beta of jspf 0.9. This version pass all tests in the last official release of the <a href="http://www.openspf.org/svn/project/test-suite/rfc4408-tests-2007.01.yml">spf testsuite</a>.</p>
