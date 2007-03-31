@@ -144,7 +144,7 @@ provide searching for our mailing lists in HTML readable format.
         <ul>
           <li>Archives with many Jakarta lists: <ul>
               <li>
-                <a href="http://mail-archives.apache.org/eyebrowse/ViewLists">List 
+                <a href="http://mail-archives.apache.org/mod_mbox/#james">List 
 Index on mail-archives.apache.org</a>
               </li>
               <li>
