@@ -105,7 +105,7 @@
     </developer>
     <developer>
       <id>hilmer</id>
-      <name>S�ren Hilmer</name>
+      <name>S&#248;ren Hilmer</name>
       <email>sh at widetrail.dk</email>
       <timezone></timezone>
       <roles>
@@ -170,6 +170,20 @@
     </site>
   </distributionManagement>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <releases>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>maven-central</id>
+      <name>maven-central</name>
+      <url>http://repo1.maven.org/maven2</url>
+    </pluginRepository>
+  </pluginRepositories>
+  
   <repositories>
     <repository>
       <id>central</id>
@@ -182,6 +196,7 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    <!-- m1 repository may contain problematic POMs 
     <repository>
       <id>central-m1</id>
       <name>Apache Main M1 Repository</name>
@@ -194,6 +209,7 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
     <repository>
       <id>apache.snapshots</id>
       <name>Apache Snapshot Repository</name>
@@ -213,5 +229,28 @@
       <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
     </mailingList>
   </mailingLists>
-
+<!-- Attempt to use velocity-news plugin (not yet working)
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.velocity.site</groupId>
+        <artifactId>velocity-site-news-plugin</artifactId>
+        <configuration>
+          <baseUrl>http://james.apache.org</baseUrl>
+          <newsfile>news.xml</newsfile>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+  
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.velocity.site</groupId>
+        <artifactId>velocity-site-news-extension</artifactId>
+        <version>1.2.0-SNAPSHOT</version>
+      </extension>
+    </extensions>
+  </build>
+-->
 </project>
