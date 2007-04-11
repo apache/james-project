@@ -80,6 +80,9 @@
           <li>
             <a href="#17">How do I use Subversion to get James source code?</a>
           </li>
+		  <li>
+		  <a href="#18">How can I control Sun's JVM DNS Lookup Configuration.</a>
+		  </li>
         </ul>
       </p>
     </section>
@@ -313,6 +316,15 @@ match as follows (in precedence order):
           <br/>James subversion repository is at <b>http://svn.apache.org/repos/asf/james/server</b>. Commiters use "https".
           <br/>You may want to search the web, our <a href="http://www.mail-archive.com/server-dev@james.apache.org/">dev</a> and <a href="http://www.mail-archive.com/server-user@james.apache.org/">user</a> mail archives or our <a href="http://wiki.apache.org/james">wiki</a> for more information.</p>
         </subsection>
+		 <a name="18"/>
+		<subsection name="How can I control Sun's JVM DNS Lookup Configuration.">
+<p>Sun's JVM Internet address lookup uses a cache which is unbounded and doesn't time out.<br/>
+This is obviously not great for a long running process like a mail server so we have introduced a system property <strong>networkaddress.cache.ttl<strong> that is used by the distributed phoenix start-up scripts, at startup, to override the java 1.4 <strong>Security.setProperty("networkaddress.cache.ttl")</strong>.<br/> By default this is set to <strong>300</strong> seconds.</p>
+<p>This workaround will only be present if you use James as distributed. If you use James in any other container, including different versions of Phoenix, you will need to ensure that you make a similar configuration change to allow the internet address cache to perform acceptably.</p>
+<p>James 2.3 has this workaround and it requires it to operate acceptably. Future versions of James will continue to have the workaround in place but will *not* require it. This will provide continued support for any mailets which you may deploy from other sources which might continue to use Sun's InetAddress class for DNS resolution.</p>
+<p>We are not currently aware of the behaviour of this cache in other JVM implementations, nor of the effect, if any, which this change might have on them</p>
+<p>For more on this read defect report <a href="http://issues.apache.org/jira/browse/JAMES-592">JAMES-592</a> and related defects.</p>
+		</subsection>
     </section>
   </body>
 </document>
