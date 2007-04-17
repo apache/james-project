@@ -12,6 +12,8 @@
           </div>
         </div>
     <subsection name="2007">
+        <a name="04162007"><h4>Apr/2007 - Apache JAMES Project Guidelines published</h4></a>
+        <p>The James PMC has approved - for the first time - a set of <a href="guidelines.html">guidelines</a> for the project. These guidelines are intended to reflect and summarize well-known practices in our community. They include "... definitions of how conflict is resolved by voting, who is able to vote, and the procedures to follow for proposing and making changes to the Apache JAMES products." </p>
         <a name="02092007"><h4>Feb/2007 - jSPF-0.9b4 released</h4></a>
         <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/jspf/beta">availability</a> of the fourth beta of jspf 0.9. This version pass all tests in the last official release of the <a href="http://www.openspf.org/svn/project/test-suite/rfc4408-tests-2007.01.yml">spf testsuite</a>.</p>
         <a name="02012007"><h4>Feb/2007 - Feathercast features James</h4></a>
