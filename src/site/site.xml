@@ -38,25 +38,6 @@
   </skin>
     
   <body>
-    <!-- 
-    <links>
-      <item name="JAMES Project" href="http://james.apache.org/index.html" />
-      <item name="Server" href="http://james.apache.org/server/index.html" />
-      <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
-      <item name="Mime4J" href="http://james.apache.org/mime4j/index.html" />
-      <item name="JSieve" href="http://james.apache.org/jsieve/index.html" />
-      <item name="Postage" href="http://james.apache.org/postage/index.html" />
-    </links>
-    
-    <menu name="Products">
-      <item name="Server" href="http://james.apache.org/server/index.html" />
-      <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
-      <item name="Mime4J" href="http://james.apache.org/mime4j/index.html" />
-      <item name="JSieve" href="http://james.apache.org/jsieve/index.html" />
-      <item name="Postage" href="http://james.apache.org/postage/index.html" />
-    </menu>
-    -->
-
     <links>
       <item name="JAMES Project" href="/index.html" />
       <item name="Server" href="/server/index.html" />
@@ -78,6 +59,7 @@
       <item name="News" href="/newsarchive.html" />
       <item name="Overview" href="/index.html" />
       <item name="Mailing Lists" href="/mail.html" />
+      <item name="Project Guidelines" href="/guidelines.html" />
       <item name="Wiki" href="http://wiki.apache.org/james" />
       <item name="Who We Are" href="/weare.html" />
       <item name="Contributing" href="/contribute.html" />

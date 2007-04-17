@@ -1,0 +1,9 @@
+How to build and publish the website:
+
+1. Install Apache Maven 2 and make its binary 'mvn' available on your PATH.
+2. Execute 'mvn site' 
+3. Test the built site in your browser from target/site
+4. If everything looks OK, copy target/site to the site/server subfolder
+5. Commit changes to SVN
+6. svn-up on minotaur
+7. Wait for the changes to replicate to the Apache web server
