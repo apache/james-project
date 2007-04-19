@@ -23,6 +23,7 @@
     <title>Download</title>
   </properties>
 <body>
+
 <section name="Downloading the Apache James Mail Server">
 
 <p>Use the links below to download the Apache James Mail Server from one of
@@ -35,7 +36,9 @@ distribution site and its mirrors.  Older releases are available from
 the <a href="http://archive.apache.org/dist/james/">archive download
 site.</a></p>
 
-<section name="Mirror">
+</section>
+
+<subsection name="Mirror">
 
 <p>[if-any logo]
 <a href="[link]"><img align="right" src="[logo]" border="0" /></a>[end]
@@ -62,7 +65,7 @@ Other mirrors: <select name="Preferred">
 <p>You may also consult the <a href="http://www.apache.org/mirrors/">complete
 list of mirrors</a>.</p>
 
-</section>
+</subsection>
 
 <section name="Apache James 2.3.0 is the best available version">
 
@@ -107,7 +110,7 @@ Binaries</a></li>
 
 </section>
 
-<section name="Verify the integrity of the files">
+<subsection name="Verify the integrity of the files">
 
 <p>It is essential that you verify the integrity of the downloaded
 files using the PGP or MD5 signatures.</p>
@@ -135,25 +138,29 @@ using</p>
 % gpg --verify james-<i>version</i>.tar.gz.asc
 </code></p>
 
-</section>
+</subsection>
 
-<section name="Test Builds">
+<section name="Unstable releases and Nightlies">
 
 <p>The software listed above represents the latest Release Build
 available from the Apache James Project.  From time to time, we also
-make available Test Builds.  These Test Builds are <u>periodic
-snapshots during development</u>.  Generally, these are considered
+make available <a href="/downloadunstable.cgi">Unstable releases</a>.
+Unstable releases are announced on the General mailing list (general&#64;james.apache.org).
+<!--  workaround for a doxia bug -->
+<br /><br />
+</p>
+
+<p>The JAMES project also provides 
+<a href="http://people.apache.org/builds/james/nightly/">Nighly Builds</a>:
+<u>periodic snapshots during development</u>.  Generally, these are considered
 stable snapshots, but they have not undergone as much testing as a
 Release Build, nor have they been voted upon for release by the
 developer community.  These are simply convenient test builds.
-Sometimes the purpose for a Test Build could be soliciting feedback on
-a specific change.  Test Builds are announced on the General mailing
-list (general&#64;james.apache.org).</p>
+Sometimes the purpose for a Nightly Build could be soliciting feedback on
+a specific change.</p>
 
-<a href="http://people.apache.org/dist/james">Latest Test Build</a>
 
 </section>
 
-</section>
 </body>
 </document>

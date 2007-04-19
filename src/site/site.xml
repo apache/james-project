@@ -69,7 +69,7 @@
 
     <menu name="Downloads" inherit="bottom">
       <item name="Stable releases" href="/download.cgi"/>
-      <item name="Test builds" href="http://people.apache.org/dist/james"/>
+      <item name="Unstable releases" href="/downloadunstable.cgi"/>
       <item name="Nightly builds" href="http://people.apache.org/builds/james/nightly/"/>
     </menu>
       
