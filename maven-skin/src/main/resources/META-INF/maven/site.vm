@@ -336,7 +336,7 @@
       _uacct = "UA-1384591-1";
       urchinTracker();
     </script>
-    #if ( $currentFileName.toLowerCase().startsWith("download") )
+#if ( $currentFileName.toLowerCase().startsWith("download") )
     <script type="text/javascript">
     if (document.getElementsByTagName) { 
       var hrefs = document.getElementsByTagName('a'); 
@@ -390,6 +390,6 @@
       }
     } 
     </script>
-    #end
+#end
   </body>
 </html>
