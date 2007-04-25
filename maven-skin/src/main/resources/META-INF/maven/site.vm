@@ -342,15 +342,17 @@
       var hrefs = document.getElementsByTagName('a'); 
       var extensions = ["gz","bz2","zip","jar","asc","sar"];
       for (var l = 0; l < hrefs.length; l++) {
-        if (hrefs[l] != "") {
-          var path = hrefs[l].pathname;
-          var external = hrefs[l].hostname != location.host;
+        // 0+ is a workaround for download.cgi script by ASF that 
+        // is not happy with simple words in square brackets
+        if (hrefs[0+l] != "") {
+          var path = hrefs[0+l].pathname;
+          var external = hrefs[0+l].hostname != location.host;
           if (external) {
             var splitted = path.split('.');
-            var ext = splitted[splitted.length-1];
+            var ext = splitted[0+splitted.length-1];
             for (var e = 0; e < extensions.length; e++) {
-              if (extensions[e] == ext) {
-                startListening(hrefs[l],"click",trackDownloads);
+              if (extensions[0+e] == ext) {
+                startListening(hrefs[0+l],"click",trackDownloads);
               }
     	}
           }
