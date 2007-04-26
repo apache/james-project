@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Licensed to the Apache Software Foundation (ASF) under one
-  or more contributor license agreements.  See the NOTICE file
-  distributed with this work for additional information
-  regarding copyright ownership.  The ASF licenses this file
-  to you under the Apache License, Version 2.0 (the
-  "License"); you may not use this file except in compliance
-  with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing,
-  software distributed under the License is distributed on an
-  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  KIND, either express or implied.  See the License for the
-  specific language governing permissions and limitations
-  under the License.    
--->
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.    
+  -->
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.james</groupId>
   <artifactId>james-project</artifactId>
@@ -61,7 +61,7 @@
     <developer>
       <id>bago</id>
       <name>Stefano Bagnara</name>
-      <email>apache at bago.org</email>
+      <email>bago at apache.org</email>
       <timezone>2</timezone>
       <roles>
         <role>Developer</role>
@@ -80,7 +80,7 @@
       <id>serge</id>
       <name>Serge Knystautas</name>
       <email>sergek at lokitech.com</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
@@ -89,7 +89,7 @@
       <id>benrdf</id>
       <name>Bernd Fondermann</name>
       <email>bf_jak at brainlounge.de</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
@@ -98,16 +98,18 @@
       <id>sbrewin</id>
       <name>Steve Brewin</name>
       <email>sbrewin at synsys.com</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
     </developer>
     <developer>
       <id>hilmer</id>
-      <name>S&#248;ren Hilmer</name>
+      <!-- This is not correctly handled by maven release plugin -->
+      <!-- <name>S&#248;ren Hilmer</name> -->
+      <name>Soren Hilmer</name>
       <email>sh at widetrail.dk</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
@@ -116,7 +118,7 @@
       <id>noel</id>
       <name>Noel J. Bergman</name>
       <email>noel at devtech.com</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
@@ -125,7 +127,7 @@
       <id>danny</id>
       <name>Danny Angus</name>
       <email>danny at apache.org</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
@@ -133,13 +135,26 @@
     <developer>
       <id>adc</id>
       <name>Alan D. Cabrera</name>
+      <email>list at toolazydogs.com</email>
       <timezone>-8</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>vincenzo</id>
+      <name>Vincenzo Gianferrari Pini</name>
+      <email>vincenzo.gianferraripini at praxis.it</email>
+      <timezone />
+      <roles>
+        <role>Developer</role>
+      </roles>
     </developer>
     <developer>
       <id>rdonkin</id>
       <name>Robert Burrell Donkin</name>
       <email>rdonkin at apache.org</email>
-      <timezone></timezone>
+      <timezone />
       <roles>
         <role>Developer</role>
       </roles>
@@ -196,20 +211,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    <!-- m1 repository may contain problematic POMs 
-    <repository>
-      <id>central-m1</id>
-      <name>Apache Main M1 Repository</name>
-      <url>http://people.apache.org/repo/m1-ibiblio-rsync-repository</url>
-      <layout>legacy</layout>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    -->
     <repository>
       <id>apache.snapshots</id>
       <name>Apache Snapshot Repository</name>
@@ -229,7 +230,26 @@
       <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
     </mailingList>
   </mailingLists>
-<!-- Attempt to use velocity-news plugin (not yet working)
+  
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <!-- also include license and notice files in all the jars -->
+      <resource>
+        <directory>${basedir}</directory>
+        <includes>
+          <include>NOTICE.txt</include>
+          <include>LICENSE.txt</include>
+        </includes>
+        <targetPath>META-INF</targetPath>
+      </resource>
+    </resources>
+  </build>
+  
+
+  <!-- Attempt to use velocity-news plugin (not yet working)
   <reporting>
     <plugins>
       <plugin>
@@ -252,5 +272,6 @@
       </extension>
     </extensions>
   </build>
--->
+  -->
+  
 </project>
