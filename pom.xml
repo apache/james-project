@@ -26,9 +26,19 @@
   <description>
     The Apache JAMES Project
   </description>
+  
+  <parent>
+    <groupId>org.apache.james</groupId>
+    <artifactId>james-parent</artifactId>
+    <version>1.1-SNAPSHOT</version>
+    <relativePath>./parent/pom.xml</relativePath>
+  </parent>
+
+  <prerequisites>
+    <maven>2.0.5</maven>
+  </prerequisites>
 
   <modules>
-    <module>maven-skin</module>
     <module>server</module>
   </modules>
   
@@ -39,127 +49,10 @@
   <dependencies>
   </dependencies>
 
-  <organization>
-    <name>The Apache Software Foundation</name>
-    <url>http://www.apache.org</url>
-  </organization>
-
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
   <issueManagement>
     <system>JIRA</system>
     <url>http://issues.apache.org/jira/browse/JAMES</url>
   </issueManagement>
-
-  <developers>
-    <developer>
-      <id>bago</id>
-      <name>Stefano Bagnara</name>
-      <email>bago at apache.org</email>
-      <timezone>2</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>norman</id>
-      <name>Norman Maurer</name>
-      <email>norman at apache.org</email>
-      <timezone>2</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>serge</id>
-      <name>Serge Knystautas</name>
-      <email>sergek at lokitech.com</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>benrdf</id>
-      <name>Bernd Fondermann</name>
-      <email>bf_jak at brainlounge.de</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>sbrewin</id>
-      <name>Steve Brewin</name>
-      <email>sbrewin at synsys.com</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>hilmer</id>
-      <!-- This is not correctly handled by maven release plugin -->
-      <!-- <name>S&#248;ren Hilmer</name> -->
-      <name>Soren Hilmer</name>
-      <email>sh at widetrail.dk</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>noel</id>
-      <name>Noel J. Bergman</name>
-      <email>noel at devtech.com</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>danny</id>
-      <name>Danny Angus</name>
-      <email>danny at apache.org</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>adc</id>
-      <name>Alan D. Cabrera</name>
-      <email>list at toolazydogs.com</email>
-      <timezone>-8</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>vincenzo</id>
-      <name>Vincenzo Gianferrari Pini</name>
-      <email>vincenzo.gianferraripini at praxis.it</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>rdonkin</id>
-      <name>Robert Burrell Donkin</name>
-      <email>rdonkin at apache.org</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-  </developers>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
@@ -168,16 +61,6 @@
   </scm>
 
   <distributionManagement>
-    <repository>
-      <id>apache.releases</id>
-      <name>Apache Release Distribution Repository</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-ibiblio-rsync-repository</url>
-    </repository>
-    <snapshotRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
-    </snapshotRepository>
     <!-- Each project must override this with their own -->
     <site>
       <id>james-website</id>
@@ -185,42 +68,6 @@
     </site>
   </distributionManagement>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <releases>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>maven-central</id>
-      <name>maven-central</name>
-      <url>http://repo1.maven.org/maven2</url>
-    </pluginRepository>
-  </pluginRepositories>
-  
-  <repositories>
-    <repository>
-      <id>central</id>
-      <name>Apache Main M2 Repository</name>
-      <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Snapshot Repository</name>
-      <url>http://people.apache.org/repo/m2-snapshot-repository</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-  </repositories>
-  
   <mailingLists>
     <mailingList>
       <name>Apache James Website Developement</name>
@@ -230,48 +77,5 @@
       <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
     </mailingList>
   </mailingLists>
-  
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-      <!-- also include license and notice files in all the jars -->
-      <resource>
-        <directory>${basedir}</directory>
-        <includes>
-          <include>NOTICE.txt</include>
-          <include>LICENSE.txt</include>
-        </includes>
-        <targetPath>META-INF</targetPath>
-      </resource>
-    </resources>
-  </build>
-  
-
-  <!-- Attempt to use velocity-news plugin (not yet working)
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.velocity.site</groupId>
-        <artifactId>velocity-site-news-plugin</artifactId>
-        <configuration>
-          <baseUrl>http://james.apache.org</baseUrl>
-          <newsfile>news.xml</newsfile>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-  
-  <build>
-    <extensions>
-      <extension>
-        <groupId>org.apache.velocity.site</groupId>
-        <artifactId>velocity-site-news-extension</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
-      </extension>
-    </extensions>
-  </build>
-  -->
   
 </project>
