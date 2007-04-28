@@ -184,6 +184,7 @@
     </site>
   </distributionManagement>
 
+	<!--
   <pluginRepositories>
     <pluginRepository>
       <releases>
@@ -197,10 +198,21 @@
       <url>http://repo1.maven.org/maven2</url>
     </pluginRepository>
   </pluginRepositories>
+   -->
   
   <repositories>
     <repository>
       <id>central</id>
+      <url>http://repo1.maven.org/maven2</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>apache.releases</id>
       <name>Apache Main M2 Repository</name>
       <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository</url>
       <releases>
@@ -247,6 +259,16 @@
       <repositories>
         <repository>
           <id>central</id>
+          <url>http://repo1.maven.org/maven2</url>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+          <id>apache.releases</id>
           <name>Apache Main M2 Repository</name>
           <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository</url>
           <releases>
