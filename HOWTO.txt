@@ -1,18 +1,21 @@
 How to build and publish the website:
 
  1. Install Apache Maven 2.0.6 and make its binary 'mvn' available on your PATH.
- 2. Execute 'mvn -Plocal install'. This will generate the artifacts and install them without 
-    trying to remove them from remote repositories ("local" profile).
- 3. Execute 'mvn -Plocal site'. This will generate the website for each module.
- 4. Test the built site in your browser from target/site
- 5. If everything looks OK, copy target/site to the checkout of james/site/trunk/www folder
+ 2. Enter parent folder and execute 'mvn -Plocal install'. This will generate the 
+    artifacts and install them without trying to remove them from remote repositories
+    (by using the "local" profile defined in the pom.xml).
+ 3. Enter the maven-skin folder and execute 'mvn -Plocal install'.
+ 4. Return to the root and execute 'mvn -Plocal site'. This will generate the website for
+    each module.
+ 5. Test the built site in your browser from target/site
+ 6. If everything looks OK, copy target/site to the checkout of james/site/trunk/www folder
     server/target/site to the checkout of james/site/trunk/www/server folder
     server/2.2.0/target/site to the checkout of james/site/trunk/www/server/2.2.0 folder
- 6. If you are on windows make sure endlines are LF only.
- 7. Commit changes to SVN
- 8. Review generated pages on svn.apache.org/repos/asf/james/site/trunk/www
- 9. svn-up on minotaur
-10. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as 
+ 7. If you are on windows make sure endlines are LF only.
+ 8. Commit changes to SVN
+ 9. Review generated pages on svn.apache.org/repos/asf/james/site/trunk/www
+10. svn-up on minotaur
+11. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as 
     a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html) 
 
 The logical tree of the poms is the following
