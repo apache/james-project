@@ -1,11 +1,27 @@
 How to build and publish the website:
 
-1. Install Apache Maven 2 and make its binary 'mvn' available on your PATH.
-2. Execute 'mvn site' 
-3. Test the built site in your browser from target/site
-4. If everything looks OK, copy target/site to the checkout of james/site/trunk/www folder
-5. If you are on windows make sure endlines are LF only.
-6. Commit changes to SVN
-7. Review generated pages on svn.apache.org/repos/asf/james/site/trunk/www
-8. svn-up on minotaur
-9. Wait for the changes to replicate to the Apache web server
+ 1. Install Apache Maven 2.0.6 and make its binary 'mvn' available on your PATH.
+ 2. Execute 'mvn -Plocal install'. This will generate the artifacts and install them without 
+    trying to remove them from remote repositories ("local" profile).
+ 3. Execute 'mvn -Plocal site'. This will generate the website for each module.
+ 4. Test the built site in your browser from target/site
+ 5. If everything looks OK, copy target/site to the checkout of james/site/trunk/www folder
+    server/target/site to the checkout of james/site/trunk/www/server folder
+    server/2.2.0/target/site to the checkout of james/site/trunk/www/server/2.2.0 folder
+ 6. If you are on windows make sure endlines are LF only.
+ 7. Commit changes to SVN
+ 8. Review generated pages on svn.apache.org/repos/asf/james/site/trunk/www
+ 9. svn-up on minotaur
+10. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as 
+    a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html) 
+
+The logical tree of the poms is the following
+
+james-parent (parent/pom.xml) is the main parent.
+|- maven-skin (maven-skin/pom.xml) is our skin
+'- james-project (pom.xml)
+   '- james-server-root (server/pom.xml) is the parent pom for JAMES server.
+      '- james-server-2.2.0 (server/2.2.0/pom.xml) is the static website for old 2.2.0 documentation.
+
+The "james-parent" artifact is needed because "james-project" uses the maven-skin but they needed
+to share some common data so they cannot depend on each-other but on a third "parent" pom.
