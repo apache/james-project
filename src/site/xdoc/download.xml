@@ -67,11 +67,11 @@ list of mirrors</a>.</p>
 
 </subsection>
 
-<section name="Apache James 2.3.0 is the best available version">
+<section name="Apache James 2.3.1 is the best available version">
 
 <p>This release has many enhancements and bug fixes over the previous
 release.  See the <a
-href="server/2.3.0/changelog.html">Change Log</a>
+href="server/2.3.1changelog.html">Change Log</a>
 for a detailed list of changes.  Some of the earlier defects could
 turn a James mail server into an Open Relay.  All users of James are urged to upgrade to James v2.3.0 as soon as
 possible.</p>
@@ -79,28 +79,28 @@ possible.</p>
 <ul>
 
 <li>Binary (Unix TAR): <a
-href="[preferred]/james/server/binaries/james-2.3.0.tar.gz">james-2.3.0.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/server/binaries/james-2.3.0.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/server/binaries/james-2.3.1.tar.gz">james-2.3.1.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/server/binaries/james-2.3.1.tar.gz.asc">PGP</a>]</li>
 
 <li>Binary (ZIP Format): <a
-href="[preferred]/james/server/binaries/james-2.3.0.zip">james-2.3.0.zip</a> [<a
-href="http://www.apache.org/dist/james/server/binaries/james-2.3.0.zip.asc">PGP</a>]</li>
+href="[preferred]/james/server/binaries/james-2.3.1.zip">james-2.3.1.zip</a> [<a
+href="http://www.apache.org/dist/james/server/binaries/james-2.3.1.zip.asc">PGP</a>]</li>
 
 <li>Source (Unix TAR): <a
-href="[preferred]/james/server/source/james-2.3.0-src.tar.gz">james-2.3.0-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-2.3.0-src.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/server/source/james-2.3.1-src.tar.gz">james-2.3.1-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/server/source/james-2.3.1-src.tar.gz.asc">PGP</a>]</li>
 
 <li>Source (ZIP Format): <a
-href="[preferred]/james/server/source/james-2.3.0-src.zip">james-2.3.0-src.zip</a> [<a
+href="[preferred]/james/server/source/james-2.3.1-src.zip">james-2.3.1-src.zip</a> [<a
 href="http://www.apache.org/dist/james/server/source/james-2.3.0-src.zip.asc">PGP</a>]</li>
 
 <li>Source with Avalon Phoenix binaries (Unix TAR): <a
-href="[preferred]/james/server/source/james-with-phoenix-2.3.0-src.tar.gz">james-with-phoenix-2.3.0-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-with-phoenix-2.3.0-src.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/server/source/james-with-phoenix-2.3.1-src.tar.gz">james-with-phoenix-2.3.1-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/server/source/james-with-phoenix-2.3.1-src.tar.gz.asc">PGP</a>]</li>
 
 <li>Source with Avalon Phoenix binaries (ZIP Format): <a
-href="[preferred]/james/server/source/james-with-phoenix-2.3.0-src.zip">james-with-phoenix-2.3.0-src.zip</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-with-phoenix-2.3.0-src.zip.asc">PGP</a>]</li>
+href="[preferred]/james/server/source/james-with-phoenix-2.3.1-src.zip">james-with-phoenix-2.3.1-src.zip</a> [<a
+href="http://www.apache.org/dist/james/server/source/james-with-phoenix-2.3.1-src.zip.asc">PGP</a>]</li>
 
 <li><a
 href="[preferred]/james/server/binaries/">Other
