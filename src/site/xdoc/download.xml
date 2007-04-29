@@ -79,31 +79,39 @@ possible.</p>
 <ul>
 
 <li>Binary (Unix TAR): <a
-href="[preferred]/james/server/binaries/james-2.3.1.tar.gz">james-2.3.1.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/server/binaries/james-2.3.1.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/server/rc/binaries/james-binary-2.3.1.tar.gz">james-binary-2.3.1.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/server/rc/binaries/james-binary-2.3.1.tar.gz.asc">PGP</a>]</li>
 
 <li>Binary (ZIP Format): <a
-href="[preferred]/james/server/binaries/james-2.3.1.zip">james-2.3.1.zip</a> [<a
-href="http://www.apache.org/dist/james/server/binaries/james-2.3.1.zip.asc">PGP</a>]</li>
+href="[preferred]/james/server/binaries/james-binary-2.3.1.zip">james-binary-2.3.1.zip</a> [<a
+href="http://www.apache.org/dist/james/server/rc/binaries/james-binary-2.3.1.zip.asc">PGP</a>]</li>
+
+<li>Mailet SDK (Unix TAR): <a
+href="[preferred]/james/server/rc/binaries/james-MailetSDK-2.3.1.tar.gz">james-MailetSDK-2.3.1.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/server/rc/binaries/james-MailetSDK-2.3.1.tar.gz.asc">PGP</a>]</li>
+
+<li>Mailet SDK (ZIP Format): <a
+href="[preferred]/james/server/binaries/james-MailetSDK-2.3.1.zip">james-MailetSDK-2.3.1.zip</a> [<a
+href="http://www.apache.org/dist/james/server/rc/binaries/james-MailetSDK-2.3.1.zip.asc">PGP</a>]</li>
 
 <li>Source (Unix TAR): <a
 href="[preferred]/james/server/source/james-2.3.1-src.tar.gz">james-2.3.1-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-2.3.1-src.tar.gz.asc">PGP</a>]</li>
+href="http://www.apache.org/dist/james/server/rc/source/james-2.3.1-src.tar.gz.asc">PGP</a>]</li>
 
 <li>Source (ZIP Format): <a
-href="[preferred]/james/server/source/james-2.3.1-src.zip">james-2.3.1-src.zip</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-2.3.0-src.zip.asc">PGP</a>]</li>
+href="[preferred]/james/server/rc/source/james-2.3.1-src.zip">james-2.3.1-src.zip</a> [<a
+href="http://www.apache.org/dist/james/server/rc/source/james-2.3.1-src.zip.asc">PGP</a>]</li>
 
 <li>Source with Avalon Phoenix binaries (Unix TAR): <a
-href="[preferred]/james/server/source/james-with-phoenix-2.3.1-src.tar.gz">james-with-phoenix-2.3.1-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-with-phoenix-2.3.1-src.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/server/rc/source/james-with-phoenix-2.3.1-src.tar.gz">james-with-phoenix-2.3.1-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/server/rc/source/james-with-phoenix-2.3.1-src.tar.gz.asc">PGP</a>]</li>
 
 <li>Source with Avalon Phoenix binaries (ZIP Format): <a
-href="[preferred]/james/server/source/james-with-phoenix-2.3.1-src.zip">james-with-phoenix-2.3.1-src.zip</a> [<a
-href="http://www.apache.org/dist/james/server/source/james-with-phoenix-2.3.1-src.zip.asc">PGP</a>]</li>
+href="[preferred]/james/server/rc/source/james-with-phoenix-2.3.1-src.zip">james-with-phoenix-2.3.1-src.zip</a> [<a
+href="http://www.apache.org/dist/james/server/rc/source/james-with-phoenix-2.3.1-src.zip.asc">PGP</a>]</li>
 
 <li><a
-href="[preferred]/james/server/binaries/">Other
+href="[preferred]/james/server/rc/binaries/">Other
 Binaries</a></li>
 
 </ul>
