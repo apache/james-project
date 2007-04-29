@@ -66,6 +66,12 @@ Other mirrors: <select name="Preferred">
 list of mirrors</a>.</p>
 
 </subsection>
+
+<section name="No updated unstable releases for Apache JAMES Server">
+<p>Apache JAMES server 2.3.1 has been released an no new unstable releases have been released.
+Please go to the <a href="/download.cgi">stable releases download page</a> to download it.
+</p>
+</section>
 <!--
 <section name="Apache JAMES Server 2.3.1 RC1 is the latest unstable version">
 
