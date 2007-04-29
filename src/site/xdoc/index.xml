@@ -31,12 +31,12 @@
     </section>
     <section name="releases">
       <p>
-        <b>Latest and Stable: James v2.3.0</b>
+        <b>Latest and Stable: James v2.3.1</b>
         <br/>
-James v2.3.0 is the current best release. Both <a href="http://james.apache.org/download.cgi">binary and source</a> distributions are available.</p>
-      <p>James v2.3.0 is a major update to the James platform, with many new features, functional improvements, and bug fixes.
-See the <a href="2.3.0/changelog.html">Change Log</a> for a detailed list of changes.  <b>All
-users are urged to upgrade to v2.3.0 as soon as possible</b>.</p>
+James v2.3.1 is the current best release. Both <a href="http://james.apache.org/download.cgi">binary and source</a> distributions are available.</p>
+      <p>James v2.3.1 is a bugfix release to the James platform, with importent bugfixes.
+See the <a href="2.3.1/changelog.html">Change Log</a> for a detailed list of bugfixes.  <b>All
+users are urged to upgrade to v2.3.1 as soon as possible</b>.</p>
       <p>Any bugs found in James are dealt with promptly.  Please provide feedback on the james-user and james-dev mailing lists.</p>
       <p>
         <b>Get your hands on the latest versions..</b>
