@@ -57,7 +57,7 @@
        systems. Examples of the services a Mailet might provide include: a
        mail-to-fax or mail-to-phone transformer, a filter, a language translator, a mailing
        list manager, etc. Several Mailets are included in the JAMES
-       distribution (see <a href="2.2.0/index.html">documentation</a>).</p>
+       distribution (see <a href="2.3.1/index.html">documentation</a>).</p>
         <p>
           <i>
             <b>Resource abstraction</b>

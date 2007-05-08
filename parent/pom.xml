@@ -28,7 +28,7 @@
   </description>
 
   <prerequisites>
-    <maven>2.0.5</maven>
+    <maven>2.0.6</maven>
   </prerequisites>
 
   <url>http://james.apache.org/</url>
@@ -184,22 +184,6 @@
     </site>
   </distributionManagement>
 
-	<!--
-  <pluginRepositories>
-    <pluginRepository>
-      <releases>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>maven-central</id>
-      <name>maven-central</name>
-      <url>http://repo1.maven.org/maven2</url>
-    </pluginRepository>
-  </pluginRepositories>
-   -->
-  
   <repositories>
     <repository>
       <id>central</id>
@@ -235,23 +219,6 @@
     </repository>
   </repositories>
   
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-      <!-- also include license and notice files in all the jars -->
-      <resource>
-        <directory>${basedir}</directory>
-        <includes>
-          <include>NOTICE.txt</include>
-          <include>LICENSE.txt</include>
-        </includes>
-        <targetPath>META-INF</targetPath>
-      </resource>
-    </resources>
-  </build>
-
   <profiles>
     <!-- local profile: used to ignore remote repositories in a local build -->
     <profile>
@@ -355,29 +322,4 @@
     <!-- END SNIPPET: release-profile -->
   </profiles>  
 
-  <!-- Attempt to use velocity-news plugin (not yet working)
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.velocity.site</groupId>
-        <artifactId>velocity-site-news-plugin</artifactId>
-        <configuration>
-          <baseUrl>http://james.apache.org</baseUrl>
-          <newsfile>news.xml</newsfile>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-  
-  <build>
-    <extensions>
-      <extension>
-        <groupId>org.apache.velocity.site</groupId>
-        <artifactId>velocity-site-news-extension</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
-      </extension>
-    </extensions>
-  </build>
-  -->
-  
 </project>

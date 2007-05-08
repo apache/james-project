@@ -12,10 +12,14 @@
           </div>
         </div>
     <subsection name="2007">
-        <a name="004029007"/><h4>Apr/2007 - JAMES Server 2.3.1 Final Released</h4>
-        <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the final release of JAMES Server 2.3.1. This is the bugfix released of 2.3.0. More informations on what's fixed since the last releas, can be found in the <a href="/server/2.3.1/changelog.html">changelog</a>.</p>
+    	<!--
+        <a name="05052007"><h4>May/2007 - Mailet API sub-project lives</h4></a>
+        <p></p>
+        -->
+        <a name="04029007"/><h4>Apr/2007 - JAMES Server 2.3.1 Final Released</h4>
+        <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the final release of JAMES Server 2.3.1. More informations on what has been fixed since the 2.3.0 release can be found in the <a href="/server/2.3.1/changelog.html">changelog</a>.</p>
         <a name="04192007"><h4>Apr/2007 - JAMES Server 2.3.1 RC1 released</h4></a>
-        <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/server/rc">availability</a> of the frist release canidat of JAMES Server 2.3.1. This release is maintenance release. See the <a href="http://issues.apache.org/jira/browse/JAMES?report=com.atlassian.jira.plugin.system.project:changelog-panel"> changelog </a> for more detail.</p>
+        <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/server/rc">availability</a> of the first release candidate of JAMES Server 2.3.1. This release is maintenance release. See the <a href="http://issues.apache.org/jira/browse/JAMES?report=com.atlassian.jira.plugin.system.project:changelog-panel"> changelog </a> for more detail.</p>
         <a name="04162007"><h4>Apr/2007 - Apache JAMES Project Guidelines published</h4></a>
         <p>The James PMC has approved - for the first time - a set of <a href="guidelines.html">guidelines</a> for the project. These guidelines are intended to reflect and summarize well-known practices in our community. They include "... definitions of how conflict is resolved by voting, who is able to vote, and the procedures to follow for proposing and making changes to the Apache JAMES products." </p>
         <a name="02092007"><h4>Feb/2007 - jSPF-0.9b4 released</h4></a>

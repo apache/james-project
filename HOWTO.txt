@@ -4,7 +4,7 @@ How to build and publish the website:
  2. Enter parent folder and execute 'mvn -Plocal install'. This will generate the 
     artifacts and install them without trying to remove them from remote repositories
     (by using the "local" profile defined in the pom.xml).
- 3. Enter the maven-skin folder and execute 'mvn -Plocal install'.
+ 3. Enter the maven-skin folder and execute 'mvn install'.
  4. Return to the root and execute 'mvn -Plocal site'. This will generate the website for
     each module.
  5. Test the built site in your browser from target/site

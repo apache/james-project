@@ -40,9 +40,6 @@ in a message under evaluation.</p>
 or pass the message to an external API or component.  This can include delivering a message to its destination 
 repository or SMTP server.</p>
 <p>The Mailet API is currently in its second revision.  Although, the Mailet API is expected to undergo substantial changes in the near future, it is our aim that existing Mailets that abided purely by the prior Mailet API interfaces will continue to run with the revised specification.</p>
-<!--
-<p>The Javadoc for the Mailet API can be found <a href="mailet/index.html">here</a>.</p>
--->
 <p>James bundles a number of Matchers and Mailets in its distribution.  Descriptions of provided matchers 
 can be found <a href="provided_matchers.html">here</a>, while descriptions of provided mailets can be found 
 <a href="provided_mailets.html">here</a>.</p>
