@@ -41,11 +41,35 @@
     </site>
   </distributionManagement>
 
+  <!-- This is here because of http://jira.codehaus.org/browse/MRRESOURCES-6 -->
+  <properties>
+    <maven.test.skip>true</maven.test.skip>
+  </properties>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk/maven-skin</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk/maven-skin</developerConnection>
     <url>http://svn.apache.org/viewvc/james/project/trunk/maven-skin</url>
   </scm>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-remote-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <configuration>
+              <resourceBundles>
+                <resourceBundle>org.apache:apache-jar-resource-bundle:1.2</resourceBundle>
+              </resourceBundles>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
