@@ -31,7 +31,7 @@
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
     <version>1.1-SNAPSHOT</version>
-    <relativePath>parent/pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <modules>
@@ -51,9 +51,9 @@
   </issueManagement>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/trunk</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk/project</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk/project</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/trunk/project</url>
   </scm>
 
   <distributionManagement>

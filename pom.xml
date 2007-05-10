@@ -30,6 +30,11 @@
   <prerequisites>
     <maven>2.0.6</maven>
   </prerequisites>
+  
+  <modules>
+    <module>maven-skin</module>
+    <module>project</module>
+  </modules>
 
   <url>http://james.apache.org/</url>
   <inceptionYear>2006</inceptionYear>
@@ -161,9 +166,9 @@
   </developers>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk/parent</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk/parent</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/trunk/parent</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/trunk</url>
   </scm>
 
   <distributionManagement>
@@ -220,6 +225,26 @@
   </repositories>
   
   <profiles>
+    <!-- parent profile: used to find skin dependency in stage -->
+    <profile>
+      <id>parent</id>
+      <repositories>
+        <repository>
+          <id>local-james-parent-stage</id>
+          <name>Apache JAMES parent stage repository folder</name>
+          <url>file://${basedir}/stage</url>
+          <layout>legacy</layout>
+          <releases>
+            <enabled>true</enabled>
+            <checksumPolicy>ignore</checksumPolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <checksumPolicy>ignore</checksumPolicy>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
     <!-- local profile: used to ignore remote repositories in a local build -->
     <profile>
       <id>local</id>
