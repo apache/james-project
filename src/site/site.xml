@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<project name="James Project">
+
+  <bannerLeft>
+    <name>James Project</name>
+    <src>images/james-project-logo.gif</src>
+    <href>http://james.apache.org/index.html</href>
+  </bannerLeft>
+
+  <bannerRight>
+    <name>The Apache Software Foundation</name>
+    <src>images/asf-logo-reduced.gif</src>
+    <href>http://www.apache.org/index.html</href>
+  </bannerRight>
+
+  <skin>
+    <groupId>org.apache.james</groupId>
+    <artifactId>maven-skin</artifactId>
+    <version>1.1-SNAPSHOT</version>
+  </skin>
+    
+  <body>
+    <links>
+      <item name="JAMES Project" href="/index.html" />
+      <item name="Server" href="/server/index.html" />
+	  <item name="Mailet API" href="/mailet/index.html" />
+      <item name="jSPF" href="/jspf/index.html" />
+      <item name="Mime4J" href="/mime4j/index.html" />
+      <item name="JSieve" href="/jsieve/index.html" />
+      <item name="Postage" href="/postage/index.html" />
+    </links>
+    
+    <menu name="Sub Projects">
+      <item name="Server" href="/server/index.html" />
+	  <item name="Mailet API" href="/mailet/index.html" />
+      <item name="jSPF" href="/jspf/index.html" />
+      <item name="Mime4J" href="/mime4j/index.html" />
+      <item name="JSieve" href="/jsieve/index.html" />
+      <item name="Postage" href="/postage/index.html" />
+    </menu>
+
+    <menu name="About">
+      <item name="News" href="/newsarchive.html" />
+      <item name="Overview" href="/index.html" />
+      <item name="Mailing Lists" href="/mail.html" />
+      <item name="Project Guidelines" href="/guidelines.html" />
+      <item name="Wiki" href="http://wiki.apache.org/james" />
+      <item name="Who We Are" href="/weare.html" />
+      <item name="Contributing" href="/contribute.html" />
+      <item name="Standards" href="/code-standards.html" />
+      <item name="License" href="/license.html" />
+    </menu>
+
+    <menu name="Downloads" inherit="bottom">
+      <item name="Stable releases" href="/download.cgi"/>
+      <item name="Unstable releases" href="/downloadunstable.cgi"/>
+      <item name="Nightly builds" href="http://people.apache.org/builds/james/nightly/"/>
+    </menu>
+      
+    <menu name="Translated">
+      <item name="Japanese (web)" href="http://james.terra-intl.com/"/>
+    </menu>
+      
+    <menu name="Related Projects">
+      <item name="Jakarta Commons" href="http://jakarta.apache.org/commons/index.html"/>
+      <item name="Ant" href="http://ant.apache.org/index.html"/>
+      <item name="Maven2" href="http://maven.apache.org/index.html"/>
+      <item name="Derby" href="http://db.apache.org/derby/index.html"/>
+      <item name="Avalon" href="http://avalon.apache.org/index.html"/>
+      <item name="DNSJava" href="http://www.dnsjava.org/index.html"/>
+    </menu>
+      
+    <menu name="Useful Information">
+      <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
+      <item name="Reference Library" href="http://jakarta.apache.org/site/library.html"/>
+      <item name="Apache" href="http://apache.org/foundation/faq.html"/>
+    </menu>
+
+  </body>
+</project>

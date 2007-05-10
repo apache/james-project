@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<document>
+  <properties>
+    <title>Overview</title>
+    <author email="site-dev@james.apache.org">JAMES Project Web Team</author>
+  </properties>
+  <body>
+      <div id="apacheconspacer">
+        <div id="apacheconbox">
+          <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
+        </div>
+      </div>
+    <section name="What is James?">
+      <p>The Apache JAMES Project delivers a rich set of open source solutions, written in Java, related to internet mail and news.</p>
+      <p>JAMES is organized into subprojects with JAMES Server and the Mailet API as their core.</p> 
+      <p>Apache JAMES is a project of The Apache Software Foundation (ASF) which encourages a collaborative, consensus-based development process under an open software license.</p>
+      <p>The ASF maintains other Java projects which may also be of interest. These are detailed on the ASF Projects page.</p>
+      <p>We recommended that users of JAMES products subscribe to the JAMES users mailing list.</p>
+    </section>
+    <section name="News">
+    <i>Read all the news in full in the <a href="newsarchive.html">News Archive</a></i><br/>
+    <i>Or click the titles to read the full story</i>
+    <subsection name="2007">
+        <!-- <a href="newsarchive.html#05052007"><strong>May/2007 - Mailet API sub-project lives</strong></a><br/> -->
+        <a href="newsarchive.html#04292007"><strong>Apr/2007 - JAMES Server 2.3.1 Final Released</strong></a><br/>
+        <a href="newsarchive.html#04192007"><strong>Apr/2007 - JAMES Server 2.3.1 RC1 Released</strong></a><br/>
+        <a href="newsarchive.html#04162007"><strong>Apr/2007 - Apache JAMES Project Guidelines published</strong></a><br/>
+        <a href="newsarchive.html#02092007"><strong>Feb/2007 - jSPF-0.9b4 released</strong></a><br/>
+        <a href="newsarchive.html#02012007"><strong>Feb/2007 - Feathercast features JAMES</strong></a><br/>
+        <a href="newsarchive.html#01012007"><strong>Jan/2007 - Mailet API to become sub-project</strong></a><br/>
+    <p></p>
+    </subsection>
+    <subsection name="2006">
+        <a href="newsarchive.html#00102006"><strong>Oct/2006 - JAMES Server 2.3.0 Final Released</strong></a><br/>
+        <a href="newsarchive.html#00092006"><strong>Sep/2006 - jSPF 0.9 b3 Released</strong></a><br/>
+        <a href="newsarchive.html#01082006"><strong>Aug/2006 - JAMES Server 2.3.0 RC3 Released</strong></a><br/>
+        <a href="newsarchive.html#00082006"><strong>Aug/2006 - JAMES Products website revamped</strong></a><br/>
+        <a href="newsarchive.html#01072006"><strong>Jul/2006 - JAMES Server 2.3.0 on the way</strong></a><br/>
+        <a href="newsarchive.html#00072006"><strong>Jul/2006 - New project JAMES jSPF</strong></a><br/>
+    </subsection>
+    </section>
+  </body>
+</document>
