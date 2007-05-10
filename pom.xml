@@ -163,7 +163,42 @@
         <role>Developer</role>
       </roles>
     </developer>
+    <developer>
+      <id>niklas</id>
+      <name>Niklas Therning</name>
+      <email>niklas(at)apache(dot)org</email>
+      <organization>Trillian AB</organization>
+    </developer>
+    <developer>
+      <id>jcheng</id>
+      <name>Joe Cheng</name>
+      <email>joe(at)joecheng(dot)com</email>
+      <properties>
+        <description>
+          Former author to the mime4j product
+        </description>
+      </properties>
+    </developer>
   </developers>
+
+  <contributors>
+    <contributor>
+      <name>Rob Oxspring</name>
+      <properties>
+        <description>
+          Contributed to the mime4j product
+        </description>
+      </properties>
+    </contributor>
+    <contributor>
+      <name>Roger Fullerton</name>
+      <properties>
+        <description>
+          Wrote spfjava, the first spf implementation in java
+        </description>
+      </properties>
+    </contributor>
+  </contributors>
 
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
