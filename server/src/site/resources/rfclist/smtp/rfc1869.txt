@@ -1,0 +1,620 @@
+
+
+
+
+
+Network Working Group                               J. Klensin, WG Chair
+Request For Comments: 1869                                           MCI
+STD: 10                                                 N. Freed, Editor
+Obsoletes: 1651                             Innosoft International, Inc.
+Category: Standards Track                                        M. Rose
+                                            Dover Beach Consulting, Inc.
+                                                            E. Stefferud
+                                     Network Management Associates, Inc.
+                                                              D. Crocker
+                                                  Brandenburg Consulting
+                                                           November 1995
+
+
+                        SMTP Service Extensions
+
+Status of this Memo
+
+   This document specifies an Internet standards track protocol for the
+   Internet community, and requests discussion and suggestions for
+   improvements.  Please refer to the current edition of the "Internet
+   Official Protocol Standards" (STD 1) for the standardization state
+   and status of this protocol.  Distribution of this memo is unlimited.
+
+1.  Abstract
+
+   This memo defines a framework for extending the SMTP service by
+   defining a means whereby a server SMTP can inform a client SMTP as to
+   the service extensions it supports.  Extensions to the SMTP service
+   are registered with the IANA. This framework does not require
+   modification of existing SMTP clients or servers unless the features
+   of the service extensions are to be requested or provided.
+
+2.  Introduction
+
+   The Simple Mail Transfer Protocol (SMTP) [1] has provided a stable,
+   effective basis for the relay function of message transfer agents.
+   Although a decade old, SMTP has proven remarkably resilient.
+   Nevertheless, the need for a number of protocol extensions has become
+   evident. Rather than describing these extensions as separate and
+   haphazard entities, this document enhances SMTP in a straightforward
+   fashion that provides a framework in which all future extensions can
+   be built in a single consistent way.
+
+3.  Framework for SMTP Extensions
+
+   For the purpose of service extensions to SMTP, SMTP relays a mail
+   object containing an envelope and a content.
+
+
+
+
+Klensin, et al              Standards Track                     [Page 1]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+ (1)   The SMTP envelope is straightforward, and is sent as a
+       series of SMTP protocol units: it consists of an
+       originator address (to which error reports should be
+       directed); a delivery mode (e.g., deliver to recipient
+       mailboxes); and, one or more recipient addresses.
+
+ (2)   The SMTP content is sent in the SMTP DATA protocol unit
+       and has two parts: the headers and the body. The
+       headers form a collection of field/value pairs
+       structured according to RFC 822 [2], whilst the body,
+       if structured, is defined according to MIME [3]. The
+       content is textual in nature, expressed using the US
+       ASCII repertoire (ANSI X3.4-1986). Although extensions
+       (such as MIME) may relax this restriction for the
+       content body, the content headers are always encoded
+       using the US ASCII repertoire. The algorithm defined in
+       [4] is used to represent header values outside the US
+       ASCII repertoire, whilst still encoding them using the
+       US ASCII repertoire.
+
+   Although SMTP is widely and robustly deployed, some parts of the
+   Internet community might wish to extend the SMTP service.  This memo
+   defines a means whereby both an extended SMTP client and server may
+   recognize each other as such and the server can inform the client as
+   to the service extensions that it supports.
+
+   It must be emphasized that any extension to the SMTP service should
+   not be considered lightly. SMTP's strength comes primarily from its
+   simplicity.  Experience with many protocols has shown that:
+
+     protocols with few options tend towards ubiquity, whilst
+     protocols with many options tend towards obscurity.
+
+   This means that each and every extension, regardless of its benefits,
+   must be carefully scrutinized with respect to its implementation,
+   deployment, and interoperability costs. In many cases, the cost of
+   extending the SMTP service will likely outweigh the benefit.
+
+   Given this environment, the framework for the extensions described in
+   this memo consists of:
+
+ (1)   a new SMTP command (section 4)
+
+ (2)   a registry of SMTP service extensions (section 5)
+
+ (3)   additional parameters to the SMTP MAIL FROM and RCPT TO
+       commands (section 6).
+
+
+
+
+Klensin, et al              Standards Track                     [Page 2]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+4.  The EHLO command
+
+   A client SMTP supporting SMTP service extensions should start an SMTP
+   session by issuing the EHLO command instead of the HELO command. If
+   the SMTP server supports the SMTP service extensions it will give a
+   successful response (see section 4.3), a failure response (see 4.4),
+   or an error response (4.5). If the SMTP server does not support any
+   SMTP service extensions it will generate an error response (see
+   section 4.5).
+
+4.1.  Changes to STD 10, RFC 821
+
+   This specification is intended to extend STD 10, RFC 821 without
+   impacting existing services in any way.  The minor changes needed are
+   enumerated below.
+
+4.1.1.  First command
+
+   RFC 821 states that the first command in an SMTP session must be the
+   HELO command. This requirement is hereby amended to allow a session
+   to start with either EHLO or HELO.
+
+4.1.2.  Maximum command line length
+
+   This specification extends the SMTP MAIL FROM and RCPT TO to allow
+   additional parameters and parameter values.  It is possible that the
+   MAIL FROM and RCPT TO lines that result will exceed the 512 character
+   limit on command line length imposed by RFC 821.  This limit is
+   hereby amended to only apply to command lines without any parameters.
+   Each specification that defines new MAIL FROM or RCPT TO parameters
+   must also specify maximum parameter value lengths for each parameter
+   so that implementors of some set of extensions know how much buffer
+   space must be allocated. The maximum command length that must be
+   supported by an SMTP implementation with extensions is 512 plus the
+   sum of all the maximum parameter lengths for all the extensions
+   supported.
+
+4.2.  Command syntax
+
+   The syntax for this command, using the ABNF notation of [2], is:
+
+     ehlo-cmd ::= "EHLO" SP domain CR LF
+
+   If successful, the server SMTP responds with code 250. On failure,
+   the server SMTP responds with code 550. On error, the server SMTP
+   responds with one of codes 500, 501, 502, 504, or 421.
+
+
+
+
+
+Klensin, et al              Standards Track                     [Page 3]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+   This command is issued instead of the HELO command, and may be issued
+   at any time that a HELO command would be appropriate.  That is, if
+   the EHLO command is issued, and a successful response is returned,
+   then a subsequent HELO or EHLO command will result in the server SMTP
+   replying with code 503.  A client SMTP must not cache any information
+   returned if the EHLO command succeeds. That is, a client SMTP must
+   issue the EHLO command at the start of each SMTP session if
+   information about extended facilities is needed.
+
+4.3.  Successful response
+
+   If the server SMTP implements and is able to perform the EHLO
+   command, it will return code 250.  This indicates that both the
+   server and client SMTP are in the initial state, that is, there is no
+   transaction in progress and all state tables and buffers are cleared.
+
+   Normally, this response will be a multiline reply. Each line of the
+   response contains a keyword and, optionally, one or more parameters.
+   The syntax for a positive response, using the ABNF notation of [2],
+   is:
+
+     ehlo-ok-rsp  ::=      "250"    domain [ SP greeting ] CR LF
+                    / (    "250-"   domain [ SP greeting ] CR LF
+                        *( "250-"      ehlo-line           CR LF )
+                           "250"    SP ehlo-line           CR LF   )
+
+                  ; the usual HELO chit-chat
+     greeting     ::= 1*<any character other than CR or LF>
+
+     ehlo-line    ::= ehlo-keyword *( SP ehlo-param )
+
+     ehlo-keyword ::= (ALPHA / DIGIT) *(ALPHA / DIGIT / "-")
+
+                  ; syntax and values depend on ehlo-keyword
+     ehlo-param   ::= 1*<any CHAR excluding SP and all
+                         control characters (US ASCII 0-31
+                         inclusive)>
+
+     ALPHA        ::= <any one of the 52 alphabetic characters
+                       (A through Z in upper case, and,
+                        a through z in lower case)>
+     DIGIT        ::= <any one of the 10 numeric characters
+                       (0 through 9)>
+
+     CR           ::= <the carriage-return character
+                       (ASCII decimal code 13)>
+     LF           ::= <the line-feed character
+                       (ASCII decimal code 10)>
+
+
+
+Klensin, et al              Standards Track                     [Page 4]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+     SP           ::= <the space character
+                       (ASCII decimal code 32)>
+
+   Although EHLO keywords may be specified in upper, lower, or mixed
+   case, they must always be recognized and processed in a case-
+   insensitive manner. This is simply an extension of practices begun in
+   RFC 821.
+
+   The IANA maintains a registry of SMTP service extensions.  Associated
+   with each such extension is a corresponding EHLO keyword value. Each
+   service extension registered with the IANA must be defined in an RFC.
+   Such RFCs must either be on the standards-track or must define an
+   IESG-approved experimental protocol.  The definition must include:
+
+ (1)   the textual name of the SMTP service extension;
+
+ (2)   the EHLO keyword value associated with the extension;
+
+ (3)   the syntax and possible values of parameters associated
+       with the EHLO keyword value;
+
+ (4)   any additional SMTP verbs associated with the extension
+       (additional verbs will usually be, but are not required
+       to be, the same as the EHLO keyword value);
+
+ (5)   any new parameters the extension associates with the
+       MAIL FROM or RCPT TO verbs;
+
+ (6)   how support for the extension affects the behavior of a
+       server and client SMTP; and,
+
+ (7)   the increment by which the extension is increasing the
+       maximum length of the commands MAIL FROM, RCPT TO, or
+       both, over that specified in RFC 821.
+
+   In addition, any EHLO keyword value that starts with an upper or
+   lower case "X" refers to a local SMTP service extension, which is
+   used through bilateral, rather than standardized, agreement. Keywords
+   beginning with "X" may not be used in a registered service extension.
+
+   Any keyword values presented in the EHLO response that do not begin
+   with "X" must correspond to a standard, standards-track, or IESG-
+   approved experimental SMTP service extension registered with IANA.  A
+   conforming server must not offer non "X" prefixed keyword values that
+   are not described in a registered extension.
+
+
+
+
+
+
+Klensin, et al              Standards Track                     [Page 5]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+   Additional verbs are bound by the same rules as EHLO keywords;
+   specifically, verbs begining with "X" are local extensions that may
+   not be registered or standardized and verbs not beginning with "X"
+   must always be registered.
+
+4.4.  Failure response
+
+   If for some reason the server SMTP is unable to list the service
+   extensions it supports, it will return code 554.
+
+   In the case of a failure response, the client SMTP should issue
+   either the HELO or QUIT command.
+
+4.5.  Error responses from extended servers
+
+   If the server SMTP recognizes the EHLO command, but the command
+   argument is unacceptable, it will return code 501.
+
+   If the server SMTP recognizes, but does not implement, the EHLO
+   command, it will return code 502.
+
+   If the server SMTP determines that the SMTP service is no longer
+   available (e.g., due to imminent system shutdown), it will return
+   code 421.
+
+   In the case of any error response, the client SMTP should issue
+   either the HELO or QUIT command.
+
+4.6.  Responses from servers without extensions
+
+   A server SMTP that conforms to RFC 821 but does not support the
+   extensions specified here will not recognize the EHLO command and
+   will consequently return code 500, as specified in RFC 821.  The
+   server SMTP should stay in the same state after returning this code
+   (see section 4.1.1 of RFC 821).  The client SMTP may then issue
+   either a HELO or a QUIT command.
+
+4.7.  Responses from improperly implemented servers
+
+   Some SMTP servers are known to disconnect the SMTP transmission
+   channel upon receipt of the EHLO command. The disconnect can occur
+   immediately or after sending a response.  Such behavior violates
+   section 4.1.1 of RFC 821, which explicitly states that disconnection
+   should only occur after a QUIT command is issued.
+
+   Nevertheless, in order to achieve maxmimum interoperablity it is
+   suggested that extended SMTP clients using EHLO be coded to check for
+   server connection closure after EHLO is sent, either before or after
+
+
+
+Klensin, et al              Standards Track                     [Page 6]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+   returning a reply.  If this happens the client must decide if the
+   operation can be successfully completed without using any SMTP
+   extensions. If it can a new connection can be opened and the HELO
+   command can be used.
+
+   Other improperly-implemented servers will not accept a HELO command
+   after EHLO has been sent and rejected.  In some cases, this problem
+   can be worked around by sending a RSET after the failure response to
+   EHLO, then sending the HELO.  Clients that do this should be aware
+   that many implementations will return a failure code (e.g., 503 Bad
+   sequence of commands) in response to the RSET.  This code can be
+   safely ignored.
+
+5.  Initial IANA Registry
+
+   The IANA's initial registry of SMTP service extensions consists of
+   these entries:
+
+   Service Ext   EHLO Keyword Parameters Verb       Added Behavior
+   ------------- ------------ ---------- ---------- ------------------
+   Send             SEND         none       SEND    defined in RFC 821
+   Send or Mail     SOML         none       SOML    defined in RFC 821
+   Send and Mail    SAML         none       SAML    defined in RFC 821
+   Expand           EXPN         none       EXPN    defined in RFC 821
+   Help             HELP         none       HELP    defined in RFC 821
+   Turn             TURN         none       TURN    defined in RFC 821
+
+   which correspond to those SMTP commands which are defined as optional
+   in [5].  (The mandatory SMTP commands, according to [5], are HELO,
+   MAIL, RCPT, DATA, RSET, VRFY, NOOP, and QUIT.)
+
+6.  MAIL FROM and RCPT TO Parameters
+
+   It is recognized that several of the extensions planned for SMTP will
+   make use of additional parameters associated with the MAIL FROM and
+   RCPT TO command. The syntax for these commands, again using the ABNF
+   notation of [2] as well as underlying definitions from [1], is:
+
+     esmtp-cmd        ::= inner-esmtp-cmd [SP esmtp-parameters] CR LF
+     esmtp-parameters ::= esmtp-parameter *(SP esmtp-parameter)
+     esmtp-parameter  ::= esmtp-keyword ["=" esmtp-value]
+     esmtp-keyword    ::= (ALPHA / DIGIT) *(ALPHA / DIGIT / "-")
+
+                          ; syntax and values depend on esmtp-keyword
+     esmtp-value      ::= 1*<any CHAR excluding "=", SP, and all
+                             control characters (US ASCII 0-31
+                             inclusive)>
+
+
+
+
+Klensin, et al              Standards Track                     [Page 7]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+                          ; The following commands are extended to
+                          ; accept extended parameters.
+     inner-esmtp-cmd  ::= ("MAIL FROM:" reverse-path)   /
+                          ("RCPT TO:" forward-path)
+
+   All esmtp-keyword values must be registered as part of the IANA
+   registration process described above. This definition only provides
+   the framework for future extension; no extended MAIL FROM or RCPT TO
+   parameters are defined by this RFC.
+
+6.1.  Error responses
+
+   If the server SMTP does not recognize or cannot implement one or more
+   of the parameters associated with a particular MAIL FROM or RCPT TO
+   command, it will return code 555.
+
+   If for some reason the server is temporarily unable to accomodate one
+   or more of the parameters associated with a MAIL FROM or RCPT TO
+   command, and if the definition of the specific parameter does not
+   mandate the use of another code, it should return code 455.
+
+   Errors specific to particular parameters and their values will be
+   specified in the parameter's defining RFC.
+
+7.  Received: Header Field Annotation
+
+   SMTP servers are required to add an appropriate Received: field to
+   the headers of all messages they receive. A "with ESMTP" clause
+   should be added to this field when any SMTP service extensions are
+   used. "ESMTP" is hereby added to the list of standard protocol names
+   registered with IANA.
+
+8.  Usage Examples
+
+ (1)   An interaction of the form:
+
+       S: <wait for connection on TCP port 25>
+       C: <open connection to server>
+       S: 220 dbc.mtview.ca.us SMTP service ready
+       C: EHLO ymir.claremont.edu
+       S: 250 dbc.mtview.ca.us says hello
+        ...
+
+       indicates that the server SMTP implements only those
+       SMTP commands which are defined as mandatory in [5].
+
+
+
+
+
+
+Klensin, et al              Standards Track                     [Page 8]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+ (2)   In contrast, an interaction of the form:
+
+       S: <wait for connection on TCP port 25>
+       C: <open connection to server>
+       S: 220 dbc.mtview.ca.us SMTP service ready
+       C: EHLO ymir.claremont.edu
+       S: 250-dbc.mtview.ca.us says hello
+       S: 250-EXPN
+       S: 250-HELP
+       S: 250-8BITMIME
+       S: 250-XONE
+       S: 250 XVRB
+        ...
+
+       indicates that the server SMTP also implements the SMTP
+       EXPN and HELP commands, one standard service extension
+       (8BITMIME), and two nonstandard and unregistered
+       service extensions (XONE and XVRB).
+
+ (3)   Finally, a server that does not support SMTP service
+       extensions would act as follows:
+
+       S: <wait for connection on TCP port 25>
+       C: <open connection to server>
+       S: 220 dbc.mtview.ca.us SMTP service ready
+       C: EHLO ymir.claremont.edu
+       S: 500 Command not recognized: EHLO
+        ...
+
+       The 500 response indicates that the server SMTP does
+       not implement the extensions specified here.  The
+       client would normally send a HELO command and proceed
+       as specified in RFC 821.   See section 4.7 for
+       additional discussion.
+
+9.  Security Considerations
+
+   This RFC does not discuss security issues and is not believed to
+   raise any security issues not already endemic in electronic mail and
+   present in fully conforming implementations of RFC-821.  It does
+   provide an announcement of server mail capabilities via the response
+   to the EHLO verb. However, all information provided by announcement
+   of any of the initial set of service extensions defined by this RFC
+   can be readily deduced by selective probing of the verbs required to
+   transport and deliver mail. The security implications of service
+   extensions described in other RFCs should be dealt with in those
+   RFCs.
+
+
+
+
+Klensin, et al              Standards Track                     [Page 9]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+10.  Acknowledgements
+
+   This document represents a synthesis of the ideas of many people and
+   reactions to the ideas and proposals of others.  Randall Atkinson,
+   Craig Everhart, Risto Kankkunen, and Greg Vaudreuil contributed ideas
+   and text sufficient to be considered co-authors.  Other important
+   suggestions, text, or encouragement came from Harald Alvestrand, Jim
+   Conklin, Mark Crispin, Frank da Cruz, 'Olafur Gudmundsson, Per
+   Hedeland, Christian Huitma, Neil Katin, Eliot Lear, Harold A.
+   Miller, Keith Moore, John Myers, Dan Oscarsson, Julian Onions, Rayan
+   Zachariassen, and the contributions of the entire IETF SMTP Working
+   Group. Of course, none of the individuals are necessarily responsible
+   for the combination of ideas represented here. Indeed, in some cases,
+   the response to a particular criticism was to accept the problem
+   identification but to include an entirely different solution from the
+   one originally proposed.
+
+11.  References
+
+   [1] Postel, J., "Simple Mail Transfer Protocol", STD 10, RFC 821,
+       USC/Information Sciences Institute, August 1982.
+
+   [2] Crocker, D., "Standard for the Format of ARPA Internet Text
+       Messages", STD 11, RFC 822, UDEL, August 1982.
+
+   [3] Borenstein, N., and N. Freed, "Multipurpose Internet Mail
+       Extensions", RFC 1521, Bellcore, Innosoft, September 1993.
+
+   [4] Moore, K., "Representation of Non-ASCII Text in Internet Message
+       Headers", RFC 1522, University of Tennessee, September 1993.
+
+   [5] Braden, R., "Requirements for Internet Hosts - Application and
+       Support", STD 3, RFC 1123, USC/Information Sciences Institute,
+       October 1989.
+
+12.  Chair, Editor, and Author Addresses
+
+   John Klensin, WG Chair
+   MCI
+   2100 Reston Parkway
+   Reston, VA 22091
+
+   Phone: +1 703 715-7361
+   Fax: +1 703 715-7436
+   EMail: klensin@mci.net
+
+
+
+
+
+
+Klensin, et al              Standards Track                    [Page 10]
+
+RFC 1869                SMTP Service Extensions            November 1995
+
+
+   Ned Freed, Editor
+   Innosoft International, Inc.
+   1050 East Garvey Avenue South
+   West Covina, CA 91790
+   USA
+
+   Phone: +1 818 919 3600
+   Fax: +1 818 919 3614
+   EMail: ned@innosoft.com
+
+
+   Marshall T. Rose
+   Dover Beach Consulting, Inc.
+   420 Whisman Court
+   Moutain View, CA  94043-2186
+   USA
+
+   Phone: +1 415 968 1052
+   Fax: +1 415 968 2510
+   EMail: mrose@dbc.mtview.ca.us
+
+
+   Einar A. Stefferud
+   Network Management Associates, Inc.
+   17301 Drey Lane
+   Huntington Beach, CA, 92647-5615
+   USA
+
+   Phone: +1 714 842 3711
+   Fax: +1 714 848 2091
+   EMail: stef@nma.com
+
+
+   Dave Crocker
+   Brandenburg Consulting
+   675 Spruce Dr.
+   Sunnyvale, CA 94086 USA
+   USA
+
+   Phone: +1 408 246 8253
+   Fax: +1 408 249 6205
+   EMail: dcrocker@mordor.stanford.edu
+
+
+
+
+
+
+
+
+
+Klensin, et al              Standards Track                    [Page 11]
+
+
+

@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Installation</title>
+<author email="sergek@lokitech.com">Serge Knystautas</author> </properties> <body> 
+<section name="Step 0: Building. (only necessary for daily snapshots)"> 
+<p> If you have downloaded a binary distribution, you do not need to build James. 
+  Proceed directory to Step 1. </p>
+<p> To compile James from the source code you need <a href="http://ant.apache.org/">Ant</a>. 
+  This is a Java-tailored, XML-configured, extensible build or make system. We 
+  are currently using Ant 1.4, which is included in the source distribution.</p>
+<p> If you have downloaded a daily snapshot, you need to build a distribution. 
+  James includes Ant to compile and package its distribution. Extract the snapshot 
+  to your favorite directory, cd to that directory and run the build by calling &quot;build&quot; 
+  or &quot;./build.sh&quot; which will create an unpacked binary distribution 
+  in the dist directory, but no archives.</p>
+<p>This "./dist" directory is the distribution directory used in Step 1 and beyond. 
+  You may either cd to ./dist, or you may copy and rename the dist directory to your 
+  installation directory.</p>
+<p>If you prefer you can run build with the &quot;dist&quot; task "build dist" 
+  (or &quot;./build.sh dist&quot;). This will create the distribution in the "./dist" 
+  directory as well as create .tgz and .zip copies of this directory, however it may 
+  require other resources to build the documentation. </p>
+<p> <strong>Warning!</strong> Any changes you've made in the 'dist' directory 
+  will be lost after a recompilation. If you are making changes to the conf.xml 
+  or other files, we recommend you backup and then change the copies in src to 
+  avoid losing work. </p>
+</section> <section name="Step 1: Installation."> 
+<p> Download distibution. Extract or copy all the files in the archive or dist 
+  directory intto your installation directory. </p>
+</section>
+
+<section name="Step 2: Configuration.">
+  <p>
+    Read the short and snappy documentation at docs/index.html for a proper
+    overview of configuring the system.
+  </p>
+  <p>
+    <b>Summary</b> (for impatient people)
+  </p>
+  
+<p> M$ users should just run /bin/run.bat. Unix users will find run.sh under the 
+  same directory. A JVM must be present and its location specified in the JAVA_HOME 
+  environment variable. Set this on windows at the command prompt with something 
+  similar to &quot;set JAVA_HOME=\jdk1.3\bin&quot; on *nix with JAVA_HOME=/jdk1.3/</p>
+<p> Running [run* --help] will provide a simple command line help. </p>
+  <p>
+    Most UNIX systems require superuser privileges to open sockets below 1024,
+    which includes the IANA-standard SMTP (on port 25) and POP3 (on port 110).
+    These default ports can be changed in the conf.xml file. (Obviously, you
+    would then need to reconfigure your clients. This may not be an option if
+    you want to receive mail from external mailservers.)
+  </p>
+  
+<p> The Avalon framework will unpack the necessary configuration files you will 
+  need to start the server.  Wait until it is running, stop it again (ctrl-c), and 
+  edit the configuration (thereafter *nix users can run the server in the background 
+  using ./run.sh &amp;). For basic use, you only need to set two items in the 
+  JAMES.conf.xml file: a root password for the remote administration facility 
+  and the IP address of a DNS server. Once you have edited the configuration files, 
+  press 'Enter' on the terminal where Avalon is waiting. </p>
+</section>
+
+<section name="Step 4: Kickstart.">
+  <p>
+    Once started you'll see a message saying Avalon is running. This means that
+    Avalon has loaded JAMES and every other needed Block (see /logs/avalon.log)
+    and is now waiting for a socket request.
+    Since at the beginning James is empty, it will not have any local users
+    registered.
+    To register a local user open a telnet session with localhost on port 4555,
+    log in as root ("root[enter]  &lt;password-you-set-in-conf.xml&gt;[enter]") and
+    type "help" for a list of available commands in the "JAMES remote
+    administrator tool". It is really a basic set but should allow you to test
+    installation.
+  </p>
+  <p>
+    Once you have some local users registered, try sending mail to one of them
+    @localhost with SMTP (port 25) (assuming you have not changed the default
+    server names in the conf.xml file). You'll see the mail appear under
+    ../var/mail/localinbox/[user].
+    Try now to retrieve that mail using POP3 (port 110).
+    Trace out JAMES actions in /logs/*info.log.
+    Actions that will be taken by JAMES on incoming mail are configured in
+    the mailet pipe line (/conf/JAMES.conf.xml). Look at it if you want to
+    understand what's happening.
+  </p>
+  <p>
+  Good luck :)
+  </p>
+</section>
+
+</body>
+</document>

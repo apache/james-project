@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<project name="James Server">
+
+  <bannerLeft>
+    <name>James Server</name>
+    <src>images/james-server-logo.gif</src>
+    <href>http://james.apache.org/server/</href>
+  </bannerLeft>
+  
+  <bannerRight>
+    <name>The Apache Software Foundation</name>
+    <src>images/asf-logo-reduced.gif</src>
+    <href>http://www.apache.org/</href>
+  </bannerRight>
+  
+  <body>
+  
+    <menu name="James Server" inherit="top">
+      <item name="Overview" href="/index.html" />
+      <item name="Objectives" href="/design_objectives.html" />
+      <item name="James FAQ" href="/FAQ.html">
+        <item name="James and Sendmail" href="/james_and_sendmail.html" />
+      </item>
+      <item name="Wiki" href="http://wiki.apache.org/james" />
+      <item name="Useful RFCs" href="/rfclist.html" />
+    </menu>
+    
+    <menu name="Documentation">
+      <!--
+      <item name="Head" href="/head/index.html" />
+      -->
+      <item name="Server 2.3.1" href="/2.3.1/index.html" />
+      <item name="Server 2.3.0" href="/2.3.0/index.html" />
+      <item name="Server 2.2.0" href="/2.2.0/index.html" />
+      <item name="Archive" href="/archive/document_archive.html" />
+    </menu>
+    
+    <menu name="Project" inherit="bottom">
+      <item name="Bug Database" href="http://issues.apache.org/jira/browse/JAMES" />
+      <item name="Source Code" href="http://svn.apache.org/viewvc/james/server/" />
+      <item name="TODO" href="/todo.html" />
+    </menu>
+    
+  </body>
+</project>
