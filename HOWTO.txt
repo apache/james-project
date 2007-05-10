@@ -1,21 +1,25 @@
 How to build and publish the website:
 
  1. Install Apache Maven 2.0.6 and make its binary 'mvn' available on your PATH.
- 2. Enter parent folder and execute 'mvn -Plocal install'. This will generate the 
-    artifacts and install them without trying to remove them from remote repositories
-    (by using the "local" profile defined in the pom.xml).
- 3. Enter the maven-skin folder and execute 'mvn install'.
- 4. Return to the root and execute 'mvn -Plocal site'. This will generate the website for
-    each module.
- 5. Test the built site in your browser from target/site
- 6. If everything looks OK, copy target/site to the checkout of james/site/trunk/www folder
-    server/target/site to the checkout of james/site/trunk/www/server folder
-    server/2.2.0/target/site to the checkout of james/site/trunk/www/server/2.2.0 folder
- 7. If you are on windows make sure endlines are LF only.
- 8. Commit changes to SVN
- 9. Review generated pages on svn.apache.org/repos/asf/james/site/trunk/www
-10. svn-up on minotaur
-11. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as 
+ 2. run "mvn -U -Plocal,parent clean install site:stage -DstagingDirectory={path}".
+    - the -U will force mvn to update plugins (check new installed skin when building
+      the project site.
+    - the -Plocal will force mvn to not lookup remote maven repositories for standard
+      dependencies.
+    - the -Pparent will add the local "stage" repository to the build (this is needed
+      so that the site generation for the parent folder will find the default maven
+      skin (this is only a workaround: the default skin is not used).
+    - install is needed because the site generated in the project module will search
+      for an installed skin.
+ 3. Test the built site in your browser from the {path} folder
+ 4. If everything looks OK, copy the {path} folder to the checkout of james/site/trunk/www
+    folder.
+ 5. If you are on windows make sure endlines are LF only
+    hint: running "ant" from james/site/trunk/ will do this (this will take a lot).
+ 6. Commit changes to SVN
+ 7. Review generated pages on svn.apache.org/repos/asf/james/site/trunk/www
+ 8. svn-up on minotaur
+ 9. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as 
     a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html) 
 
 The logical tree of the poms is the following
