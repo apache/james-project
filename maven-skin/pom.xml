@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -22,14 +20,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.james</groupId>
   <artifactId>maven-skin</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <name>JAMES Skin</name>
   <description>Apache JAMES Official Maven2 Site Skin</description>
 
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -47,9 +45,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk/maven-skin</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk/maven-skin</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/trunk/maven-skin</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-parent-1.1/maven-skin</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-parent-1.1/maven-skin</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/tags/james-parent-1.1/maven-skin</url>
   </scm>
 
   <build>
