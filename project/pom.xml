@@ -22,7 +22,7 @@
   <groupId>org.apache.james</groupId>
   <artifactId>james-project</artifactId>
   <name>Apache JAMES Project</name>
-  <version>1.1</version>
+  <version>1.1-SNAPSHOT</version>
   <description>
     The Apache JAMES Project
   </description>
@@ -30,8 +30,7 @@
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
-    <version>1.1</version>
-    <relativePath>../pom.xml</relativePath>
+    <version>1.1-SNAPSHOT</version>
   </parent>
 
   <modules>
@@ -49,12 +48,6 @@
     <system>JIRA</system>
     <url>http://issues.apache.org/jira/browse/JAMES</url>
   </issueManagement>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-parent-1.1/project</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-parent-1.1/project</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/tags/james-parent-1.1/project</url>
-  </scm>
 
   <distributionManagement>
     <!-- Each project must override this with their own -->
