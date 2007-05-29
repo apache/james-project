@@ -160,6 +160,12 @@ href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9b4-src.zip.asc">PGP
 
 </section>
 
+<section name="No updated unstable releases for Apache Mime4J">
+<p>Apache Mime4J 0.3 has been released an no new unstable releases have been released.
+Please go to the <a href="/download.cgi">stable releases download page</a> to download it.
+</p>
+</section>
+
 <subsection name="Verify the integrity of the files">
 
 <p>It is essential that you verify the integrity of the downloaded

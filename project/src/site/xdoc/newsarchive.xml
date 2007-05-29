@@ -12,10 +12,10 @@
           </div>
         </div>
     <subsection name="2007">
-    	<!--
+        <a name="05302007"><h4>May/2007 - Apache Mime4J 0.3 Final Released</h4></a>
+        <p>After almost 2 years the Apache JAMES team is proud to announce the <a href="download.cgi">availability</a> of Apache Mime4J 0.3. This is the first release under the ASF umbrella.</p>
         <a name="05052007"><h4>May/2007 - Mailet API sub-project lives</h4></a>
-        <p></p>
-        -->
+        <p>Following the decision the PMC have taken few months ago the Apache Mailet API project is now independent of JAMES Server and has its own <a href="mailet/index.html">webpage</a> and itw own source repository.</p>
         <a name="04029007"/><h4>Apr/2007 - JAMES Server 2.3.1 Final Released</h4>
         <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the final release of JAMES Server 2.3.1. More informations on what has been fixed since the 2.3.0 release can be found in the <a href="/server/2.3.1/changelog.html">changelog</a>.</p>
         <a name="04192007"><h4>Apr/2007 - JAMES Server 2.3.1 RC1 released</h4></a>
