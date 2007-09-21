@@ -1,6 +1,6 @@
 How to build and publish the website:
 
- 1. Install Apache Maven 2.0.6 and make its binary 'mvn' available on your PATH.
+ 1. Install Apache Maven 2.0.6+ and make its binary 'mvn' available on your PATH.
  2. run "mvn -U -Plocal,parent clean install site:stage -DstagingDirectory={path}".
     - the -U will force mvn to update plugins (check new installed skin when building
       the project site.
