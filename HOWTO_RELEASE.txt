@@ -54,7 +54,7 @@ Howto release via maven release plugin:
                 <id>people.apache.org</id>
                 <username>$(USERNAME)</username>
                 <privateKey>$(PRIVATE_KEY)</privateKey>
-                <passphrase>$(PASSPRASE)</passphrase>
+                <passphrase>$(PASSPHRASE)</passphrase>
                 <directoryPermissions>775</directoryPermissions>
                 <filePermissions>644</filePermissions>
              </server>
@@ -69,7 +69,7 @@ Howto release via maven release plugin:
           </profiles>
       </settings>
   
-      Replace $(USERNAME) with the username you use to login people.apache.org, $(PRIVATE_KEY) with the path to your private openssh key and $(PASSPRASE) with your passphrase. 
+      Replace $(USERNAME) with the username you use to login people.apache.org, $(PRIVATE_KEY) with the path to your private openssh key and $(PASSPHRASE) with your passphrase. 
       Just remove the passphrase config option if your private key is not encrypted with one.
   
   
@@ -94,3 +94,13 @@ Howto release via maven release plugin:
         ' mvn -Plocal,release release:perform -Dgoals=deploy -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgoals=deploy -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE)" '
       
       Now all should be done the next time with only this two maven commands
+      
+      
+    3 Publish the release as maven artifact
+      
+    This steps will make the artifact's aviable in maven repositories. Get sure the VOTE has passed and the release should get official
+      
+      Publish:
+      1 Copy the artifact's the maven repo via: 'cp -r ~/staging-repository/org/apache/james/* /www/people.apache.org/repo/m2-ibiblio-rsync-repository/org/apache/james/'
+      2 Get some coffee and wait till the artifact's get synced across the mirrors (this can take some time).
+      
