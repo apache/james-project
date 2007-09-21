@@ -27,7 +27,7 @@ Howto release via maven release plugin:
       This file is not understood by maven. So the easiest thing is to run an interactive maven command
       using the ssh access to people.apache.org.
       mvn deploy:deploy-file
-         \ -Durl=scp://people.apache.org/home/(YOURHOME)/public_html/a-random-repository 
+         \ -Durl=scp://people.apache.org/home/$(YOURHOME)/public_html/a-random-repository 
          \ -DrepositoryId=a_random.id 
          \ -Dfile=path_to_a_local_file.jar
          \ -DgroupId=org.some.group
@@ -42,9 +42,9 @@ Howto release via maven release plugin:
 
 
     General:
-    1 Install Apache Maven 2.0.6 and make its binary 'mvn' available on your PATH.
+    1 Install Apache Maven 2.0.6+ and make its binary 'mvn' available on your PATH.
   
-    2 Create a settings.xml  in your .m2 directory with the following content:
+    2 Create a settings.xml in your .m2 directory with the following content:
   
       <settings xmlns="http://maven.apache.org/POM/4.0.0"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -70,13 +70,22 @@ Howto release via maven release plugin:
       </settings>
   
       Replace $(USERNAME) with the username you use to login people.apache.org, $(PRIVATE_KEY) with the path to your private openssh key and $(PASSPRASE) with your passphrase. 
-      Just remoe the passphrase config option if your private key is not encrypted with one.
+      Just remove the passphrase config option if your private key is not encrypted with one.
   
   
     2 Do the release with maven:
     
-      This steps will build, sign and upload the releases
+    This steps will build, sign and upload the releases
     
+      Prepare:
+      1 Login to minotaur (people.apache.org) via ssh. 
+      2 Clean up your staging-repository via: 'rm -r ~/staging-repository/org/apache/james/*' 
+        If this fails, you have probally not the needed directory structure in place. Create it via: 'mkdir -p ~/staging-repository/org/apache/james/'
+      3 Copy the "old" published builds to staging-repository (this is needed to get the right meta data) via: 
+        'cp -r /www/people.apache.org/repo/m2-ibiblio-rsync-repository/org/apache/james/* ~/staging-repository/org/apache/james/'
+    
+        
+      
       General:
       1 Move to the root folder of the project:
       2 Use ' mvn -Plocal,release release:prepare -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) " ' to prepare the release
