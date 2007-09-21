@@ -20,9 +20,24 @@ Howto release via maven release plugin:
     1 Create and install a SSH key
       1 Install ssh ( this should be installed by default on must linux / unix systems)
       2 Use "ssh-keygen -t dsa" to generate a new private/public key
-      3 Use ssh to login people.apache.org and add the content of "~/.ssh/id_dsa.pub" (local) to "~/.ssh/authorited_keys" (people.apache.org) 
+      3 Use ssh to login people.apache.org and add the content of "~/.ssh/id_dsa.pub" (local) to "~/.ssh/authorized_keys" (people.apache.org) 
       4 Check you can login people.apache.org via your private key
-    
+      
+    2 Some linux version (e.g: kubuntu 7) uses an hashed version of the known_hosts file.
+      This file is not understood by maven. So the easiest thing is to run an interactive maven command
+      using the ssh access to people.apache.org.
+      mvn deploy:deploy-file
+         \ -Durl=scp://people.apache.org/home/(YOURHOME)/public_html/a-random-repository 
+         \ -DrepositoryId=a_random.id 
+         \ -Dfile=path_to_a_local_file.jar
+         \ -DgroupId=org.some.group
+         \ -DartifactId=your-artifact
+         \ -Dversion=1.0
+         \ -Dpackaging=jar
+      This will try connecting via ssh to people.apache.org and interactively will ask you to accept the new
+      host key.
+      Run this a second time and it HAVE TO work without asking anything. If it keep asking to accept
+      the key for an unknown host you will not be able to make the release.
 
 
 
@@ -65,6 +80,8 @@ Howto release via maven release plugin:
       General:
       1 Move to the root folder of the project:
       2 Use ' mvn -Plocal,release release:prepare -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) " ' to prepare the release
-      3 Use ' mvn -Plocal,release release:perfom -Dgoals=deploy -Darguments="-Dgoals=deploy" ' to finally perfom all needed steps to finish the release stuff
+      3 Use ' mvn -Plocal,release release:perform -Dgoals=deploy -Darguments="-Dgoals=deploy" ' to finally perfom all needed steps to finish the release stuff
+      4 If the step 3 does not work try this more verbose
+        ' mvn -Plocal,release release:perform -Dgoals=deploy -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgoals=deploy -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE)" '
       
       Now all should be done the next time with only this two maven commands
