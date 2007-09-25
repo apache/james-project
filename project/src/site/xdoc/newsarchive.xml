@@ -13,7 +13,7 @@
         </div>
     <subsection name="2007">
         <a name="09252007"><h4>Sept/2007 - jSPF-0.9.5 released</h4></a>
-        <p>We are proud to announce the <a href="downloadunstable.cgi">availability</a> release of APACHE jSPF-0.9.5. This release spots an initial support for asynchronous processing and is fully <a href="http://www.openspf.org">RFC4408</a> compliant.</p>
+        <p>We are proud to announce the <a href="downloadunstable.cgi">availability</a> of APACHE jSPF-0.9.5. This release brings initial support for asynchronous processing and is fully RFC4408 compliant.</p> 
         <a name="05302007"><h4>May/2007 - Apache Mime4J 0.3 Final Released</h4></a>
         <p>After almost 2 years the Apache JAMES team is proud to announce the <a href="download.cgi">availability</a> of Apache Mime4J 0.3. This is the first release under the ASF umbrella.</p>
         <a name="05052007"><h4>May/2007 - Mailet API sub-project lives</h4></a>
