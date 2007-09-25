@@ -12,6 +12,8 @@
           </div>
         </div>
     <subsection name="2007">
+        <a name="09252007"><h4>Sept/2007 - jSPF-0.9b5 released</h4></a>
+        <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/jspf/beta">availability</a> of jSPF-0.9b5. This release supports asynchron processing and is fully RFC4408 conform.</p>
         <a name="05302007"><h4>May/2007 - Apache Mime4J 0.3 Final Released</h4></a>
         <p>After almost 2 years the Apache JAMES team is proud to announce the <a href="download.cgi">availability</a> of Apache Mime4J 0.3. This is the first release under the ASF umbrella.</p>
         <a name="05052007"><h4>May/2007 - Mailet API sub-project lives</h4></a>
