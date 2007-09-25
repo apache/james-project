@@ -122,37 +122,37 @@ Binaries</a></li>
 </section>
 -->
 
-<section name="Apache JAMES jSPF 0.9B5 is the latest jSPF unstable version">
+<section name="Apache JAMES jSPF 0.9.5 is the latest jSPF unstable version">
 
 <ul>
 
 <li>Binary (JAR): <a
-href="[preferred]/james/jspf/beta/bin/jspf-0.9b5.jar">jspf-0.9b5.jar</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9b5.jar.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/bin/jspf-0.9.5.jar">jspf-0.9.5.jar</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9.5.jar.asc">PGP</a>]</li>
 
 <li>Binary (ZIP Format): <a
-href="[preferred]/james/jspf/beta/bin/jspf-0.9b5-bin.zip">jspf-0.9b5-bin.zip</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9b5-bin.zip.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/bin/jspf-0.9.5-bin.zip">jspf-0.9.5-bin.zip</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9.5-bin.zip.asc">PGP</a>]</li>
 
 <li>Binary (Unix TAR.GZ): <a
-href="[preferred]/james/jspf/beta/bin/jspf-0.9b5-bin.tar.gz">jspf-0.9b5-bin.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9b5-bin.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/bin/jspf-0.9.5-bin.tar.gz">jspf-0.9.5-bin.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9.5-bin.tar.gz.asc">PGP</a>]</li>
 
 <li>Binary (Unix TAR.BZ2): <a
-href="[preferred]/james/jspf/beta/bin/jspf-0.9b5-bin.tar.bz2">jspf-0.9b5-bin.tar.bz2</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9b5-bin.tar.bz2.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/bin/jspf-0.9.5-bin.tar.bz2">jspf-0.9.5-bin.tar.bz2</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/bin/jspf-0.9.5-bin.tar.bz2.asc">PGP</a>]</li>
 
 <li>Source (Unix TAR.GZ): <a
-href="[preferred]/james/jspf/beta/src/jspf-0.9b5-src.tar.gz">jspf-0.9b5-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9b5-src.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/src/jspf-0.9.5-src.tar.gz">jspf-0.9.5-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9.5-src.tar.gz.asc">PGP</a>]</li>
 
 <li>Source (Unix TAR.BZ2): <a
-href="[preferred]/james/jspf/beta/src/jspf-0.9b5-src.tar.bz2">jspf-0.9b5-src.tar.bz2</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9b5-src.tar.bz2.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/src/jspf-0.9.5-src.tar.bz2">jspf-0.9.5-src.tar.bz2</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9.5-src.tar.bz2.asc">PGP</a>]</li>
 
 <li>Source (ZIP Format): <a
-href="[preferred]/james/jspf/beta/src/jspf-0.9b5-src.zip">jspf-0.9b5-src.zip</a> [<a
-href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9b5-src.zip.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/beta/src/jspf-0.9.5-src.zip">jspf-0.9.5-src.zip</a> [<a
+href="http://www.apache.org/dist/james/jspf/beta/src/jspf-0.9.5-src.zip.asc">PGP</a>]</li>
 
 <li><a href="[preferred]/james/jspf/beta/binaries/">Other Binaries</a></li>
 
