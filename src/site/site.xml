@@ -50,7 +50,7 @@
     
     <menu name="Sub Projects">
       <item name="Server" href="/server/index.html" />
-	  <item name="Mailet API" href="/mailet/index.html" />
+      <item name="Mailet API" href="/mailet/index.html" />
       <item name="jSPF" href="/jspf/index.html" />
       <item name="Mime4J" href="/mime4j/index.html" />
       <item name="JSieve" href="/jsieve/index.html" />
@@ -91,7 +91,13 @@
     <menu name="Useful Information">
       <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
       <item name="Reference Library" href="http://jakarta.apache.org/site/library.html"/>
-      <item name="Apache" href="http://apache.org/foundation/faq.html"/>
+    </menu>
+
+    <menu name="Foundation">
+      <item name="FAQ" href="http://apache.org/foundation/faq.html"/>
+      <item name="Sponsorship" href="http://apache.org/foundation/sponsorship.html"/>
+      <item name="Donations" href="http://apache.org/foundation/contributing.html"/>
+      <item name="Thanks" href="http://apache.org/foundation/thanks.html"/>
     </menu>
 
   </body>
