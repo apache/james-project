@@ -20,6 +20,9 @@
     <section name="News">
     <i>Read all the news in full in the <a href="newsarchive.html">News Archive</a></i><br/>
     <i>Or click the titles to read the full story</i>
+    <subsection name="2008">
+        <a href="newsarchive.html#03192008"><strong>Mar/2008 - James publishes project ideas for Google Summer of Code '08</strong></a><br/>
+    </subsection>
     <subsection name="2007">
         <a href="newsarchive.html#09252007"><strong>Sept/2007 - jSPF-0.9.5 released</strong></a><br/>
         <a href="newsarchive.html#05302007"><strong>May/2007 - Apache Mime4J 0.3 Final Released</strong></a><br/>
