@@ -11,6 +11,15 @@
             <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
           </div>
         </div>
+    <subsection name="2008">
+        <a name="03192008"><h4>Mar/2008 - James publishes project ideas for Google Summer of Code '08</h4></a>
+        <p>The James Team are delighted to announce that we're proposing two project ideas for <a href="http://code.google.com/soc/2008/">Google Summer of Code (GSOC) 2008</a>. The project Ideas are set out on the Apache GSOC wiki <a href="http://wiki.apache.org/general/SummerOfCode2008#james">here</a>.</p>
+        <p>In brief they are:<br/>
+        1) Develop a VERP Mailet to allow James to write VERP modified return addresses on outbound messages, and an inbound mailet/matcher to identify VERP bounces and invoke configurable "do something" code.
+        <br/>
+        And <br/>
+        2) James' provided mailing list manager is fine for small closed groups, but lacks the functionality of a more robust MLM, the project is to add some all or more of the following features subscriber and message moderation, double opt-in and bounce handling.</p>
+    </subsection>
     <subsection name="2007">
         <a name="09252007"><h4>Sept/2007 - jSPF-0.9.5 released</h4></a>
         <p>We are proud to announce the <a href="downloadunstable.cgi">availability</a> of APACHE jSPF-0.9.5. This release brings initial support for asynchronous processing and is fully RFC4408 compliant.</p> 
