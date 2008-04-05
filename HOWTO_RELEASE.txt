@@ -88,7 +88,7 @@ Howto release via maven release plugin:
       
       General:
       1 Move to the root folder of the project:
-      2 Use ' mvn -Plocal,release release:prepare -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) " ' to prepare the release
+      2 Use ' mvn -Plocal,release release:prepare -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE)" ' to prepare the release
       3 Use ' mvn -Plocal,release release:perform -Dgoals=deploy -Darguments="-Dgoals=deploy" ' to finally perfom all needed steps to finish the release stuff
       4 If the step 3 does not work try this more verbose
         ' mvn -Plocal,release release:perform -Dgoals=deploy -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE) -Darguments="-Dgoals=deploy -Dgpg.keyname=$(YOURKEYNAME) -Dgpg.passphrase=$(YOURPASSPHRASE)" '
