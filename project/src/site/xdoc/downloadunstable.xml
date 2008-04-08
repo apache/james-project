@@ -68,7 +68,7 @@ list of mirrors</a>.</p>
 </subsection>
 
 <section name="No updated unstable releases for Apache JAMES Server">
-<p>Apache JAMES server 2.3.1 has been released an no new unstable releases have been released.
+<p>Apache JAMES server 2.3.1 has been released and no new unstable releases have been released.
 Please go to the <a href="/download.cgi">stable releases download page</a> to download it.
 </p>
 </section>
@@ -122,6 +122,13 @@ Binaries</a></li>
 </section>
 -->
 
+<section name="No updated unstable releases for Apache JAMES jSPF">
+<p>Apache JAMES jSPF 0.9.6 has been released and no new unstable releases have been released.
+Please go to the <a href="/download.cgi">stable releases download page</a> to download it.
+</p>
+</section>
+
+<!--
 <section name="Apache JAMES jSPF 0.9.5 is the latest jSPF unstable version">
 
 <ul>
@@ -151,7 +158,7 @@ href="http://www.apache.org/dist/james/jspf/beta/src/apache-jspf-0.9.5-src.zip.a
 </ul>
 
 </section>
-
+-->
 <section name="No updated unstable releases for Apache Mime4J">
 <p>Apache Mime4J 0.3 has been released an no new unstable releases have been released.
 Please go to the <a href="/download.cgi">stable releases download page</a> to download it.
