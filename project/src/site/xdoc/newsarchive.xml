@@ -12,6 +12,9 @@
           </div>
         </div>
     <subsection name="2008">
+        <a name="04082008"><h4>Apr/2008 - jSPF-0.9.6 released</h4></a>
+        <p>We are proud to announce the <a href="../download.cgi">availability</a> release of APACHE jSPF-0.9.6. This release fix two possible NullPointerExceptions and handle the "exp=" modifier correctly.</p>
+    
         <a name="03192008"><h4>Mar/2008 - James publishes project ideas for Google Summer of Code '08</h4></a>
         <p>The James Team are delighted to announce that we're proposing two project ideas for <a href="http://code.google.com/soc/2008/">Google Summer of Code (GSOC) 2008</a>. The project Ideas are set out on the Apache GSOC wiki <a href="http://wiki.apache.org/general/SummerOfCode2008#james">here</a>.</p>
         <p>In brief they are:<br/>
@@ -21,12 +24,6 @@
         2) James' provided mailing list manager is fine for small closed groups, but lacks the functionality of a more robust MLM, the project is to add some all or more of the following features subscriber and message moderation, double opt-in and bounce handling.</p>
     </subsection>
     
-    
-    <subsection name="2008">
-        <a name="04082008"><h4>Apr/2008 - jSPF-0.9.6 released</h4></a>
-      <p>We are proud to announce the <a href="../download.cgi">availability</a> release of APACHE jSPF-0.9.6. This release fix two possible NullPointerExceptions and handle the "exp=" modifier correctly.</p>
-    
-    </subsection>
     <subsection name="2007">
         <a name="09252007"><h4>Sept/2007 - jSPF-0.9.5 released</h4></a>
         <p>We are proud to announce the <a href="downloadunstable.cgi">availability</a> of APACHE jSPF-0.9.5. This release brings initial support for asynchronous processing and is fully RFC4408 compliant.</p> 
