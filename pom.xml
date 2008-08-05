@@ -53,7 +53,7 @@
     <!-- Each project must override this with their own -->
     <site>
       <id>james-website</id>
-      <url>scp://minotaur.apache.org/www/james.apache.org/</url>
+      <url>scp://people.apache.org/www/james.apache.org/</url>
     </site>
   </distributionManagement>
 
