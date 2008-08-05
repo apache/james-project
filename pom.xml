@@ -220,7 +220,7 @@
     <!-- Each project must override this with their own -->
     <site>
       <id>james-parent-website</id>
-      <url>scp://minotaur.apache.org/www/james.apache.org/parent/</url>
+      <url>scp://people.apache.org/www/james.apache.org/parent/</url>
     </site>
   </distributionManagement>
 
