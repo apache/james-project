@@ -41,7 +41,7 @@
     <links>
       <item name="JAMES Project" href="/index.html" />
       <item name="Server" href="/server/index.html" />
-	  <item name="Mailet API" href="/mailet/index.html" />
+	  <item name="Mailets" href="/mailet/index.html" />
       <item name="jSPF" href="/jspf/index.html" />
       <item name="Mime4J" href="/mime4j/index.html" />
       <item name="JSieve" href="/jsieve/index.html" />
@@ -50,7 +50,7 @@
     
     <menu name="Sub Projects">
       <item name="Server" href="/server/index.html" />
-      <item name="Mailet API" href="/mailet/index.html" />
+      <item name="Mailets" href="/mailet/index.html" />
       <item name="jSPF" href="/jspf/index.html" />
       <item name="Mime4J" href="/mime4j/index.html" />
       <item name="JSieve" href="/jsieve/index.html" />
