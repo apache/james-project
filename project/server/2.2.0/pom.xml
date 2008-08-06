@@ -34,11 +34,11 @@
   </parent>
   <url>http://james.apache.org/server/2.2.0/</url>
   <inceptionYear>2006</inceptionYear>
-
+  
   <distributionManagement>
     <site>
       <id>james-server-website</id>
-      <url>scp://minotaur.apache.org/www/james.apache.org/server/2.2.0/</url>
+      <url>scp://people.apache.org/www/james.apache.org/server/2.2.0/</url>
     </site>
   </distributionManagement>
 </project>

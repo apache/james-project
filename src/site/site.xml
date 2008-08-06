@@ -20,7 +20,7 @@
 <project name="James Parent POM">
 
   <bannerLeft>
-    <name>James Project</name>
+    <name>James Parent</name>
     <src>images/james-project-logo.gif</src>
     <href>http://james.apache.org/index.html</href>
   </bannerLeft>
