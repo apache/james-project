@@ -41,7 +41,7 @@
   <distributionManagement>
     <site>
       <id>james-server-website</id>
-      <url>scp://minotaur.apache.org/www/james.apache.org/server/</url>
+      <url>scp://people.apache.org/www/james.apache.org/server/</url>
     </site>
   </distributionManagement>
   

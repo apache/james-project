@@ -48,6 +48,17 @@
     <url>http://www.apache.org</url>
   </organization>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>2.0-beta-5</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
