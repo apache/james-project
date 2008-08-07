@@ -34,7 +34,7 @@
   <distributionManagement>
     <site>
       <id>maven-skin-website</id>
-      <url>scp://minotaur.apache.org/www/james.apache.org/maven-skin</url>
+      <url>scp://people.apache.org/www/james.apache.org/maven-skin</url>
     </site>
   </distributionManagement>
 
