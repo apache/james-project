@@ -12,6 +12,16 @@
           </div>
         </div>
     <subsection name="2008">
+        <a name="08222008"><h4>Aug/2008 - Mime4j released</h4></a>
+        <p>We are proud to announce the <a href="../download.cgi">availability</a> of APACHE Mime4j-0.4. This release brings a number of significant improvements in terms of supported capabilities, flexibility and performance:</p>
+        <ul>
+          <li>Revised and improved public API with support for pull parsing</li>
+          <li>Support for parsing of 'headless' messages transmitted using non SMTP transports such as HTTP</li>
+          <li>Reduced external dependencies. Mime4j is no longer directly dependent on log4j and commons-io</li>
+          <li>Improved parsing performance (up to 10x for large messages)</li>
+          <li>More comprehensive header parsing including support for RFC1864, RFC2045, RFC2183, RFC2557 and RFC3066</li>
+          <li>Revised packaging and exception hierarchy. MimeException now extends IOException</li>
+        </ul>
         <a name="04082008"><h4>Apr/2008 - jSPF-0.9.6 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> release of APACHE jSPF-0.9.6. This release fix two possible NullPointerExceptions and handle the "exp=" modifier correctly.</p>
     
