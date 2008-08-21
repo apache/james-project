@@ -155,34 +155,34 @@ Binaries</a></li>
 </subsection>
 
 
-<section name="Apache Mime4J 0.3">
+<section name="Apache Mime4J 0.4">
 
 <ul>
 
 <li>Binary (Unix TAR): <a
-href="[preferred]/james/mime4j/apache-mime4j-0.3-bin.tar.gz">apache-mime4j-0.3-bin.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-bin.tar.gz.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-bin.tar.gz.md5">MD5</a>]</li>
+href="[preferred]/james/mime4j/apache-mime4j-0.4-bin.tar.gz">apache-mime4j-0.4-bin.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-bin.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-bin.tar.gz.md5">MD5</a>]</li>
 
 <li>Binary (ZIP Format): <a
-href="[preferred]/james/mime4j/apache-mime4j-0.3-bin.zip">apache-mime4j-0.3-bin.zip</a> [<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-bin.zip.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-bin.zip.md5">MD5</a>]</li>
+href="[preferred]/james/mime4j/apache-mime4j-0.4-bin.zip">apache-mime4j-0.4-bin.zip</a> [<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-bin.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-bin.zip.md5">MD5</a>]</li>
 
 <li>Source (Unix TAR): <a
-href="[preferred]/james/mime4j/apache-mime4j-0.3-src.tar.gz">apache-mime4j-0.3-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-src.tar.gz.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-src.tar.gz.md5">MD5</a>]</li>
+href="[preferred]/james/mime4j/apache-mime4j-0.4-src.tar.gz">apache-mime4j-0.4-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-src.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-src.tar.gz.md5">MD5</a>]</li>
 
 <li>Source (ZIP Format): <a
-href="[preferred]/james/mime4j/apache-mime4j-0.3-src.zip">apache-mime4j-0.3-src.zip</a> [<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-src.zip.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3-src.zip.md5">MD5</a>]</li>
+href="[preferred]/james/mime4j/apache-mime4j-0.4-src.zip">apache-mime4j-0.4-src.zip</a> [<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-src.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4-src.zip.md5">MD5</a>]</li>
 
 <li>Binary (JAR library only): <a
-href="[preferred]/james/mime4j/apache-mime4j-0.3.jar">apache-mime4j-0.3.jar</a> [<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3.jar.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.3.jar.md5">MD5</a>]</li>
+href="[preferred]/james/mime4j/apache-mime4j-0.4.jar">apache-mime4j-0.4.jar</a> [<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4.jar.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.4.jar.md5">MD5</a>]</li>
 
 <li><a
 href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
