@@ -6,12 +6,68 @@
   </properties>
   <body>
     <section name="What is JAMES?">
-      <p>The Apache JAMES Project delivers a rich set of open source solutions, written in Java, related to internet mail and news.</p>
-      <p>JAMES is organized into subprojects with JAMES Server and the Mailet API as their core. Mailets are a mail processing component
-	system (similar to servlets). JAMES is an advanced, fully featured, mailet-enabled mail server.</p> 
-      <p>Apache JAMES is a project of The Apache Software Foundation (ASF) which encourages a collaborative, consensus-based development process under an open software license.</p>
-      <p>The ASF maintains other Java projects which may also be of interest. These are detailed on the ASF Projects page.</p>
-      <p>We recommended that users of JAMES products subscribe to the JAMES users mailing list.</p>
+      <p>
+The Apache JAMES Project delivers a rich set of open source solutions, written in Java, related to internet mail and news.
+      </p>
+      <subsection name='Get Involved'>
+<p>
+<a href='http://projects.apache.org'>Apache projects</a> are developed in an
+<a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> 
+<a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>. All 
+are welcome. 
+</p><p>
+We recommend that
+</p>
+<ul> 
+<li>Users subscribe to the JAMES user <a href='http://james.apache.org/mail.html'>mailing list</a></li>
+<li>Developers subscribe to the appropriate development <a href='http://james.apache.org/mail.html'>mailing list</a></li>
+</ul>
+  </subsection>
+  <subsection name='Products'>
+      <p>
+The JAMES project contains many products, classified by subproject: 
+      </p>
+<ul>
+<li><a href='http://james.apache.org/server'>JAMES Server</a> is an advanced fully functioned 
+integrated mail server. It is a mailet container and delegates mail processing to mailets
+(independent processing agents). Most of these mailets are 
+available through products in the <a href='http://james.apache.org/mailets'>mailets subproject</a>.
+The following protocols are supported:
+<ul>
+<li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
+<abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
+<li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
+<abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news)</li>
+<li><a href='http://james.apache.org/server/rfclist/pop3/rfc1725.txt'>
+<abbr title='Post Office Protocol'>POP3</abbr></a></li>
+<li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
+<abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (experimental)</li>
+</ul>
+</li>
+<li>The <a href='http://james.apache.org/mailets'>Mailet subproject</a> collects products
+related to mailets (mail processing components analogous to servlets). These are independent of the 
+<a href='http://james.apache.org/server'>JAMES server</a> and can be reused in any mailet container.
+<ul>
+<li>The <a href='http://james.apache.org/mailet/api'>Mailet API</a> specifies mailets</li>
+<li>The <a href='http://james.apache.org/mailet/base'>Mailet Basic Toolkit</a>
+collects utilities and lightweight frameworks useful for developing and testing mailets</li>
+<li><a href='http://james.apache.org/mailet/standard'>Standard Mailets</a> collects
+general processing mailets with limited dependencies</li>
+<li><a href='http://james.apache.org/mailet/crypto'>Crypto Mailets</a> collects
+mailets which perform cryptographic processing such as signing, encrypting,
+decrypting and signature verification.</li>
+</ul>
+</li>
+<li><a href='http://james.apache.org/jspf/'>jSPF</a> implements <abbr title='Sender Policy Framework'>
+<a href='http://www.openspf.org/'>SPF</a></abbr></li>
+<li><a href='http://james.apache.org/mime4j/'>Mime4J</a> parses MIME typed documents (including 
+- but not limited to - mail). APIs similar to DOM, SAX and pull parsers are exposed.</li>
+<li><a href='http://james.apache.org/jsieve'>jSieve</a> implements the 
+<a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language</li>
+<li><a href='http://james.apache.org/postage/'>Postage</a> generates mail traffic suitable
+for stress testing mail servers</li>
+</ul>
+    </subsection>
     </section>
       <div id="apacheconspacer">
         <div id="apacheconbox">
