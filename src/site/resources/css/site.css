@@ -1,3 +1,30 @@
+#newsbox {
+  margin: 20px 0px 0px 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: white;
+  background-image: url(../images/button-top.gif);
+  background-repeat: repeat-x;
+  width: 260px;
+}
+#newsboxspacer {
+  float: right;
+  margin: 0px 0px 10px 10px;
+  background-color: white;
+}
+
+#newsbox ul {
+  padding-left: 15px;
+}
+
+#newsbox div {
+  margin-left: 0px;
+}
+
+#newsbox li {
+  margin-bottom: 5px;
+}
+
 #apacheconbox {
   margin: 20px 0px 0px 20px;
   padding: 10px;
