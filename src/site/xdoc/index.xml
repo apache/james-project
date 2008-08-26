@@ -9,7 +9,11 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
-        <li>Aug/2008 - <a href="newsarchive.html#08222008"><strong>Mime4j 0.4</strong> released</a></li>
+        <li>Aug/2008 - <ul>
+        <li><a href="newsarchive.html#08262008"><strong>Apache JSieve 0.2</strong> released</a></li>
+        <li><a href="newsarchive.html#08222008"><strong>Mime4j 0.4</strong> released</a></li>
+        </ul>
+        </li>
         <li>Apr/2008 - <a href="newsarchive.html#04082008"><strong>jSPF 0.9.6</strong> released</a></li>
         <li>Mar/2008 - <a href="newsarchive.html#03192008">Project ideas for Google Summer of Code '08</a></li>
         </ul>

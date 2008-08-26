@@ -12,6 +12,12 @@
           </div>
         </div>
     <subsection name="2008">
+        <a name="08262008"><h4>Aug/2008 - Apache JSieve 0.2 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first public release of 
+        <a href='http://james.apache.org/jsieve'>Apache JSieve</a> an implementation
+        of <a href='http://www.faqs.org/rfcs/rfc3028.html'>RFC3028 - Sieve: A Mail Filtering Language</a>
+        for Java.
+        </p>
         <a name="08222008"><h4>Aug/2008 - Mime4j released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> of APACHE Mime4j-0.4. This release brings a number of significant improvements in terms of supported capabilities, flexibility and performance:</p>
         <ul>
