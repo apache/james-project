@@ -220,7 +220,41 @@ href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.6-src.zip.asc
 </ul>
 
 </section>
+<section name="Apache JSieve 0.2">
 
+<ul>
+
+<li>Binary (Unix TAR): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-bin.tar.gz">apache-jsieve-0.2-bin.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-bin.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-bin.tar.gz.md5">MD5</a>]</li>
+
+<li>Binary (ZIP Format): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-bin.zip">apache-jsieve-0.2-bin.zip</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-bin.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-bin.zip.md5">MD5</a>]</li>
+
+<li>Source (Unix TAR): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-src.tar.gz">apache-jsieve-0.2-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-src.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-src.tar.gz.md5">MD5</a>]</li>
+
+<li>Source (ZIP Format): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-src.zip">apache-jsieve-0.2-src.zip</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-src.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-src.zip.md5">MD5</a>]</li>
+
+<li>Binary (JAR library only): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2.jar">apache-jsieve-0.2.jar</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2.jar.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2.jar.md5">MD5</a>]</li>
+
+<li><a
+href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
+
+</ul>
+
+</section>
 
 <subsection name="Verify the integrity of the files">
 
