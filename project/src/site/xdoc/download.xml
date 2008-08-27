@@ -244,13 +244,20 @@ href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-src.zip">apache-jsie
 href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-src.zip.asc">PGP</a>][<a
 href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-src.zip.md5">MD5</a>]</li>
 
-<li>Binary (JAR library only): <a
+<li><abbr title='Java ARchive'>JAR</abbr> library only: <a
 href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2.jar">apache-jsieve-0.2.jar</a> [<a
 href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2.jar.asc">PGP</a>][<a
 href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2.jar.md5">MD5</a>]</li>
 
-<li><a
-href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
+<li>Javadocs only (for IDEs): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-javadoc.jar">apache-jsieve-0.2-javadoc.jar</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-javadoc.jar.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-javadoc.jar.md5">MD5</a>]</li>
+
+<li>Source <abbr title='Java ARchive'>JAR</abbr> only (for IDEs): <a
+href="[preferred]/james/apache-jsieve/0.2/apache-jsieve-0.2-sources.jar">apache-jsieve-0.2-sources.jar</a> [<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-sources.jar.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-sources.jar.md5">MD5</a>]</li>
 
 </ul>
 
