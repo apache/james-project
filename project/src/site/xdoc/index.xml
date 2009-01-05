@@ -9,6 +9,10 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
+        <li>Jan/2009 - <ul>
+        <li><a href="newsarchive.html#01052009"><strong>Apache Mailet 2.4</strong> released</a></li>
+        </ul>
+        </li>
         <li>Aug/2008 - <ul>
         <li><a href="newsarchive.html#08262008"><strong>Apache JSieve 0.2</strong> released</a></li>
         <li><a href="newsarchive.html#08222008"><strong>Mime4j 0.4</strong> released</a></li>
