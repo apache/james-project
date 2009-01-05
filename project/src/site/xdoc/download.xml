@@ -24,9 +24,9 @@
   </properties>
 <body>
 
-<section name="Downloading the Apache JAMES Mail Server">
+<section name="Downloading">
 
-<p>Use the links below to download the Apache JAMES Mail Server from one of
+<p>Use the links below to download the product from one of
 our mirrors.  You <strong>must</strong> <a href="#Verify the integrity of the files">verify the
 integrity</a> of the downloaded files using signatures downloaded from
 our main distribution directory.</p>
@@ -36,7 +36,13 @@ distribution site and its mirrors.  Older releases are available from
 the <a href="http://archive.apache.org/dist/james/">archive download
 site.</a></p>
 
-</section>
+<ul>
+<li><a href='#Apache James Server'>Apache James Server</a></li>
+<li><a href='#Apache Mime4J'>Apache Mime4j</a></li>
+<li><a href='#Apache jSPF'>Apache jSPF</a></li>
+<li><a href='#Apache JSieve'>Apache JSieve</a></li>
+<li><a href='#Apache Mailet'>Apache Mailet</a></li>
+</ul>
 
 <subsection name="Mirror">
 
@@ -66,8 +72,39 @@ Other mirrors: <select name="Preferred">
 list of mirrors</a>.</p>
 
 </subsection>
+<subsection name="Verify the integrity of the files">
 
-<section name="Apache JAMES 2.3.1 is the best available version">
+<p>It is essential that you verify the integrity of the downloaded
+files using the PGP or MD5 signatures.</p>
+
+<p>The PGP signatures can be verified using PGP or GPG.  First
+download the <a href="http://www.apache.org/dist/james/KEYS">KEYS</a>
+as well as the <code>asc</code> signature file for the particular
+distribution.  Make sure you get these files from the <a
+href="http://www.apache.org/dist/james/">main distribution
+directory</a>, rather than from a mirror. Then verify the signatures
+using</p>
+
+<p><code>
+% pgpk -a KEYS<br />
+% pgpv james-<i>version</i>.tar.gz.asc<br />
+</code>
+<em>or</em><br />
+<code>
+% pgp -ka KEYS<br />
+% pgp james-<i>version</i>.tar.gz.asc<br />
+</code>
+<em>or</em><br />
+<code>
+% gpg --import KEYS<br />
+% gpg --verify james-<i>version</i>.tar.gz.asc
+</code></p>
+
+</subsection>
+</section>
+
+<section name='Apache James Server'>
+<subsection name="Apache JAMES 2.3.1 is the best available version">
 
 <p>This release has many enhancements and bug fixes over the previous
 release.  See the <a
@@ -116,8 +153,6 @@ Binaries</a></li>
 
 </ul>
 
-</section>
-
 <subsection name="Apache JAMES 2.3.0 is the previous release">
 
 <ul>
@@ -153,10 +188,11 @@ Binaries</a></li>
 </ul>
 
 </subsection>
+</subsection>
+</section>
 
-
-<section name="Apache Mime4J 0.5">
-
+<section name="Apache Mime4J">
+<p>Apache Mime4J 0.5 is the latest stable version:</p>
 <ul>
 
 <li>Binary (Unix TAR): <a
@@ -191,8 +227,8 @@ href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...
 
 </section>
 
-<section name="Apache JAMES jSPF 0.9.6 is the latest jSPF stable version">
-
+<section name="Apache jSPF">
+<p>Apache James jSPF 0.9.6 is the latest jSPF stable version:</p>
 <ul>
 
 <li>Binary (JAR): <a
@@ -220,8 +256,8 @@ href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.6-src.zip.asc
 </ul>
 
 </section>
-<section name="Apache JSieve 0.2">
-
+<section name="Apache JSieve">
+<p>Apache JSieve 0.2 is the latest stable version:</p>
 <ul>
 
 <li>Binary (Unix TAR): <a
@@ -263,35 +299,38 @@ href="http://www.apache.org/dist/james/apache-jsieve/0.2/apache-jsieve-0.2-sourc
 
 </section>
 
-<subsection name="Verify the integrity of the files">
+<section name="Apache Mailet">
+<p>Apache Mailet 2.4 is the latest stable version:</p>
+<ul>
 
-<p>It is essential that you verify the integrity of the downloaded
-files using the PGP or MD5 signatures.</p>
+<li>Binary (Unix TAR): <a
+href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz">apache-mailet-2.4.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.tar.gz.md5">MD5</a>]</li>
 
-<p>The PGP signatures can be verified using PGP or GPG.  First
-download the <a href="http://www.apache.org/dist/james/KEYS">KEYS</a>
-as well as the <code>asc</code> signature file for the particular
-distribution.  Make sure you get these files from the <a
-href="http://www.apache.org/dist/james/">main distribution
-directory</a>, rather than from a mirror. Then verify the signatures
-using</p>
+<li>Binary (ZIP Format): <a
+href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.zip">apache-mailet-2.4.zip</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.zip.md5">MD5</a>]</li>
 
-<p><code>
-% pgpk -a KEYS<br />
-% pgpv james-<i>version</i>.tar.gz.asc<br />
-</code>
-<em>or</em><br />
-<code>
-% pgp -ka KEYS<br />
-% pgp james-<i>version</i>.tar.gz.asc<br />
-</code>
-<em>or</em><br />
-<code>
-% gpg --import KEYS<br />
-% gpg --verify james-<i>version</i>.tar.gz.asc
-</code></p>
+<li>Source (Unix TAR): <a
+href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz">apache-mailet-2.4-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.tar.gz.md5">MD5</a>]</li>
 
-</subsection>
+<li>Source (ZIP Format): <a
+href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4-src.zip">apache-mailet-2.4-src.zip</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4-src.zip.md5">MD5</a>]</li>
+
+<li><abbr title='Java ARchive'>JAR</abbr> library only: <a
+href="[preferred]/james/apache-mailet/2.4/apache-mailet-2.4.jar">apache-mailet-2.4.jar</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.md5">MD5</a>]</li>
+
+</ul>
+
+</section>
 
 <section name="Unstable releases and Nightlies">
 
