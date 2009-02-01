@@ -203,6 +203,18 @@ every code change, build results, testing notices, etc. <b>Do not send
 mail to this list with usage questions or configuration problems</b> -- 
 that's what server-user@james is for. </p>
       </subsection>
+      <subsection name="Mime4j">
+        <p>
+          <b>Medium Traffic</b>
+          <a href="mailto:mime4j-dev-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:mime4j-dev-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+          <a href="http://mail-archives.apache.org/mod_mbox/james-mime4j-dev"> 
+Archive</a>
+        </p>
+        <p> Discussions on the <a href='http://james.apache.org/mime4j'>Mime4j</a> 
+        parser library.</p>
+      </subsection>
       <subsection name="Site Developer List">
         <p>
           <b>Very Low Traffic</b>
