@@ -42,6 +42,7 @@ site.</a></p>
 <li><a href='#Apache jSPF'>Apache jSPF</a></li>
 <li><a href='#Apache JSieve'>Apache JSieve</a></li>
 <li><a href='#Apache Mailet'>Apache Mailet</a></li>
+<li>The MailetDoc Plugin for Maven is available from the standard repositories</li>
 </ul>
 
 <subsection name="Mirror">
