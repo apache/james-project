@@ -12,6 +12,14 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name="20092102"><h4>Feb/2009 - MailetDocs Maven Plugin 0.1 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first release of the
+        <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/' rel='tag'>MailetDocs</a> 
+        plugin for <a href='http://maven.apache.org' rel='tag'>Maven</a>. The plugin catalogs mailet
+        (for <a href='http://james.apache.org/mailet/standard/mailet-report.html'>example</a>). 
+        For more information, see the 
+        <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/release-notes.html'>release notes</a>.
+        </p>  
         <a name="01052009"><h4>Jan/2009 - Apache Mailet 2.4 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce the first independent release of
         <a href='http://james.apache.org/mailet/api'>Apache Mailet</a> (previous versions 
