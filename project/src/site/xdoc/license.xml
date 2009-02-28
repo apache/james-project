@@ -3,12 +3,12 @@
 <document>
 
  <properties>
-  <title>Apache Software License</title>
+  <title>Apache License</title>
   <author email="sergek@lokitech.com">Serge Knystautas</author>
  </properties>
 
 <body>
-<section name="Apache Software License">
+<section name="Apache License">
 <p>
     Apache James is Open Source released under the <a href='http://www.opensource.org/'>OSI</a>
     <a href='http://www.opensource.org/licenses/apache2.0.php'>approved</a>
