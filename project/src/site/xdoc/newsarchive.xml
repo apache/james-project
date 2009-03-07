@@ -12,7 +12,13 @@
           </div>
         </div>
     <subsection name='2009'>
-        <a name="20092102"><h4>Feb/2009 - MailetDocs Maven Plugin 0.1 released</h4></a>
+        <a name="08032009"><h4>Mar/2009 - Mime4j 0.6 released</h4></a>
+        <p>We are proud to announce the <a href="../download.cgi">availability</a> of Apache 
+        Mime4j-0.6. This release brings another round of API enhancements and performance 
+        optimizations. There has been a number of notable improvements in the DOM support. MIME 
+        stream parser is expected to be 50% faster when line counting is disabled. Please also note 
+        that as of this release Mime4j requires a Java 1.5 compatible runtime</p>
+        <a name="21022009"><h4>Feb/2009 - MailetDocs Maven Plugin 0.1 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce the first release of the
         <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/' rel='tag'>MailetDocs</a> 
         plugin for <a href='http://maven.apache.org' rel='tag'>Maven</a>. The plugin catalogs mailet
