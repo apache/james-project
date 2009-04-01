@@ -339,14 +339,14 @@ href="http://www.apache.org/dist/james/apache-mailet/2.4/apache-mailet-2.4.jar.m
 <ul>
 
 <li>Binary (Unix TAR): <a
-href="[preferred]/james/apache-mailet-base/1.0/apache-mailet-base-1.0.tar.gz">apache-mailet-base-1.0.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0.tar.gz.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0.tar.gz.md5">MD5</a>]</li>
+href="[preferred]/james/apache-mailet-base/1.0/apache-mailet-base-1.0-bin.tar.gz">apache-mailet-base-1.0.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0-bin.tar.gz.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0-bin.tar.gz.md5">MD5</a>]</li>
 
 <li>Binary (ZIP Format): <a
-href="[preferred]/james/apache-mailet-base/1.0/apache-mailet-base-1.0.zip">apache-mailet-base-1.0.zip</a> [<a
-href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0.zip.asc">PGP</a>][<a
-href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0.zip.md5">MD5</a>]</li>
+href="[preferred]/james/apache-mailet-base/1.0/apache-mailet-base-1.0-bin.zip">apache-mailet-base-1.0.zip</a> [<a
+href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0-bin.zip.asc">PGP</a>][<a
+href="http://www.apache.org/dist/james/apache-mailet-base/1.0/apache-mailet-base-1.0-bin.zip.md5">MD5</a>]</li>
 
 <li>Source (Unix TAR): <a
 href="[preferred]/james/apache-mailet-base/1.0/apache-mailet-base-1.0-src.tar.gz">apache-mailet-base-1.0-src.tar.gz</a> [<a
