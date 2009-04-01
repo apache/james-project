@@ -12,6 +12,14 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name="01042009"><h4>Apr/2009 - Apache Mailet Base 1.0 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first independent release of
+        <a href='http://james.apache.org/mailet/base'>Apache Mailet Base</a> (previous versions 
+        were released as part of the 
+        <a href='http://james.apache.org/server'>Apache James Server</a>). The Basic Mailet Toolkit
+        contains lightweight frameworks and utilities likely to be of interest to 
+        <a href='http://james.apache.org/mailet/api'>Mailet</a> developers.
+        </p>   
         <a name="08032009"><h4>Mar/2009 - Mime4j 0.6 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> of Apache 
         Mime4j-0.6. This release brings another round of API enhancements and performance 
