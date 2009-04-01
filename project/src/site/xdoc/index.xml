@@ -9,8 +9,15 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
-        <li>Feb/2009 - <ul>
+        <li>Apr/2009 - <ul>
+        <li><a href="newsarchive.html#01042009"><strong>Apache Mailet Base 1.0 released</strong> released</a></li>
+        </ul>
+        </li>
+        <li>Mar/2009 - <ul>
         <li><a href="newsarchive.html#08032009"><strong>Mime4j 0.6</strong> released</a></li>
+        </ul>
+        </li>
+        <li>Feb/2009 - <ul>
         <li><a href="newsarchive.html#01052009"><strong>MailetDocs Maven Plugin 0.1</strong> released</a></li>
         </ul>
         </li>
