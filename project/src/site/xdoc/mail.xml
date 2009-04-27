@@ -136,6 +136,31 @@ messages to multiple mailing lists. The reason is that people may be
 subscribed to one list and not to the other. Therefore, some people will 
 only see part of the conversation. </p>
     </section>
+	<subsection name="How to unsubscribe your old email address">
+        <p>
+        First, find out the particular email adress to which ezmlm is sending.
+        The email headers are visible in Microsoft Outlook via the messages menu
+        "View | Options".
+        <pre>
+        Microsoft Mail Internet Headers Version 2.0
+        ...
+        List-Unsubscribe: &lt;mailto:server-user-unsubscribe@james.apache.org&gt;
+        List-Help: &lt;mailto:server-user-help@james.apache.org&gt;
+        List-Post: &lt;mailto:server-user@james.apache.org&gt;
+        List-Id: "James Server Users List" &lt;server-user.james.apache.org&gt;
+        Reply-To: "James Server Users List" &lt;server-user@james.apache.org&gt;
+        Delivered-To: mailing list server-user@james.apache.org
+        ...
+        Return-Path: server-user-return-12345-<i>john=host.domain</i>@james.apache.org
+        ...
+        </pre>
+        The <i>Return-Path</i> header contains the email address which is subscribed. 
+        </p>      
+        <p> To stop subscription for the address john@host.domain , send an email to <pre>server-dev-unsubscribe-john=host.domain@james.apache.org</pre>
+          or to  <pre>server-user-unsubscribe-john=host.domain@james.apache.org</pre>.
+        </p>  
+      </subsection>
+    </section>
     <section name="Archives">
       <p> There are several sites on the net that archive and 
 provide searching for our mailing lists in HTML readable format.
@@ -256,5 +281,6 @@ all. <b>Do not send mail to this list with James software problems</b>
         <p> This is the public list for the Mailet API subproject, discussing all <a href="http://james.apache.org/mailet/index.html">Mailet API</a> design and implementation related topics. Questions about using Mailets and their configuration should be addressed to the server-user list.</p>
       </subsection>
     </section>
+	
   </body>
 </document>
