@@ -9,8 +9,12 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
+        <li>May/2009 - <ul>
+        <li><a href="newsarchive.html#14152009"><strong>Apache Crypto Mailets 1.0</strong> released</a></li>
+        </ul>
+        </li>
         <li>Apr/2009 - <ul>
-        <li><a href="newsarchive.html#01042009"><strong>Apache Mailet Base 1.0 released</strong> released</a></li>
+        <li><a href="newsarchive.html#01042009"><strong>Apache Mailet Base 1.0</strong> released</a></li>
         </ul>
         </li>
         <li>Mar/2009 - <ul>
