@@ -62,30 +62,12 @@
     </menu>
 
     <menu name="Downloads" inherit="bottom">
-      <item name="Stable releases" href="/download.cgi"/>
-      <item name="Unstable releases" href="/downloadunstable.cgi"/>
+      <item name="Releases" href="/download.cgi"/>
       <item name="Nightly builds" href="http://people.apache.org/builds/james/nightly/"/>
     </menu>
       
-    <menu name="Translated">
-      <item name="Japanese (web)" href="http://james.terra-intl.com/"/>
-    </menu>
-      
-    <menu name="Related Projects">
-      <item name="Jakarta Commons" href="http://jakarta.apache.org/commons/index.html"/>
-      <item name="Ant" href="http://ant.apache.org/index.html"/>
-      <item name="Maven2" href="http://maven.apache.org/index.html"/>
-      <item name="Derby" href="http://db.apache.org/derby/index.html"/>
-      <item name="Avalon" href="http://avalon.apache.org/index.html"/>
-      <item name="DNSJava" href="http://www.dnsjava.org/index.html"/>
-    </menu>
-      
-    <menu name="Useful Information">
+    <menu name="Apache Software Foundation">
       <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
-      <item name="Reference Library" href="http://jakarta.apache.org/site/library.html"/>
-    </menu>
-
-    <menu name="Foundation">
       <item name="FAQ" href="http://apache.org/foundation/faq.html"/>
       <item name="Sponsorship" href="http://apache.org/foundation/sponsorship.html"/>
       <item name="Donations" href="http://apache.org/foundation/contributing.html"/>
