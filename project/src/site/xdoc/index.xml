@@ -109,6 +109,8 @@ decrypting and signature verification.</li>
 <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language</li>
 <li><a href='http://james.apache.org/postage/'>Postage</a> generates mail traffic suitable
 for stress testing mail servers</li>
+<li><a href='http://james.apache.org/mpt/'>MPT</a> is a scripted functional test tool
+suitable for testing mail protocols.</li>
 </ul>
     </section>
   </body>
