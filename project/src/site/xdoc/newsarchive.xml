@@ -12,6 +12,13 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name="14052009"><h4>May/2009 - Apache Crypto Mailets 1.0 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first independent release of
+        <a href='http://james.apache.org/mailet/crypto'>Apache Cryptographic Mailets</a> (previous versions 
+        were released as part of the 
+        <a href='http://james.apache.org/server'>Apache James Server</a>). 
+        This package contains mailets which encode, decode, sign and verify mail plus cryptology utilities.
+        </p> 
         <a name="01042009"><h4>Apr/2009 - Apache Mailet Base 1.0 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce the first independent release of
         <a href='http://james.apache.org/mailet/base'>Apache Mailet Base</a> (previous versions 
