@@ -135,12 +135,12 @@ list and send your messages to that mailing list only. Do not send your
 messages to multiple mailing lists. The reason is that people may be 
 subscribed to one list and not to the other. Therefore, some people will 
 only see part of the conversation. </p>
-    </section>
 	<subsection name="How to unsubscribe your old email address">
         <p>
         First, find out the particular email adress to which ezmlm is sending.
         The email headers are visible in Microsoft Outlook via the messages menu
         "View | Options".
+        </p>
         <pre>
         Microsoft Mail Internet Headers Version 2.0
         ...
@@ -154,6 +154,7 @@ only see part of the conversation. </p>
         Return-Path: server-user-return-12345-<i>john=host.domain</i>@james.apache.org
         ...
         </pre>
+        <p>
         The <i>Return-Path</i> header contains the email address which is subscribed. 
         </p>      
         <p> To stop subscription for the address john@host.domain , send an email to <pre>server-dev-unsubscribe-john=host.domain@james.apache.org</pre>
