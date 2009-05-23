@@ -45,6 +45,12 @@ Any bugs found in James are dealt with promptly.  Please provide <a href='https:
         <br/>Whilst the quality of these versions cannot be guaranteed they may contain important bug fixes and cool new features.<br/>
  </p>
       </subsection>
+      <subsection name='James Server 2.3.2 Candidate'>
+        <p>
+        A bug fix point release currently in preparation. See <a href='2.3.2/release-notes.html'>release notes</a>
+        for details.
+        </p>
+      </subsection>
       <subsection name='Development - James 3.0'>
         <p>
 The <a href='http://james.apache.org/server/head'>James 3.0</a> code base has many 
