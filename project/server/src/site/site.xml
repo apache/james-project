@@ -45,6 +45,7 @@
     
     <menu name="Documentation">
       <item name="Development 3.0" href="/head/index.html" />
+      <item name="Candidate 2.3.2" href="/2.3.2/index.html" />
       <item name="Server 2.3.1" href="/2.3.1/index.html" />
       <item name="Server 2.3.0" href="/2.3.0/index.html" />
       <item name="Server 2.2.0" href="/2.2.0/index.html" />
