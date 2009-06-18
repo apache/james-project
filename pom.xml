@@ -25,7 +25,13 @@
   <description>
     The Apache JAMES Parent POM
   </description>
-
+  
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>6</version>
+  </parent>
+  
   <prerequisites>
     <maven>2.0.6</maven>
   </prerequisites>
