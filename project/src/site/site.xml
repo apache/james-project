@@ -66,7 +66,7 @@
       <item name="Nightly builds" href="http://people.apache.org/builds/james/nightly/"/>
     </menu>
       
-    <menu name="Apache Software Foundation">
+    <menu name="Apache Software Foundation" inherit="bottom">
       <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
       <item name="FAQ" href="http://apache.org/foundation/faq.html"/>
       <item name="Sponsorship" href="http://apache.org/foundation/sponsorship.html"/>
