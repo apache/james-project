@@ -50,22 +50,23 @@
       <item name="Postage" href="/postage/index.html" />
     </links>
 
-    <menu name="About">
-      <item name="News" href="/newsarchive.html" />
-      <item name="Overview" href="/index.html" />
-      <item name="Mailing Lists" href="/mail.html" />
-      <item name="Project Guidelines" href="/guidelines.html" />
-      <item name="Wiki" href="http://wiki.apache.org/james" />
-      <item name="Who We Are" href="/weare.html" />
-      <item name="Contributing" href="/contribute.html" />
-      <item name="License" href="/license.html" />
-    </menu>
-
-    <menu name="Downloads" inherit="bottom">
+    <menu name="Download" inherit="bottom">
+      <item name='License' href='http://www.apache.org/licenses/LICENSE-2.0.txt'/>
       <item name="Releases" href="/download.cgi"/>
       <item name="Nightly builds" href="http://people.apache.org/builds/james/nightly/"/>
     </menu>
       
+    <menu name="About James " inherit='bottom'>
+      <item name="Overview" href="/index.html" />
+      <item name="News" href="/newsarchive.html" />
+      <item name="Mailing Lists" href="/mail.html" />
+      <item name="Contributing" href="/contribute.html" />
+      <item name="Project Guidelines" href="/guidelines.html" />
+      <item name="Wiki" href="http://wiki.apache.org/james" />
+      <item name="Who We Are" href="/weare.html" />
+      <item name="License" href="/license.html" />
+    </menu>
+
     <menu name="Apache Software Foundation" inherit="bottom">
       <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
       <item name="FAQ" href="http://apache.org/foundation/faq.html"/>
