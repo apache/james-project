@@ -9,6 +9,10 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
+        <li>Jun/2009 - <ul>
+        <li><a href="newsarchive.html#18062009"><strong>Apache JSieve 0.3</strong> released</a></li>
+        </ul>
+        </li>
         <li>May/2009 - <ul>
         <li><a href="newsarchive.html#14152009"><strong>Apache Crypto Mailets 1.0</strong> released</a></li>
         </ul>
