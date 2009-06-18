@@ -49,7 +49,8 @@
    </div>
     <section name="What is JAMES?">
       <p>
-The Apache JAMES Project delivers a rich set of open source solutions, written in Java, related to internet mail and news.
+The Apache JAMES Project delivers a rich set of open source modules and libraries, written in Java, 
+related to internet mail and news which build into an advanced enterprise mail server.
       </p>
       <subsection name='Get Involved'>
 <p>
@@ -66,16 +67,27 @@ We recommend that
 </ul>
   </subsection>
 </section>
-  <section name='Products'>
+  <section name='Looking For...'>
+    <subsection name='An Enterprise Mail Server'>
       <p>
-The JAMES project contains many products, classified by subproject: 
+      <a href='http://james.apache.org/server'>James Server</a> is a stable, mature and production ready email server.
+      </p>
+    </subsection>
+    <subsection name='A Modular Mail Platform'>
+      <p>
+      Developers looking for a modular mail platform on which to build should start by 
+      looking at the modules and libraries used to compose James Server 3.x.
       </p>
 <ul>
-<li><a href='http://james.apache.org/server'>JAMES Server</a> is an advanced fully functioned 
-integrated mail server. It is a mailet container and delegates mail processing to mailets
-(independent processing agents). Most of these mailets are 
-available through products in the <a href='http://james.apache.org/mailets'>mailets subproject</a>.
-The following protocols are supported:
+<li><a href='http://james.apache.org/server/head/index.html'>JAMES Server 3</a>
+<ul>
+<li>Is an advanced fully functioned integrated mail server</li>
+<li>Is a mailet container, delegating to independent processing agents known as mailets</li>
+<li>Is modular</li>
+<li>Supports Spring and is moving towards OSGi</li>
+<li>Retains the mature, production ready <a href='http://excalibur.apache.org'>Apache Excalibur</a>
+components used by <a href='http://avalon.apache.org'>Avalon</a></li>
+<li>Supports the following protocols:
 <ul>
 <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
 <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
@@ -84,7 +96,10 @@ The following protocols are supported:
 <li><a href='http://james.apache.org/server/rfclist/pop3/rfc1725.txt'>
 <abbr title='Post Office Protocol'>POP3</abbr></a></li>
 <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
-<abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (experimental)</li>
+<abbr title='Internet Message Access Protocol'>IMAP</abbr></a> 
+(see the <a href='http://james.apache.org/imap'>IMAP</a> sub-project)</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>The <a href='http://james.apache.org/mailets'>Mailet subproject</a> collects products
@@ -112,6 +127,7 @@ for stress testing mail servers</li>
 <li><a href='http://james.apache.org/mpt/'>MPT</a> is a scripted functional test tool
 suitable for testing mail protocols.</li>
 </ul>
-    </section>
+    </subsection>
+  </section>
   </body>
 </document>
