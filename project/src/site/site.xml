@@ -40,6 +40,7 @@
   <body>
     <links>
       <item name="JAMES Project" href="/index.html" />
+      <item name="IMAP" href="/imap/index.html" />
       <item name="JSieve" href="/jsieve/index.html" />
       <item name="jSPF" href="/jspf/index.html" />
       <item name="Mime4J" href="/mime4j/index.html" />
