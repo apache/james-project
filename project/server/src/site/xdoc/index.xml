@@ -22,10 +22,11 @@
     <title>Overview</title>
     <author email="site-dev@james.apache.org">James Project Team</author>
   </properties>
-  <body><!-- 
+  <body>
     <section name="What is it?">
       <p>Apache James Server
       </p>
+      
       <ul>
       <li>Is 100% pure java capable of running on Java 1.4 onwards</li>
       <li>Integrates protocols
@@ -74,7 +75,7 @@
       </ul>
       </li>
       </ul>
-    </section>-->
+    </section>
     <section name="Releases">
       <subsection name='Stable - James 2'>
         <p>
