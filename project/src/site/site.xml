@@ -40,13 +40,13 @@
   <body>
     <links>
       <item name="JAMES Project" href="/index.html" />
-      <item name="Server" href="/server/index.html" />
-      <item name="Mailets" href="/mailet/index.html" />
+      <item name="JSieve" href="/jsieve/index.html" />
       <item name="jSPF" href="/jspf/index.html" />
       <item name="Mime4J" href="/mime4j/index.html" />
-      <item name="JSieve" href="/jsieve/index.html" />
-      <item name="Postage" href="/postage/index.html" />
+      <item name="Mailets" href="/mailet/index.html" />
       <item name="MPT" href="/mpt/index.html" />
+      <item name="Server" href="/server/index.html" />
+      <item name="Postage" href="/postage/index.html" />
     </links>
 
     <menu name="About">
