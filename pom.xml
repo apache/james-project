@@ -195,6 +195,24 @@
         </description>
       </properties>
     </developer>
+    <developer>
+      <id>mwiederkehr</id>
+      <name>Markus Wiederkehr</name>
+      <email>mwiederkehr at apache.org</email>
+      <timezone />
+      <roles>
+        <role>PMC Member</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>olegk</id>
+      <name>Oleg Kalnichevski</name>
+      <email>olegk at apache.org</email>
+      <timezone />
+      <roles>
+        <role>PMC Member</role>
+      </roles>
+    </developer>
   </developers>
 
   <contributors>
