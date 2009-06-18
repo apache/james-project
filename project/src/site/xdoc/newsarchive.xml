@@ -12,6 +12,15 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name="18062009"><h4>Jun/2009 - Apache JSieve 0.3 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce that the third release of
+        <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
+        <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language - 
+        is now available for <a href='download.html#Apache%20JSieve'>download</a>. This is the first
+        modular release and includes a filtering <a href='http://james.apache.org/mailet'>mailet</a>.
+        See the <a href='http://james.apache.org/jsieve/0.3/release-notes.html'>release notes</a>
+        for more details.
+        </p> 
         <a name="14052009"><h4>May/2009 - Apache Crypto Mailets 1.0 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce the first independent release of
         <a href='http://james.apache.org/mailet/crypto'>Apache Cryptographic Mailets</a> (previous versions 
