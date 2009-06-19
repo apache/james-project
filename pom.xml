@@ -53,6 +53,11 @@
     <url>http://www.apache.org</url>
   </organization>
 
+  <ciManagement>
+    <system>hudson</system>
+    <url>http://hudson.zones.apache.org/hudson/view/James/</url>
+  </ciManagement>
+
   <build>
     <pluginManagement>
       <plugins>
