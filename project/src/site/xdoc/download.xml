@@ -234,9 +234,11 @@ href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...
 <p>Apache James jSPF 0.9.7 is the latest jSPF stable version:</p>
 <ul>
 
-<li>Binary (JAR): <a
+<li>Binary Resolver (JAR): <a
 href="[preferred]/james/jspf/binaries/apache-jspf-resolver-0.9.7.jar">apache-jspf-resolver-0.9.7.jar</a> [<a
-href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-0.9.7.jar.asc">PGP</a>]<a
+href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-0.9.7.jar.asc">PGP</a>]</li>
+
+<li>Binary Tester (JAR): <a
 href="[preferred]/james/jspf/binaries/apache-jspf-tester-0.9.7.jar">apache-jspf-tester-0.9.7.jar</a> [<a
 href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-0.9.7.jar.asc">PGP</a>]</li>
 
