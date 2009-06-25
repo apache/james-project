@@ -12,6 +12,10 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name="25062009"><h4>Jun/2009 - Apache jSPF 0.9.7 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce a new  
+        <a href='http://james.apache.org/jsieve'>Apache jSPF</a> release which included some critical bug fixes.
+        </p> 
         <a name="18062009"><h4>Jun/2009 - Apache JSieve 0.3 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce that the third release of
         <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
