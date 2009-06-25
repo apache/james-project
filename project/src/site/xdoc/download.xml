@@ -231,28 +231,30 @@ href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...
 </section>
 
 <section name="Apache jSPF">
-<p>Apache James jSPF 0.9.6 is the latest jSPF stable version:</p>
+<p>Apache James jSPF 0.9.7 is the latest jSPF stable version:</p>
 <ul>
 
 <li>Binary (JAR): <a
-href="[preferred]/james/jspf/binaries/apache-jspf-0.9.6.jar">apache-jspf-0.9.6.jar</a> [<a
-href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.6.jar.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/binaries/apache-jspf-resolver-0.9.7.jar">apache-jspf-resolver-0.9.7.jar</a> [<a
+href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-0.9.7.jar.asc">PGP</a>]<a
+href="[preferred]/james/jspf/binaries/apache-jspf-tester-0.9.7.jar">apache-jspf-tester-0.9.7.jar</a> [<a
+href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-0.9.7.jar.asc">PGP</a>]</li>
 
 <li>Binary (ZIP Format): <a
-href="[preferred]/james/jspf/binaries/apache-jspf-0.9.6-bin.zip">apache-jspf-0.9.6-bin.zip</a> [<a
-href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.6-bin.zip.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/binaries/apache-jspf-0.9.7-bin.zip">apache-jspf-0.9.7-bin.zip</a> [<a
+href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.7-bin.zip.asc">PGP</a>]</li>
 
 <li>Binary (Unix TAR.GZ): <a
-href="[preferred]/james/jspf/binaries/apache-jspf-0.9.6-bin.tar.gz">apache-jspf-0.9.6-bin.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.6-bin.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/binaries/apache-jspf-0.9.7-bin.tar.gz">apache-jspf-0.9.7-bin.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.7-bin.tar.gz.asc">PGP</a>]</li>
 
 <li>Source (Unix TAR.GZ): <a
-href="[preferred]/james/jspf/source/apache-jspf-0.9.6-src.tar.gz">apache-jspf-0.9.6-src.tar.gz</a> [<a
-href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.6-src.tar.gz.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/source/apache-jspf-0.9.7-src.tar.gz">apache-jspf-0.9.7-src.tar.gz</a> [<a
+href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.7-src.tar.gz.asc">PGP</a>]</li>
 
 <li>Source (ZIP Format): <a
-href="[preferred]/james/jspf/source/apache-jspf-0.9.6-src.zip">apache-jspf-0.9.6-src.zip</a> [<a
-href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.6-src.zip.asc">PGP</a>]</li>
+href="[preferred]/james/jspf/source/apache-jspf-0.9.7-src.zip">apache-jspf-0.9.7-src.zip</a> [<a
+href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.7-src.zip.asc">PGP</a>]</li>
 
 <li><a href="[preferred]/james/jspf/binaries/">Other Binaries</a></li>
 
