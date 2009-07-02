@@ -12,6 +12,14 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name="02072009"><h4>Jul/2009 - Apache MPT 1.0 released</h4></a>
+        <p>The Apache JAMES project is pleased to announced the first release of
+        <a href='http://james.apache.org/mpt'>Apache MPT</a> - a functional testing
+        library particularly suitable for line protocols based on ASCII. These
+        protocols are common in mail but the library may be useful more widely.
+        See the <a href='http://james.apache.org/mpt/1.0/release-notes.html'>release notes</a>
+        for more details.
+        </p>
         <a name="25062009"><h4>Jun/2009 - Apache jSPF 0.9.7 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce a new  
         <a href='http://james.apache.org/jspf'>Apache jSPF</a> release which included some critical bug fixes.
