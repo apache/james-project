@@ -441,6 +441,7 @@ href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apa
 
 <li>Jars (including source and javadocs) for the modules are distributed through the standard 
 <a href='http://maven.apache.org'>Maven</a> repositories.</li>
+</ul>
 </section>
 
 <section name="Nightly Builds">
