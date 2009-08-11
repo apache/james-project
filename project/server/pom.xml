@@ -50,18 +50,6 @@
     <url>http://issues.apache.org/jira/browse/JAMES</url>
   </issueManagement>
 
-  <ciManagement>
-    <system>continuum</system>
-    <notifiers>
-      <notifier>
-        <type>mail</type>
-        <sendOnError />
-        <sendOnFailure />
-        <address>server-dev@james.apache.org</address>
-      </notifier>
-    </notifiers>
-  </ciManagement>
-
   <mailingLists>
     <mailingList>
       <name>Server User List</name>
