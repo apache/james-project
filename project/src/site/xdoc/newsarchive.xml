@@ -12,6 +12,16 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name='31082009'><h4>Aug/2009 - Apache James 2.3.2 Released</h4></a>
+        <p>
+        The Apache JAMES project is pleased to announce that Apache James 2.3.2 
+        is now 
+        <a href='download.cgi#Apache%20James%20Server'>available</a>.
+        This is a minor bug fix release.
+        See the 
+        <a href="http://james.apache.org/server/2.3.2/release-notes.html">Release Notes</a> 
+        for more details. Upgrading is recommended for users of previous 2.x releases.
+        </p> 
         <a name="02072009"><h4>Jul/2009 - Apache MPT 0.1 released</h4></a>
         <p>The Apache JAMES project is pleased to announced that the first release of
         <a href='http://james.apache.org/mpt'>Apache MPT</a> - a functional testing
