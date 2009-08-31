@@ -82,26 +82,13 @@
         James 2 is a mature, production ready code stream with minimal development. 
         Use of the latest stable release is recommended.
         </p>
-        <subsection name='Latest and Stable - James 2.3.1'>
-  <ul>
-  <li>Is the latest official stable release</li>
-  <li>Is a bugfix <a href="http://james.apache.org/download.cgi">release</a>.
-  See the <a href="2.3.1/changelog.html">Change Log</a> for details.
-  </li>
-  </ul>
-        </subsection>
-        <subsection name='Candidate - James 2.3.2'>
-          <ul>
+        <subsection name='Latest and Stable - James 2.3.2'>
+        <ul>
+          <li>Is the latest official stable release and is available for download 
+            <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.</li>
           <li>
-          Is a bug fix point release currently in preparation. See <a href='2.3.2/release-notes.html'>release notes</a>
-          for details.
-          </li>
-          <li>
-          Release candidates are <a href='http://people.apache.org/~rdonkin/server/'>available</a>. Note that these
-          are <strong>not</strong> official releases and are intended for evaluation by expert users only. 
-          </li><li>
-          Feedback welcomed either through the <a href='http://james.apache.org/mail.html'>mailing lists</a>
-          or <a href='http://issues.apache.org/jira/browse/JAMES'>JIRA</a>.
+          Is a bug fix point release. 
+          See <a href='2.3.2/release-notes.html'>release notes</a> for details.
           </li>
           </ul>
         </subsection>
