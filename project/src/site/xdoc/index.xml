@@ -9,6 +9,10 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
+        <li>Aug/2009 - <ul>
+        <li><a href="newsarchive.html#31082009"><strong>Apache James 2.3.2</strong> released</a></li>
+        </ul>
+        </li>
         <li>Jul/2009 - <ul>
         <li><a href="newsarchive.html#02072009"><strong>Apache MPT 0.1</strong> released</a></li>
         </ul>
