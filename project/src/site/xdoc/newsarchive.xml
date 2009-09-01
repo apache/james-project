@@ -16,7 +16,7 @@
         <p>
         The Apache JAMES project is pleased to announce that Apache James 2.3.2 
         is now 
-        <a href='download.cgi#Apache%20James%20Server'>available</a>.
+        <a href='download.cgi#Apache_James_Server'>available</a>.
         This is a minor bug fix release.
         See the 
         <a href="http://james.apache.org/server/2.3.2/release-notes.html">Release Notes</a> 
@@ -26,7 +26,7 @@
         <p>The Apache JAMES project is pleased to announced that the first release of
         <a href='http://james.apache.org/mpt'>Apache MPT</a> - a functional testing
         library particularly suitable for line protocols based on ASCII - is now
-        <a href='download.cgi#Apache%20MPT'>available</a>. These
+        <a href='download.cgi#Apache_MPT'>available</a>. These
         protocols are common in mail but the library may be useful more widely.
         See the <a href='http://james.apache.org/mpt/0.1/release-notes.html'>release notes</a>
         for more details.
@@ -39,7 +39,7 @@
         <p>The Apache JAMES Project is pleased to announce that the third release of
         <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
         <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language - 
-        is now available for <a href='download.cgi#Apache%20JSieve'>download</a>. This is the first
+        is now available for <a href='download.cgi#Apache_JSieve'>download</a>. This is the first
         modular release and includes a filtering <a href='http://james.apache.org/mailet'>mailet</a>.
         See the <a href='http://james.apache.org/jsieve/0.3/release-notes.html'>release notes</a>
         for more details.
