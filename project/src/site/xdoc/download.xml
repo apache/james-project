@@ -125,7 +125,7 @@ href="http://www.apache.org/dist/james/server/apache-james-2.3.2.tar.gz.asc">PGP
 
 <li>Binary (ZIP Format): <a
 href="[preferred]/james/server/apache-james-2.3.2.zip">james-binary-2.3.2.zip</a> [<a
-href="http://www.apache.org/dist/james/server/apache-james-2.3.2.asc">PGP</a>]</li>
+href="http://www.apache.org/dist/james/server/apache-james-2.3.2.zip.asc">PGP</a>]</li>
 
 <li>Source (Unix TAR): <a
 href="[preferred]/james/server/apache-james-2.3.2-src.tar.gz">james-2.3.2-src.tar.gz</a> [<a
