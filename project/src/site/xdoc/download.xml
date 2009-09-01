@@ -37,15 +37,15 @@ the <a href="http://archive.apache.org/dist/james/">archive download
 site.</a></p>
 
 <ul>
-<li><a href='#Apache James Server'>Apache James Server</a></li>
-<li><a href='#Apache Mime4J'>Apache Mime4j</a></li>
-<li><a href='#Apache jSPF'>Apache jSPF</a></li>
-<li><a href='#Apache JSieve'>Apache JSieve</a></li>
-<li><a href='#Apache Mailet'>Apache Mailet</a></li>
-<li><a href='#Apache Mailet Base'>Apache Mailet Base</a></li>
-<li><a href='#Apache Crypto Mailets'>Apache Crypto Mailets</a></li>
+<li><a href='#Apache_James_Server'>Apache James Server</a></li>
+<li><a href='#Apache_Mime4J'>Apache Mime4j</a></li>
+<li><a href='#Apache_jSPF'>Apache jSPF</a></li>
+<li><a href='#Apache_JSieve'>Apache JSieve</a></li>
+<li><a href='#Apache_Mailet'>Apache Mailet</a></li>
+<li><a href='#Apache_Mailet_Base'>Apache Mailet Base</a></li>
+<li><a href='#Apache_Crypto_Mailets'>Apache Crypto Mailets</a></li>
 <li>The MailetDoc Plugin for Maven is available from the standard repositories</li>
-<li><a href='#Apache MPT'>Apache MPT</a></li>
+<li><a href='#Apache_MPT'>Apache MPT</a></li>
 </ul>
 
 <subsection name="Mirror">
