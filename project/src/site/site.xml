@@ -58,14 +58,14 @@
     </menu>
       
     <menu name="About James " inherit='bottom'>
-      <item name="Overview" href="http://james.apache.org/index.html" />
-      <item name="News" href="http://james.apache.org/newsarchive.html" />
-      <item name="Mailing Lists" href="http://james.apache.org/mail.html" />
-      <item name="Contributing" href="http://james.apache.org/contribute.html" />
-      <item name="Project Guidelines" href="http://james.apache.org/guidelines.html" />
+      <item name="Overview" href="/index.html" />
+      <item name="News" href="/newsarchive.html" />
+      <item name="Mailing Lists" href="/mail.html" />
+      <item name="Contributing" href="/contribute.html" />
+      <item name="Project Guidelines" href="/guidelines.html" />
       <item name="Wiki" href="http://wiki.apache.org/james" />
-      <item name="Who We Are" href="http://james.apache.org/weare.html" />
-      <item name="License" href="http://james.apache.org/license.html" />
+      <item name="Who We Are" href="/weare.html" />
+      <item name="License" href="/license.html" />
     </menu>
 
     <menu name="Apache Software Foundation" inherit="bottom">
