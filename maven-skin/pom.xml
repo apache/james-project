@@ -20,14 +20,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.james</groupId>
   <artifactId>maven-skin</artifactId>
-  <version>1.3RC1</version>
+  <version>1.3RC2-SNAPSHOT</version>
   <name>JAMES Skin</name>
   <description>Apache JAMES Official Maven2 Site Skin</description>
 
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
-    <version>1.3RC1</version>
+    <version>1.3RC2-SNAPSHOT</version>
   </parent>
 
 
