@@ -12,6 +12,13 @@
           </div>
         </div>
     <subsection name='2009'>
+        <a name='25092009'><h4>Sept/2009 - Hupa joins Apache James as sub-project</h4></a>
+        <p>
+        The Apache JAMES project is pleased to announce the inclusion of a new sub-project called
+        <a href='http://james.apache.org/hupa/'>Hupa</a>.
+        Hupa is a GWT based webmail which use IMAP to connect to the backend mailserver.
+        </p> 
+        
         <a name='31082009'><h4>Aug/2009 - Apache James 2.3.2 Released</h4></a>
         <p>
         The Apache JAMES project is pleased to announce that Apache James 2.3.2 

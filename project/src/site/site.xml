@@ -40,6 +40,7 @@
   <body>
     <links>
       <item name="JAMES Project" href="http://james.apache.org/index.html" />
+      <item name="Hupa" href="http://james.apache.org/hupa/index.html" />
       <item name="IMAP" href="http://james.apache.org/imap/index.html" />
       <item name="JSieve" href="http://james.apache.org/jsieve/index.html" />
       <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
