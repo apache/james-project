@@ -9,6 +9,10 @@
      <div id="newsbox">
     <subsection name="News">
         <ul>
+        <li>Sept/2009 - <ul>
+        <li><a href="newsarchive.html#25.092009"><strong>Hupa</strong>, a GWT based webmail, joins James as sub-project</a></li>
+        </ul>
+        </li>
         <li>Aug/2009 - <ul>
         <li><a href="newsarchive.html#31082009"><strong>Apache James 2.3.2</strong> released</a></li>
         </ul>
