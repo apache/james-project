@@ -49,6 +49,7 @@
       <item name="MPT" href="http://james.apache.org/mpt/index.html" />
       <item name="Server" href="http://james.apache.org/server/index.html" />
       <item name="Postage" href="http://james.apache.org/postage/index.html" />
+      <item name="jDKIM" href="http://james.apache.org/jdkim/index.html" />
     </links>
 
     <menu name="Download" inherit="bottom">

@@ -12,7 +12,14 @@
           </div>
         </div>
     <subsection name='2009'>
-        <a name='25092009'><h4>Sept/2009 - Hupa joins Apache James as sub-project</h4></a>
+        <a name='15102009'><h4>Oct/2009 - jDKIM joins Apache James as sub-project</h4></a>
+        <p>
+        The Apache JAMES project is pleased to announce the inclusion of a new sub-project called
+        <a href='http://james.apache.org/jdkim/'>jDKIM</a>.
+        jDKIM is a DomainKeys Identified Mail (DKIM) implementation library written in Java. It provides both verification and signing and also provides Mailets for the Apache JAMES project.
+        </p> 
+        
+        <a name='25092009'><h4>Sep/2009 - Hupa joins Apache James as sub-project</h4></a>
         <p>
         The Apache JAMES project is pleased to announce the inclusion of a new sub-project called
         <a href='http://james.apache.org/hupa/'>Hupa</a>.

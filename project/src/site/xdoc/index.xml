@@ -8,9 +8,13 @@
    <div id="newsboxspacer">
      <div id="newsbox">
     <subsection name="News">
-        <ul>
-        <li>Sept/2009 - <ul>
-        <li><a href="newsarchive.html#25.092009"><strong>Hupa</strong>, a GWT based webmail, joins James as sub-project</a></li>
+      <ul>
+        <li>Oct/2009 - <ul>
+        <li><a href="newsarchive.html#15102009"><strong>jDKIM</strong>, a Java DKIM implementation, joins JAMES as sub-project</a></li>
+        </ul>
+        </li>
+        <li>Sep/2009 - <ul>
+        <li><a href="newsarchive.html#25092009"><strong>Hupa</strong>, a GWT based webmail, joins JAMES as sub-project</a></li>
         </ul>
         </li>
         <li>Aug/2009 - <ul>
@@ -46,19 +50,8 @@
         <li><a href="newsarchive.html#01052009"><strong>Apache Mailet 2.4</strong> released</a></li>
         </ul>
         </li>
-        <li>Oct/2008 - <ul>
-        <li><a href="newsarchive.html#10162008"><strong>Mime4j 0.5</strong> released</a></li>
-        </ul>
-        </li>
-        <li>Aug/2008 - <ul>
-        <li><a href="newsarchive.html#08262008"><strong>Apache JSieve 0.2</strong> released</a></li>
-        <li><a href="newsarchive.html#08222008"><strong>Mime4j 0.4</strong> released</a></li>
-        </ul>
-        </li>
-        <li>Apr/2008 - <a href="newsarchive.html#04082008"><strong>jSPF 0.9.6</strong> released</a></li>
-        <li>Mar/2008 - <a href="newsarchive.html#03192008">Project ideas for Google Summer of Code '08</a></li>
-        </ul>
-    <i>Read all the news in full in the <a href="newsarchive.html">News Archive</a></i><br/>
+      </ul>
+      <i>Read all the news in full in the <a href="newsarchive.html">News Archive</a></i><br/>
     </subsection>
     <br />
        <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
@@ -135,6 +128,8 @@ decrypting and signature verification.</li>
 </li>
 <li><a href='http://james.apache.org/jspf/'>jSPF</a> implements <abbr title='Sender Policy Framework'>
 <a href='http://www.openspf.org/'>SPF</a></abbr></li>
+<li><a href='http://james.apache.org/jdkim/'>jDKIM</a> implements <abbr title='Domain Keys Identified Mail'>
+<a href='http://www.dkim.org/'>DKIM</a></abbr></li>
 <li><a href='http://james.apache.org/mime4j/'>Mime4J</a> parses MIME typed documents (including 
 - but not limited to - mail). APIs similar to DOM, SAX and pull parsers are exposed.</li>
 <li><a href='http://james.apache.org/jsieve'>jSieve</a> implements the 
