@@ -103,7 +103,7 @@
       <email>norman at apache.org</email>
       <timezone>2</timezone>
       <roles>
-        <role>Developer</role>
+        <role>PMC Chair</role>
       </roles>
     </developer>
     <developer>
@@ -221,6 +221,15 @@
       <timezone />
       <roles>
         <role>PMC Member</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>manolo</id>
+      <name>Manuel Carrasco Monino</name>
+      <email>manono at apache.org</email>
+      <timezone />
+      <roles>
+        <role>Developer</role>
       </roles>
     </developer>
   </developers>
