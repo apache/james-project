@@ -21,7 +21,7 @@
   <groupId>org.apache.james</groupId>
   <artifactId>james-parent</artifactId>
   <name>Apache JAMES Parent POM</name>
-  <version>1.6-SNAPSHOT</version>
+  <version>1.5</version>
   <description>
     The Apache JAMES Parent POM
   </description>
@@ -254,9 +254,9 @@
   </contributors>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-parent-1.2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-parent-1.2</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/tags/james-parent-1.2</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/1.5</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/1.5</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/tags/1.5</url>
   </scm>
 
   <distributionManagement>
