@@ -11,6 +11,90 @@
             <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
           </div>
         </div>
+    <subsection name='2009'>
+        <a name='15102009'><h4>Oct/2009 - jDKIM joins Apache James as sub-project</h4></a>
+        <p>
+        The Apache JAMES project is pleased to announce the inclusion of a new sub-project called
+        <a href='http://james.apache.org/jdkim/'>jDKIM</a>.
+        jDKIM is a DomainKeys Identified Mail (DKIM) implementation library written in Java. It provides both verification and signing and also provides Mailets for the Apache JAMES project.
+        </p> 
+        
+        <a name='25092009'><h4>Sep/2009 - Hupa joins Apache James as sub-project</h4></a>
+        <p>
+        The Apache JAMES project is pleased to announce the inclusion of a new sub-project called
+        <a href='http://james.apache.org/hupa/'>Hupa</a>.
+        Hupa is a GWT based webmail which use IMAP to connect to the backend mailserver.
+        </p> 
+        
+        <a name='31082009'><h4>Aug/2009 - Apache James 2.3.2 Released</h4></a>
+        <p>
+        The Apache JAMES project is pleased to announce that Apache James 2.3.2 
+        is now 
+        <a href='download.cgi#Apache_James_Server'>available</a>.
+        This is a minor bug fix release.
+        See the 
+        <a href="http://james.apache.org/server/2.3.2/release-notes.html">Release Notes</a> 
+        for more details. Upgrading is recommended for users of previous 2.x releases.
+        </p> 
+        <a name="02072009"><h4>Jul/2009 - Apache MPT 0.1 released</h4></a>
+        <p>The Apache JAMES project is pleased to announced that the first release of
+        <a href='http://james.apache.org/mpt'>Apache MPT</a> - a functional testing
+        library particularly suitable for line protocols based on ASCII - is now
+        <a href='download.cgi#Apache_MPT'>available</a>. These
+        protocols are common in mail but the library may be useful more widely.
+        See the <a href='http://james.apache.org/mpt/0.1/release-notes.html'>release notes</a>
+        for more details.
+        </p>
+        <a name="25062009"><h4>Jun/2009 - Apache jSPF 0.9.7 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce a new  
+        <a href='http://james.apache.org/jspf'>Apache jSPF</a> release which included some critical bug fixes.
+        </p> 
+        <a name="18062009"><h4>Jun/2009 - Apache JSieve 0.3 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce that the third release of
+        <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
+        <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language - 
+        is now available for <a href='download.cgi#Apache_JSieve'>download</a>. This is the first
+        modular release and includes a filtering <a href='http://james.apache.org/mailet'>mailet</a>.
+        See the <a href='http://james.apache.org/jsieve/0.3/release-notes.html'>release notes</a>
+        for more details.
+        </p> 
+        <a name="14052009"><h4>May/2009 - Apache Crypto Mailets 1.0 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first independent release of
+        <a href='http://james.apache.org/mailet/crypto'>Apache Cryptographic Mailets</a> (previous versions 
+        were released as part of the 
+        <a href='http://james.apache.org/server'>Apache James Server</a>). 
+        This package contains mailets which encode, decode, sign and verify mail plus cryptology utilities.
+        </p> 
+        <a name="01042009"><h4>Apr/2009 - Apache Mailet Base 1.0 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first independent release of
+        <a href='http://james.apache.org/mailet/base'>Apache Mailet Base</a> (previous versions 
+        were released as part of the 
+        <a href='http://james.apache.org/server'>Apache James Server</a>). The Basic Mailet Toolkit
+        contains lightweight frameworks and utilities likely to be of interest to 
+        <a href='http://james.apache.org/mailet/api'>Mailet</a> developers.
+        </p>   
+        <a name="08032009"><h4>Mar/2009 - Mime4j 0.6 released</h4></a>
+        <p>We are proud to announce the <a href="../download.cgi">availability</a> of Apache 
+        Mime4j-0.6. This release brings another round of API enhancements and performance 
+        optimizations. There has been a number of notable improvements in the DOM support. MIME 
+        stream parser is expected to be 50% faster when line counting is disabled. Please also note 
+        that as of this release Mime4j requires a Java 1.5 compatible runtime</p>
+        <a name="21022009"><h4>Feb/2009 - MailetDocs Maven Plugin 0.1 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first release of the
+        <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/' rel='tag'>MailetDocs</a> 
+        plugin for <a href='http://maven.apache.org' rel='tag'>Maven</a>. The plugin catalogs mailet
+        (for <a href='http://james.apache.org/mailet/standard/mailet-report.html'>example</a>). 
+        For more information, see the 
+        <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/release-notes.html'>release notes</a>.
+        </p>  
+        <a name="01052009"><h4>Jan/2009 - Apache Mailet 2.4 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce the first independent release of
+        <a href='http://james.apache.org/mailet/api'>Apache Mailet</a> (previous versions 
+        were released as part of the 
+        <a href='http://james.apache.org/server'>Apache James Server</a>). The Mailet API
+        defines a standard approach to enterprise mail processing.
+        </p>   
+    </subsection>
     <subsection name="2008">
         <a name="10162008"><h4>October/2008 - Mime4j 0.5 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> of APACHE Mime4j-0.5. This release addresses a number of important issues discovered since 0.4. In particular, it improves Mime4j ability to deal with malformed data streams including those intentionally crafted to cause excessive CPU and memory utilization that can lead to DoS condition</p>
@@ -45,7 +129,7 @@
     
     <subsection name="2007">
         <a name="09252007"><h4>Sept/2007 - jSPF-0.9.5 released</h4></a>
-        <p>We are proud to announce the <a href="downloadunstable.cgi">availability</a> of APACHE jSPF-0.9.5. This release brings initial support for asynchronous processing and is fully RFC4408 compliant.</p> 
+        <p>We are proud to announce the <a href="download.cgi">availability</a> of APACHE jSPF-0.9.5. This release brings initial support for asynchronous processing and is fully RFC4408 compliant.</p> 
         <a name="05302007"><h4>May/2007 - Apache Mime4J 0.3 Final Released</h4></a>
         <p>After almost 2 years the Apache JAMES team is proud to announce the <a href="download.cgi">availability</a> of Apache Mime4J 0.3. This is the first release under the ASF umbrella.</p>
         <a name="05052007"><h4>May/2007 - Mailet API sub-project lives</h4></a>

@@ -20,14 +20,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.james</groupId>
   <artifactId>maven-skin</artifactId>
-  <version>1.2</version>
+  <version>1.5</version>
   <name>JAMES Skin</name>
   <description>Apache JAMES Official Maven2 Site Skin</description>
 
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
-    <version>1.2</version>
+    <version>1.5</version>
   </parent>
 
 
@@ -44,23 +44,6 @@
   </properties>
 
   <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-remote-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>process</goal>
-            </goals>
-            <configuration>
-              <resourceBundles>
-                <resourceBundle>org.apache:apache-jar-resource-bundle:1.2</resourceBundle>
-              </resourceBundles>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 
 </project>

@@ -3,15 +3,16 @@
 <document>
 
  <properties>
-  <title>Apache Software License</title>
+  <title>Apache License</title>
   <author email="sergek@lokitech.com">Serge Knystautas</author>
  </properties>
 
 <body>
-<section name="Apache Software License">
+<section name="Apache License">
 <p>
-    James is released under the Apache Software License
-    listed below:
+    Apache James is Open Source released under the <a href='http://www.opensource.org/'>OSI</a>
+    <a href='http://www.opensource.org/licenses/apache2.0.php'>approved</a>
+    <a href='http://www.apache.org/licenses/'>Apache License, Version 2.0</a>
 </p>
 
 <source><![CDATA[
@@ -197,12 +198,17 @@
 
 </section>
 
-<section name="dnsjava">
-<p>
-    dnsjava is distributed with James, a copy of the licence is contained in the distribution
-</p>
+<section name='Third Party Libraries'>
+  <p>
+Apache James relies on numerous third party libraries. Each is distributed under it's individual 
+license terms.
+  </p>
+  <subsection name="dnsjava">
+  <p>
+      dnsjava is distributed with James, a copy of the licence is contained in the distribution
+  </p>
+  </subsection>
 </section>
-
 </body>
 </document>
 

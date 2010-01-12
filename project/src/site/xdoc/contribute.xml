@@ -106,6 +106,73 @@
              happy to receive good documentation.
          </p>
          </section>
+         
+         <section name="Coding Standards">
+
+         <p>
+            Submissions to the James project must follow the coding conventions
+            outlined in this document. James developers
+            are asked to follow coding conventions already present in the code.
+            (For example, if the existing code has the bracket on
+            the same line as the if statement, then all subsequent code
+            should also follow that convention.) Anything not
+            explicitly mentioned in this document should adhere to the
+            official
+            <a href="http://java.sun.com/docs/codeconv/html/CodeConvTOC.doc.html">Sun
+            Java Coding Conventions</a>.
+         </p>
+        
+         <p>
+            <strong>Developers who commit code that does not follow
+            the coding conventions outlined in this document will be
+            responsible for fixing their own code.</strong>
+         </p>
+        
+         <p>
+        1. Spaces between parentheses are optional. The preference is to exclude
+        extra spaces. Both of these conventions are acceptable:
+         </p>
+        
+         <p>
+        <source><![CDATA[
+  
+  if (foo)
+  
+  or
+  
+  if ( foo )
+        ]]></source>
+        </p>
+        
+        <p>
+        2. Four spaces. <strong>NO tabs</strong>. Period. The James
+        mailing list receives commit messages that are almost impossible
+        to read if tabs are used.
+        </p>
+        
+        <p>
+        In Emacs-speak, this translates to the following command:
+        
+        (setq-default tab-width 4 indent-tabs-mode nil)
+        </p>
+        
+        <p>
+        3. Use Unix linefeeds for all .java source code files. Only platform-specific
+        files (e.g. .bat files for Windows) should contain non-Unix linefeeds.
+        </p>
+        
+        <p>
+        4. Javadoc <strong>must</strong> exist on all methods. Contributing
+        a missing javadoc for any method, class, variable, etc., will be GREATLY
+        appreciated as this will help to improve the James project.
+        </p>
+        
+        <p>
+        5. The standard Apache boilerplace <strong>MUST</strong> be placed
+        at the top of every file.
+        </p>
+        
+        </section>
     
         </body>
    </document>

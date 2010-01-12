@@ -21,11 +21,21 @@
   <groupId>org.apache.james</groupId>
   <artifactId>james-parent</artifactId>
   <name>Apache JAMES Parent POM</name>
-  <version>1.2</version>
+  <version>1.5</version>
   <description>
     The Apache JAMES Parent POM
   </description>
+  
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>7</version>
+  </parent>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
   <prerequisites>
     <maven>2.0.6</maven>
   </prerequisites>
@@ -47,12 +57,18 @@
     <url>http://www.apache.org</url>
   </organization>
 
+  <ciManagement>
+    <system>hudson</system>
+    <url>http://hudson.zones.apache.org/hudson/view/James/</url>
+  </ciManagement>
+
   <build>
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
-          <version>2.0-beta-5</version>
+          <version>2.0.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -87,7 +103,7 @@
       <email>norman at apache.org</email>
       <timezone>2</timezone>
       <roles>
-        <role>Developer</role>
+        <role>PMC Chair</role>
       </roles>
     </developer>
     <developer>
@@ -189,6 +205,33 @@
         </description>
       </properties>
     </developer>
+    <developer>
+      <id>mwiederkehr</id>
+      <name>Markus Wiederkehr</name>
+      <email>mwiederkehr at apache.org</email>
+      <timezone />
+      <roles>
+        <role>PMC Member</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>olegk</id>
+      <name>Oleg Kalnichevski</name>
+      <email>olegk at apache.org</email>
+      <timezone />
+      <roles>
+        <role>PMC Member</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>manolo</id>
+      <name>Manuel Carrasco Monino</name>
+      <email>manolo at apache.org</email>
+      <timezone />
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
   </developers>
 
   <contributors>
@@ -211,22 +254,12 @@
   </contributors>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-parent-1.2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-parent-1.2</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/tags/james-parent-1.2</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-parent-1.5</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-parent-1.5</developerConnection>
+    <url>http://svn.apache.org/viewvc/james/project/tags/james-parent-1.5</url>
   </scm>
 
   <distributionManagement>
-    <repository>
-      <id>apache.releases</id>
-      <name>Apache Release Distribution Repository</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-ibiblio-rsync-repository</url>
-    </repository>
-    <snapshotRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
-    </snapshotRepository>
     <!-- Each project must override this with their own -->
     <site>
       <id>james-parent-website</id>
@@ -234,162 +267,8 @@
     </site>
   </distributionManagement>
 
-  <repositories>
-    <repository>
-      <id>central</id>
-      <url>http://repo1.maven.org/maven2</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>apache.releases</id>
-      <name>Apache Main M2 Repository</name>
-      <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Snapshot Repository</name>
-      <url>http://people.apache.org/repo/m2-snapshot-repository</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  
   <profiles>
-    <!-- parent profile: used to find skin dependency in stage -->
-    <profile>
-      <id>parent</id>
-      <repositories>
-        <repository>
-          <id>local-james-parent-stage</id>
-          <name>Apache JAMES parent stage repository folder</name>
-          <url>file://${basedir}/stage</url>
-          <layout>legacy</layout>
-          <releases>
-            <enabled>true</enabled>
-            <checksumPolicy>ignore</checksumPolicy>
-          </releases>
-          <snapshots>
-            <enabled>true</enabled>
-            <checksumPolicy>ignore</checksumPolicy>
-          </snapshots>
-        </repository>
-      </repositories>
-    </profile>
-    <!-- local profile: used to ignore remote repositories in a local build -->
-    <profile>
-      <id>local</id>
-      <repositories>
-        <repository>
-          <id>central</id>
-          <url>http://repo1.maven.org/maven2</url>
-          <releases>
-            <enabled>false</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </repository>
-        <repository>
-          <id>apache.releases</id>
-          <name>Apache Main M2 Repository</name>
-          <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository</url>
-          <releases>
-            <enabled>false</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </repository>
-        <repository>
-          <id>apache.snapshots</id>
-          <name>Apache Snapshot Repository</name>
-          <url>http://people.apache.org/repo/m2-snapshot-repository</url>
-          <releases>
-            <enabled>false</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </repository>
-      </repositories>
-    </profile>
-    <!-- START SNIPPET: release-profile -->
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <!-- We want to sign the artifact, the POM, and all attached artifacts -->
-          <plugin>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.0-alpha-3</version>
-            <configuration>
-              <passphrase>${gpg.passphrase}</passphrase>
-            </configuration>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <!-- We want to deploy the artifact to a staging location for perusal -->
-          <plugin>
-            <inherited>true</inherited>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <version>2.3</version>
-            <configuration>
-              <altDeploymentRepository>${deploy.altRepository}</altDeploymentRepository>
-              <updateReleaseInfo>true</updateReleaseInfo>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.0.2</version>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.2</version>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <!-- END SNIPPET: release-profile -->
+ <!-- Use inherited apache release profile -->
   </profiles>  
 
 </project>
