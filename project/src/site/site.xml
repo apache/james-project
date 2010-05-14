@@ -55,7 +55,7 @@
     <menu name="Download" inherit="bottom">
       <item name='License' href='http://www.apache.org/licenses/LICENSE-2.0.txt'/>
       <item name="Releases" href="http://james.apache.org/download.cgi"/>
-      <item name="Nightly builds" href="http://people.apache.org/builds/james/nightly/"/>
+      <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
       <item name='Latest (Continuous)' href='http://hudson.zones.apache.org/hudson/view/James/'/>
     </menu>
       
