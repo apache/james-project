@@ -11,6 +11,19 @@
             <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
           </div>
         </div>
+    <subsection name='2010'>
+        <a name="14052010_1"><h4>May/2010 - Apache JSieve 0.4 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce that the forth release of
+        <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
+        <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language - 
+        is now available for <a href='download.cgi#Apache_JSieve'>download</a>.
+        </p> 
+        <a name="14052010"><h4>May/2010 - Apache Mailet Standard 1.0 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce that the first independent release of
+        <a href='http://james.apache.org/mailet/standard/'>Apache Mailet Standard</a> - was bundled with JAMES Server 2.3 before - 
+        is now available for <a href='download.cgi#Apache_JSieve'>download</a>.
+        </p> 
+    </subsection>
     <subsection name='2009'>
         <a name='15102009'><h4>Oct/2009 - jDKIM joins Apache James as sub-project</h4></a>
         <p>
