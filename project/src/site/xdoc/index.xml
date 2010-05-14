@@ -9,6 +9,11 @@
      <div id="newsbox">
     <subsection name="News">
       <ul>
+        <li>May/2010 - <ul>
+        <li><a href="newsarchive.html#14052010_1"><strong>Apache jSieve 0.4 </strong> released</a></li>
+        <li><a href="newsarchive.html#14052010"><strong>Apache Mailet Standard 1.0 </strong> released</a></li>
+        </ul>
+        </li>
         <li>Oct/2009 - <ul>
         <li><a href="newsarchive.html#15102009"><strong>jDKIM</strong>, a Java DKIM implementation, joins JAMES as sub-project</a></li>
         </ul>
