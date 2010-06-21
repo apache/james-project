@@ -9,6 +9,11 @@
      <div id="newsbox">
     <subsection name="News">
       <ul>
+        <li>Jun/2010 - <ul>
+        <li><a href="newsarchive.html#21062010_1"><strong>Apache jSPF 0.9.8</strong> released</a></li>   
+        <li><a href="newsarchive.html#21062010"><strong>Apache Mailet Base 1.1</strong> released</a></li>   
+        </ul>
+        </li>
         <li>May/2010 - <ul>
         <li><a href="newsarchive.html#14052010_1"><strong>Apache jSieve 0.4 </strong> released</a></li>
         <li><a href="newsarchive.html#14052010"><strong>Apache Mailet Standard 1.0 </strong> released</a></li>
