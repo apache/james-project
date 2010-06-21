@@ -12,6 +12,14 @@
           </div>
         </div>
     <subsection name='2010'>
+        <a name="21062010_1"><h4>Jun/2010 - Apache jSPF 0.9.8 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce a new  
+        <a href='http://james.apache.org/jspf'>Apache jSPF</a> release which includes fixed to TXT record escaping and pass the rfc4408-tests-2009.10 testsuite.
+        </p> 
+        <a name="21062010"><h4>Jun/2010 - Apache Mailet Base 1.1 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce a new  
+        <a href='http://james.apache.org/mailet/api'>Apache Mailet Base</a> release which fixes a NullPointerException when using MatcherInverter.
+        </p> 
         <a name="14052010_1"><h4>May/2010 - Apache JSieve 0.4 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce that the forth release of
         <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
