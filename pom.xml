@@ -232,6 +232,15 @@
         <role>Developer</role>
       </roles>
     </developer>
+    <developer>
+      <id>eric</id>
+      <name>Eric Charles</name>
+      <email>eric at apache.org</email>
+      <timezone />
+      <roles>
+        <role>PMC Member</role>
+      </roles>
+    </developer>
   </developers>
 
   <contributors>
