@@ -24,9 +24,9 @@
   </properties>
   <body>
     <section name="This list">
-      <p>Special thanks go to the following people for their contributions to this project.  We also appreciate documentation, feedback, and bug reports.  This is a living document that describes the key contributors to James. Last Updated January 2007.</p>
+      <p>Special thanks go to the following people for their contributions to this project.  We also appreciate documentation, feedback, and bug reports.  This is a living document that describes the key contributors to James. Last Updated October 2010.</p>
     </section>
-    <section name="Active Commiters">
+    <section name="Active Committers">
       <p>
         <b>Serge Knystautas (sergek at lokitech.com) (SK)</b>
         <br/> Serge was the original donator of the James code, which has since been massively improved by people smarter than him.  He tries to answer questions on the listserv and make code contributions when he does get a rare bit of free time.</p>
@@ -72,6 +72,9 @@
       </p>
       <p>
         <b>Manuel Carrasco Monino (manolo at apache.org)</b>
+      </p>
+      <p>
+        <b>Eric Charles (eric at apache.org)</b>
       </p>
     </section>
     <section name="Alumni and Other Contributors">
