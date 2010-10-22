@@ -12,6 +12,15 @@
           </div>
         </div>
     <subsection name='2010'>
+        <a name="20092010_1"><h4>Sep/2010 - Apache IMAP 0.2-M1 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce a new  
+        <a href='http://james.apache.org/imap'>Apache IMAP</a> release in preparation of 
+        the upcoming 3.0-M1 <a href='http://james.apache.org/imap'>Apache Mail server</a>.
+        </p>
+        <a name="18092010_1"><h4>Sep/2010 - Apache protocols 1.2-M1 released</h4></a>
+        <p>The Apache JAMES Project is pleased to announce a new  
+        Apache protocols release in preparation of the upcoming 3.0-M1 <a href='http://james.apache.org/imap'>Apache Mail server</a>.
+        </p>
         <a name="21062010_1"><h4>Jun/2010 - Apache jSPF 0.9.8 released</h4></a>
         <p>The Apache JAMES Project is pleased to announce a new  
         <a href='http://james.apache.org/jspf'>Apache jSPF</a> release which includes fixed to TXT record escaping and pass the rfc4408-tests-2009.10 testsuite.
