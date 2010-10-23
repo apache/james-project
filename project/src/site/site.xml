@@ -17,7 +17,7 @@
   specific language governing permissions and limitations
   under the License.    
 -->
-<project name="James Project">
+<project name="James">
 
   <bannerLeft>
     <name>James Project</name>
@@ -34,32 +34,43 @@
   <skin>
     <groupId>org.apache.james</groupId>
     <artifactId>maven-skin</artifactId>
-    <version>1.2</version>
+    <version>1.6-SNAPSHOT</version>
   </skin>
-    
+  
   <body>
+<!-- Breadcrumbs are desactivated as they give strange results.
+    <breadcrumbs>
+      <item name="Home" />
+    </breadcrumbs>
+-->
+    
     <links>
-      <item name="JAMES Project" href="http://james.apache.org/index.html" />
-      <item name="Hupa" href="http://james.apache.org/hupa/index.html" />
-      <item name="IMAP" href="http://james.apache.org/imap/index.html" />
-      <item name="JSieve" href="http://james.apache.org/jsieve/index.html" />
-      <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
-      <item name="Mime4J" href="http://james.apache.org/mime4j/index.html" />
-      <item name="Mailets" href="http://james.apache.org/mailet/index.html" />
-      <item name="MPT" href="http://james.apache.org/mpt/index.html" />
+      <item name="Home" href="http://james.apache.org/index.html" />
       <item name="Server" href="http://james.apache.org/server/index.html" />
-      <item name="Postage" href="http://james.apache.org/postage/index.html" />
+      <item name="Hupa" href="http://james.apache.org/hupa/index.html" />
+      <item name="Protocols" href="http://james.apache.org/protocols/index.html" />
+      <item name="IMAP" href="http://james.apache.org/imap/index.html" />
+      <item name="Mailets" href="http://james.apache.org/mailet/index.html" />
+      <item name="Mailbox" href="http://james.apache.org/mailbox/index.html" />
+      <item name="Mime4J" href="http://james.apache.org/mime4j/index.html" />
+      <item name="jSieve" href="http://james.apache.org/jsieve/index.html" />
+      <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
       <item name="jDKIM" href="http://james.apache.org/jdkim/index.html" />
+      <item name="MPT" href="http://james.apache.org/mpt/index.html" />
+      <item name="Postage" href="http://james.apache.org/postage/index.html" />
     </links>
 
     <menu name="Download" inherit="bottom">
-      <item name='License' href='http://www.apache.org/licenses/LICENSE-2.0.txt'/>
       <item name="Releases" href="http://james.apache.org/download.cgi"/>
-      <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
-      <item name='Latest (Continuous)' href='http://hudson.zones.apache.org/hudson/view/James/'/>
+<!--
+    Don't display this as the build directory is no more updated.
+          <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
+-->
+      <item name='Snapshots (Hudson)' href='http://hudson.zones.apache.org/hudson/view/James/'/>
+      <item name='Snapshots (Maven)' href='http://repository.apache.org/snapshots/org/apache/james/'/>
     </menu>
-      
-    <menu name="About James " inherit='bottom'>
+
+    <menu name="About James " inherit="bottom">
       <item name="Overview" href="/index.html" />
       <item name="News" href="/newsarchive.html" />
       <item name="Mailing Lists" href="/mail.html" />
@@ -70,13 +81,17 @@
       <item name="License" href="/license.html" />
     </menu>
 
+<!-- Activate this line if you want to inherit this menu.
     <menu name="Apache Software Foundation" inherit="bottom">
-      <item name="Get Involved" href="http://jakarta.apache.org/site/getinvolved.html"/>
-      <item name="FAQ" href="http://apache.org/foundation/faq.html"/>
-      <item name="Sponsorship" href="http://apache.org/foundation/sponsorship.html"/>
-      <item name="Donations" href="http://apache.org/foundation/contributing.html"/>
-      <item name="Thanks" href="http://apache.org/foundation/thanks.html"/>
+-->
+    <menu name="Apache Software Foundation">
+      <item name="Get Involved" href="http://www.apache.org/foundation/getinvolved.html"/>
+      <item name="FAQ" href="http://www.apache.org/foundation/faq.html"/>
+      <item name="Sponsorship" href="http://www.apache.org/foundation/sponsorship.html"/>
+      <item name="Donations" href="http://www.apache.org/foundation/contributing.html"/>
+      <item name="Thanks" href="http://www.apache.org/foundation/thanks.html"/>
     </menu>
 
   </body>
+  
 </project>
