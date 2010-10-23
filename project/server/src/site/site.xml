@@ -33,7 +33,10 @@
   
   <body>
   
+ <!-- Activate this line if you want to inherit this menu.
     <menu name="James Server" inherit="top">
+-->
+    <menu name="James Server">
       <item name="Overview" href="/index.html" />
       <item name="Objectives" href="/design_objectives.html" />
       <item name="James FAQ" href="/FAQ.html">
@@ -44,7 +47,10 @@
       <item name="Source" href="http://svn.apache.org/viewvc/james/server/" />
     </menu>
     
+ <!-- Activate this line if you want to inherit this menu.
     <menu name="Documentation" inherit='bottom'>
+-->
+    <menu name="Documentation">
       <item name="Development 3.0" href="/head/index.html" />
       <item name="Candidate 2.3.2" href="/2.3.2/index.html" />
       <item name="Server 2.3.1" href="/2.3.1/index.html" />
@@ -54,4 +60,5 @@
     </menu>
     
   </body>
+
 </project>
