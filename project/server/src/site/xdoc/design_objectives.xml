@@ -23,9 +23,10 @@
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
   <body>
+  
     <section name="Design Objectives">
       
-      <subsection name="features">
+      <subsection name="Features">
         <p>These are some of the currently implemented features:</p>
         <p>
           <i>
@@ -74,7 +75,7 @@
        scalability and mission-critical use.</p>
         <p>Anything else you may want if you help us write it :-)</p>
       </subsection>
-      <subsection name="standards compliance">
+      <subsection name="Standards compliance">
         <p>It is the existence of published "open" standards which 
 allows independant teams to develop interoperable software.
 <br/>James attempts to support a number of these standards most of which are 
