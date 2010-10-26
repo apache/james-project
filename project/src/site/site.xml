@@ -66,8 +66,8 @@
     Don't display this as the build directory is no more updated.
           <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
 -->
-      <item name='Snapshots (Hudson)' href='http://hudson.zones.apache.org/hudson/view/James/'/>
-      <item name='Snapshots (Maven)' href='http://repository.apache.org/snapshots/org/apache/james/'/>
+      <item name="Snapshots (Hudson)" href="https://hudson.apache.org/hudson/view/G-L/view/James/"/>
+      <item name="Snapshots (Maven)" href="http://repository.apache.org/snapshots/org/apache/james/"/>
     </menu>
 
     <menu name="About James " inherit="bottom">

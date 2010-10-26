@@ -39,9 +39,7 @@
     <menu name="James Server">
       <item name="Overview" href="/index.html" />
       <item name="Objectives" href="/design_objectives.html" />
-      <item name="James FAQ" href="/FAQ.html">
-        <item name="James and Sendmail" href="/james_and_sendmail.html" />
-      </item>
+      <item name="James FAQ" href="/FAQ.html" />
       <item name="Useful RFCs" href="/rfclist.html" />
       <item name="Issue Tracker" href="http://issues.apache.org/jira/browse/JAMES" />
       <item name="Source" href="http://svn.apache.org/viewvc/james/server/" />
