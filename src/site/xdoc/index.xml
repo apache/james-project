@@ -18,6 +18,7 @@
   under the License.    
 -->
 <document>
+
   <properties>
     <title>Overview</title>
     <author email="site-dev@james.apache.org">James Project Team</author>
@@ -25,34 +26,28 @@
 
   <body>
   
-    <div style="float:left;width:50%;">
-  
-    <section name="Apache James Server">
+    <table>
+    
+    <tr><td width="50%">
+    
+    <section name="What's Apache James Server?">
     
       <p>Is 100% pure JAVA capable Mail Server running on Java 1.5 onwards. James integrates emailing protocols such as:</p>
+
       <ul>
         <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
-        <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
+            <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
         <li>LMTP</li>
         <li><a href='http://james.apache.org/server/rfclist/pop3/rfc1725.txt'>
-        <abbr title='Post Office Protocol'>POP3</abbr></a>
-          <ul>
-            <li>Outgoing server</li>
-            <li>Incoming from POP3 accounts (FetchMail)</li>
-          </ul>
-        </li>
+           <abbr title='Post Office Protocol'>POP3</abbr></a></li>
         <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
-        <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (James 3)
-          <ul> 
-            <li>Server</li>
-            <li><a href='http://james.apache.org/jsieve'>Sieve</a> 
-            filtering into IMAP mailboxes for incoming mail</li>
-          </ul>
-        </li>
-      </ul>
-      <ul>
-         <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
-         <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news) - only in 2.3., support is discontinuated in 3.0.</li>
+            <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (James 3)</li>
+        <li><a href='http://james.apache.org/jsieve'>Sieve</a> 
+            filtering into mailboxes for incoming mail</li>
+        <li>FetchMail from POP3 and IMAP accounts.</li>
+        <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
+            <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news) 
+            - only in 2.3., support is discontinuated in 3.0.</li>
       </ul>
 
       <p>Is a mailet container: the email processing is delegated to independent, extensible, pluggable agents
@@ -64,21 +59,12 @@
       mail platform.</p>
       
       <p>Is based on open technical standards.</p>
-
-      <ul>
-        <li><a href='http://james.apache.org/server/head'>James 3</a> (development) supports Spring and is moving
-        towards OSGI.</li>
-        <li>James 2 (production) uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon development
-        has now stopped but the framework is mature, stable and of proved production quality.</li>
-      </ul>
       
     </section>
     
-    </div>
+    </td><td width="50%">
 
-    <div style="float:left;width:50%;">
-  
-    <section name="Releases">
+    <section name="Which Release?">
     
       <subsection name='Proposal - James 3.0 Milestone 1'>
 
@@ -96,6 +82,9 @@
            <a href='http://james.apache.org/server/head/jira-report.html'>new features</a>
            and major revisions to the architecture are ongoing</p>
         
+        <p><a href='http://james.apache.org/server/head'>James 3</a> (development) supports Spring and is moving
+           towards OSGI.</p>
+
         <p>It is recommended only for advanced users who are willing to accept that
            development is ongoing and that they may need to participate actively.
            Users are strongly recommended to subscribe to the server-dev 
@@ -109,12 +98,18 @@
         Use of the latest stable release is recommended.</p>
 
         <p>Latest and Stable - James 2.3.2</p>
+        
+        <p>James 2 uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon development
+          has now stopped but the framework is mature, stable and of proved production quality.</p>
+
         <ul>
-          <li>Is the latest official stable release and is available for download 
-            <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.</li>
           <li>
-          Is a bug fix point release. 
-          See <a href='2.3.2/release-notes.html'>release notes</a> for details.
+            Is the latest official stable release and is available for download 
+            <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.
+          </li>
+          <li>
+            Is a bug fix point release.
+            See <a href='2.3.2/release-notes.html'>release notes</a> for details.
           </li>
         </ul>
 
@@ -141,18 +136,18 @@
 
       </section>
       
-      </div>
-      
-      <div style="clear:both;float:none;visibility:hidden;"></div>
-
+      </td>
+      </tr>
+      </table>
+  
       <section name="Feature Matrix">
 
         <table>
           <tr>
             <th>Item</th>
             <th>Status</th>
-            <th>3.0</th>
             <th>2.3.x</th>
+            <th>3.0</th>
             <th>Since</th>
             <th>First released</th>
           </tr>
@@ -174,7 +169,7 @@
           </tr>
           <tr>
             <td>IMAP</td>
-            <td>Okay</td>
+            <td>Experimental</td>
             <td>yes</td>
             <td>no</td>
             <td>3.0</td>
@@ -182,7 +177,7 @@
           </tr>
             <tr>
               <td>LMTP</td>
-              <td></td>
+              <td>Experimental</td>
               <td>no</td>
               <td>yes</td>
               <td></td>
@@ -191,22 +186,22 @@
           <tr>
             <td>NNTP</td>
             <td>Experimental</td>
-            <td>no</td>
             <td>yes</td>
+            <td>no</td>
             <td>1.2</td>
             <td>1.2</td>
           </tr>
           <tr>
             <td>TLS POP3/SMTP</td>
             <td>Experimental</td>
-            <td></td>
-            <td></td>
+            <td>yes</td>
+            <td>yes</td>
             <td>1.2</td>
             <td>1.2</td>
           </tr>
             <tr>
               <td>Mailing List</td>
-              <td></td>
+              <td>Experimental</td>
               <td>yes</td>
               <td>yes</td>
               <td></td>
@@ -215,8 +210,8 @@
           <tr>
             <td>FetchMail</td>
             <td>Stable</td>
-            <td></td>
-            <td></td>
+            <td>yes</td>
+            <td>yes</td>
             <td>2.2</td>
             <td>2.2</td>
           </tr>
@@ -231,24 +226,24 @@
           <tr>
             <td>Remote Manager</td>
             <td>Stable</td>
-            <td></td>
-            <td></td>
+            <td>yes</td>
+            <td>yes</td>
             <td>1.0</td>
             <td>1.0</td>
           </tr>
             <tr>
               <td>Management via JMX</td>
-              <td></td>
+              <td>Experimental</td>
               <td>yes</td>
               <td>yes</td>
               <td></td>
               <td></td>
             </tr>
           <tr>
-            <td>TLS Support Remote Manager</td>
+            <td>TLS Remote Manager</td>
             <td>Stable</td>
-            <td></td>
-            <td></td>
+            <td>yes</td>
+            <td>yes</td>
             <td>1.2</td>
             <td>1.2</td>
           </tr>
@@ -262,7 +257,7 @@
             </tr>
             <tr>
               <td>JDBC Database Mail Store</td>
-              <td></td>
+              <td>Experimental</td>
               <td>yes</td>
               <td>yes</td>
               <td>1.2</td>
@@ -270,7 +265,7 @@
             </tr>
             <tr>
               <td>JPA Database Mail Store</td>
-              <td></td>
+              <td>Experimental</td>
               <td>no</td>
               <td>yes</td>
               <td></td>
@@ -278,7 +273,7 @@
             </tr>
             <tr>
               <td>JCR (Jackrabbit) Database Mail Store</td>
-              <td></td>
+              <td>Experimental</td>
               <td>no</td>
               <td>yes</td>
               <td></td>
@@ -287,38 +282,46 @@
           <tr>
             <td>JDBC Users</td>
             <td>Stable</td>
-            <td></td>
-            <td></td>
+            <td>yes</td>
+            <td>yes</td>
             <td>1.2.1</td>
             <td>1.2.1</td>
           </tr>
           <tr>
             <td>JPA Users</td>
             <td>Stable</td>
-            <td></td>
-            <td></td>
+            <td>no</td>
+            <td>yes</td>
             <td>1.2.1</td>
             <td>1.2.1</td>
           </tr>
           <tr>
             <td>JCR Users</td>
             <td>Stable</td>
-            <td></td>
-            <td></td>
+            <td>no</td>
+            <td>yes</td>
             <td>1.2.1</td>
             <td>1.2.1</td>
           </tr>
           <tr>
             <td>LDAP Users</td>
             <td>Experimental</td>
-            <td></td>
-            <td></td>
+            <td>yes</td>
+            <td>yes</td>
             <td>1.2</td>
             <td>1.2</td>
           </tr>
             <tr>
-              <td>Alternate User and Mail stores</td>
+              <td>Alternate Mail stores</td>
+              <td>Experimental</td>
+              <td>yes</td>
+              <td>yes</td>
               <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Alternate Mail stores</td>
+              <td>Experimental</td>
               <td>yes</td>
               <td>yes</td>
               <td></td>
@@ -326,7 +329,7 @@
             </tr>
             <tr>
               <td>Alternate Queue</td>
-              <td></td>
+              <td>Experimental</td>
               <td>no</td>
               <td>yes</td>
               <td></td>
@@ -334,7 +337,7 @@
             </tr>
             <tr>
               <td>Integration with SpamAssassin</td>
-              <td></td>
+              <td>Stable</td>
               <td>partial</td>
               <td>yes</td>
               <td></td>
@@ -342,7 +345,7 @@
             </tr>
             <tr>
               <td>Run-as-service scripts</td>
-              <td></td>
+              <td>Stable</td>
               <td>no</td>
               <td>yes</td>
               <td></td>
@@ -350,7 +353,7 @@
             </tr>
             <tr>
               <td>Deployment in WEB container</td>
-              <td></td>
+              <td>Experimental</td>
               <td>no</td>
               <td>yes</td>
               <td></td>
@@ -374,7 +377,7 @@
             </tr>
             <tr>
               <td>Monitoring via JMX</td>
-              <td></td>
+              <td>Experimental</td>
               <td>yes</td>
               <td>yes</td>
               <td></td>
@@ -382,7 +385,7 @@
             </tr>
             <tr>
               <td>IP V6</td>
-              <td></td>
+              <td>Experimental</td>
               <td>no</td>
               <td>partial</td>
               <td></td>
@@ -401,7 +404,7 @@
 
     </section>
 
-    <section name='TODO'>
+    <section name='To Do'>
       <p>See <a href='todo.html'>here</a></p>
     </section>
 

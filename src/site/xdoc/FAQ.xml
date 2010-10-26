@@ -80,9 +80,12 @@
           <li>
             <a href="#17">How do I use Subversion to get James source code?</a>
           </li>
-		  <li>
-		  <a href="#18">How can I control Sun's JVM DNS Lookup Configuration.</a>
-		  </li>
+          <li>
+          <a href="#18">How can I control Sun's JVM DNS Lookup Configuration.</a>
+          </li>
+          <li>
+          <a href="james_and_sendmail.html">James and Sendmail.</a>
+          </li>
         </ul>
       </p>
     </section>
