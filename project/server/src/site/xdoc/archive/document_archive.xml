@@ -36,6 +36,7 @@ for users who still have need of it.  The James project urges all
 users to upgrade to the current Release Build of James.</p>
 
 <subsection name="Table of Contents">
+
 <p>
     <ul name="Older Documentation">
         <li> <a href="announcement_2_1.html">Announcement (version 2.1)</a></li>
@@ -45,10 +46,14 @@ users to upgrade to the current Release Build of James.</p>
         <li> <a href="usingLDAP_v1_2.html">Using LDAP (version 1.2)</a></li>
         <li> <a href="usingTLS_v1_2.html">Using TLS (version 1.2)</a></li>
         <li> <a href="architecture_v2_0.html">Architecture (version 2.0)</a></li>
-
     </ul>
+
 </p>
+
 </subsection>
+
 </section>
+
 </body>
+
 </document>
