@@ -19,14 +19,14 @@
 -->
 <document>
   <properties>
-    <title>Apache JAMES Project Guidelines</title>
+    <title>Apache James Project Guidelines</title>
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
   <body>
-    <section name="Apache JAMES Project Guidelines">
+    <section name="Apache James Project Guidelines">
 
 <p>
-    This document defines the guidelines for the Apache JAMES Project. It includes definitions of how conflict is resolved by voting, who is able to vote, and the procedures to follow for proposing and making changes to the Apache JAMES products.
+    This document defines the guidelines for the Apache James Project. It includes definitions of how conflict is resolved by voting, who is able to vote, and the procedures to follow for proposing and making changes to the Apache James products.
 
 </p>
 <p>
@@ -36,22 +36,22 @@
     </section>
     <section name="People, Places, and Things">
 
-    <subsection name="Apache JAMES Project Management Committee">
+    <subsection name="Apache James Project Management Committee">
 <p>
-        The group of volunteers who are responsible for managing the Apache JAMES Project. This includes deciding what is distributed as products of the Apache JAMES Project, maintaining the Project's shared resources, speaking on behalf of the Project, resolving license disputes regarding Apache JAMES products, nominating new PMC members or committers, and establishing these guidelines.
+        The group of volunteers who are responsible for managing the Apache James Project. This includes deciding what is distributed as products of the Apache James Project, maintaining the Project's shared resources, speaking on behalf of the Project, resolving license disputes regarding Apache James products, nominating new PMC members or committers, and establishing these guidelines.
 
 </p>
 <p>
-         Membership in the Apache JAMES PMC is by invitation only and must be approved by consensus of the active Apache JAMES PMC members. A PMC member is considered inactive by their own declaration or by not contributing in any form to the project for over six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked by a unanimous vote of all the active PMC members other than the member in question.
+         Membership in the Apache James PMC is by invitation only and must be approved by consensus of the active Apache James PMC members. A PMC member is considered inactive by their own declaration or by not contributing in any form to the project for over six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked by a unanimous vote of all the active PMC members other than the member in question.
 
 </p>
     </subsection>
-    <subsection name="Apache JAMES Committers">
+    <subsection name="Apache James Committers">
 <p>
-        The group of volunteers who are responsible for the technical aspects of the Apache JAMES Project. This group has write access to the appropriate source repositories and these volunteers may cast non-binding votes on any technical discussion.
+        The group of volunteers who are responsible for the technical aspects of the Apache James Project. This group has write access to the appropriate source repositories and these volunteers may cast non-binding votes on any technical discussion.
 </p>
 <p>
-         Membership as a Committer is by invitation only and must be approved by consensus of the active Apache JAMES PMC members. A Committer is considered inactive by their own declaration or by not contributing in any form to the project for over six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked by a unanimous vote of all the active PMC members (except the member in question if they are a PMC member).
+         Membership as a Committer is by invitation only and must be approved by consensus of the active Apache James PMC members. A Committer is considered inactive by their own declaration or by not contributing in any form to the project for over six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked by a unanimous vote of all the active PMC members (except the member in question if they are a PMC member).
 
 </p>
     </subsection>
@@ -63,13 +63,13 @@
     </subsection>
     <subsection name="private list">
 <p>
-        The Apache JAMES Project's private mailing list for discussion of issues that are inappropriate for public discussion, such as legal, personal, or security issues prior to a published fix. Subscription to the list is only open to Apache JAMES PMC members and Apache Software Foundation Members.
+        The Apache James Project's private mailing list for discussion of issues that are inappropriate for public discussion, such as legal, personal, or security issues prior to a published fix. Subscription to the list is only open to Apache James PMC members and Apache Software Foundation Members.
 
 </p>
     </subsection>
     <subsection name="SVN">
 <p>
-        All of the Apache JAMES products are maintained in shared information repositories using SVN on svn.apache.org. The Apache committers have write access to these repositories; everyone has read access via anonymous SVN.
+        All of the Apache James products are maintained in shared information repositories using SVN on svn.apache.org. The Apache committers have write access to these repositories; everyone has read access via anonymous SVN.
 
 </p>
     </subsection>
@@ -88,7 +88,7 @@
     <section name="Voting">
 
 <p>
-     Any of the Apache JAMES Committers may vote on any issue or action item. However, the only binding votes are those cast by active members of the Apache James PMC; if the vote is about a change to source code or documentation, the primary author of what is being changed may also cast a binding vote on that issue. All other votes are non-binding. All committers are encouraged to participate in decisions, but the decision itself is made by those who have been long-time contributors to the project. In other words, the Apache Project is a minimum-threshold meritocracy.
+     Any of the Apache James Committers may vote on any issue or action item. However, the only binding votes are those cast by active members of the Apache James PMC; if the vote is about a change to source code or documentation, the primary author of what is being changed may also cast a binding vote on that issue. All other votes are non-binding. All committers are encouraged to participate in decisions, but the decision itself is made by those who have been long-time contributors to the project. In other words, the Apache Project is a minimum-threshold meritocracy.
 
 </p>
 <p>
@@ -153,7 +153,7 @@
     </subsection>
     <subsection name="Product Changes">
 <p>
-        Changes to the Apache JAMES products, including code and documentation, will appear as action items under several categories corresponding to the change status:
+        Changes to the Apache James products, including code and documentation, will appear as action items under several categories corresponding to the change status:
 
 </p>
     </subsection>
