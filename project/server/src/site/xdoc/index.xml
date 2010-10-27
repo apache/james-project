@@ -32,7 +32,8 @@
     
     <section name="What's Apache James Server?">
     
-      <p>Is 100% pure JAVA capable Mail Server running on Java 1.5 onwards. James integrates emailing protocols such as:</p>
+      <p>Apache James Server is a 100% pure JAVA capable Mail Server running on Java 1.5 onwards.
+      James integrates emailing protocols such as:</p>
 
       <ul>
         <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
@@ -43,22 +44,20 @@
         <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
             <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (James 3)</li>
         <li><a href='http://james.apache.org/jsieve'>Sieve</a> 
-            filtering into mailboxes for incoming mail</li>
+            filtering into mailboxes for incoming mail.</li>
         <li>FetchMail from POP3 and IMAP accounts.</li>
         <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
             <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news) 
             - only in 2.3., support is discontinuated in 3.0.</li>
       </ul>
 
-      <p>Is a mailet container: the email processing is delegated to independent, extensible, pluggable agents
+      <p>James Server provides a mailet container: the email processing is delegated to independent, extensible, pluggable agents
       specified by the <a href='http://james.apache.org/mailet/api'>Mailet API</a>. Any function
       which is not already available (from <a href='http://james.apache.org/mailet'>James</a>
       or from a third party) can be developed.</p>
       
-      <p>Is a modular, component based <a href="http://martinfowler.com/articles/injection.html">Inversion of Control</a> 
-      mail platform.</p>
-      
-      <p>Is based on open technical standards.</p>
+      <p>James Server's architecture is modular, component based and offers a <a href="http://martinfowler.com/articles/injection.html">Inversion of Control</a> 
+      mail platform. All developments and implementations are based on open technical standards.</p>
       
     </section>
     
@@ -68,11 +67,11 @@
     
       <subsection name='Proposal - James 3.0 Milestone 1'>
 
-        <ul>
-          <li>Is a proposed milestone release allowing a preview of the James 3.0 features</li>
-          <li>Feedback welcomed either through the <a href='http://james.apache.org/mail.html'>mailing lists</a>
-          or <a href='http://issues.apache.org/jira/browse/JAMES'>JIRA</a>.</li>
-        </ul>
+        <p>James 3.0 Milestone 1 is a proposed milestone release allowing a preview of the James 3.0 features.
+           We strongly encourage to download and test it.</p>
+        
+        <p>Feedback welcomed either through the <a href='http://james.apache.org/mail.html'>mailing lists</a>
+           or <a href='http://issues.apache.org/jira/browse/JAMES'>JIRA</a>.</p>
 
       </subsection>
 
@@ -80,10 +79,9 @@
 
         <p>The <a href='http://james.apache.org/server/head'>James 3</a> code base has many 
            <a href='http://james.apache.org/server/head/jira-report.html'>new features</a>
-           and major revisions to the architecture are ongoing</p>
-        
-        <p><a href='http://james.apache.org/server/head'>James 3</a> (development) supports Spring and is moving
-           towards OSGI.</p>
+           and major revisions compared to the 2.3.x architecture have been implemented.
+           <a href='http://james.apache.org/server/head'>James 3</a> (development) 
+           supports Spring and is moving towards OSGI.</p>
 
         <p>It is recommended only for advanced users who are willing to accept that
            development is ongoing and that they may need to participate actively.
@@ -92,26 +90,16 @@
         
       </subsection>
 
-      <subsection name='Stable - James 2'>
+      <subsection name='Previous - James 2.3.2'>
       
-        <p>James 2 is a mature, production ready code stream with minimal development. 
-        Use of the latest stable release is recommended.</p>
-
-        <p>Latest and Stable - James 2.3.2</p>
-        
-        <p>James 2 uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon development
-          has now stopped but the framework is mature, stable and of proved production quality.</p>
-
-        <ul>
-          <li>
-            Is the latest official stable release and is available for download 
-            <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.
-          </li>
-          <li>
-            Is a bug fix point release.
-            See <a href='2.3.2/release-notes.html'>release notes</a> for details.
-          </li>
-        </ul>
+        <p>James 2.3.2 is a mature, production ready code stream with minimal development. 
+           Use of the previous stable James 2.3.2 release is recommended. James 2.3.2 uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon development
+           has now stopped but the framework is mature, stable and of proved production quality.</p>
+           
+        <p>James 2.3.2 is still the official stable release and is available for download 
+           <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.
+           James 3.0 will soon replace 2.3.2 as recommended release.
+           See also the <a href='2.3.2/release-notes.html'>release notes</a> for details on 2.3.2 bug fixes.</p>
 
 <!--  2.4.0 is no more in the pipe.
 
@@ -146,8 +134,8 @@
           <tr>
             <th>Item</th>
             <th>Status</th>
-            <th>2.3.x</th>
             <th>3.0</th>
+            <th>2.3.x</th>
             <th>Since</th>
             <th>First released</th>
           </tr>
@@ -178,16 +166,16 @@
             <tr>
               <td>LMTP</td>
               <td>Experimental</td>
-              <td>no</td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
           <tr>
             <td>NNTP</td>
             <td>Experimental</td>
-            <td>yes</td>
             <td>no</td>
+            <td>yes</td>
             <td>1.2</td>
             <td>1.2</td>
           </tr>
@@ -218,8 +206,8 @@
           <tr>
             <td>Mailet Container</td>
             <td>Stable</td>
-              <td>yes</td>
-              <td>yes</td>
+            <td>yes</td>
+            <td>yes</td>
             <td>2.3</td>
             <td>0.95</td>
           </tr>
@@ -266,16 +254,16 @@
             <tr>
               <td>JPA Database Mail Store</td>
               <td>Experimental</td>
-              <td>no</td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>JCR (Jackrabbit) Database Mail Store</td>
               <td>Experimental</td>
-              <td>no</td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
@@ -290,16 +278,16 @@
           <tr>
             <td>JPA Users</td>
             <td>Stable</td>
-            <td>no</td>
             <td>yes</td>
+            <td>no</td>
             <td>1.2.1</td>
             <td>1.2.1</td>
           </tr>
           <tr>
             <td>JCR Users</td>
             <td>Stable</td>
-            <td>no</td>
             <td>yes</td>
+            <td>no</td>
             <td>1.2.1</td>
             <td>1.2.1</td>
           </tr>
@@ -330,48 +318,48 @@
             <tr>
               <td>Alternate Queue</td>
               <td>Experimental</td>
-              <td>no</td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>Integration with SpamAssassin</td>
               <td>Stable</td>
-              <td>partial</td>
               <td>yes</td>
+              <td>partial</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>Run-as-service scripts</td>
               <td>Stable</td>
-              <td>no</td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>Deployment in WEB container</td>
               <td>Experimental</td>
-              <td>no</td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>Deployment in OSGI container</td>
               <td></td>
-              <td>no</td>
               <td>planned</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>Configuration Hot Reload</td>
               <td></td>
-              <td>no</td>
               <td>planned</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
@@ -386,16 +374,16 @@
             <tr>
               <td>IP V6</td>
               <td>Experimental</td>
-              <td>no</td>
               <td>partial</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
             <tr>
               <td>Java 1.4</td>
               <td></td>
-              <td>yes</td>
               <td>no</td>
+              <td>yes</td>
               <td></td>
               <td></td>
             </tr>
@@ -405,7 +393,7 @@
     </section>
 
     <section name='To Do'>
-      <p>See <a href='todo.html'>here</a></p>
+      <p>See <a href='todo.html'>here</a>.</p>
     </section>
 
   </body>
