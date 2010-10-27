@@ -49,11 +49,8 @@
     <menu name="Documentation" inherit='bottom'>
 -->
     <menu name="Documentation">
-      <item name="Server 3.0" href="/head/index.html" />
-      <item name="Server 2.3.2" href="/2.3.2/index.html" />
-      <item name="Server 2.3.1" href="/2.3.1/index.html" />
-      <item name="Server 2.3.0" href="/2.3.0/index.html" />
-      <item name="Server 2.2.0" href="/2.2.0/index.html" />
+      <item name="Server v3" href="/3/index.html" />
+      <item name="Server v2" href="/2/index.html" />
       <item name="Archive" href="/archive/document_archive.html" />
     </menu>
     
