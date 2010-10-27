@@ -38,7 +38,8 @@
   </skin>
   
   <body>
-<!-- Breadcrumbs are desactivated as they give strange results.
+<!-- 
+    Breadcrumbs are desactivated as they give strange results.
     <breadcrumbs>
       <item name="Home" />
     </breadcrumbs>
@@ -60,16 +61,6 @@
       <item name="Postage" href="http://james.apache.org/postage/index.html" />
     </links>
 
-    <menu name="Download" inherit="bottom">
-      <item name="Releases" href="http://james.apache.org/download.cgi"/>
-<!--
-    Don't display this as the build directory is no more updated.
-          <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
--->
-      <item name="Snapshots (Hudson)" href="https://hudson.apache.org/hudson/view/G-L/view/James/"/>
-      <item name="Snapshots (Maven)" href="http://repository.apache.org/snapshots/org/apache/james/"/>
-    </menu>
-
     <menu name="About James " inherit="bottom">
       <item name="Overview" href="/index.html" />
       <item name="News" href="/newsarchive.html" />
@@ -79,6 +70,19 @@
       <item name="Wiki" href="http://wiki.apache.org/james" />
       <item name="Who We Are" href="/weare.html" />
       <item name="License" href="/license.html" />
+    </menu>
+
+    <menu name="Download" inherit="bottom">
+      <item name="Releases" href="http://james.apache.org/download.cgi"/>
+      <item name="Snapshots" href="http://people.apache.org/builds/james/nightly/"/>
+<!--
+    Don't display this as the build directory is no more updated and must be removed.
+          <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
+-->
+<!--
+    Don't display the link to Hudson, we already have the link to the nightly page.
+      <item name="Snapshots (Hudson)" href="https://hudson.apache.org/hudson/view/G-L/view/James/"/>
+-->
     </menu>
 
 <!-- Activate this line if you want to inherit this menu.
