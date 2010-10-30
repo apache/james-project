@@ -37,18 +37,19 @@
 
       <ul>
         <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
-            <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
-        <li>LMTP</li>
+            <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a>.</li>
+        <li><a href='http://james.apache.org/server/rfclist/lmtp/rfc2033.txt'>
+            <abbr title='Local Mail Transfer Protocol'>LMTP</abbr></a> (only with Server V3).</li>
         <li><a href='http://james.apache.org/server/rfclist/pop3/rfc1725.txt'>
            <abbr title='Post Office Protocol'>POP3</abbr></a></li>
         <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
-            <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (James 3)</li>
+            <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> (only with Server V3).</li>
         <li><a href='http://james.apache.org/jsieve'>Sieve</a> 
             filtering into mailboxes for incoming mail.</li>
         <li>FetchMail from POP3 and IMAP accounts.</li>
         <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
             <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news) 
-            - only in 2.3., support is discontinuated in 3.0.</li>
+            (only with Server V2, support is discontinuated in Server V3).</li>
       </ul>
 
       <p>James Server provides a mailet container: the email processing is delegated to independent, extensible, pluggable agents
@@ -75,31 +76,32 @@
 
       </subsection>
 
-      <subsection name='Development - James 3.0'>
+      <subsection name="Development - James 3.0">
 
-        <p>The <a href='http://james.apache.org/server/head'>James 3</a> code base has many 
-           <a href='http://james.apache.org/server/head/jira-report.html'>new features</a>
+        <p>The <a href="http://james.apache.org/server/3">James 3</a> code base has many 
+           <a href="http://james.apache.org/server/3/release_notes.html">new features</a>
            and major revisions compared to the 2.3.x architecture have been implemented.
-           <a href='http://james.apache.org/server/head'>James 3</a> (development) 
+           <a href="http://james.apache.org/server/3">James 3</a> (development) 
            supports Spring and is moving towards OSGI.</p>
 
         <p>It is recommended only for advanced users who are willing to accept that
            development is ongoing and that they may need to participate actively.
            Users are strongly recommended to subscribe to the server-dev 
-           <a href='http://james.apache.org/mail.html'>mailing list</a>.</p>
+           <a href="http://james.apache.org/mail.html">mailing list</a>.</p>
         
       </subsection>
 
       <subsection name='Previous - James 2.3.2'>
       
         <p>James 2.3.2 is a mature, production ready code stream with minimal development. 
-           Use of the previous stable James 2.3.2 release is recommended. James 2.3.2 uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon development
-           has now stopped but the framework is mature, stable and of proved production quality.</p>
-           
-        <p>James 2.3.2 is still the official stable release and is available for download 
+           James 2.3.2 is still the official stable release and is available for download 
            <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.
-           James 3.0 will soon replace 2.3.2 as recommended release.
-           See also the <a href='2.3.2/release-notes.html'>release notes</a> for details on 2.3.2 bug fixes.</p>
+           James 3.0 will soon replace 2.3.2 as recommended release.</p>
+           
+        <p>James 2.3.2 uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon 
+           development has now stopped but the framework is mature, stable and of proved production quality.
+           See also the <a href='2.3.2/release-notes.html'>release notes</a> for details on 
+           2.3.2 bug fixes.</p>
 
 <!--  2.4.0 is no more in the pipe.
 

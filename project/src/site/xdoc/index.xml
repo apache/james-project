@@ -38,16 +38,17 @@
           <ul>
             <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
                <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
-            <li>LMTP</li>
+            <li><a href='http://james.apache.org/server/rfclist/lmtp/rfc2033.txt'>
+                <abbr title='Local Mail Transfer Protocol'>LMTP</abbr></a> (available with Server V3).</li>
             <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
                <abbr title='Post Office Protocol'>POP3</abbr></a></li>
             <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
                <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> 
-               (see the <a href='http://james.apache.org/imap'>IMAP</a> sub-project, only with James 3.0)</li>
+               (see the <a href='http://james.apache.org/imap'>IMAP</a> sub-project, available with Server V3).</li>
             <li>Sieve filtering into mailboxes for incoming mail.</li>
             <li>Fetchmail from POP3 and IMAP accounts.</li>
             <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
-                <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news, only with James 2.3.2)</li>
+                <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news, available with Server V2).</li>
          </ul>
 
       <p><a href='http://james.apache.org/server'>Read more</a> about the complete features of James 3.0 and 
