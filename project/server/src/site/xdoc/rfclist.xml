@@ -48,6 +48,9 @@
 <a href="rfclist/smtp/rfc2554.txt">RFC 2554: SMTP Service Extension for Authentication</a><br/>
 <a href="rfclist/smtp/rfc2821.txt">RFC 2821: Simple Mail Transfer Protocol (obsoletes RFC 821)</a><br/>
 </subsection>
+<subsection name="LMTP RFCs">
+<a href="rfclist/lmtp/rfc2033.txt">RFC 2033 : LMTP Local Mail Transfer Protocol</a><br/>
+</subsection>
 <subsection name="POP3 RFCs">
 <a href="rfclist/pop3/rfc1725.txt">RFC 1725: POP3 Protocol</a><br/>
 <a href="rfclist/pop3/rfc1734.txt">RFC 1734: POP3 AUTHentication command</a><br/>
@@ -70,9 +73,10 @@
 <a href="rfclist/imap4/rfc2359.txt">RFC 2359: IMAP4 UIDPLUS extension (elective)</a><br/>
 <a href="rfclist/imap4/rfc2595.txt">RFC 2595: Using TLS with IMAP, POP and ACAP</a><br/>
 <a href="rfclist/imap4/rfc2683.txt">RFC 2683: IMAP4 Implementation Recommendations</a><br/>
+<a href="rfclist/imap4/rfc5256.txt">RFC 5256: IMAP4 SORT and THREAD Extensions</a><br/>
 </subsection>
 <subsection name="NNTP RFCs">
-<a href="rfclist/nntp/rfc0977.txt">RFC 977 : NNTP Protocol</a><br/>
+<a href="rfclist/nntp/rfc0977.txt">RFC 977: NNTP Protocol</a><br/>
 <a href="rfclist/nntp/rfc1036.txt">RFC 1036: Format of News Messages</a><br/>
 <a href="rfclist/nntp/rfc2980.txt">RFC 2980: Common NNTP Extensions</a><br/>
 <a href="http://www.academ.com/academ/nntp/">NNTP Working Group</a><br/>
