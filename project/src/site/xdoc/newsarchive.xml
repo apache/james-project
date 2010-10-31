@@ -1,47 +1,85 @@
 <?xml version="1.0"?>
 <document>
+
   <properties>
     <title>News Archive</title>
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
+
   <body>
-  	<section name="News">
-        <div id="apacheconspacer">
-          <div id="apacheconbox">
-            <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
-          </div>
+
+    <section name="News">
+
+      <div id="apacheconspacer">
+        <div id="apacheconbox">
+          <iframe src="http://www.apache.org/ads/bannerbar.html" style="border-width:0;" frameborder="0" scrolling="no" width="250" height="150"></iframe>
         </div>
+      </div>
+
     <subsection name='2010'>
+
+        <a name="01112010_1"><h4>Nov/2010 - Apache Server 3.0-M1 released</h4></a>
+        <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
+           the release of version 3.0-M1 (Milestone 1) of the Apache James server.</p>
+        
+        <p>The Apache James Server is a 100% pure Java enterprise mail server based on open protocols. 
+           Currently supported are SMTP/LMTP, POP3, IMAP4 protocols together with several different 
+           storage solutions (relational database via JPA and JDBC, File system with MailDir, JCR Content Repsitory).</p>
+        
+        <p>The James server also serves as a mail application platform. It hosts the Apache Mailet API,
+           and acts has a Mailet container. This feature makes it easy to design, write, and deploy custom applications for mail processing. This modularity and ease of customization is one of James' strengths, and can allow administrators to produce powerful applications surprisingly easily.</p>
+        
+        <p>Features for that version include enhancements to nearly every area of functionality, 
+           including full IMAP support, improved mailing list capabilities, fastfail support, SMTP API 
+           for developing own fastfail filters and the next revision of the Mailet API.</p>
+           
+        <p>This was an exciting time in James development and we thank all contributors.</p>
+        
+        <p>We are still actively looking for eager, capable developers to contribute to James. 
+          If you're interesting in contributing to the James project, please subscribe to the James 
+          <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+        
+        <p>Information about James can be found at the James web site
+           at <a href="http://james.apache.org/">http://james.apache.org/</a>.</p>
+         
         <a name="20092010_1"><h4>Sep/2010 - Apache IMAP 0.2-M1 released</h4></a>
         <p>The Apache James Project is pleased to announce a new  
         <a href='http://james.apache.org/imap'>Apache IMAP</a> release in preparation of 
         the upcoming 3.0-M1 <a href='http://james.apache.org/imap'>Apache Mail server</a>.
         </p>
+
         <a name="18092010_1"><h4>Sep/2010 - Apache protocols 1.2-M1 released</h4></a>
         <p>The Apache James Project is pleased to announce a new  
         Apache protocols release in preparation of the upcoming 3.0-M1 <a href='http://james.apache.org/imap'>Apache Mail server</a>.
         </p>
+
         <a name="21062010_1"><h4>Jun/2010 - Apache jSPF 0.9.8 released</h4></a>
         <p>The Apache James Project is pleased to announce a new  
         <a href='http://james.apache.org/jspf'>Apache jSPF</a> release which includes fixed to TXT record escaping and pass the rfc4408-tests-2009.10 testsuite.
-        </p> 
+        </p>
+        
         <a name="21062010"><h4>Jun/2010 - Apache Mailet Base 1.1 released</h4></a>
         <p>The Apache James Project is pleased to announce a new  
         <a href='http://james.apache.org/mailet/api'>Apache Mailet Base</a> release which fixes a NullPointerException when using MatcherInverter.
-        </p> 
+        </p>
+        
         <a name="14052010_1"><h4>May/2010 - Apache JSieve 0.4 released</h4></a>
         <p>The Apache James Project is pleased to announce that the forth release of
         <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
         <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language - 
         is now available for <a href='download.cgi#Apache_JSieve'>download</a>.
-        </p> 
+        </p>
+        
         <a name="14052010"><h4>May/2010 - Apache Mailet Standard 1.0 released</h4></a>
         <p>The Apache James Project is pleased to announce that the first independent release of
         <a href='http://james.apache.org/mailet/standard/'>Apache Mailet Standard</a> - was bundled with James Server 2.3 before - 
         is now available for <a href='download.cgi#Apache_JSieve'>download</a>.
         </p> 
+        
     </subsection>
+    
     <subsection name='2009'>
+    
         <a name='15102009'><h4>Oct/2009 - jDKIM joins Apache James as sub-project</h4></a>
         <p>
         The Apache James project is pleased to announce the inclusion of a new sub-project called
@@ -75,10 +113,12 @@
         See the <a href='http://james.apache.org/mpt/0.1/release-notes.html'>release notes</a>
         for more details.
         </p>
+        
         <a name="25062009"><h4>Jun/2009 - Apache jSPF 0.9.7 released</h4></a>
         <p>The Apache James Project is pleased to announce a new  
         <a href='http://james.apache.org/jspf'>Apache jSPF</a> release which included some critical bug fixes.
         </p> 
+        
         <a name="18062009"><h4>Jun/2009 - Apache JSieve 0.3 released</h4></a>
         <p>The Apache James Project is pleased to announce that the third release of
         <a href='http://james.apache.org/jsieve'>Apache JSieve</a> - an implementation of the
@@ -88,6 +128,7 @@
         See the <a href='http://james.apache.org/jsieve/0.3/release-notes.html'>release notes</a>
         for more details.
         </p> 
+        
         <a name="14052009"><h4>May/2009 - Apache Crypto Mailets 1.0 released</h4></a>
         <p>The Apache James Project is pleased to announce the first independent release of
         <a href='http://james.apache.org/mailet/crypto'>Apache Cryptographic Mailets</a> (previous versions 
@@ -95,6 +136,7 @@
         <a href='http://james.apache.org/server'>Apache James Server</a>). 
         This package contains mailets which encode, decode, sign and verify mail plus cryptology utilities.
         </p> 
+        
         <a name="01042009"><h4>Apr/2009 - Apache Mailet Base 1.0 released</h4></a>
         <p>The Apache James Project is pleased to announce the first independent release of
         <a href='http://james.apache.org/mailet/base'>Apache Mailet Base</a> (previous versions 
@@ -103,12 +145,14 @@
         contains lightweight frameworks and utilities likely to be of interest to 
         <a href='http://james.apache.org/mailet/api'>Mailet</a> developers.
         </p>   
+        
         <a name="08032009"><h4>Mar/2009 - Mime4j 0.6 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> of Apache 
         Mime4j-0.6. This release brings another round of API enhancements and performance 
         optimizations. There has been a number of notable improvements in the DOM support. MIME 
         stream parser is expected to be 50% faster when line counting is disabled. Please also note 
         that as of this release Mime4j requires a Java 1.5 compatible runtime</p>
+        
         <a name="21022009"><h4>Feb/2009 - MailetDocs Maven Plugin 0.1 released</h4></a>
         <p>The Apache James Project is pleased to announce the first release of the
         <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/' rel='tag'>MailetDocs</a> 
@@ -117,6 +161,7 @@
         For more information, see the 
         <a href='http://james.apache.org/mailet/maven-mailetdocs-plugin/release-notes.html'>release notes</a>.
         </p>  
+        
         <a name="01052009"><h4>Jan/2009 - Apache Mailet 2.4 released</h4></a>
         <p>The Apache James Project is pleased to announce the first independent release of
         <a href='http://james.apache.org/mailet/api'>Apache Mailet</a> (previous versions 
@@ -124,8 +169,11 @@
         <a href='http://james.apache.org/server'>Apache James Server</a>). The Mailet API
         defines a standard approach to enterprise mail processing.
         </p>   
+        
     </subsection>
+    
     <subsection name="2008">
+    
         <a name="10162008"><h4>October/2008 - Mime4j 0.5 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> of APACHE Mime4j-0.5. This release addresses a number of important issues discovered since 0.4. In particular, it improves Mime4j ability to deal with malformed data streams including those intentionally crafted to cause excessive CPU and memory utilization that can lead to DoS condition</p>
         <p>This release also fixes a serious bug that can prevent Mime4j from correctly processing binary content</p>
@@ -135,6 +183,7 @@
         of <a href='http://www.faqs.org/rfcs/rfc3028.html'>RFC3028 - Sieve: A Mail Filtering Language</a>
         for Java.
         </p>
+        
         <a name="08222008"><h4>Aug/2008 - Mime4j 0.4 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> of APACHE Mime4j-0.4. This release brings a number of significant improvements in terms of supported capabilities, flexibility and performance:</p>
         <ul>
@@ -145,6 +194,7 @@
           <li>More comprehensive header parsing including support for RFC1864, RFC2045, RFC2183, RFC2557 and RFC3066</li>
           <li>Revised packaging and exception hierarchy. MimeException now extends IOException</li>
         </ul>
+        
         <a name="04082008"><h4>Apr/2008 - jSPF-0.9.6 released</h4></a>
         <p>We are proud to announce the <a href="../download.cgi">availability</a> release of APACHE jSPF-0.9.6. This release fix two possible NullPointerExceptions and handle the "exp=" modifier correctly.</p>
     
@@ -155,56 +205,81 @@
         <br/>
         And <br/>
         2) James' provided mailing list manager is fine for small closed groups, but lacks the functionality of a more robust MLM, the project is to add some all or more of the following features subscriber and message moderation, double opt-in and bounce handling.</p>
+
     </subsection>
     
     <subsection name="2007">
+
         <a name="09252007"><h4>Sept/2007 - jSPF-0.9.5 released</h4></a>
         <p>We are proud to announce the <a href="download.cgi">availability</a> of APACHE jSPF-0.9.5. This release brings initial support for asynchronous processing and is fully RFC4408 compliant.</p> 
+
         <a name="05302007"><h4>May/2007 - Apache Mime4J 0.3 Final Released</h4></a>
         <p>After almost 2 years the Apache James team is proud to announce the <a href="download.cgi">availability</a> of Apache Mime4J 0.3. This is the first release under the ASF umbrella.</p>
+
         <a name="05052007"><h4>May/2007 - Mailet API sub-project lives</h4></a>
         <p>Following a decision taken by the James PMC a few months ago, the Apache Mailet API project is now independent of James Server and has its own <a href="mailet/index.html">webpage</a> and its own source repository.</p>
+
         <a name="04029007"/><h4>Apr/2007 - James Server 2.3.1 Final Released</h4>
         <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the final release of James Server 2.3.1. More informations on what has been fixed since the 2.3.0 release can be found in the <a href="/server/2.3.1/changelog.html">changelog</a>.</p>
+
         <a name="04192007"><h4>Apr/2007 - James Server 2.3.1 RC1 released</h4></a>
         <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/server/rc">availability</a> of the first release candidate of James Server 2.3.1. This release is maintenance release. See the <a href="http://issues.apache.org/jira/browse/James?report=com.atlassian.jira.plugin.system.project:changelog-panel"> changelog </a> for more detail.</p>
+
         <a name="04162007"><h4>Apr/2007 - Apache James Project Guidelines published</h4></a>
         <p>The James PMC has approved - for the first time - a set of <a href="guidelines.html">guidelines</a> for the project. These guidelines are intended to reflect and summarize well-known practices in our community. They include "... definitions of how conflict is resolved by voting, who is able to vote, and the procedures to follow for proposing and making changes to the Apache James products." </p>
+
         <a name="02092007"><h4>Feb/2007 - jSPF-0.9b4 released</h4></a>
         <p>James PMC is proud to announce the <a href="http://www.apache.org/dist/james/jspf/beta">availability</a> of the fourth beta of jspf 0.9. This version pass all tests in the last official release of the <a href="http://www.openspf.org/svn/project/test-suite/rfc4408-tests-2007.01.yml">spf testsuite</a>.</p>
+
         <a name="02012007"><h4>Feb/2007 - Feathercast features James</h4></a>
         <p>James PMC member and commiter <a href="http://people.apache.org/list_A.html">Danny Angus</a> was interviewed about James by David Reid for Feathercast episode 24. You can download the podcast from <a href="http://feathercast.org/?p=39">here</a>.</p>
+
         <a name="01012007"><h4>Jan/2007 - Mailet API to become a sub-project</h4></a>
         <p>The James commiters have voted to promote the Mailet API to its own James sub-project.<br/>
         This move will provide a clearer division between development of the API and development of James server, and we hope this will encourage more participation from external projects.</p>
         <p>The effort will start small, by releasing the current version, and move on to look at the enhancements we've been discussing over on <a href="http://james.apache.org/mail.html">the mailet api list</a> where we will extend a warm welcome to anyone who has something to contribute.</p>
         <p>Eventually we hope to extend the scope of the sub-project to include things like a Reference Implementation independent of James Server and suitable for embedding, an SDK, and possibly a TCK.
         </p>
+
     </subsection>
+
     <subsection name="2006">
+
      <a name="00102006"/><h4>Oct/2006 - James Server 2.3.0 Final Released</h4>
      <p>James PMC is proud to announce the <a href="download.cgi">availability</a> of the long awaited final release of James Server 2.3.0. More informations on what's new can be found in the <a href="/server/2.3.0/changelog.html">changelog</a>.</p>
+
      <a name="00092006"/><h4>Sep/2006 - jSPF 0.9 b3 Released</h4>
      <p>James PMC is proud to announce the <a href="http://people.apache.org/dist/james/jspf/">availability</a> of the third beta of jspf 0.9. This version has start to use the official spf testsuite to fix all rfc issues.</p>
+
      <a name="01082006"/><h4>Aug/2006 - James Server 2.3.0 RC3 Released</h4>
      <p>James PMC is proud to announce the <a href="http://people.apache.org/dist/james/server/">availability</a> of the third, and hopefully last, release candidate of James Server 2.3.0. More informations on what's new can be found in the <a href="/server/2.3.0/changelog.html">changelog</a>.</p>
      <p>New development roadmaps are being discussed right now, so stay tuned for 2.3.0 final and for the following news. - Sep/2006</p>
+
      <a name="00082006"/><h4>Aug/2006 - James Products website revamped</h4>
      <p>We just finished a major update of james products to be able to publish each product specific site under this new website structure</p>
+
      <a name="01072006"/><h4>Jul/2006 - James Server 2.3.0 on the way</h4>
      <p>After a long time of development we have released the first <a href="http://people.apache.org/dist/james/server/">release candidate</a> of James Server 2.3.0. After a period of user testing version 2.3.0 will be released.</p>
+
      <a name="00072006"/><h4>Jul/2006 - New project James jSPF</h4>
      <p>James PMC is happy to announce that we are working on a Java implementation of the SPF specification. The first <a href="http://people.apache.org/dist/james/jspf/">betas</a> are already available for download.</p>
+
     </subsection>
+
     <subsection name="2005">
-     <h4>James PMC react to the closure of Apache Avalon.</h4>
+
+      <h4>James PMC react to the closure of Apache Avalon.</h4>
       <p>James PMC would like to reassure all of our users that James Server is alive and well. All of the James team have kept abreast of the Avalon developments culminating in the closure of the Avalon project and dispersal of its codebase. We are are keen to stress that this has little impact on our ability to support and develop Server in both the short and long terms.<br/>Over the coming months we will be finalising and publishing a road map for James Server which will address all of the specific concerns raised by Avalon's closure, but rest assured James Server' future is safe, and we have enthusiasm and plans aplenty.<br/> In the meantime we would like to extend our best wishes to all our friends from Avalon, here's luck with your future projects guys!<br/> If you are at all concerned please subscribe to the server-user mailing list and raise your points there. - 05/Jan/2005</p>
 
       <h4>James product sources have moved to "Subversion"</h4>
       <p>Subversion is a version control system like CVS, but it has advantages over CVS for Apache Software Foundation (ASF) projects.<br/> In common with all other ASF projects we have reviewed our use of CVS and migrated our code to Subversion.<br/>
-Have a look at this <a href="server/FAQ.html#17">FAQ</a> for further details. - 05/Jan/2005</p>
+         Have a look at this <a href="server/FAQ.html#17">FAQ</a> for further details. - 05/Jan/2005</p>
       <p/>
-      </subsection>
+
+    </subsection>
+
     </section>
+
   </body>
+
 </document>
