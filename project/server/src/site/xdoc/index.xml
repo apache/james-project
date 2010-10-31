@@ -52,10 +52,17 @@
       
      <subsection name="What's Apache James Server?">
     
-      <p>Apache James Server is a 100% pure JAVA capable Mail Server running on Java 1.5 onwards.
-      James integrates emailing protocols such as:</p>
+       <div class="ui-widget">
+		 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
+			<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+			<strong>Hey!</strong> James Server 3.0-M1 is out.</p>
+	     </div>
+       </div>
+      
+       <p>Apache James Server is a 100% pure JAVA capable Mail Server running on Java 1.5 onwards.
+          James integrates emailing protocols such as:</p>
 
-      <ul>
+       <ul>
         <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
             <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a>.</li>
         <li><a href='http://james.apache.org/server/rfclist/lmtp/rfc2033.txt'>
@@ -75,14 +82,14 @@
         <p>Download James Mail Server.</p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:alert('Please come back tomorrow, we still have to upload the voted release.');">
+            <a href="javascript:window.location='http://www.apache.org/dyn/closer.cgi?path=james/server/james-server-container-spring-3.0-M1-bin.zip';">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
         </p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version';">
               <span><span class="icon"></span>Stable James Server 2.3.2</span>
             </a>
           </span>
@@ -113,7 +120,7 @@
         
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:alert('Please come back tomorrow, we still have to upload the voted release.');">
+            <a href="javascript:window.location='http://www.apache.org/dyn/closer.cgi?path=james/server/james-server-container-spring-3.0-M1-bin.zip';">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
@@ -154,7 +161,7 @@
            as recommended release.</p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version';">
               <span><span class="icon"></span>Stable James Server 2.3.2</span>
             </a>
           </span>
