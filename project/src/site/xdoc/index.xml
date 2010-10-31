@@ -54,7 +54,7 @@
         </p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='download.cgi';">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
               <span><span class="icon"></span>Stable James Server 2.3.2</span>
             </a>
           </span>
