@@ -6,123 +6,224 @@
     <title>Overview</title>
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
+  
+  <head>
+  
+    <script type="text/javascript">
+
+      $(function(){
+        $('#tabs').tabs();
+      });
+      
+    </script>
+    
+    <style type="text/css">
+      #newsbox {margin: 0 0 0 0;}
+    </style>
+
+  </head>
 
   <body>
   
   <table><tr><td>
 
-    <section name="What is James?">
+    <div id="tabs" style="min-width:550px;">
     
-      <p>The Apache James Project delivers a rich set of open source modules and libraries, written in Java, 
-         related to internet mail and news which build into an advanced enterprise mail server.</p>
-
-      <p><a href='http://projects.apache.org'>Apache projects</a> are developed in an
-         <a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> and 
-         <a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>.
-         All are welcome!  We recommend that Users, Developers, Curious and Fans subscribe to the James <a href='http://james.apache.org/mail.html'>mailing lists</a>.</p>
-
-    </section>
-    
-    <section name="You're looking for...">
-    
-  <table><tr><td width="50%">
-    
-    <subsection name='... an Enterprise Mail Server'>
-    
-      <p><a href='http://james.apache.org/server'>James Server</a> 3.0 and 2.3.2 are integrated email server with advanced fully functional features.</p>
-         
-      <p>James 3.0 provides a mailet container, delegating to independent processing agents known as mailets.
-         It benefits from modular architecture, is built on Spring and is moving towards OSGi.
-         It supports the following protocols:</p>
-     
-          <ul>
-            <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
-               <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
-            <li><a href='http://james.apache.org/server/rfclist/lmtp/rfc2033.txt'>
-                <abbr title='Local Mail Transfer Protocol'>LMTP</abbr></a> (available with Server V3).</li>
-            <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
-               <abbr title='Post Office Protocol'>POP3</abbr></a></li>
-            <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
-               <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> 
-               (see the <a href='http://james.apache.org/imap'>IMAP</a> sub-project, available with Server V3).</li>
-            <li>Sieve filtering into mailboxes for incoming mail.</li>
-            <li>Fetchmail from POP3 and IMAP accounts.</li>
-            <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
-                <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news, available with Server V2).</li>
-         </ul>
-
-      <p><a href='http://james.apache.org/server'>Read more</a> about the complete features of James 3.0 and 
-      on the stable, mature and production ready James 2.3.2.</p>
-      
-      <p>You can also try the <a href='http://james.apache.org/hup'>Hupa</a> WEB-mail solution to give access
-         from any browser to IMAP mailboxes (hosted by James Server or any other IMAP Server).</p>
-      
-    </subsection>
-    
-    </td><td width="50%">
-    
-    <subsection name='... a Modular Mail Platform'>
-    
-      <p>Developers looking for a modular mail platform on which to build should start by 
-         looking at the modules and libraries used to compose James Server 3.0.</p>
-
-      <p><a href='http://james.apache.org/imap/'>IMAP</a> iproviding a flexible codec for IMAP, 
-         command processors and a sample data access layer. In combination with a socket layer, 
-         this library can be used to create an IMAP server.</p>
-  
-      <p>The <a href='http://james.apache.org/mailets'>Mailet subproject</a> collects products
-         related to mailets (mail processing components analogous to servlets). These are independent of the 
-          <a href='http://james.apache.org/server'>James server</a> and can be reused in any mailet container.</p>
-      
       <ul>
-        <li>The <a href='http://james.apache.org/mailet/api'>Mailet API</a> specifies mailets</li>
-        <li>The <a href='http://james.apache.org/mailet/base'>Mailet Basic Toolkit</a>
-            collects utilities and lightweight frameworks useful for developing and testing mailets</li>
-        <li><a href='http://james.apache.org/mailet/standard'>Standard Mailets</a> collects
-            general processing mailets with limited dependencies</li>
-        <li><a href='http://james.apache.org/mailet/crypto'>Crypto Mailets</a> collects
-            mailets which perform cryptographic processing such as signing, encrypting,
-            decrypting and signature verification.</li>
+        <li><a href="#tabs-1">Project</a></li>
+        <li><a href="#tabs-2">Server</a></li>
+        <li><a href="#tabs-3">Components</a></li>
+        <li><a href="#tabs-4">Video</a></li>
       </ul>
 
-      <p><a href='http://james.apache.org/protocols/'>Protocols</a> project delivers a lightweight, 
-         and highly extensible framework for mail protocols implementations.</p>
+      <div id="tabs-1">
+      
+        <subsection name="James Project">
   
-      <p><a href='http://james.apache.org/mailbox/'>Mailbox</a> is a flexible Mailbox storage 
-         accessible by mail (imap, pop3, smtp,...) and other protocols..</p>
+        <p>The Apache James Project delivers a rich set of open source modules and libraries, written in Java, 
+           related to internet mail communication which build into an advanced enterprise mail server.</p>
+           
+        <p>Download your mail server.</p>
+        
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='download.cgi';">
+              <span><span class="icon"></span>Early James Server 3.0-M1</span>
+            </a>
+          </span>
+        </p>
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='download.cgi';">
+              <span><span class="icon"></span>Stable James Server 2.3.2</span>
+            </a>
+          </span>
+        </p>
+        
+        </subsection>
+           
+        <subsection name="Join the Community">
   
-      <p><a href='http://james.apache.org/mime4j/'>Mime4J</a> parses MIME typed documents (including 
-          - but not limited to - mail). APIs similar to DOM, SAX and pull parsers are exposed.</p>
-
-      <p><a href='http://james.apache.org/jspf/'>jSPF</a> implements <abbr title='Sender Policy Framework'>
-         <a href='http://www.openspf.org/'>SPF</a></abbr></p>
-
-      <p><a href='http://james.apache.org/jsieve'>jSieve</a> implements the 
-          <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language</p>
-
-      <p><a href='http://james.apache.org/jdkim/'>jDKIM</a> implements <abbr title='Domain Keys Identified Mail'>
-         <a href='http://www.dkim.org/'>DKIM</a></abbr></p>
-
-      <p><a href='http://james.apache.org/mpt/'>MPT</a> is a scripted functional test tool
-          suitable for testing mail protocols.</p>
-  
-      <p><a href='http://james.apache.org/postage/'>Postage</a> generates mail traffic suitable
-          for stress testing mail servers</p>
-
-    </subsection>
+          <p><a href='http://projects.apache.org'>Apache projects</a> are developed in an
+             <a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> and 
+             <a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>.</p>
+           
+          <p>All are welcome to the Community!  We recommend that Users, Developers, Curious and Fans subscribe to the James 
+          <a href='http://james.apache.org/mail.html'>mailing lists</a> and follow <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
+        
+        </subsection>
+        
+      </div>
+      
+      <div id="tabs-2">
+          
+          <subsection name="James Packaged as a Server">
     
-    </td></tr></table>
-    
-    </section>
-    
-    </td><td>
+            <p><a href='http://james.apache.org/server'>James Server</a> 3.0 and 2.3.2 are integrated email server with advanced fully functional features.</p>
+               
+            <p>James 3.0 provides a mailet container, delegating to independent processing agents known as mailets.
+               It benefits from modular architecture, is built on Spring and is moving towards OSGi.
+               It supports the following protocols:</p>
+           
+                <ul>
+                  <li><a href='http://james.apache.org/server/rfclist/smtp/rfc0821.txt'>
+                     <abbr title='Simple Mail Transport Protocol'>SMTP</abbr></a></li>
+                  <li><a href='http://james.apache.org/server/rfclist/lmtp/rfc2033.txt'>
+                      <abbr title='Local Mail Transfer Protocol'>LMTP</abbr></a>.</li>
+                  <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
+                     <abbr title='Post Office Protocol'>POP3</abbr></a></li>
+                  <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
+                     <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> 
+                     (see <a href='http://james.apache.org/imap'>IMAP</a> sub-project).</li>
+                  <li>Sieve filtering into mailboxes for incoming mail.</li>
+                  <li>Fetchmail from POP3 and IMAP accounts.</li>
+                  <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
+                      <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news, only with Server V2).</li>
+               </ul>
+      
+            <p>You can also try the <a href='http://james.apache.org/hupa/'>Hupa</a> WEB-mail solution to give access
+               from any browser to IMAP mailboxes (hosted by James Server or any other IMAP Server).</p>
+               
+           </subsection>
+
+          </div>            
+
+          <div id="tabs-3">
+          
+          <subsection name="James Software Components">
+
+            <p>Developers looking for a modular mail platform on which to build can look 
+               at the modules and libraries used to compose James Server 3.0.</p>
+      
+            <p><a href='http://james.apache.org/imap/'>IMAP</a> provides a flexible codec for IMAP, 
+               command processors and a sample data access layer. In combination with a socket layer, 
+               and a mailbox persistence, this library can be used to create an IMAP server.</p>
+        
+            <p>The <a href='http://james.apache.org/mailets/'>Mailet subproject</a> collects products
+               related to mailets (mail processing components analogous to servlets). These are independent of the 
+                <a href='http://james.apache.org/server/'>James server</a> and can be reused in any mailet container.</p>
+            
+            <ul>
+              <li>The <a href='http://james.apache.org/mailet/api'>Mailet API</a> specifies mailets.</li>
+              <li>The <a href='http://james.apache.org/mailet/base'>Mailet Basic Toolkit.</a>
+                  collects utilities and lightweight frameworks useful to develop and test mailets.</li>
+              <li><a href='http://james.apache.org/mailet/standard'>Standard Mailets</a> collects
+                  general processing mailets with limited dependencies.</li>
+              <li><a href='http://james.apache.org/mailet/crypto'>Crypto Mailets</a> collects
+                  mailets which perform cryptographic processing such as signing, encrypting,
+                  decrypting and signature verification.</li>
+            </ul>
+      
+            <p><a href='http://james.apache.org/protocols/'>Protocols</a> project delivers a lightweight, 
+               and highly extensible framework for mail protocols implementations.</p>
+        
+            <p><a href='http://james.apache.org/mailbox/'>Mailbox</a> is a flexible Mailbox storage 
+               accessible by mail (imap, pop3, smtp,...) and other protocols..</p>
+        
+            <p><a href='http://james.apache.org/mime4j/'>Mime4J</a> parses MIME typed documents (including 
+                - but not limited to - mail). APIs similar to DOM, SAX and pull parsers are exposed.</p>
+      
+            <p><a href='http://james.apache.org/jspf/'>jSPF</a> implements <abbr title='Sender Policy Framework'>
+               <a href='http://www.openspf.org/'>SPF</a></abbr></p>
+      
+            <p><a href='http://james.apache.org/jsieve'>jSieve</a> implements the 
+                <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language</p>
+      
+            <p><a href='http://james.apache.org/jdkim/'>jDKIM</a> implements <abbr title='Domain Keys Identified Mail'>
+               <a href='http://www.dkim.org/'>DKIM</a></abbr></p>
+      
+            <p><a href='http://james.apache.org/mpt/'>MPT</a> is a scripted functional test tool
+                suitable for testing mail protocols.</p>
+        
+            <p><a href='http://james.apache.org/postage/'>Postage</a> generates mail traffic suitable
+                for stress testing mail servers</p>
+                
+           </subsection>
+          
+          </div>
+
+          <div id="tabs-4">
   
-	<div id="newsboxspacer">
+              <object width="480" height="385">
+                <param name="movie" value="http://www.youtube.com/v/0Mx7qy7i3Hs?fs=1&amp;hl=en_US"></param>
+                <param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param>
+                <embed src="http://www.youtube.com/v/0Mx7qy7i3Hs?fs=1&amp;hl=en_US" type="application/x-shockwave-flash" allowscriptaccess="always" 
+                     allowfullscreen="true" width="480" height="385">
+                </embed>
+              </object>
+  
+          </div>
+
+        </div>
+        
+   </td>
+   <td>
+
+  <div id="newsboxspacer">
 
      <div id="newsbox">
 
+      <script src="http://widgets.twimg.com/j/2/widget.js"></script>
+      <script>
+      new TWTR.Widget({
+        version: 2,
+        type: 'search',
+        search: 'from:ApacheJames OR #ApacheJames',
+        interval: 6000,
+        title: 'Apache James Conversations',
+        subject: '',
+        width: 250,
+        height: 300,
+        theme: {
+          shell: {
+            background: '#525D76',
+            color: '#ffffff'
+          },
+          tweets: {
+            background: '#ffffff',
+            color: '#444444',
+            links: '#1985b5'
+          }
+        },
+        features: {
+          scrollbar: false,
+          loop: true,
+          live: true,
+          hashtags: true,
+          timestamp: true,
+          avatars: true,
+          toptweets: true,
+          behavior: 'default'
+        }
+      }).render().start();
+      </script>
+
       <subsection name="News">
         <ul>
+          <li>Nov/2010 - <ul>
+          <li><a href="newsarchive.html#01112010_1"><strong>Apache Server 3.0-M1</strong> released</a></li>
+          </ul>
+          </li>
           <li>Sep/2010 - <ul>
           <li><a href="newsarchive.html#20092010_1"><strong>Apache IMAP 0.2-M1</strong> released</a></li>
           <li><a href="newsarchive.html#18092010_1"><strong>Apache protocols 1.2-M1</strong> released</a></li>
@@ -148,19 +249,6 @@
           </li>
           <li>Aug/2009 - <ul>
           <li><a href="newsarchive.html#31082009"><strong>Apache James 2.3.2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Jul/2009 - <ul>
-          <li><a href="newsarchive.html#02072009"><strong>Apache MPT 0.1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Jun/2009 - <ul>
-          <li><a href="newsarchive.html#25062009"><strong>Apache jSPF 0.9.7</strong> released</a></li>   
-          <li><a href="newsarchive.html#18062009"><strong>Apache JSieve 0.3</strong> released</a></li>
-          </ul>
-          </li>
-          <li>May/2009 - <ul>
-          <li><a href="newsarchive.html#14152009"><strong>Apache Crypto Mailets 1.0</strong> released</a></li>
           </ul>
           </li>
         </ul>
