@@ -75,7 +75,7 @@
         <p>Download James Mail Server.</p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='download.cgi';">
+            <a href="javascript:alert('Please come back tomorrow, we still have to upload the voted release.');">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
@@ -113,7 +113,7 @@
         
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='download.cgi';">
+            <a href="javascript:alert('Please come back tomorrow, we still have to upload the voted release.');">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
