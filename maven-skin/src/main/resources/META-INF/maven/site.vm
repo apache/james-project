@@ -274,14 +274,15 @@
   <head>
     <title>$title</title>
     <style type="text/css" media="all">
+      @import url("$relativePath/css/james.css");
       @import url("$relativePath/css/maven-base.css");
       @import url("$relativePath/css/maven-theme.css");
       @import url("$relativePath/css/site.css");
-      @import url("http://james.apache.org/js/jquery/css/ui-lightness/jquery-ui-1.8.5.custom.css");
-      @import url("http://james.apache.org/js/jquery/css/print.css");
+      @import url("$relativePath/js/jquery/css/custom-theme/jquery-ui-1.8.5.custom.css");
+      @import url("$relativePath/js/jquery/css/print.css");
     </style>
-    <script type="text/javascript" src="http://james.apache.org/js/jquery/js/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="http://james.apache.org/js/jquery/js/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="$relativePath/js/jquery/js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="$relativePath/js/jquery/js/jquery-ui-1.8.5.custom.min.js"></script>
     #foreach( $author in $authors )
       <meta name="author" content="$author" />
     #end
