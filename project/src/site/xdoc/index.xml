@@ -31,7 +31,7 @@
     
       <ul>
         <li><a href="#tabs-1">Project</a></li>
-        <li><a href="#tabs-2">Server</a></li>
+        <li><a href="#tabs-2">Server Pack</a></li>
         <li><a href="#tabs-3">Components</a></li>
         <li><a href="#tabs-4">Video</a></li>
       </ul>
@@ -62,18 +62,18 @@
         <p>The Apache James Project delivers a rich set of open source modules and libraries, written in Java, 
            related to internet mail communication which build into an advanced enterprise mail server.</p>
            
-        <p>Download James Mail server.</p>
+        <p>Download James Mail Server.</p>
         
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:alert('Please come back tomorrow, we still have to upload the voted release.');">
+            <a href="javascript:window.location='http://www.apache.org/dyn/closer.cgi?path=james/server/james-server-container-spring-3.0-M1-bin.zip';">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
         </p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version';">
               <span><span class="icon"></span>Stable James Server 2.3.2</span>
             </a>
           </span>

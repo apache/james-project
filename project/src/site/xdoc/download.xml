@@ -118,37 +118,64 @@
 
   <section name='Apache James Server'>
   
-    <subsection name="Apache James 2.3.2 is the best available version">
+    <subsection name="Apache James 3.0-M1 is for early adopters">
+    
+      <p>This release is the first milestone based on 
+         release.  See the <a
+         href="http://james.apache.org/server/3/release-notes.html">Release Notes</a>
+         for a detailed list of changes.</p>
+      
+      <ul>
+      
+        <li>Binary (Unix TAR): <a
+            href="[preferred]/james/server/james-server-container-spring-3.0-M1-bin.tar.gz">james-server-container-spring-3.0-M1-bin.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M1-bin.tar.gz.asc">PGP</a>]</li>
+      
+        <li>Binary (ZIP Format): <a
+            href="[preferred]/james/server/james-server-container-spring-3.0-M1-bin.zip">james-server-container-spring-3.0-M1-bin.zip</a> [<a
+            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M1-bin.zip.asc">PGP</a>]</li>
+      
+          <li>Source (ZIP Format): <a
+              href="[preferred]/james/server/james-server-3.0-M1-source-release.zip">james-server-3.0-M1-source-release.zip</a> [<a
+              href="http://www.apache.org/dist/james/server/james-server-3.0-M1-source-release.zip.asc">PGP</a>]</li>
+      
+      </ul>
+    
+    </subsection>
+    
+    <subsection name="Apache James 2.3.2 is the stable version">
     
       <p>This release has many enhancements and bug fixes over the previous
       release.  See the <a
-      href="http://james.apache.org/server/2.3.2/release-notes.html">Release Notes</a>
+      href="http://james.apache.org/server/2/release-notes.html">Release Notes</a>
       for a detailed list of changes.  Some of the earlier defects could
       turn a James mail server into an Open Relay.  All users of James Server are urged to upgrade to version v2.3.1 as soon as
       possible.</p>
       
       <ul>
       
-      <li>Binary (Unix TAR): <a
-      href="[preferred]/james/server/apache-james-2.3.2.tar.gz">james-binary-2.3.2.tar.gz</a> [<a
-      href="http://www.apache.org/dist/james/server/apache-james-2.3.2.tar.gz.asc">PGP</a>]</li>
+        <li>Binary (Unix TAR): <a
+            href="[preferred]/james/server/apache-james-2.3.2.tar.gz">james-binary-2.3.2.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/server/apache-james-2.3.2.tar.gz.asc">PGP</a>]</li>
       
-      <li>Binary (ZIP Format): <a
-      href="[preferred]/james/server/apache-james-2.3.2.zip">james-binary-2.3.2.zip</a> [<a
-      href="http://www.apache.org/dist/james/server/apache-james-2.3.2.zip.asc">PGP</a>]</li>
+        <li>Binary (ZIP Format): <a
+            href="[preferred]/james/server/apache-james-2.3.2.zip">james-binary-2.3.2.zip</a> [<a
+            href="http://www.apache.org/dist/james/server/apache-james-2.3.2.zip.asc">PGP</a>]</li>
       
-      <li>Source (Unix TAR): <a
-      href="[preferred]/james/server/apache-james-2.3.2-src.tar.gz">james-2.3.2-src.tar.gz</a> [<a
-      href="http://www.apache.org/dist/james/server/apache-james-2.3.2-src.tar.gz.asc">PGP</a>]</li>
+        <li>Source (Unix TAR): <a
+            href="[preferred]/james/server/apache-james-2.3.2-src.tar.gz">james-2.3.2-src.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/server/apache-james-2.3.2-src.tar.gz.asc">PGP</a>]</li>
       
-      <li>Source (ZIP Format): <a
-      href="[preferred]/james/server/apache-james-2.3.2-src.zip">james-2.3.2-src.zip</a> [<a
-      href="http://www.apache.org/dist/james/server/apache-james-2.3.2-src.zip.asc">PGP</a>]</li>
+          <li>Source (ZIP Format): <a
+              href="[preferred]/james/server/apache-james-2.3.2-src.zip">james-2.3.2-src.zip</a> [<a
+              href="http://www.apache.org/dist/james/server/apache-james-2.3.2-src.zip.asc">PGP</a>]</li>
       
       </ul>
     
     <subsection name="Earlier Releases">
+    
       <p>Are now <a href='http://archive.apache.org/dist/james/server'>archived</a></p>
+
     </subsection>
 
   </subsection>
