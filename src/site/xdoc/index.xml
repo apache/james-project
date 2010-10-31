@@ -23,14 +23,34 @@
     <title>Overview</title>
     <author email="site-dev@james.apache.org">James Project Team</author>
   </properties>
+  
+  <head>
+  
+    <script type="text/javascript">
+
+      $(function(){
+        $('#tabs').tabs();
+      });
+      
+    </script>
+    
+  </head>
 
   <body>
   
-    <table>
+  <table><tr><td>
+
+    <div id="tabs" style="min-width:550px;">
     
-    <tr><td width="50%">
-    
-    <section name="What's Apache James Server?">
+      <ul>
+        <li><a href="#tabs-1">Server</a></li>
+        <li><a href="#tabs-2">Releases</a></li>
+        <li><a href="#tabs-3">Features</a></li>
+      </ul>
+
+     <div id="tabs-1">
+      
+     <subsection name="What's Apache James Server?">
     
       <p>Apache James Server is a 100% pure JAVA capable Mail Server running on Java 1.5 onwards.
       James integrates emailing protocols such as:</p>
@@ -52,37 +72,73 @@
             (only with Server V2, support is discontinuated in Server V3).</li>
       </ul>
 
+        <p>Download your mail server.</p>
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='download.cgi';">
+              <span><span class="icon"></span>Early James Server 3.0-M1</span>
+            </a>
+          </span>
+        </p>
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
+              <span><span class="icon"></span>Stable James Server 2.3.2</span>
+            </a>
+          </span>
+        </p>
+        
       <p>James Server provides a mailet container: the email processing is delegated to independent, extensible, pluggable agents
       specified by the <a href='http://james.apache.org/mailet/api'>Mailet API</a>. Any function
       which is not already available (from <a href='http://james.apache.org/mailet'>James</a>
       or from a third party) can be developed.</p>
       
       <p>James Server's architecture is modular, component based and offers a <a href="http://martinfowler.com/articles/injection.html">Inversion of Control</a> 
-      mail platform. All developments and implementations are based on open technical standards.</p>
+         mail platform. All developments and implementations are based on open technical standards.</p>
       
-    </section>
+      <p>You can have also have a look on our <a href='todo.html'>to do</a> list and
+         join the community via the <a href="http://james.apache.org/mail.html">mailing list</a> 
+         and <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
+      
+     </subsection>
     
-    </td><td width="50%">
-
-    <section name="Which Release?">
+    </div>
     
-      <subsection name='Proposal - James 3.0 Milestone 1'>
+    <div id="tabs-2">
+      
+      <subsection name='James 3.0 Milestone 1'>
 
         <p>James 3.0 Milestone 1 is a proposed milestone release allowing a preview of the James 3.0 features.
            We strongly encourage to download and test it.</p>
         
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='download.cgi';">
+              <span><span class="icon"></span>Early James Server 3.0-M1</span>
+            </a>
+          </span>
+        </p>
+
         <p>Feedback welcomed either through the <a href='http://james.apache.org/mail.html'>mailing lists</a>
            or <a href='http://issues.apache.org/jira/browse/JAMES'>JIRA</a>.</p>
 
       </subsection>
 
-      <subsection name="Development - James 3.0">
+      <subsection name="James 3.0 Development">
 
         <p>The <a href="http://james.apache.org/server/3">James 3</a> code base has many 
            <a href="http://james.apache.org/server/3/release_notes.html">new features</a>
            and major revisions compared to the 2.3.x architecture have been implemented.
            <a href="http://james.apache.org/server/3">James 3</a> (development) 
            supports Spring and is moving towards OSGI.</p>
+
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='http://people.apache.org/builds/james/nightly/';">
+              <span><span class="icon"></span>Snapshot James Server 3.0</span>
+            </a>
+          </span>
+        </p>
 
         <p>It is recommended only for advanced users who are willing to accept that
            development is ongoing and that they may need to participate actively.
@@ -91,17 +147,24 @@
         
       </subsection>
 
-      <subsection name='Previous - James 2.3.2'>
+      <subsection name='James 2.3.2'>
       
-        <p>James 2.3.2 is a mature, production ready code stream with minimal development. 
-           James 2.3.2 is still the official stable release and is available for download 
-           <a href="http://james.apache.org/download.cgi#Apache%20James%20Server">here</a>.
-           James 3.0 will soon replace 2.3.2 as recommended release.</p>
+        <p>James 2.3.2 is a mature, production ready code stream with minimal development
+           and is still the official stable release.  James 3.0 will soon replace 2.3.2 
+           as recommended release.</p>
+        <p>
+          <span class="minibutton btn-download">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
+              <span><span class="icon"></span>Stable James Server 2.3.2</span>
+            </a>
+          </span>
+        </p>
            
         <p>James 2.3.2 uses the <a href='http://avalon.apache.org'>Avalon</a> framework. Avalon 
            development has now stopped but the framework is mature, stable and of proved production quality.
-           See also the <a href='2.3.2/release-notes.html'>release notes</a> for details on 
+           See also the <a href='2/release-notes.html'>release notes</a> for details on 
            2.3.2 bug fixes.</p>
+
 
 <!--  2.4.0 is no more in the pipe.
 
@@ -123,15 +186,11 @@
 -->
 
         </subsection>
-
-      </section>
-      
-      </td>
-      </tr>
-      </table>
   
-      <section name="Feature Matrix">
-
+     </div>
+  
+     <div id="tabs-3">
+      
         <table>
           <tr>
             <th>Item</th>
@@ -269,6 +328,14 @@
               <td></td>
               <td></td>
             </tr>
+            <tr>
+              <td>Alternate Mail stores</td>
+              <td>Experimental</td>
+              <td>yes</td>
+              <td>yes</td>
+              <td></td>
+              <td></td>
+            </tr>
           <tr>
             <td>JDBC Users</td>
             <td>Stable</td>
@@ -302,15 +369,7 @@
             <td>1.2</td>
           </tr>
             <tr>
-              <td>Alternate Mail stores</td>
-              <td>Experimental</td>
-              <td>yes</td>
-              <td>yes</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Alternate Mail stores</td>
+              <td>Alternate User Stores</td>
               <td>Experimental</td>
               <td>yes</td>
               <td>yes</td>
@@ -351,7 +410,7 @@
             </tr>
             <tr>
               <td>Deployment in OSGI container</td>
-              <td></td>
+              <td>Planned</td>
               <td>planned</td>
               <td>no</td>
               <td></td>
@@ -359,7 +418,7 @@
             </tr>
             <tr>
               <td>Configuration Hot Reload</td>
-              <td></td>
+              <td>Planned</td>
               <td>planned</td>
               <td>no</td>
               <td></td>
@@ -382,21 +441,21 @@
               <td></td>
             </tr>
             <tr>
-              <td>Java 1.4</td>
-              <td></td>
-              <td>no</td>
+              <td>Java 1.5</td>
+              <td><i>Requirement</i></td>
               <td>yes</td>
+              <td>no</td>
               <td></td>
               <td></td>
             </tr>
 
-        </table>
+         </table>
+        
+      </div>
+      
+    </div>
 
-    </section>
-
-    <section name='To Do'>
-      <p>See <a href='todo.html'>here</a>.</p>
-    </section>
+  </td></tr></table>
 
   </body>
   
