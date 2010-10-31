@@ -18,18 +18,102 @@
   under the License.    
 -->
 <document>
+
   <properties>
     <title>Mailing lists</title>
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
+
   <body>
-    <section name="This Document">
-      <P>This is a living 
-document that provides details of mailing lists and guidelines for their 
-use for the Apache James project. <br/> Please read the whole document 
-and find a list of available mailinglists at the bottom of the 
-page.<br/> Last Updated June 2006.</P>
+
+    <section name="James Mailing lists">
+      <p>
+        <i>Please the guidelines below</i> before subscribing to our lists and join our 
+community.</p>
+      <subsection name="Server User List">
+        <p>
+          <b>Low Traffic</b>&#160;
+          <a href="mailto:server-user-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:server-user-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+          <a href="http://www.mail-archive.com/server-user@james.apache.org/"> 
+Archive</a>
+        </p>
+        <p> This is the list where users of the Apache James 
+(Server) meet and discuss issues. Developers are also expected to be 
+subscribed to this list to offer support to users of Apache James 
+(Server). </p>
+      </subsection>
+      <subsection name="Server Developer List">
+        <p>
+          <b>High Traffic</b>&#160;
+          <a href="mailto:server-dev-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:server-dev-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+          <a href="http://www.mail-archive.com/server-dev@james.apache.org/"> 
+Archive</a>
+        </p>
+        <p> This is the list where participating developers of 
+the the Apache James Project meet and discuss issues, code 
+changes/additions, etc. Subscribers to this list get notices of each and 
+every code change, build results, testing notices, etc. <b>Do not send 
+mail to this list with usage questions or configuration problems</b> -- 
+that's what server-user@james is for. </p>
+      </subsection>
+      <subsection name="Mime4j">
+        <p>
+          <b>Medium Traffic</b>&#160;
+          <a href="mailto:mime4j-dev-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:mime4j-dev-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+          <a href="http://mail-archives.apache.org/mod_mbox/james-mime4j-dev"> 
+Archive</a>
+        </p>
+        <p> Discussions on the <a href='http://james.apache.org/mime4j'>Mime4j</a> 
+        parser library.</p>
+      </subsection>
+      <subsection name="Site Developer List">
+        <p>
+          <b>Very Low Traffic</b>&#160;
+          <a href="mailto:site-dev-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:site-dev-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+          <a href="http://www.mail-archive.com/site-dev@james.apache.org/"> 
+Archive</a>
+        </p>
+        <p> This is the list where participating developers of 
+the the Apache James project discuss changes/additions to the James 
+websites etc. Subscribers to this list get notifications of every commit 
+of the website reaources<b>Do not send mail to this list with James 
+software problems</b> -- that's what server-user@james is for. </p>
+      </subsection>
+      <subsection name="James General List">
+        <p>
+          <b>Low Traffic</b>&#160;
+          <a href="mailto:general-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:general-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+          <!-- <a 
+href="http://www.mail-archive.com/general@james.apache.org/"> 
+Archive</a> -->
+        </p>
+        <p> This is the list for general discussions 
+relating to the running of the project, it is the public list of the 
+James project management committee (PMC) and is a public list open to 
+all. <b>Do not send mail to this list with James software problems</b> 
+-- that's what server-user@james is for. </p>
+      </subsection>
+      <subsection name="Mailet API List">
+        <p>
+          <b>Very Low Traffic</b>&#160;
+          <a href="mailto:mailet-api-subscribe@james.apache.org">Subscribe</a>
+          <a href="mailto:mailet-api-unsubscribe@james.apache.org">Unsubscribe</a>
+          <a href="mail.html">Guidelines</a>
+        </p>
+        <p> This is the public list for the Mailet API subproject, discussing all <a href="http://james.apache.org/mailet/index.html">Mailet API</a> design and implementation related topics. Questions about using Mailets and their configuration should be addressed to the server-user list.</p>
+      </subsection>
     </section>
+	
     <section name="Mailing Lists - Guidelines">
       <p>A mailing list is an electronic discussion forum 
 that anyone can subscribe to. When someone sends an email message to the 
@@ -157,11 +241,12 @@ only see part of the conversation. </p>
         <p>
         The <i>Return-Path</i> header contains the email address which is subscribed. 
         </p>      
-        <p> To stop subscription for the address john@host.domain , send an email to <pre>server-dev-unsubscribe-john=host.domain@james.apache.org</pre>
+        <p>To stop subscription for the address john@host.domain , send an email to <pre>server-dev-unsubscribe-john=host.domain@james.apache.org</pre>
           or to  <pre>server-user-unsubscribe-john=host.domain@james.apache.org</pre>.
         </p>  
       </subsection>
     </section>
+
     <section name="Archives">
       <p> There are several sites on the net that archive and 
 provide searching for our mailing lists in HTML readable format.
@@ -194,94 +279,7 @@ servlet and JSP list archives</a>
         </ul>
       </p>
     </section>
-    <section name="James Mailing lists">
-      <p>
-        <i>Now that you have 
-read the guidelines above</i> please subscribe to our lists and join our 
-community. </p>
-      <subsection name="Server User List">
-        <p>
-          <b>Low Traffic</b>
-          <a href="mailto:server-user-subscribe@james.apache.org">Subscribe</a>
-          <a href="mailto:server-user-unsubscribe@james.apache.org">Unsubscribe</a>
-          <a href="mail.html">Guidelines</a>
-          <a href="http://www.mail-archive.com/server-user@james.apache.org/"> 
-Archive</a>
-        </p>
-        <p> This is the list where users of the Apache James 
-(Server) meet and discuss issues. Developers are also expected to be 
-subscribed to this list to offer support to users of Apache James 
-(Server). </p>
-      </subsection>
-      <subsection name="Server Developer List">
-        <p>
-          <b>High Traffic</b>
-          <a href="mailto:server-dev-subscribe@james.apache.org">Subscribe</a>
-          <a href="mailto:server-dev-unsubscribe@james.apache.org">Unsubscribe</a>
-          <a href="mail.html">Guidelines</a>
-          <a href="http://www.mail-archive.com/server-dev@james.apache.org/"> 
-Archive</a>
-        </p>
-        <p> This is the list where participating developers of 
-the the Apache James Project meet and discuss issues, code 
-changes/additions, etc. Subscribers to this list get notices of each and 
-every code change, build results, testing notices, etc. <b>Do not send 
-mail to this list with usage questions or configuration problems</b> -- 
-that's what server-user@james is for. </p>
-      </subsection>
-      <subsection name="Mime4j">
-        <p>
-          <b>Medium Traffic</b>
-          <a href="mailto:mime4j-dev-subscribe@james.apache.org">Subscribe</a>
-          <a href="mailto:mime4j-dev-unsubscribe@james.apache.org">Unsubscribe</a>
-          <a href="mail.html">Guidelines</a>
-          <a href="http://mail-archives.apache.org/mod_mbox/james-mime4j-dev"> 
-Archive</a>
-        </p>
-        <p> Discussions on the <a href='http://james.apache.org/mime4j'>Mime4j</a> 
-        parser library.</p>
-      </subsection>
-      <subsection name="Site Developer List">
-        <p>
-          <b>Very Low Traffic</b>
-          <a href="mailto:site-dev-subscribe@james.apache.org">Subscribe</a>
-          <a href="mailto:site-dev-unsubscribe@james.apache.org">Unsubscribe</a>
-          <a href="mail.html">Guidelines</a>
-          <a href="http://www.mail-archive.com/site-dev@james.apache.org/"> 
-Archive</a>
-        </p>
-        <p> This is the list where participating developers of 
-the the Apache James project discuss changes/additions to the James 
-websites etc. Subscribers to this list get notifications of every commit 
-of the website reaources<b>Do not send mail to this list with James 
-software problems</b> -- that's what server-user@james is for. </p>
-      </subsection>
-      <subsection name="James General List">
-        <p>
-          <b>Low Traffic</b>
-          <a href="mailto:general-subscribe@james.apache.org">Subscribe</a>
-          <a href="mailto:general-unsubscribe@james.apache.org">Unsubscribe</a>
-          <a href="mail.html">Guidelines</a>
-          <!-- <a 
-href="http://www.mail-archive.com/general@james.apache.org/"> 
-Archive</a> -->
-        </p>
-        <p> This is the list for general discussions 
-relating to the running of the project, it is the public list of the 
-James project management committee (PMC) and is a public list open to 
-all. <b>Do not send mail to this list with James software problems</b> 
--- that's what server-user@james is for. </p>
-      </subsection>
-      <subsection name="Mailet API List">
-        <p>
-          <b>Very Low Traffic</b>
-          <a href="mailto:mailet-api-subscribe@james.apache.org">Subscribe</a>
-          <a href="mailto:mailet-api-unsubscribe@james.apache.org">Unsubscribe</a>
-          <a href="mail.html">Guidelines</a>
-        </p>
-        <p> This is the public list for the Mailet API subproject, discussing all <a href="http://james.apache.org/mailet/index.html">Mailet API</a> design and implementation related topics. Questions about using Mailets and their configuration should be addressed to the server-user list.</p>
-      </subsection>
-    </section>
-	
+    
   </body>
+
 </document>
