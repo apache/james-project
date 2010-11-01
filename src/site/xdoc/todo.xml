@@ -21,7 +21,7 @@
 
  <properties>
  
-  <title>TODO</title>
+  <title>James Server - To Do</title>
   <author email="sergek@lokitech.com">Serge Knystautas</author>
   <author email="charles@benett1.co.uk">Charles Benett</author>
   <author email="farsight@alum.mit.edu">Peter M. Goldstein</author>
@@ -30,10 +30,11 @@
 
 <body>
 
-<section name="TODO">
+<section name="James Server - To Do">
 
 <p>This is a living document that will give new and existing volunteers some areas where we need help.  As always, any help is appreciated, be it documentation, code, suggestions, or feedback.
 Last Updated July 2006.</p>
+
 </section>
 
 <section name="Cross-Service Issues">

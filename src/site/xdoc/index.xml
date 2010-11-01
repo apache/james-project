@@ -55,7 +55,7 @@
        <div class="ui-widget">
 		 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 			<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-			<strong>Hey!</strong> James Server 3.0-M1 is out.</p>
+			<strong>Hey!</strong> James Server 3.0-M1 is out - <a href="3/">Read more</a>.</p>
 	     </div>
        </div>
       
@@ -82,7 +82,7 @@
         <p>Download James Mail Server.</p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://www.apache.org/dyn/closer.cgi?path=james/server/james-server-container-spring-3.0-M1-bin.zip';">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
@@ -120,7 +120,7 @@
         
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://www.apache.org/dyn/closer.cgi?path=james/server/james-server-container-spring-3.0-M1-bin.zip';">
+            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
               <span><span class="icon"></span>Early James Server 3.0-M1</span>
             </a>
           </span>
@@ -197,6 +197,8 @@
      </div>
   
      <div id="tabs-3">
+     
+       <p>
       
         <table>
           <tr>
@@ -458,6 +460,8 @@
 
          </table>
         
+       </p>
+
       </div>
       
     </div>
