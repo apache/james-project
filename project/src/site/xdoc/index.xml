@@ -210,7 +210,7 @@
         search: 'from:ApacheJames OR #ApacheJames',
         interval: 6000,
         title: 'Apache James Conversations',
-        subject: '',
+        subject: '@ApacheJames',
         width: 250,
         height: 300,
         theme: {
