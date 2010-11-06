@@ -44,7 +44,7 @@
       <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
         <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
         <strong>Hey!</strong>
-        James Server 3.0-M1 is out! Thank you to everyone who contributed code, 
+        James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
 	     documentation, bug report, feedback...
 		</p>
       </div>
@@ -67,7 +67,7 @@
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-M1</span>
+              <span><span class="icon"></span>Early James Server 3.0-M2</span>
             </a>
           </span>
         </p>
@@ -207,7 +207,7 @@
       new TWTR.Widget({
         version: 2,
         type: 'search',
-        search: 'from:ApacheJames OR #ApacheJames',
+        search: 'from:ApacheJames OR #ApacheJames OR @ApacheJames',
         interval: 6000,
         title: 'Apache James Conversations',
         subject: '@ApacheJames',
@@ -239,6 +239,10 @@
 
       <subsection name="News">
         <ul>
+          <li>Nov/2010 - <ul>
+          <li><a href="newsarchive.html#06112010_1"><strong>Apache Server 3.0-M2</strong> released</a></li>
+          </ul>
+          </li>
           <li>Nov/2010 - <ul>
           <li><a href="newsarchive.html#01112010_1"><strong>Apache Server 3.0-M1</strong> released</a></li>
           </ul>

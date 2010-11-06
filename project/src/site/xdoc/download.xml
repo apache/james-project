@@ -29,18 +29,19 @@
   <section name="Downloading">
   
     <p>Use the links below to download the product from one of
-    our mirrors.  You <strong>must</strong>&#160;<a href="#Verify_the_integrity_of_the_files">verify the
-    integrity</a> of the downloaded files using signatures downloaded from
-    our main distribution directory.</p>
+       our mirrors.  You <strong>must</strong>&#160;<a href="#Verify_the_integrity_of_the_files">verify the
+       integrity</a> of the downloaded files using signatures downloaded from
+       our main distribution directory.</p>
     
     <p>Only current recommended releases are available on the main
-    distribution site and its mirrors.  Older releases are available from
-    the <a href="http://archive.apache.org/dist/james/">archive download
-    site.</a></p>
+       distribution site and its mirrors.  Older releases are available from
+       the <a href="http://archive.apache.org/dist/james/">archive download
+       site.</a></p>
     
     <ul>
       <li><a href='#Apache_James_Server'>Apache James Server</a></li>
       <li>Apache James Hupa is available from the James maven repositories (*)</li>
+      <li>Apache James Protocols is available from the James maven repositories (*)</li>
       <li>Apache James IMAP is available from the James maven repositories (*)</li>
       <li>Apache James Mailbox is available from the James maven repositories (*)</li>
       <li><a href='#Apache_Mime4J'>Apache Mime4j</a></li>
@@ -120,13 +121,13 @@
          available from the Apache James Project.</p>
     
       <p>The James project also provides 
-      <a href="http://people.apache.org/builds/james/nightly/">Nighly Builds</a>:
-      <u>periodic snapshots during development</u>. Generally, these are considered
-      stable snapshots, but they have not undergone as much testing as a
-      Release Build, nor have they been voted upon for release by the
-      developer community. These are simply convenient test builds.
-      Sometimes the purpose for a Nightly Build could be soliciting feedback on
-      a specific change.</p>
+         <a href="http://people.apache.org/builds/james/nightly/">Nighly Builds</a>:
+        <u>periodic snapshots during development</u>. Generally, these are considered
+        stable snapshots, but they have not undergone as much testing as a
+        Release Build, nor have they been voted upon for release by the
+        developer community. These are simply convenient test builds.
+        Sometimes the purpose for a Nightly Build could be soliciting feedback on
+        a specific change.</p>
     
       <p>James continous integration can be found on 
       <a href="https://hudson.apache.org/hudson/view/G-L/view/James/">Hudson</a>.</p>
@@ -137,7 +138,7 @@
 
   <section name='Apache James Server'>
   
-    <subsection name="Apache James 3.0-M1 is for early adopters">
+    <subsection name="Apache James 3.0-M2 is for early adopters">
     
       <p>This release is the first milestone based on 
          release.  See the <a
@@ -147,16 +148,16 @@
       <ul>
       
         <li>Binary (Unix TAR): <a
-            href="[preferred]/james/server/james-server-container-spring-3.0-M1-bin.tar.gz">james-server-container-spring-3.0-M1-bin.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M1-bin.tar.gz.asc">PGP</a>]</li>
+            href="[preferred]/james/server/james-server-container-spring-3.0-M2-bin.tar.gz">james-server-container-spring-3.0-M2-bin.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M2-bin.tar.gz.asc">PGP</a>]</li>
       
         <li>Binary (ZIP Format): <a
-            href="[preferred]/james/server/james-server-container-spring-3.0-M1-bin.zip">james-server-container-spring-3.0-M1-bin.zip</a> [<a
-            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M1-bin.zip.asc">PGP</a>]</li>
+            href="[preferred]/james/server/james-server-container-spring-3.0-M2-bin.zip">james-server-container-spring-3.0-M2-bin.zip</a> [<a
+            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M2-bin.zip.asc">PGP</a>]</li>
       
           <li>Source (ZIP Format): <a
-              href="[preferred]/james/server/james-server-3.0-M1-source-release.zip">james-server-3.0-M1-source-release.zip</a> [<a
-              href="http://www.apache.org/dist/james/server/james-server-3.0-M1-source-release.zip.asc">PGP</a>]</li>
+              href="[preferred]/james/server/james-server-3.0-M2-source-release.zip">james-server-3.0-M2-source-release.zip</a> [<a
+              href="http://www.apache.org/dist/james/server/james-server-3.0-M2-source-release.zip.asc">PGP</a>]</li>
       
       </ul>
     
