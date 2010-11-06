@@ -18,27 +18,34 @@
 
     <subsection name='2010'>
 
+        <a name="06112010_1"><h4>Nov/2010 - Apache Server 3.0-M2 released</h4></a>
+        <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
+           the release of version 3.0-M2 (Milestone 1) of the Apache James server.</p>
+        <p>M2 is not only a fast corrective release on M1 (issues related to JMX 
+           security configuration on Windows platforms,...), but also contains an important number
+           of enhancement and JIRA fixes.</p>
+        <p>For example, memory usage has been reduced thanks to optimizations on 
+           the ActiveMQ component usage (responsible for the mail spooling).</p>
+        <p>We thank all Users for their feedback and tests and we encourage 
+           anyone to discover this Milestone 2 release.</p>
+        <p>If you're interested in contributing to the James project, please subscribe to the James 
+          <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+
         <a name="01112010_1"><h4>Nov/2010 - Apache Server 3.0-M1 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
            the release of version 3.0-M1 (Milestone 1) of the Apache James server.</p>
-        
         <p>The Apache James Server is a 100% pure Java enterprise mail server based on open protocols. 
            Currently supported are SMTP/LMTP, POP3, IMAP4 protocols together with several different 
            storage solutions (relational database via JPA and JDBC, File system with MailDir, JCR Content Repsitory).</p>
-        
         <p>The James server also serves as a mail application platform. It hosts the Apache Mailet API,
            and acts has a Mailet container. This feature makes it easy to design, write, and deploy custom applications for mail processing. This modularity and ease of customization is one of James' strengths, and can allow administrators to produce powerful applications surprisingly easily.</p>
-        
         <p>Features for that version include enhancements to nearly every area of functionality, 
            including full IMAP support, improved mailing list capabilities, fastfail support, SMTP API 
            for developing own fastfail filters and the next revision of the Mailet API.</p>
-           
         <p>This was an exciting time in James development and we thank all contributors.</p>
-        
         <p>We are still actively looking for eager, capable developers to contribute to James. 
           If you're interesting in contributing to the James project, please subscribe to the James 
           <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
-        
         <p>Information about James can be found at the James web site
            at <a href="http://james.apache.org/">http://james.apache.org/</a>.</p>
          
