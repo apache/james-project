@@ -55,7 +55,7 @@
        <div class="ui-widget">
 		 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 			<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-			<strong>Hey!</strong> James Server 3.0-M1 is out - <a href="3/">Read more</a>.</p>
+			<strong>Hey!</strong> James Server 3.0-M2 is out - <a href="3/">Read more</a>.</p>
 	     </div>
        </div>
       
@@ -83,7 +83,7 @@
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-M1</span>
+              <span><span class="icon"></span>Early James Server 3.0-M2</span>
             </a>
           </span>
         </p>
@@ -121,7 +121,7 @@
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-M1</span>
+              <span><span class="icon"></span>Early James Server 3.0-M2</span>
             </a>
           </span>
         </p>
