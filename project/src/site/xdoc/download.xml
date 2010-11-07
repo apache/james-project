@@ -40,10 +40,6 @@
     
     <ul>
       <li><a href='#Apache_James_Server'>Apache James Server</a></li>
-      <li>Apache James Hupa is available from the James maven repositories (*)</li>
-      <li>Apache James Protocols is available from the James maven repositories (*)</li>
-      <li>Apache James IMAP is available from the James maven repositories (*)</li>
-      <li>Apache James Mailbox is available from the James maven repositories (*)</li>
       <li><a href='#Apache_Mime4J'>Apache Mime4j</a></li>
       <li><a href='#Apache_jSPF'>Apache jSPF</a></li>
       <li><a href='#Apache_JSieve'>Apache JSieve</a></li>
@@ -51,6 +47,10 @@
       <li><a href='#Apache_Mailet_Base'>Apache Mailet Base</a></li>
       <li><a href='#Apache_Crypto_Mailets'>Apache Crypto Mailets</a></li>
       <li>Apache MailetDoc Plugin for Maven is available from the standard maven repositories (*)</li>
+      <li>Apache James Hupa is available from the James maven repositories (*)</li>
+      <li>Apache James Protocols is available from the James maven repositories (*)</li>
+      <li>Apache James IMAP is available from the James maven repositories (*)</li>
+      <li>Apache James Mailbox is available from the James maven repositories (*)</li>
       <li><a href='#Apache_MPT'>Apache MPT</a></li>
     </ul>
  
@@ -156,8 +156,8 @@
             href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M2-bin.zip.asc">PGP</a>]</li>
       
           <li>Source (ZIP Format): <a
-              href="[preferred]/james/server/james-server-3.0-M2-source-release.zip">james-server-3.0-M2-source-release.zip</a> [<a
-              href="http://www.apache.org/dist/james/server/james-server-3.0-M2-source-release.zip.asc">PGP</a>]</li>
+              href="[preferred]/james/server/james-server-3.0-M2-sources.jar">james-server-3.0-M2-sources.jar</a> [<a
+              href="http://www.apache.org/dist/james/server/james-server-3.0-M2-sources.jar.asc">PGP</a>]</li>
       
       </ul>
     
