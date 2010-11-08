@@ -18,7 +18,7 @@
 
     <subsection name='2010'>
 
-        <a name="06112010_1"><h4>Nov/2010 - Apache Server 3.0-M2 released</h4></a>
+        <a name="06112010_1"><h4>Nov/2010 - Apache James Server 3.0-M2 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
            the release of version 3.0-M2 (Milestone 1) of the Apache James server.</p>
         <p>M2 is not only a fast corrective release on M1 (issues related to JMX 
@@ -31,7 +31,7 @@
         <p>If you're interested in contributing to the James project, please subscribe to the James 
           <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
 
-        <a name="01112010_1"><h4>Nov/2010 - Apache Server 3.0-M1 released</h4></a>
+        <a name="01112010_1"><h4>Nov/2010 - Apache James Server 3.0-M1 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
            the release of version 3.0-M1 (Milestone 1) of the Apache James server.</p>
         <p>The Apache James Server is a 100% pure Java enterprise mail server based on open protocols. 
