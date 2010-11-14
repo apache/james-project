@@ -8,10 +8,16 @@
   </properties>
   
   <head>
+
+    <script src="js/galleria/galleria.js"></script>
   
     <script type="text/javascript">
 
       $(function(){
+      
+        Galleria.loadTheme('js/galleria/themes/classic/galleria.classic.js');
+      
+        $('#james-logo-slideshow').galleria();
 
         $('#tabs').tabs();
 
@@ -20,16 +26,36 @@
             return false;
         });
         
-        $('#james-project-logo').click(function() {
+        $('#james-logo-0-preview').click(function() {
           switchLogo('images/james-project-logo.gif');
         });
 
-        $('#simon-funnell-James2').click(function() {
-          switchLogo('logo-call/simon-funnell-James2_100.jpg');
+        $('#james-logo-1-preview').click(function() {
+          switchLogo('logo-call/james-logo-1.png');
         });
-        
-        $('#eric-charles-james-logo-1').click(function() {
-          switchLogo('logo-call/eric-charles-james-logo-1_100.png');
+
+        $('#james-logo-2-preview').click(function() {
+          switchLogo('logo-call/james-logo-2.png');
+        });
+
+        $('#james-logo-3-preview').click(function() {
+          switchLogo('logo-call/james-logo-3.png');
+        });
+
+        $('#james-logo-4-preview').click(function() {
+          switchLogo('logo-call/james-logo-4.png');
+        });
+
+        $('#james-logo-5-preview').click(function() {
+          switchLogo('logo-call/james-logo-5.png');
+        });
+
+        $('#james-logo-6-preview').click(function() {
+          switchLogo('logo-call/james-logo-6.png');
+        });
+
+        $('#james-logo-7-preview').click(function() {
+          switchLogo('logo-call/james-logo-7.png');
         });
         
         function switchLogo(logoPath) {
@@ -38,13 +64,14 @@
               scrollTop: $('#banner').offset().top
           }, 2000);
        }
-
+       
       });
 
     </script>
     
     <style type="text/css">
       #newsbox {margin: 0 0 0 0;}
+      #james-logo-slideshow{height:200px;width:500px;}
     </style>
 
   </head>
@@ -65,71 +92,51 @@
 
       <div id="tabs-1">
       
-        <subsection name="James Project">
-  
-    <div class="ui-widget">
-      <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
-        <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
-        <strong>Hey!</strong>
-        James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
-	     documentation, bug report, feedback...
-		</p>
-      </div>
-    </div>
-<!-- 
-    Grey version - use the red one for now
-    
        <div class="ui-widget">
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
-				<p><span class="ui-icon ui-icon-circle-plus" style="float: left; margin-right: .3em;"></span>
-				<strong>Hey!</strong> </p>
+				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+				<strong>Hey!</strong> 
+				 James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
+	             documentation, bug report, feedback...
+				</p>
 			</div>
 		</div>
- -->  
+
         <p>The Apache James Project delivers a rich set of open source modules and libraries, written in Java, 
            related to Internet mail communication which build into an advanced enterprise mail server.</p>
            
-        </subsection>
-         
-        <subsection name="Download James Mail Server">
-        
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-M2</span>
+              <span><span class="icon"></span>Download Early James Server 3.0-M2</span>
             </a>
           </span>
         </p>
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version';">
-              <span><span class="icon"></span>Stable James Server 2.3.2</span>
+              <span><span class="icon"></span>Download Stable James Server 2.3.2</span>
             </a>
           </span>
         </p>
         
-        </subsection>
-           
-        <subsection name="Call for new James Logo">
-        
+        <p>
           <div id="display-call-for-logo-tab">
-            <img src="images/james-logo-square.png"/>
-            &#160;&#160;<a href="#">Help use</a> to design and choose a new logo for James.
+            <a href="#"><b>Help use design and choose a new logo for James (test logo proposals on this web site).</b></a>
           </div>
+        </p>
         
-        </subsection>
-        
-        <subsection name="Join the Community">
-  
           <p>All are welcome to the Community!  We recommend that Users, Developers, Curious and Fans subscribe to the James 
-             <a href='http://james.apache.org/mail.html'>mailing lists</a> and follow <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
+             <a href='http://james.apache.org/mail.html'>mailing lists</a> and 
+             follow <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
+             
+          <p>You can also read the <a href="http://wiki.apache.org/james/">wiki</a> 
+             (discover <a href="http://wiki.apache.org/james/JamesUsers">who uses James</a>,...)</p>
         
           <p>Just like other <a href='http://projects.apache.org'>Apache projects</a>, James is developed in an
              <a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> and 
              <a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>.</p>
            
-        </subsection>
-        
       </div>
       
       <div id="tabs-2">
@@ -221,7 +228,82 @@
 
         <div id="tabs-4">
         
-        
+          <subsection name="Proposal 1">
+            <div id="james-logo-1-preview">
+              <p><img src="logo-call/james-logo-1.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+          </subsection>
+
+          <subsection name="Proposal 2">
+            <div id="james-logo-2-preview">
+              <p><img src="logo-call/james-logo-2.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+          </subsection>
+
+          <subsection name="Proposal 3">
+            <div id="james-logo-3-preview">
+              <p><img src="logo-call/james-logo-3.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+          </subsection>
+
+          <subsection name="Proposal 4">
+            <div id="james-logo-4-preview">
+              <p><img src="logo-call/james-logo-4.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+          </subsection>
+
+          <subsection name="Proposal 5">
+            <div id="james-logo-5-preview">
+              <p><img src="logo-call/james-logo-5.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+            <p><img src="logo-call/james-logo-5-avatar.png"/></p>
+          </subsection>
+
+          <subsection name="Proposal 6">
+            <div id="james-logo-6-preview">
+              <p><img src="logo-call/james-logo-6.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+            <p><img src="logo-call/james-logo-6-avatar.png"/></p>
+          </subsection>
+
+          <subsection name="Proposal 7">
+            <div id="james-logo-7-preview">
+              <p><img src="logo-call/james-logo-7.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+          </subsection>
+
+          <subsection name="Preview a Logo on this Web Site">
+          
+            <div id="james-logo-0-preview">
+              <p><img src="images/james-logo-square.png"/></p>
+              <p>
+                <a href="#">Click to reset the upper left logo.</a>
+              </p>
+            </div>
+
+          </subsection>
+
           <subsection name="Why a new Logo?">
           
             <p>We are happy with our current logo, but for the 
@@ -229,75 +311,38 @@
                give our community the opportunity to create a new image for James.</p>
                
             <p>Don't be shy, take your inkscape and gimp, and send us on 
-            the James <a href="server-user-subscribe@james.apache.org">user mailing list</a> 
-            your creations. We will publish them on this page.</p>
+               the <a href="mail.html">James Server User mailing list</a> 
+               your creations. We will publish them on this page.</p>
+            
+            <p>We need an horizontal logo (100p height) to be show displayed on the upper
+               left corner of this page, an avatar (48x48p) to be used on a Twitter stream for example.
+               The used fonts should be redistributable (or commonly available on Windows and Linux).
+               The chosen logo should be delivered in SVG format. 
+               We also like the <a href="http://www.apache.org/foundation/press/kit/">Apache feather</a>.</p>
           
           </subsection>
         
-          <subsection name="Test and Vote">
+          <subsection name="How to Choose?">
           
-            <p>You can click on some "Preview Button" such as this one to preview 
-               the logo on this web site.</p>
+            <p>Listen <a href="http://james.apache.org/mail.html">mailing list</a> 
+               and <a href="http://twitter.com/ApacheJames">Twitter</a> for the vote.</p>
+               
+            <p>We still don't have any date for this vote, so it's still time to submit your proposals.</p>
+            
+          <p>
+            <div id="james-logo-slideshow">
+              <img src="logo-call/james-logo-1.png"/>
+              <img src="logo-call/james-logo-2.png"/>
+              <img src="logo-call/james-logo-3.png"/>
+              <img src="logo-call/james-logo-4.png"/>
+              <img src="logo-call/james-logo-5.png"/>
+              <img src="logo-call/james-logo-6.png"/>
+              <img src="logo-call/james-logo-7.png"/>
+            </div>
+          </p>
           
-            <p><img src="images/james-logo-square.png"/></p>
-            <div id="james-project-logo">
-              <p>
-                <img src="icon/zoom.png"/>
-                Click to reset the upper left logo.
-              </p>
-            </div>
-
           </subsection>
           
-          <subsection name="Proposal 1">
-            <p><img src="logo-call/simon-funnell-FeatherJames.jpg"/></p>
-          </subsection>
-
-          <subsection name="Proposal 2">
-            <p><img src="logo-call/simon-funnell-GreenJames.jpg"/></p>
-          </subsection>
-
-          <subsection name="Proposal 3">
-            <p><img src="logo-call/simon-funnell-James.gif"/></p>
-          </subsection>
-
-          <subsection name="Proposal 4">
-            <p><img src="logo-call/simon-funnell-James2.jpg"/></p>
-            <div id="simon-funnell-James2">
-              <p>
-                <img src="icon/zoom.png"/>
-                Click to change the upper left logo on this page and preview this proposal.
-              </p>
-            </div>
-          </subsection>
-
-          <subsection name="Proposal 5">
-            <p><img src="logo-call/simon-funnell-YellowJames.jpg"/></p>
-          </subsection>
-
-          <subsection name="Proposal 6">
-            <p><img src="logo-call/eric-charles-james-logo-1.png"/></p>
-            <p><img src="logo-call/eric-charles-james-logo-1_100.png"/></p>
-            <div id="eric-charles-james-logo-1">
-              <p>
-                <img src="icon/zoom.png"/>
-                Click to change the upper left logo on this page and preview this proposal
-              </p>
-            </div>
-          </subsection>
-	
-          <subsection name="Proposal 7">
-            <p><img src="logo-call/eric-charles-james-logo-2.png"/></p>
-          </subsection>
-
-          <subsection name="Proposal 8">
-            <p><img src="logo-call/eric-charles-james-logo-3.png"/></p>
-          </subsection>
-
-          <subsection name="Proposal 9">
-            <p><img src="logo-call/eric-charles-james-logo-4.png"/></p>
-          </subsection>
-
         </div>
 
         <div id="tabs-5">
