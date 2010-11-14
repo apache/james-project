@@ -9,71 +9,22 @@
   
   <head>
 
-    <script src="js/galleria/galleria.js"></script>
-  
-    <script type="text/javascript">
-
-      $(function(){
-      
-        Galleria.loadTheme('js/galleria/themes/classic/galleria.classic.js');
-      
-        $('#james-logo-slideshow').galleria();
-
-        $('#tabs').tabs();
-
-        $('#display-call-for-logo-tab').click(function() {
-            $('#tabs').tabs('select', 3);
-            return false;
-        });
-        
-        $('#james-logo-0-preview').click(function() {
-          switchLogo('images/james-project-logo.gif');
-        });
-
-        $('#james-logo-1-preview').click(function() {
-          switchLogo('logo-call/james-logo-1.png');
-        });
-
-        $('#james-logo-2-preview').click(function() {
-          switchLogo('logo-call/james-logo-2.png');
-        });
-
-        $('#james-logo-3-preview').click(function() {
-          switchLogo('logo-call/james-logo-3.png');
-        });
-
-        $('#james-logo-4-preview').click(function() {
-          switchLogo('logo-call/james-logo-4.png');
-        });
-
-        $('#james-logo-5-preview').click(function() {
-          switchLogo('logo-call/james-logo-5.png');
-        });
-
-        $('#james-logo-6-preview').click(function() {
-          switchLogo('logo-call/james-logo-6.png');
-        });
-
-        $('#james-logo-7-preview').click(function() {
-          switchLogo('logo-call/james-logo-7.png');
-        });
-        
-        function switchLogo(logoPath) {
-          $('#bannerLeft img').attr('src', logoPath);
-          $('html, body').animate({
-              scrollTop: $('#banner').offset().top
-          }, 2000);
-       }
-       
-      });
-
-    </script>
-    
     <style type="text/css">
       #newsbox {margin: 0 0 0 0;}
-      #james-logo-slideshow{height:200px;width:500px;}
+      #james-logo-slideshow {height:200px; width:500px;}
     </style>
 
+    <script type="text/javascript" src="js/galleria/galleria.js"></script>
+
+    <script type="text/javascript" src="js/james/index.js"></script>
+    
+    <script type="text/javascript">
+      $(function(){
+        Galleria.loadTheme('./js/galleria/themes/classic/galleria.classic.js');
+        initIndexPage();
+      });
+    </script>
+    
   </head>
 
   <body>
@@ -105,6 +56,17 @@
         <p>The Apache James Project delivers a rich set of open source modules and libraries, written in Java, 
            related to Internet mail communication which build into an advanced enterprise mail server.</p>
            
+          <p>All are welcome to the Community!  We recommend that Users, Developers, Curious and Fans subscribe to the James 
+             <a href='http://james.apache.org/mail.html'>mailing lists</a> and 
+             follow <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
+             
+          <p>You can also read the <a href="http://wiki.apache.org/james/">wiki</a> 
+             (discover <a href="http://wiki.apache.org/james/JamesUsers">who uses James</a>,...)</p>
+        
+          <p>Just like other <a href='http://projects.apache.org'>Apache projects</a>, James is developed in an
+             <a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> and 
+             <a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>.</p>
+           
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
@@ -122,21 +84,24 @@
         
         <p>
           <div id="display-call-for-logo-tab">
-            <a href="#"><b>Help use design and choose a new logo for James (test logo proposals on this web site).</b></a>
+            <img src="images/james-logo-square.png"/>
+            <b>Help use design and choose a new logo for James<br/>
+            <a href="#">Click here to apply the logo proposals on this web site</a></b>
           </div>
         </p>
-        
-          <p>All are welcome to the Community!  We recommend that Users, Developers, Curious and Fans subscribe to the James 
-             <a href='http://james.apache.org/mail.html'>mailing lists</a> and 
-             follow <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
-             
-          <p>You can also read the <a href="http://wiki.apache.org/james/">wiki</a> 
-             (discover <a href="http://wiki.apache.org/james/JamesUsers">who uses James</a>,...)</p>
-        
-          <p>Just like other <a href='http://projects.apache.org'>Apache projects</a>, James is developed in an
-             <a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> and 
-             <a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>.</p>
-           
+<!--
+          <p>
+            <div id="james-logo-slideshow">
+              <img src="logo-call/james-logo-1.png"/>
+              <img src="logo-call/james-logo-2.png"/>
+              <img src="logo-call/james-logo-3.png"/>
+              <img src="logo-call/james-logo-4.png"/>
+              <img src="logo-call/james-logo-5.png"/>
+              <img src="logo-call/james-logo-6.png"/>
+              <img src="logo-call/james-logo-7.png"/>
+            </div>
+          </p>
+-->
       </div>
       
       <div id="tabs-2">
@@ -329,18 +294,6 @@
                
             <p>We still don't have any date for this vote, so it's still time to submit your proposals.</p>
             
-          <p>
-            <div id="james-logo-slideshow">
-              <img src="logo-call/james-logo-1.png"/>
-              <img src="logo-call/james-logo-2.png"/>
-              <img src="logo-call/james-logo-3.png"/>
-              <img src="logo-call/james-logo-4.png"/>
-              <img src="logo-call/james-logo-5.png"/>
-              <img src="logo-call/james-logo-6.png"/>
-              <img src="logo-call/james-logo-7.png"/>
-            </div>
-          </p>
-          
           </subsection>
           
         </div>
