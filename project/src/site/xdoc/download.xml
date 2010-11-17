@@ -145,7 +145,16 @@
          href="http://james.apache.org/server/3/release-notes.html">Release Notes</a>
          for a detailed list of changes.</p>
       
-      <ul>
+    <div class="ui-widget">
+      <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+        <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+        <strong>POP3 is broken in 3.0-M2 - Please use IMAP4 to read your Mails!</strong>
+        We are working to repair POP3 in M3 snapshot release.
+		</p>
+      </div>
+    </div>
+    
+          <ul>
       
         <li>Binary (Unix TAR): <a
             href="[preferred]/james/server/james-server-container-spring-3.0-M2-bin.tar.gz">james-server-container-spring-3.0-M2-bin.tar.gz</a> [<a
