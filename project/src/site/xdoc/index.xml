@@ -86,7 +86,7 @@
           <div id="display-call-for-logo-tab">
             <img src="images/james-logo-square.png"/>
             <b>Help use design and choose a new logo for James<br/>
-            <a href="#">Click here to apply the logo proposals on this web site</a></b>
+            <a href="#">Click here to test the logo proposals on this web site</a></b>
           </div>
         </p>
 <!--
@@ -193,6 +193,44 @@
 
         <div id="tabs-4">
         
+          <subsection name="Why a new Logo?">
+          
+            <p>We are happy with our current logo, but for the 
+               upcoming James Server 3.0 release, we would like to 
+               give our community the opportunity to create a new image for James.</p>
+               
+            <p>Don't be shy, take your inkscape and gimp, and send us on 
+               the <a href="mail.html">James Server User mailing list</a> 
+               your creations. We will publish them on this page.</p>
+            
+            <p>We need an horizontal logo (100p height) to be show displayed on the upper
+               left corner of this page, an avatar (48x48p) to be used on a Twitter stream for example.
+               The used fonts should be redistributable (or commonly available on Windows and Linux).
+               The chosen logo should be delivered in SVG format. 
+               We also like the <a href="http://www.apache.org/foundation/press/kit/">Apache feather</a>.</p>
+          
+          </subsection>
+        
+          <subsection name="How to Choose?">
+          
+            <p>Listen <a href="http://james.apache.org/mail.html">mailing list</a> 
+               and <a href="http://twitter.com/ApacheJames">Twitter</a> for the vote.</p>
+               
+            <p>We still don't have any date for this vote, so it's still time to submit your proposals.</p>
+            
+          </subsection>
+          
+          <subsection name="Preview a Logo on this Web Site">
+          
+            <div id="james-logo-0-preview">
+              <p><img src="images/james-logo-square.png"/></p>
+              <p>
+                <a href="#">Click to reset the upper left logo.</a>
+              </p>
+            </div>
+
+          </subsection>
+
           <subsection name="Proposal 1">
             <div id="james-logo-1-preview">
               <p><img src="logo-call/james-logo-1.png"/></p>
@@ -258,44 +296,6 @@
             </div>
           </subsection>
 
-          <subsection name="Preview a Logo on this Web Site">
-          
-            <div id="james-logo-0-preview">
-              <p><img src="images/james-logo-square.png"/></p>
-              <p>
-                <a href="#">Click to reset the upper left logo.</a>
-              </p>
-            </div>
-
-          </subsection>
-
-          <subsection name="Why a new Logo?">
-          
-            <p>We are happy with our current logo, but for the 
-               upcoming James Server 3.0 release, we would like to 
-               give our community the opportunity to create a new image for James.</p>
-               
-            <p>Don't be shy, take your inkscape and gimp, and send us on 
-               the <a href="mail.html">James Server User mailing list</a> 
-               your creations. We will publish them on this page.</p>
-            
-            <p>We need an horizontal logo (100p height) to be show displayed on the upper
-               left corner of this page, an avatar (48x48p) to be used on a Twitter stream for example.
-               The used fonts should be redistributable (or commonly available on Windows and Linux).
-               The chosen logo should be delivered in SVG format. 
-               We also like the <a href="http://www.apache.org/foundation/press/kit/">Apache feather</a>.</p>
-          
-          </subsection>
-        
-          <subsection name="How to Choose?">
-          
-            <p>Listen <a href="http://james.apache.org/mail.html">mailing list</a> 
-               and <a href="http://twitter.com/ApacheJames">Twitter</a> for the vote.</p>
-               
-            <p>We still don't have any date for this vote, so it's still time to submit your proposals.</p>
-            
-          </subsection>
-          
         </div>
 
         <div id="tabs-5">
