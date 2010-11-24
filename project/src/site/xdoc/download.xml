@@ -149,7 +149,7 @@
       <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
         <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
         <strong>POP3 is broken in 3.0-M2 - Please use IMAP4 to read your Mails!</strong>
-        We are working to repair POP3 in M3 snapshot release.
+        POP3 is repaired in M3 snapshot and you can <a href="http://people.apache.org/builds/james/nightly/">download it from here</a>.
 		</p>
       </div>
     </div>
