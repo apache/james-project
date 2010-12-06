@@ -18,14 +18,18 @@
   under the License.    
 -->
 <document>
+
   <properties>
     <title>Frequently Asked Questions</title>
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
+  
   <body>
+  
     <section name="This FAQ">
       <P>This is a living document that provides answers to common questions about James, installation, configuration, admin and running not already answered in the documentation. Last Updated January 2005.</P>
     </section>
+  
     <section name="Questions">
       <p>
         <ul>
@@ -89,54 +93,14 @@
         </ul>
       </p>
     </section>
+    
     <section name="Answers">
+
       <a name="1"/>
-      <subsection name="Would you please teach me how to set up a mailing list">
-        <p>James currently (v2.1) includes only the most basic list functionality, users can subscribe and unsubscribe, but there is no moderation of messages or subscriptions</p>
-        <p>To enable a list you need the following in config.xml in the root processor block and above the final mailet block -</p>
-        <source>
-&lt;mailet match="CommandForListserv=james@localhost"
-    class="AvalonListservManager">
-    &lt;repositoryName>list-james&lt;/repositoryName>
-&lt;/mailet>
-</source>
-        <p>that will intercept the command emails sent to
-<ul>
-            <li>james-on@localhost to subscribe the sender</li>
-            <li>james-off@localhost to unsubscribe the sender</li>
-          </ul>
-        </p>
-        <p>and-</p>
-        <source>
-&lt;mailet match="RecipientIs=james@localhost" class="AvalonListserv">
-    &lt;membersonly> false &lt;/membersonly>
-    &lt;attachmentsallowed> true &lt;/attachmentsallowed>
-    &lt;replytolist> true &lt;/replytolist>
-    &lt;repositoryName>list-james&lt;/repositoryName>
-    &lt;subjectprefix>JamesList&lt;/subjectprefix>
-&lt;/mailet>
-</source>
-        <p>Which will distribute the mail to the current subscribers</p>
-        <p>in addition to the above you need to have a repository configured in the users-store block(usually near the bottom of config.xml) like so (database)-</p>
-        <source>
-&lt;repository name="list-james"
-    class="org.apache.james.userrepository.ListUsersJdbcRepository"
-    destinationURL="db://maildb/lists/list-james">
-    &lt;sqlFile>file://conf/sqlResources.xml&lt;/sqlFile>
-&lt;/repository>
-</source>
-        <p>Database users will also need to ensure that they have <a href="2.3.1/using_database.html">configured a data-source</a> named to match the destination URL</p>
-        <p>Using the filesystem:-</p>
-        <source>
-&lt;repository name="list-james"
-    class="org.apache.james.userrepository.UsersFileRepository">
-    &lt;destination URL="file://var/lists/list-james/"/>
-&lt;/repository>
-</source>
-        <p>Restart James, send a mail to james-on@localhost and you should be subscribed.</p>
-        <p>The repository, be it a database table or directory in the filesystem will be created automatically.</p>
-        <p>Database users can manipulate the users repository using SQL, and hence any application capable of running SQL queries against it.</p>
+      <subsection name="How do I set up a mailing list">
+        <p>Read more on <a href="http://james.apache.org/server/3/config-listmanager.html">James Server 3 List-Manager configuration</a>.</p>
       </subsection>
+      
       <a name="2"/>
       <subsection name="James seems to be an open relay for Spam, is it?">
         <p>In some simple tests of mail relays James appears to be an open relay, properly configured it is not. </p>
@@ -144,6 +108,7 @@
         <p>This means that James accepts Spam. However the default configuration, and any sensible re-configuration has a number of anti-spam measures which will prevent the re-transmisson of spam from James. This makes it a blackhole for spam.</p>
         <p>This also means that James will not verify addresses, but of course this means that valid addresses can't be harvested from James by spammers either.</p>
       </subsection>
+      
       <a name="3"/>
       <subsection name="I can send messages to James, but nobody is receiving them.  What do I do?">
         <p>Check that you've added valid DNS servers to your James installation.  Email delivery requires the use of special mail related DNS information (MX records), so James needs to explicitly be given DNS servers.  Look at your config.xml file for a &lt;dnsserver&gt; section and add one or more DNS servers.</p>
@@ -163,6 +128,7 @@
         <p>This tells the processor that anything not in this address list should go to the spam processor.</p>
         <p>Please note that if you wish to configure James to allow users to send email from any domain or IP address you will need to disable this matcher.  In this situation you must use SMTP AUTH to ensure that your server does not act as an open relay.  For more on open relays, please see <a href="http://www.ordb.org">the Open Relay Database</a>.</p>
       </subsection>
+      
       <a name="4"/>
       <subsection name="I can send people messages via James, but nobody can send me messages.  What do I do?">
         <p>You need to do one of two things:
@@ -172,15 +138,18 @@
           </ol>
         </p>
       </subsection>
+      
       <a name="5"/>
       <subsection name="I'm trying to debug messages that James is trying to deliver.  Where should I look?">
         <p>First step is to look in the log directory at the mailet.log file.  Look for entries that include the text "RemoteDelivery".  This should provide some high-level debug information of James' attempt to delivery mail remotely.</p>
         <p>If you want to delve into the code, look at the RemoteDelivery mailet.  You may also want to review the mail repository source code for the repository type you are using (file, db, etc...).</p>
       </subsection>
+      
       <a name="6"/>
       <subsection name="What about IMAP support?">
         <p>IMAP development had been stalled, but has recently attracted new activity.  IMAP support is scheduled for inclusion in James v3.  In the meantime, there is experimental code in the repository.  If you are interested in working on or trying the IMAP prototype code, join the james-dev mailing list and let us know.</p>
       </subsection>
+      
       <a name="7"/>
       <subsection name="What about support virtual hosting?">
         <p>James v2.1+ includes a new mailet for database users, <a href="2.3.1/apidocs/org/apache/james/transport/mailets/JDBCVirtualUserTable.html">JDBCVirtualUserTable</a>, that mimics some of the sendmail capabilities of the same name.</p>
@@ -223,6 +192,7 @@ match as follows (in precedence order):
         <p>Beyond that, James needs to refine virtual hosting for mailet processing.  With the current user model, the mailet API has a Mail.getUser() method that no longer would be useable as a reliable indicator of whether they were in the local username namespace.  To date we are unclear of the best way to bring this translation into the mailet processing.  Similarly, it would be nice to support different mailet processing based on the domain, although this is somewhat feasible using the limited processing flow offered with a HostIs matcher.</p>
         <p>Virtual hosting is one of the most requested features, and additional work is scheduled for the 3.0 release.</p>
       </subsection>
+      
       <a name="8"/>
       <subsection name="Where do I stick classes and jars?">
         <p>We are largely reliant on what Avalon is doing in terms of classloading, but here are a few tips and suggestions:
@@ -232,6 +202,7 @@ match as follows (in precedence order):
           </ul>
   Eventually we hope to support mailet reloading and a special lib and classes directory within the james directory that custom mailets can load from, but for now these are hopefully some useful tips.</p>
       </subsection>
+      
       <a name="9"/>
       <subsection name="How do I upgrade to a newer version of James?">
         <p>
@@ -246,14 +217,17 @@ match as follows (in precedence order):
           </ol>
         </p>
       </subsection>
+      
       <a name="10"/>
       <subsection name="How do I run James as an NT/2k/XP service?">
         <p>The version of Avalon Phoenix distributed with James v2.1 and later includes a <a href="http://avalon.apache.org/phoenix/guide-administrator.html">wrapper</a> that lets you run James as a service.  An alternative strategy is to install the <a href="http://www.alexandriasc.com/software/JavaService/index.html">JavaService</a> from Alexandia Software.</p>
       </subsection>
+      
       <a name="11"/>
       <subsection name="Why isn't my mailet making changes to a MimeMessage?">
         <p>Check the JavaMail docs.  Per the API, when you call MimeMessage.setContent(blah), you have to call saveChanges() to apply your changes.  James tries to automatically call this method so you don't have to, but in certain cases you'll still have to call saveChanges().</p>
       </subsection>
+      
       <a name="12"/>
       <subsection name="How to remove unneeded services like NNTP, POP3?">
         <p>The following information is based on James 2.0a3, but the
@@ -276,16 +250,19 @@ match as follows (in precedence order):
              you will get error messages, saying that there is no corresponding
              block.</p>
       </subsection>
+      
       <a name="13"/>
       <subsection name="How can I contribute to James">
         <p>Read the "Contributors How To" <a href="../contribute.html">here</a>
         </p>
       </subsection>
+      
       <a name="14"/>
       <subsection name="How can I make sendmail route local mail (or all mail) through James on the same machine?">
         <p>Read the "sendmail How To" <a href="james_and_sendmail.html">here</a>
         </p>
       </subsection>
+      
       <a name="15"/>
       <subsection name="I am using Microsoft's SQL Type 4 JDBC Driver, why do I get a &quot;Can't start manual transaction mode because there are cloned connections&quot; exception?">
         <p>I am using Microsoft's SQL Type 4 JDBC Driver, why do I get the following exception?<br/>java.sql.SQLException: [Microsoft][SQLServer 2000 Driver for JDBC]Can&apos;t start manual transaction mode because there are cloned connections.</p>
@@ -293,6 +270,7 @@ match as follows (in precedence order):
         <p>To solve this you need to add <b>;SelectMethod=cursor</b> to the end of your dburl string. Your dburl string would then look something like this<br/>&lt;dburl&gt;jdbc:microsoft:sqlserver://dbserver.host.name:1433;SelectMethod=cursor&lt;/dburl&gt;</p>
         <p>NOTE: some people have complained about performance when using this option, the alternative is a 3rd party JDBC driver but these are often not free.</p>
       </subsection>
+      
       <a name="16"/>
       <subsection name="I am using James with a MySQL database and I keep getting a &quot;Packet is larger than max_allowed_packet&quot; when receiving large messages despite the fact that my max packet size is configured to be larger than my max message size.  What's going on?">
         <p>When a user tries to send a large message that is close to but not quite at the max message limit the send fails and an exception similar to the following appears in the log:</p>
@@ -312,6 +290,7 @@ match as follows (in precedence order):
             max_packet_size allows only a 3.2MB max message.
             </p>
       </subsection>
+      
       <a name="17"/>
         <subsection name="How do I use Subversion to get James source code?">
           <p>First of all read this: <a href="http://www.apache.org/dev/version-control.html">ASF Source Code</a>.
@@ -319,6 +298,7 @@ match as follows (in precedence order):
           <br/>James subversion repository is at <b>http://svn.apache.org/repos/asf/james/server</b>. Commiters use "https".
           <br/>You may want to search the web, our <a href="http://www.mail-archive.com/server-dev@james.apache.org/">dev</a> and <a href="http://www.mail-archive.com/server-user@james.apache.org/">user</a> mail archives or our <a href="http://wiki.apache.org/james">wiki</a> for more information.</p>
         </subsection>
+        
 		 <a name="18"/>
 		<subsection name="How can I control Sun's JVM DNS Lookup Configuration.">
 <p>Sun's JVM Internet address lookup uses a cache which is unbounded and doesn't time out.<br/>
@@ -328,6 +308,10 @@ This is obviously not great for a long running process like a mail server so we 
 <p>We are not currently aware of the behaviour of this cache in other JVM implementations, nor of the effect, if any, which this change might have on them</p>
 <p>For more on this read defect report <a href="http://issues.apache.org/jira/browse/JAMES-592">JAMES-592</a> and related defects.</p>
 		</subsection>
+		
     </section>
+    
   </body>
+  
 </document>
+
