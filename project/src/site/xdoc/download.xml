@@ -48,14 +48,14 @@
       <li><a href='#Apache_Crypto_Mailets'>Apache James Crypto Mailets</a></li>
       <li><a href='#Apache_James_Protocols'>Apache James Protocols</a></li>
       <li><a href='#Apache_MPT'>Apache James MPT</a></li>
-      <li>Apache James IMAP is available from the James maven repositories (*)</li>
-      <li>Apache James Mailbox is available from the James maven repositories (*)</li>
-      <li>Apache MailetDoc Plugin for Maven is available from the standard maven repositories (*)</li>
-      <li>Apache James Hupa is available from the James maven repositories (*)</li>
+      <li>Apache James IMAP is available from the James Maven repositories (*)</li>
+      <li>Apache James Mailbox is available from the James Maven repositories (*)</li>
+      <li>Apache MailetDoc Plugin for Maven is available from the standard Maven repositories (*)</li>
+      <li>Apache James Hupa is available from the James Maven repositories (*)</li>
     </ul>
  
     <p>(*) James maven repositories can be found on 
-    <a href="https://repository.apache.org/content/repositories/releases/org/apache/james/">https://repository.apache.org/content/repositories/releases/org/apache/james/</a>.</p>
+    <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</p>
   
     <subsection name="Mirror">
     
@@ -504,7 +504,7 @@
     href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.zip.md5">MD5</a>]</li>
     
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories.</li>
+    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</li>
     </ul>
   
   </section>
@@ -535,7 +535,7 @@
     href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.zip.md5">MD5</a>]</li>
     
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories.</li>
+    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</li>
     </ul>
   
   </section>
