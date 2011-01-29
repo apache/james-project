@@ -16,7 +16,7 @@
 
     <script type="text/javascript" src="js/galleria/galleria.js"></script>
 
-    <script type="text/javascript" src="js/james/index.js"></script>
+    <script type="text/javascript" src="js/james/index.js?v=1"></script>
     
     <script type="text/javascript">
       $(function(){
@@ -294,6 +294,16 @@
                 <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
               </p>
             </div>
+          </subsection>
+
+          <subsection name="Proposal 8">
+            <div id="james-logo-8-preview">
+              <p><img src="logo-call/james-logo-8.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+            <p><img src="logo-call/james-logo-8-avatar.png"/></p>
           </subsection>
 
         </div>
