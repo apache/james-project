@@ -34,58 +34,58 @@
       <p>
         <ul>
           <li>
-            <a href="#1">How do I set up a mailing list</a>
+            <a href="#How_do_I_set_up_a_mailing_list">How do I set up a mailing list</a>
           </li>
           <li>
-            <a href="#2">Is James an Open Relay for Spam?</a>
+            <a href="#James_seems_to_be_an_open_relay_for_Spam_is_it">Is James an Open Relay for Spam?</a>
           </li>
           <li>
-            <a href="#3">I can send messages to James, but nobody is receiving them.  What do I do?</a>
+            <a href="#I_can_send_messages_to_James_but_nobody_is_receiving_them.__What_do_I_do">I can send messages to James, but nobody is receiving them.  What do I do?</a>
           </li>
           <li>
-            <a href="#4">I can send people messages via James, but nobody can send me messages.  What do I do?</a>
+            <a href="#I_can_send_people_messages_via_James_but_nobody_can_send_me_messages.__What_do_I_do">I can send people messages via James, but nobody can send me messages.  What do I do?</a>
           </li>
           <li>
-            <a href="#5">I'm trying to debug messages that James is trying to deliver.  Where should I look?</a>
+            <a href="#Im_trying_to_debug_messages_that_James_is_trying_to_deliver.__Where_should_I_look">I'm trying to debug messages that James is trying to deliver.  Where should I look?</a>
           </li>
           <li>
-            <a href="#6">What about IMAP support?</a>
+            <a href="#What_about_IMAP_support">What about IMAP support?</a>
           </li>
           <li>
-            <a href="#7">What about support virtual hosting?</a>
+            <a href="#What_about_support_virtual_hosting">What about support virtual hosting?</a>
           </li>
           <li>
-            <a href="#8">Where do I stick classes and jars?</a>
+            <a href="#Where_do_I_stick_classes_and_jars">Where do I stick classes and jars?</a>
           </li>
           <li>
-            <a href="#9">How do I upgrade to a newer version of James?</a>
+            <a href="#How_do_I_upgrade_to_a_newer_version_of_James">How do I upgrade to a newer version of James?</a>
           </li>
           <li>
-            <a href="#10">How do I run James as an NT/2k/XP service?</a>
+            <a href="#How_do_I_run_James_as_an_NT2kXP_service">How do I run James as an NT/2k/XP service?</a>
           </li>
           <li>
-            <a href="#11">Why isn't my mailet making changes to a MimeMessage?</a>
+            <a href="#Why_isnt_my_mailet_making_changes_to_a_MimeMessage">Why isn't my mailet making changes to a MimeMessage?</a>
           </li>
           <li>
-            <a href="#12">How to remove unneeded services like NNTP, POP3?</a>
+            <a href="#How_to_remove_unneeded_services_like_NNTP_POP3">How to remove unneeded services like NNTP, POP3?</a>
           </li>
           <li>
-            <a href="#13">How can I contribute to James?</a>
+            <a href="#How_can_I_contribute_to_James">How can I contribute to James?</a>
           </li>
           <li>
-            <a href="#14">How can I make sendmail route local mail (or all mail) through James on the same machine?</a>
+            <a href="#How_can_I_make_sendmail_route_local_mail_or_all_mail_through_James_on_the_same_machine">How can I make sendmail route local mail (or all mail) through James on the same machine?</a>
           </li>
           <li>
-            <a href="#15">I am using Microsoft's SQL Type 4 JDBC Driver, why do I get a "Can't start manual transaction mode because there are cloned connections" exception?</a>
+            <a href="#I_am_using_Microsofts_SQL_Type_4_JDBC_Driver_why_do_I_get_a_Cant_start_manual_transaction_mode_because_there_are_cloned_connections_exception">I am using Microsoft's SQL Type 4 JDBC Driver, why do I get a "Can't start manual transaction mode because there are cloned connections" exception?</a>
           </li>
           <li>
-            <a href="#16">I am using James with a MySQL database and I keep getting a "Packet is larger than max_allowed_packet" when receiving large messages despite the fact that my max packet size is configured to be larger than my max message size.  What's going on?</a>
+            <a href="#I_am_using_James_with_a_MySQL_database_and_I_keep_getting_a_Packet_is_larger_than_max_allowed_packet_when_receiving_large_messages_despite_the_fact_that_my_max_packet_size_is_configured_to_be_larger_than_my_max_message_size.__Whats_going_on">I am using James with a MySQL database and I keep getting a "Packet is larger than max_allowed_packet" when receiving large messages despite the fact that my max packet size is configured to be larger than my max message size.  What's going on?</a>
           </li>
           <li>
-            <a href="#17">How do I use Subversion to get James source code?</a>
+            <a href="#How_do_I_use_Subversion_to_get_James_source_code">How do I use Subversion to get James source code?</a>
           </li>
           <li>
-          <a href="#18">How can I control Sun's JVM DNS Lookup Configuration.</a>
+          <a href="#How_can_I_control_Suns_JVM_DNS_Lookup_Configuration.">How can I control Sun's JVM DNS Lookup Configuration.</a>
           </li>
           <li>
           <a href="james_and_sendmail.html">James and Sendmail.</a>
@@ -96,12 +96,10 @@
     
     <section name="Answers">
 
-      <a name="1"/>
       <subsection name="How do I set up a mailing list">
         <p>Read more on <a href="http://james.apache.org/server/3/config-listmanager.html">James Server 3 List-Manager configuration</a>.</p>
       </subsection>
       
-      <a name="2"/>
       <subsection name="James seems to be an open relay for Spam, is it?">
         <p>In some simple tests of mail relays James appears to be an open relay, properly configured it is not. </p>
         <p>Because James is an email application platform it currently accepts all mail delivered to it via SMTP for processing. Only after the mail has been recieved does this processing begin.</p>
@@ -109,7 +107,6 @@
         <p>This also means that James will not verify addresses, but of course this means that valid addresses can't be harvested from James by spammers either.</p>
       </subsection>
       
-      <a name="3"/>
       <subsection name="I can send messages to James, but nobody is receiving them.  What do I do?">
         <p>Check that you've added valid DNS servers to your James installation.  Email delivery requires the use of special mail related DNS information (MX records), so James needs to explicitly be given DNS servers.  Look at your config.xml file for a &lt;dnsserver&gt; section and add one or more DNS servers.</p>
         <p>Additionally, check the RemoteAddrNotInNetwork matcher under&lt;processor name="transport"&gt;. By default it looks like this:</p>
@@ -129,7 +126,6 @@
         <p>Please note that if you wish to configure James to allow users to send email from any domain or IP address you will need to disable this matcher.  In this situation you must use SMTP AUTH to ensure that your server does not act as an open relay.  For more on open relays, please see <a href="http://www.ordb.org">the Open Relay Database</a>.</p>
       </subsection>
       
-      <a name="4"/>
       <subsection name="I can send people messages via James, but nobody can send me messages.  What do I do?">
         <p>You need to do one of two things:
                <ol>
@@ -139,18 +135,15 @@
         </p>
       </subsection>
       
-      <a name="5"/>
       <subsection name="I'm trying to debug messages that James is trying to deliver.  Where should I look?">
         <p>First step is to look in the log directory at the mailet.log file.  Look for entries that include the text "RemoteDelivery".  This should provide some high-level debug information of James' attempt to delivery mail remotely.</p>
         <p>If you want to delve into the code, look at the RemoteDelivery mailet.  You may also want to review the mail repository source code for the repository type you are using (file, db, etc...).</p>
       </subsection>
       
-      <a name="6"/>
       <subsection name="What about IMAP support?">
         <p>IMAP development had been stalled, but has recently attracted new activity.  IMAP support is scheduled for inclusion in James v3.  In the meantime, there is experimental code in the repository.  If you are interested in working on or trying the IMAP prototype code, join the james-dev mailing list and let us know.</p>
       </subsection>
       
-      <a name="7"/>
       <subsection name="What about support virtual hosting?">
         <p>James v2.1+ includes a new mailet for database users, <a href="2.3.1/apidocs/org/apache/james/transport/mailets/JDBCVirtualUserTable.html">JDBCVirtualUserTable</a>, that mimics some of the sendmail capabilities of the same name.</p>
         <p>JDBCVirtualUserTable does not provide any administation tools.
@@ -193,7 +186,6 @@ match as follows (in precedence order):
         <p>Virtual hosting is one of the most requested features, and additional work is scheduled for the 3.0 release.</p>
       </subsection>
       
-      <a name="8"/>
       <subsection name="Where do I stick classes and jars?">
         <p>We are largely reliant on what Avalon is doing in terms of classloading, but here are a few tips and suggestions:
   <ul>
@@ -203,7 +195,6 @@ match as follows (in precedence order):
   Eventually we hope to support mailet reloading and a special lib and classes directory within the james directory that custom mailets can load from, but for now these are hopefully some useful tips.</p>
       </subsection>
       
-      <a name="9"/>
       <subsection name="How do I upgrade to a newer version of James?">
         <p>
           <ol>
@@ -218,17 +209,14 @@ match as follows (in precedence order):
         </p>
       </subsection>
       
-      <a name="10"/>
       <subsection name="How do I run James as an NT/2k/XP service?">
         <p>The version of Avalon Phoenix distributed with James v2.1 and later includes a <a href="http://avalon.apache.org/phoenix/guide-administrator.html">wrapper</a> that lets you run James as a service.  An alternative strategy is to install the <a href="http://www.alexandriasc.com/software/JavaService/index.html">JavaService</a> from Alexandia Software.</p>
       </subsection>
       
-      <a name="11"/>
       <subsection name="Why isn't my mailet making changes to a MimeMessage?">
         <p>Check the JavaMail docs.  Per the API, when you call MimeMessage.setContent(blah), you have to call saveChanges() to apply your changes.  James tries to automatically call this method so you don't have to, but in certain cases you'll still have to call saveChanges().</p>
       </subsection>
       
-      <a name="12"/>
       <subsection name="How to remove unneeded services like NNTP, POP3?">
         <p>The following information is based on James 2.0a3, but the
              upcoming 2.1 version should be similar.</p>
@@ -251,19 +239,16 @@ match as follows (in precedence order):
              block.</p>
       </subsection>
       
-      <a name="13"/>
       <subsection name="How can I contribute to James">
         <p>Read the "Contributors How To" <a href="../contribute.html">here</a>
         </p>
       </subsection>
       
-      <a name="14"/>
       <subsection name="How can I make sendmail route local mail (or all mail) through James on the same machine?">
         <p>Read the "sendmail How To" <a href="james_and_sendmail.html">here</a>
         </p>
       </subsection>
       
-      <a name="15"/>
       <subsection name="I am using Microsoft's SQL Type 4 JDBC Driver, why do I get a &quot;Can't start manual transaction mode because there are cloned connections&quot; exception?">
         <p>I am using Microsoft's SQL Type 4 JDBC Driver, why do I get the following exception?<br/>java.sql.SQLException: [Microsoft][SQLServer 2000 Driver for JDBC]Can&apos;t start manual transaction mode because there are cloned connections.</p>
         <p>This seems to be a problem with the Microsoft Type 4 JDBC Driver and concurrent statements/transactions/resultsets on the same database conntection.</p>
@@ -271,7 +256,6 @@ match as follows (in precedence order):
         <p>NOTE: some people have complained about performance when using this option, the alternative is a 3rd party JDBC driver but these are often not free.</p>
       </subsection>
       
-      <a name="16"/>
       <subsection name="I am using James with a MySQL database and I keep getting a &quot;Packet is larger than max_allowed_packet&quot; when receiving large messages despite the fact that my max packet size is configured to be larger than my max message size.  What's going on?">
         <p>When a user tries to send a large message that is close to but not quite at the max message limit the send fails and an exception similar to the following appears in the log:</p>
         <p>Sent: 451 Error processing message:<br/>
@@ -291,7 +275,6 @@ match as follows (in precedence order):
             </p>
       </subsection>
       
-      <a name="17"/>
         <subsection name="How do I use Subversion to get James source code?">
           <p>First of all read this: <a href="http://www.apache.org/dev/version-control.html">ASF Source Code</a>.
           <br/>Now go to <a href="http://subversion.tigris.org/">http://subversion.tigris.org/</a> and download a subversion client.
@@ -299,7 +282,6 @@ match as follows (in precedence order):
           <br/>You may want to search the web, our <a href="http://www.mail-archive.com/server-dev@james.apache.org/">dev</a> and <a href="http://www.mail-archive.com/server-user@james.apache.org/">user</a> mail archives or our <a href="http://wiki.apache.org/james">wiki</a> for more information.</p>
         </subsection>
         
-		 <a name="18"/>
 		<subsection name="How can I control Sun's JVM DNS Lookup Configuration.">
 <p>Sun's JVM Internet address lookup uses a cache which is unbounded and doesn't time out.<br/>
 This is obviously not great for a long running process like a mail server so we have introduced a system property <strong>networkaddress.cache.ttl</strong> that is used by the distributed phoenix start-up scripts, at startup, to override the java 1.4 <strong>Security.setProperty("networkaddress.cache.ttl")</strong>.<br/> By default this is set to <strong>300</strong> seconds.</p>
