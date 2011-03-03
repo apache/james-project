@@ -241,6 +241,15 @@
         <role>PMC Member</role>
       </roles>
     </developer>
+    <developer>
+      <id>felixk</id>
+      <name>Felix Knecht</name>
+      <email>felixk at apache.org</email>
+      <timezone>1</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
   </developers>
 
   <contributors>
