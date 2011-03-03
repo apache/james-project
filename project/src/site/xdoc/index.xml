@@ -18,12 +18,7 @@
 
     <script type="text/javascript" src="js/james/index.js?v=1"></script>
     
-    <script type="text/javascript">
-      $(function(){
-        Galleria.loadTheme('./js/galleria/themes/classic/galleria.classic.js');
-        initIndexPage();
-      });
-    </script>
+    <script type="text/javascript" src="js/james/functions.js"></script>
     
   </head>
 

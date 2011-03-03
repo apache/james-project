@@ -172,6 +172,10 @@
         at the top of every file.
         </p>
         
+        <p>
+        <strong>Eclipse IDE</strong><br />
+        Eclipse users can import the files to enfore the code formating <a href="downloads/formatting.xml">formatting.xml</a>
+        </p>
         </section>
     
         </body>
