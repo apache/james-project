@@ -173,8 +173,10 @@
         </p>
         
         <p>
-        <strong>Eclipse IDE</strong><br />
-        Eclipse users can import the files to enfore the code formating <a href="downloads/formatting.xml">formatting.xml</a>
+          <strong>Eclipse IDE</strong><br />
+          Eclipse users can import those two files to enfore the code formating :
+          <a href="downloads/formatting.xml">formatting.xml</a> and
+          <a href="downloads/codetemplates.xml">codetemplates.xml</a>.
         </p>
         </section>
     
