@@ -22,7 +22,7 @@
   <artifactId>maven-skin</artifactId>
   <version>1.6-SNAPSHOT</version>
   <name>JAMES Skin</name>
-  <description>Apache JAMES Official Maven2 Site Skin</description>
+  <description>Apache JAMES Official Maven2/3 Site Skin</description>
 
   <parent>
     <groupId>org.apache.james</groupId>
@@ -30,6 +30,10 @@
     <version>1.6-SNAPSHOT</version>
   </parent>
 
+  <url>http://james.apache.org/maven-skin/</url>
+  <prerequisites>
+    <maven>3.0.2</maven>
+  </prerequisites>
 
   <distributionManagement>
     <site>
@@ -38,12 +42,36 @@
     </site>
   </distributionManagement>
 
-  <!-- This is here because of http://jira.codehaus.org/browse/MRRESOURCES-6 -->
-  <properties>
-    <maven.test.skip>true</maven.test.skip>
-  </properties>
-
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <reportPlugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-project-info-reports-plugin</artifactId>
+              <version>2.3.1</version>
+              <reportSets>
+                <reportSet>
+                  <reports>
+                  <report>distribution-management</report>
+                  <report>index</report>
+                  <report>issue-tracking</report>
+                  <report>license</report>
+                  <report>mailing-list</report>
+                  <report>project-team</report>
+                  <report>scm</report>
+                  <report>summary</report>
+                </reports>
+                </reportSet>
+              </reportSets>
+            </plugin>
+          </reportPlugins>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
 </project>

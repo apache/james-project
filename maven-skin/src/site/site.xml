@@ -25,9 +25,9 @@
         <version>1.6-SNAPSHOT</version>
     </skin>
     
-    <!-- Banner sources must have absolute URL -->
+    <!-- Banner sources must have absolute URL, otherwise inheriting will fail -->
     <bannerLeft>
-        <name>James Project</name>
+        <name>James Maven Skin</name>
         <src>http://james.apache.org/images/logos/james-project-logo.gif</src>
         <href>http://james.apache.org/index.html</href>
     </bannerLeft>
