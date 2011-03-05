@@ -94,4 +94,21 @@
       <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
     </mailingList>
   </mailingLists>
+
+  <profiles>
+    <profile>
+      <id>site-reports</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+            <configuration>
+              <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
