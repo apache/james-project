@@ -286,7 +286,38 @@
   </distributionManagement>
 
   <profiles>
- <!-- Use inherited apache release profile -->
-  </profiles>  
+    <!-- Use inherited apache release profile -->
+    
+    <!-- can be removed when all james project have been migrated to maven 3 only -->
+    <profile>
+      <id>maven-3</id>
+      <activation>
+        <file>
+          <!--  This employs that the basedir expression is only recognized by Maven 3.x (see MNG-2363) -->
+          <exists>${basedir}</exists>
+        </file>
+      </activation>
+      <properties>
+        <site.plugin.version>2.2</site.plugin.version>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-site-plugin</artifactId>
+              <version>3.0-beta-3</version>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
