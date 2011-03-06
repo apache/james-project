@@ -19,15 +19,22 @@
 -->
 <project name="James Server">
 
+  <skin>
+    <groupId>org.apache.james</groupId>
+    <artifactId>maven-skin</artifactId>
+    <version>1.6-SNAPSHOT</version>
+  </skin>
+    
   <bannerLeft>
     <name>James Server</name>
-    <src>images/james-server-logo.gif</src>
-    <href>http://james.apache.org/server/</href>
+    <src>images/logos/james-server-logo.gif</src>
+    <href>http://james.apache.org/server/index.html</href>
+    <alt>james-server-logo.gif</alt>
   </bannerLeft>
   
   <bannerRight>
     <name>The Apache Software Foundation</name>
-    <src>images/asf-logo-reduced.gif</src>
+    <src>images/logos/asf-logo-reduced.gif</src>
     <href>http://www.apache.org/</href>
   </bannerRight>
   
