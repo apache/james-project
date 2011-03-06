@@ -83,19 +83,26 @@
     #end
 ##
     #if( $banner.src )
-        #set ( $bsrc = $banner.src )
-        #if ( ! ( $bsrc.toLowerCase().startsWith("http:/") || $bsrc.toLowerCase().startsWith("https:/") ||
-                $bsrc.toLowerCase().startsWith("ftp:/") || $bsrc.toLowerCase().startsWith("mailto:/") ||
-                $bsrc.toLowerCase().startsWith("file:/") || ($bsrc.toLowerCase().indexOf("://") != -1) ) )
-            #set ( $bsrc = $PathTool.calculateLink( $bsrc, $relativePath ) )
-            #set ( $bsrc = $src.replaceAll( '\\', '/' ) )
-        #end
-        #if ( $banner.alt )
-            #set ( $alt = $banner.alt )
+        #set ( $src = $banner.src )
+      
+        ## Workaround for banner inheriting problems, see also skin docs
+        ## Right banner is always ASF reduced logo, image included in skin
+        #if( $id.toLowerCase().equals('bannerright') )
+            #set ( $src = 'images/logos/asf-logo-reduced.gif' )
         #else
-            #set ( $alt = $banner.name )
+            ## Left banner is constructed by a fix path and the value given in the <alt> tag
+            #set ( $src = 'images/logos/' + $banner.alt )
+            #if ( ! ( $src.toLowerCase().startsWith("http:/") || $src.toLowerCase().startsWith("https:/") ||
+                    $src.toLowerCase().startsWith("ftp:/") || $src.toLowerCase().startsWith("mailto:/") ||
+                    $src.toLowerCase().startsWith("file:/") || ($src.toLowerCase().indexOf("://") != -1) ) )
+                #set ( $src = $PathTool.calculateLink( $src, $relativePath ) )
+                #set ( $src = $src.replaceAll( '\\', '/' ) )
+            #end
         #end
-        <img src="$bsrc" alt="$alt" />
+        #set ( $alt = $banner.name )
+        ## End Workaround
+
+        <img src="$src" alt="$alt" />
     #else
         $banner.name
     #end

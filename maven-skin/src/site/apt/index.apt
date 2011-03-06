@@ -32,26 +32,34 @@ Apache JAMES Official Maven2/3 Site Skin
   
   * The <<\<banner\>>> tag in site.xml
   
-    Make sure that the <<\<src\>>> tag contains an absolute URL. Other will cause problems
-    when being inherited in a multi-module project due to bugs in probably doxia.
+    When inheriting the banner the <<\<src\>>> tag contains a strange url (e.g. '../../../james-imap-api'). This
+    looks like a container ULR but not like an valid image src.
+    How the workaround works:
     
-    <<Do>>
+    For the <<\<bannerRight\>>> tag (add it as usual) the site.vm replaces any src values by 'images/logos/asf-logo-reduced.gif'.
+    
+    For the <<\<bannerLeft\>>> tag (add it as usual) the site.vml replaces any src values by ('images/logos/' + $banner.alt)
+    (set the images name as as value of the <<\<alt\>>> tag).
+    
+    The logos for all the JAMES projects are included via this skin (see src/resources/images/logos).
+    
+    <<Note>>
+    
+    When a project logo changes then it must also be added/changed in this maven-skin.
+   
+    <<A correct definition could look like>>
 
 +----------------------------------------+
 <bannerLeft>
-    <name>James Project</name>
-    <src>http://james.apache.org/images/logos/james-project-logo.gif</src>
+    <name>James IMAP</name>
+    <src>images/logos/james-imap-logo.gif</src>
+    <href>http://james.apache.org/imap/index.html</href>
+    <alt>james-imap-logo.gif</alt>
+</bannerLeft>
+
+<bannerRight>
+    <name>Apache Software Foundation</name>
+    <src>images/logos/asf-logo-reduced.gif</src>
     <href>http://james.apache.org/index.html</href>
 </bannerLeft>
 +----------------------------------------+
-
-    <<Don't>>
-
-+----------------------------------------+
-<bannerLeft>
-    <name>James Project</name>
-    <src>images/logos/james-project-logo.gif</src>
-    <href>http://james.apache.org/index.html</href>
-</bannerLeft>
-+----------------------------------------+
-    
