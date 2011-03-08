@@ -94,6 +94,23 @@
       <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
     </mailingList>
   </mailingLists>
+  
+  <build>
+    <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-descriptor</id>
+                <goals>
+                  <goal>attach-descriptor</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+    </plugins>
+  </build>
 
   <profiles>
     <profile>
@@ -106,6 +123,14 @@
             <configuration>
               <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
             </configuration>
+            <executions>
+              <execution>
+                <id>attach-descriptor</id>
+                <goals>
+                  <goal>attach-descriptor</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
