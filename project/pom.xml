@@ -132,16 +132,12 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-project-info-reports-plugin</artifactId>
-              <reportSets>
-                <reportSet>
-                  <reports>
-                    <report>index</report>
-                    <report>mailing-list</report>
-                    <report>project-team</report>
-                    <report>license</report>
-                  </reports>
-                </reportSet>
-              </reportSets>
+              <reports>
+                <report>index</report>
+                <report>mailing-list</report>
+                <report>project-team</report>
+                <report>license</report>
+              </reports>
             </plugin>
           </reportPlugins>
         </configuration>
