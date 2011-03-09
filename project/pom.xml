@@ -94,46 +94,93 @@
       <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
     </mailingList>
   </mailingLists>
-  
+
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>${maven-site-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>2.3.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-site-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-descriptor</id>
-                <goals>
-                  <goal>attach-descriptor</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <executions>
+          <!-- Attach non-reporting site-descriptor when installing -->
+          <execution>
+            <id>attach-descriptor</id>
+            <goals>
+              <goal>attach-descriptor</goal>
+            </goals>
+            <configuration>
+              <siteDirectory>${basedir}/src/site</siteDirectory>
+              <generateReports>false</generateReports>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <reportPlugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-project-info-reports-plugin</artifactId>
+              <reportSets>
+                <reportSet>
+                  <reports>
+                    <report>index</report>
+                    <report>mailing-list</report>
+                    <report>project-team</report>
+                    <report>license</report>
+                  </reports>
+                </reportSet>
+              </reportSets>
+            </plugin>
+          </reportPlugins>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
   <profiles>
+    <!-- can be removed when all james project have been migrated to maven 3 only -->
+    <profile>
+      <id>maven-3</id>
+      <activation>
+        <file>
+          <!--  This employs that the basedir expression is only recognized by Maven 3.x (see MNG-2363) -->
+          <exists>${basedir}</exists>
+        </file>
+      </activation>
+      <properties>
+        <maven-site-plugin.version>3.0-beta-3</maven-site-plugin.version>
+      </properties>
+    </profile>
+
+    <!--
+      Switches between generating the documentation site (without using this profile) and
+      generating the tenchnical reports site (using this profile)
+    -->
     <profile>
       <id>site-reports</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-site-plugin</artifactId>
-            <configuration>
-              <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
-            </configuration>
-            <executions>
-              <execution>
-                <id>attach-descriptor</id>
-                <goals>
-                  <goal>attach-descriptor</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
+      <properties>
+        <!-- Overriding values set by default (see properties section) -->
+        <maven-site-plugin.siteDirectory>${basedir}/src/reporting-site</maven-site-plugin.siteDirectory>
+        <maven-site-plugin.generateReports>true</maven-site-plugin.generateReports>
+      </properties>
     </profile>
   </profiles>
+
+  <properties>
+    <maven-site-plugin.version>2.2</maven-site-plugin.version>
+    <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
+    <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
+  </properties>
 </project>
