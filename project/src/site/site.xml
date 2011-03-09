@@ -25,16 +25,16 @@
     <version>1.6-SNAPSHOT</version>
   </skin>
   
-  <!-- Banner sources must have absolute URL, otherwise inheriting will fail -->
   <bannerLeft>
     <name>James Project</name>
-    <src>http://james.apache.org/images/logos/james-project-logo.gif</src>
+    <src>images/logos/james-project-logo.gif</src>
     <href>http://james.apache.org/index.html</href>
+    <alt>james-project-logo.gif</alt>
   </bannerLeft>
 
   <bannerRight>
     <name>The Apache Software Foundation</name>
-    <src>http://james.apache.org/images/logos/asf-logo-reduced.gif</src>
+    <src>images/logos/asf-logo-reduced.gif</src>
     <href>http://www.apache.org/index.html</href>
   </bannerRight>
 
