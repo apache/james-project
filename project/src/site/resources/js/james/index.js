@@ -31,7 +31,9 @@ function initIndexPage() {
       switchLogo('images/james-project-logo.gif');
     });
 /*    
-    for (var i=0; i < 9; i++) {
+     // This should work, but it does not...
+     // So we explicitelly repeat ourself...
+     for (var i=0; i < 9; i++) {
       $('#james-logo-' + i + '-preview').click(function() {
         switchLogo('logo-call/james-logo-'+ i + '.png');
       });
@@ -67,6 +69,10 @@ function initIndexPage() {
     
     $('#james-logo-8-preview').click(function() {
         switchLogo('logo-call/james-logo-8.png');
+    });
+    
+    $('#james-logo-9-preview').click(function() {
+        switchLogo('logo-call/james-logo-9.png');
     });
     
     if (window.location.hash == '#logo') {

@@ -301,6 +301,15 @@
             <p><img src="logo-call/james-logo-8-avatar.png"/></p>
           </subsection>
 
+          <subsection name="Proposal 9">
+            <div id="james-logo-9-preview">
+              <p><img src="logo-call/james-logo-9.png"/></p>
+              <p>
+                <a href="#">Click to change the upper left logo on this page and preview this proposal.</a>
+              </p>
+            </div>
+          </subsection>
+
         </div>
 
         <div id="tabs-5">
