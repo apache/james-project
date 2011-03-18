@@ -19,24 +19,22 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.james</groupId>
-  <artifactId>james-server-root</artifactId>
-  <name>JAMES Server</name>
-  <version>1.6-SNAPSHOT</version>
-  <description>
-    Apache JAMES Server
-  </description>
-  <packaging>pom</packaging>
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
     <version>1.6-SNAPSHOT</version>
   </parent>
+  <groupId>org.apache.james</groupId>
+  <artifactId>james-server-root</artifactId>
+  <name>JAMES Server</name>
+  <description>Apache JAMES Server</description>
+  <url>http://james.apache.org/server/</url>
+  <inceptionYear>2006</inceptionYear>
+  <packaging>pom</packaging>
+
   <modules>
     <module>2.2.0</module>
   </modules>
-  <url>http://james.apache.org/server/</url>
-  <inceptionYear>2006</inceptionYear>
 
   <distributionManagement>
     <site>
@@ -66,6 +64,5 @@
       <archive>http://www.mail-archive.com/general%40james.apache.org/</archive>
     </mailingList>
   </mailingLists>
-
 
 </project>

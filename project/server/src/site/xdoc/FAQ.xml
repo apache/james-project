@@ -27,7 +27,7 @@
   <body>
   
     <section name="This FAQ">
-      <P>This is a living document that provides answers to common questions about James, installation, configuration, admin and running not already answered in the documentation. Last Updated January 2005.</P>
+      <p>This is a living document that provides answers to common questions about James, installation, configuration, admin and running not already answered in the documentation. Last Updated January 2005.</p>
     </section>
   
     <section name="Questions">

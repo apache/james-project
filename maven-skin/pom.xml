@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -17,23 +17,18 @@
   specific language governing permissions and limitations
   under the License.    
 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.james</groupId>
-  <artifactId>maven-skin</artifactId>
-  <version>1.6-SNAPSHOT</version>
-  <name>JAMES Skin</name>
-  <description>Apache JAMES Official Maven2/3 Site Skin</description>
-
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
     <version>1.6-SNAPSHOT</version>
   </parent>
-
+  <groupId>org.apache.james</groupId>
+  <artifactId>maven-skin</artifactId>
+  <name>JAMES Skin</name>
+  <description>Apache JAMES Official Maven2/3 Site Skin</description>
   <url>http://james.apache.org/maven-skin/</url>
-  <prerequisites>
-    <maven>3.0.2</maven>
-  </prerequisites>
 
   <distributionManagement>
     <site>
@@ -43,6 +38,20 @@
   </distributionManagement>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.0-beta-3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>2.3.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -52,7 +61,6 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-project-info-reports-plugin</artifactId>
-              <version>2.3.1</version>
               <reports>
                 <report>distribution-management</report>
                 <report>index</report>
