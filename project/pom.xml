@@ -1,48 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-  
-      http://www.apache.org/licenses/LICENSE-2.0
-  
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.    
-  -->
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.james</groupId>
-  <artifactId>james-project</artifactId>
-  <name>Apache JAMES Project</name>
-  <version>1.6-SNAPSHOT</version>
-  <description>
-    The Apache JAMES Project
-  </description>
-  
   <parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-parent</artifactId>
     <version>1.6-SNAPSHOT</version>
   </parent>
-
-  <modules>
-    <module>server</module>
-  </modules>
-  
+  <groupId>org.apache.james</groupId>
+  <artifactId>james-project</artifactId>
+  <name>Apache JAMES Project</name>
+  <description>The Apache JAMES Project</description>
   <url>http://james.apache.org/</url>
   <inceptionYear>2006</inceptionYear>
   <packaging>pom</packaging>
 
-  <dependencies>
-  </dependencies>
+  <modules>
+    <module>server</module>
+  </modules>
 
   <issueManagement>
     <system>JIRA</system>
@@ -101,7 +93,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
-          <version>${maven-site-plugin.version}</version>
+          <version>3.0-beta-3</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -146,23 +138,9 @@
   </build>
 
   <profiles>
-    <!-- can be removed when all james project have been migrated to maven 3 only -->
-    <profile>
-      <id>maven-3</id>
-      <activation>
-        <file>
-          <!--  This employs that the basedir expression is only recognized by Maven 3.x (see MNG-2363) -->
-          <exists>${basedir}</exists>
-        </file>
-      </activation>
-      <properties>
-        <maven-site-plugin.version>3.0-beta-3</maven-site-plugin.version>
-      </properties>
-    </profile>
-
     <!--
       Switches between generating the documentation site (without using this profile) and
-      generating the tenchnical reports site (using this profile)
+      generating the technical reports site (using this profile)
     -->
     <profile>
       <id>site-reports</id>
@@ -175,7 +153,6 @@
   </profiles>
 
   <properties>
-    <maven-site-plugin.version>2.2</maven-site-plugin.version>
     <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
     <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
   </properties>
