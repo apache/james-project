@@ -18,142 +18,142 @@
   under the License.    
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.james</groupId>
+        <artifactId>james-parent</artifactId>
+        <version>1.6-SNAPSHOT</version>
+    </parent>
     <groupId>org.apache.james</groupId>
-    <artifactId>james-parent</artifactId>
-    <version>1.6-SNAPSHOT</version>
-  </parent>
-  <groupId>org.apache.james</groupId>
-  <artifactId>james-project</artifactId>
-  <name>Apache JAMES Project</name>
-  <description>The Apache JAMES Project</description>
-  <url>http://james.apache.org/</url>
-  <inceptionYear>2006</inceptionYear>
-  <packaging>pom</packaging>
+    <artifactId>james-project</artifactId>
+    <name>Apache JAMES Project</name>
+    <description>The Apache JAMES Project</description>
+    <url>http://james.apache.org/</url>
+    <inceptionYear>2006</inceptionYear>
+    <packaging>pom</packaging>
 
-  <modules>
-    <module>server</module>
-  </modules>
+    <modules>
+        <module>server</module>
+    </modules>
 
-  <issueManagement>
-    <system>JIRA</system>
-    <url>http://issues.apache.org/jira/browse/JAMES</url>
-  </issueManagement>
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://issues.apache.org/jira/browse/JAMES</url>
+    </issueManagement>
 
-  <distributionManagement>
-    <!-- Each project must override this with their own -->
-    <site>
-      <id>james-website</id>
-      <url>scp://people.apache.org/www/james.apache.org/</url>
-    </site>
-  </distributionManagement>
+    <distributionManagement>
+        <!-- Each project must override this with their own -->
+        <site>
+            <id>james-website</id>
+            <url>scp://people.apache.org/www/james.apache.org/</url>
+        </site>
+    </distributionManagement>
 
-  <mailingLists>
-    <mailingList>
-      <name>Server Development (including components)</name>
-      <subscribe>server-dev-subscribe@james.apache.org</subscribe>
-      <unsubscribe>server-dev-unsubscribe@james.apache.org</unsubscribe>
-      <post>server-dev@james.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/james-server-dev/</archive>
-    </mailingList>
-    <mailingList>
-      <name>Server User</name>
-      <subscribe>server-user-subscribe@james.apache.org</subscribe>
-      <unsubscribe>server-user-unsubscribe@james.apache.org</unsubscribe>
-      <post>server-user@james.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/james-server-user/</archive>
-    </mailingList>
-    <mailingList>
-      <name>Mime4J</name>
-      <subscribe>mime4j-dev-subscribe@james.apache.org</subscribe>
-      <unsubscribe>mime4j-dev-unsubscribe@james.apache.org</unsubscribe>
-      <post>mime4j-dev@james.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/james-mime4j-dev/</archive>
-    </mailingList>
-    <mailingList>
-      <name>General</name>
-      <subscribe>general-subscribe@james.apache.org</subscribe>
-      <unsubscribe>general-unsubscribe@james.apache.org</unsubscribe>
-      <post>general@james.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/james-general/</archive>
-    </mailingList>
-    <mailingList>
-      <name>Website Development</name>
-      <subscribe>site-dev-subscribe@james.apache.org</subscribe>
-      <unsubscribe>site-dev-unsubscribe@james.apache.org</unsubscribe>
-      <post>site-dev@james.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
-    </mailingList>
-  </mailingLists>
+    <mailingLists>
+        <mailingList>
+            <name>Server Development (including components)</name>
+            <subscribe>server-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>server-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>server-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-server-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Server User</name>
+            <subscribe>server-user-subscribe@james.apache.org</subscribe>
+            <unsubscribe>server-user-unsubscribe@james.apache.org</unsubscribe>
+            <post>server-user@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-server-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Mime4J</name>
+            <subscribe>mime4j-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>mime4j-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>mime4j-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-mime4j-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>General</name>
+            <subscribe>general-subscribe@james.apache.org</subscribe>
+            <unsubscribe>general-unsubscribe@james.apache.org</unsubscribe>
+            <post>general@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-general/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Website Development</name>
+            <subscribe>site-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>site-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>site-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
+        </mailingList>
+    </mailingLists>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.0-beta-3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>2.3.1</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <executions>
-          <!-- Attach non-reporting site-descriptor when installing -->
-          <execution>
-            <id>attach-descriptor</id>
-            <goals>
-              <goal>attach-descriptor</goal>
-            </goals>
-            <configuration>
-              <siteDirectory>${basedir}/src/site</siteDirectory>
-              <generateReports>false</generateReports>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <reportPlugins>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0-beta-3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-project-info-reports-plugin</artifactId>
-              <reports>
-                <report>index</report>
-                <report>mailing-list</report>
-                <report>project-team</report>
-                <report>license</report>
-              </reports>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <executions>
+                    <!-- Attach non-reporting site-descriptor when installing -->
+                    <execution>
+                        <id>attach-descriptor</id>
+                        <goals>
+                            <goal>attach-descriptor</goal>
+                        </goals>
+                        <configuration>
+                            <siteDirectory>${basedir}/src/site</siteDirectory>
+                            <generateReports>false</generateReports>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                            <reports>
+                                <report>index</report>
+                                <report>mailing-list</report>
+                                <report>project-team</report>
+                                <report>license</report>
+                            </reports>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
             </plugin>
-          </reportPlugins>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+        </plugins>
+    </build>
 
-  <profiles>
-    <!--
-      Switches between generating the documentation site (without using this profile) and
-      generating the technical reports site (using this profile)
-    -->
-    <profile>
-      <id>site-reports</id>
-      <properties>
-        <!-- Overriding values set by default (see properties section) -->
-        <maven-site-plugin.siteDirectory>${basedir}/src/reporting-site</maven-site-plugin.siteDirectory>
-        <maven-site-plugin.generateReports>true</maven-site-plugin.generateReports>
-      </properties>
-    </profile>
-  </profiles>
+    <profiles>
+        <!--
+          Switches between generating the documentation site (without using this profile) and
+          generating the technical reports site (using this profile)
+        -->
+        <profile>
+            <id>site-reports</id>
+            <properties>
+                <!-- Overriding values set by default (see properties section) -->
+                <maven-site-plugin.siteDirectory>${basedir}/src/reporting-site</maven-site-plugin.siteDirectory>
+                <maven-site-plugin.generateReports>true</maven-site-plugin.generateReports>
+            </properties>
+        </profile>
+    </profiles>
 
-  <properties>
-    <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
-    <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
-  </properties>
+    <properties>
+        <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
+        <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
+    </properties>
 </project>

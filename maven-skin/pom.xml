@@ -18,64 +18,64 @@
   under the License.    
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.james</groupId>
+        <artifactId>james-parent</artifactId>
+        <version>1.6-SNAPSHOT</version>
+    </parent>
     <groupId>org.apache.james</groupId>
-    <artifactId>james-parent</artifactId>
-    <version>1.6-SNAPSHOT</version>
-  </parent>
-  <groupId>org.apache.james</groupId>
-  <artifactId>maven-skin</artifactId>
-  <name>JAMES Skin</name>
-  <description>Apache JAMES Official Maven2/3 Site Skin</description>
-  <url>http://james.apache.org/maven-skin/</url>
+    <artifactId>maven-skin</artifactId>
+    <name>JAMES Skin</name>
+    <description>Apache JAMES Official Maven2/3 Site Skin</description>
+    <url>http://james.apache.org/maven-skin/</url>
 
-  <distributionManagement>
-    <site>
-      <id>maven-skin-website</id>
-      <url>scp://people.apache.org/www/james.apache.org/maven-skin</url>
-    </site>
-  </distributionManagement>
+    <distributionManagement>
+        <site>
+            <id>maven-skin-website</id>
+            <url>scp://people.apache.org/www/james.apache.org/maven-skin</url>
+        </site>
+    </distributionManagement>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.0-beta-3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>2.3.1</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <configuration>
-          <reportPlugins>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0-beta-3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-project-info-reports-plugin</artifactId>
-              <reports>
-                <report>distribution-management</report>
-                <report>index</report>
-                <report>issue-tracking</report>
-                <report>license</report>
-                <report>mailing-list</report>
-                <report>project-team</report>
-                <report>scm</report>
-                <report>summary</report>
-              </reports>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                            <reports>
+                                <report>distribution-management</report>
+                                <report>index</report>
+                                <report>issue-tracking</report>
+                                <report>license</report>
+                                <report>mailing-list</report>
+                                <report>project-team</report>
+                                <report>scm</report>
+                                <report>summary</report>
+                            </reports>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
             </plugin>
-          </reportPlugins>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+        </plugins>
+    </build>
 
 </project>

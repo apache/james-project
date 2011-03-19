@@ -18,254 +18,247 @@
   under the License.    
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache</groupId>
-    <artifactId>apache</artifactId>
-    <version>9</version>
-  </parent>
-  <groupId>org.apache.james</groupId>
-  <artifactId>james-parent</artifactId>
-  <name>Apache JAMES Parent POM</name>
-  <version>1.6-SNAPSHOT</version>
-  <description>The Apache JAMES Parent POM</description>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>9</version>
+    </parent>
+    <groupId>org.apache.james</groupId>
+    <artifactId>james-parent</artifactId>
+    <name>Apache JAMES Parent POM</name>
+    <version>1.6-SNAPSHOT</version>
+    <description>The Apache JAMES Parent POM</description>
+    <url>http://james.apache.org/</url>
+    <inceptionYear>2006</inceptionYear>
+    <packaging>pom</packaging>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  <prerequisites>
-    <maven>3.0.2</maven>
-  </prerequisites>
-  
-  <modules>
-    <module>maven-skin</module>
-    <module>project</module>
-  </modules>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-  <url>http://james.apache.org/</url>
-  <inceptionYear>2006</inceptionYear>
-  <packaging>pom</packaging>
+    <prerequisites>
+        <maven>3.0.2</maven>
+    </prerequisites>
 
-  <organization>
-    <name>The Apache Software Foundation</name>
-    <url>http://www.apache.org</url>
-  </organization>
+    <modules>
+        <module>maven-skin</module>
+        <module>project</module>
+    </modules>
 
-  <ciManagement>
-    <system>hudson</system>
-    <url>http://hudson.zones.apache.org/hudson/view/James/</url>
-  </ciManagement>
+    <organization>
+        <name>The Apache Software Foundation</name>
+        <url>http://www.apache.org</url>
+    </organization>
 
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+    <ciManagement>
+        <system>hudson</system>
+        <url>http://hudson.zones.apache.org/hudson/view/James/</url>
+    </ciManagement>
 
-  <issueManagement>
-    <system>JIRA</system>
-    <url>http://issues.apache.org/jira/browse/JAMES</url>
-  </issueManagement>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-  <developers>
-    <developer>
-      <id>bago</id>
-      <name>Stefano Bagnara</name>
-      <email>bago at apache.org</email>
-      <timezone>2</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>norman</id>
-      <name>Norman Maurer</name>
-      <email>norman at apache.org</email>
-      <timezone>2</timezone>
-      <roles>
-        <role>PMC Chair</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>serge</id>
-      <name>Serge Knystautas</name>
-      <email>sergek at lokitech.com</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>benrdf</id>
-      <name>Bernd Fondermann</name>
-      <email>bf_jak at brainlounge.de</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>sbrewin</id>
-      <name>Steve Brewin</name>
-      <email>sbrewin at synsys.com</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>hilmer</id>
-      <!-- This is not correctly handled by maven release plugin -->
-      <!-- <name>S&#248;ren Hilmer</name> -->
-      <name>Soren Hilmer</name>
-      <email>sh at widetrail.dk</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>noel</id>
-      <name>Noel J. Bergman</name>
-      <email>noel at devtech.com</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>danny</id>
-      <name>Danny Angus</name>
-      <email>danny at apache.org</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>adc</id>
-      <name>Alan D. Cabrera</name>
-      <email>list at toolazydogs.com</email>
-      <timezone>-8</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>vincenzo</id>
-      <name>Vincenzo Gianferrari Pini</name>
-      <email>vincenzo.gianferraripini at praxis.it</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>rdonkin</id>
-      <name>Robert Burrell Donkin</name>
-      <email>rdonkin at apache.org</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>niklas</id>
-      <name>Niklas Therning</name>
-      <email>niklas(at)apache(dot)org</email>
-      <organization>Trillian AB</organization>
-    </developer>
-    <developer>
-      <id>jcheng</id>
-      <name>Joe Cheng</name>
-      <email>joe(at)joecheng(dot)com</email>
-      <properties>
-        <description>
-          Former author to the mime4j product
-        </description>
-      </properties>
-    </developer>
-    <developer>
-      <id>mwiederkehr</id>
-      <name>Markus Wiederkehr</name>
-      <email>mwiederkehr at apache.org</email>
-      <timezone />
-      <roles>
-        <role>PMC Member</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>olegk</id>
-      <name>Oleg Kalnichevski</name>
-      <email>olegk at apache.org</email>
-      <timezone />
-      <roles>
-        <role>PMC Member</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>manolo</id>
-      <name>Manuel Carrasco Monino</name>
-      <email>manolo at apache.org</email>
-      <timezone />
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>eric</id>
-      <name>Eric Charles</name>
-      <email>eric at apache.org</email>
-      <timezone />
-      <roles>
-        <role>PMC Member</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>felixk</id>
-      <name>Felix Knecht</name>
-      <email>felixk at apache.org</email>
-      <timezone>1</timezone>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-  </developers>
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://issues.apache.org/jira/browse/JAMES</url>
+    </issueManagement>
 
-  <contributors>
-    <contributor>
-      <name>Rob Oxspring</name>
-      <properties>
-        <description>
-          Contributed to the mime4j product
-        </description>
-      </properties>
-    </contributor>
-    <contributor>
-      <name>Roger Fullerton</name>
-      <properties>
-        <description>
-          Wrote spfjava, the first spf implementation in java
-        </description>
-      </properties>
-    </contributor>
-  </contributors>
+    <developers>
+        <developer>
+            <id>bago</id>
+            <name>Stefano Bagnara</name>
+            <email>bago at apache.org</email>
+            <timezone>2</timezone>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>norman</id>
+            <name>Norman Maurer</name>
+            <email>norman at apache.org</email>
+            <timezone>2</timezone>
+            <roles>
+                <role>PMC Chair</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>serge</id>
+            <name>Serge Knystautas</name>
+            <email>sergek at lokitech.com</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>benrdf</id>
+            <name>Bernd Fondermann</name>
+            <email>bf_jak at brainlounge.de</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>sbrewin</id>
+            <name>Steve Brewin</name>
+            <email>sbrewin at synsys.com</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>hilmer</id>
+            <!-- This is not correctly handled by maven release plugin -->
+            <!-- <name>S&#248;ren Hilmer</name> -->
+            <name>Soren Hilmer</name>
+            <email>sh at widetrail.dk</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>noel</id>
+            <name>Noel J. Bergman</name>
+            <email>noel at devtech.com</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>danny</id>
+            <name>Danny Angus</name>
+            <email>danny at apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>adc</id>
+            <name>Alan D. Cabrera</name>
+            <email>list at toolazydogs.com</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>vincenzo</id>
+            <name>Vincenzo Gianferrari Pini</name>
+            <email>vincenzo.gianferraripini at praxis.it</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>rdonkin</id>
+            <name>Robert Burrell Donkin</name>
+            <email>rdonkin at apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>niklas</id>
+            <name>Niklas Therning</name>
+            <email>niklas(at)apache(dot)org</email>
+            <organization>Trillian AB</organization>
+        </developer>
+        <developer>
+            <id>jcheng</id>
+            <name>Joe Cheng</name>
+            <email>joe(at)joecheng(dot)com</email>
+            <properties>
+                <description>Former author to the mime4j product</description>
+            </properties>
+        </developer>
+        <developer>
+            <id>mwiederkehr</id>
+            <name>Markus Wiederkehr</name>
+            <email>mwiederkehr at apache.org</email>
+            <timezone />
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>olegk</id>
+            <name>Oleg Kalnichevski</name>
+            <email>olegk at apache.org</email>
+            <timezone />
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>manolo</id>
+            <name>Manuel Carrasco Monino</name>
+            <email>manolo at apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>eric</id>
+            <name>Eric Charles</name>
+            <email>eric at apache.org</email>
+            <timezone />
+            <roles>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>felixk</id>
+            <name>Felix Knecht</name>
+            <email>felixk at apache.org</email>
+            <timezone>1</timezone>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/james/project/trunk</url>
-  </scm>
+    <contributors>
+        <contributor>
+            <name>Rob Oxspring</name>
+            <properties>
+                <description>Contributed to the mime4j product</description>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Roger Fullerton</name>
+            <properties>
+                <description>Wrote spfjava, the first spf implementation in java</description>
+            </properties>
+        </contributor>
+    </contributors>
 
-  <distributionManagement>
-    <!-- Each project must override this with their own -->
-    <site>
-      <id>james-parent-website</id>
-      <url>scp://people.apache.org/www/james.apache.org/parent/</url>
-    </site>
-  </distributionManagement>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
+        <url>http://svn.apache.org/viewvc/james/project/trunk</url>
+    </scm>
+
+    <distributionManagement>
+        <!-- Each project must override this with their own -->
+        <site>
+            <id>james-parent-website</id>
+            <url>scp://people.apache.org/www/james.apache.org/parent/</url>
+        </site>
+    </distributionManagement>
 
 </project>
