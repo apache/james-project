@@ -32,9 +32,11 @@
     <inceptionYear>2006</inceptionYear>
     <packaging>pom</packaging>
 
+    <!-- No need to build legacy documentation each time
     <modules>
         <module>2.2.0</module>
     </modules>
+    -->
 
     <distributionManagement>
         <site>
