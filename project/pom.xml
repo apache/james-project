@@ -32,9 +32,11 @@
     <inceptionYear>2006</inceptionYear>
     <packaging>pom</packaging>
 
+    <!-- No need to build legacy documentation each time
     <modules>
         <module>server</module>
     </modules>
+    -->
 
     <issueManagement>
         <system>JIRA</system>
