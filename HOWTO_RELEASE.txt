@@ -1,4 +1,14 @@
-Howto release via maven release plugin:
+Howto release via maven release plugin
+--------------------------------------
 
-See http://maven.apache.org/developers/release/apache-release.html
-      
+See details on http://www.apache.org/dev/publishing-maven-artifacts.html
+
+In short, just follow the 'standard' process:
+1. Prepare pom for release
+2. publish snapshot
+3. prepare release
+4. stage the release for a vote (don't forget to close the staging repository)
+5. vote
+6. release
+
+Don't forget to add your key to http://www.apache.org/dist/james/KEYS
