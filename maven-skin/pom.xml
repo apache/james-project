@@ -26,8 +26,8 @@
     </parent>
     <groupId>org.apache.james</groupId>
     <artifactId>maven-skin</artifactId>
-    <name>JAMES Skin</name>
-    <description>Apache JAMES Official Maven2/3 Site Skin</description>
+    <name>Apache James Skin</name>
+    <description>The Apache James Official Maven2/3 Site Skin</description>
     <url>http://james.apache.org/maven-skin/</url>
 
     <distributionManagement>

@@ -26,8 +26,8 @@
     </parent>
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
-    <name>Apache JAMES Project</name>
-    <description>The Apache JAMES Project</description>
+    <name>Apache James Project</name>
+    <description>The Apache James Project</description>
     <url>http://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
     <packaging>pom</packaging>
