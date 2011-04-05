@@ -33,7 +33,8 @@
         <li><a href="#tabs-2">Server Pack</a></li>
         <li><a href="#tabs-3">Components</a></li>
         <li><a href="#tabs-4">Call for Logo</a></li>
-        <li><a href="#tabs-5">Video</a></li>
+        <!--  Video tab is temporary desactivated, seems to be not displayed -->
+<!--        <li><a href="#tabs-5">Video</a></li>-->
       </ul>
 
       <div id="tabs-1">
@@ -42,7 +43,7 @@
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 				<strong>Hey!</strong> 
-				 James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
+				 Apache James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
 	             documentation, bug report, feedback...
 				</p>
 			</div>
@@ -51,14 +52,14 @@
         <p>The Apache James Project delivers a rich set of open source modules and libraries, written in Java, 
            related to Internet mail communication which build into an advanced enterprise mail server.</p>
            
-          <p>All are welcome to the Community!  We recommend that Users, Developers, Curious and Fans subscribe to the James 
+          <p>All are welcome to the Community!  We recommend that Users, Developers, Curious and Fans subscribe to the 
              <a href='http://james.apache.org/mail.html'>mailing lists</a> and 
              follow <a href="http://twitter.com/ApacheJames">@ApacheJames</a> on Twitter.</p>
              
           <p>You can also read the <a href="http://wiki.apache.org/james/">wiki</a> 
              (discover <a href="http://wiki.apache.org/james/JamesUsers">who uses James</a>,...)</p>
         
-          <p>Just like other <a href='http://projects.apache.org'>Apache projects</a>, James is developed in an
+          <p>Just like other <a href='http://projects.apache.org'>Apache projects</a>, Apache James is developed in an
              <a href='http://www.apache.org/foundation/how-it-works.html#meritocracy'>open</a> and 
              <a href='http://www.apache.org/foundation/how-it-works.html#management'>collaborative manner</a>.</p>
            
@@ -103,9 +104,9 @@
           
           <subsection name="James Packaged as a Server">
     
-            <p><a href='http://james.apache.org/server'>James Server</a> 3.0 and 2.3.2 are integrated email server with advanced fully functional features.</p>
+            <p><a href='http://james.apache.org/server'>Apache James Server</a> 3.0 and 2.3.2 are integrated email server with advanced fully functional features.</p>
                
-            <p>James 3.0 provides a mailet container, delegating to independent processing agents known as mailets.
+            <p>Apache James Server 3.0 provides a mailet container, delegating to independent processing agents known as mailets.
                It benefits from modular architecture, is built on Spring and is moving towards OSGi.
                It supports the following protocols:</p>
            
@@ -118,14 +119,14 @@
                      <abbr title='Post Office Protocol'>POP3</abbr></a></li>
                   <li><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>
                      <abbr title='Internet Message Access Protocol'>IMAP</abbr></a> 
-                     (see <a href='http://james.apache.org/imap'>IMAP</a> sub-project).</li>
-                  <li>Sieve filtering into mailboxes for incoming mail.</li>
+                     (see <a href='http://james.apache.org/imap'>Apache James IMAP</a> project).</li>
+                  <li>Sieve filtering into mailboxes for incoming mail (see <a href="http://james.apache.org/jsieve/index.html">Apache James jSieve</a> project).</li>
                   <li>Fetchmail from POP3 and IMAP accounts.</li>
                   <li><a href='http://james.apache.org/server/rfclist/nntp/rfc0977.txt'>
                       <abbr title='Network News Transfer Protocol'>NNTP</abbr></a> (better known as news, only with Server V2).</li>
                </ul>
       
-            <p>You can also try the <a href='http://james.apache.org/hupa/'>Hupa</a> WEB-mail solution to give access
+            <p>You can also try the <a href='http://james.apache.org/hupa/'>Apache James Hupa</a> WEB-mail solution to give access
                from any browser to IMAP mailboxes (hosted by James Server or any other IMAP Server).</p>
                
            </subsection>
@@ -134,52 +135,52 @@
 
           <div id="tabs-3">
           
-          <subsection name="James Software Components">
+          <subsection name="Apache James Software Components">
 
             <p>Developers looking for a modular mail platform on which to build can look 
                at the modules and libraries used to compose James Server 3.0.</p>
       
-            <p><a href='http://james.apache.org/imap/'>IMAP</a> provides a flexible codec for IMAP, 
+            <p><a href='http://james.apache.org/imap/'>Apache James IMAP</a> provides a flexible codec for IMAP, 
                command processors and a sample data access layer. In combination with a socket layer, 
                and a mailbox persistence, this library can be used to create an IMAP server.</p>
         
-            <p>The <a href='http://james.apache.org/mailets/'>Mailet subproject</a> collects products
+            <p>The <a href='http://james.apache.org/mailets/'>Apache James Mailet project</a> collects products
                related to mailets (mail processing components analogous to servlets). These are independent of the 
                 <a href='http://james.apache.org/server/'>James server</a> and can be reused in any mailet container.</p>
             
             <ul>
-              <li>The <a href='http://james.apache.org/mailet/api'>Mailet API</a> specifies mailets.</li>
-              <li>The <a href='http://james.apache.org/mailet/base'>Mailet Basic Toolkit.</a>
+              <li>The <a href='http://james.apache.org/mailet/api'>Apache James Mailet API</a> specifies mailets.</li>
+              <li>The <a href='http://james.apache.org/mailet/base'>Apache James Mailet Basic Toolkit.</a>
                   collects utilities and lightweight frameworks useful to develop and test mailets.</li>
-              <li><a href='http://james.apache.org/mailet/standard'>Standard Mailets</a> collects
+              <li><a href='http://james.apache.org/mailet/standard'>Apache James Standard Mailets</a> collects
                   general processing mailets with limited dependencies.</li>
-              <li><a href='http://james.apache.org/mailet/crypto'>Crypto Mailets</a> collects
+              <li><a href='http://james.apache.org/mailet/crypto'>Apache James Crypto Mailets</a> collects
                   mailets which perform cryptographic processing such as signing, encrypting,
                   decrypting and signature verification.</li>
             </ul>
       
-            <p><a href='http://james.apache.org/protocols/'>Protocols</a> project delivers a lightweight, 
+            <p><a href='http://james.apache.org/protocols/'>Apache James Protocols</a> project delivers a lightweight, 
                and highly extensible framework for mail protocols implementations.</p>
         
-            <p><a href='http://james.apache.org/mailbox/'>Mailbox</a> is a flexible Mailbox storage 
+            <p><a href='http://james.apache.org/mailbox/'>Apache James Mailbox</a> is a flexible Mailbox storage 
                accessible by mail (imap, pop3, smtp,...) and other protocols..</p>
         
-            <p><a href='http://james.apache.org/mime4j/'>Mime4J</a> parses MIME typed documents (including 
+            <p><a href='http://james.apache.org/mime4j/'>Apache James Mime4J</a> parses MIME typed documents (including 
                 - but not limited to - mail). APIs similar to DOM, SAX and pull parsers are exposed.</p>
       
-            <p><a href='http://james.apache.org/jspf/'>jSPF</a> implements <abbr title='Sender Policy Framework'>
+            <p><a href='http://james.apache.org/jspf/'>Apache James jSPF</a> implements <abbr title='Sender Policy Framework'>
                <a href='http://www.openspf.org/'>SPF</a></abbr></p>
       
-            <p><a href='http://james.apache.org/jsieve'>jSieve</a> implements the 
+            <p><a href='http://james.apache.org/jsieve'>Apache James jSieve</a> implements the 
                 <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a> mail filtering language</p>
       
-            <p><a href='http://james.apache.org/jdkim/'>jDKIM</a> implements <abbr title='Domain Keys Identified Mail'>
+            <p><a href='http://james.apache.org/jdkim/'>Apache James jDKIM</a> implements <abbr title='Domain Keys Identified Mail'>
                <a href='http://www.dkim.org/'>DKIM</a></abbr></p>
       
-            <p><a href='http://james.apache.org/mpt/'>MPT</a> is a scripted functional test tool
+            <p><a href='http://james.apache.org/mpt/'>Apache James MPT</a> is a scripted functional test tool
                 suitable for testing mail protocols.</p>
         
-            <p><a href='http://james.apache.org/postage/'>Postage</a> generates mail traffic suitable
+            <p><a href='http://james.apache.org/postage/'>Apache James  Postage</a> generates mail traffic suitable
                 for stress testing mail servers</p>
                 
            </subsection>
@@ -312,18 +313,18 @@
 
         </div>
 
+<!-- 
         <div id="tabs-5">
   
               <object width="480" height="385">
                 <param name="movie" value="http://www.youtube.com/v/0Mx7qy7i3Hs?fs=1&amp;hl=en_US"></param>
                 <param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param>
-                <embed src="http://www.youtube.com/v/0Mx7qy7i3Hs?fs=1&amp;hl=en_US" type="application/x-shockwave-flash" allowscriptaccess="always" 
-                     allowfullscreen="true" width="480" height="385">
+                <embed src="http://www.youtube.com/v/0Mx7qy7i3Hs?fs=1&amp;hl=en_US" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="480" height="385">
                 </embed>
               </object>
   
         </div>
-
+-->
       </div>
         
    </td>
