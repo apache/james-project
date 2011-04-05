@@ -17,7 +17,7 @@
   specific language governing permissions and limitations
   under the License.    
 -->
-<project name="James">
+<project name="Apache James Project">
 
     <skin>
         <groupId>org.apache.james</groupId>
