@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Model xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML" xmi:id="_NjUDEb_5Ed-sK5i6ADV8Gw" name="james-server">
+  <packagedElement xmi:type="uml:Package" xmi:id="__M5i4cATEd-WluVYiXTpAQ" name="org.apache.james:server" clientDependency="_JWyo8Mf0Ed-X3fnr8lVXtA _bqficN3wEd-czIlYaY4R-w _1jHHMN6pEd-8rJnRk1et1w">
+    <packagedElement xmi:type="uml:Class" xmi:id="_xHaZcMAUEd-WluVYiXTpAQ" name="james-server-imapserver" clientDependency="_qtDy4MAZEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_3Yq8IMAUEd-WluVYiXTpAQ" name="james-server-pop3server" clientDependency="_pPnkgMAZEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_6gxVgMAUEd-WluVYiXTpAQ" name="james-server-smtpserver" clientDependency="_nIrtMMAZEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_-xVy0MAUEd-WluVYiXTpAQ" name="james-server-lmtpserver" clientDependency="_oiGXMMAZEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_BnlnMMAVEd-WluVYiXTpAQ" name="james-server-remotemanager" clientDependency="_wTnLsMAZEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_HNtiMMAVEd-WluVYiXTpAQ" name="james-server-netty-socket"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_nIrtMMAZEd-WluVYiXTpAQ" name="" supplier="_HNtiMMAVEd-WluVYiXTpAQ" client="_6gxVgMAUEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_oiGXMMAZEd-WluVYiXTpAQ" name="" supplier="_6gxVgMAUEd-WluVYiXTpAQ" client="_-xVy0MAUEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_pPnkgMAZEd-WluVYiXTpAQ" name="" supplier="_HNtiMMAVEd-WluVYiXTpAQ" client="_3Yq8IMAUEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_qtDy4MAZEd-WluVYiXTpAQ" name="" supplier="_HNtiMMAVEd-WluVYiXTpAQ" client="_xHaZcMAUEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_wTnLsMAZEd-WluVYiXTpAQ" name="" supplier="_HNtiMMAVEd-WluVYiXTpAQ" client="_BnlnMMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_xJHH8MAnEd-L8aSZjXXFeg" name="Dependency0" supplier="_kt2mUMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_JWyo8Mf0Ed-X3fnr8lVXtA" name="smtp" supplier="_NymLgMAVEd-WluVYiXTpAQ" client="__M5i4cATEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_-5iAAcjcEd-QlIjuzT4_zg" name="james-server-fetchmail"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_bqficN3wEd-czIlYaY4R-w" name="imap" supplier="_unsowN3vEd-czIlYaY4R-w" client="__M5i4cATEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_1jHHMN6pEd-8rJnRk1et1w" name="pop3" supplier="_T7k2UMf0Ed-X3fnr8lVXtA" client="__M5i4cATEd-WluVYiXTpAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_fpEd0MAVEd-WluVYiXTpAQ" name="org.apache.james:spool" clientDependency="_eoQbcMf0Ed-X3fnr8lVXtA _xN88cNxGEd-N1OA8aAXF5g">
+    <packagedElement xmi:type="uml:Interface" xmi:id="_icMswMAVEd-WluVYiXTpAQ" name="apache-james-queue-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_kt2mUMAVEd-WluVYiXTpAQ" name="apache-james-mailetcontainer-library" clientDependency="_b0LIgMAYEd-WluVYiXTpAQ _kx_sgMYVEd-0uL9oK6f20Q _mnt4AMYVEd-0uL9oK6f20Q _E2hi4MjdEd-QlIjuzT4_zg _BEeYIMjeEd-OV4AexWz_7A">
+      <interfaceRealization xmi:id="_kx_sgMYVEd-0uL9oK6f20Q" name="" supplier="_pXtGUMAVEd-WluVYiXTpAQ" client="_kt2mUMAVEd-WluVYiXTpAQ" contract="_pXtGUMAVEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="_pXtGUMAVEd-WluVYiXTpAQ" name="apache-james-mailetcontainer-api" clientDependency="_nNoBcMYVEd-0uL9oK6f20Q"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_tR8uUMAVEd-WluVYiXTpAQ" name="apache-james-mailets"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_b0LIgMAYEd-WluVYiXTpAQ" name="" supplier="_tR8uUMAVEd-WluVYiXTpAQ" client="_kt2mUMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_eI5RkMYVEd-0uL9oK6f20Q" name="apache-james-queue-activemq" clientDependency="_gG7rkMYVEd-0uL9oK6f20Q _h9tBgNeQEd-UHbij1eT1HA"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_mnt4AMYVEd-0uL9oK6f20Q" name="" supplier="_eI5RkMYVEd-0uL9oK6f20Q" client="_kt2mUMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_nNoBcMYVEd-0uL9oK6f20Q" name="" supplier="_icMswMAVEd-WluVYiXTpAQ" client="_pXtGUMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_eoQbcMf0Ed-X3fnr8lVXtA" name="store" supplier="_T7k2UMf0Ed-X3fnr8lVXtA" client="_fpEd0MAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_H-oUYci-Ed-xaab8H-rxHg" name="apache-james-mailetcontainer-camel"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_E2hi4MjdEd-QlIjuzT4_zg" name="" supplier="_H-oUYci-Ed-xaab8H-rxHg" client="_kt2mUMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_BEeYIMjeEd-OV4AexWz_7A" name="" supplier="_H-oUYci-Ed-xaab8H-rxHg" client="_kt2mUMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_dXay4deQEd-UHbij1eT1HA" name="apache-james-queue-jms" clientDependency="_gG7rkMYVEd-0uL9oK6f20Q">
+      <interfaceRealization xmi:id="_gG7rkMYVEd-0uL9oK6f20Q" name="" supplier="_icMswMAVEd-WluVYiXTpAQ" client="_eI5RkMYVEd-0uL9oK6f20Q _dXay4deQEd-UHbij1eT1HA" contract="_icMswMAVEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_h9tBgNeQEd-UHbij1eT1HA" name="" supplier="_dXay4deQEd-UHbij1eT1HA" client="_eI5RkMYVEd-0uL9oK6f20Q"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_ExWYAMAWEd-WluVYiXTpAQ" name="org.apache.james:container">
+    <packagedElement xmi:type="uml:Class" xmi:id="_GE0LAMAWEd-WluVYiXTpAQ" name="james-server-container-spring"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_VHPZQN0eEd-ItbRJUWlV9g" name="james-server-container-guice"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_Cdf6IN0iEd-ItbRJUWlV9g" name="james-server-container-karaf"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_JxEaUMAWEd-WluVYiXTpAQ" name="org.apache.james:util">
+    <packagedElement xmi:type="uml:Class" xmi:id="_lyj5sMAXEd-WluVYiXTpAQ" name="james-server-util" clientDependency="_tKKcMMmVEd-yMK1kB0eGWA"/>
+    <packagedElement xmi:type="uml:Realization" xmi:id="_USIqsMApEd-AndjfSa6Oug" name="Realization0"/>
+    <packagedElement xmi:type="uml:Realization" xmi:id="_VERSQMApEd-AndjfSa6Oug" name=""/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_tKKcMMmVEd-yMK1kB0eGWA" name="" client="_lyj5sMAXEd-WluVYiXTpAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_cRNUsMAWEd-WluVYiXTpAQ" name="org.apache.james:user">
+    <packagedElement xmi:type="uml:Class" xmi:id="_stzqAMAWEd-WluVYiXTpAQ" name="james-server-user-library" clientDependency="_lujuAMAYEd-WluVYiXTpAQ" isAbstract="true">
+      <interfaceRealization xmi:id="_lujuAMAYEd-WluVYiXTpAQ" name="" supplier="_TRcH4MAXEd-WluVYiXTpAQ" client="_stzqAMAWEd-WluVYiXTpAQ" contract="_TRcH4MAXEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_QA2g4MAXEd-WluVYiXTpAQ" name="james-server-user-jpa">
+      <generalization xmi:id="_x0VNAMAYEd-WluVYiXTpAQ" general="_stzqAMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="_TRcH4MAXEd-WluVYiXTpAQ" name="james-server-user-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_VG-tMMAXEd-WluVYiXTpAQ" name="james-server-user-jcr">
+      <generalization xmi:id="_yZOp0MAYEd-WluVYiXTpAQ" general="_stzqAMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_WCViMMAXEd-WluVYiXTpAQ" name="james-server-user-ldap">
+      <generalization xmi:id="_yzHwgMAYEd-WluVYiXTpAQ" general="_stzqAMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_W10NkMAXEd-WluVYiXTpAQ" name="james-server-user-file">
+      <generalization xmi:id="_z7H6YMAYEd-WluVYiXTpAQ" general="_stzqAMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_gKaa4MAWEd-WluVYiXTpAQ" name="org.apache.james:mailbox">
+    <packagedElement xmi:type="uml:Interface" xmi:id="_ucy7YMAWEd-WluVYiXTpAQ" name="apache-james-mailbox-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_aTVdUMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-maildir">
+      <generalization xmi:id="_vX-fUMAYEd-WluVYiXTpAQ" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_cBuRwMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-library" clientDependency="_ktiV4MAYEd-WluVYiXTpAQ" isAbstract="true">
+      <interfaceRealization xmi:id="_ktiV4MAYEd-WluVYiXTpAQ" name="" supplier="_ucy7YMAWEd-WluVYiXTpAQ" client="_cBuRwMAXEd-WluVYiXTpAQ" contract="_ucy7YMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_wOiJUMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-jcr">
+      <generalization xmi:id="_wIBcMMAYEd-WluVYiXTpAQ" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_w9GfgMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-jpa">
+      <generalization xmi:id="_wy3wAMAYEd-WluVYiXTpAQ" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_xmKqoMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-memory">
+      <generalization xmi:id="_N_PlwMAoEd-L8aSZjXXFeg" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
+      <generalization xmi:id="_7Fm7YMApEd-d7smgnT5FSA" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_yvDlUMAXEd-WluVYiXTpAQ" name="apache-james-mailbox-tool">
+      <generalization xmi:id="_NYtxQMAoEd-L8aSZjXXFeg" general="_cBuRwMAXEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_S2ftwMAWEd-WluVYiXTpAQ" name="apache-james-mailbox-adapter"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_p0ukEMAWEd-WluVYiXTpAQ" name="org.apache.james:domainlist">
+    <packagedElement xmi:type="uml:Class" xmi:id="_viILwMAWEd-WluVYiXTpAQ" name="apache-james-domainlist-library" clientDependency="_m48dgMAYEd-WluVYiXTpAQ" isAbstract="true">
+      <interfaceRealization xmi:id="_m48dgMAYEd-WluVYiXTpAQ" name="" supplier="_yntcoMAWEd-WluVYiXTpAQ" client="_viILwMAWEd-WluVYiXTpAQ" contract="_yntcoMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="_yntcoMAWEd-WluVYiXTpAQ" name="apache-james-domainlist-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_8Hw2kMAWEd-WluVYiXTpAQ" name="apache-james-domain-xml">
+      <generalization xmi:id="_2ZRX0MAYEd-WluVYiXTpAQ" general="_viILwMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_AaZwcMAXEd-WluVYiXTpAQ" name="apache-james-domainlist-jdbc">
+      <ownedComment xmi:id="_AjCIAMAXEd-WluVYiXTpAQ">
+        <body>apache-james-domain-xml</body>
+      </ownedComment>
+      <generalization xmi:id="_1PfFQMAYEd-WluVYiXTpAQ" general="_viILwMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_DScUkMAXEd-WluVYiXTpAQ" name="apache-james-domainlist-jpa">
+      <generalization xmi:id="_1q2yoMAYEd-WluVYiXTpAQ" general="_viILwMAWEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_JR2SQMAXEd-WluVYiXTpAQ" name="apache-james-domainlist-jcr"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_NymLgMAVEd-WluVYiXTpAQ" name="org.apache.james:protocols" clientDependency="_KbrNYMf0Ed-X3fnr8lVXtA">
+    <packagedElement xmi:type="uml:Interface" xmi:id="_W8MNQMAVEd-WluVYiXTpAQ" name="apache-james-protocols-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_ZcIacMAVEd-WluVYiXTpAQ" name="apache-james-protocols-impl" clientDependency="_53smgMAYEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_bXBZ0MAVEd-WluVYiXTpAQ" name="apache-james-protocols-smtp">
+      <generalization xmi:id="_mw4PUMhrEd-Ccvwwtqu0Xg" general="_ZcIacMAVEd-WluVYiXTpAQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Realization" xmi:id="_53smgMAYEd-WluVYiXTpAQ" name="" supplier="_W8MNQMAVEd-WluVYiXTpAQ" client="_ZcIacMAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_KbrNYMf0Ed-X3fnr8lVXtA" name="queue" supplier="_Ug5OUMJsEd-pX-A_WLl6ww" client="_NymLgMAVEd-WluVYiXTpAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_9iB14cCqEd-WEaNtwquejw" name="org.apache.james:migrator">
+    <packagedElement xmi:type="uml:Class" xmi:id="__4R7kMCqEd-WEaNtwquejw" name="apache-james-mailbox-jpa-migrator"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_i4ydoMjSEd--__0NVxZPfA" name="james-server-mail-migrator"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_Ug5OUMJsEd-pX-A_WLl6ww" name="org.apache.james:core" clientDependency="_BS0HMNxHEd-N1OA8aAXF5g">
+    <packagedElement xmi:type="uml:Class" xmi:id="_nLpAwMJtEd-pX-A_WLl6ww" name="james-server-core-library" clientDependency="_yc8V4MJtEd-pX-A_WLl6ww"/>
+    <packagedElement xmi:type="uml:Interface" xmi:id="_s2u7UMJtEd-pX-A_WLl6ww" name="james-server-core-api"/>
+    <packagedElement xmi:type="uml:Realization" xmi:id="_yc8V4MJtEd-pX-A_WLl6ww" name="" supplier="_s2u7UMJtEd-pX-A_WLl6ww" client="_nLpAwMJtEd-pX-A_WLl6ww"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_xN88cNxGEd-N1OA8aAXF5g" name="dequeue" supplier="_Ug5OUMJsEd-pX-A_WLl6ww" client="_fpEd0MAVEd-WluVYiXTpAQ"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_8L9iINxGEd-N1OA8aAXF5g" name="james-server-core-function">
+      <generalization xmi:id="_-xh2MNxGEd-N1OA8aAXF5g" general="_nLpAwMJtEd-pX-A_WLl6ww"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_BS0HMNxHEd-N1OA8aAXF5g" name="" supplier="_fpEd0MAVEd-WluVYiXTpAQ" client="_Ug5OUMJsEd-pX-A_WLl6ww"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_YTIcUcLZEd-Gba43PojZng" name="org.apache.james:dnsservice">
+    <packagedElement xmi:type="uml:Interface" xmi:id="_anUFcMLZEd-Gba43PojZng" name="james-server-dnsservice-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_cLvFkMLZEd-Gba43PojZng" name="james-server-dnsservice-dnsjava" clientDependency="_iBKA0MLZEd-Gba43PojZng">
+      <interfaceRealization xmi:id="_iBKA0MLZEd-Gba43PojZng" name="" supplier="_anUFcMLZEd-Gba43PojZng" client="_cLvFkMLZEd-Gba43PojZng" contract="_anUFcMLZEd-Gba43PojZng"/>
+    </packagedElement>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_U5gmUcYUEd-0uL9oK6f20Q" name="org.apache.james:mail">
+    <packagedElement xmi:type="uml:Interface" xmi:id="_ZKtVwMYUEd-0uL9oK6f20Q" name="james-server-mail-api"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_b9wsMMYUEd-0uL9oK6f20Q" name="james-server-mail-library" clientDependency="_j3iE0MYUEd-0uL9oK6f20Q" isAbstract="true">
+      <interfaceRealization xmi:id="_j3iE0MYUEd-0uL9oK6f20Q" name="" supplier="_ZKtVwMYUEd-0uL9oK6f20Q" client="_b9wsMMYUEd-0uL9oK6f20Q" contract="_ZKtVwMYUEd-0uL9oK6f20Q"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_fMEbQMYUEd-0uL9oK6f20Q" name="james-server-mail-file">
+      <generalization xmi:id="_lXDW0MYUEd-0uL9oK6f20Q" general="_b9wsMMYUEd-0uL9oK6f20Q"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_gCOnMMYUEd-0uL9oK6f20Q" name="james-server-mail-jdbc">
+      <generalization xmi:id="_mCFQ0MYUEd-0uL9oK6f20Q" general="_b9wsMMYUEd-0uL9oK6f20Q"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_hE5lIMYUEd-0uL9oK6f20Q" name="james-server-mail-jcr">
+      <generalization xmi:id="_mYbUQMYUEd-0uL9oK6f20Q" general="_b9wsMMYUEd-0uL9oK6f20Q"/>
+    </packagedElement>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_T7k2UMf0Ed-X3fnr8lVXtA" name="org.apache.james:store" clientDependency="_fnfD0Mf0Ed-X3fnr8lVXtA _gJj2IMf0Ed-X3fnr8lVXtA _gw_CgMf0Ed-X3fnr8lVXtA _jjN5kMf0Ed-X3fnr8lVXtA">
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_fnfD0Mf0Ed-X3fnr8lVXtA" name="crudq" supplier="_cRNUsMAWEd-WluVYiXTpAQ" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_gJj2IMf0Ed-X3fnr8lVXtA" name="crudq" supplier="_p0ukEMAWEd-WluVYiXTpAQ" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_gw_CgMf0Ed-X3fnr8lVXtA" name="crudq" supplier="_U5gmUcYUEd-0uL9oK6f20Q" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_jjN5kMf0Ed-X3fnr8lVXtA" name="crudq" supplier="_gKaa4MAWEd-WluVYiXTpAQ" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_9eCicMAVEd-WluVYiXTpAQ" name="org.apache.james:test" clientDependency="_VBJP4N3wEd-czIlYaY4R-w">
+    <packagedElement xmi:type="uml:Class" xmi:id="__C6OgMAVEd-WluVYiXTpAQ" name="apache-james-imap-protocol-tester"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_VBJP4N3wEd-czIlYaY4R-w" name="test-imap" supplier="_unsowN3vEd-czIlYaY4R-w" client="_9eCicMAVEd-WluVYiXTpAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Package" xmi:id="_unsowN3vEd-czIlYaY4R-w" name="org.apache.james:imap" clientDependency="_zshYEN3wEd-czIlYaY4R-w">
+    <packagedElement xmi:type="uml:Class" xmi:id="_DN1mUN3wEd-czIlYaY4R-w" name="apache-james-imap-processor" clientDependency="_wSUS4N5wEd-g4awTgzMqtQ _xqF-IN5wEd-g4awTgzMqtQ">
+      <interfaceRealization xmi:id="_wSUS4N5wEd-g4awTgzMqtQ" name="" supplier="_rDIRMN5wEd-g4awTgzMqtQ" client="_DN1mUN3wEd-czIlYaY4R-w" contract="_rDIRMN5wEd-g4awTgzMqtQ"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_D_rS8N3wEd-czIlYaY4R-w" name="apache-james-imap-message" clientDependency="_tsITwN5wEd-g4awTgzMqtQ"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_zshYEN3wEd-czIlYaY4R-w" name="process" supplier="_T7k2UMf0Ed-X3fnr8lVXtA" client="_unsowN3vEd-czIlYaY4R-w"/>
+    <packagedElement xmi:type="uml:Interface" xmi:id="_rDIRMN5wEd-g4awTgzMqtQ" name="apache-james-imap-api"/>
+    <packagedElement xmi:type="uml:Realization" xmi:id="_tsITwN5wEd-g4awTgzMqtQ" name="" supplier="_rDIRMN5wEd-g4awTgzMqtQ" client="_D_rS8N3wEd-czIlYaY4R-w"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_xqF-IN5wEd-g4awTgzMqtQ" name="" supplier="_D_rS8N3wEd-czIlYaY4R-w" client="_DN1mUN3wEd-czIlYaY4R-w"/>
+  </packagedElement>
+</uml:Model>
