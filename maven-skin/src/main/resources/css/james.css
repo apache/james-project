@@ -21,7 +21,6 @@
  Button
  From http://davidwalsh.name/github-css and adapted to maven site.
 */
-
 .minibutton {
   display:inline-block;
   height:23px;
@@ -36,6 +35,12 @@
   overflow:visible;
   cursor:pointer;
   text-decoration:none;
+}
+
+/* Avoid additional icon from standard maven skin on buttons */
+.minibutton a.externalLink {
+  background:none !important;
+  padding-right: 0px !important;
 }
 
 .minibutton>a>span {
