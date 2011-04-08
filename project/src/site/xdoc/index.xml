@@ -43,7 +43,7 @@
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 				<strong>Hey!</strong> 
-				 Apache James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
+				 Apache James Server 3.0-M3 is out! <b>Thank you to everyone</b> who contributed code, 
 	             documentation, bug report, feedback...
 				</p>
 			</div>
@@ -371,6 +371,10 @@
 
       <subsection name="News">
         <ul>
+          <li>/2011 - <ul>
+          <li><a href="newsarchive.html#_2011_1"><strong>Apache James Server 3.0-M3</strong> released</a></li>
+          </ul>
+          </li>
           <li>Dec/2010 - <ul>
           <li><a href="newsarchive.html#06122010_1"><strong>Apache James Protocols 1.2</strong> released</a></li>
           </ul>
