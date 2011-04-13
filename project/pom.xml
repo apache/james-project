@@ -102,9 +102,54 @@
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>2.3.1</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
+            <!-- Generate javadoc only when running mvn site, but not for mvn install -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>javadocs-for-site</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>aggregate</goal>
+                            <goal>test-aggregate</goal>
+                        </goals>
+                        <configuration>
+                            <minmemory>256m</minmemory>
+                            <maxmemory>1g</maxmemory>
+                            <linksource>true</linksource>
+                            <tags>
+                                <tag>
+                                    <name>note</name>
+                                    <placement>a</placement>
+                                    <head>NOTE</head>
+                                </tag>
+                                <tag>
+                                    <name>todo</name>
+                                    <placement>a</placement>
+                                    <head>TODO</head>
+                                </tag>
+                                <tag>
+                                    <name>warning</name>
+                                    <placement>a</placement>
+                                    <head>WARNING</head>
+                                </tag>
+                            </tags>
+                            <source>${target.jdk}</source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+          
+            <!-- Site generation -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
@@ -157,5 +202,6 @@
     <properties>
         <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
         <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
+        <target.jdk>1.5</target.jdk>
     </properties>
 </project>
