@@ -65,14 +65,14 @@
            
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
+            <a href="http://james.apache.org/download.cgi#Apache_James_Server;">
               <span><span class="icon"></span>Download Early James Server 3.0-M2</span>
             </a>
           </span>
         </p>
         <p>
           <span class="minibutton btn-download">
-            <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version';">
+            <a href="http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version;">
               <span><span class="icon"></span>Download Stable James Server 2.3.2</span>
             </a>
           </span>
