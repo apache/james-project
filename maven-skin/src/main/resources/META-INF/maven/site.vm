@@ -485,9 +485,11 @@
       @import url("$relativePath/css/site.css");
       @import url("$relativePath/js/jquery/css/custom-theme/jquery-ui-1.8.5.custom.css");
       @import url("$relativePath/js/jquery/css/print.css");
+      @import url("$relativePath/js/fancybox/jquery.fancybox-1.3.4.css");
     </style>
     <script type="text/javascript" src="$relativePath/js/jquery/js/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="$relativePath/js/jquery/js/jquery-ui-1.8.5.custom.min.js"></script>
+    <script type="text/javascript" src="$relativePath/js/fancybox/jquery.fancybox-1.3.4.js"></script>
     <link rel="stylesheet" href="$relativePath/css/print.css" type="text/css" media="print" />
 #foreach( $author in $authors )
       <meta name="author" content="$author" />
