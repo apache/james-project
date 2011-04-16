@@ -14,9 +14,10 @@
       #james-logo-slideshow {height:200px; width:500px;}
     </style>
 
+<!-- 
     <script type="text/javascript" src="js/galleria/galleria.js"></script>
-
-    <script type="text/javascript" src="js/james/index.js?v=1"></script>
+-->
+    <script type="text/javascript" src="js/james/index.js?v=2"></script>
     
     <script type="text/javascript" src="js/james/functions.js"></script>
     
