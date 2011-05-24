@@ -118,10 +118,6 @@
     <packagedElement xmi:type="uml:Realization" xmi:id="_53smgMAYEd-WluVYiXTpAQ" name="" supplier="_W8MNQMAVEd-WluVYiXTpAQ" client="_ZcIacMAVEd-WluVYiXTpAQ"/>
     <packagedElement xmi:type="uml:Dependency" xmi:id="_KbrNYMf0Ed-X3fnr8lVXtA" name="queue" supplier="_Ug5OUMJsEd-pX-A_WLl6ww" client="_NymLgMAVEd-WluVYiXTpAQ"/>
   </packagedElement>
-  <packagedElement xmi:type="uml:Package" xmi:id="_9iB14cCqEd-WEaNtwquejw" name="org.apache.james:migrator">
-    <packagedElement xmi:type="uml:Class" xmi:id="__4R7kMCqEd-WEaNtwquejw" name="apache-james-mailbox-jpa-migrator"/>
-    <packagedElement xmi:type="uml:Class" xmi:id="_i4ydoMjSEd--__0NVxZPfA" name="james-server-mail-migrator"/>
-  </packagedElement>
   <packagedElement xmi:type="uml:Package" xmi:id="_Ug5OUMJsEd-pX-A_WLl6ww" name="org.apache.james:core" clientDependency="_BS0HMNxHEd-N1OA8aAXF5g">
     <packagedElement xmi:type="uml:Class" xmi:id="_nLpAwMJtEd-pX-A_WLl6ww" name="james-server-core-library" clientDependency="_yc8V4MJtEd-pX-A_WLl6ww"/>
     <packagedElement xmi:type="uml:Interface" xmi:id="_s2u7UMJtEd-pX-A_WLl6ww" name="james-server-core-api"/>
@@ -158,6 +154,8 @@
     <packagedElement xmi:type="uml:Dependency" xmi:id="_gJj2IMf0Ed-X3fnr8lVXtA" name="crudq" supplier="_p0ukEMAWEd-WluVYiXTpAQ" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
     <packagedElement xmi:type="uml:Dependency" xmi:id="_gw_CgMf0Ed-X3fnr8lVXtA" name="crudq" supplier="_U5gmUcYUEd-0uL9oK6f20Q" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
     <packagedElement xmi:type="uml:Dependency" xmi:id="_jjN5kMf0Ed-X3fnr8lVXtA" name="crudq" supplier="_gKaa4MAWEd-WluVYiXTpAQ" client="_T7k2UMf0Ed-X3fnr8lVXtA"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_gKMIsIXoEeCyBcjZxlSvoA"/>
+    <packagedElement xmi:type="uml:Dependency" xmi:id="_lOy1kIXpEeCyBcjZxlSvoA"/>
   </packagedElement>
   <packagedElement xmi:type="uml:Package" xmi:id="_9eCicMAVEd-WluVYiXTpAQ" name="org.apache.james:test" clientDependency="_VBJP4N3wEd-czIlYaY4R-w">
     <packagedElement xmi:type="uml:Class" xmi:id="__C6OgMAVEd-WluVYiXTpAQ" name="apache-james-imap-protocol-tester"/>
