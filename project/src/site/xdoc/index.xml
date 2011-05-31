@@ -372,8 +372,14 @@
 
       <subsection name="News">
         <ul>
+<!--
           <li>/2011 - <ul>
           <li><a href="newsarchive.html#_2011_1"><strong>Apache James Server 3.0-M3</strong> released</a></li>
+          </ul>
+          </li>
+-->
+          <li>May/2011 - <ul>
+          <li><a href="newsarchive.html#15052011"><strong>Apache James IMAP 0.2 and Mailbox 0.2</strong> released</a></li>
           </ul>
           </li>
           <li>Dec/2010 - <ul>
