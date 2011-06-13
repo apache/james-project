@@ -38,3 +38,12 @@
   margin: 0px 0px 10px 10px;
   background-color: white;
 }
+
+/* Box containing cryptography export control notice */
+.apache-james-crypto-notice {
+    padding: 0.7em; 
+    margin: 0.5em 0 0.5em 0; 
+    border-style:solid; 
+    border-width:medium;
+    background-color: #cdd3d8;
+}
