@@ -18,6 +18,11 @@
 
     <subsection name='2011'>
     
+        <a name="29062011"><h4>Apache James Protocols 1.5</h4></a>
+        <p>The Apache James Project is happy to announce 
+           the release of version 1.5 of the Apache James Protocols</p>
+        <p><a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311060&version=12316655">Read the release notes</a>.</p>
+
         <a name="15052011"><h4>Apache James IMAP 0.2 and Mailbox 0.2</h4></a>
         <p>The Apache James Project is happy to announce 
            the release of version 0.2 of the Apache James IMAP and Mailbox components with following features:</p>

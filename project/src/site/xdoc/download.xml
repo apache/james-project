@@ -546,7 +546,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache James Protocols">
   
-    <p>Apache James Protocols 1.3 is the latest stable version:</p>
+    <p>Apache James Protocols 1.5 is the latest stable version:</p>
     <ul>
 <!-- 
     <li>Binary (Unix TAR): <a
@@ -558,7 +558,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     href="[preferred]/james/protocols/protocols-1.3-bin.zip">protocols-1.3.zip</a> [<a
     href="http://www.apache.org/dist/james/protocols/protocols-1.3-bin.zip.asc">PGP</a>][<a
     href="http://www.apache.org/dist/james/protocols/protocols-1.3-bin.zip.md5">MD5</a>]</li>
--->
+
     <li>Source (Unix TAR): <a
     href="[preferred]/james/protocols/protocols-1.3-source-release.tar.gz">protocols-1.3-source-release.tar.gz</a> [<a
     href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.tar.gz.asc">PGP</a>][<a
@@ -568,9 +568,9 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     href="[preferred]/james/protocols/protocols-1.3-source-release.zip">protocols-1.3-source-release.zip</a> [<a
     href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.zip.asc">PGP</a>][<a
     href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.zip.md5">MD5</a>]</li>
-    
+-->
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</li>
+    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/protocols">http://repo1.maven.org/maven2/org/apache/james/protocols</a>.</li>
     </ul>
   
   </section>
