@@ -467,7 +467,7 @@
       (function() {
         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        var s = document.getElementsByTagName('script').item(0); s.parentNode.insertBefore(ga, s);
       })();
 
     </script>
@@ -524,17 +524,15 @@
       var hrefs = document.getElementsByTagName('a'); 
       var extensions = ["gz","bz2","zip","jar","asc","sar"];
       for (var l = 0; l < hrefs.length; l++) {
-        // 0+ is a workaround for download.cgi script by ASF that 
-        // is not happy with simple words in square brackets
-        if (hrefs[0+l] != "") {
-          var path = hrefs[0+l].pathname;
-          var external = hrefs[0+l].hostname != location.host;
+        if (hrefs.item(l) != "") {
+          var path = hrefs.item(l).pathname;
+          var external = hrefs.item(l).hostname != location.host;
           if (external) {
             var splitted = path.split('.');
-            var ext = splitted[0+splitted.length-1];
+            var ext = splitted.item(splitted.length-1);
             for (var e = 0; e < extensions.length; e++) {
-              if (extensions[0+e] == ext) {
-                startListening(hrefs[0+l],"click",trackDownloads);
+              if (extensions.item(e) == ext) {
+                startListening(hrefs.item(l),"click",trackDownloads);
               }
     	}
           }
