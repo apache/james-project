@@ -170,7 +170,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
         <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
         <strong>POP3 is broken in 3.0-M2 - Please use IMAP4 to read your Mails!</strong>
-        POP3 is repaired in M3 snapshot and you can <a href="http://people.apache.org/builds/james/nightly/">download it from here</a>.
+        POP3 is repaired in beta2 snapshot and you can <a href="http://people.apache.org/builds/james/nightly/">download it from here</a>.
 		</p>
       </div>
     </div>
@@ -302,32 +302,32 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache jSPF">
   
-    <p>Apache James jSPF 0.9.8 is the latest jSPF stable version:</p>
+    <p>Apache James jSPF 0.9.9 is the latest jSPF stable version:</p>
     <ul>
     
     <li>Binary Resolver (JAR): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-resolver-0.9.8.jar">apache-jspf-resolver-0.9.8.jar</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-0.9.8.jar.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-resolver-0.9.9.jar">apache-jspf-resolver-0.9.9.jar</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-0.9.9.jar.asc">PGP</a>]</li>
     
     <li>Binary Tester (JAR): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-tester-0.9.8.jar">apache-jspf-tester-0.9.8.jar</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-0.9.8.jar.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-tester-0.9.9.jar">apache-jspf-tester-0.9.9.jar</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-0.9.9.jar.asc">PGP</a>]</li>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-0.9.8-bin.zip">apache-jspf-0.9.8-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.8-bin.zip.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-0.9.9-bin.zip">apache-jspf-0.9.9-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.9-bin.zip.asc">PGP</a>]</li>
     
     <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-0.9.8-bin.tar.gz">apache-jspf-0.9.8-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.8-bin.tar.gz.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-0.9.9-bin.tar.gz">apache-jspf-0.9.9-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.9-bin.tar.gz.asc">PGP</a>]</li>
     
     <li>Source (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/source/apache-jspf-0.9.8-src.tar.gz">apache-jspf-0.9.8-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.8-src.tar.gz.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/source/apache-jspf-0.9.9-src.tar.gz">apache-jspf-0.9.9-src.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.9-src.tar.gz.asc">PGP</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/jspf/source/apache-jspf-0.9.8-src.zip">apache-jspf-0.9.8-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.8-src.zip.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/source/apache-jspf-0.9.9-src.zip">apache-jspf-0.9.9-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.9-src.zip.asc">PGP</a>]</li>
     
     <li><a href="[preferred]/james/jspf/binaries/">Other Binaries</a></li>
     

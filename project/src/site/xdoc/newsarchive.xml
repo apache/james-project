@@ -18,9 +18,14 @@
 
     <subsection name='2011'>
     
+        <a name="10072011"><h4>Apache James jSPF 0.9.9</h4></a>
+        <p>The Apache James Project is happy to announce 
+           the release of version 0.9.9 of the Apache James jSPF which includes fixes related to OSGI.</p>
+        <p><a href="https://issues.apache.org/jira/secure/IssueNavigator.jspa?reset=true&amp;jqlQuery=project+%3D+JSPF+AND+fixVersion+%3D+%220.9.9%22+AND+status+%3D+Resolved+ORDER+BY+priority+DESC&amp;mode=hide">Read the release notes</a>.</p>
+
         <a name="29062011"><h4>Apache James Protocols 1.5</h4></a>
         <p>The Apache James Project is happy to announce 
-           the release of version 1.5 of the Apache James Protocols</p>
+           the release of version 1.5 of the Apache James Protocols.</p>
         <p><a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311060&amp;version=12316655">Read the release notes</a>.</p>
 
         <a name="15052011"><h4>Apache James IMAP 0.2 and Mailbox 0.2</h4></a>

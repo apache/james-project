@@ -44,7 +44,7 @@
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 				<strong>Hey!</strong> 
-				 Apache James Server 3.0-M3 is out! <b>Thank you to everyone</b> who contributed code, 
+				 Apache James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
 	             documentation, bug report, feedback...
 				</p>
 			</div>
@@ -378,6 +378,10 @@
           </ul>
           </li>
 -->
+          <li>July/2011 - <ul>
+          <li><a href="newsarchive.html#10072011"><strong>Apache James jSPF 0.9.9</strong> released</a></li>
+          </ul>
+          </li>
           <li>June/2011 - <ul>
           <li><a href="newsarchive.html#29062011"><strong>Apache James Protocols 1.5</strong> released</a></li>
           </ul>
@@ -411,18 +415,6 @@
           <li>May/2010 - <ul>
           <li><a href="newsarchive.html#14052010_1"><strong>Apache jSieve 0.4 </strong> released</a></li>
           <li><a href="newsarchive.html#14052010"><strong>Apache Mailet Standard 1.0 </strong> released</a></li>
-          </ul>
-          </li>
-          <li>Oct/2009 - <ul>
-          <li><a href="newsarchive.html#15102009"><strong>jDKIM</strong>, a Java DKIM implementation, joins James as sub-project</a></li>
-          </ul>
-          </li>
-          <li>Sep/2009 - <ul>
-          <li><a href="newsarchive.html#25092009"><strong>Hupa</strong>, a GWT based webmail, joins James as sub-project</a></li>
-          </ul>
-          </li>
-          <li>Aug/2009 - <ul>
-          <li><a href="newsarchive.html#31082009"><strong>Apache James 2.3.2</strong> released</a></li>
           </ul>
           </li>
         </ul>
