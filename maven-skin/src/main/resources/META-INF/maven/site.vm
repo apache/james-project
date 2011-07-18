@@ -273,6 +273,32 @@
     </ul>
     #end
   #end
+  <h5>Apache Software Foundation</h5>
+  <ul>
+    <li>
+      <strong>
+        <a title="ASF" href="http://www.apache.org/">ASF</a>
+      </strong>
+    </li>
+    <li>
+      <a title="Get Involved" href="http://www.apache.org/foundation/getinvolved.html">Get Involved</a>
+    </li>
+    <li>
+      <a title="FAQ" href="http://www.apache.org/foundation/faq.html">FAQ</a>
+    </li>
+    <li>
+      <a title="License" href="http://www.apache.org/licenses/" >License</a>
+    </li>
+    <li>
+      <a title="Sponsorship" href="http://www.apache.org/foundation/sponsorship.html">Sponsorship</a>
+    </li>
+    <li>
+      <a title="Thanks" href="http://www.apache.org/foundation/thanks.html">Thanks</a>
+    </li>
+    <li>
+      <a title="Security" href="http://www.apache.org/security/">Security</a>
+    </li>
+  </ul>
 #end
 ##
 #macro ( copyright )
