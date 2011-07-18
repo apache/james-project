@@ -85,18 +85,6 @@
       <item name="Snapshots (Hudson)" href="https://hudson.apache.org/hudson/view/G-L/view/James/"/>
 -->
         </menu>
-
-<!-- Activate this line if you want to inherit this menu.
-    <menu name="Apache Software Foundation" inherit="bottom">
--->
-        <menu name="Apache Software Foundation">
-            <item name="Get Involved" href="http://www.apache.org/foundation/getinvolved.html" />
-            <item name="FAQ" href="http://www.apache.org/foundation/faq.html" />
-            <item name="Sponsorship" href="http://www.apache.org/foundation/sponsorship.html" />
-            <item name="Donations" href="http://www.apache.org/foundation/contributing.html" />
-            <item name="Thanks" href="http://www.apache.org/foundation/thanks.html" />
-        </menu>
-
     </body>
 
 </project>
