@@ -278,20 +278,10 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7-bin.zip.asc">PGP</a>][<a
     href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7-bin.zip.md5">MD5</a>]</li>
     
-    <li>Source (Unix TAR): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.7-src.tar.gz">apache-mime4j-0.7-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7-src.tar.gz.md5">MD5</a>]</li>
-    
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.7-src.zip">apache-mime4j-0.7-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7-src.zip.md5">MD5</a>]</li>
-    
-    <li>Binary (JAR library only): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.6.jar">apache-mime4j-0.6.jar</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.jar.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.jar.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/apache-mime4j-project-0.7-source-release.zip">apache-mime4j-0.7-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7-source-release.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7-source-release.zip.md5">MD5</a>]</li>
     
     <li><a
     href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
