@@ -63,6 +63,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       <li><a href='#Apache_James_Server'>Apache James Server</a></li>
       <li><a href='#Apache_Mime4J'>Apache James Mime4j</a></li>
       <li><a href='#Apache_jSPF'>Apache James jSPF</a></li>
+      <li><a href='#Apache_jDKIM'>Apache James jDKIM</a></li>
       <li><a href='#Apache_JSieve'>Apache James JSieve</a></li>
       <li><a href='#Apache_Mailet'>Apache James Mailet</a></li>
       <li><a href='#Apache_Mailet_Base'>Apache James Mailet Base</a></li>
@@ -320,6 +321,41 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.9-src.zip.asc">PGP</a>]</li>
     
     <li><a href="[preferred]/james/jspf/binaries/">Other Binaries</a></li>
+    
+    </ul>
+  
+  </section>
+  
+  <section name="Apache jDKIM">
+  
+    <p>Apache James jDKIM 0.2 is the latest jDKIM stable version:</p>
+    <ul>
+    
+    <li>Binary Main Library (JAR): <a
+    href="[preferred]/james/jdkim/binaries/apache-jdkim-main-0.2.jar">apache-jdkim-main-0.2.jar</a> [<a
+    href="http://www.apache.org/dist/james/jdkim/binaries/apache-jdkim-main-0.2.jar.asc">PGP</a>]</li>
+    
+    <li>Binary Mailet (JAR): <a
+    href="[preferred]/james/jdkim/binaries/apache-jdkim-mailets-0.1.jar">apache-jdkim-mailets-0.2.jar</a> [<a
+    href="http://www.apache.org/dist/james/jdkim/binaries/apache-jdkim-mailets-0.2.jar.asc">PGP</a>]</li>
+    
+    <li>Binary (ZIP Format): <a
+    href="[preferred]/james/jdkim/binaries/apache-jdkim-0.2-bin.zip">apache-jdkim-0.2-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/jdkim/binaries/apache-jdkim-0.2-bin.zip.asc">PGP</a>]</li>
+    
+    <li>Binary (Unix TAR.GZ): <a
+    href="[preferred]/james/jdkim/binaries/apache-jdkim-0.2-bin.tar.gz">apache-jdkim-0.2-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jdkim/binaries/apache-jdkim-0.2-bin.tar.gz.asc">PGP</a>]</li>
+    
+    <li>Source (Unix TAR.GZ): <a
+    href="[preferred]/james/jdkim/source/apache-jdkim-project-0.2-source-release.tar.gz">apache-jdkim-project-0.2-source-release.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jdkim/source/apache-jdkim-project-0.2-source-release.tar.gz.asc">PGP</a>]</li>
+    
+    <li>Source (ZIP Format): <a
+    href="[preferred]/james/jdkim/source/apache-jdkim-project-0.2-source-release.zip">apache-jdkim-project-0.2-source-release.zip</a> [<a
+    href="http://www.apache.org/dist/james/jdkim/source/apache-jdkim-project-0.2-source-release.zip.asc">PGP</a>]</li>
+    
+    <li><a href="[preferred]/james/jdkim/binaries/">Other Binaries</a></li>
     
     </ul>
   
