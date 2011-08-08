@@ -13,7 +13,6 @@
           $href.toLowerCase().startsWith("https:/") ||
           $href.toLowerCase().startsWith("ftp:/") ||
           $href.toLowerCase().startsWith("mailto:/") ||
-          $href.toLowerCase().startsWith("file:/") ||
           ($href.toLowerCase().indexOf("://") != -1) ) )
     #set ( $linkClass = ' class="externalLink"' )
   #else
@@ -546,25 +545,6 @@
     #googleAnalytics( "UA-1384591-1" )
 #if ( $currentFileName.toLowerCase().startsWith("download") )
     <script type="text/javascript">
-    if (document.getElementsByTagName) { 
-      var hrefs = document.getElementsByTagName('a'); 
-      var extensions = ["gz","bz2","zip","jar","asc","sar"];
-      for (var l = 0; l < hrefs.length; l++) {
-        if (hrefs.item(l) != "") {
-          var path = hrefs.item(l).pathname;
-          var external = hrefs.item(l).hostname != location.host;
-          if (external) {
-            var splitted = path.split('.');
-            var ext = splitted.item(splitted.length-1);
-            for (var e = 0; e < extensions.length; e++) {
-              if (extensions.item(e) == ext) {
-                startListening(hrefs.item(l),"click",trackDownloads);
-              }
-    	}
-          }
-        }
-      } 
-    } 
     
     function startListening (obj,evnt,func) { 
       if (obj.addEventListener) {
@@ -595,8 +575,32 @@
     
       if (typeof(urchinTracker) == "function") {
         urchinTracker(lnk);
+      } else if (_gaq) {
+        _gaq.push(['_trackPageview', lnk]);
       }
-    } 
+    }
+    
+    $(function() {
+      if (document.getElementsByTagName) { 
+        var hrefs = document.getElementsByTagName('a'); 
+        var extensions = ["gz","bz2","zip","jar","asc","sar"];
+        for (var l = 0; l < hrefs.length; l++) {
+          if (hrefs.item(l) != "") {
+            var path = hrefs.item(l).pathname;
+            var external = hrefs.item(l).hostname != location.host;
+            if (external) {
+              var splitted = path.split('.');
+              var ext = splitted[ splitted.length-1 ];
+              for (var e = 0; e < extensions.length; e++) {
+                if (extensions[ e ] == ext) {
+                  startListening(hrefs.item(l),"click",trackDownloads);
+                }
+              }
+            }
+          }
+        } 
+      } 
+    });
     </script>
 #end
   </head>
