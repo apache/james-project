@@ -160,51 +160,46 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name='Apache James Server'>
   
-    <subsection name="Apache James 3.0-M2 is for early adopters">
+    <subsection name="Apache James 3.0-beta3 is for early adopters">
     
       <p>This release is the first milestone based on 
          release.  See the <a
          href="http://james.apache.org/server/3/release-notes.html">Release Notes</a>
          for a detailed list of changes.</p>
       
-    <div class="ui-widget">
-      <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
-        <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
-        <strong>POP3 is broken in 3.0-M2 - Please use IMAP4 to read your Mails!</strong>
-        POP3 is repaired in beta2 snapshot and you can <a href="http://people.apache.org/builds/james/nightly/">download it from here</a>.
-		</p>
-      </div>
-    </div>
-
-  <div class="ui-widget">
-    <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
-      <p>
-        <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-        Apache James Server 3 uses third party cryptography software
-        including
-      </p>
-      <ul>
-        <li><code>bcmail</code> and <code>bcprov</code> libraries by "The Legion of the Bouncy
-          Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
-        <li><code>jasypt</code> library by "Jasypt.org" <a href='http://www.jasypt.org/'>http://www.jasypt.org/</a></li>
-        <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
-      </ul>
-    </div>
-  </div>
-    
+      <div class="ui-widget">
+        <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
+          <p>
+            <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+            Apache James Server 3 uses third party cryptography software
+            including
+          </p>
           <ul>
+            <li><code>bcmail</code> and <code>bcprov</code> libraries by "The Legion of the Bouncy
+              Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
+            <li><code>jasypt</code> library by "Jasypt.org" <a href='http://www.jasypt.org/'>http://www.jasypt.org/</a></li>
+            <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <ul>
       
         <li>Binary (Unix TAR): <a
-            href="[preferred]/james/server/james-server-container-spring-3.0-M2-bin.tar.gz">james-server-container-spring-3.0-M2-bin.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M2-bin.tar.gz.asc">PGP</a>]</li>
+            href="[preferred]/james/apache-james/3.0-beta3/apache-james-3.0-beta3-app.tar.gz">apache-james-3.0-beta3-app.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/apache-james/3.0-beta3/apache-james-3.0-beta3-app.tar.gz.asc">PGP</a>]</li>
       
         <li>Binary (ZIP Format): <a
-            href="[preferred]/james/server/james-server-container-spring-3.0-M2-bin.zip">james-server-container-spring-3.0-M2-bin.zip</a> [<a
+            href="[preferred]/james/apache-james/3.0-beta3/apache-james-3.0-beta3-app.zip">apache-james-3.0-beta3-app.zip</a> [<a
             href="http://www.apache.org/dist/james/server/james-server-container-spring-3.0-M2-bin.zip.asc">PGP</a>]</li>
       
+          <li>Source (Unix TAR): <a
+              href="[preferred]/james/apache-james/3.0-beta3/apache-james-3.0-beta3-source-release.tar.gz">apache-james-3.0-beta3-source-release.tar.gz</a> [<a
+              href="http://www.apache.org/dist/james/apache-james/3.0-beta3/apache-james-3.0-beta3-source-release.tar.gz.asc">PGP</a>]</li>
+      
           <li>Source (ZIP Format): <a
-              href="[preferred]/james/server/james-server-3.0-M2-source-release.zip">james-server-3.0-M2-source-release.zip</a> [<a
-              href="http://www.apache.org/dist/james/server/james-server-3.0-M2-source-release.zip.asc">PGP</a>]</li>
+              href="[preferred]/james/apache-james/3.0-beta3/apache-james-3.0-beta3-source-release.zip">apache-james-3.0-beta3-source-release.zip</a> [<a
+              href="http://www.apache.org/dist/james/apache-james/3.0-beta3/apache-james-3.0-beta3-source-release.zip.asc">PGP</a>]</li>
       
       </ul>
     
