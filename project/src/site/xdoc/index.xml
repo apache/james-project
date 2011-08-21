@@ -44,7 +44,7 @@
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 				<strong>Hey!</strong> 
-				 Apache James Server 3.0-M2 is out! <b>Thank you to everyone</b> who contributed code, 
+				 Apache James Server 3.0-beta3 is out! <b>Thank you to everyone</b> who contributed code, 
 	             documentation, bug report, feedback...
 				</p>
 			</div>
@@ -66,14 +66,14 @@
            
         <p>
           <span class="minibutton btn-download">
-            <a href="http://james.apache.org/download.cgi#Apache_James_Server;">
-              <span><span class="icon"></span>Download Early James Server 3.0-M2</span>
+            <a href="http://james.apache.org/download.cgi#Apache_James_Server">
+              <span><span class="icon"></span>Download Early James Server 3.0-beta3</span>
             </a>
           </span>
         </p>
         <p>
           <span class="minibutton btn-download">
-            <a href="http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version;">
+            <a href="http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version">
               <span><span class="icon"></span>Download Stable James Server 2.3.2</span>
             </a>
           </span>
@@ -372,12 +372,10 @@
 
       <subsection name="News">
         <ul>
-<!--
           <li>/2011 - <ul>
           <li><a href="newsarchive.html#082011"><strong>Apache James Server 3.0-beta3</strong> released</a></li>
           </ul>
           </li>
--->
           <li>July/2011 - <ul>
           <li><a href="newsarchive.html#30072011"><strong>Apache James jDKIM 0.2</strong> released</a></li>
           </ul>

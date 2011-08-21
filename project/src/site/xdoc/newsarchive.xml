@@ -18,7 +18,6 @@
 
     <subsection name='2011'>
 
-<!--
       <a name="082011"><h4>2011 - Apache James Server 3.0-beta3 released</h4></a>
         <p>The Apache James project is happy to announce the release 
            of version 3.0-beta3 of its modular mail server.</p>
@@ -48,7 +47,7 @@
           - Mailing list functionality has been removed
           - More documentation on web site for configuration,...
           - Java 1.6 mandatory
-          - ... and much more, see details on https://issues.apache.org/jira/secure/ReleaseNote.jspa?in&version=12316850&amp;styleName=Html&amp;projectId=10411
+          - ... and much more, see details on https://issues.apache.org/jira/secure/ReleaseNote.jspa?in&amp;version=12316850&amp;styleName=Html&amp;projectId=10411
         * What's new in 3.0-beta3 for developers
           - Less maven modules
           - Maven 3.0.2 required to build
@@ -56,11 +55,11 @@
           - Code reports generation via 'mvn site -P site-reports' maven profile
           - Corrections further to findbugs,... reports
           - Code formatting
-          - ... and much more, see details on https://issues.apache.org/jira/secure/ReleaseNote.jspa?in&version=12316850&amp;styleName=Html&amp;projectId=10411
+          - ... and much more, see details on https://issues.apache.org/jira/secure/ReleaseNote.jspa?in&amp;version=12316850&amp;styleName=Html&amp;projectId=10411
       
         * Quick Start  http://james.apache.org/server/3/quick-start.html
         </pre>
--->
+
         <a name="30072011"><h4>Apache James jDKIM 0.2</h4></a>
         <p>The Apache James Project is happy to announce
            the release of version 0.2 of the Apache James jDKIM library.</p>
