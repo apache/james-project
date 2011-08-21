@@ -26,13 +26,7 @@
   
   <head>
   
-    <script type="text/javascript">
-
-      $(function(){
-        $('#tabs').tabs();
-      });
-      
-    </script>
+    <script type="text/javascript" src="./js/index.js" />
     
   </head>
 
@@ -55,7 +49,7 @@
        <div class="ui-widget">
 		 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 			<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-			<strong>Hey!</strong> James Server 3.0-M2 is out - <a href="3/">Read more</a>.</p>
+			<strong>Hey!</strong> James Server 3.0-beta3 is out - <a href="3/">Read more</a>.</p>
 	     </div>
        </div>
       
@@ -83,7 +77,7 @@
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-M2</span>
+              <span><span class="icon"></span>Early James Server 3.0-beta3</span>
             </a>
           </span>
         </p>
@@ -113,15 +107,15 @@
     
     <div id="tabs-2">
       
-      <subsection name='James 3.0 Milestone 2'>
+      <subsection name='James 3.0 Beta 3'>
 
-        <p>James 3.0 Milestone 2 is a proposed milestone release allowing a preview of the James 3.0 features.
+        <p>James 3.0 Beta 3 is a proposed beta release allowing a preview of the James 3.0 features.
            We strongly encourage to download and test it.</p>
         
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-M2</span>
+              <span><span class="icon"></span>Early James Server 3.0-beta3</span>
             </a>
           </span>
         </p>
@@ -142,7 +136,7 @@
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://people.apache.org/builds/james/nightly/';">
-              <span><span class="icon"></span>Snapshot James Server 3.0</span>
+              <span><span class="icon"></span>Snapshot James Server 3.0 SNAPSHOT</span>
             </a>
           </span>
         </p>
@@ -202,7 +196,7 @@
       
         <table>
           <tr>
-            <th>Item</th>
+            <th>Feature</th>
             <th>Status</th>
             <th>3.0</th>
             <th>2.3.x</th>
