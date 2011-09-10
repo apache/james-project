@@ -230,6 +230,15 @@
                 <role>Developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>ieugen</id>
+            <name>Ioan Eugen Stan</name>
+            <email>ieugen at apache.org </email>
+            <timezone/>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
     </developers>
 
     <contributors>
