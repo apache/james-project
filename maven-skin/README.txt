@@ -2,7 +2,7 @@
    Apache JAMES Website M2 Skin
    ============================
 
-This is the maven skin for JAMES products deplyed at http://james.apache.org
+This is the maven skin for JAMES products deployed at http://james.apache.org
 
 This release include the google analytic javascript code at the bottom of every
 generated page and specifically to page starting with "download" it will also add
