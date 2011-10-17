@@ -18,6 +18,14 @@
 
     <subsection name='2011'>
 
+      <a name="111711"><h4>October 2011 - Apache James Mime4j 0.7.1 released</h4></a>
+        <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
+           the release of version 0.7.1 of Apache James Mime4j library.</p>
+
+      <a name="111611"><h4>October 2011 - Apache James Protocols 1.6-beta1 released</h4></a>
+        <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
+           the release of version 1.6-beta1 of Apache James Protocols library.</p>
+
       <a name="082011"><h4>Augustus 2011 - Apache James Server 3.0-beta3 released</h4></a>
         <p>The Apache James project is happy to announce the release 
            of version 3.0-beta3 of its modular mail server.</p>
