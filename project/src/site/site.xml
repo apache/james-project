@@ -21,7 +21,7 @@
 
     <skin>
         <groupId>org.apache.james</groupId>
-        <artifactId>maven-skin</artifactId>
+        <artifactId>james-skin</artifactId>
         <version>1.7-SNAPSHOT</version>
     </skin>
 
