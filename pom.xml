@@ -42,7 +42,6 @@
     </prerequisites>
 
     <modules>
-        <module>maven-skin</module>
         <module>project</module>
     </modules>
 
