@@ -372,6 +372,18 @@
 
       <subsection name="News">
         <ul>
+          <li>October/2011 - <ul>
+          <li><a href="newsarchive.html#111711"><strong>Apache James Mime4j 0.7.1</strong> released</a></li>
+          </ul>
+          </li>
+          <li>October/2011 - <ul>
+          <li><a href="newsarchive.html#111611"><strong>Apache James Protocols 1.6-beta1</strong> released</a></li>
+          </ul>
+          </li>
+          <li>October/2011 - <ul>
+          <li><a href="newsarchive.html#082011"><strong>Apache James Server 3.0-beta3</strong> released</a></li>
+          </ul>
+          </li>
           <li>Augustus/2011 - <ul>
           <li><a href="newsarchive.html#082011"><strong>Apache James Server 3.0-beta3</strong> released</a></li>
           </ul>
