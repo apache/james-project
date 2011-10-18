@@ -308,7 +308,7 @@
                 Use properties to build deploy url to avoid accidently overriding the common module's
                 website when using "-Psite-reports" by chance
             -->
-            <url>scp://people.apache.org/www/james.apache.org/${deploySiteDirectory}/${deployTechnicalSiteDirectory}</url>
+            <url>scpexe://people.apache.org/www/james.apache.org/${deploySiteDirectory}/${deployTechnicalSiteDirectory}</url>
         </site>
     </distributionManagement>
 
@@ -350,8 +350,8 @@
             <extension>
                 <!-- Adding a Protocol to Deploy the Site (support for ssh/scp) -->
                 <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-                <version>1.0</version>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>2.0</version>
             </extension>
         </extensions>
         <pluginManagement>

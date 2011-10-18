@@ -8,3 +8,6 @@ How to build and publish the website:
     a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html) 
 
 To deploy the technical reports use the "-Psite-reports" profile.
+
+For wagon-ssh-external configuration see 
+http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html
