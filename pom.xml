@@ -331,6 +331,14 @@
     </repositories>
 
     <build>
+        <extensions>
+            <extension>
+                <!-- Adding a Protocol to Deploy the Site (support for ssh/scp) -->
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>1.0</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
