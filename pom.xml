@@ -301,10 +301,13 @@
     </ciManagement>
 
     <distributionManagement>
-        <!-- Each project must override this with their own -->
         <site>
             <id>james-website</id>
-            <url>scp://people.apache.org/www/james.apache.org/</url>
+            <!--
+                Use properties to build deploy url to avoid accidently overriding the common module's
+                website when using "-Psite-reports" by chance
+            -->
+            <url>scp://people.apache.org/www/james.apache.org/${deploySiteDirectory}/${deployTechnicalSiteDirectory}</url>
         </site>
     </distributionManagement>
 
@@ -313,6 +316,17 @@
         <target.jdk>1.5</target.jdk>
         <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
         <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
+        <!--
+            NOTE:
+            Each project must override this property with their own value.
+            This property contains the directory where to deploy when running "site" without profile
+        -->
+        <deploySiteDirectory></deploySiteDirectory>
+        <!--
+            This property contains the directory where to deploy when running using "-Psite-reports" profile
+            to avoid accidently overriding the common modules website. Empty by default.
+        -->
+        <deployTechnicalSiteDirectory></deployTechnicalSiteDirectory>
     </properties>
 
     <repositories>
@@ -482,6 +496,11 @@
                 <!-- Overriding values set by default (see properties section) -->
                 <maven-site-plugin.siteDirectory>${basedir}/src/reporting-site</maven-site-plugin.siteDirectory>
                 <maven-site-plugin.generateReports>true</maven-site-plugin.generateReports>
+                <!--
+                    This property contains the directory where to deploy when running using "-Psite-reports" profile
+                    to avoid accidently overriding the common modules website
+                -->
+                <deployTechnicalSiteDirectory>technical-reports</deployTechnicalSiteDirectory>
             </properties>
         </profile>
     </profiles>
