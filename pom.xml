@@ -17,7 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<!-- 
+<!--
     Tag order follows model description at http://maven.apache.org/ref/3.0.3/maven-model/maven.html
 -->
 <project
@@ -242,6 +242,44 @@
         </contributor>
     </contributors>
 
+    <mailingLists>
+        <mailingList>
+            <name>Server Development (including components)</name>
+            <subscribe>server-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>server-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>server-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-server-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Server User</name>
+            <subscribe>server-user-subscribe@james.apache.org</subscribe>
+            <unsubscribe>server-user-unsubscribe@james.apache.org</unsubscribe>
+            <post>server-user@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-server-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Mime4J</name>
+            <subscribe>mime4j-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>mime4j-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>mime4j-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-mime4j-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>General</name>
+            <subscribe>general-subscribe@james.apache.org</subscribe>
+            <unsubscribe>general-unsubscribe@james.apache.org</unsubscribe>
+            <post>general@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-general/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Website Development</name>
+            <subscribe>site-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>site-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>site-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
+        </mailingList>
+    </mailingLists>
+
     <prerequisites>
         <maven>3.0.2</maven>
     </prerequisites>
@@ -276,6 +314,174 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <target.jdk>1.5</target.jdk>
+        <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
+        <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
     </properties>
+
+    <repositories>
+        <!-- JBoss.org repository - required for APIviz Javadoc build -->
+        <repository>
+            <id>jboss.releases</id>
+            <name>JBoss releases</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories />
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.7</version>
+                    <configuration>
+                        <doclet>org.jboss.apiviz.APIviz</doclet>
+                        <docletArtifact>
+                            <groupId>org.jboss.apiviz</groupId>
+                            <artifactId>apiviz</artifactId>
+                            <version>1.3.1.GA</version>
+                        </docletArtifact>
+                        <useStandardDocletOptions>true</useStandardDocletOptions>
+                        <charset>UTF-8</charset>
+                        <encoding>UTF-8</encoding>
+                        <docencoding>UTF-8</docencoding>
+                        <breakiterator>true</breakiterator>
+                        <version>true</version>
+                        <author>true</author>
+                        <keywords>true</keywords>
+                        <additionalparam>-sourceclasspath ${project.build.outputDirectory}</additionalparam>
+                        <minmemory>256m</minmemory>
+                        <maxmemory>1g</maxmemory>
+                        <linksource>true</linksource>
+                        <tags>
+                            <tag>
+                                <name>note</name>
+                                <placement>a</placement>
+                                <head>NOTE</head>
+                            </tag>
+                            <tag>
+                                <name>todo</name>
+                                <placement>a</placement>
+                                <head>TODO</head>
+                            </tag>
+                            <tag>
+                                <name>warning</name>
+                                <placement>a</placement>
+                                <head>WARNING</head>
+                            </tag>
+                        </tags>
+                        <source>${target.jdk}</source>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <!-- Generate javadoc only when running mvn site, but not for mvn install -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>javadocs-for-site</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>aggregate</goal>
+                            <goal>test-aggregate</goal>
+                        </goals>
+                        <configuration>
+                            <minmemory>256m</minmemory>
+                            <maxmemory>1g</maxmemory>
+                            <linksource>true</linksource>
+                            <tags>
+                                <tag>
+                                    <name>note</name>
+                                    <placement>a</placement>
+                                    <head>NOTE</head>
+                                </tag>
+                                <tag>
+                                    <name>todo</name>
+                                    <placement>a</placement>
+                                    <head>TODO</head>
+                                </tag>
+                                <tag>
+                                    <name>warning</name>
+                                    <placement>a</placement>
+                                    <head>WARNING</head>
+                                </tag>
+                            </tags>
+                            <source>${target.jdk}</source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Site generation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <executions>
+                    <!-- Attach non-reporting site-descriptor when installing -->
+                    <execution>
+                        <id>attach-descriptor</id>
+                        <goals>
+                            <goal>attach-descriptor</goal>
+                        </goals>
+                        <configuration>
+                            <siteDirectory>${basedir}/src/site</siteDirectory>
+                            <generateReports>false</generateReports>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                            <reports>
+                                <report>index</report>
+                                <report>mailing-list</report>
+                                <report>project-team</report>
+                                <report>license</report>
+                            </reports>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+            Switches between generating the documentation site (without using this profile) and
+            generating the technical reports site (using this profile)
+        -->
+        <profile>
+            <id>site-reports</id>
+            <properties>
+                <!-- Overriding values set by default (see properties section) -->
+                <maven-site-plugin.siteDirectory>${basedir}/src/reporting-site</maven-site-plugin.siteDirectory>
+                <maven-site-plugin.generateReports>true</maven-site-plugin.generateReports>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
