@@ -315,6 +315,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <target.jdk>1.5</target.jdk>
+        <james-skin.version>1.7</james-skin.version>
         <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
         <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
         <!--
