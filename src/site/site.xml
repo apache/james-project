@@ -17,29 +17,74 @@
   specific language governing permissions and limitations
   under the License.    
 -->
-<project name="James Parent POM">
+<project name="Apache James Project">
 
-  <bannerLeft>
-    <name>James Parent</name>
-    <src>images/james-project-logo.gif</src>
-    <href>http://james.apache.org/index.html</href>
-  </bannerLeft>
+    <skin>
+        <groupId>org.apache.james</groupId>
+        <artifactId>james-skin</artifactId>
+        <version>1.7-SNAPSHOT</version>
+    </skin>
 
-  <bannerRight>
-    <name>The Apache Software Foundation</name>
-    <src>images/asf-logo-reduced.gif</src>
-    <href>http://www.apache.org/index.html</href>
-  </bannerRight>
+    <bannerLeft>
+        <name>James Project</name>
+        <src>images/logos/james-project-logo.gif</src>
+        <href>http://james.apache.org/index.html</href>
+        <alt>james-project-logo.gif</alt>
+    </bannerLeft>
 
-  <!-- This file has been placed here as a workaround to 
-       http://jira.codehaus.org/browse/MSITE-228 -->
-  <skin>
-    <groupId>org.apache.maven.skins</groupId>
-    <artifactId>maven-default-skin</artifactId>
-    <version>1.0</version>
-  </skin>
-    
-  <body>
+    <bannerRight>
+        <name>The Apache Software Foundation</name>
+        <src>images/logos/asf-logo-reduced.gif</src>
+        <href>http://www.apache.org/index.html</href>
+    </bannerRight>
 
-  </body>
+    <body>
+<!-- 
+    Breadcrumbs are desactivated as they give strange results.
+    <breadcrumbs>
+      <item name="Home" />
+    </breadcrumbs>
+-->
+
+        <links>
+            <item name="Home" href="http://james.apache.org/index.html" />
+            <item name="Server" href="http://james.apache.org/server/index.html" />
+            <item name="Hupa" href="http://james.apache.org/hupa/index.html" />
+            <item name="Protocols" href="http://james.apache.org/protocols/index.html" />
+            <item name="IMAP" href="http://james.apache.org/imap/index.html" />
+            <item name="Mailets" href="http://james.apache.org/mailet/index.html" />
+            <item name="Mailbox" href="http://james.apache.org/mailbox/index.html" />
+            <item name="Mime4J" href="http://james.apache.org/mime4j/index.html" />
+            <item name="jSieve" href="http://james.apache.org/jsieve/index.html" />
+            <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
+            <item name="jDKIM" href="http://james.apache.org/jdkim/index.html" />
+            <item name="MPT" href="http://james.apache.org/mpt/index.html" />
+            <item name="Postage" href="http://james.apache.org/postage/index.html" />
+        </links>
+
+        <menu name="About James " inherit="bottom">
+            <item name="Overview" href="/index.html" />
+            <item name="News" href="/newsarchive.html" />
+            <item name="Mailing Lists" href="/mail.html" />
+            <item name="Contributing" href="/contribute.html" />
+            <item name="Guidelines" href="/guidelines.html" />
+            <item name="Wiki" href="http://wiki.apache.org/james" />
+            <item name="Who We Are" href="/weare.html" />
+            <item name="License" href="/license.html" />
+        </menu>
+
+        <menu name="Download" inherit="bottom">
+            <item name="Releases" href="http://james.apache.org/download.cgi" />
+            <item name="Snapshots" href="http://people.apache.org/builds/james/nightly/" />
+<!--
+    Don't display this as the build directory is no more updated and must be removed.
+          <item name="Nightly builds" href="http://james.zones.apache.org/builds/"/>
+-->
+<!--
+    Don't display the link to Hudson, we already have the link to the nightly page.
+      <item name="Snapshots (Hudson)" href="https://hudson.apache.org/hudson/view/G-L/view/James/"/>
+-->
+        </menu>
+    </body>
+
 </project>
