@@ -785,33 +785,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <executions>
-                    <!-- Attach non-reporting site-descriptor when installing -->
-                    <execution>
-                        <id>attach-descriptor</id>
-                        <goals>
-                            <goal>attach-descriptor</goal>
-                        </goals>
-                        <configuration>
-                            <siteDirectory>${basedir}/src/site</siteDirectory>
-                            <generateReports>false</generateReports>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <reports>
-                                <report>index</report>
-                                <report>mailing-list</report>
-                                <report>project-team</report>
-                                <report>license</report>
-                            </reports>
-                        </plugin>
-                    </reportPlugins>
-                </configuration>
             </plugin>
         </plugins>
     </build>
