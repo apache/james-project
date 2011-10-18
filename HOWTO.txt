@@ -3,6 +3,8 @@ How to build and publish the website:
  1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
  2. run "mvn clean site"
  3. Test the built site in your browser from the {path}/target/site folder
- 4. If everything looks OK, deploy the site using "mvn clean deploy-site".
+ 4. If everything looks OK, deploy the site using "mvn clean site-deploy".
  5. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as 
     a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html) 
+
+To deploy the technical reports use the "-Psite-reports" profile.
