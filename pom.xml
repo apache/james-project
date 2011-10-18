@@ -297,8 +297,8 @@
     </issueManagement>
 
     <ciManagement>
-        <system>hudson</system>
-        <url>http://hudson.zones.apache.org/hudson/view/James/</url>
+        <system>Jenkins</system>
+        <url>https://builds.apache.org/</url>
     </ciManagement>
 
     <distributionManagement>
