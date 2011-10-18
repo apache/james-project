@@ -33,12 +33,12 @@
     </parent>
 
     <groupId>org.apache.james</groupId>
-    <artifactId>james-parent</artifactId>
+    <artifactId>james-project</artifactId>
     <version>1.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Apache James Parent POM</name>
-    <description>The Apache James Parent POM</description>
+    <name>Apache James Project</name>
+    <description>The Apache James Project</description>
     <url>http://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
 
@@ -284,10 +284,6 @@
         <maven>3.0.2</maven>
     </prerequisites>
 
-    <modules>
-        <module>project</module>
-    </modules>
-
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
@@ -307,8 +303,8 @@
     <distributionManagement>
         <!-- Each project must override this with their own -->
         <site>
-            <id>james-parent-website</id>
-            <url>scp://people.apache.org/www/james.apache.org/parent/</url>
+            <id>james-website</id>
+            <url>scp://people.apache.org/www/james.apache.org/</url>
         </site>
     </distributionManagement>
 
@@ -333,8 +329,6 @@
             </snapshots>
         </repository>
     </repositories>
-
-    <pluginRepositories />
 
     <build>
         <pluginManagement>
