@@ -305,10 +305,10 @@
         <site>
             <id>james-website</id>
             <!--
-                Use properties to build deploy url to avoid accidently overriding the common module's
+                Add postfix to build deploy url to avoid accidently overriding the common module's
                 website when using "-Psite-reports" by chance
             -->
-            <url>scpexe://people.apache.org/www/james.apache.org/${deploySiteDirectory}/${deployTechnicalSiteDirectory}</url>
+            <url>scpexe://people.apache.org/www/james.apache.org/${deployTechnicalSiteDirectory}</url>
         </site>
     </distributionManagement>
 
@@ -318,12 +318,6 @@
         <james-skin.version>1.7</james-skin.version>
         <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
         <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
-        <!--
-            NOTE:
-            Each project must override this property with their own value.
-            This property contains the directory where to deploy when running "site" without profile
-        -->
-        <deploySiteDirectory></deploySiteDirectory>
         <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
@@ -587,6 +581,19 @@
                             <plugin>
                                 <groupId>org.apache.maven.plugins</groupId>
                                 <artifactId>maven-pmd-plugin</artifactId>
+                                <configuration>
+                                    <aggregate>true</aggregate>
+                                    <targetJdk>${target.jdk}</targetJdk>
+                                    <rulesets>
+                                        <ruleset>/rulesets/basic.xml</ruleset>
+                                        <ruleset>/rulesets/unusedcode.xml</ruleset>
+                                        <ruleset>/rulesets/imports.xml</ruleset>
+                                    </rulesets>
+                                    <format>xml</format>
+                                    <linkXref>true</linkXref>
+                                    <sourceEncoding>utf-8</sourceEncoding>
+                                    <minimumTokens>100</minimumTokens>
+                                </configuration>
                             </plugin>
                             <plugin>
                                 <groupId>org.apache.maven.plugins</groupId>
@@ -804,7 +811,7 @@
                     This property contains the directory where to deploy when running using "-Psite-reports" profile
                     to avoid accidently overriding the common modules website
                 -->
-                <deployTechnicalSiteDirectory>technical-reports</deployTechnicalSiteDirectory>
+                <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
             </properties>
         </profile>
     </profiles>
