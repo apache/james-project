@@ -314,7 +314,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <target.jdk>1.5</target.jdk>
+        <target.jdk>1.6</target.jdk>
         <james-skin.version>1.7</james-skin.version>
         <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
         <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
@@ -753,7 +753,6 @@
                         <phase>pre-site</phase>
                         <goals>
                             <goal>aggregate</goal>
-                            <goal>test-aggregate</goal>
                         </goals>
                         <configuration>
                             <minmemory>256m</minmemory>
