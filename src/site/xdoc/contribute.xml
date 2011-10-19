@@ -173,6 +173,12 @@
         </p>
         
         <p>
+        6. <strong>pom.xml</strong> files shall follow the same ordering as seen in the reference
+        of the <a href="http://maven.apache.org/ref/3.0.3/maven-model/maven.html">Maven Model</a>,
+        split multiple attributes each on a new line.
+        </p>
+        
+        <p>
           <strong>Eclipse IDE</strong><br />
           Eclipse users can import those two files to enfore the code formating :
           <a href="downloads/formatting.xml">formatting.xml</a> and
