@@ -62,7 +62,7 @@
             <item name="Postage" href="http://james.apache.org/postage/index.html" />
         </links>
 
-        <menu name="About James " inherit="bottom">
+        <menu name="About James" inherit="bottom">
             <item name="Overview" href="/index.html" />
             <item name="News" href="/newsarchive.html" />
             <item name="Mailing Lists" href="/mail.html" />
