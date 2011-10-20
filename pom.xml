@@ -43,19 +43,6 @@
     <url>http://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
 
-    <organization>
-        <name>The Apache Software Foundation</name>
-        <url>http://www.apache.org</url>
-    </organization>
-
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
     <developers>
         <developer>
             <id>bago</id>
@@ -104,9 +91,7 @@
         </developer>
         <developer>
             <id>hilmer</id>
-            <!-- This is not correctly handled by maven release plugin -->
-            <!-- <name>S&#248;ren Hilmer</name> -->
-            <name>Soren Hilmer</name>
+            <name>S&#248;ren Hilmer</name>
             <email>sh at widetrail.dk</email>
             <timezone />
             <roles>
@@ -313,9 +298,18 @@
     </distributionManagement>
 
     <properties>
+        <!--
+            Following properties can be overridden in inheriting pom.xml if needed,
+            otherwise the set values are used by default.
+        -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <target.jdk>1.6</target.jdk>
         <james-skin.version>1.7</james-skin.version>
+        <!--
+            Default values for site generation (mvn site:site). Other values are set when using the
+            profile 'site-reports'.
+            By default no reports are generated except javadocs (see build tag).
+        -->
         <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
         <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
         <!--
@@ -710,8 +704,9 @@
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>cobertura-maven-plugin</artifactId>
-                    <version>2.5.1</version>
+                    <artifactId>emma-maven-plugin</artifactId>
+                    <version>1.0-alpha-3</version>
+                    <inherited>true</inherited>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
