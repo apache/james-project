@@ -306,13 +306,6 @@
         <target.jdk>1.6</target.jdk>
         <james-skin.version>1.7</james-skin.version>
         <!--
-            Default values for site generation (mvn site:site). Other values are set when using the
-            profile 'site-reports'.
-            By default no reports are generated except javadocs (see build tag).
-        -->
-        <maven-site-plugin.siteDirectory>${basedir}/src/site</maven-site-plugin.siteDirectory>
-        <maven-site-plugin.generateReports>false</maven-site-plugin.generateReports>
-        <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
         -->
@@ -529,116 +522,8 @@
                             <goals>
                                 <goal>attach-descriptor</goal>
                             </goals>
-                            <configuration>
-                                <siteDirectory>${basedir}/src/site</siteDirectory>
-                                <generateReports>false</generateReports>
-                            </configuration>
                         </execution>
                     </executions>
-                    <configuration>
-                        <siteDirectory>${maven-site-plugin.siteDirectory}</siteDirectory>
-                        <generateReports>${maven-site-plugin.generateReports}</generateReports>
-                        <reportPlugins>
-                            <!-- Order matters. First project-info-reports, second jxr. -->
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-project-info-reports-plugin</artifactId>
-                                <reports>
-                                    <report>dependencies</report>
-                                    <report>dependency-management</report>
-                                    <report>dependency-convergence</report>
-                                    <report>distribution-management</report>
-                                    <report>index</report>
-                                    <report>issue-tracking</report>
-                                    <report>license</report>
-                                    <report>mailing-list</report>
-                                    <report>modules</report>
-                                    <report>plugin-management</report>
-                                    <report>plugins</report>
-                                    <report>project-team</report>
-                                    <report>scm</report>
-                                    <report>summary</report>
-                                </reports>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-jxr-plugin</artifactId>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-surefire-report-plugin</artifactId>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.apache.rat</groupId>
-                                <artifactId>apache-rat-plugin</artifactId>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-pmd-plugin</artifactId>
-                                <configuration>
-                                    <aggregate>true</aggregate>
-                                    <targetJdk>${target.jdk}</targetJdk>
-                                    <rulesets>
-                                        <ruleset>/rulesets/basic.xml</ruleset>
-                                        <ruleset>/rulesets/unusedcode.xml</ruleset>
-                                        <ruleset>/rulesets/imports.xml</ruleset>
-                                    </rulesets>
-                                    <format>xml</format>
-                                    <linkXref>true</linkXref>
-                                    <sourceEncoding>utf-8</sourceEncoding>
-                                    <minimumTokens>100</minimumTokens>
-                                </configuration>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-javadoc-plugin</artifactId>
-                                <reportSets>
-                                    <reportSet>
-                                        <reports>
-                                            <report>aggregate</report>
-                                            <report>test-aggregate</report>
-                                        </reports>
-                                    </reportSet>
-                                </reportSets>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.codehaus.mojo</groupId>
-                                <artifactId>findbugs-maven-plugin</artifactId>
-                            </plugin>
-                            <plugin>
-                                <groupId>org.codehaus.mojo</groupId>
-                                <artifactId>versions-maven-plugin</artifactId>
-                                <reportSets>
-                                    <reportSet>
-                                        <reports>
-                                            <report>dependency-updates-report</report>
-                                            <report>plugin-updates-report</report>
-                                            <report>property-updates-report</report>
-                                        </reports>
-                                    </reportSet>
-                                </reportSets>
-                            </plugin>
-                            <!--
-                                <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-changes-plugin</artifactId>
-                                <configuration>
-                                <onlyCurrentVersion>true</onlyCurrentVersion>
-                                <resolutionIds>Fixed</resolutionIds>
-                                <statusIds>Resolved,Closed</statusIds>
-                                <columnNames>Type,Key,Summary,Status,Resolution,Fix Version</columnNames>
-                                </configuration>
-                                <reportSets>
-                                <reportSet>
-                                <reports>
-                                <report>jira-report</report>
-                                </reports>
-                                </reportSet>
-                                </reportSets>
-                                </plugin>
-                            -->
-                        </reportPlugins>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -745,48 +630,24 @@
             </plugins>
         </pluginManagement>
         <plugins>
-            <!-- Generate javadoc only when running mvn site, but not for mvn install -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>javadocs-for-site</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>aggregate</goal>
-                        </goals>
-                        <configuration>
-                            <minmemory>256m</minmemory>
-                            <maxmemory>1g</maxmemory>
-                            <linksource>true</linksource>
-                            <tags>
-                                <tag>
-                                    <name>note</name>
-                                    <placement>a</placement>
-                                    <head>NOTE</head>
-                                </tag>
-                                <tag>
-                                    <name>todo</name>
-                                    <placement>a</placement>
-                                    <head>TODO</head>
-                                </tag>
-                                <tag>
-                                    <name>warning</name>
-                                    <placement>a</placement>
-                                    <head>WARNING</head>
-                                </tag>
-                            </tags>
-                            <source>${target.jdk}</source>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Site generation -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <reportSets>
+                                <reportSet>
+                                    <reports>
+                                        <report>aggregate</report>
+                                    </reports>
+                                </reportSet>
+                            </reportSets>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -799,16 +660,126 @@
         <profile>
             <id>site-reports</id>
             <properties>
-                <!-- Overriding values set by default (see properties section) -->
-                <maven-site-plugin.siteDirectory>${basedir}/src/reporting-site</maven-site-plugin.siteDirectory>
-                <maven-site-plugin.generateReports>true</maven-site-plugin.generateReports>
                 <!--
                     This property contains the directory where to deploy when running using "-Psite-reports" profile
                     to avoid accidently overriding the common modules website
                 -->
                 <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
             </properties>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-site-plugin</artifactId>
+                            <configuration>
+                                <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
+                                <reportPlugins combine.children="append">
+                                    <!-- Order matters. First project-info-reports, second jxr. -->
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                                        <reports>
+                                            <report>dependencies</report>
+                                            <report>dependency-management</report>
+                                            <report>dependency-convergence</report>
+                                            <report>distribution-management</report>
+                                            <report>index</report>
+                                            <report>issue-tracking</report>
+                                            <report>license</report>
+                                            <report>mailing-list</report>
+                                            <report>modules</report>
+                                            <report>plugin-management</report>
+                                            <report>plugins</report>
+                                            <report>project-team</report>
+                                            <report>scm</report>
+                                            <report>summary</report>
+                                        </reports>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-jxr-plugin</artifactId>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-surefire-report-plugin</artifactId>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.rat</groupId>
+                                        <artifactId>apache-rat-plugin</artifactId>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-pmd-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                            <targetJdk>${target.jdk}</targetJdk>
+                                            <rulesets>
+                                                <ruleset>/rulesets/basic.xml</ruleset>
+                                                <ruleset>/rulesets/unusedcode.xml</ruleset>
+                                                <ruleset>/rulesets/imports.xml</ruleset>
+                                            </rulesets>
+                                            <format>xml</format>
+                                            <linkXref>true</linkXref>
+                                            <sourceEncoding>utf-8</sourceEncoding>
+                                            <minimumTokens>100</minimumTokens>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-javadoc-plugin</artifactId>
+                                        <reportSets>
+                                            <reportSet>
+                                                <reports>
+                                                    <report>aggregate</report>
+                                                    <report>test-aggregate</report>
+                                                </reports>
+                                            </reportSet>
+                                        </reportSets>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>findbugs-maven-plugin</artifactId>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>versions-maven-plugin</artifactId>
+                                        <reportSets>
+                                            <reportSet>
+                                                <reports>
+                                                    <report>dependency-updates-report</report>
+                                                    <report>plugin-updates-report</report>
+                                                    <report>property-updates-report</report>
+                                                </reports>
+                                            </reportSet>
+                                        </reportSets>
+                                    </plugin>
+                                    <!--
+                                        <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-changes-plugin</artifactId>
+                                        <configuration>
+                                        <onlyCurrentVersion>true</onlyCurrentVersion>
+                                        <resolutionIds>Fixed</resolutionIds>
+                                        <statusIds>Resolved,Closed</statusIds>
+                                        <columnNames>Type,Key,Summary,Status,Resolution,Fix Version</columnNames>
+                                        </configuration>
+                                        <reportSets>
+                                        <reportSet>
+                                        <reports>
+                                        <report>jira-report</report>
+                                        </reports>
+                                        </reportSet>
+                                        </reportSets>
+                                        </plugin>
+                                    -->
+                                </reportPlugins>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
         </profile>
     </profiles>
-
 </project>
