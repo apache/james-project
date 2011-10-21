@@ -70,6 +70,12 @@
             <roles>
                 <role>Developer</role>
             </roles>
+            <properties>
+                <Donator>Serge was the original donator of the James code, which has since been massively
+                    improved by people smarter than him. He tries to answer questions on the listserv and make
+                    code
+                    contributions when he does get a rare bit of free time.</Donator>
+            </properties>
         </developer>
         <developer>
             <id>benrdf</id>
@@ -115,12 +121,33 @@
             <roles>
                 <role>Developer</role>
             </roles>
+            <organization>Student Loans Company ltd</organization>
+            <organizationUrl>http://www.slc.co.uk</organizationUrl>
+            <properties>
+                <Description>Danny is a member of the Apache Software Foundation and married father
+                    of two by night, and by day works as lead technical consultant for the Student Loans
+                    Company ltd.</Description>
+            </properties>
         </developer>
         <developer>
             <id>adc</id>
             <name>Alan D. Cabrera</name>
             <email>list at toolazydogs.com</email>
             <timezone>-8</timezone>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Harmeet Bedi</name>
+            <email>harmeet at kodemuse.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Jason Webb</name>
+            <email>jw at inovem.com</email>
             <roles>
                 <role>Developer</role>
             </roles>
@@ -154,7 +181,7 @@
             <name>Joe Cheng</name>
             <email>joe(at)joecheng(dot)com</email>
             <properties>
-                <description>Former author to the mime4j product</description>
+                <Description>Former author to the mime4j product</Description>
             </properties>
         </developer>
         <developer>
@@ -217,14 +244,151 @@
         <contributor>
             <name>Rob Oxspring</name>
             <properties>
-                <description>Contributed to the mime4j product</description>
+                <Contribution>Contributed to the mime4j product</Contribution>
             </properties>
         </contributor>
         <contributor>
             <name>Roger Fullerton</name>
             <properties>
-                <description>Wrote spfjava, the first spf implementation in java</description>
+                <Contribution>Wrote spfjava, the first spf implementation in java</Contribution>
             </properties>
+        </contributor>
+        <contributor>
+            <name>Alan D. Cabrera [ADC]</name>
+            <email>list at toolazydogs.com</email>
+        </contributor>
+        <contributor>
+            <name>Darrell DeBoer (DD)</name>
+        </contributor>
+        <contributor>
+            <name>Stephen J. McConnell (SJM)</name>
+            <email>mcconnell at apache.org</email>
+        </contributor>
+        <contributor>
+            <name>Peter M. Goldstein (PG)</name>
+            <email>farsight at alum.mit.edu</email>
+        </contributor>
+        <contributor>
+            <name>Pete Donald (PD)</name>
+        </contributor>
+        <contributor>
+            <name>Charles Benett (CB)</name>
+            <email>charles at benett1.demon.co.uk</email>
+        </contributor>
+        <contributor>
+            <name>Federico Barbieri (FB)</name>
+            <email>scoobie at systemy.it</email>
+        </contributor>
+        <contributor>
+            <name>Stuart Roebuck (SR)</name>
+            <email>stuart.roebuck at adolos.co.uk</email>
+        </contributor>
+        <contributor>
+            <name>Ivan Seskar (IS)</name>
+            <email>iseskar at upsideweb.com</email>
+        </contributor>
+        <contributor>
+            <name>Prasanna Uppaladadium (PU)</name>
+            <email>prasanna at vayusphere.com</email>
+        </contributor>
+        <contributor>
+            <name>Gabriel Bucher (GB)</name>
+            <email>gabriel.bucher at razor.ch</email>
+        </contributor>
+        <contributor>
+            <name>Matthew Pangaro (MP)</name>
+            <email>mattp at lokitech.com</email>
+        </contributor>
+        <contributor>
+            <name>Jason Borden (JB)</name>
+            <email>jborden at javasense.com</email>
+        </contributor>
+        <contributor>
+            <name>Randy Stanard (RS)</name>
+            <email>rstanard at lokitech.com</email>
+            <properties>
+                <Contribution>Contributed the James logo</Contribution>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Samuel Sadek (SS)</name>
+            <email>Samuel.Sadek at kpmg.co.uk</email>
+        </contributor>
+        <contributor>
+            <name>Stephan Schiessling (SS2)</name>
+            <email>s at rapi.com</email>
+        </contributor>
+        <contributor>
+            <name>Eung-ju Park (EP)</name>
+            <email>colus at apache.org</email>
+        </contributor>
+        <contributor>
+            <name>Paul Hammant (PH)</name>
+            <email>Paul_Hammant at yahoo.com</email>
+        </contributor>
+        <contributor>
+            <name>Jeff Keyser (JK)</name>
+            <email>JKeyser at telocity.com</email>
+        </contributor>
+        <contributor>
+            <name>Andrei Ivanov (AI)</name>
+            <email>myfam at surfeu.fi</email>
+        </contributor>
+        <contributor>
+            <name>Brad Walker (BW)</name>
+            <email>bwalker at studentadvantage.com</email>
+        </contributor>
+        <contributor>
+            <name>Christian Buchegger (CB2)</name>
+            <email>christian.buchegger at planet-interkom.de</email>
+        </contributor>
+        <contributor>
+            <name>Shilpa Dalmia (SD)</name>
+            <email>shilpa at postx.com</email>
+        </contributor>
+        <contributor>
+            <name>Steve Short (SS3)</name>
+            <email>sshort at postx.com</email>
+        </contributor>
+        <contributor>
+            <name>Aaron Knauf (AK)</name>
+            <email>aknauf at xtra.co.nz</email>
+        </contributor>
+        <contributor>
+            <name>Serge "Sergei" Sozonoff (SS4)</name>
+            <email>serge at globalbeach.com</email>
+        </contributor>
+        <contributor>
+            <name>Kai Londenberg [KL]</name>
+            <email>kai.londenberg at my-vwclub.de</email>
+        </contributor>
+        <contributor>
+            <name>Mark Imel [MI]</name>
+            <email>james at imelshire.com</email>
+        </contributor>
+        <contributor>
+            <name>Kevin Schmidt [KS]</name>
+            <email>ktschmidt at earthlink.net</email>
+        </contributor>
+        <contributor>
+            <name>Hontvari Jozsef [HJ]</name>
+            <email>hontvari2 at solware.com</email>
+        </contributor>
+        <contributor>
+            <name>Cesar Bonadio [CB3]</name>
+            <email>bonadio at picture.com.br</email>
+        </contributor>
+        <contributor>
+            <name>Marco Tedone [MT]</name>
+            <email>mtedone at jemos.org</email>
+        </contributor>
+        <contributor>
+            <name>Tim Stephenson [TS]</name>
+            <email>tim at thestephensons.me.uk</email>
+        </contributor>
+        <contributor>
+            <name>Richard O. Hammer [ROH]</name>
+            <email>rohammer at earthlink.net</email>
         </contributor>
     </contributors>
 
@@ -635,6 +799,18 @@
                 <artifactId>maven-site-plugin</artifactId>
                 <configuration>
                     <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                            <reportSets>
+                                <reportSet>
+                                    <reports>
+                                        <report>license</report>
+                                        <report>project-team</report>
+                                    </reports>
+                                </reportSet>
+                            </reportSets>
+                        </plugin>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-javadoc-plugin</artifactId>
