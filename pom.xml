@@ -693,9 +693,12 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.10</version>
+                    <inherited>true</inherited>
                     <configuration>
                         <aggregate>true</aggregate>
-                        <forkMode>pertest</forkMode>
+                        <forkMode>once</forkMode>
+                        <reportFormat>xml</reportFormat>
+                        <classesDirectory>${project.build.directory}/generated-classes/emma/classes</classesDirectory>
                         <argLine>-Xms256m -Xmx512m</argLine>
                         <testFailureIgnore>false</testFailureIgnore>
                         <skip>false</skip>
@@ -708,8 +711,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
                     <version>2.10</version>
+                    <inherited>true</inherited>
                     <configuration>
-                        <forkMode>pertest</forkMode>
+                        <forkMode>once</forkMode>
                         <argLine>-Xms256m -Xmx512m</argLine>
                         <testFailureIgnore>false</testFailureIgnore>
                         <skip>false</skip>
@@ -876,6 +880,11 @@
                                     <plugin>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-jxr-plugin</artifactId>
+                                    </plugin>
+                                    <!-- Order seems to matter. emma-maven-plugin must preceed maven-surfire-report-plugin. -->
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>emma-maven-plugin</artifactId>
                                     </plugin>
                                     <plugin>
                                         <groupId>org.apache.maven.plugins</groupId>
