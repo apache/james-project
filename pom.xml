@@ -213,7 +213,6 @@
             <timezone />
             <roles>
                 <role>Developer</role>
-                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
