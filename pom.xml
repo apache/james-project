@@ -44,6 +44,14 @@
     <inceptionYear>2006</inceptionYear>
 
     <developers>
+        <!-- 
+            Roles to use:
+            <role>Developer</role>
+            <role>Emeritus</role>
+            <role>PMC member</role>
+            <role>PMC chair</role>
+        
+         -->
         <developer>
             <id>bago</id>
             <name>Stefano Bagnara</name>
@@ -59,6 +67,7 @@
             <email>norman at apache.org</email>
             <timezone>2</timezone>
             <roles>
+                <role>Developer</role>
                 <role>PMC Chair</role>
             </roles>
         </developer>
@@ -190,6 +199,7 @@
             <email>mwiederkehr at apache.org</email>
             <timezone />
             <roles>
+                <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
         </developer>
@@ -199,6 +209,7 @@
             <email>olegk at apache.org</email>
             <timezone />
             <roles>
+                <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
         </developer>
@@ -217,6 +228,7 @@
             <email>eric at apache.org</email>
             <timezone />
             <roles>
+                <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
         </developer>
@@ -227,6 +239,7 @@
             <timezone>1</timezone>
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
