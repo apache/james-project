@@ -39,23 +39,30 @@
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
-    <description>The Apache James Project</description>
+    <description>
+        The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP and POP3 Mail server.
+        We have designed James to be a complete and portable enterprise mail engine solution based on currently available
+        open protocols. James is also a mail application platform. We have developed a Java API to let you write Java
+        code to process emails that we call the mailet API. A mailet can generate an automatic reply, update a database,
+        prevent spam, build a message archive, or whatever you can imagine. A matcher determines whether your mailet
+        should process an email in the server. The James project hosts the Mailet API, and James provides an implementation
+        of this mail application platform API.
+    </description>
     <url>http://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
 
     <developers>
-        <!-- 
+        <!--
             Roles to use:
             <role>Developer</role>
             <role>Emeritus</role>
             <role>PMC member</role>
             <role>PMC chair</role>
-        
-         -->
+        -->
         <developer>
             <id>bago</id>
             <name>Stefano Bagnara</name>
-            <email>bago at apache.org</email>
+            <email>bago@apache.org</email>
             <timezone>2</timezone>
             <roles>
                 <role>Developer</role>
@@ -65,7 +72,7 @@
         <developer>
             <id>norman</id>
             <name>Norman Maurer</name>
-            <email>norman at apache.org</email>
+            <email>norman@apache.org</email>
             <timezone>2</timezone>
             <roles>
                 <role>Developer</role>
@@ -75,7 +82,7 @@
         <developer>
             <id>serge</id>
             <name>Serge Knystautas</name>
-            <email>sergek at lokitech.com</email>
+            <email>sergek@lokitech.com</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -90,7 +97,7 @@
         <developer>
             <id>benrdf</id>
             <name>Bernd Fondermann</name>
-            <email>bf_jak at brainlounge.de</email>
+            <email>bf_jak@brainlounge.de</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -99,7 +106,7 @@
         <developer>
             <id>sbrewin</id>
             <name>Steve Brewin</name>
-            <email>sbrewin at synsys.com</email>
+            <email>sbrewin@synsys.com</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -109,7 +116,7 @@
         <developer>
             <id>hilmer</id>
             <name>S&#248;ren Hilmer</name>
-            <email>sh at widetrail.dk</email>
+            <email>sh@widetrail.dk</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -119,7 +126,7 @@
         <developer>
             <id>noel</id>
             <name>Noel J. Bergman</name>
-            <email>noel at devtech.com</email>
+            <email>noel@devtech.com</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -129,7 +136,7 @@
         <developer>
             <id>danny</id>
             <name>Danny Angus</name>
-            <email>danny at apache.org</email>
+            <email>danny@apache.org</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -146,7 +153,7 @@
         <developer>
             <id>adc</id>
             <name>Alan D. Cabrera</name>
-            <email>list at toolazydogs.com</email>
+            <email>list@toolazydogs.com</email>
             <timezone>-8</timezone>
             <roles>
                 <role>Developer</role>
@@ -155,7 +162,7 @@
         <developer>
             <id>hbedi</id>
             <name>Harmeet Bedi</name>
-            <email>harmeet at kodemuse.com</email>
+            <email>harmeet@kodemuse.com</email>
             <roles>
                 <role>Developer</role>
             </roles>
@@ -163,7 +170,7 @@
         <developer>
             <id>jasonw</id>
             <name>Jason Webb</name>
-            <email>jw at inovem.com</email>
+            <email>jw@inovem.com</email>
             <roles>
                 <role>Developer</role>
             </roles>
@@ -171,7 +178,7 @@
         <developer>
             <id>vincenzo</id>
             <name>Vincenzo Gianferrari Pini</name>
-            <email>vincenzo.gianferraripini at praxis.it</email>
+            <email>vincenzo.gianferraripini@praxis.it</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -181,7 +188,7 @@
         <developer>
             <id>rdonkin</id>
             <name>Robert Burrell Donkin</name>
-            <email>rdonkin at apache.org</email>
+            <email>rdonkin@apache.org</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -191,7 +198,7 @@
         <developer>
             <id>niklas</id>
             <name>Niklas Therning</name>
-            <email>niklas(at)apache(dot)org</email>
+            <email>niklas@apache.org</email>
             <organization>Trillian AB</organization>
             <roles>
                 <role>Developer</role>
@@ -201,7 +208,7 @@
         <developer>
             <id>jcheng</id>
             <name>Joe Cheng</name>
-            <email>joe(at)joecheng(dot)com</email>
+            <email>joe@joecheng.com</email>
             <properties>
                 <Description>Former author to the mime4j product</Description>
             </properties>
@@ -209,7 +216,7 @@
         <developer>
             <id>mwiederkehr</id>
             <name>Markus Wiederkehr</name>
-            <email>mwiederkehr at apache.org</email>
+            <email>mwiederkehr@apache.org</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -218,7 +225,7 @@
         <developer>
             <id>olegk</id>
             <name>Oleg Kalnichevski</name>
-            <email>olegk at apache.org</email>
+            <email>olegk@apache.org</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -228,7 +235,7 @@
         <developer>
             <id>manolo</id>
             <name>Manuel Carrasco Monino</name>
-            <email>manolo at apache.org</email>
+            <email>manolo@apache.org</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -238,7 +245,7 @@
         <developer>
             <id>eric</id>
             <name>Eric Charles</name>
-            <email>eric at apache.org</email>
+            <email>eric@apache.org</email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -248,7 +255,7 @@
         <developer>
             <id>felixk</id>
             <name>Felix Knecht</name>
-            <email>felixk at apache.org</email>
+            <email>felixk@apache.org</email>
             <timezone>1</timezone>
             <roles>
                 <role>Developer</role>
@@ -258,7 +265,7 @@
         <developer>
             <id>ieugen</id>
             <name>Ioan Eugen Stan</name>
-            <email>ieugen at apache.org </email>
+            <email>ieugen@apache.org </email>
             <timezone />
             <roles>
                 <role>Developer</role>
@@ -281,140 +288,152 @@
         </contributor>
         <contributor>
             <name>Alan D. Cabrera [ADC]</name>
-            <email>list at toolazydogs.com</email>
+            <email>list@toolazydogs.com</email>
         </contributor>
         <contributor>
             <name>Darrell DeBoer (DD)</name>
         </contributor>
         <contributor>
             <name>Stephen J. McConnell (SJM)</name>
-            <email>mcconnell at apache.org</email>
+            <email>mcconnell@apache.org</email>
         </contributor>
         <contributor>
             <name>Peter M. Goldstein (PG)</name>
-            <email>farsight at alum.mit.edu</email>
+            <email>farsight@alum.mit.edu</email>
         </contributor>
         <contributor>
             <name>Pete Donald (PD)</name>
         </contributor>
         <contributor>
             <name>Charles Benett (CB)</name>
-            <email>charles at benett1.demon.co.uk</email>
+            <email>charles@benett1.demon.co.uk</email>
         </contributor>
         <contributor>
             <name>Federico Barbieri (FB)</name>
-            <email>scoobie at systemy.it</email>
+            <email>scoobie@systemy.it</email>
         </contributor>
         <contributor>
             <name>Stuart Roebuck (SR)</name>
-            <email>stuart.roebuck at adolos.co.uk</email>
+            <email>stuart.roebuck@adolos.co.uk</email>
         </contributor>
         <contributor>
             <name>Ivan Seskar (IS)</name>
-            <email>iseskar at upsideweb.com</email>
+            <email>iseskar@upsideweb.com</email>
         </contributor>
         <contributor>
             <name>Prasanna Uppaladadium (PU)</name>
-            <email>prasanna at vayusphere.com</email>
+            <email>prasanna@vayusphere.com</email>
         </contributor>
         <contributor>
             <name>Gabriel Bucher (GB)</name>
-            <email>gabriel.bucher at razor.ch</email>
+            <email>gabriel.bucher@razor.ch</email>
         </contributor>
         <contributor>
             <name>Matthew Pangaro (MP)</name>
-            <email>mattp at lokitech.com</email>
+            <email>mattp@lokitech.com</email>
         </contributor>
         <contributor>
             <name>Jason Borden (JB)</name>
-            <email>jborden at javasense.com</email>
+            <email>jborden@javasense.com</email>
         </contributor>
         <contributor>
             <name>Randy Stanard (RS)</name>
-            <email>rstanard at lokitech.com</email>
+            <email>rstanard@lokitech.com</email>
             <properties>
                 <Contribution>Contributed the James logo</Contribution>
             </properties>
         </contributor>
         <contributor>
             <name>Samuel Sadek (SS)</name>
-            <email>Samuel.Sadek at kpmg.co.uk</email>
+            <email>Samuel.Sadek@kpmg.co.uk</email>
         </contributor>
         <contributor>
             <name>Stephan Schiessling (SS2)</name>
-            <email>s at rapi.com</email>
+            <email>s@rapi.com</email>
         </contributor>
         <contributor>
             <name>Eung-ju Park (EP)</name>
-            <email>colus at apache.org</email>
+            <email>colus@apache.org</email>
         </contributor>
         <contributor>
             <name>Paul Hammant (PH)</name>
-            <email>Paul_Hammant at yahoo.com</email>
+            <email>Paul_Hammant@yahoo.com</email>
         </contributor>
         <contributor>
             <name>Jeff Keyser (JK)</name>
-            <email>JKeyser at telocity.com</email>
+            <email>JKeyser@telocity.com</email>
         </contributor>
         <contributor>
             <name>Andrei Ivanov (AI)</name>
-            <email>myfam at surfeu.fi</email>
+            <email>myfam@surfeu.fi</email>
         </contributor>
         <contributor>
             <name>Brad Walker (BW)</name>
-            <email>bwalker at studentadvantage.com</email>
+            <email>bwalker@studentadvantage.com</email>
         </contributor>
         <contributor>
             <name>Christian Buchegger (CB2)</name>
-            <email>christian.buchegger at planet-interkom.de</email>
+            <properties>
+                <email>christian.buchegger@planet-interkom.de</email>
+            </properties>
+            <!--
+                See http://jira.codehaus.org/browse/MDOAP-36
+                <email>christian.buchegger@planet-interkom.de</email>
+            -->
         </contributor>
         <contributor>
             <name>Shilpa Dalmia (SD)</name>
-            <email>shilpa at postx.com</email>
+            <email>shilpa@postx.com</email>
         </contributor>
         <contributor>
             <name>Steve Short (SS3)</name>
-            <email>sshort at postx.com</email>
+            <email>sshort@postx.com</email>
         </contributor>
         <contributor>
             <name>Aaron Knauf (AK)</name>
-            <email>aknauf at xtra.co.nz</email>
+            <email>aknauf@xtra.co.nz</email>
         </contributor>
         <contributor>
             <name>Serge "Sergei" Sozonoff (SS4)</name>
-            <email>serge at globalbeach.com</email>
+            <email>serge@globalbeach.com</email>
         </contributor>
         <contributor>
             <name>Kai Londenberg [KL]</name>
-            <email>kai.londenberg at my-vwclub.de</email>
+            <!--
+                See http://jira.codehaus.org/browse/MDOAP-36
+                <email>kai.londenberg@my-vwclub.de</email>
+            -->
+            <properties>
+                <email>kai.londenberg@my-vwclub.de</email>
+            </properties>
         </contributor>
         <contributor>
             <name>Mark Imel [MI]</name>
-            <email>james at imelshire.com</email>
+            <email>james@imelshire.com</email>
         </contributor>
         <contributor>
             <name>Kevin Schmidt [KS]</name>
-            <email>ktschmidt at earthlink.net</email>
+            <email>ktschmidt@earthlink.net</email>
         </contributor>
         <contributor>
             <name>Hontvari Jozsef [HJ]</name>
-            <email>hontvari2 at solware.com</email>
+            <email>hontvari2@solware.com</email>
         </contributor>
         <contributor>
             <name>Cesar Bonadio [CB3]</name>
-            <email>bonadio at picture.com.br</email>
+            <email>bonadio@picture.com.br</email>
         </contributor>
         <contributor>
             <name>Marco Tedone [MT]</name>
-            <email>mtedone at jemos.org</email>
+            <email>mtedone@jemos.org</email>
         </contributor>
         <contributor>
             <name>Tim Stephenson [TS]</name>
-            <email>tim at thestephensons.me.uk</email>
+            <email>tim@thestephensons.me.uk</email>
         </contributor>
         <contributor>
             <name>Richard O. Hammer [ROH]</name>
-            <email>rohammer at earthlink.net</email>
+            <email>rohammer@earthlink.net</email>
         </contributor>
     </contributors>
 
@@ -579,6 +598,43 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-doap-plugin</artifactId>
                     <version>1.1</version>
+                    <configuration>
+                        <doapOptions>
+                            <!-- See http://projects.apache.org/languages.html -->
+                            <programmingLanguage>Java</programmingLanguage>
+                            <!-- http://projects.apache.org/categories.html -->
+                            <category>mail, network-server</category>
+                            <!-- Default values -->
+                            <bugDatabase>${project.issueManagement.url}</bugDatabase>
+                            <created>${project.inceptionYear}-01-01</created>
+                            <description>${project.description}</description>
+                            <downloadPage>${project.url}/download.cgi</downloadPage>
+                            <homepage>${project.url}</homepage>
+                            <license>${project.url}/license.html</license>
+                            <mailingList>${project.url}/mail-lists.html</mailingList>
+                            <name>${project.name}</name>
+                            <scmAnonymous>${project.scm.connection}</scmAnonymous>
+                            <scmDeveloper>${project.scm.developerConnection}</scmDeveloper>
+                            <shortdesc>The Apache James Project</shortdesc>
+                            <vendor>${project.organization.name}</vendor>
+                        </doapOptions>
+                        <asfExtOptions>
+                            <charter>${project.description}</charter>
+                            <!-- Default values -->
+                            <pmc>${project.url}</pmc>
+                            <name>${project.name}</name>
+
+                            <!-- If this Apache project implements a standard -->
+                            <standards>
+                                <standard>
+                                    <title>Extensible Stylesheet Language - Formatting Objects (XSL-FO 1.1)</title>
+                                    <body>W3C</body>
+                                    <id>XSL 1.1</id>
+                                    <url>http://www.w3.org/TR/xsl11/</url>
+                                </standard>
+                            </standards>
+                        </asfExtOptions>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -824,6 +880,19 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-doap-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>site</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
