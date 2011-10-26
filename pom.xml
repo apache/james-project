@@ -59,6 +59,7 @@
             <timezone>2</timezone>
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -102,6 +103,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -111,6 +113,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -120,6 +123,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -129,6 +133,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
             <organization>Student Loans Company ltd</organization>
             <organizationUrl>http://www.slc.co.uk</organizationUrl>
@@ -148,6 +153,7 @@
             </roles>
         </developer>
         <developer>
+            <id>hbedi</id>
             <name>Harmeet Bedi</name>
             <email>harmeet at kodemuse.com</email>
             <roles>
@@ -155,6 +161,7 @@
             </roles>
         </developer>
         <developer>
+            <id>jasonw</id>
             <name>Jason Webb</name>
             <email>jw at inovem.com</email>
             <roles>
@@ -168,6 +175,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -177,6 +185,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
@@ -184,6 +193,10 @@
             <name>Niklas Therning</name>
             <email>niklas(at)apache(dot)org</email>
             <organization>Trillian AB</organization>
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
         </developer>
         <developer>
             <id>jcheng</id>
@@ -220,6 +233,7 @@
             <timezone />
             <roles>
                 <role>Developer</role>
+                <role>PMC Member</role>
             </roles>
         </developer>
         <developer>
