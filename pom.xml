@@ -834,11 +834,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>dashboard-maven-plugin</artifactId>
-                    <version>1.0.0-beta-1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
                     <artifactId>emma-maven-plugin</artifactId>
                     <version>1.0-alpha-3</version>
                     <inherited>true</inherited>
