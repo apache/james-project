@@ -12,3 +12,5 @@ In short, just follow the 'standard' process:
 6. release
 
 Don't forget to add your key to http://www.apache.org/dist/james/KEYS
+ $ ssh people.apache.org
+ $ cd /www/www.apache.org/dist/james
