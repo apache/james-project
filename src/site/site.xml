@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
+    or more contributor license agreements. See the NOTICE file
     distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
+    regarding copyright ownership. The ASF licenses this file
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+    with the License. You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
+    KIND, either express or implied. See the License for the
     specific language governing permissions and limitations
-    under the License.    
+    under the License.
 -->
-<project name="Apache James Project">
+<project
+    xmlns="http://maven.apache.org/DECORATION/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd"
+    name="Apache James Project">
 
     <skin>
         <groupId>org.apache.james</groupId>
@@ -38,49 +42,105 @@
         <href>http://www.apache.org/index.html</href>
     </bannerRight>
 
+    <version position="none" />
+
     <body>
 
         <head>
-            <link rel="meta" title="DOAP" href="${project.url}/doap_${project.artifactId}.rdf" type="application/rdf+xml"/>
+            <link
+                rel="meta"
+                title="DOAP"
+                href="${project.url}/doap_${project.artifactId}.rdf"
+                type="application/rdf+xml" />
         </head>
 
-        <!-- 
+        <!--
             Breadcrumbs are desactivated as they give strange results.
             <breadcrumbs>
-              <item name="Home" />
+            <item name="Home" />
             </breadcrumbs>
         -->
 
         <links>
-            <item name="Home" href="http://james.apache.org/index.html" />
-            <item name="Server" href="http://james.apache.org/server/index.html" />
-            <item name="Hupa" href="http://james.apache.org/hupa/index.html" />
-            <item name="Protocols" href="http://james.apache.org/protocols/index.html" />
-            <item name="IMAP" href="http://james.apache.org/imap/index.html" />
-            <item name="Mailets" href="http://james.apache.org/mailet/index.html" />
-            <item name="Mailbox" href="http://james.apache.org/mailbox/index.html" />
-            <item name="Mime4J" href="http://james.apache.org/mime4j/index.html" />
-            <item name="jSieve" href="http://james.apache.org/jsieve/index.html" />
-            <item name="jSPF" href="http://james.apache.org/jspf/index.html" />
-            <item name="jDKIM" href="http://james.apache.org/jdkim/index.html" />
-            <item name="MPT" href="http://james.apache.org/mpt/index.html" />
-            <item name="Postage" href="http://james.apache.org/postage/index.html" />
+            <item
+                name="Home"
+                href="http://james.apache.org/index.html" />
+            <item
+                name="Server"
+                href="http://james.apache.org/server/index.html" />
+            <item
+                name="Hupa"
+                href="http://james.apache.org/hupa/index.html" />
+            <item
+                name="Protocols"
+                href="http://james.apache.org/protocols/index.html" />
+            <item
+                name="IMAP"
+                href="http://james.apache.org/imap/index.html" />
+            <item
+                name="Mailets"
+                href="http://james.apache.org/mailet/index.html" />
+            <item
+                name="Mailbox"
+                href="http://james.apache.org/mailbox/index.html" />
+            <item
+                name="Mime4J"
+                href="http://james.apache.org/mime4j/index.html" />
+            <item
+                name="jSieve"
+                href="http://james.apache.org/jsieve/index.html" />
+            <item
+                name="jSPF"
+                href="http://james.apache.org/jspf/index.html" />
+            <item
+                name="jDKIM"
+                href="http://james.apache.org/jdkim/index.html" />
+            <item
+                name="MPT"
+                href="http://james.apache.org/mpt/index.html" />
+            <item
+                name="Postage"
+                href="http://james.apache.org/postage/index.html" />
         </links>
 
-        <menu name="About James" inherit="bottom">
-            <item name="Overview" href="/index.html" />
-            <item name="News" href="/newsarchive.html" />
-            <item name="Mailing Lists" href="/mail.html" />
-            <item name="Contributing" href="/contribute.html" />
-            <item name="Guidelines" href="/guidelines.html" />
-            <item name="Wiki" href="http://wiki.apache.org/james" />
-            <item name="Who We Are" href="/team-list.html" />
-            <item name="License" href="/license.html" />
+        <menu
+            name="About James"
+            inherit="bottom">
+            <item
+                name="Overview"
+                href="/index.html" />
+            <item
+                name="News"
+                href="/newsarchive.html" />
+            <item
+                name="Mailing Lists"
+                href="/mail.html" />
+            <item
+                name="Contributing"
+                href="/contribute.html" />
+            <item
+                name="Guidelines"
+                href="/guidelines.html" />
+            <item
+                name="Wiki"
+                href="http://wiki.apache.org/james" />
+            <item
+                name="Who We Are"
+                href="/team-list.html" />
+            <item
+                name="License"
+                href="/license.html" />
         </menu>
 
-        <menu name="Download" inherit="bottom">
-            <item name="Releases" href="http://james.apache.org/download.cgi" />
-            <item name="Snapshots" href="https://repository.apache.org/content/repositories/snapshots/org/apache/james/" />
+        <menu
+            name="Download"
+            inherit="bottom">
+            <item
+                name="Releases"
+                href="http://james.apache.org/download.cgi" />
+            <item
+                name="Snapshots"
+                href="https://repository.apache.org/content/repositories/snapshots/org/apache/james/" />
         </menu>
     </body>
 
