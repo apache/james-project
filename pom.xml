@@ -20,22 +20,19 @@
 <!--
     Tag order follows model description at http://maven.apache.org/ref/3.0.3/maven-model/maven.html
 -->
-<project
-    xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>10</version>
-        <relativePath></relativePath>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.7</version>
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
@@ -115,7 +112,7 @@
         </developer>
         <developer>
             <id>hilmer</id>
-            <name>S&#248;ren Hilmer</name>
+            <name>Søren Hilmer</name>
             <email>sh@widetrail.dk</email>
             <timezone />
             <roles>
@@ -480,9 +477,9 @@
     </prerequisites>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
-        <url>http://svn.apache.org/viewvc/james/project/trunk</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-project-1.7</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-project-1.7</developerConnection>
+        <url>http://svn.apache.org/viewvc/james/project/tags/james-project-1.7</url>
     </scm>
 
     <issueManagement>
@@ -518,7 +515,7 @@
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
         -->
-        <deployTechnicalSiteDirectory></deployTechnicalSiteDirectory>
+        <deployTechnicalSiteDirectory />
     </properties>
 
     <repositories>
