@@ -520,6 +520,8 @@
 
     <repositories>
         <!-- JBoss.org repository - required for APIviz Javadoc build -->
+        <!-- apiviz stuff, comment ATM as it doesn't works on poms packaging pom -->
+        <!--
         <repository>
             <id>jboss.releases</id>
             <name>JBoss releases</name>
@@ -531,6 +533,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+        -->
     </repositories>
 
     <build>
@@ -758,7 +761,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>1.5</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -784,33 +787,17 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.10</version>
-                    <inherited>true</inherited>
                     <configuration>
-                        <aggregate>true</aggregate>
-                        <forkMode>once</forkMode>
-                        <reportFormat>xml</reportFormat>
-                        <classesDirectory>${project.build.directory}/generated-classes/emma/classes</classesDirectory>
                         <argLine>-Xms256m -Xmx512m</argLine>
-                        <testFailureIgnore>false</testFailureIgnore>
-                        <skip>false</skip>
-                        <includes>
-                            <include>**/*Test.java</include>
-                        </includes>
+                        <forkMode>always</forkMode>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
                     <version>2.10</version>
-                    <inherited>true</inherited>
                     <configuration>
-                        <forkMode>once</forkMode>
-                        <argLine>-Xms256m -Xmx512m</argLine>
-                        <testFailureIgnore>false</testFailureIgnore>
-                        <skip>false</skip>
-                        <includes>
-                            <include>**/*Test.java</include>
-                        </includes>
+                        <aggregate>true</aggregate>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -821,7 +808,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
-                    <version>0.7</version>
+                    <version>0.8</version>
                     <configuration>
                         <excludes>
                             <exclude>BUILDING.*</exclude>
@@ -851,9 +838,17 @@
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>emma-maven-plugin</artifactId>
-                    <version>1.0-alpha-3</version>
-                    <inherited>true</inherited>
+                    <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>2.5.1</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                        <!--
+                            Whether to remove GPL licensed files from the generated report. This is required to distribute
+                            the report as part of a distribution, which is licensed under the ASL, or a similar license,
+                            which is incompatible with the GPL
+                        -->
+                        <omitGplFiles>true</omitGplFiles>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -985,11 +980,9 @@
                                     <plugin>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-jxr-plugin</artifactId>
-                                    </plugin>
-                                    <!-- Order seems to matter. emma-maven-plugin must preceed maven-surfire-report-plugin. -->
-                                    <plugin>
-                                        <groupId>org.codehaus.mojo</groupId>
-                                        <artifactId>emma-maven-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                        </configuration>
                                     </plugin>
                                     <plugin>
                                         <groupId>org.apache.maven.plugins</groupId>
@@ -998,11 +991,26 @@
                                     <plugin>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-surefire-report-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>cobertura-maven-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                            <!--
+                                                Whether to remove GPL licensed files from the generated report. This is required to distribute
+                                                the report as part of a distribution, which is licensed under the ASL, or a similar license,
+                                                which is incompatible with the GPL
+                                            -->
+                                            <omitGplFiles>true</omitGplFiles>
+                                        </configuration>
                                     </plugin>
                                     <plugin>
                                         <groupId>org.apache.rat</groupId>
                                         <artifactId>apache-rat-plugin</artifactId>
-                                        <!-- Configuration not inherited (bug?) -->
                                         <configuration>
                                             <excludes>
                                                 <exclude>BUILDING.*</exclude>
@@ -1050,6 +1058,47 @@
                                     <plugin>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-javadoc-plugin</artifactId>
+                                        <configuration>
+                                            <linksource>true</linksource>
+                                            <maxmemory>1g</maxmemory>
+                                            <minmemory>256m</minmemory>
+                                            <source>${target.jdk}</source>
+                                            <tags>
+                                                <tag>
+                                                    <name>note</name>
+                                                    <placement>a</placement>
+                                                    <head>NOTE</head>
+                                                </tag>
+                                                <tag>
+                                                    <name>todo</name>
+                                                    <placement>a</placement>
+                                                    <head>TODO</head>
+                                                </tag>
+                                                <tag>
+                                                    <name>warning</name>
+                                                    <placement>a</placement>
+                                                    <head>WARNING</head>
+                                                </tag>
+                                            </tags>
+                                            <!-- apiviz stuff, comment ATM as it doesn't works on poms packaging pom -->
+                                            <!--
+                                                <doclet>org.jboss.apiviz.APIviz</doclet>
+                                                <docletArtifact>
+                                                <groupId>org.jboss.apiviz</groupId>
+                                                <artifactId>apiviz</artifactId>
+                                                <version>1.3.1.GA</version>
+                                                </docletArtifact>
+                                                <useStandardDocletOptions>true</useStandardDocletOptions>
+                                                <charset>UTF-8</charset>
+                                                <encoding>UTF-8</encoding>
+                                                <docencoding>UTF-8</docencoding>
+                                                <breakiterator>true</breakiterator>
+                                                <version>true</version>
+                                                <author>true</author>
+                                                <keywords>true</keywords>
+                                                <additionalparam>-sourceclasspath ${project.build.outputDirectory}</additionalparam>
+                                            -->
+                                        </configuration>
                                         <reportSets>
                                             <reportSet>
                                                 <reports>
@@ -1062,6 +1111,13 @@
                                     <plugin>
                                         <groupId>org.codehaus.mojo</groupId>
                                         <artifactId>findbugs-maven-plugin</artifactId>
+                                        <configuration>
+                                            <!-- required by dashboard plugin and jenkins -->
+                                            <xmlOutput>true</xmlOutput>
+                                            <effort>Max</effort>
+                                            <findbugsXmlOutput>true</findbugsXmlOutput>
+                                            <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                                        </configuration>
                                     </plugin>
                                     <plugin>
                                         <groupId>org.codehaus.mojo</groupId>
