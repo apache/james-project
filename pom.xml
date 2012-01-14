@@ -893,7 +893,7 @@
                           <pluginExecutionFilter>
                             <groupId>org.codehaus.mojo</groupId>
                             <artifactId>openjpa-maven-plugin</artifactId>
-                            <versionRange>[1.2,)</versionRange>
+                            <versionRange>[1.1,)</versionRange>
                             <goals>
                                 <goal>enhance</goal>
                             </goals>
