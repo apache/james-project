@@ -882,6 +882,65 @@
                     <artifactId>versions-maven-plugin</artifactId>
                     <version>1.2</version>
                 </plugin>
+                <plugin>
+                  <groupId>org.eclipse.m2e</groupId>
+                  <artifactId>lifecycle-mapping</artifactId>
+                  <version>1.0.0</version>
+                  <configuration>
+                    <lifecycleMappingMetadata>
+                      <pluginExecutions>
+                        <pluginExecution>
+                          <pluginExecutionFilter>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>openjpa-maven-plugin</artifactId>
+                            <versionRange>[1.2,)</versionRange>
+                            <goals>
+                                <goal>enhance</goal>
+                            </goals>
+                          </pluginExecutionFilter>
+                          <action>
+                            <execute >
+                              <runOnIncremental>false</runOnIncremental>
+                            </execute >
+                            <ignore/>
+                          </action>
+                        </pluginExecution>
+                        <pluginExecution>
+                          <pluginExecutionFilter>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>gwt-maven-plugin</artifactId>
+                            <versionRange>[2.4.0,)</versionRange>
+                            <goals>
+                                <goal>resources</goal>
+                            </goals>
+                          </pluginExecutionFilter>
+                          <action>
+                            <execute >
+                              <runOnIncremental>false</runOnIncremental>
+                            </execute >
+                            <ignore/>
+                          </action>
+                        </pluginExecution>
+                        <pluginExecution>
+                          <pluginExecutionFilter>
+                            <groupId>org.bsc.maven</groupId>
+                            <artifactId>maven-processor-plugin</artifactId>
+                            <versionRange>[2.0.5,)</versionRange>
+                            <goals>
+                                <goal>process</goal>
+                            </goals>
+                          </pluginExecutionFilter>
+                          <action>
+                            <execute >
+                              <runOnIncremental>false</runOnIncremental>
+                            </execute >
+                            <ignore/>
+                          </action>
+                        </pluginExecution>
+                      </pluginExecutions>
+                    </lifecycleMappingMetadata>
+                  </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
