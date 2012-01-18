@@ -214,21 +214,21 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       turn a James mail server into an Open Relay.  All users of James Server are urged to upgrade to version v2.3.1 as soon as
       possible.</p>
 
-  <div class="ui-widget">
-    <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
-      <p>
-        <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-        Apache James Server 2 uses third party cryptography software
-        including
-      </p>
-      <ul>
-        <li><code>bcmail</code> by "The Legion of the Bouncy
-          Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
-        <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
-      </ul>
-    </div>
-  </div>
-          
+      <div class="ui-widget">
+        <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
+          <p>
+            <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+            Apache James Server 2 uses third party cryptography software
+            including
+          </p>
+          <ul>
+            <li><code>bcmail</code> by "The Legion of the Bouncy
+              Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
+            <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
+          </ul>
+        </div>
+      </div>
+              
       <ul>
       
         <li>Binary (Unix TAR): <a
@@ -261,23 +261,23 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache Mime4J">
   
-    <p>Apache Mime4J 0.7.1 is the latest stable version:</p>
+    <p>Apache Mime4J 0.7.2 is the latest stable version:</p>
     <ul>
     
     <li>Binary (Unix TAR): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.7.1-bin.tar.gz">apache-mime4j-0.7.1-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.1-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.1-bin.tar.gz.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/apache-mime4j-0.7.2-bin.tar.gz">apache-mime4j-0.7.2-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.tar.gz.md5">MD5</a>]</li>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.7.1-bin.zip">apache-mime4j-0.7.1-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.1-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.1-bin.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/apache-mime4j-0.7.2-bin.zip">apache-mime4j-0.7.2-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.zip.md5">MD5</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/mime4j/apache-mime4j-project-0.7.1-source-release.zip">apache-mime4j-0.7.1-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7.1-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7.1-source-release.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/apache-mime4j-project-0.7.2-source-release.zip">apache-mime4j-0.7.2-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7.2-source-release.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7.2-source-release.zip.md5">MD5</a>]</li>
     
     <li><a
     href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
@@ -288,32 +288,32 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache jSPF">
   
-    <p>Apache James jSPF 0.9.9 is the latest jSPF stable version:</p>
+    <p>Apache James jSPF 1.0.0 is the latest jSPF stable version:</p>
     <ul>
     
     <li>Binary Resolver (JAR): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-resolver-0.9.9.jar">apache-jspf-resolver-0.9.9.jar</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-0.9.9.jar.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-resolver-1.0.0.jar">apache-jspf-resolver-1.0.0.jar</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-1.0.0.jar.asc">PGP</a>]</li>
     
     <li>Binary Tester (JAR): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-tester-0.9.9.jar">apache-jspf-tester-0.9.9.jar</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-0.9.9.jar.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-tester-1.0.0.jar">apache-jspf-tester-1.0.0.jar</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-1.0.0.jar.asc">PGP</a>]</li>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-0.9.9-bin.zip">apache-jspf-0.9.9-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.9-bin.zip.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-1.0.0-bin.zip">apache-jspf-1.0.0-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-1.0.0-bin.zip.asc">PGP</a>]</li>
     
     <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-0.9.9-bin.tar.gz">apache-jspf-0.9.9-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-0.9.9-bin.tar.gz.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/binaries/apache-jspf-1.0.0-bin.tar.gz">apache-jspf-1.0.0-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-1.0.0-bin.tar.gz.asc">PGP</a>]</li>
     
     <li>Source (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/source/apache-jspf-0.9.9-src.tar.gz">apache-jspf-0.9.9-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.9-src.tar.gz.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/source/apache-jspf-1.0.0-src.tar.gz">apache-jspf-1.0.0-src.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-1.0.0-src.tar.gz.asc">PGP</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/jspf/source/apache-jspf-0.9.9-src.zip">apache-jspf-0.9.9-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-0.9.9-src.zip.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/source/apache-jspf-1.0.0-src.zip">apache-jspf-1.0.0-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-1.0.0-src.zip.asc">PGP</a>]</li>
     
     <li><a href="[preferred]/james/jspf/binaries/">Other Binaries</a></li>
     
@@ -553,7 +553,16 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache James Protocols">
   
-    <p>Apache James Protocols 1.6.0-RC1 is the latest stable version:</p>
+    <div class="ui-widget">
+      <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+        <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+        <strong>STARTLS is broken for POP3 and SMTP</strong>
+        We are working to quickly release 1.6.1 which will fix this.
+		</p>
+      </div>
+    </div>
+            
+    <p>Apache James Protocols 1.6.0 is the latest stable version:</p>
     <ul>
 <!-- 
     <li>Binary (Unix TAR): <a

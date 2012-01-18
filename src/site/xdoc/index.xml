@@ -389,8 +389,24 @@
 
       <subsection name="News">
         <ul>
+          <li>January/2012 - <ul>
+          <li><a href="newsarchive.html#120118"><strong>Apache James Protocols 1.6.0</strong> released</a></li>
+          </ul>
+          </li>
+          <li>January/2012 - <ul>
+          <li><a href="newsarchive.html#120104"><strong>Apache James Mime4j 0.7.2</strong> released</a></li>
+          </ul>
+          </li>
           <li>December/2011 - <ul>
           <li><a href="newsarchive.html#111230"><strong>Apache James Protocols 1.6.0-RC1</strong> released</a></li>
+          </ul>
+          </li>
+          <li>November/2011 - <ul>
+          <li><a href="newsarchive.html#111101"><strong>Apache James jSPF 1.0.0</strong> released</a></li>
+          </ul>
+          </li>
+          <li>October/2011 - <ul>
+          <li><a href="newsarchive.html#111711"><strong>Apache James Mime4j 0.7.1</strong> released</a></li>
           </ul>
           </li>
           <li>October/2011 - <ul>
@@ -431,25 +447,6 @@
           </li>
           <li>Nov/2010 - <ul>
           <li><a href="newsarchive.html#06112010_1"><strong>Apache James Server 3.0-M2</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Nov/2010 - <ul>
-          <li><a href="newsarchive.html#01112010_1"><strong>Apache James Server 3.0-M1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Sep/2010 - <ul>
-          <li><a href="newsarchive.html#20092010_1"><strong>Apache IMAP 0.2-M1</strong> released</a></li>
-          <li><a href="newsarchive.html#18092010_1"><strong>Apache protocols 1.2-M1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>Jun/2010 - <ul>
-          <li><a href="newsarchive.html#21062010_1"><strong>Apache jSPF 0.9.8</strong> released</a></li>   
-          <li><a href="newsarchive.html#21062010"><strong>Apache Mailet Base 1.1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>May/2010 - <ul>
-          <li><a href="newsarchive.html#14052010_1"><strong>Apache jSieve 0.4 </strong> released</a></li>
-          <li><a href="newsarchive.html#14052010"><strong>Apache Mailet Standard 1.0 </strong> released</a></li>
           </ul>
           </li>
         </ul>
