@@ -291,14 +291,6 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <p>Apache James jSPF 1.0.0 is the latest jSPF stable version:</p>
     <ul>
     
-    <li>Binary Resolver (JAR): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-resolver-1.0.0.jar">apache-jspf-resolver-1.0.0.jar</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-resolver-1.0.0.jar.asc">PGP</a>]</li>
-    
-    <li>Binary Tester (JAR): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-tester-1.0.0.jar">apache-jspf-tester-1.0.0.jar</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-tester-1.0.0.jar.asc">PGP</a>]</li>
-    
     <li>Binary (ZIP Format): <a
     href="[preferred]/james/jspf/binaries/apache-jspf-1.0.0-bin.zip">apache-jspf-1.0.0-bin.zip</a> [<a
     href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-1.0.0-bin.zip.asc">PGP</a>]</li>
@@ -562,29 +554,17 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
       </div>
     </div>
             
-    <p>Apache James Protocols 1.6.0 is the latest stable version:</p>
+    <p>Apache James Protocols 1.6.1 is the latest stable version:</p>
     <ul>
-<!-- 
-    <li>Binary (Unix TAR): <a
-    href="[preferred]/james/protocols/protocols/0.1/protocols-1.3-bin.tar.gz">protocols-1.3.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-bin.tar.gz.md5">MD5</a>]</li>
-    
-    <li>Binary (ZIP Format): <a
-    href="[preferred]/james/protocols/protocols-1.3-bin.zip">protocols-1.3.zip</a> [<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-bin.zip.md5">MD5</a>]</li>
-
     <li>Source (Unix TAR): <a
-    href="[preferred]/james/protocols/protocols-1.3-source-release.tar.gz">protocols-1.3-source-release.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.tar.gz.md5">MD5</a>]</li>
+    href="[preferred]/james/protocols/protocols-1.6.1-source-release.tar.gz">protocols-1.6.1-source-release.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/protocols/protocols-1.6.1-source-release.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/protocols/protocols-1.6.1-source-release.tar.gz.md5">MD5</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/protocols/protocols-1.3-source-release.zip">protocols-1.3-source-release.zip</a> [<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.3-source-release.zip.md5">MD5</a>]</li>
--->
+    href="[preferred]/james/protocols/protocols-1.6.1-source-release.zip">protocols-1.6.1-source-release.zip</a> [<a
+    href="http://www.apache.org/dist/james/protocols/protocols-1.6.1-source-release.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/protocols/protocols-1.6.1-source-release.zip.md5">MD5</a>]</li>
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
     <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/protocols">http://repo1.maven.org/maven2/org/apache/james/protocols</a>.</li>
     </ul>
