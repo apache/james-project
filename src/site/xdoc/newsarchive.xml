@@ -34,7 +34,10 @@
         </div>
       </div>
 
-    <subsection name='2011'>
+    <subsection name='2012'>
+      <a name="120123"><h4>January 2012 - Apache James Protocols 1.6.1 released</h4></a>
+        <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
+           the release of version 1.6.1 of Apache James Protocols library.</p>
 
       <a name="120118"><h4>January 2012 - Apache James Protocols 1.6.0 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
@@ -43,7 +46,8 @@
       <a name="120104"><h4>January 2012 - Apache James Mime4j 0.7.2 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
            the release of version 0.7.2 of Apache James Mime4j library.</p>
-
+    </subsection>
+    <subsection name='2011'>
       <a name="111230"><h4>December 2011 - Apache James Protocols 1.6.0-RC1 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
            the release of version 1.6.0-RC1 of Apache James Protocols library.</p>
