@@ -32,7 +32,7 @@
 
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
-    <version>1.8.1-SNAPSHOT</version>
+    <version>1.8.1</version>
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
@@ -477,9 +477,9 @@
     </prerequisites>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
-        <url>http://svn.apache.org/viewvc/james/project/trunk</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-project-1.8.1</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-project-1.8.1</developerConnection>
+        <url>http://svn.apache.org/viewvc/james/project/tags/james-project-1.8.1</url>
     </scm>
 
     <issueManagement>
@@ -899,10 +899,10 @@
                             </goals>
                           </pluginExecutionFilter>
                           <action>
-                            <execute >
+                            <execute>
                               <runOnIncremental>false</runOnIncremental>
-                            </execute >
-                            <ignore/>
+                            </execute>
+                            <ignore />
                           </action>
                         </pluginExecution>
                         <pluginExecution>
@@ -915,10 +915,10 @@
                             </goals>
                           </pluginExecutionFilter>
                           <action>
-                            <execute >
+                            <execute>
                               <runOnIncremental>false</runOnIncremental>
-                            </execute >
-                            <ignore/>
+                            </execute>
+                            <ignore />
                           </action>
                         </pluginExecution>
                         <pluginExecution>
@@ -931,10 +931,10 @@
                             </goals>
                           </pluginExecutionFilter>
                           <action>
-                            <execute >
+                            <execute>
                               <runOnIncremental>false</runOnIncremental>
-                            </execute >
-                            <ignore/>
+                            </execute>
+                            <ignore />
                           </action>
                         </pluginExecution>
                         <pluginExecution>
@@ -948,7 +948,7 @@
                             </goals>
                           </pluginExecutionFilter>
                           <action>
-                            <ignore></ignore>
+                            <ignore />
                           </action>
                         </pluginExecution>
                       </pluginExecutions>
