@@ -32,6 +32,9 @@
 
 <section name="James Server - To Do">
 
+<p>Please add your wisches on the JIRA for 'Roadmap for Apache James Server 3.1' (https://issues.apache.org/jira/browse/JAMES-1272).</p>
+
+<!-- 
 <p>This is a living document that will give new and existing volunteers some areas where we need help.  As always, any help is appreciated, be it documentation, code, suggestions, or feedback.
 Last Updated July 2006.</p>
 
@@ -110,6 +113,7 @@ and a full suite of mail-driven commands.</p>
 <section name="Documentation">
 <p>Document instructions on configuring logging in James.</p>
 </section>
+-->
 
 </body>
 
