@@ -49,7 +49,7 @@
        <div class="ui-widget">
 		 <div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 			<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-			<strong>Hey!</strong> James Server 3.0-beta3 is out - <a href="3/">Read more</a>.</p>
+			<strong>Hey!</strong> James Server 3.0-beta4 is out - <a href="3/">Read more</a>.</p>
 	     </div>
        </div>
       
@@ -73,11 +73,11 @@
             (only with Server V2, support is discontinuated in Server V3).</li>
       </ul>
 
-        <p>Download James Mail Server.</p>
+        <p>Download Apache James Mail Server.</p>
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-beta3</span>
+              <span><span class="icon"></span>Early James Server 3.0-beta4</span>
             </a>
           </span>
         </p>
@@ -107,15 +107,15 @@
     
     <div id="tabs-2">
       
-      <subsection name='James 3.0 Beta 3'>
+      <subsection name='James 3.0 Beta 4'>
 
-        <p>James 3.0 Beta 3 is a proposed beta release allowing a preview of the James 3.0 features.
+        <p>James 3.0 Beta 4 is a proposed beta release allowing a preview of the James 3.0 features.
            We strongly encourage to download and test it.</p>
         
         <p>
           <span class="minibutton btn-download">
             <a href="javascript:window.location='http://james.apache.org/download.cgi#Apache_James_Server';">
-              <span><span class="icon"></span>Early James Server 3.0-beta3</span>
+              <span><span class="icon"></span>Early James Server 3.0-beta4</span>
             </a>
           </span>
         </p>
