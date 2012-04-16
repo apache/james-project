@@ -35,6 +35,16 @@
       </div>
 
     <subsection name='2012'>
+
+      <a name="120417"><h4>April 2012 - Apache James Server 3.0-beta4 released</h4></a>
+        <p>The Apache James project is happy to announce the release 
+           of version 3.0-beta4 of its modular mail server.</p>
+        <p>We thank all Users for their feedback and tests and we encourage anyone to 
+           <a href="http://james.apache.org/download.cgi#Apache_James_Server">download</a>
+           and discover this Milestone 3 release.</p>
+        <p>If you're interested in contributing to the James project, please subscribe to the James 
+           <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+
       <a name="120123"><h4>January 2012 - Apache James Protocols 1.6.1 released</h4></a>
         <p>The Java Apache Mail Enterprise Server (a.k.a. Apache James) Project is happy to announce 
            the release of version 1.6.1 of Apache James Protocols library.</p>

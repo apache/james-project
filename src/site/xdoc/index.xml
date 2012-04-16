@@ -61,7 +61,7 @@
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
 				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 				<strong>Hey!</strong> 
-				 Apache James Server 3.0-beta3 is out! <b>Thank you to everyone</b> who contributed code, 
+				 Apache James Server 3.0-beta4 is out! <b>Thank you to everyone</b> who contributed code, 
 	             documentation, bug report, feedback...
 				</p>
 			</div>
@@ -84,7 +84,7 @@
         <p>
           <span class="minibutton btn-download">
             <a href="http://james.apache.org/download.cgi#Apache_James_Server">
-              <span><span class="icon"></span>Download Early James Server 3.0-beta3</span>
+              <span><span class="icon"></span>Download Early James Server 3.0-beta4</span>
             </a>
           </span>
         </p>
@@ -389,6 +389,10 @@
 
       <subsection name="News">
         <ul>
+          <li>April/2012 - <ul>
+          <li><a href="newsarchive.html#120417"><strong>Apache James Server 3.0-beta4</strong> released</a></li>
+          </ul>
+          </li>
           <li>January/2012 - <ul>
           <li><a href="newsarchive.html#120123"><strong>Apache James Protocols 1.6.1</strong> released</a></li>
           </ul>
@@ -415,10 +419,6 @@
           </li>
           <li>October/2011 - <ul>
           <li><a href="newsarchive.html#111611"><strong>Apache James Protocols 1.6-beta1</strong> released</a></li>
-          </ul>
-          </li>
-          <li>October/2011 - <ul>
-          <li><a href="newsarchive.html#082011"><strong>Apache James Server 3.0-beta3</strong> released</a></li>
           </ul>
           </li>
           <li>Augustus/2011 - <ul>
