@@ -75,9 +75,6 @@
                 name="Protocols"
                 href="http://james.apache.org/protocols/index.html" />
             <item
-                name="IMAP"
-                href="http://james.apache.org/imap/index.html" />
-            <item
                 name="Mailets"
                 href="http://james.apache.org/mailet/index.html" />
             <item
