@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one
   or more contributor license agreements.  See the NOTICE file
@@ -18,222 +18,380 @@
   under the License.    
 -->
 <document>
+
   <properties>
     <title>Apache James Project Guidelines</title>
     <author email="site-dev@james.apache.org">James Project Web Team</author>
   </properties>
+
   <body>
+
     <section name="Apache James Project Guidelines">
+      <p>
+        This document defines the guidelines for the Apache James Project. It
+        includes definitions of how conflict is resolved by voting, who
+        is able to vote, and the procedures to follow for proposing and
+        making changes to the Apache James products.
+      </p>
+      <p>
+        The objective here is to avoid unnecessary conflict over changes and
+        continue to produce a quality system in a timely manner. Not all
+        conflict can be avoided, but at least we can agree on the
+        procedures for conflict to be resolved.
 
-<p>
-    This document defines the guidelines for the Apache James Project. It includes definitions of how conflict is resolved by voting, who is able to vote, and the procedures to follow for proposing and making changes to the Apache James products.
-
-</p>
-<p>
-     The objective here is to avoid unnecessary conflict over changes and continue to produce a quality system in a timely manner. Not all conflict can be avoided, but at least we can agree on the procedures for conflict to be resolved.
-
-</p>
+      </p>
     </section>
+
     <section name="People, Places, and Things">
+      <subsection name="Apache James Project Management Committee">
+        <p>
+          The group of volunteers who are responsible for managing the Apache
+          James Project. This includes deciding what is distributed as
+          products of the Apache James Project, maintaining the
+          Project's shared resources, speaking on behalf of the Project,
+          resolving license disputes regarding Apache James products,
+          nominating new PMC members or committers, and establishing
+          these guidelines.
+        </p>
+        <p>
+          Membership in the Apache James PMC is by invitation only and must be approved
+          by consensus of the active Apache James PMC members. A PMC
+          member is considered inactive by their own declaration or by
+          not contributing in any form to the project for over six
+          months. An inactive member can become active again by
+          reversing whichever condition made them inactive (i.e., by
+          reversing their earlier declaration or by once again
+          contributing toward the project's work). Membership can be
+          revoked by a unanimous vote of all the active PMC members
+          other than the member in question.
 
-    <subsection name="Apache James Project Management Committee">
-<p>
-        The group of volunteers who are responsible for managing the Apache James Project. This includes deciding what is distributed as products of the Apache James Project, maintaining the Project's shared resources, speaking on behalf of the Project, resolving license disputes regarding Apache James products, nominating new PMC members or committers, and establishing these guidelines.
+        </p>
+      </subsection>
+      <subsection name="Apache James Committers">
+        <p>
+          The group of volunteers who are responsible for the technical aspects
+          of the Apache James Project. This group has write access to
+          the appropriate source repositories and these volunteers may
+          cast non-binding votes on any technical discussion.
+        </p>
+        <p>
+          Membership as a Committer is by invitation only and must be approved by
+          consensus of the active Apache James PMC members. A Committer
+          is considered inactive by their own declaration or by not
+          contributing in any form to the project for over six months.
+          An inactive member can become active again by reversing
+          whichever condition made them inactive (i.e., by reversing
+          their earlier declaration or by once again contributing toward
+          the project's work). Membership can be revoked by a unanimous
+          vote of all the active PMC members (except the member in
+          question if they are a PMC member).
 
-</p>
-<p>
-         Membership in the Apache James PMC is by invitation only and must be approved by consensus of the active Apache James PMC members. A PMC member is considered inactive by their own declaration or by not contributing in any form to the project for over six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked by a unanimous vote of all the active PMC members other than the member in question.
-
-</p>
-    </subsection>
-    <subsection name="Apache James Committers">
-<p>
-        The group of volunteers who are responsible for the technical aspects of the Apache James Project. This group has write access to the appropriate source repositories and these volunteers may cast non-binding votes on any technical discussion.
-</p>
-<p>
-         Membership as a Committer is by invitation only and must be approved by consensus of the active Apache James PMC members. A Committer is considered inactive by their own declaration or by not contributing in any form to the project for over six months. An inactive member can become active again by reversing whichever condition made them inactive (i.e., by reversing their earlier declaration or by once again contributing toward the project's work). Membership can be revoked by a unanimous vote of all the active PMC members (except the member in question if they are a PMC member).
-
-</p>
-    </subsection>
-    <subsection name="mailing list">
-<p>
-        The Apache committers' primary mailing list for discussion of issues and changes related to the project (server-dev@james.apache.org). Subscription to the list is open, but only subscribers can post directly to the list.
-
-</p>
-    </subsection>
-    <subsection name="private list">
-<p>
-        The Apache James Project's private mailing list for discussion of issues that are inappropriate for public discussion, such as legal, personal, or security issues prior to a published fix. Subscription to the list is only open to Apache James PMC members and Apache Software Foundation Members.
-
-</p>
-    </subsection>
-    <subsection name="SVN">
-<p>
-        All of the Apache James products are maintained in shared information repositories using SVN on svn.apache.org. The Apache committers have write access to these repositories; everyone has read access via anonymous SVN.
-
-</p>
-    </subsection>
+        </p>
+      </subsection>
+      <subsection name="Mailing list">
+        <p>
+          The Apache committers' primary mailing list for discussion of issues
+          and changes related to the project
+          (server-dev@james.apache.org). Subscription to the list is
+          open, but only subscribers can post directly to the list.
+        </p>
+      </subsection>
+      <subsection name="Private list">
+        <p>
+          The Apache James Project's private mailing list for discussion of
+          issues that are inappropriate for public discussion, such as
+          legal, personal, or security issues prior to a published fix.
+          Subscription to the list is only open to Apache James PMC
+          members and Apache Software Foundation Members.
+        </p>
+      </subsection>
+      <subsection name="SVN">
+        <p>
+          All of the Apache James products are maintained in shared information
+          repositories using SVN on svn.apache.org. The Apache
+          committers have write access to these repositories; everyone
+          has read access via anonymous SVN.
+        </p>
+      </subsection>
     </section>
-    <section name="STATUS">
 
-<p>
-     Each of the Apache Project's active source code repositories contain a file called "STATUS" which is used to keep track of the agenda and plans for work within that repository. The STATUS file includes information about release plans, a summary of code changes committed since the last release, a list of proposed changes that are under discussion, brief notes about items that individual committers are working on or want discussion about, and anything else that might be useful to help the group track progress. The active STATUS files are automatically posted to the mailing list each week.
-
-</p>
-<p>
-     Many issues will be encountered by the project, each resulting in zero or more proposed action items. Issues should be raised on the mailing list as soon as they are identified. Action items must be raised on the mailing list and added to the relevant STATUS file. All action items may be voted on, but not all of them will require a formal vote.
-
-</p>
+    <section name="Status">
+      <p>
+        Each of the Apache Project's active source code repositories contain a
+        file called "STATUS" which is used to keep track of the agenda
+        and plans for work within that repository. The STATUS file
+        includes information about release plans, a summary of code
+        changes committed since the last release, a list of proposed
+        changes that are under discussion, brief notes about items that
+        individual committers are working on or want discussion about,
+        and anything else that might be useful to help the group track
+        progress. The active STATUS files are automatically posted to
+        the mailing list each week.
+      </p>
+      <p>
+        Many issues will be encountered by the project, each resulting in zero
+        or more proposed action items. Issues should be raised on the
+        mailing list as soon as they are identified. Action items must
+        be raised on the mailing list and added to the relevant STATUS
+        file. All action items may be voted on, but not all of them will
+        require a formal vote.
+      </p>
     </section>
+
     <section name="Voting">
-
-<p>
-     Any of the Apache James Committers may vote on any issue or action item. However, the only binding votes are those cast by active members of the Apache James PMC; if the vote is about a change to source code or documentation, the primary author of what is being changed may also cast a binding vote on that issue. All other votes are non-binding. All committers are encouraged to participate in decisions, but the decision itself is made by those who have been long-time contributors to the project. In other words, the Apache Project is a minimum-threshold meritocracy.
-
-</p>
-<p>
-     The act of voting carries certain obligations -- voting members are not only stating their opinion, they are agreeing to help do the work of the Apache Project. Since we are all volunteers, members often become inactive for periods of time in order to take care of their "real jobs" or devote more time to other projects. It is therefore unlikely that the entire group membership will vote on every issue. To account for this, all voting decisions are based on a minimum quorum.
-
-</p>
-<p>
-     Each vote can be made in one of three flavors:
-</p>
-<p>
-    <strong>+1</strong><br/>
-        Yes, agree, or the action should be performed. On some issues, this vote is only binding if the voter has tested the action on their own system(s).
-</p>
-<p>
-    <strong>+-0</strong><br/>
-        Abstain, no opinion, or I am happy to let the other group members decide this issue. An abstention may have detrimental effects if too many people abstain.
-</p>
-<p>
-    <strong>-1</strong><br/>
-        No. On issues where consensus is required, this vote counts as a veto. All vetos must include an explanation of why the veto is appropriate. A veto with no explanation is void. No veto can be overruled. If you disagree with the veto, you should lobby the person who cast the veto. Voters intending to veto an action item should make their opinions known to the group immediately, so that the problem can be remedied as early as possible.
-
-</p>
-<p>
-     An action item requiring consensus approval must receive at least 3 binding +1 votes and no vetos. An action item requiring majority approval must receive at least 3 binding +1 votes and more +1 votes than -1 votes (i.e., a majority with a minimum quorum of three positive votes). All other action items are considered to have lazy approval until someone votes -1, after which point they are decided by either consensus or a majority vote, depending upon the type of action item.
-
-</p>
-<p>
-     Votes are tallied within the STATUS file, adjacent to the action item under vote. All votes must be either sent to the mailing list or added directly to the STATUS file entry for that action item.
-</p>
-
-<p>
-     Votes are to remain open for 72 hours after which the developer who put forth the vote should tabulate the result and send this to the mailing list.  A developer should be sensitive to holidays that could dampen participation in the vote.
-</p>
-
+      <p>
+        Any of the Apache James Committers may vote on any issue or action
+        item. However, the only binding votes are those cast by active
+        members of the Apache James PMC; if the vote is about a change
+        to source code or documentation, the primary author of what is
+        being changed may also cast a binding vote on that issue. All
+        other votes are non-binding. All committers are encouraged to
+        participate in decisions, but the decision itself is made by
+        those who have been long-time contributors to the project. In
+        other words, the Apache Project is a minimum-threshold
+        meritocracy.
+      </p>
+      <p>
+        The act of voting carries certain obligations -- voting members are not
+        only stating their opinion, they are agreeing to help do the
+        work of the Apache Project. Since we are all volunteers, members
+        often become inactive for periods of time in order to take care
+        of their "real jobs" or devote more time to other projects. It
+        is therefore unlikely that the entire group membership will vote
+        on every issue. To account for this, all voting decisions are
+        based on a minimum quorum.
+      </p>
+      <p>
+        Each vote can be made in one of three flavors:
+      </p>
+      <p>
+        <strong>+1</strong>
+        <br />
+        Yes, agree, or the action should be performed. On some issues,
+        this vote is only binding if the voter has tested the action on
+        their own system(s).
+      </p>
+      <p>
+        <strong>+-0</strong>
+        <br />
+        Abstain, no opinion, or I am happy to let the other group
+        members decide this issue. An abstention may have detrimental
+        effects if too many people abstain.
+      </p>
+      <p>
+        <strong>-1</strong>
+        <br />
+        No. On issues where consensus is required, this vote counts as a
+        veto. All vetos must include an explanation of why the veto is
+        appropriate. A veto with no explanation is void. No veto can be
+        overruled. If you disagree with the veto, you should lobby the
+        person who cast the veto. Voters intending to veto an action
+        item should make their opinions known to the group immediately,
+        so that the problem can be remedied as early as possible.
+      </p>
+      <p>
+        An action item requiring consensus approval must receive at least 3
+        binding +1 votes and no vetos. An action item requiring majority
+        approval must receive at least 3 binding +1 votes and more +1
+        votes than -1 votes (i.e., a majority with a minimum quorum of
+        three positive votes). All other action items are considered to
+        have lazy approval until someone votes -1, after which point
+        they are decided by either consensus or a majority vote,
+        depending upon the type of action item.
+      </p>
+      <p>
+        Votes are tallied within the STATUS file, adjacent to the action item
+        under vote. All votes must be either sent to the mailing list or
+        added directly to the STATUS file entry for that action item.
+      </p>
+      <p>
+        Votes are to remain open for 72 hours after which the developer who put
+        forth the vote should tabulate the result and send this to the
+        mailing list. A developer should be sensitive to holidays that
+        could dampen participation in the vote.
+      </p>
     </section>
+
     <section name="Types of Action Items">
-
-    <subsection name="Long Term Plans">
-<p>
-        Long term plans are simply announcements that group members are working on particular issues related to the Apache software. These are not voted on, but group members who do not agree with a particular plan, or think an alternate plan would be better, are obligated to inform the group of their feelings. In general, it is always better to hear about alternate plans prior to spending time on less adequate solutions.
-</p>
-    </subsection>
-    <subsection name="Short Term Plans">
-<p>
-        Short term plans are announcements that a developer is working on a particular set of documentation or code files, with the implication that other committers should avoid them or try to coordinate their changes. This is a good way to proactively avoid conflict and possible duplication of work.
-</p>
-    </subsection>
-    <subsection name="Release Plan">
-<p>
-        A release plan is used to keep all the committers aware of when a release is desired, who will be the release manager, when the repository will be frozen in order to create the release, and assorted other trivia to keep us from tripping over ourselves during the final moments. Lazy majority decides each issue in the release plan.
-</p>
-    </subsection>
-    <subsection name="Release Testing">
-<p>
-        After a new release is built, colloquially termed a tarball, it must be tested before being released to the public. Majority approval is required before the tarball can be publically released.
-</p>
-    </subsection>
-    <subsection name="Showstoppers">
-<p>
-        Showstoppers are issues that require a fix be in place before the next public release. They are listed in the STATUS file in order to focus special attention on the problem. An issue becomes a showstopper when it is listed as such in STATUS and remains so by lazy consensus.
-</p>
-    </subsection>
-    <subsection name="Product Changes">
-<p>
-        Changes to the Apache James products, including code and documentation, will appear as action items under several categories corresponding to the change status:
-
-</p>
-    </subsection>
-    <subsection name="Concept/Plan">
-<p>
-            An idea or plan for a change. These are usually only listed in STATUS when the change is substantial, significantly impacts the API, or is likely to be controversial. Votes are being requested early so as to uncover conflicts before too much work is done.
-</p>
-    </subsection>
-    <subsection name="Proposed Patch">
-<p>
-            A specific set of changes to the current product in the form of input to the patch command (a diff output).
-</p>
-    </subsection>
-    <subsection name="Committed Change">
-<p>
-            A one-line summary of a change that has been committed to the repository since the last public release.
-</p>
-<p>
-
-        All product changes to the currently active repository are subject to lazy consensus. All product changes to a prior-branch (old version) repository require consensus before the change is committed.
-</p>
-
-    </subsection>
+      <subsection name="Long Term Plans">
+        <p>
+          Long term plans are simply announcements that group members are working
+          on particular issues related to the Apache software. These are
+          not voted on, but group members who do not agree with a
+          particular plan, or think an alternate plan would be better,
+          are obligated to inform the group of their feelings. In
+          general, it is always better to hear about alternate plans
+          prior to spending time on less adequate solutions.
+        </p>
+      </subsection>
+      <subsection name="Short Term Plans">
+        <p>
+          Short term plans are announcements that a developer is working on a
+          particular set of documentation or code files, with the
+          implication that other committers should avoid them or try to
+          coordinate their changes. This is a good way to proactively
+          avoid conflict and possible duplication of work.
+        </p>
+      </subsection>
+      <subsection name="Release Plan">
+        <p>
+          A release plan is used to keep all the committers aware of when a
+          release is desired, who will be the release manager, when the
+          repository will be frozen in order to create the release, and
+          assorted other trivia to keep us from tripping over ourselves
+          during the final moments. Lazy majority decides each issue in
+          the release plan.
+        </p>
+      </subsection>
+      <subsection name="Release Testing">
+        <p>
+          After a new release is built, colloquially termed a tarball, it must be
+          tested before being released to the public. Majority approval
+          is required before the tarball can be publically released.
+        </p>
+      </subsection>
+      <subsection name="Showstoppers">
+        <p>
+          Showstoppers are issues that require a fix be in place before the next public
+          release. They are listed in the STATUS file in order to focus
+          special attention on the problem. An issue becomes a
+          showstopper when it is listed as such in STATUS and remains so
+          by lazy consensus.
+        </p>
+      </subsection>
+      <subsection name="Product Changes">
+        <p>
+          Changes to the Apache James products, including code and documentation,
+          will appear as action items under several categories
+          corresponding to the change status:
+        </p>
+      </subsection>
+      <subsection name="Concept/Plan">
+        <p>
+          An idea or plan for a change. These are usually only listed in STATUS
+          when the change is substantial, significantly impacts the API,
+          or is likely to be controversial. Votes are being requested
+          early so as to uncover conflicts before too much work is done.
+        </p>
+      </subsection>
+      <subsection name="Proposed Patch">
+        <p>
+          A specific set of changes to the current product in the form of
+          input to the patch command (a diff output).
+        </p>
+      </subsection>
+      <subsection name="Committed Change">
+        <p>
+          A one-line summary of a change that has been committed to the
+          repository since the last public release.
+        </p>
+        <p>
+          All product changes to the currently active repository are subject to
+          lazy consensus. All product changes to a prior-branch (old
+          version) repository require consensus before the change is
+          committed.
+        </p>
+      </subsection>
     </section>
+
     <section name="When to Commit a Change">
-
-<p>
-     Ideas must be review-then-commit; patches can be commit-then-review. With a commit-then-review process, we trust that the developer doing the commit has a high degree of confidence in the change. Doubtful changes, new features, and large-scale overhauls need to be discussed before being committed to a repository. Any change that affects the semantics of arguments to configurable directives, significantly adds to the runtime size of the program, or changes the semantics of an existing API function must receive consensus approval on the mailing list before being committed.
-
-</p>
- <p>
-     Each developer is responsible for notifying the mailing list and adding an action item to STATUS when they have an idea for a new feature or major change to propose for the product. The distributed nature of the Apache project requires an advance notice of 48 hours in order to properly review a major change -- consensus approval of either the concept or a specific patch is required before the change can be committed. Note that a member might veto the concept (with an adequate explanation), but later rescind that veto if a specific patch satisfies their objections. No advance notice is required to commit singular bug fixes.
-
-</p>
- <p>
-     Related changes should be committed as a group, or very closely together. Half-completed projects should not be committed unless doing so is necessary to pass the baton to another developer who has agreed to complete the project in short order. All code changes must be successfully compiled on the developer's platform before being committed.
-
-</p>
- <p>
-     The current source code tree should be capable of complete compilation at all times. However, it is sometimes impossible for a developer on one platform to avoid breaking some other platform when a change is committed, particularly when completing the change requires access to a special development tool on that other platform. If it is anticipated that a given change will break some other platform, the committer must indicate that in the commit log.
-
-</p>
- <p>
-     The committer is responsible for the quality of any third-party code or documentation they commit to the repository. All software committed to the repository must be covered by the Apache LICENSE or contain a copyright and license that allows redistribution under the same conditions as the Apache LICENSE.
-
-</p>
- <p>
-     A committed change must be reversed if it is vetoed by one of the voting members and the veto conditions cannot be immediately satisfied by the equivalent of a "bug fix" commit. The veto must be rescinded before the change can be included in any public release.
-
-</p>
+      <p>
+        Ideas must be review-then-commit; patches can be commit-then-review. With
+        a commit-then-review process, we trust that the developer doing
+        the commit has a high degree of confidence in the change.
+        Doubtful changes, new features, and large-scale overhauls need
+        to be discussed before being committed to a repository. Any
+        change that affects the semantics of arguments to configurable
+        directives, significantly adds to the runtime size of the
+        program, or changes the semantics of an existing API function
+        must receive consensus approval on the mailing list before being
+        committed.
+      </p>
+      <p>
+        Each developer is responsible for notifying the mailing list and adding
+        an action item to STATUS when they have an idea for a new
+        feature or major change to propose for the product. The
+        distributed nature of the Apache project requires an advance
+        notice of 48 hours in order to properly review a major change --
+        consensus approval of either the concept or a specific patch is
+        required before the change can be committed. Note that a member
+        might veto the concept (with an adequate explanation), but later
+        rescind that veto if a specific patch satisfies their
+        objections. No advance notice is required to commit singular bug
+        fixes.
+      </p>
+      <p>
+        Related changes should be committed as a group, or very closely together.
+        Half-completed projects should not be committed unless doing so
+        is necessary to pass the baton to another developer who has
+        agreed to complete the project in short order. All code changes
+        must be successfully compiled on the developer's platform before
+        being committed.
+      </p>
+      <p>
+        The current source code tree should be capable of complete compilation
+        at all times. However, it is sometimes impossible for a
+        developer on one platform to avoid breaking some other platform
+        when a change is committed, particularly when completing the
+        change requires access to a special development tool on that
+        other platform. If it is anticipated that a given change will
+        break some other platform, the committer must indicate that in
+        the commit log.
+      </p>
+      <p>
+        The committer is responsible for the quality of any third-party code or
+        documentation they commit to the repository. All software
+        committed to the repository must be covered by the Apache
+        LICENSE or contain a copyright and license that allows
+        redistribution under the same conditions as the Apache LICENSE.
+      </p>
+      <p>
+        A committed change must be reversed if it is vetoed by one of the
+        voting members and the veto conditions cannot be immediately
+        satisfied by the equivalent of a "bug fix" commit. The veto must
+        be rescinded before the change can be included in any public
+        release.
+      </p>
     </section>
+
     <section name="Patch Format">
-
- <p>
-     When a specific change to the software is proposed for discussion or voting on the mailing list, it should be presented in the form of input to the patch command. When sent to the mailing list, the message should contain a Subject beginning with [PATCH] and a distinctive one-line summary corresponding to the action item for that patch. Afterwords, the patch summary in the STATUS file should be updated to point to the Message-ID of that message.
-
-</p>
- <p>
-     The patch should be created by using the diff -u command from the original software file(s) to the modified software file(s). E.g.,
-</p>
-<p>
-
+      <p>
+        When a specific change to the software is proposed for discussion or
+        voting on the mailing list, it should be presented in the form
+        of input to the patch command. When sent to the mailing list,
+        the message should contain a Subject beginning with [PATCH] and
+        a distinctive one-line summary corresponding to the action item
+        for that patch. Afterwords, the patch summary in the STATUS file
+        should be updated to point to the Message-ID of that message.
+      </p>
+      <p>
+        The patch should be created by using the diff -u command from the
+        original software file(s) to the modified software file(s).
+        E.g.,
+      </p>
+      <source>
         diff -u James.java.orig James.java >> patchfile.txt
+      </source>
+      <p>
+        All patches necessary to address an action item should be concatenated
+        within a single patch message. If later modification of the
+        patch proves necessary, the entire new patch should be posted
+        and not just the difference between two patches. The STATUS file
+        entry should then be updated to point to the new patch message.
 
-</p>
- <p>
-     All patches necessary to address an action item should be concatenated within a single patch message. If later modification of the patch proves necessary, the entire new patch should be posted and not just the difference between two patches. The STATUS file entry should then be updated to point to the new patch message.
-
-</p>
- <p>
-     The completed patchfile should produce no errors or prompts when the command,
-</p>
-<p>
-
+      </p>
+      <p>
+        The completed patchfile should produce no errors or prompts when the
+        command,
+      </p>
+      <source>
         patch -s &lt; patchfile
-</p>
-<p>
-
-    is issued in the target repository.
-</p>
+      </source>
+      <p>
+        is issued in the target repository.
+      </p>
     </section>
+    
   </body>
+
 </document>
