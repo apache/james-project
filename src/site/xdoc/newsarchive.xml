@@ -36,6 +36,10 @@
 
     <subsection name='2012'>
 
+      <a name="120607"><h4>Jun 2012 - Apache Hupa 0.0.2 released</h4></a>
+        <p>The Java Apache Mail Enterprise Server Project is happy to announce 
+           the release of version 0.0.2 of Apache Hupa, the James rich webmail client.</p>
+
       <a name="120417"><h4>April 2012 - Apache James Server 3.0-beta4 released</h4></a>
         <p>The Apache James project is happy to announce the release 
            of version 3.0-beta4 of its modular mail server.</p>
