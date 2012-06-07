@@ -578,6 +578,28 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
   
   </section>
 
+  <section name="Apache HUPA">
+  
+    <p>Apache HUPA 0.0.2 is the latest stable version:</p>
+    <ul>
+    
+    <li>Binary (Java WAR): <a
+    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war">hupa-0.0.2.war</a> [<a
+    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war.asc">PGP</a>][<a
+    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa/0.0.2/hupa-0.0.2.war.asc.md5">MD5</a>]</li>
+    
+    <li>Source (ZIP Format): <a
+    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2-source-release.zip">hupa-parent-0.0.2-source-release.zip</a> [<a
+    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2-source-release.zip.asc">PGP</a>][<a
+    href="http://repo1.maven.org/maven2/org/apache/james/hupa/hupa-parent/0.0.2/hupa-parent-0.0.2.pom.asc.md5">MD5</a>]</li>
+    
+    <li>Jars (including source and javadocs) for the modules are distributed through the standard 
+    <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/hupa">http://repo1.maven.org/maven2/org/apache/james/hupa</a>.</li>
+    </ul>
+  
+  </section>
+
+
 </body>
 
 </document>
