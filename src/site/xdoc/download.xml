@@ -265,19 +265,19 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <ul>
     
     <li>Binary (Unix TAR): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.7.2-bin.tar.gz">apache-mime4j-0.7.2-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.tar.gz.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz">apache-mime4j-0.7.2-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.tar.gz.md5">MD5</a>]</li>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/mime4j/apache-mime4j-0.7.2-bin.zip">apache-mime4j-0.7.2-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-0.7.2-bin.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip">apache-mime4j-0.7.2-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-0.7.2-bin.zip.md5">MD5</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/mime4j/apache-mime4j-project-0.7.2-source-release.zip">apache-mime4j-0.7.2-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7.2-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/mime4j/apache-mime4j-project-0.7.2-source-release.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip">apache-mime4j-0.7.2-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mime4j/0.7.2/apache-mime4j-project-0.7.2-source-release.zip.md5">MD5</a>]</li>
     
     <li><a
     href="[preferred]/james/mime4j/">Other Files</a> (javadoc.jar, sha1 checksums...)</li>
@@ -340,24 +340,24 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <ul>
     
     <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz">apache-jsieve-all-0.5-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc.md5">MD5</a>]</li>
+    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz">apache-jsieve-all-0.5-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.tar.gz.asc.md5">MD5</a>]</li>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-jsieve/0.5/apache-jsieve-all-0.5-bin.zip">apache-jsieve-all-0.5-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc.md5">MD5</a>]</li>
+    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip">apache-jsieve-all-0.5-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-bin.zip.asc.md5">MD5</a>]</li>
     
     <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz">apache-jsieve-all-0.5-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc.md5">MD5</a>]</li>
+    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz">apache-jsieve-all-0.5-src.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.tar.gz.asc.md5">MD5</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-jsieve/0.5/apache-jsieve-all-0.5-src.zip">apache-jsieve-all-0.5-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc.md5">MD5</a>]</li>
+    href="[preferred]/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip">apache-jsieve-all-0.5-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/jsieve/0.5/apache-jsieve-all-0.5-src.zip.asc.md5">MD5</a>]</li>
     
     </ul>
   
@@ -533,14 +533,14 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <p>Apache James Protocols 1.6.2 is the latest stable version:</p>
     <ul>
     <li>Source (Unix TAR): <a
-    href="[preferred]/james/protocols/protocols-1.6.2-source-release.tar.gz">protocols-1.6.2-source-release.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.6.2-source-release.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.6.2-source-release.tar.gz.md5">MD5</a>]</li>
+    href="[preferred]/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz">protocols-1.6.2-source-release.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.tar.gz.md5">MD5</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/protocols/protocols-1.6.2-source-release.zip">protocols-1.6.2-source-release.zip</a> [<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.6.2-source-release.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/protocols/protocols-1.6.2-source-release.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/protocols/1.6.3/protocols-1.6.2-source-release.zip">protocols-1.6.2-source-release.zip</a> [<a
+    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/protocols/1.6.3/protocols-1.6.2-source-release.zip.md5">MD5</a>]</li>
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
     <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/protocols">http://repo1.maven.org/maven2/org/apache/james/protocols</a>.</li>
     </ul>
@@ -553,24 +553,24 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <ul>
     
     <li>Binary (Unix TAR): <a
-    href="[preferred]/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-bin.tar.gz">apache-james-mpt-0.1.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-bin.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-bin.tar.gz.md5">MD5</a>]</li>
+    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-bin.tar.gz">apache-james-mpt-0.1.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.tar.gz.md5">MD5</a>]</li>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-bin.zip">apache-james-mpt-0.1.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-bin.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-bin.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-bin.zip">apache-james-mpt-0.1.zip</a> [<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-bin.zip.md5">MD5</a>]</li>
     
     <li>Source (Unix TAR): <a
-    href="[preferred]/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.tar.gz">apache-james-mpt-0.1-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.tar.gz.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.tar.gz.md5">MD5</a>]</li>
+    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz">apache-james-mpt-0.1-src.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.tar.gz.md5">MD5</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.zip">apache-james-mpt-0.1-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.zip.asc">PGP</a>][<a
-    href="http://www.apache.org/dist/james/apache-james-mpt/apache-james-mpt/0.1/apache-james-mpt-0.1-src.zip.md5">MD5</a>]</li>
+    href="[preferred]/james/mpt/0.1/apache-james-mpt-0.1-src.zip">apache-james-mpt-0.1-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.asc">PGP</a>][<a
+    href="http://www.apache.org/dist/james/mpt/0.1/apache-james-mpt-0.1-src.zip.md5">MD5</a>]</li>
     
     <li>Jars (including source and javadocs) for the modules are distributed through the standard 
     <a href='http://maven.apache.org'>Maven</a> repositories on <a href="http://repo1.maven.org/maven2/org/apache/james/">http://repo1.maven.org/maven2/org/apache/james/</a>.</li>
