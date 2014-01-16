@@ -292,22 +292,22 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     <ul>
     
     <li>Binary (ZIP Format): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-1.0.0-bin.zip">apache-jspf-1.0.0-bin.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-1.0.0-bin.zip.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-bin.zip">apache-jspf-1.0.0-bin.zip</a> [<a
+    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-bin.zip.asc">PGP</a>]</li>
     
     <li>Binary (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/binaries/apache-jspf-1.0.0-bin.tar.gz">apache-jspf-1.0.0-bin.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/binaries/apache-jspf-1.0.0-bin.tar.gz.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-bin.tar.gz">apache-jspf-1.0.0-bin.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-bin.tar.gz.asc">PGP</a>]</li>
     
     <li>Source (Unix TAR.GZ): <a
-    href="[preferred]/james/jspf/source/apache-jspf-1.0.0-src.tar.gz">apache-jspf-1.0.0-src.tar.gz</a> [<a
-    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-1.0.0-src.tar.gz.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-src.tar.gz">apache-jspf-1.0.0-src.tar.gz</a> [<a
+    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-src.tar.gz.asc">PGP</a>]</li>
     
     <li>Source (ZIP Format): <a
-    href="[preferred]/james/jspf/source/apache-jspf-1.0.0-src.zip">apache-jspf-1.0.0-src.zip</a> [<a
-    href="http://www.apache.org/dist/james/jspf/source/apache-jspf-1.0.0-src.zip.asc">PGP</a>]</li>
+    href="[preferred]/james/jspf/1.0.0/apache-jspf-1.0.0-src.zip">apache-jspf-1.0.0-src.zip</a> [<a
+    href="http://www.apache.org/dist/james/jspf/1.0.0/apache-jspf-1.0.0-src.zip.asc">PGP</a>]</li>
     
-    <li><a href="[preferred]/james/jspf/binaries/">Other Binaries</a></li>
+    <li><a href="[preferred]/james/jspf/1.0.0/">Other Binaries</a></li>
     
     </ul>
   
