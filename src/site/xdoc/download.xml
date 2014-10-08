@@ -141,7 +141,9 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
    
       <p>The software listed above represents the latest Release Build
          available from the Apache James Project.</p>
-    
+<!-- 
+Do not promote snapshots, See JAMES-1558
+
       <p>The James project also provides 
          <a href="http://people.apache.org/builds/james/nightly/">Nighly Builds</a>:
         <u>periodic snapshots during development</u>. Generally, these are considered
@@ -153,6 +155,7 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     
       <p>James continous integration can be found on 
       <a href="https://hudson.apache.org/hudson/view/G-L/view/James/">Hudson</a>.</p>
+-->    
   
     </subsection>
 
@@ -598,7 +601,6 @@ is found <a href='http://www.apache.org/licenses/exports/'>here</a>.
     </ul>
   
   </section>
-
 
 </body>
 
