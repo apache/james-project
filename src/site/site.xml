@@ -135,9 +135,6 @@
             <item
                 name="Releases"
                 href="http://james.apache.org/download.cgi" />
-            <item
-                name="Snapshots"
-                href="https://repository.apache.org/content/repositories/snapshots/org/apache/james/" />
         </menu>
     </body>
 
