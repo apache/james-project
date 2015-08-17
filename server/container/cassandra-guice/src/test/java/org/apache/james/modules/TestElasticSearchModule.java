@@ -17,33 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
-import org.apache.james.modules.mailbox.CassandraMailboxModule;
-import org.apache.james.modules.mailbox.CassandraSessionModule;
-import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
-import org.apache.james.modules.server.ConfigurationPerformerModule;
-import org.apache.james.modules.server.DNSServiceModule;
-import org.apache.james.modules.server.JpaDomainListModule;
-import org.apache.james.modules.server.JpaUsersRepositoryModule;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import org.apache.james.mailbox.elasticsearch.ClientProvider;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
+import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
+import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import javax.inject.Singleton;
 
-public class CassandraJamesServerMain {
+public class TestElasticSearchModule extends AbstractModule{
 
-    public static final Module defaultModule = Modules.combine(
-            new ConfigurationPerformerModule(),
-            new CassandraMailboxModule(),
-            new CassandraSessionModule(),
-            new ElasticSearchMailboxModule(),
-            new JpaUsersRepositoryModule(),
-            new JpaDomainListModule(),
-            new DNSServiceModule());
+    private final EmbeddedElasticSearch embeddedElasticSearch;
 
-    public static void main(String[] args) throws Exception {
-        CassandraJamesServer server = new CassandraJamesServer(defaultModule);
-        server.start();
+    public TestElasticSearchModule(EmbeddedElasticSearch embeddedElasticSearch) {
+        this.embeddedElasticSearch = embeddedElasticSearch;
     }
 
+    @Override
+    protected void configure() {
+
+    }
+
+    @Provides
+    @Singleton
+    protected ClientProvider provideClientProvider() {
+        return NodeMappingFactory.applyMapping(
+            IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()))
+        );
+    }
 }
