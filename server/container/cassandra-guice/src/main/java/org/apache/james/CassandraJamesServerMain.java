@@ -24,9 +24,9 @@ import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
+import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
-import org.apache.james.modules.server.SimpleMessageSearchModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -37,7 +37,7 @@ public class CassandraJamesServerMain {
             new CassandraMailboxModule(),
             new ConfigurationPerformerModule(),
             new CassandraSessionModule(),
-            new SimpleMessageSearchModule(),
+            new ElasticSearchMailboxModule(),
             new CassandraUsersRepositoryModule(),
             new CassandraDomainListModule(),
             new CassandraRecipientRewriteTableModule(),

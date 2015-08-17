@@ -27,9 +27,14 @@ import javax.mail.Store;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.modules.TestElasticSearchModule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -41,11 +46,17 @@ public class CassandraJamesServerTest {
     private static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
 
     private CassandraJamesServer server;
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+
+    @Rule
+    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     @Before
     public void setup() throws Exception {
         server = new CassandraJamesServer(Modules.override(CassandraJamesServerMain.defaultModule)
-                .with(new AbstractModule() {
+                .with(new TestElasticSearchModule(embeddedElasticSearch), 
+                        new AbstractModule() {
                     
                     @Override
                     protected void configure() {
@@ -68,10 +79,10 @@ public class CassandraJamesServerTest {
     }
 
     @Test (expected = AuthenticationFailedException.class)
-    public void connectShouldThrowWhenNoCrendentials() throws Exception {
+    public void connectIMAPServerShouldThrowWhenNoCredentials() throws Exception {
         store().connect();
     }
-    
+
     private Store store() throws NoSuchProviderException {
         Properties properties = new Properties();
         properties.put("mail.imap.host", "localhost");
