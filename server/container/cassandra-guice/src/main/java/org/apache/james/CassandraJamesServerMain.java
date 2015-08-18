@@ -25,6 +25,7 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
+import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
 
@@ -41,7 +42,8 @@ public class CassandraJamesServerMain {
             new CassandraUsersRepositoryModule(),
             new CassandraDomainListModule(),
             new CassandraRecipientRewriteTableModule(),
-            new DNSServiceModule());
+            new DNSServiceModule(),
+            new ActiveMQQueueModule());
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(defaultModule);
