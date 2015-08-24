@@ -24,6 +24,7 @@ import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
+import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.SimpleMessageSearchModule;
 
@@ -32,13 +33,15 @@ import com.google.inject.util.Modules;
 
 public class CassandraJamesServerMain {
 
-    public static final Module defaultModule = Modules.combine(new CassandraMailboxModule(),
-        new CassandraSessionModule(),
-        new SimpleMessageSearchModule(),
-        new CassandraUsersRepositoryModule(),
-        new CassandraDomainListModule(),
-        new CassandraRecipientRewriteTableModule(),
-        new DNSServiceModule());
+    public static final Module defaultModule = Modules.combine(
+            new CassandraMailboxModule(),
+            new ConfigurationPerformerModule(),
+            new CassandraSessionModule(),
+            new SimpleMessageSearchModule(),
+            new CassandraUsersRepositoryModule(),
+            new CassandraDomainListModule(),
+            new CassandraRecipientRewriteTableModule(),
+            new DNSServiceModule());
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(defaultModule);
