@@ -44,12 +44,12 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 public class JmxServerProbe implements ServerProbe {
 
     // TODO: Move this to somewhere else
-    private final static String DOMAINLIST_OBJECT_NAME = "org.apache.james:type=component,name=domainlist";
-    private final static String VIRTUALUSERTABLE_OBJECT_NAME = "org.apache.james:type=component,name=recipientrewritetable";
-    private final static String USERSREPOSITORY_OBJECT_NAME = "org.apache.james:type=component,name=usersrepository";
-    private final static String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
-    private final static String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
-    private final static String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
+    public final static String DOMAINLIST_OBJECT_NAME = "org.apache.james:type=component,name=domainlist";
+    public final static String VIRTUALUSERTABLE_OBJECT_NAME = "org.apache.james:type=component,name=recipientrewritetable";
+    public final static String USERSREPOSITORY_OBJECT_NAME = "org.apache.james:type=component,name=usersrepository";
+    public final static String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
+    public final static String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
+    public final static String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
 
     private JMXConnector jmxc;
     
