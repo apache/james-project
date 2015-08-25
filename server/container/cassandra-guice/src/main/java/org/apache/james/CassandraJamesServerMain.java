@@ -31,6 +31,7 @@ import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.FilesystemDataModule;
+import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.QuotaModule;
 
 import com.google.inject.Module;
@@ -54,7 +55,9 @@ public class CassandraJamesServerMain {
             new QuotaModule());
 
     public static void main(String[] args) throws Exception {
-        CassandraJamesServer server = new CassandraJamesServer(defaultModule);
+        CassandraJamesServer server = new CassandraJamesServer(Modules.combine(
+            defaultModule,
+            new JMXServerModule()));
         server.start();
     }
 
