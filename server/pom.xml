@@ -534,7 +534,7 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-cassandra</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -545,13 +545,11 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-tika</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -903,8 +901,6 @@
                 <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
-
-
             <dependency>
                 <groupId>concurrent</groupId>
                 <artifactId>concurrent</artifactId>

@@ -36,7 +36,6 @@ import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -58,10 +57,15 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Inject
     @Resource
-    public void setSession(@Named("cassandra-session") Session session) {
+    public void setSession(Session session) {
         this.session = session;
     }
 
+    @Override
+    public boolean supportVirtualHosting() {
+        return true;
+    }
+    
     @Override
     public User getUserByName(String name){
         ResultSet result = session.execute(

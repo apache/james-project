@@ -16,42 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.modules.data;
 
-package org.apache.james.backends.cassandra.init;
-
-import java.util.Optional;
-
-import javax.inject.Inject;
-
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.UserType;
-import com.google.common.collect.ImmutableMap;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.utils.Collectors;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.cassandra.CassandraUsersRepository;
 
-public class CassandraTypesProvider {
-    private final ImmutableMap<String, UserType> userTypes;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-    @Inject
-    public CassandraTypesProvider(CassandraModule module, Session session) {
-        userTypes = module.moduleTypes()
-            .stream()
-            .collect(Collectors.toImmutableMap(
-                    CassandraType::getName,
-                    type -> getSessionType(session, type)));
-    }
+public class CassandraUsersRepositoryModule extends AbstractModule {
 
-    private UserType getSessionType(Session session, CassandraType type) {
-        return session.getCluster()
-            .getMetadata()
-            .getKeyspace(session.getLoggedKeyspace())
-            .getUserType(type.getName());
-    }
+    @Override
+    public void configure() {
+        bind(UsersRepository.class).to(CassandraUsersRepository.class);
+        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        cassandraDataDefinitions.addBinding().to(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.class);
 
-    public UserType getDefinedUserType(String typeName) {
-        return Optional.ofNullable(userTypes.get(typeName))
-            .orElseThrow(() -> new RuntimeException("Cassandra UDT " + typeName + " can not be retrieved"));
     }
 
 }
