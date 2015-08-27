@@ -32,6 +32,7 @@ import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.FilesystemDataModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.modules.server.QuotaModule;
 
 import com.google.inject.Module;
@@ -52,7 +53,8 @@ public class CassandraJamesServerMain {
             new SMTPServerModule(),
             new LMTPServerModule(),
             new ActiveMQQueueModule(),
-            new QuotaModule());
+            new QuotaModule(),
+            new MailStoreRepositoryModule());
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(Modules.combine(
