@@ -178,6 +178,12 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-cassandra</artifactId>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 </dependency>
                 <dependency>
@@ -216,6 +222,11 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-file</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-data-jpa</artifactId>
+                </dependency>
+                
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-library</artifactId>
