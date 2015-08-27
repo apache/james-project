@@ -28,7 +28,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.james.domainlist.hbase.def.HDomainList;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.hbase.def.HUsersRepository;

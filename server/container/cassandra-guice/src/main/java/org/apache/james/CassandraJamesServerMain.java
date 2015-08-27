@@ -28,12 +28,14 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.FilesystemDataModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.modules.server.QuotaModule;
+import org.apache.james.modules.server.SieveModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -53,8 +55,11 @@ public class CassandraJamesServerMain {
             new SMTPServerModule(),
             new LMTPServerModule(),
             new ActiveMQQueueModule(),
-            new QuotaModule(),
-            new MailStoreRepositoryModule());
+            new MailStoreRepositoryModule(),
+            new SieveModule(),
+            new MailStoreRepositoryModule(),
+            new CamelMailetContainerModule(),
+            new QuotaModule());
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(Modules.combine(
