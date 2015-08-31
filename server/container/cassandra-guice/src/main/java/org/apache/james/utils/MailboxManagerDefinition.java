@@ -16,20 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.adapter.mailbox;
 
-public class MailboxManagerResolverException extends RuntimeException {
+package org.apache.james.utils;
 
-    public MailboxManagerResolverException() {
-        super();
+import org.apache.james.mailbox.MailboxManager;
+
+import com.google.common.base.Objects;
+
+public class MailboxManagerDefinition {
+    
+    private final String name;
+    private final MailboxManager manager;
+
+    public MailboxManagerDefinition(String name, MailboxManager manager) {
+        this.name = name;
+        this.manager = manager;
     }
-
-    public MailboxManagerResolverException(Throwable cause) {
-        super(cause);
+    
+    public MailboxManager getManager() {
+        return manager;
     }
-
-    public MailboxManagerResolverException(String message) {
-        super(message);
+    
+    public String getName() {
+        return name;
     }
-
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name, manager);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MailboxManagerDefinition) {
+            MailboxManagerDefinition other = (MailboxManagerDefinition) obj;
+            return Objects.equal(name, other.name) && Objects.equal(manager, other.manager);
+        }
+        return false;
+    }
 }
