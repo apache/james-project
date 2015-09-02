@@ -44,6 +44,7 @@ import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ import java.util.List;
 /**
  * Provides DNS client functionality to services running inside James
  */
+@Singleton
 public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, Configurable {
 
     /**
