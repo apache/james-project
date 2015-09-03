@@ -25,7 +25,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -63,7 +63,7 @@ import org.apache.mailet.Mail;
  * 
  * </p>
  */
-public class SpamAssassinHandler implements JamesMessageHook, InitializingLifecycleAwareProtocolHandler {
+public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
 
     /** The port spamd is listen on */
     private int spamdPort = 783;

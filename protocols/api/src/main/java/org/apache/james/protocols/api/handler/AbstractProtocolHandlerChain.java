@@ -81,8 +81,8 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
      * @see org.apache.james.protocols.api.handler.ProtocolHandlerChain#destroy()
      */
     public void destroy() {
-        List<LifecycleAwareProtocolHandler> handlers = getHandlers(LifecycleAwareProtocolHandler.class);
-        for (LifecycleAwareProtocolHandler handler: handlers) {
+        List<ProtocolHandler> handlers = getHandlers(ProtocolHandler.class);
+        for (ProtocolHandler handler: handlers) {
             handler.destroy();
         }
     }

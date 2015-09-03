@@ -24,6 +24,8 @@ package org.apache.james.protocols.smtp.core.fastfail;
 
 import java.util.Collection;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -38,6 +40,16 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  * This handler can be used to just ignore duplicated recipients. 
  */
 public class SupressDuplicateRcptHandler implements RcptHook {
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)

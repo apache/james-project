@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.smtp.RelayPath;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
@@ -328,7 +330,16 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
             } 
             return result;
         }
-        
+
+        @Override
+        public void init(Configuration config) throws ConfigurationException {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
     }
     
     private final class TestDeliverHook implements DeliverToRecipientHook {
@@ -351,6 +362,16 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
         public List<MailEnvelope> getDelivered() {
             return delivered;
         }
-    };
+
+        @Override
+        public void init(Configuration config) throws ConfigurationException {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
+    }
 
 }

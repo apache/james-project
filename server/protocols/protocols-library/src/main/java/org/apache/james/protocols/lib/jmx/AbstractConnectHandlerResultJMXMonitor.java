@@ -20,7 +20,6 @@ package org.apache.james.protocols.lib.jmx;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,19 +27,14 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.ConnectHandler;
-import org.apache.james.protocols.api.handler.ExtensibleHandler;
-import org.apache.james.protocols.api.handler.ProtocolHandler;
-import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
-import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.*;
 
 /**
  * Handler which will gather statistics for {@link ConnectHandler}'s
  * 
  * @param <S>
  */
-public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response, S extends ProtocolSession> implements ProtocolHandlerResultHandler<R,S>, ExtensibleHandler, InitializingLifecycleAwareProtocolHandler {
+public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response, S extends ProtocolSession> implements ProtocolHandlerResultHandler<R,S>, ExtensibleHandler, ProtocolHandler {
 
     private final Map<String, ConnectHandlerStats> cStats = new HashMap<String, ConnectHandlerStats>();
     private String jmxName;

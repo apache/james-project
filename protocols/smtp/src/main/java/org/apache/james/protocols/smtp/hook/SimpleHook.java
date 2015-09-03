@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.smtp.hook;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -31,6 +33,16 @@ import org.apache.james.protocols.smtp.SMTPSession;
  *
  */
 public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * Return {@link HookResult} with {@link HookReturnCode#OK}

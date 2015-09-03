@@ -19,6 +19,7 @@
 
 package org.apache.james.smtpserver;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
@@ -76,4 +77,13 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
         return null;
     }
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }

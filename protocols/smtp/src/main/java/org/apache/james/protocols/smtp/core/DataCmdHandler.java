@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -62,6 +64,16 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             }
             return null;
         }
+
+        @Override
+        public void init(Configuration config) throws ConfigurationException {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
     }
 
     public static final class DataLineFilterWrapper implements LineHandler<SMTPSession> {
@@ -84,13 +96,32 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             Response r = filter.onLine(session, line, next);
             return r;
         }
-                
+
+        @Override
+        public void init(Configuration config) throws ConfigurationException {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
     }
    
     public final static String MAILENV = "MAILENV";
     
     private LineHandler<SMTPSession> lineHandler;
-    
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     /**
      * process DATA command
      *

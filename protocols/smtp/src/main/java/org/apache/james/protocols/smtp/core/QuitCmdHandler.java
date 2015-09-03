@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -51,7 +53,17 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
         response.setEndSession(true);
         SYNTAX_ERROR = response.immutable();
     }
-    
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     /**
      * Handler method called upon receipt of a QUIT command. This method informs
      * the client that the connection is closing.

@@ -21,6 +21,8 @@ package org.apache.james.lmtpserver.jmx;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 
 public class JMXHandlersLoader implements HandlersPackage {
@@ -40,4 +42,13 @@ public class JMXHandlersLoader implements HandlersPackage {
         return handlers;
     }
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }
