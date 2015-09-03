@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Set;
 
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -43,6 +45,16 @@ public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHa
     private List<CapaCapability> caps;
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("CAPA"));
     private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("PIPELINING")));
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * @see

@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -68,6 +70,16 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
      * A map of parameterHooks
      */
     private Map<String, MailParametersHook> paramHooks;
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * @see

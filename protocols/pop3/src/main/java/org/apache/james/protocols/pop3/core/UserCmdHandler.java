@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -39,6 +41,15 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("USER"));
     private static final Set<String> CAPS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("USER")));
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * Handler method called upon receipt of a USER command. Reads in the user

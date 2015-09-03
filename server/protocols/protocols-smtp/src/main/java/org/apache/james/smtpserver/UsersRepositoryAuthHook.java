@@ -21,6 +21,8 @@ package org.apache.james.smtpserver;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -71,5 +73,14 @@ public class UsersRepositoryAuthHook implements AuthHook {
         }
         return new HookResult(HookReturnCode.DECLINED);
     }
-    
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }

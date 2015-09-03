@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -44,7 +46,17 @@ public class IMAPCommandDispatcher extends CommandDispatcher<IMAPSession>{
             MultiLineHandler<IMAPSession> handler = new MultiLineHandler<IMAPSession>() {
                 
                 private static final String BYTES_READ = "BYTES_READ";
-                
+
+                @Override
+                public void init(Configuration config) throws ConfigurationException {
+
+                }
+
+                @Override
+                public void destroy() {
+
+                }
+
                 /*
                  * (non-Javadoc)
                  * @see org.apache.james.protocols.api.handler.MultiLineHandler#isReady(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)

@@ -21,11 +21,12 @@ package org.apache.james.smtpserver;
 
 import java.util.Collection;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -48,9 +49,18 @@ public class SendMailHandler implements JamesMessageHook {
         this.queueFactory = queueFactory;
     }
 
-    @PostConstruct
     public void init() {
+
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
         queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+    }
+
+    @Override
+    public void destroy() {
+
     }
 
     /**

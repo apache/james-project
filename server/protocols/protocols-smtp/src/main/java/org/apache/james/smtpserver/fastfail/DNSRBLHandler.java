@@ -30,9 +30,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 
-public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail.DNSRBLHandler implements InitializingLifecycleAwareProtocolHandler {
+public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail.DNSRBLHandler implements ProtocolHandler {
 
     private DNSService dns;
 

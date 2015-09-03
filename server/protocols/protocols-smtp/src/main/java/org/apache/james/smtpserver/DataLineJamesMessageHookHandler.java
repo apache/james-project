@@ -19,6 +19,8 @@
 
 package org.apache.james.smtpserver;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.core.MimeMessageInputStream;
@@ -65,6 +67,16 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
     private List<HookResultHook> rHooks;
 
     private List<MessageHook> mHandlers;
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     public Response onLine(SMTPSession session, ByteBuffer lineByteBuffer, LineHandler<SMTPSession> next) {
 

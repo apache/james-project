@@ -20,7 +20,6 @@ package org.apache.james.protocols.lib.jmx;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,17 +27,12 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.CommandHandler;
-import org.apache.james.protocols.api.handler.ExtensibleHandler;
-import org.apache.james.protocols.api.handler.ProtocolHandler;
-import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
-import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.*;
 
 /**
  * Expose JMX statistics for {@link CommandHandler}
  */
-public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolSession> implements ProtocolHandlerResultHandler<Response, S>, ExtensibleHandler, InitializingLifecycleAwareProtocolHandler {
+public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolSession> implements ProtocolHandlerResultHandler<Response, S>, ExtensibleHandler, ProtocolHandler {
 
     private final Map<String, AbstractCommandHandlerStats> cStats = new HashMap<String, AbstractCommandHandlerStats>();
     private String jmxName;

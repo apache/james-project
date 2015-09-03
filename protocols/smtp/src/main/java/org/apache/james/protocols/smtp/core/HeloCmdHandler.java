@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -48,6 +50,17 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.DELIVERY_INVALID_ARG)
                     + " Domain address required: " + COMMAND_NAME).immutable();
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     /**
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
      */
