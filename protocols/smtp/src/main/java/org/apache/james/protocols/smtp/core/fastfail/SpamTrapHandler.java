@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -42,9 +44,18 @@ public class SpamTrapHandler implements RcptHook {
     private Collection<String> spamTrapRecips = new ArrayList<String>();
     
     /** Default blocktime 12 hours */
-    protected long blockTime = 4320000; 
-    
-   
+    protected long blockTime = 4320000;
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     public void setSpamTrapRecipients(Collection<String> spamTrapRecips) {
         this.spamTrapRecips = spamTrapRecips;
     }

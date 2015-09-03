@@ -27,7 +27,7 @@ import java.util.Map;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -41,7 +41,7 @@ import org.apache.mailet.MailAddress;
  * if the {@link Mail} has more then one recipient, then the highest priority
  * (which was found) is set
  */
-public class MailPriorityHandler implements JamesMessageHook, InitializingLifecycleAwareProtocolHandler {
+public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
 
     private final Map<String, Integer> prioMap = new HashMap<String, Integer>();
 

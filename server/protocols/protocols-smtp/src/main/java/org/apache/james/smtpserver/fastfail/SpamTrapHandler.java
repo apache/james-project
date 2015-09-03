@@ -21,11 +21,11 @@ package org.apache.james.smtpserver.fastfail;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 
 import java.util.Arrays;
 
-public class SpamTrapHandler extends org.apache.james.protocols.smtp.core.fastfail.SpamTrapHandler implements InitializingLifecycleAwareProtocolHandler {
+public class SpamTrapHandler extends org.apache.james.protocols.smtp.core.fastfail.SpamTrapHandler implements ProtocolHandler {
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

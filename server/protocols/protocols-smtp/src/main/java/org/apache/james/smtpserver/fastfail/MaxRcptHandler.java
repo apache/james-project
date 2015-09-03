@@ -21,9 +21,9 @@ package org.apache.james.smtpserver.fastfail;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 
-public class MaxRcptHandler extends org.apache.james.protocols.smtp.core.fastfail.MaxRcptHandler implements InitializingLifecycleAwareProtocolHandler {
+public class MaxRcptHandler extends org.apache.james.protocols.smtp.core.fastfail.MaxRcptHandler implements ProtocolHandler {
 
     @Override
     public void init(Configuration config) throws ConfigurationException {

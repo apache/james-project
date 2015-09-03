@@ -21,10 +21,8 @@ package org.apache.james.container.spring.bean.factory.protocols;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.container.spring.bean.factory.AbstractBeanFactory;
-import org.apache.james.protocols.api.handler.LifecycleAwareProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
@@ -38,9 +36,7 @@ public class ProtocolHandlerLoaderBeanFactory extends AbstractBeanFactory implem
             // Use the classloader which is used for bean instance stuff
             Class<ProtocolHandler> c = (Class<ProtocolHandler>) getBeanFactory().getBeanClassLoader().loadClass(name);
             ProtocolHandler handler =  (ProtocolHandler) getBeanFactory().createBean(c, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, true);
-            if (handler instanceof LifecycleAwareProtocolHandler) {
-                ((InitializingLifecycleAwareProtocolHandler) handler).init(config);
-            }
+            handler.init(config);
             return handler;
         } catch (ClassNotFoundException e) {
             throw new LoadingException("Unable to load handler", e);

@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.pop3.core;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
@@ -26,6 +28,16 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 
 public class WelcomeMessageHandler implements ConnectHandler<POP3Session> {
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * @see org.apache.james.protocols.api.handler.ConnectHandler

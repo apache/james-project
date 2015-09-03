@@ -24,6 +24,8 @@ import java.util.Date;
 
 import javax.inject.Inject;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -99,4 +101,13 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
         return result;
     }
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }

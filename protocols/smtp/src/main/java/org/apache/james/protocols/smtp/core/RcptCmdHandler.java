@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -50,6 +52,17 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();
     private static final Response SYNTAX_ERROR_DELIVERY = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Syntax error in parameters or arguments").immutable();
     private static final Response SYNTAX_ERROR_ADDRESS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_MAILBOX, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_SYNTAX) + " Syntax error in recipient address").immutable();
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     /**
      * Handler method called upon receipt of a RCPT command. Reads recipient.
      * Does some connection validation.

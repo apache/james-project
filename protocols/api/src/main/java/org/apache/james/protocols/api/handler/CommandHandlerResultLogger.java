@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.api.handler;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.logger.Logger;
@@ -53,4 +55,13 @@ public class CommandHandlerResultLogger implements ProtocolHandlerResultHandler<
         }
     }
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }

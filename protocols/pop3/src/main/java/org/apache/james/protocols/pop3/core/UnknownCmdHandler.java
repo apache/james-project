@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.pop3.core;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.UnknownCommandHandler;
@@ -35,5 +37,15 @@ public class UnknownCmdHandler extends UnknownCommandHandler<POP3Session> {
      */
     public Response onCommand(POP3Session session, Request request) {
         return POP3Response.ERR;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
     }
 }
