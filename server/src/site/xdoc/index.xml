@@ -118,7 +118,7 @@
 		      
          </td><td width="50%">
 
-          <subsection name="Configureable">
+          <subsection name="Configurable">
           
             <p>Configure the stores,... via the well-known Spring framework - <a href="config.html">read more</a>.</p>
         
