@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Cassandra Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="Cassandra Configuration">
+
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a> to get some examples and hints.</p>
+
+      <dl>
+        <dt><strong>cassandra.ip</strong></dt>
+        <dd>Is the IP (or host) of the Cassandra used. (cluster is not yet supported)</dd>
+        <dt><strong>cassandra.port</strong></dt>
+        <dd>Is the port used to connect to Cassandra.</dd>
+        <dt><strong>cassandra.keyspace</strong></dt>
+        <dd>Is the name of the keyspace used by James.</dd>
+        <dt><strong>cassandra.replication.factor</strong></dt>
+        <dd>Is the replication factor. (should be 1, as cluster is not yet supported)</dd>
+      </dl>
+
+<p>If you want more explanation about Cassandra configuration, you should visit the dedicated <a href="http://docs.datastax.com/en/cassandra/2.1/cassandra/gettingStartedCassandraIntro.html">documentation</a>.</p>
+
+  </section>
+
+</body>
+
+</document>

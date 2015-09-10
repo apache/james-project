@@ -64,6 +64,12 @@
 	      <a href="manage.html">manage</a>, <a href="monitor.html">monitor</a> 
 	      and <a href="dev.html">develop</a> Apache James Server.</p>
 	      
+        <p>
+          We are currently working on an experimental module which goal is to simplify the configuration process.
+          This module only supports the <a href="config-guice.html">Cassandra</a> backend yet, 
+          and may be <a href="quick-start-cassandra.html">started</a> with docker.
+        </p>
+
         <p>Download Apache James Mail Server 3.0-beta4 and <a href="quick-start.html">quick-start</a> it!</p>
         <p>
           <span class="minibutton btn-download">
@@ -120,10 +126,12 @@
 
           <subsection name="Configurable">
           
-            <p>Configure the stores,... via the well-known Spring framework - <a href="config.html">read more</a>.</p>
+            <p>Configure the stores,...</p>
+            <p>via the well-known Spring framework - <a href="config.html">read more</a>.</p>
         
             <p><img src="images/conf/config-example.png" /></p>
         
+            <p>or via the Guice module - <a href="config-guice.html">read more</a>.</p>
           </subsection>
           
          </td></tr>
