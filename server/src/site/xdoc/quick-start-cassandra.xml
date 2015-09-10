@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Quick Start for Cassandra backend</title>
+ </properties>
+
+<body>
+
+<section name="Quick Start for Cassandra backend">
+
+  <p>The goal of the document is to allow anyone to start with James on Docker as an operational mail server.</p>
+  <p>The method described bellow should not be used in production.</p>
+
+<source>
+Step 0: Requirements
+####################
+
+  * Java 8 SDK
+  * 512MB RAM (launches with -Xmx512M - can use less, can need more, depending on load)
+  * Docker 1.7.1+
+  * Maven 3.3
+
+Step 1: Download
+#################
+
+  * Clone the James git repository
+
+<i>$ git clone git://git.apache.org/james.git</i>
+
+  * Then go to the James folder
+  
+<i>$ cd james</i>
+
+Step 3: Compile
+###############
+
+  * Compile the Guice Cassandra project
+  
+<i>$ mvn package -DskipTests</i>
+
+Step 3: Deploy
+##############
+
+3.1. Deploy Cassandra (optional)
+You may skip this part if you already have a running Cassandra on your network.
+
+<i>$ docker run --name=cassandra cassandra</i>
+
+3.2. Deploy ElasticSearch (optional)
+You may skip this part if you already have a running ElasticSearch on your network.
+
+<i>$ docker run --name=elasticsearch elasticsearch:1.5.2</i>
+
+Step 4: Configure
+#################
+
+  * Follow the <a href="config-guice.html">Cassandra guice</a> configuration documentation.
+  * We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TSL keys to ./conf/keystore or generate it using :
+
+<i>$ keytool -genkey -alias james -keyalg RSA -keystore ./conf/keystore</i>
+
+Configure your domain in the ./conf/domainlist.xml file.
+
+Step 5: Start
+#############
+
+  * Run James
+
+<i>$ java -Dworking.directory=<b>WORKING_PATH</b> -jar container/cassandra-guice/target/james-server-cassandra-guice-beta5-SNAPSHOT.jar</i>
+
+Where :
+- <b>WORKING_PATH</b> is the path where are located your configuration file folder.
+
+Step 6: Create Domains and Users
+################################
+
+Time to add domains and users.
+
+Give enough rights to the James CLI
+
+<i>$ chmod 755 app/target/appassembler/bin/james-cli.sh</i>
+
+<i>$ ./app/target/appassembler/bin/james-cli.sh -h 127.0.0.1 -p 9999  adduser <b>USER_MAIL_ADDRESS</b> <b>PASSWORD</b></i>
+
+Where :
+- <b>USER_MAIL_ADDRESS</b> is the mail address that will be used by this user.
+- <b>PASSWORD</b> is the password that will be used by this user.
+
+Step 8: Test
+############
+
+$ telnet <b>HOSTNAME</b> 25
+Trying <b>HOSTNAME</b>...
+Connected to <b>HOSTNAME</b>.
+Escape character is '^]'.
+220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0-beta4) ready Sat, 6 Nov 2010 17:31:33 +0100 (CET)
+ehlo test
+250-172.16.1.131 Hello test (aoscommunity.com [127.0.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+mail from:&lt;YOUR_NAME@YOUR_DOMAIN&gt;
+250 2.1.0 Sender &lt;YOUR_NAME@YOUR_DOMAIN&gt; OK
+rcpt to:&lt;YOUR_NAME@YOUR_DOMAIN>
+250 2.1.5 Recipient &lt;YOUR_NAME@YOUR_DOMAIN&gt; OK
+data
+354 Ok Send data ending with &lt;CRLF&gt;.&lt;CRLF&gt;
+subject: test
+
+this is a test
+.
+250 2.6.0 Message received
+quit
+Connection closed by foreign host.
+
+Step 8: Manage
+##############
+
+8.1. Manage via james-cli
+
+  usage: 
+<i>$ docker exec james-cassandra /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh -h 127.0.0.1 -p 9999</i>
+
+  Available commands:
+    adduser &lt;/username&gt; &lt;/password&gt;
+    removeuser &lt;/username&gt;
+    listusers
+    adddomain &lt;/domainname&gt;
+    removedomain &lt;/domainname&gt;
+    listdomains
+
+8.2. Manage via JMX
+
+  * Launch jconsole (or any other JMX client) and connect on URL=service:jmx:rmi:///jndi/rmi://localhost:<b>HOSTNAME</b>/jmxrmi
+  * Select the MBeans tab and open the org.apache.james node to view attributes and execute operations.
+
+Step 9: Monitor
+###############
+
+  * Monitor the ./log/james-server.log log file.
+
+  * Monitor via JMX (launch any JMX client and connect to URL=service:jmx:rmi:///jndi/rmi://<b>HOSTNAME</b>:9999/jmxrmi)
+
+  * Check ./var folder usage
+  
+    mail
+    +-error
+    +-address-error
+    +-relay-denied
+    +-spam
+
+    store
+    +-maildir
+    +-derby
+    +-jackrabbit
+    +-activemq
+      +-brokers
+        +-james
+      +-blob-transfer
+        +-outgoing
+        +-spool
+
+  * Check /tmp folder usage
+
+</source>
+
+</section>
+
+</body>
+
+</document>
