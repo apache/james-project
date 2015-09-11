@@ -18,47 +18,50 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import java.io.FileNotFoundException;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.cassandra.ClusterFactory;
+import org.apache.james.mailbox.cassandra.ClusterWithKeyspaceCreatedFactory;
+import org.apache.james.mailbox.cassandra.SessionFactory;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
-import org.apache.james.mailbox.cassandra.ClusterFactory;
-import org.apache.james.mailbox.cassandra.ClusterWithKeyspaceCreatedFactory;
-import org.apache.james.mailbox.cassandra.SessionFactory;
-import org.apache.james.utils.PropertiesReader;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class CassandraSessionModule extends AbstractModule {
 
-    private final PropertiesReader propertiesReader;
-    private final String keyspace;
-
-    public CassandraSessionModule() {
-        propertiesReader = new PropertiesReader("cassandra.properties");
-        keyspace = propertiesReader.getProperty("cassandra.keyspace");
-    }
-
     @Override
     protected void configure() {
-
     }
 
     @Provides
     @Singleton
-    Session provideSession(Cluster cluster) {
+    Session provideSession(FileSystem fileSystem, Cluster cluster) throws FileNotFoundException, ConfigurationException {
+        PropertiesConfiguration configuration = getConfiguration(fileSystem);
+        String keyspace = configuration.getString("cassandra.keyspace");
         return SessionFactory.createSession(cluster, keyspace);
     }
 
     @Provides
     @Singleton
-    Cluster provideCluster() {
+    Cluster provideCluster(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
+        PropertiesConfiguration configuration = getConfiguration(fileSystem);
+        
         return ClusterWithKeyspaceCreatedFactory.clusterWithInitializedKeyspace(
             ClusterFactory.createClusterForSingleServerWithoutPassWord(
-                propertiesReader.getProperty("cassandra.ip"),
-                Integer.parseInt(propertiesReader.getProperty("cassandra.port"))),
-            keyspace,
-            Integer.parseInt(propertiesReader.getProperty("cassandra.replication.factor")));
+                configuration.getString("cassandra.ip"),
+                configuration.getInt("cassandra.port")),
+                configuration.getString("cassandra.keyspace"),
+                configuration.getInt("cassandra.replication.factor"));
     }
 
+    private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
+        return new PropertiesConfiguration(fileSystem.getFile("cassandra.properties"));
+    }
+    
 }
