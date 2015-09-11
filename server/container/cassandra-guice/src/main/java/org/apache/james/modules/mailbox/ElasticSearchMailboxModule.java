@@ -19,18 +19,26 @@
 
 package org.apache.james.modules.mailbox;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
+import java.io.FileNotFoundException;
+
+import javax.inject.Singleton;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.elasticsearch.*;
+import org.apache.james.mailbox.elasticsearch.ClientProvider;
+import org.apache.james.mailbox.elasticsearch.ClientProviderImpl;
+import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
+import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
-import org.apache.james.utils.PropertiesReader;
 
-import javax.inject.Singleton;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.TypeLiteral;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
 
@@ -44,13 +52,13 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected ClientProvider provideClientProvider() {
-        PropertiesReader propertiesReader = new PropertiesReader("elasticsearch.properties");
-        ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getProperty("elasticsearch.masterHost"),
-            Integer.parseInt(propertiesReader.getProperty("elasticsearch.port")));
+    protected ClientProvider provideClientProvider(FileSystem fileSystem) throws ConfigurationException, FileNotFoundException {
+        PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile("elasticsearch.properties"));
+        ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getString("elasticsearch.masterHost"),
+            propertiesReader.getInt("elasticsearch.port"));
         IndexCreationFactory.createIndex(clientProvider,
-            Integer.parseInt(propertiesReader.getProperty("elasticsearch.nb.shards")),
-            Integer.parseInt(propertiesReader.getProperty("elasticsearch.nb.replica")));
+            propertiesReader.getInt("elasticsearch.nb.shards"),
+            propertiesReader.getInt("elasticsearch.nb.replica"));
         NodeMappingFactory.applyMapping(clientProvider);
         return clientProvider;
     }
