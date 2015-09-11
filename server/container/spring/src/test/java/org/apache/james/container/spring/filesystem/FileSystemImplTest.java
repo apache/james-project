@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.container.spring.filesystem;
 
-import org.apache.james.container.spring.context.TestApplicationContextProvider;
+import org.apache.james.container.spring.context.JamesServerApplicationContext;
+import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
+import org.apache.james.container.spring.resource.JamesResourceLoader;
+import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.filesystem.api.AbstractFileSystemTest;
 import org.apache.james.filesystem.api.FileSystem;
 
@@ -29,6 +32,34 @@ public class FileSystemImplTest extends AbstractFileSystemTest {
         FileSystemImpl fs = new FileSystemImpl();
         fs.setApplicationContext(new TestApplicationContextProvider(configurationRootDirectory, null));
         return fs;
+    }
+    
+    private class TestApplicationContextProvider extends JamesServerApplicationContext {
+        private String configurationRootDirectory;
+
+        public TestApplicationContextProvider(String configurationRootDirectory, String[] configs) {
+            super(configs);
+            this.configurationRootDirectory = configurationRootDirectory;
+        }
+
+        @Override
+        public JamesResourceLoader getResourceLoader() {
+            return new DefaultJamesResourceLoader(new TestDirectoryProvider(configurationRootDirectory));
+        }
+    }
+
+    private static class TestDirectoryProvider extends JamesServerResourceLoader {
+
+        private String configurationRootDirectory;
+
+        public TestDirectoryProvider(String configurationRootDirectory) {
+            this.configurationRootDirectory = configurationRootDirectory;
+        }
+
+        @Override
+        public String getRootDirectory() {
+            return configurationRootDirectory;
+        }
     }
 
 }

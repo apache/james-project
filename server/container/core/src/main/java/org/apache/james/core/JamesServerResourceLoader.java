@@ -16,15 +16,51 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.container.spring.resource;
+package org.apache.james.core;
 
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.springframework.core.io.ResourceLoader;
 
-/**
- * {@link ResourceLoader} which offer extra methods to retrieve the Path to all
- * important Directories, which are in use by JAMES.
- */
-public interface JamesResourceLoader extends ResourceLoader, JamesDirectoriesProvider {
+public class JamesServerResourceLoader implements JamesDirectoriesProvider {
+
+    /**
+     * @see org.apache.james.container.spring.resource.JamesResourceLoader#getAbsoluteDirectory()
+     */
+    public String getAbsoluteDirectory() {
+        return "/";
+    }
+
+    /**
+     * @see
+     * org.apache.james.container.spring.resource.JamesResourceLoader#getConfDirectory()
+     */
+    public String getConfDirectory() {
+        return getRootDirectory() + "/conf/";
+    }
+
+    /**
+     * @see
+     * org.apache.james.container.spring.resource.JamesResourceLoader#getVarDirectory()
+     */
+    public String getVarDirectory() {
+        return getRootDirectory() + "/var/";
+    }
+
+    /**
+     * Return the directory where the external jar libraries must be placed
+     * by the administrator. The jars may contain mailets, jdbc drivers,...
+     * 
+     * @return externalLibraryDirectory
+     */
+    public String getExternalLibraryDirectory() {
+        return getRootDirectory() + "/conf/lib/";
+    }
+
+    /**
+     * @see
+     * org.apache.james.container.spring.resource.JamesResourceLoader#getRootDirectory()
+     */
+    public String getRootDirectory() {
+        return "../";
+    }
 
 }
