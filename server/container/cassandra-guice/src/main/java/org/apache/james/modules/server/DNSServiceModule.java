@@ -18,17 +18,17 @@
  ****************************************************************/
 package org.apache.james.modules.server;
 
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.dnsservice.dnsjava.DNSJavaService;
+import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.dnsjava.DNSJavaService;
-
-import com.google.inject.AbstractModule;
-import org.apache.james.utils.ClassPathConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DNSServiceModule extends AbstractModule {
 
@@ -43,19 +43,19 @@ public class DNSServiceModule extends AbstractModule {
     @Singleton
     public static class DNSServiceConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ClassPathConfigurationProvider classPathConfigurationProvider;
+        private final ConfigurationProvider configurationProvider;
         private final DNSJavaService dnsService;
 
         @Inject
-        public DNSServiceConfigurationPerformer(ClassPathConfigurationProvider classPathConfigurationProvider,
+        public DNSServiceConfigurationPerformer(ConfigurationProvider configurationProvider,
                                                 DNSJavaService dnsService) {
-            this.classPathConfigurationProvider = classPathConfigurationProvider;
+            this.configurationProvider = configurationProvider;
             this.dnsService = dnsService;
         }
 
         public void initModule() throws Exception {
             dnsService.setLog(LOGGER);
-            dnsService.configure(classPathConfigurationProvider.getConfiguration("dnsservice"));
+            dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
             dnsService.init();
         }
     }
