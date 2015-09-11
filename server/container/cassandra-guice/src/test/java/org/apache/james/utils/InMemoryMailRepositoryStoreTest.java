@@ -42,7 +42,7 @@ public class InMemoryMailRepositoryStoreTest {
         repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
                 new MailStoreRepositoryModule.FileMailRepositoryProvider(
                         new FileSystemImpl(new JamesServerResourceLoader()))));
-        repositoryStore.configure(new ClassPathConfigurationProvider().getConfiguration("mailrepositorystore"));
+        repositoryStore.configure(new FileConfigurationProvider().getConfiguration("mailrepositorystore"));
         repositoryStore.init();
     }
 
@@ -72,7 +72,7 @@ public class InMemoryMailRepositoryStoreTest {
             repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
                     new MailStoreRepositoryModule.FileMailRepositoryProvider(
                             new FileSystemImpl(new JamesServerResourceLoader()))));
-            repositoryStore.configure(new ClassPathConfigurationProvider().getConfiguration("fakemailrepositorystore"));
+            repositoryStore.configure(new FileConfigurationProvider().getConfiguration("fakemailrepositorystore"));
         } catch (Exception e) {
             fail("Unexpected failure : ", e);
         }

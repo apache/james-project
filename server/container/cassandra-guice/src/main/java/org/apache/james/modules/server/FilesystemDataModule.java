@@ -20,11 +20,6 @@
 
 package org.apache.james.modules.server;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
-
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.domainlist.api.DomainList;
@@ -35,10 +30,16 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.file.XMLRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.file.UsersFileRepository;
-import org.apache.james.utils.ClassPathConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
+import org.apache.james.utils.FileConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class FilesystemDataModule extends AbstractModule {
 
@@ -46,6 +47,7 @@ public class FilesystemDataModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
         bind(JamesDirectoriesProvider.class).to(JamesServerResourceLoader.class);
         bind(FileSystem.class).to(FileSystemImpl.class);
         bind(DomainList.class).to(XMLDomainList.class);
@@ -57,17 +59,17 @@ public class FilesystemDataModule extends AbstractModule {
     @Singleton
     public static class CassandraDataConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ClassPathConfigurationProvider classPathConfigurationProvider;
+        private final ConfigurationProvider configurationProvider;
         private final XMLDomainList fileDomainList;
         private final UsersFileRepository fileUsersRepository;
         private final XMLRecipientRewriteTable fileRecipientRewriteTable;
 
         @Inject
-        public CassandraDataConfigurationPerformer(ClassPathConfigurationProvider classPathConfigurationProvider,
+        public CassandraDataConfigurationPerformer(ConfigurationProvider configurationProvider,
                                                    XMLDomainList fileDomainList,
                                                    UsersFileRepository fileUsersRepository,
                                                    XMLRecipientRewriteTable fileRecipientRewriteTable) {
-            this.classPathConfigurationProvider = classPathConfigurationProvider;
+            this.configurationProvider = configurationProvider;
             this.fileDomainList = fileDomainList;
             this.fileUsersRepository = fileUsersRepository;
             this.fileRecipientRewriteTable = fileRecipientRewriteTable;
@@ -75,11 +77,11 @@ public class FilesystemDataModule extends AbstractModule {
 
         public void initModule() throws Exception {
             fileRecipientRewriteTable.setLog(LOGGER);
-            fileRecipientRewriteTable.configure(classPathConfigurationProvider.getConfiguration("recipientrewritetable"));
+            fileRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             fileDomainList.setLog(LOGGER);
-            fileDomainList.configure(classPathConfigurationProvider.getConfiguration("domainlist"));
+            fileDomainList.configure(configurationProvider.getConfiguration("domainlist"));
             fileUsersRepository.setLog(LOGGER);
-            fileUsersRepository.configure(classPathConfigurationProvider.getConfiguration("usersrepository"));
+            fileUsersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
             fileUsersRepository.init();
         }
     }

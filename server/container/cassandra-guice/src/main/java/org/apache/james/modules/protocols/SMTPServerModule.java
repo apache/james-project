@@ -21,8 +21,8 @@ package org.apache.james.modules.protocols;
 
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
-import org.apache.james.utils.ClassPathConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,15 +43,15 @@ public class SMTPServerModule extends AbstractModule {
     @Singleton
     public static class SMTPModuleConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ClassPathConfigurationProvider classPathConfigurationProvider;
+        private final ConfigurationProvider configurationProvider;
         private final SMTPServerFactory smtpServerFactory;
         private final SendMailHandler sendMailHandler;
 
         @Inject
-        public SMTPModuleConfigurationPerformer(ClassPathConfigurationProvider classPathConfigurationProvider,
+        public SMTPModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
                 SMTPServerFactory smtpServerFactory,
-                SendMailHandler sendMailHandler) {
-            this.classPathConfigurationProvider = classPathConfigurationProvider;
+            SendMailHandler sendMailHandler) {
+            this.configurationProvider = configurationProvider;
             this.smtpServerFactory = smtpServerFactory;
             this.sendMailHandler = sendMailHandler;
         }
@@ -59,7 +59,7 @@ public class SMTPServerModule extends AbstractModule {
         @Override
         public void initModule() throws Exception {
             smtpServerFactory.setLog(LOGGER);
-            smtpServerFactory.configure(classPathConfigurationProvider.getConfiguration("smtpserver"));
+            smtpServerFactory.configure(configurationProvider.getConfiguration("smtpserver"));
             smtpServerFactory.init();
             sendMailHandler.init(null);
         }

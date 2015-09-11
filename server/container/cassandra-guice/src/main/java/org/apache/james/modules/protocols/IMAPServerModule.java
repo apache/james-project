@@ -18,11 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
-import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
@@ -35,13 +30,18 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
-import org.apache.james.utils.ClassPathConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 
 public class IMAPServerModule extends AbstractModule {
 
@@ -84,19 +84,19 @@ public class IMAPServerModule extends AbstractModule {
     @Singleton
     public static class IMAPModuleConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ClassPathConfigurationProvider classPathConfigurationProvider;
+        private final ConfigurationProvider configurationProvider;
         private final IMAPServerFactory imapServerFactory;
 
         @Inject
-        public IMAPModuleConfigurationPerformer(ClassPathConfigurationProvider classPathConfigurationProvider, IMAPServerFactory imapServerFactory) {
-            this.classPathConfigurationProvider = classPathConfigurationProvider;
+        public IMAPModuleConfigurationPerformer(ConfigurationProvider configurationProvider, IMAPServerFactory imapServerFactory) {
+            this.configurationProvider = configurationProvider;
             this.imapServerFactory = imapServerFactory;
         }
 
         @Override
         public void initModule() throws Exception {
             imapServerFactory.setLog(LOGGER);
-            imapServerFactory.configure(classPathConfigurationProvider.getConfiguration("imapserver"));
+            imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
             imapServerFactory.init();
         }
     }

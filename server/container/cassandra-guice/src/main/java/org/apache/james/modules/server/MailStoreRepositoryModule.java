@@ -23,11 +23,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepository;
-import org.apache.james.utils.ClassPathConfigurationProvider;
+import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.InMemoryMailRepositoryStore;
 import org.apache.james.utils.MailRepositoryProvider;
@@ -67,19 +68,19 @@ public class MailStoreRepositoryModule extends AbstractModule {
     @Singleton
     public static class MailRepositoryStoreModuleConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ClassPathConfigurationProvider classPathConfigurationProvider;
+        private final ConfigurationProvider configurationProvider;
         private final InMemoryMailRepositoryStore javaMailRepositoryStore;
 
         @Inject
-        public MailRepositoryStoreModuleConfigurationPerformer(ClassPathConfigurationProvider classPathConfigurationProvider,
-                                                               InMemoryMailRepositoryStore javaMailRepositoryStore) {
-            this.classPathConfigurationProvider = classPathConfigurationProvider;
+        public MailRepositoryStoreModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
+                InMemoryMailRepositoryStore javaMailRepositoryStore) {
+            this.configurationProvider = configurationProvider;
             this.javaMailRepositoryStore = javaMailRepositoryStore;
         }
 
         @Override
         public void initModule() throws Exception {
-            javaMailRepositoryStore.configure(classPathConfigurationProvider.getConfiguration("mailrepositorystore"));
+            javaMailRepositoryStore.configure(configurationProvider.getConfiguration("mailrepositorystore"));
             javaMailRepositoryStore.init();
         }
     }

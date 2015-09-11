@@ -19,11 +19,6 @@
 
 package org.apache.james.modules.server;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -35,13 +30,19 @@ import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.mailetcontainer.impl.JamesMailetContext;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.utils.ClassPathConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.GuiceMailetLoader;
 import org.apache.james.utils.GuiceMatcherLoader;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class CamelMailetContainerModule extends AbstractModule {
 
@@ -74,17 +75,17 @@ public class CamelMailetContainerModule extends AbstractModule {
     @Singleton
     public static class IMAPModuleConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ClassPathConfigurationProvider classPathConfigurationProvider;
+        private final ConfigurationProvider configurationProvider;
         private final CamelCompositeProcessor camelCompositeProcessor;
         private final JamesMailSpooler jamesMailSpooler;
         private final JamesMailetContext mailetContext;
 
         @Inject
-        public IMAPModuleConfigurationPerformer(ClassPathConfigurationProvider classPathConfigurationProvider,
+        public IMAPModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
                                                 CamelCompositeProcessor camelCompositeProcessor,
                                                 JamesMailSpooler jamesMailSpooler,
                                                 JamesMailetContext mailetContext) {
-            this.classPathConfigurationProvider = classPathConfigurationProvider;
+            this.configurationProvider = configurationProvider;
             this.camelCompositeProcessor = camelCompositeProcessor;
             this.jamesMailSpooler = jamesMailSpooler;
             this.mailetContext = mailetContext;
@@ -94,13 +95,13 @@ public class CamelMailetContainerModule extends AbstractModule {
         public void initModule() throws Exception {
             camelCompositeProcessor.setLog(LOGGER);
             camelCompositeProcessor.setCamelContext(new DefaultCamelContext());
-            camelCompositeProcessor.configure(classPathConfigurationProvider.getConfiguration("mailetcontainer").configurationAt("processors"));
+            camelCompositeProcessor.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("processors"));
             camelCompositeProcessor.init();
             jamesMailSpooler.setLog(LOGGER);
-            jamesMailSpooler.configure(classPathConfigurationProvider.getConfiguration("mailetcontainer").configurationAt("spooler"));
+            jamesMailSpooler.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("spooler"));
             jamesMailSpooler.init();
             mailetContext.setLog(LOGGER);
-            mailetContext.configure(classPathConfigurationProvider.getConfiguration("mailetcontainer").configurationAt("context"));
+            mailetContext.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("context"));
         }
     }
 
