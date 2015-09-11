@@ -30,10 +30,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class ClassPathConfigurationProvider {
+public class FileConfigurationProvider implements ConfigurationProvider {
 
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
 
+    @Override
     public HierarchicalConfiguration getConfiguration(String component) throws ConfigurationException {
         List<String> configPathParts = Arrays.asList(component.split("\\."));
         HierarchicalConfiguration config = getConfig(retrieveConfigInputStream(configPathParts.get(0)));

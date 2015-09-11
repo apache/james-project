@@ -33,6 +33,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
+import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.FileSystemModule;
 import org.apache.james.modules.server.JMXServerModule;
@@ -64,7 +65,8 @@ public class CassandraJamesServerMain {
             new SieveModule(),
             new MailStoreRepositoryModule(),
             new CamelMailetContainerModule(),
-            new QuotaModule());
+            new QuotaModule(),
+            new ConfigurationProviderModule());
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(Modules.combine(
