@@ -30,7 +30,7 @@
     </parent>
 
     <artifactId>james-server-cassandra-guice</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Cassandra - guice injection</name>
     <description>An advanced email server - Cassandra backend with guice injection</description>
@@ -44,7 +44,6 @@
             </plugin>
         </plugins>
     </build>
-
 
     <profiles>
         <profile>
@@ -144,17 +143,34 @@
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>fully.qualified.MainClass</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-dependency-plugin</artifactId>
+                      <executions>
+                        <execution>
+                          <id>copy-dependencies</id>
+                          <phase>package</phase>
+                          <goals>
+                            <goal>copy-dependencies</goal>
+                          </goals>
+                          <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}.lib</outputDirectory>
+                          </configuration>
+                        </execution>
+                      </executions>
+                    </plugin>
+                    <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-jar-plugin</artifactId>
+                      <configuration>
+                        <archive>
+                          <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>${project.build.finalName}.lib/</classpathPrefix>
+                            <mainClass>org.apache.james.CassandraJamesServerMain</mainClass>
+                            <useUniqueVersions>false</useUniqueVersions>
+                          </manifest>
+                        </archive>
+                      </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
