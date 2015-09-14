@@ -45,7 +45,7 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
      */
     public Resource getResource(String fileURL) {
         // delegate the loading to the resourceloader
-        Resource r = resourceLoader.getResource(fileURL);
+        Resource r = getResourceLoader().getResource(fileURL);
         if (r == null) {
             r = super.getResource(fileURL);
         }
@@ -57,7 +57,7 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
      * org.apache.james.container.spring.resource.JamesResourceLoader#getAbsoluteDirectory()
      */
     public String getAbsoluteDirectory() {
-        return resourceLoader.getAbsoluteDirectory();
+        return getResourceLoader().getAbsoluteDirectory();
     }
 
     /**
@@ -65,7 +65,7 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
      * org.apache.james.container.spring.resource.JamesResourceLoader#getConfDirectory()
      */
     public String getConfDirectory() {
-        return resourceLoader.getConfDirectory();
+        return getResourceLoader().getConfDirectory();
     }
 
     /**
@@ -73,7 +73,7 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
      * org.apache.james.container.spring.resource.JamesResourceLoader#getVarDirectory()
      */
     public String getVarDirectory() {
-        return resourceLoader.getVarDirectory();
+        return getResourceLoader().getVarDirectory();
     }
 
     /**
@@ -81,17 +81,17 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
      * org.apache.james.container.spring.resource.JamesResourceLoader#getRootDirectory()
      */
     public String getRootDirectory() {
-        return resourceLoader.getRootDirectory();
+        return getResourceLoader().getRootDirectory();
     }
 
     /**
      * Protected accessor for the resource loader.
      */
-    protected static JamesServerResourceLoader getResourceLoader() {
+    protected JamesServerResourceLoader getResourceLoader() {
         return resourceLoader;
     }
 
-    protected static final class JamesServerResourceLoader extends AbstractJamesResourceLoader {
+    protected static class JamesServerResourceLoader extends AbstractJamesResourceLoader {
 
         /**
          * @see org.apache.james.container.spring.resource.JamesResourceLoader#getAbsoluteDirectory()
