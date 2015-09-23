@@ -85,12 +85,11 @@ public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response,
      * @see
      * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(ConnectHandler.class)) {
             // add stats for all hooks
             for (Object anExtension : extension) {
-                ConnectHandler c = (ConnectHandler) anExtension;
+                ConnectHandler<?> c = (ConnectHandler<?>) anExtension;
                 if (!equals(c)) {
                     String cName = c.getClass().getName();
                     try {

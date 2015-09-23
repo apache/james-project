@@ -74,7 +74,6 @@ public final class MailetManagement extends StandardMBean implements MailetManag
     /**
      * @see org.apache.james.mailetcontainer.api.jmx.MailetManagementMBean#getMailetParameters()
      */
-    @SuppressWarnings("unchecked")
     public String[] getMailetParameters() {
         List<String> parameterList = new ArrayList<String>();
         Iterator<String> iterator = config.getInitParameterNames();

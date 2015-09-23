@@ -19,18 +19,20 @@
 package org.apache.james.dnsservice.library;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.mailet.HostAddress;
-import org.slf4j.Logger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.mailet.HostAddress;
+import org.slf4j.Logger;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  *
@@ -39,22 +41,14 @@ import java.util.Map;
 public class MXHostAddressIterator implements Iterator<HostAddress> {
 
     private final Iterator<HostAddress> addresses;
-    private final Iterator<String> hosts;
-    private final DNSService dns;
-    private final boolean useSingleIP;
-    private final Logger logger;
-    private final int defaultPort;
-
+    
     public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP, Logger logger) {
         this(hosts, 25, dns, useSingleIP, logger);
     }
 
     public MXHostAddressIterator(Iterator<String> hosts, int defaultPort, DNSService dns, boolean useSingleIP, Logger logger) {
-        this.hosts = checkNotNull(hosts, "Hosts is null");
-        this.dns = checkNotNull(dns, "Dns is null");
-        this.useSingleIP = useSingleIP;
-        this.logger = logger;
-        this.defaultPort = defaultPort;
+        checkNotNull(hosts, "Hosts is null");
+        checkNotNull(dns, "Dns is null");
         final List<HostAddress> hAddresses = Lists.newArrayList();
 
         while (hosts.hasNext()) {

@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -35,12 +34,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DefaultDelegatingMailboxListenerTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDelegatingMailboxListenerTest.class);
 
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath OTHER_MAILBOX_PATH = new MailboxPath("namespace", "other", "name");

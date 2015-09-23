@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.mail.internet.ParseException;
 

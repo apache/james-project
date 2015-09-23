@@ -18,22 +18,22 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.api.mock;
 
-import org.apache.mailet.HostAddress;
-import org.apache.mailet.LookupException;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.MailetContext;
-import org.apache.mailet.TemporaryLookupException;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.MimeMessage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.mailet.HostAddress;
+import org.apache.mailet.LookupException;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext;
 
 public class MockMailetContext implements MailetContext {
 
@@ -61,7 +61,7 @@ public class MockMailetContext implements MailetContext {
     }
 
     @Override
-    public Iterator getAttributeNames() {
+    public Iterator<String> getAttributeNames() {
         return attributes.keySet().iterator();
     }
 
@@ -70,7 +70,7 @@ public class MockMailetContext implements MailetContext {
      * was "localhost". Otherwise and empty {@link Collection} is returned
      */
     @Override
-    public Collection getMailServers(String host) {
+    public Collection<String> getMailServers(String host) {
         List<String> servers = new ArrayList<String>();
         if ("localhost".equalsIgnoreCase(host)) {
             servers.add("mx.localhost");
@@ -99,7 +99,7 @@ public class MockMailetContext implements MailetContext {
     }
 
     @Override
-    public Iterator getSMTPHostAddresses(String arg0) {
+    public Iterator<HostAddress> getSMTPHostAddresses(String arg0) {
         return new ArrayList<HostAddress>().iterator();
     }
 
@@ -169,12 +169,12 @@ public class MockMailetContext implements MailetContext {
     }
 
     @Override
-    public void sendMail(MailAddress arg0, Collection arg1, MimeMessage arg2) throws MessagingException {
+    public void sendMail(MailAddress arg0, Collection<MailAddress> arg1, MimeMessage arg2) throws MessagingException {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void sendMail(MailAddress arg0, Collection arg1, MimeMessage arg2, String arg3) throws MessagingException {
+    public void sendMail(MailAddress arg0, Collection<MailAddress> arg1, MimeMessage arg2, String arg3) throws MessagingException {
         throw new UnsupportedOperationException("Not implemented");
     }
 

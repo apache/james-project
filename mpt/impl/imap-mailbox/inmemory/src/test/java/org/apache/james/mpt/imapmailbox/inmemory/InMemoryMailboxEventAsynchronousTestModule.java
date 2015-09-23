@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.inmemory;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryEventAsynchronousHostSystem;
-import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class InMemoryMailboxEventAsynchronousTestModule extends AbstractModule {
 

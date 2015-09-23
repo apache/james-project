@@ -43,16 +43,16 @@ public class OrTest extends BaseMatchersTest {
         setupChild("RecipientIsRegex=test@james.apache.org");
         setupChild("RecipientIsRegex=test2@james.apache.org");
 
-        Collection matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
         assertEquals(matchedRecipients.size(), mockedMail.getRecipients().size());
 
         // Now ensure they match the actual recipients
-        Iterator iterator = matchedRecipients.iterator();
-        MailAddress address = (MailAddress) iterator.next();
+        Iterator<MailAddress> iterator = matchedRecipients.iterator();
+        MailAddress address = iterator.next();
         assertEquals(address, "test@james.apache.org");
-        address = (MailAddress) iterator.next();
+        address = iterator.next();
         assertEquals(address, "test2@james.apache.org");
     }
 

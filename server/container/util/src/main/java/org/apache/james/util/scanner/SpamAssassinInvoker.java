@@ -21,6 +21,9 @@ package org.apache.james.util.scanner;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+import com.google.common.io.Closeables;
+
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.BufferedReader;
@@ -133,9 +136,9 @@ public class SpamAssassinInvoker {
             throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e1);
         } finally {
             try {
-                in.close();
-                out.close();
-                socket.close();
+                Closeables.close(in, true);
+                Closeables.close(out, true);
+                Closeables.close(socket, true);
             } catch (Exception e) {
                 // Should never happin
             }

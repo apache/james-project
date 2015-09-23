@@ -373,7 +373,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
 
             final Message<Id> message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder);
 
-            new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
+            new QuotaChecker<Id>(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(mailboxSession, new StoreMailboxPath<Id>(getMailboxEntity()), new MailboxPathLocker.LockAwareExecution<Long>() {
 
@@ -701,7 +701,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
     private Iterator<MessageMetaData> copy(final Iterator<Message<Id>> originalRows, final MailboxSession session) throws MailboxException {
         final List<MessageMetaData> copiedRows = new ArrayList<MessageMetaData>();
         final MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
-        QuotaChecker quotaChecker = new QuotaChecker(quotaManager, quotaRootResolver, mailbox);
+        QuotaChecker<Id> quotaChecker = new QuotaChecker<Id>(quotaManager, quotaRootResolver, mailbox);
 
         while (originalRows.hasNext()) {
             final Message<Id> originalMessage = originalRows.next();

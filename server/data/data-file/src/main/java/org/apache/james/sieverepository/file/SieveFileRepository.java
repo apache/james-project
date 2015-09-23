@@ -80,10 +80,11 @@ public class SieveFileRepository implements SieveRepository {
         String script = null;
         Scanner scanner = null;
         try {
-            scanner = new Scanner(file, encoding).useDelimiter("\\A");
+            scanner = new Scanner(file, encoding);
+            scanner.useDelimiter("\\A");
             script = scanner.next();
         } finally {
-            if (null != scanner) {
+            if (scanner != null) {
                 scanner.close();
             }
         }

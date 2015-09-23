@@ -29,6 +29,7 @@ import org.apache.mailet.MailAddress;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import java.util.Collection;
 import java.util.Enumeration;
 
@@ -51,7 +52,7 @@ public class RelayLimit extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
         MimeMessage mm = mail.getMessage();
         int count = 0;
-        for (Enumeration<Header> e = mm.getAllHeaders(); e.hasMoreElements();) {
+        for (@SuppressWarnings("unchecked") Enumeration<Header> e = mm.getAllHeaders(); e.hasMoreElements();) {
             Header hdr = e.nextElement();
             if (hdr.getName().equals(RFC2822Headers.RECEIVED)) {
                 count++;

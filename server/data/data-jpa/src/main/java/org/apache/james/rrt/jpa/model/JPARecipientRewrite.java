@@ -103,7 +103,6 @@ public class JPARecipientRewrite {
      * See:  http://docs.oracle.com/javaee/6/tutorial/doc/bnbqa.html
      * Do not us this constructor, it is for JPA only.
      */
-    @SuppressWarnings(value = "unused" )
     protected JPARecipientRewrite() {
     }
 

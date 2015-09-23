@@ -18,10 +18,11 @@
  ****************************************************************/
 package org.apache.james.system.hbase;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
-import junit.framework.Assert;
+
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -40,21 +41,21 @@ public class TablePoolTest {
 
     @Test
     public void testGetInstance() throws IOException {
-        Assert.assertNotNull(TablePool.getInstance());
+        assertThat(TablePool.getInstance()).isNotNull();
     }
 
     @Test
     public void testGetDomainlistTable() throws IOException {
-        Assert.assertNotNull(TablePool.getInstance().getDomainlistTable());
+        assertThat(TablePool.getInstance().getDomainlistTable()).isNotNull();
     }
 
     @Test
     public void testGetRecipientRewriteTable() throws IOException {
-        Assert.assertNotNull(TablePool.getInstance().getRecipientRewriteTable());
+        assertThat(TablePool.getInstance().getRecipientRewriteTable()).isNotNull();
     }
 
     @Test
     public void testGetUsersRepositoryTable() throws IOException {
-        Assert.assertNotNull(TablePool.getInstance().getUsersRepositoryTable());
+        assertThat(TablePool.getInstance().getUsersRepositoryTable()).isNotNull();
     }
 }

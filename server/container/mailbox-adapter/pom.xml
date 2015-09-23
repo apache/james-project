@@ -90,7 +90,6 @@
             <artifactId>apache-james-mailbox-store</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${mailbox.version}</version>
         </dependency>
     </dependencies>
 

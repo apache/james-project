@@ -54,7 +54,7 @@ public class DefaultQuotaRootResolverTest {
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
-        mockedFactory = (MailboxSessionMapperFactory<TestId>) mock(MailboxSessionMapperFactory.class);
+        mockedFactory = mock(MailboxSessionMapperFactory.class);
         testee = new DefaultQuotaRootResolver(mockedFactory);
     }
 

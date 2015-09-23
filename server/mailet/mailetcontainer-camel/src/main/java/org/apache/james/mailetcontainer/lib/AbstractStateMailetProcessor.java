@@ -256,7 +256,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * @throws MessagingException
      * @throws NotCompliantMBeanException
      */
-    @SuppressWarnings("unchecked")
     private List<Matcher> loadCompositeMatchers(String state, Map<String, Matcher> compMap, List<HierarchicalConfiguration> compMatcherConfs) throws ConfigurationException, MessagingException {
         List<Matcher> matchers = new ArrayList<Matcher>();
 
@@ -305,7 +304,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         return matchers;
     }
 
-    @SuppressWarnings("unchecked")
     private void parseConfiguration() throws MessagingException, ConfigurationException {
 
         // load composite matchers if there are any

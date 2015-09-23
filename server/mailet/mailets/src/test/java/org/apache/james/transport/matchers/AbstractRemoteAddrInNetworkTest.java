@@ -75,7 +75,7 @@ public abstract class AbstractRemoteAddrInNetworkTest {
             }
 
             @Override
-            public void setRecipients(Collection recipients) {
+            public void setRecipients(Collection<MailAddress> recipients) {
                 throw new UnsupportedOperationException("Unimplemented mock service");
             }
 
@@ -125,7 +125,7 @@ public abstract class AbstractRemoteAddrInNetworkTest {
             }
 
             @Override
-            public Iterator getAttributeNames() {
+            public Iterator<String> getAttributeNames() {
                 throw new UnsupportedOperationException("Unimplemented mock service");
             }
 

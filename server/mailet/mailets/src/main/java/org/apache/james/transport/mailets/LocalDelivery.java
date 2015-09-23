@@ -19,17 +19,13 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
-import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
@@ -37,6 +33,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  * Receives a Mail from the Queue and takes care of delivery of the
@@ -130,15 +129,11 @@ public class LocalDelivery extends GenericMailet {
             }
 
             public Iterator<String> getInitParameterNames() {
-                IteratorChain c = new IteratorChain();
-                Collection<String> h = new ArrayList<String>();
-                h.add("addDeliveryHeader");
-                h.add("resetReturnPath");
-                c.addIterator(getMailetConfig().getInitParameterNames());
-                c.addIterator(h.iterator());
-                return c;
+                return Iterators.concat(
+                        getMailetConfig().getInitParameterNames(), 
+                        Lists.newArrayList("addDeliveryHeader", "resetReturnPath").iterator());
             }
-
+            
             public MailetContext getMailetContext() {
                 return getMailetConfig().getMailetContext();
             }

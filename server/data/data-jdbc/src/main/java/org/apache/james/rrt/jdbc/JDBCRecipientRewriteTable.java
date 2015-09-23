@@ -181,10 +181,6 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             throw new ConfigurationException(exceptionBuffer);
         }
 
-        if (urlParams.size() >= 1) {
-            String dataSourceName = urlParams.get(0);
-        }
-
         if (urlParams.size() >= 2) {
             tableName = urlParams.get(1);
         }

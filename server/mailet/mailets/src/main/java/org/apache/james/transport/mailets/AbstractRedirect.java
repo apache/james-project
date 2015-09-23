@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import com.google.common.base.Throwables;
+
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
@@ -38,6 +39,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.UnknownHostException;
@@ -226,7 +228,7 @@ public abstract class AbstractRedirect extends GenericMailet {
     private int attachmentType = NONE;
     private int inLineType = BODY;
     private String messageText;
-    private Collection recipients;
+    private Collection<MailAddress> recipients;
     private MailAddress replyTo;
     private MailAddress reversePath;
     private MailAddress sender;
@@ -419,8 +421,8 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.RECIPIENTS</code> or <code>null</code> if
      *         missing
      */
-    protected Collection getRecipients() throws MessagingException {
-        Collection newRecipients = new HashSet();
+    protected Collection<MailAddress> getRecipients() throws MessagingException {
+        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
         String addressList = getInitParameter("recipients");
 
         // if nothing was specified, return <code>null</code> meaning no change
@@ -455,8 +457,8 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #replaceMailAddresses} on {@link #getRecipients()},
      */
-    protected Collection getRecipients(Mail originalMail) throws MessagingException {
-        Collection recipients = (isStatic()) ? this.recipients : getRecipients();
+    protected Collection<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
+        Collection<MailAddress> recipients = (isStatic()) ? this.recipients : getRecipients();
         if (recipients != null) {
             if (recipients.size() == 1 && (recipients.contains(SpecialAddress.UNALTERED) || recipients.contains(SpecialAddress.RECIPIENTS))) {
                 recipients = null;
@@ -471,7 +473,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * Sets the recipients of <i>newMail</i> to <i>recipients</i>. If the
      * requested value is null does nothing. Is a "setX(Mail, Tx, Mail)" method.
      */
-    protected void setRecipients(Mail newMail, Collection recipients, Mail originalMail) {
+    protected void setRecipients(Mail newMail, Collection<MailAddress> recipients, Mail originalMail) {
         if (recipients != null) {
             newMail.setRecipients(recipients);
             if (isDebug) {
@@ -534,15 +536,15 @@ public abstract class AbstractRedirect extends GenericMailet {
             if (apparentlyTo.length == 1 && (apparentlyTo[0].equals(SpecialAddress.UNALTERED.toInternetAddress()) || apparentlyTo[0].equals(SpecialAddress.TO.toInternetAddress()))) {
                 apparentlyTo = null;
             } else {
-                Collection toList = new ArrayList(apparentlyTo.length);
+                Collection<InternetAddress> toList = new ArrayList<InternetAddress>(apparentlyTo.length);
                 Collections.addAll(toList, apparentlyTo);
                 /*
                  * IMPORTANT: setTo() treats null differently from a zero length
                  * array, so it's ok to get a zero length array from
                  * replaceSpecialAddresses
                  */
-                Collection var = replaceInternetAddresses(originalMail, toList);
-                apparentlyTo = (InternetAddress[]) var.toArray(new InternetAddress[var.size()]);
+                Collection<InternetAddress> var = replaceInternetAddresses(originalMail, toList);
+                apparentlyTo = var.toArray(new InternetAddress[var.size()]);
             }
         }
 
@@ -1079,7 +1081,8 @@ public abstract class AbstractRedirect extends GenericMailet {
      * headers
      */
     protected String getMessageHeaders(MimeMessage message) throws MessagingException {
-        Enumeration heads = message.getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> heads = message.getAllHeaderLines();
         StringBuilder headBuffer = new StringBuilder(1024);
         while (heads.hasMoreElements()) {
             headBuffer.append(heads.nextElement().toString()).append("\r\n");
@@ -1109,7 +1112,8 @@ public abstract class AbstractRedirect extends GenericMailet {
 
         // Copy the relevant headers
         String[] relevantHeaderNames = {RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH};
-        Enumeration headerEnum = originalMessage.getMatchingHeaderLines(relevantHeaderNames);
+        @SuppressWarnings("unchecked")
+        Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(relevantHeaderNames);
         while (headerEnum.hasMoreElements()) {
             newMessage.addHeaderLine((String) headerEnum.nextElement());
         }
@@ -1431,8 +1435,8 @@ public abstract class AbstractRedirect extends GenericMailet {
      * <code>SpecialAddress.UNALTERED</code> are ignored.<br>
      * Any other address is not replaced.
      */
-    protected Collection replaceMailAddresses(Mail mail, Collection list) {
-        Collection newList = new HashSet(list.size());
+    protected Collection<MailAddress> replaceMailAddresses(Mail mail, Collection<MailAddress> list) {
+        Collection<MailAddress> newList = new HashSet<MailAddress>(list.size());
         for (Object aList : list) {
             MailAddress mailAddress = (MailAddress) aList;
             if (!mailAddress.getDomain().equalsIgnoreCase("address.marker")) {
@@ -1501,10 +1505,9 @@ public abstract class AbstractRedirect extends GenericMailet {
      * <code>SpecialAddress.UNALTERED</code> is ignored.<br>
      * Any other address is not replaced.<br>
      */
-    protected Collection replaceInternetAddresses(Mail mail, Collection list) throws MessagingException {
-        Collection newList = new HashSet(list.size());
-        for (Object aList : list) {
-            InternetAddress internetAddress = (InternetAddress) aList;
+    protected Collection<InternetAddress> replaceInternetAddresses(Mail mail, Collection<InternetAddress> list) throws MessagingException {
+        Collection<InternetAddress> newList = new HashSet<InternetAddress>(list.size());
+        for (InternetAddress internetAddress : list) {
             MailAddress mailAddress = new MailAddress(internetAddress);
             if (!mailAddress.getDomain().equalsIgnoreCase("address.marker")) {
                 newList.add(internetAddress);

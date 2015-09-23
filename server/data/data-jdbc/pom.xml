@@ -28,7 +28,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james</groupId>
     <artifactId>james-server-data-jdbc</artifactId>
     <packaging>bundle</packaging>
 

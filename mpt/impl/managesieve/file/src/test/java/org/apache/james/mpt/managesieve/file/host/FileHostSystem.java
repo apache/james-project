@@ -1,18 +1,17 @@
 package org.apache.james.mpt.managesieve.file.host;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mpt.host.JamesManageSieveHostSystem;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.file.SieveFileRepository;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.memory.MemoryUsersRepository;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mpt.host.JamesManageSieveHostSystem;
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.file.SieveFileRepository;
+import org.apache.james.user.memory.MemoryUsersRepository;
 
 public class FileHostSystem extends JamesManageSieveHostSystem {
 

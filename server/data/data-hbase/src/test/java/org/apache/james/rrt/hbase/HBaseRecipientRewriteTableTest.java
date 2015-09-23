@@ -19,13 +19,13 @@
 package org.apache.james.rrt.hbase;
 
 import java.io.IOException;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.system.hbase.TablePool;
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
 
@@ -37,10 +37,6 @@ import org.slf4j.LoggerFactory;
  */
 public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
-    /**
-     * The Logger.
-     */
-    private static Logger logger = Logger.getLogger(HBaseRecipientRewriteTableTest.class);
     private static final HBaseClusterSingleton cluster = HBaseClusterSingleton.build();
 
     @Before

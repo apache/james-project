@@ -165,7 +165,6 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
      *
      * @throws MailboxException
      */
-    @SuppressWarnings("rawtypes")
     @PostConstruct
     public void init() throws MailboxException {
         // The dispatcher need to have the delegating listener added
@@ -175,7 +174,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
             index = new SimpleMessageSearchIndex<Id>(mailboxSessionMapperFactory);
         }
         if (index instanceof ListeningMessageSearchIndex) {
-            this.addGlobalListener((ListeningMessageSearchIndex) index, null);
+            this.addGlobalListener((MailboxListener) index, null);
         }
 
         if (idGenerator == null) {

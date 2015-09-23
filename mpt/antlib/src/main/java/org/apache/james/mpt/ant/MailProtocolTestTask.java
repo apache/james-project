@@ -201,8 +201,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
             throw new BuildException("Scripts can be specified either by the script attribute or as resource collections but not both."); 
         }
         
-        for(final Iterator it=users.iterator();it.hasNext();) {
-            final AddUser user = (AddUser) it.next();
+        for(AddUser user: users) {
             user.validate();
         }
         
@@ -229,8 +228,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
     }
     
     private void doExecute() throws BuildException {
-        for (final Iterator it=users.iterator();it.hasNext();) {
-            final AddUser userAdder = (AddUser) it.next();
+        for (AddUser userAdder: users) {
             userAdder.execute();
         }
         
@@ -242,7 +240,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
             scripts.add(new FileResource(script));
         }
         
-        for (final Iterator it=scripts.iterator();it.hasNext();) {
+        for (final Iterator<?> it = scripts.iterator(); it.hasNext();) {
             final Resource resource = (Resource) it.next();
             try {
                 final Runner runner = new Runner();

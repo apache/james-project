@@ -333,7 +333,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
                     messageRowKey(mailbox.getMailboxId(), 0));
             scan.addFamily(MESSAGES_META_CF);
             scan.setFilter(new SingleColumnValueExcludeFilter(MESSAGES_META_CF, FLAGS_SEEN, CompareOp.EQUAL, MARKER_MISSING));
-            scan.setCaching(messages.getScannerCaching() * 2);
+            scan.setCaching(messages.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             scanner = messages.getScanner(scan);
             long count = 0;
@@ -405,7 +405,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             // filter out all rows with FLAGS_SEEN qualifier
             SingleColumnValueFilter filter = new SingleColumnValueFilter(MESSAGES_META_CF, FLAGS_SEEN, CompareOp.EQUAL, MARKER_MISSING);
             scan.setFilter(filter);
-            scan.setCaching(messages.getScannerCaching() * 2);
+            scan.setCaching(messages.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             scanner = messages.getScanner(scan);
             Result result;
@@ -448,7 +448,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             scan.addColumn(MESSAGES_META_CF, FLAGS_RECENT);
             SingleColumnValueFilter filter = new SingleColumnValueFilter(MESSAGES_META_CF, FLAGS_RECENT, CompareOp.EQUAL, MARKER_PRESENT);
             scan.setFilter(filter);
-            scan.setCaching(messages.getScannerCaching() * 2);
+            scan.setCaching(messages.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
 
             scanner = messages.getScanner(scan);

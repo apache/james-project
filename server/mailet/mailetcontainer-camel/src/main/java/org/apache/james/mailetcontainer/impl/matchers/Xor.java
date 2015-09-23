@@ -38,15 +38,15 @@ public class Xor extends GenericCompositeMatcher {
      * @return Collection of Recipients from the Xor composition of the child
      *         matchers.
      */
-    public Collection match(Mail mail) throws MessagingException {
-        Collection finalResult = null;
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        Collection<MailAddress> finalResult = null;
         Matcher matcher;
         boolean first = true;
-        for (Iterator matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = (Matcher) (matcherIter.next());
-            Collection result = matcher.match(mail);
+        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
+            matcher = matcherIter.next();
+            Collection<MailAddress> result = matcher.match(mail);
             if (result == null) {
-                result = new ArrayList(0);
+                result = new ArrayList<MailAddress>(0);
             }
             // log("Matching with " +
             // matcher.getMatcherConfig().getMatcherName() +

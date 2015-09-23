@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -1334,8 +1333,8 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      */
     private Object invokeGetter(Object target, String getter) {
         try {
-            Method getAddress = target.getClass().getMethod(getter, null);
-            return getAddress.invoke(target, null);
+            Method getAddress = target.getClass().getMethod(getter);
+            return getAddress.invoke(target);
         } catch (NoSuchMethodException nsme) {
             // An SMTPAddressFailedException with no getAddress method.
         } catch (IllegalAccessException iae) {

@@ -42,15 +42,14 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     private class Consumer implements Runnable {
 
-        private KafkaStream m_stream;
+        private KafkaStream<byte[], byte[]> m_stream;
 
-        public Consumer(KafkaStream a_stream) {
+        public Consumer(KafkaStream<byte[], byte[]> a_stream) {
             m_stream = a_stream;
         }
 
-        @SuppressWarnings("unchecked")
         public void run() {
-            for (MessageAndMetadata<byte[], byte[]> aM_stream : (Iterable<MessageAndMetadata<byte[], byte[]>>) m_stream) {
+            for (MessageAndMetadata<byte[], byte[]> aM_stream : m_stream) {
                 messageReceiver.receiveSerializedEvent(aM_stream.message());
             }
         }
@@ -112,9 +111,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
     }
 
     private void startConsuming(List<KafkaStream<byte[], byte[]>> streams) {
-        for (final KafkaStream stream : streams) {
-            executor.submit(new Consumer(stream));
-        }
+        streams.forEach(stream -> executor.submit(new Consumer(stream)));
     }
 
     private ConsumerConfig createConsumerConfig(String zookeeperConnectionString, String groupId) {

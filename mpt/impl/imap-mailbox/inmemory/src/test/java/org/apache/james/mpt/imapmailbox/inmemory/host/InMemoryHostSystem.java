@@ -85,7 +85,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         perUserMaxQuotaManager.setDefaultMaxStorage(5L * 1024L * 1024L * 1024L);
 
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator(factory, quotaRootResolver),
+            new CurrentQuotaCalculator<InMemoryId>(factory, quotaRootResolver),
             mailboxManager);
 
         StoreQuotaManager quotaManager = new StoreQuotaManager();

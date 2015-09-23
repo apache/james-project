@@ -54,7 +54,7 @@ public class MockMatcher implements Matcher {
     }
 
     @Override
-    public Collection match(Mail mail) throws MessagingException {
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
         List<MailAddress> match = new ArrayList<MailAddress>();
 
         Iterator<MailAddress> rcpts = mail.getRecipients().iterator();

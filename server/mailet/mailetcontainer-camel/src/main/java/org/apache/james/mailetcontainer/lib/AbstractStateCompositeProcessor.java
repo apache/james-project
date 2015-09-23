@@ -160,7 +160,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         }
     }
 
-    @SuppressWarnings("unchecked")
     @PostConstruct
     public void init() throws Exception {
         List<HierarchicalConfiguration> processorConfs = config.configurationsAt("processor");

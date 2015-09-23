@@ -28,7 +28,6 @@ import org.apache.james.imap.decode.DelegatingImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.MessagingImapCommandParser;
-import org.apache.james.imap.processor.GetQuotaRootProcessor;
 
 /**
  * A factory for ImapCommand instances, provided based on the command name.

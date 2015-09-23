@@ -178,7 +178,7 @@ public class MailetContextLog implements Logger {
     /**
      * Do nothing
      */
-    public void trace(String format, Object[] argArray) {
+    public void trace(String format, Object... argArray) {
     }
 
     /**
@@ -215,7 +215,7 @@ public class MailetContextLog implements Logger {
     /**
      * Do nothing
      */
-    public void trace(Marker marker, String format, Object[] argArray) {
+    public void trace(Marker marker, String format, Object... argArray) {
     }
 
     /**
@@ -246,7 +246,7 @@ public class MailetContextLog implements Logger {
     /**
      * @see org.slf4j.Logger#debug(java.lang.String, java.lang.Object[])
      */
-    public void debug(String format, Object[] argArray) {
+    public void debug(String format, Object... argArray) {
         if (isDebug) {
             debugLog(format, argArray);
         }
@@ -292,7 +292,7 @@ public class MailetContextLog implements Logger {
      * @see org.slf4j.Logger#debug(org.slf4j.Marker, java.lang.String,
      * java.lang.Object[])
      */
-    public void debug(Marker marker, String format, Object[] argArray) {
+    public void debug(Marker marker, String format, Object... argArray) {
         if (isDebug) {
             debugLog(marker, format, argArray);
         }
@@ -326,7 +326,7 @@ public class MailetContextLog implements Logger {
     /**
      * @see org.slf4j.Logger#info(java.lang.String, java.lang.Object[])
      */
-    public void info(String format, Object[] argArray) {
+    public void info(String format, Object... argArray) {
         infoLog(format, argArray);
     }
 
@@ -364,7 +364,7 @@ public class MailetContextLog implements Logger {
      * @see org.slf4j.Logger#info(org.slf4j.Marker, java.lang.String,
      * java.lang.Object[])
      */
-    public void info(Marker marker, String format, Object[] argArray) {
+    public void info(Marker marker, String format, Object... argArray) {
         infoLog(marker, format, argArray);
     }
 
@@ -386,7 +386,7 @@ public class MailetContextLog implements Logger {
     /**
      * @see org.slf4j.Logger#warn(java.lang.String, java.lang.Object[])
      */
-    public void warn(String format, Object[] argArray) {
+    public void warn(String format, Object... argArray) {
         warnLog(format, argArray);
     }
 
@@ -432,7 +432,7 @@ public class MailetContextLog implements Logger {
      * @see org.slf4j.Logger#warn(org.slf4j.Marker, java.lang.String,
      * java.lang.Object[])
      */
-    public void warn(Marker marker, String format, Object[] argArray) {
+    public void warn(Marker marker, String format, Object... argArray) {
         warnLog(marker, format, argArray);
     }
 
@@ -462,7 +462,7 @@ public class MailetContextLog implements Logger {
     /**
      * @see org.slf4j.Logger#error(java.lang.String, java.lang.Object[])
      */
-    public void error(String format, Object[] argArray) {
+    public void error(String format, Object... argArray) {
         errorLog(format, argArray);
     }
 
@@ -500,7 +500,7 @@ public class MailetContextLog implements Logger {
      * @see org.slf4j.Logger#error(org.slf4j.Marker, java.lang.String,
      * java.lang.Object[])
      */
-    public void error(Marker marker, String format, Object[] argArray) {
+    public void error(Marker marker, String format, Object... argArray) {
         errorLog(marker, format, argArray);
     }
 
@@ -534,13 +534,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.DEBUG, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.DEBUG, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.DEBUG, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.DEBUG, s.toString());
         }
     }
 
@@ -565,13 +561,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.DEBUG, s.toString(), t);
-            context.log(s.toString(), t);
+             context.log(MailetContext.LogLevel.DEBUG, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.DEBUG, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.DEBUG, s.toString());
         }
     }
 
@@ -597,13 +589,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.ERROR, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.ERROR, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.ERROR, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.ERROR, s.toString());
         }
     }
 
@@ -628,13 +616,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.ERROR, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.ERROR, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.ERROR, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.ERROR, s.toString());
         }
     }
 
@@ -660,13 +644,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.INFO, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.INFO, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.INFO, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.INFO, s.toString());
         }
     }
 
@@ -691,13 +671,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.INFO, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.INFO, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.INFO, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.INFO, s.toString());
         }
     }
 
@@ -723,13 +699,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.WARN, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.WARN, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.WARN, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.WARN, s.toString());
         }
     }
 
@@ -754,13 +726,9 @@ public class MailetContextLog implements Logger {
             s.append("]");
         }
         if (t != null) {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.WARN, s.toString(), t);
-            context.log(s.toString(), t);
+            context.log(MailetContext.LogLevel.WARN, s.toString(), t);
         } else {
-            // TODO Use with apache-mailet-2.5
-            // context.log(MailetContext.LogLevel.WARN, s.toString());
-            context.log(s.toString());
+            context.log(MailetContext.LogLevel.WARN, s.toString());
         }
     }
 }

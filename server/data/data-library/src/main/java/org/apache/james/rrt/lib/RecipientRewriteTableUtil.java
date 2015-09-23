@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -29,8 +27,6 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.mailet.MailAddress;
-
-import com.google.common.base.Joiner;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations

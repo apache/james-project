@@ -43,7 +43,7 @@ public class XorTest extends BaseMatchersTest {
         setupChild("RecipientIsRegex=test@james.apache.org");
         setupChild("RecipientIsRegex=test@james.apache.org");
 
-        Collection matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
         assertEquals(0, matchedRecipients.size());
@@ -54,12 +54,12 @@ public class XorTest extends BaseMatchersTest {
         setupChild("RecipientIsRegex=test@james.apache.org");
         setupChild("RecipientIsRegex=test2@james.apache.org");
 
-        Collection matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
         assertEquals(2, matchedRecipients.size());
 
-        Iterator iterator = matchedRecipients.iterator();
+        Iterator<MailAddress> iterator = matchedRecipients.iterator();
         MailAddress address = (MailAddress) iterator.next();
         assertEquals(address, "test@james.apache.org");
         address = (MailAddress) iterator.next();

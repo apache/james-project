@@ -199,7 +199,8 @@ public class MimeMessageUtil {
      */
     private static void writeHeadersTo(MimeMessage message, OutputStream headerOs, String[] ignoreList) throws MessagingException {
         // Write the headers (minus ignored ones)
-        Enumeration headers = message.getNonMatchingHeaderLines(ignoreList);
+        @SuppressWarnings("unchecked")
+        Enumeration<String> headers = message.getNonMatchingHeaderLines(ignoreList);
         writeHeadersTo(headers, headerOs);
     }
 
@@ -212,8 +213,7 @@ public class MimeMessageUtil {
      *            the OutputStream to which the headers get written
      * @throws MessagingException
      */
-    @SuppressWarnings("unchecked")
-    public static void writeHeadersTo(Enumeration headers, OutputStream headerOs) throws MessagingException {
+    public static void writeHeadersTo(Enumeration<String> headers, OutputStream headerOs) throws MessagingException {
         try {
             IOUtils.copy(new InternetHeadersInputStream(headers), headerOs);
         } catch (IOException e) {
@@ -302,7 +302,7 @@ public class MimeMessageUtil {
         // messages each time).
         size = message.getSize();
         if (size != -1) {
-            Enumeration e = message.getAllHeaderLines();
+            Enumeration<?> e = message.getAllHeaderLines();
             if (e.hasMoreElements()) {
                 size += 2;
             }

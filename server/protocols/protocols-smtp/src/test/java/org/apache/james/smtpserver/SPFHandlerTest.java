@@ -64,7 +64,7 @@ public class SPFHandlerTest {
         mockedDnsService = new DNSService() {
 
             @Override
-            public List getLocalDomainNames() {
+            public List<String> getLocalDomainNames() {
                 throw new UnsupportedOperationException("Unimplemented mock service");
             }
 
@@ -84,11 +84,11 @@ public class SPFHandlerTest {
             }
 
             @Override
-            public List getRecords(DNSRequest req) throws TimeoutException {
+            public List<String> getRecords(DNSRequest req) throws TimeoutException {
                 switch (req.getRecordType()) {
                     case DNSRequest.TXT:
                     case DNSRequest.SPF:
-                        List l = new ArrayList();
+                        List<String> l = new ArrayList<String>();
                         if (req.getHostname().equals("spf1.james.apache.org")) {
                             // pass
                             l.add("v=spf1 +all");
@@ -151,10 +151,6 @@ public class SPFHandlerTest {
                 } else {
                     return sstate.get(key);
                 }
-            }
-
-            public String getRemoteIPAddress() {
-                return ip;
             }
 
             @Override

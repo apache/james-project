@@ -28,7 +28,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james</groupId>
     <artifactId>james-server-util</artifactId>
     <packaging>bundle</packaging>
 
@@ -38,6 +37,10 @@
         <dependency>
             <groupId>${javax.mail.groupId}</groupId>
             <artifactId>${javax.mail.artifactId}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

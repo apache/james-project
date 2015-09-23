@@ -20,7 +20,6 @@
 package org.apache.james.jmap.methods;
 
 import org.apache.james.jmap.model.ClientId;
-import org.apache.james.jmap.model.ProtocolRequest;
 
 import com.google.common.annotations.VisibleForTesting;
 

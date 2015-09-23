@@ -89,6 +89,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
+            @SuppressWarnings("unchecked")
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery(queryName).setParameter("user", user).setParameter("domain", domain).getResultList();
             transaction.commit();
             if (virtualUsers.size() > 0) {
@@ -115,6 +116,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
+            @SuppressWarnings("unchecked")
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectUserDomainMapping").setParameter("user", user).setParameter("domain", domain).getResultList();
             transaction.commit();
             if (virtualUsers.size() > 0) {
@@ -143,6 +145,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         Map<String, Mappings> mapping = new HashMap<String, Mappings>();
         try {
             transaction.begin();
+            @SuppressWarnings("unchecked")
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectAllMappings").getResultList();
             transaction.commit();
             for (JPARecipientRewrite virtualUser : virtualUsers) {
@@ -223,7 +226,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            int deleted = entityManager.createNamedQuery("deleteMapping").setParameter("user", user).setParameter("domain", domain).setParameter("targetAddress", mapping).executeUpdate();
+            entityManager.createNamedQuery("deleteMapping").setParameter("user", user).setParameter("domain", domain).setParameter("targetAddress", mapping).executeUpdate();
             transaction.commit();
 
         } catch (PersistenceException e) {

@@ -57,7 +57,6 @@ public class SMTPServerFactory extends AbstractServerFactory {
        return new SMTPServer();
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception{
         

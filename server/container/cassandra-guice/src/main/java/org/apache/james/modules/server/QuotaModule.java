@@ -25,13 +25,14 @@ import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 public class QuotaModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(QuotaManager.class).to(NoQuotaManager.class);
-        bind(QuotaRootResolver.class).to(DefaultQuotaRootResolver.class);
+        bind(QuotaRootResolver.class).to(DefaultQuotaRootResolver.class).in(Scopes.SINGLETON);;
     }
     
 }

@@ -490,7 +490,8 @@ public abstract class AbstractSign extends GenericMailet {
             
             MimeMessage newMessage = new MimeMessage(Session.getDefaultInstance(System.getProperties(),
             null));
-            Enumeration headerEnum = originalMessage.getAllHeaderLines();
+            @SuppressWarnings("unchecked")
+            Enumeration<String> headerEnum = originalMessage.getAllHeaderLines();
             while (headerEnum.hasMoreElements()) {
                 newMessage.addHeaderLine((String) headerEnum.nextElement());
             }
@@ -650,7 +651,8 @@ public abstract class AbstractSign extends GenericMailet {
      * @return The string containing the headers.
      */
     protected final String getMessageHeaders(MimeMessage message) throws MessagingException {
-        Enumeration heads = message.getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> heads = message.getAllHeaderLines();
         StringBuilder headBuffer = new StringBuilder(1024);
         while(heads.hasMoreElements()) {
             headBuffer.append(heads.nextElement().toString()).append("\r\n");

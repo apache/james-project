@@ -71,7 +71,7 @@ public class InMemoryIntegrationResources implements IntegrationResources {
         QuotaRootResolver quotaRootResolver =  createQuotaRootResolver(mailboxManager);
 
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator(((StoreMailboxManager<InMemoryId>)mailboxManager).getMapperFactory(), quotaRootResolver),
+            new CurrentQuotaCalculator<InMemoryId>(((StoreMailboxManager<InMemoryId>)mailboxManager).getMapperFactory(), quotaRootResolver),
             mailboxManager
         );
 

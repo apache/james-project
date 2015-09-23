@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -55,6 +56,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(new TypeLiteral<MessageMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
         bind(new TypeLiteral<MailboxMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
         bind(new TypeLiteral<MailboxSessionMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
+        bind(new TypeLiteral<MailboxSessionMapperFactory<? extends MailboxId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
         bind(new TypeLiteral<ModSeqProvider<CassandraId>>(){}).to(new TypeLiteral<CassandraModSeqProvider>(){});
         bind(new TypeLiteral<UidProvider<CassandraId>>(){}).to(new TypeLiteral<CassandraUidProvider>(){});
 

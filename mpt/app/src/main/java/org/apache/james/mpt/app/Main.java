@@ -89,7 +89,6 @@ public class Main {
         }
     }
 
-    @SuppressWarnings("static-access")
     private static Options buildOptions() {
         final Options options = new Options();
         

@@ -35,7 +35,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
  * Maintain mapper instances by {@link MailboxSession}. So only one mapper instance is used
  * in a {@link MailboxSession}
  */
-public abstract class MailboxSessionMapperFactory <Id extends MailboxId> implements RequestAware, MailboxMapperFactory<Id>, MessageMapperFactory<Id>, SubscriptionMapperFactory{
+public abstract class MailboxSessionMapperFactory<Id extends MailboxId> implements RequestAware, MailboxMapperFactory<Id>, MessageMapperFactory<Id>, SubscriptionMapperFactory{
 
     protected final static String MESSAGEMAPPER ="MESSAGEMAPPER";
     protected final static String MAILBOXMAPPER ="MAILBOXMAPPER";

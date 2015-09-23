@@ -72,7 +72,12 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         mailboxManager = new StoreMailboxManager<MaildirId>(mailboxSessionMapperFactory, userManager, locker, aclResolver, groupMembershipResolver);
         mailboxManager.init();
 
-        final ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, sm, new NoQuotaManager(), new DefaultQuotaRootResolver(mailboxSessionMapperFactory));
+        final ImapProcessor defaultImapProcessorFactory = 
+                DefaultImapProcessorFactory.createDefaultProcessor(
+                        mailboxManager, 
+                        sm, 
+                        new NoQuotaManager(), 
+                        new DefaultQuotaRootResolver(mailboxSessionMapperFactory));
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);

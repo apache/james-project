@@ -127,8 +127,8 @@ public class Bounce extends AbstractNotify {
      * @return <code>SpecialAddress.REVERSE_PATH</code>
      */
     @Override
-    protected Collection getRecipients() {
-        Collection newRecipients = new HashSet();
+    protected Collection<MailAddress> getRecipients() {
+        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
         newRecipients.add(SpecialAddress.REVERSE_PATH);
         return newRecipients;
     }

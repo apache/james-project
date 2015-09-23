@@ -51,12 +51,12 @@ public class RecordingMailContext extends FakeMailContext {
     }
 
     @Override
-    public void sendMail(MailAddress sender, Collection recipients, MimeMessage msg) throws MessagingException {
+    public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
         sendmails.add(new SendMailEvent(msg, sender, recipients));
     }
 
     @Override
-    public void sendMail(MailAddress sender, Collection recipients, MimeMessage msg, String state) throws MessagingException {
+    public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, String state) throws MessagingException {
         sendmails.add(new SendMailEvent(msg, sender, recipients, state));
     }
 

@@ -48,7 +48,7 @@ public class MailImplTest extends MailTestAllImplementations {
 
     @Test
     public void testConstr2() throws MessagingException {
-        ArrayList recepients = new ArrayList();
+        ArrayList<MailAddress> recepients = new ArrayList<MailAddress>();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);
@@ -66,7 +66,7 @@ public class MailImplTest extends MailTestAllImplementations {
 
     @Test
     public void testConstr3() throws MessagingException {
-        ArrayList recepients = new ArrayList();
+        ArrayList<MailAddress> recepients = new ArrayList<MailAddress>();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);
