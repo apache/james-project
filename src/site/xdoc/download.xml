@@ -208,13 +208,13 @@ Do not promote snapshots, See JAMES-1558
     
     </subsection>
     
-    <subsection name="Apache James 2.3.2 is the stable version">
+    <subsection name="Apache James 2.3.2.1 is the stable version">
     
       <p>This release has many enhancements and bug fixes over the previous
       release.  See the <a
       href="http://james.apache.org/server/2/release-notes.html">Release Notes</a>
       for a detailed list of changes.  Some of the earlier defects could
-      turn a James mail server into an Open Relay.  All users of James Server are urged to upgrade to version v2.3.1 as soon as
+      turn a James mail server into an Open Relay and allow files to be written on disk.  All users of James Server are urged to upgrade to version v2.3.2.1 as soon as
       possible.</p>
 
       <div class="ui-widget">
@@ -235,20 +235,20 @@ Do not promote snapshots, See JAMES-1558
       <ul>
       
         <li>Binary (Unix TAR): <a
-            href="[preferred]/james/server/apache-james-2.3.2.tar.gz">james-binary-2.3.2.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/server/apache-james-2.3.2.tar.gz.asc">PGP</a>]</li>
+            href="[preferred]/james/server/james-binary-2.3.2.1.tar.gz">james-binary-2.3.2.1.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/server/james-binary-2.3.2.1.tar.gz.asc">PGP</a>]</li>
       
         <li>Binary (ZIP Format): <a
-            href="[preferred]/james/server/apache-james-2.3.2.zip">james-binary-2.3.2.zip</a> [<a
-            href="http://www.apache.org/dist/james/server/apache-james-2.3.2.zip.asc">PGP</a>]</li>
+            href="[preferred]/james/server/james-binary-2.3.2.1.zip">james-binary-2.3.2.1.zip</a> [<a
+            href="http://www.apache.org/dist/james/server/james-binary-2.3.2.1.zip.asc">PGP</a>]</li>
       
         <li>Source (Unix TAR): <a
-            href="[preferred]/james/server/apache-james-2.3.2-src.tar.gz">james-2.3.2-src.tar.gz</a> [<a
-            href="http://www.apache.org/dist/james/server/apache-james-2.3.2-src.tar.gz.asc">PGP</a>]</li>
+            href="[preferred]/james/server/james-2.3.2.1-src.tar.gz">james-2.3.2.1-src.tar.gz</a> [<a
+            href="http://www.apache.org/dist/james/server/james-2.3.2.1-src.tar.gz.asc">PGP</a>]</li>
       
           <li>Source (ZIP Format): <a
-              href="[preferred]/james/server/apache-james-2.3.2-src.zip">james-2.3.2-src.zip</a> [<a
-              href="http://www.apache.org/dist/james/server/apache-james-2.3.2-src.zip.asc">PGP</a>]</li>
+              href="[preferred]/james/server/james-2.3.2.1-src.zip">james-2.3.2.1-src.zip</a> [<a
+              href="http://www.apache.org/dist/james/server/james-2.3.2.1-src.zip.asc">PGP</a>]</li>
       
       </ul>
     

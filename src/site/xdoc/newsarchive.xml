@@ -34,7 +34,14 @@
         </div>
       </div>
 
-    <subsection name='2012'>
+   <subsection name='2015'>
+
+     <a name="20150926"><h4>Sep 2015 - Apache James Server 2.3.2.1 released</h4></a>
+     <p>This release fixes a security vulnerability - Users are invited to upgrade (read <a href="https://blogs.apache.org/james/entry/apache_james_server_2_3">annouce on the Apache James blog</a>).</p>
+
+   </subsection>
+
+   <subsection name='2012'>
 
       <a name="120607"><h4>Jun 2012 - Apache Hupa 0.0.2 released</h4></a>
         <p>The Java Apache Mail Enterprise Server Project is happy to announce 
