@@ -1,0 +1,97 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Create a few folders
+C: 10 CREATE listtest
+S: 10 OK CREATE completed.
+C: 11 CREATE listtest.subfolder
+S: 11 OK CREATE completed.
+C: 12 CREATE listtest1
+S: 12 OK CREATE completed.
+C: 13 CREATE listtest1.subfolder1
+S: 13 OK CREATE completed.
+C: 14 CREATE funny
+S: 14 OK CREATE completed.
+C: 15 CREATE "funny.name with gaps"
+S: 15 OK CREATE completed.
+C: 16 CREATE "funny.name"
+S: 16 OK CREATE completed.
+C: 17 CREATE "funny.name with gaps.more"
+S: 17 OK CREATE completed.
+
+# Empty 1st arg searches default context (#mail)
+C: 10 LIST "" listtest
+S: \* LIST \(\\HasChildren\) \"\.\" "listtest"
+S: 10 OK LIST completed.
+
+# % returns all mailboxes matching
+C: a1 LIST "" %
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" \"listtest\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"listtest1\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"funny\"
+}
+S: a1 OK LIST completed.
+
+C: a2 list "" funny.%
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" \"funny.name with gaps\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"funny.name\"
+}
+S: a2 OK LIST completed.
+
+C: a3 LIST "" *
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" \"listtest\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"listtest.subfolder\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"listtest1\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"listtest1.subfolder1\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"funny\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"funny.name with gaps\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"funny.name with gaps\.more\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"funny.name\"
+}
+S: a3 OK LIST completed.
+
+C: a4 LIST "" funny.*
+SUB {
+S: \* LIST \(\\HasChildren\) \"\.\" \"funny.name with gaps\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"funny.name with gaps\.more\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"funny.name\"
+}
+S: a4 OK LIST completed.
+
+# Cleanup
+C: 15 DELETE "funny.name with gaps.more"
+S: 15 OK DELETE completed.
+C: 15 DELETE "funny.name with gaps"
+S: 15 OK DELETE completed.
+C: 16 DELETE "funny.name"
+S: 16 OK DELETE completed.
+C: 14 DELETE funny
+S: 14 OK DELETE completed.
+C: a1 DELETE listtest1.subfolder1
+S: a1 OK DELETE completed.
+C: a1 DELETE listtest1
+S: a1 OK DELETE completed.
+C: a1 DELETE listtest.subfolder
+S: a1 OK DELETE completed.
+C: a1 DELETE listtest
+S: a1 OK DELETE completed.

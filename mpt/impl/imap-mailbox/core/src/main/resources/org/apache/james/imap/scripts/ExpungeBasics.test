@@ -1,0 +1,718 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+C: A2 CREATE testmailbox
+S: A2 OK CREATE completed.
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A3 OK \[READ-WRITE\] SELECT completed.
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C: 
+C: This is a very simple email.
+C: 
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A4 OK (\[.+\] )?APPEND completed.
+C: A5 APPEND testmailbox {704+}
+C: Received: by 10.114.81.13 with HTTP; Sat, 2 Feb 2008 05:14:19 -0800 (PST)
+C: Message-ID: <f470f68e0802020514m6eaba233u96a9021a2697a48d@mail.gmail.com>
+C: Date: Sat, 2 Feb 2008 13:14:19 +0000
+C: From: "Robert Burrell Donkin" <robertburrelldonkin@gmail.com>
+C: To: "James Developers List" <server-dev@james.apache.org>
+C: Subject: JCR -> trunk ...?
+C: MIME-Version: 1.0
+C: Content-Type: text/plain; charset=ISO-8859-1
+C: Content-Transfer-Encoding: 7bit
+C: Content-Disposition: inline
+C: Delivered-To: robertburrelldonkin@gmail.com
+C: 
+C: i'd like to copy james-jcr into trunk and add some example
+C: configurations. development can continue in the sandbox (or not) and
+C: merged in later (if necessary).
+C: 
+C: any objections?
+C: 
+C: - robert
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: A5 OK (\[.+\] )?APPEND completed.
+C: A6 APPEND testmailbox {668+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/alternative;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: applcation/xhtml+xml
+C: 
+C: <!DOCTYPE html
+C: PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+C: "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: text/html; charset=US-ASCII
+C: 
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729--
+C: 
+S: \* 3 EXISTS
+S: \* 3 RECENT
+S: A6 OK (\[.+\] )?APPEND completed.
+C: A7 APPEND testmailbox {1767+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/mixed;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: application/octet-stream
+C: Content-Transfer-Encoding: base64
+C: 
+C: 987654321AHPLA
+C: 
+C: --1729
+C: Content-Type: message/rfc822
+C: 
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Alternative Email
+C: Content-Type: multipart/alternative;boundary=42
+C: 
+C: This message has a premable
+C: 
+C: --42
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Custard!
+C: 
+C: --42
+C: Content-Type: application/octet-stream
+C: 
+C: CUSTARDCUSTARDCUSTARD
+C: 
+C: --42--
+C: 
+C: --1729
+C: Content-Type: multipart/mixed; boundary=4.66920160910299
+C: 
+C: --4.66920160910299
+C: Content-Type: image/gif
+C: Content-Transfer-Encoding: base64
+C: MIME-Version: 1.0
+C: Content-ID: 238478934723847238947892374
+C: Content-Description: Bogus Image Data
+C: 
+C: ABCDFEGHIJKLMNO
+C: 
+C: --4.66920160910299
+C: Content-Type: message/rfc822
+C: 
+C: From: Timothy Tayler <timothy@example.org>
+C: To: John Smith <john@example.org>
+C: Date: Sat, 16 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: Another Example Email
+C: Content-Type: multipart/mixed;boundary=2.50290787509
+C: 
+C: Yet another preamble
+C: 
+C: --2.50290787509
+C: Content-Type: text/plain
+C: 
+C: Rhubard AND Custard!
+C: 
+C: --2.50290787509
+C: Content-Type: multipart/alternative;boundary=3.243F6A8885A308D3
+C: 
+C: --3.243F6A8885A308D3
+C: Content-Type: text/plain
+C: 
+C: Rhubard?Custard?
+C: 
+C: --3.243F6A8885A308D3
+C: 
+C: Content-Type: text/richtext
+C: 
+C: Rhubard?Custard?
+C: 
+C: --3.243F6A8885A308D3--
+C: 
+C: --2.50290787509--
+C: 
+C: --4.66920160910299--
+C: --1729--
+C: 
+S: \* 4 EXISTS
+S: \* 4 RECENT
+S: A7 OK (\[.+\] )?APPEND completed.
+C: A8 APPEND testmailbox {185+}
+C: From: John Smith <john@example.org>
+C: To: Timothy Taylor <tim@example.org>
+C: Subject: Hello
+C: Date: Sat, 23 Feb 2008 07:48:03 -0600
+C: Message-ID: <1729@machine.example.org>
+C: 
+C: Hello, World!
+S: \* 5 EXISTS
+S: \* 5 RECENT
+S: A8 OK (\[.+\] )?APPEND completed.
+C: A9 APPEND testmailbox {3366+}
+C: Delivered-To: robertburrelldonkin@gmail.com
+C: Received: by 10.114.126.16 with SMTP id y16cs68962wac;
+C:         Tue, 11 Mar 2008 11:41:47 -0700 (PDT)
+C: Received: by 10.78.193.19 with SMTP id q19mr18798706huf.15.1205260904964;
+C:         Tue, 11 Mar 2008 11:41:44 -0700 (PDT)
+C: Return-Path: <robertburrelldonkin@blueyonder.co.uk>
+C: Received: from smtp-out4.blueyonder.co.uk (smtp-out4.blueyonder.co.uk [195.188.213.7])
+C:         by mx.google.com with ESMTP id c22si4019124ika.3.2008.03.11.11.41.42;
+C:         Tue, 11 Mar 2008 11:41:44 -0700 (PDT)
+C: Received-SPF: pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.7 as permitted sender) client-ip=195.188.213.7;
+C: Authentication-Results: mx.google.com; spf=pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.7 as permitted sender) smtp.mail=robertburrelldonkin@blueyonder.co.uk
+C: Received: from [172.23.170.136] (helo=anti-virus01-07)
+C: 	by smtp-out4.blueyonder.co.uk with smtp (Exim 4.52)
+C: 	id 1JZ9Px-0001OZ-VF
+C: 	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:41:42 +0000
+C: Received: from [82.38.65.6] (helo=[10.0.0.27])
+C: 	by asmtp-out1.blueyonder.co.uk with esmtpa (Exim 4.52)
+C: 	id 1JZ9Px-0007FO-G5
+C: 	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:41:41 +0000
+C: Subject: An HTML Email
+C: From: Robert Burrell Donkin <robertburrelldonkin@blueyonder.co.uk>
+C: To: robertburrelldonkin@gmail.com
+C: Content-Type: multipart/alternative; boundary="=-blWYb/063JwXox8nBGv5"
+C: Date: Tue, 11 Mar 2008 18:41:40 +0000
+C: Message-Id: <1205260900.7516.3.camel@localhost>
+C: Mime-Version: 1.0
+C: X-Mailer: Evolution 2.12.1 
+C: 
+C: 
+C: --=-blWYb/063JwXox8nBGv5
+C: Content-Type: text/plain
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: A Sonnet By William Shakespeare
+C: 
+C: 
+C: 
+C: Tired with all these, for restful death I cry,
+C: As to behold desert a beggar born,
+C: And needy nothing trimm'd in jollity,
+C: And purest faith unhappily forsworn,
+C: And gilded honour shamefully misplac'd,
+C: And maiden virtue rudely strumpeted,
+C: And right perfection wrongfully disgrac'd,
+C: And strength by limping sway disabled
+C: And art made tongue-tied by authority,
+C: And folly--doctor-like--controlling skill,
+C: And simple truth miscall'd simplicity,
+C: And captive good attending captain ill:
+C:   Tir'd with all these, from these would I be gone,
+C:   Save that, to die, I leave my love alone.
+C: 
+C: --=-blWYb/063JwXox8nBGv5
+C: Content-Type: text/html; charset=utf-8
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 TRANSITIONAL//EN">
+C: <HTML>
+C: <HEAD>
+C:   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; CHARSET=UTF-8">
+C:   <META NAME="GENERATOR" CONTENT="GtkHTML/3.16.1">
+C: </HEAD>
+C: <BODY>
+C: <H1>
+C: A Sonnet By William Shakespeare
+C: </H1>
+C: <BR>
+C: <PRE>
+C: Tired with all these, for restful death I cry,
+C: As to behold desert a beggar born,
+C: And needy nothing trimm'd in jollity,
+C: And purest faith unhappily forsworn,
+C: And gilded honour shamefully misplac'd,
+C: And maiden virtue rudely strumpeted,
+C: And right perfection wrongfully disgrac'd,
+C: And strength by limping sway disabled
+C: And art made tongue-tied by authority,
+C: And folly--doctor-like--controlling skill,
+C: And simple truth miscall'd simplicity,
+C: And captive good attending captain ill:
+C:   Tir'd with all these, from these would I be gone,
+C:   Save that, to die, I leave my love alone.
+C: </PRE>
+C: </BODY>
+C: </HTML>
+C: 
+C: --=-blWYb/063JwXox8nBGv5--
+C: 
+C: 
+C: 
+S: \* 6 EXISTS
+S: \* 6 RECENT
+S: A9 OK (\[.+\] )?APPEND completed.
+C: A10 APPEND testmailbox {4173+}
+C: Delivered-To: robertburrelldonkin@gmail.com
+C: Received: by 10.114.126.16 with SMTP id y16cs69319wac;
+C:         Tue, 11 Mar 2008 11:45:12 -0700 (PDT)
+C: Received: by 10.78.107.8 with SMTP id f8mr18855121huc.40.1205261111174;
+C:         Tue, 11 Mar 2008 11:45:11 -0700 (PDT)
+C: Return-Path: <robertburrelldonkin@blueyonder.co.uk>
+C: Received: from smtp-out2.blueyonder.co.uk (smtp-out2.blueyonder.co.uk [195.188.213.5])
+C:         by mx.google.com with ESMTP id z34si465534ikz.8.2008.03.11.11.45.09;
+C:         Tue, 11 Mar 2008 11:45:11 -0700 (PDT)
+C: Received-SPF: pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.5 as permitted sender) client-ip=195.188.213.5;
+C: Authentication-Results: mx.google.com; spf=pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.5 as permitted sender) smtp.mail=robertburrelldonkin@blueyonder.co.uk
+C: Received: from [172.23.170.147] (helo=anti-virus03-10)
+C: 	by smtp-out2.blueyonder.co.uk with smtp (Exim 4.52)
+C: 	id 1JZ9TJ-0000ZL-49
+C: 	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:45:09 +0000
+C: Received: from [82.38.65.6] (helo=[10.0.0.27])
+C: 	by asmtp-out3.blueyonder.co.uk with esmtpa (Exim 4.52)
+C: 	id 1JZ9TI-0000A6-8B
+C: 	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:45:08 +0000
+C: Subject: Sonnets By William Shakespeare
+C: From: Robert Burrell Donkin <robertburrelldonkin@blueyonder.co.uk>
+C: To: robertburrelldonkin@gmail.com
+C: Content-Type: multipart/mixed; boundary="=-iC8rnNDvTPHypqsz+j7t"
+C: Date: Tue, 11 Mar 2008 18:45:07 +0000
+C: Message-Id: <1205261107.7516.6.camel@localhost>
+C: Mime-Version: 1.0
+C: X-Mailer: Evolution 2.12.1 
+C: 
+C: 
+C: --=-iC8rnNDvTPHypqsz+j7t
+C: Content-Type: text/plain
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: O! lest the world should task you to recite
+C: What merit lived in me, that you should love
+C: After my death,--dear love, forget me quite,
+C: For you in me can nothing worthy prove;
+C: Unless you would devise some virtuous lie,
+C: To do more for me than mine own desert,
+C: And hang more praise upon deceased I
+C: Than niggard truth would willingly impart:
+C: O! lest your true love may seem false in this
+C: That you for love speak well of me untrue,
+C: My name be buried where my body is,
+C: And live no more to shame nor me nor you.
+C:   For I am shamed by that which I bring forth,
+C:   And so should you, to love things nothing worth.
+C: 
+C: --=-iC8rnNDvTPHypqsz+j7t
+C: Content-Disposition: attachment; filename=sonnet.html
+C: Content-Type: text/html; name=sonnet.html; charset=us-ascii
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: <html><head><title></title></head>
+C: <body>
+C: <blockquote cite='http://en.wikipedia.org/wiki/William_Shakespeare'><pre>
+C: Those parts of thee that the world's eye doth view
+C: Want nothing that the thought of hearts can mend;
+C: All tongues--the voice of souls--give thee that due,
+C: Uttering bare truth, even so as foes commend.
+C: Thy outward thus with outward praise is crown'd;
+C: But those same tongues, that give thee so thine own,
+C: In other accents do this praise confound
+C: By seeing farther than the eye hath shown.
+C: They look into the beauty of thy mind,
+C: And that in guess they measure by thy deeds;
+C: Then--churls--their thoughts, although their eyes were kind,
+C: To thy fair flower add the rank smell of weeds: 
+C:   But why thy odour matcheth not thy show,
+C:   The soil is this, that thou dost common grow.
+C: </pre></blockquote>
+C: </body></html>
+C: 
+C: --=-iC8rnNDvTPHypqsz+j7t
+C: Content-Disposition: attachment; filename=sonnet.txt
+C: Content-Type: text/plain; name=sonnet.txt; charset=us-ascii
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: Ah! wherefore with infection should he live,
+C: And with his presence grace impiety,
+C: That sin by him advantage should achieve,
+C: And lace itself with his society? 
+C: Why should false painting imitate his cheek,
+C: And steel dead seeming of his living hue?
+C: Why should poor beauty indirectly seek
+C: Roses of shadow, since his rose is true?
+C: Why should he live, now Nature bankrupt is,
+C: Beggar'd of blood to blush through lively veins?
+C: For she hath no exchequer now but his,
+C: And proud of many, lives upon his gains.
+C:   O! him she stores, to show what wealth she had
+C:   In days long since, before these last so bad.
+C: 
+C: --=-iC8rnNDvTPHypqsz+j7t--
+S: \* 7 EXISTS
+S: \* 7 RECENT
+S: A10 OK (\[.+\] )?APPEND completed.
+C: A11 APPEND testmailbox {404+}
+C: Resent-From: John Smith <john@example.org>
+C: Resent-To: Samual Smith <sam@example.org>
+C: Resent-Date: Sat, 23 Feb 2008 18:18:59 +0000
+C: Resent-Message-ID: <424242@example.org>
+C: From: Samual Webster <webster@example.org>
+C: To: Timothy Taylor <tim@example.org>
+C: Subject: Rhubard And Custard!
+C: Date: Sat, 23 Feb 2008 14:10:00 +0000
+C: Message-ID: <17299271@example.org>
+C: 
+C: Rhubard or custard? Rhubard AND custard!
+S: \* 8 EXISTS
+S: \* 8 RECENT
+S: A11 OK (\[.+\] )?APPEND completed.
+C: A12 APPEND testmailbox {429+}
+C: Received: from alpha.beta
+C:    by example.org
+C:    via TCP
+C:    with ESMTP
+C:    id 1729
+C:    for <tim@example.org>; Sat, 23 Feb 2008 18:24:05 +0000
+C: Received: from gamma.delta by alpha.beta; Sat, 23 Feb 2008 18:20:05 +0000
+C: From: Samual Webster <webster@example.org>
+C: To: Timothy Taylor <tim@example.org>
+C: Subject: Custard?
+C: Date: Sat, 23 Feb 2008 18:26:56 +0000
+C: Message-ID: <1729@machine.example.org>
+C: 
+C: Rhubard! Rhubard! Rhubard!
+C: 
+S: \* 9 EXISTS
+S: \* 9 RECENT
+S: A12 OK (\[.+\] )?APPEND completed.
+C: A13 APPEND testmailbox {14996+}
+C: Return-Path: <robertburrelldonkin@gmail.com>
+C: Received: (qmail 26928 invoked from network); 11 Mar 2008 18:54:17 -0000
+C: Received: from unknown (HELO pre-smtp21-01.prod.mesa1.secureserver.net)
+C:         ([10.0.19.121]) (envelope-sender <rdonkin-owner@locus.apache.org>) by
+C:         smtp18-01.prod.mesa1.secureserver.net (qmail-1.03) with SMTP for
+C:         <asf@xmlmapt.org>; 11 Mar 2008 18:54:17 -0000
+C: Received: (qmail 8159 invoked from network); 11 Mar 2008 18:54:16 -0000
+C: Received: from unknown (HELO minotaur.apache.org) ([140.211.11.9])
+C:         (envelope-sender <rdonkin-owner@locus.apache.org>) by
+C:         pre-smtp21-01.prod.mesa1.secureserver.net (qmail-ldap-1.03) with SMTP for
+C:         <asf@xmlmapt.org>; 11 Mar 2008 18:54:16 -0000
+C: Received: (qmail 33158 invoked by uid 1289); 11 Mar 2008 18:54:15 -0000
+C: Delivered-To: rdonkin@locus.apache.org
+C: Received: (qmail 33153 invoked from network); 11 Mar 2008 18:54:15 -0000
+C: Received: from hermes.apache.org (HELO mail.apache.org) (140.211.11.2) by
+C:         minotaur.apache.org with SMTP; 11 Mar 2008 18:54:15 -0000
+C: Received: (qmail 13020 invoked by uid 500); 11 Mar 2008 18:54:12 -0000
+C: Delivered-To: apmail-rdonkin@apache.org
+C: Delivered-To: rob@localhost
+C: Delivered-To: rob@localhost
+C: Received: (qmail 13017 invoked by uid 99); 11 Mar 2008 18:54:12 -0000
+C: Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+C:         by apache.org (qpsmtpd/0.29) with ESMTP; Tue, 11 Mar 2008 11:54:12 -0700
+C: X-ASF-Spam-Status: No, hits=2.0 required=10.0 tests=HTML_MESSAGE,SPF_PASS
+C: X-Spam-Check-By: apache.org
+C: Received-SPF: pass (athena.apache.org: domain of
+C:         robertburrelldonkin@gmail.com designates 209.85.146.176 as permitted sender)
+C: Received: from [209.85.146.176] (HELO wa-out-1112.google.com)
+C:         (209.85.146.176) by apache.org (qpsmtpd/0.29) with ESMTP; Tue, 11 Mar 2008
+C:         18:53:36 +0000
+C: Received: by wa-out-1112.google.com with SMTP id m28so3142139wag.13 for
+C:         <rdonkin@apache.org>; Tue, 11 Mar 2008 11:53:46 -0700 (PDT)
+C: DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+C:         h=domainkey-signature:received:received:message-id:date:from:to:subject:cc:in-reply-to:mime-version:content-type:references;
+C:         bh=yuycNteU3R8u06MvlZyMGfEM6XWUsfZNdi4MXOvDmJM=;
+C:         b=YlpZWlL8q5FXdYMMXo1tUnxhwvV6uGNszLQ7f7p0LXDa0YLsPi8GQRckuRlB8aHvO6aVR14qbuLTbFHZJ5+cwITLZhtQrFzq/BiBzh5F1UjbcgwLkulHRkw2ulBGN06rK4FJCH976aaf7M8qKkK3i+xkwo2ptTzve4VFzGXh4gg=
+C: DomainKey-Signature: a=rsa-sha1; c=nofws; d=gmail.com; s=gamma;
+C:         h=message-id:date:from:to:subject:cc:in-reply-to:mime-version:content-type:references;
+C:         b=CITXFMszoBpjfabn47oOdBGGj3ULwqJ3L1P84fQz0ZY/LdPk1qW3oC0bsmJPK6swRfHYDkz695QKHn9XG/d0B7lFmODrXZ1jxSqyz6N6WgvE4vqyiZ+fniz0sZHvpXGub06y1DI8b7vGLA5fj5BoJ9tFk8uIthJbrKb2j4WbJco=
+C: Received: by 10.114.197.1 with SMTP id u1mr5302053waf.61.1205261626861;
+C:         Tue, 11 Mar 2008 11:53:46 -0700 (PDT)
+C: Received: by 10.114.126.16 with HTTP; Tue, 11 Mar 2008 11:53:38 -0700 (PDT)
+C: Message-ID: <f470f68e0803111153w2262a775sdefc8c423c5d5c95@mail.gmail.com>
+C: Date: Tue, 11 Mar 2008 18:53:38 +0000
+C: From: "Robert Burrell Donkin" <robertburrelldonkin@gmail.com>
+C: To: "Robert Burrell Donkin" <robertburrelldonkin@blueyonder.co.uk>
+C: Subject: Re: Sonnets By William Shakespeare
+C: Cc: "Robert Burrell Donkin" <robertburrelldonkin@gmail.com>
+C: In-Reply-To: <1205261107.7516.6.camel@localhost>
+C: MIME-Version: 1.0
+C: Content-Type: multipart/mixed;  boundary="----=_Part_4002_22491526.1205261626856"
+C: References: <1205261107.7516.6.camel@localhost>
+C: X-Virus-Checked: Checked by ClamAV on apache.org
+C: X-Nonspam: None
+C: X-fetched-from: mail.xmlmapt.org
+C: X-Evolution-Source: imap://rob@thebes/
+C: 
+C: 
+C: ------=_Part_4002_22491526.1205261626856
+C: Content-Type: multipart/alternative;  boundary="----=_Part_4003_18492227.1205261626856"
+C: 
+C: 
+C: ------=_Part_4003_18492227.1205261626856
+C: Content-Type: text/plain; charset=ISO-8859-1
+C: Content-Transfer-Encoding: 7bit
+C: Content-Disposition: inline
+C: 
+C: *Ah yes!*
+C: 
+C: On Tue, Mar 11, 2008 at 6:45 PM, Robert Burrell Donkin <
+C: robertburrelldonkin@blueyonder.co.uk> wrote:
+C: > O! lest the world should task you to recite
+C: >  What merit lived in me, that you should love
+C: >  After my death,--dear love, forget me quite,
+C: >  For you in me can nothing worthy prove;
+C: >  Unless you would devise some virtuous lie,
+C: >  To do more for me than mine own desert,
+C: >  And hang more praise upon deceased I
+C: >  Than niggard truth would willingly impart:
+C: >  O! lest your true love may seem false in this
+C: >  That you for love speak well of me untrue,
+C: >  My name be buried where my body is,
+C: >  And live no more to shame nor me nor you.
+C: >   For I am shamed by that which I bring forth,
+C: >   And so should you, to love things nothing worth.
+C: >
+C: 
+C: ------=_Part_4003_18492227.1205261626856
+C: Content-Type: text/html; charset=ISO-8859-1
+C: Content-Transfer-Encoding: 7bit
+C: Content-Disposition: inline
+C: 
+C: <b><span style="font-family: trebuchet ms,sans-serif;">Ah yes!</span></b><br><br>On Tue, Mar 11, 2008 at 6:45 PM, Robert Burrell Donkin &lt;<a href="mailto:robertburrelldonkin@blueyonder.co.uk">robertburrelldonkin@blueyonder.co.uk</a>&gt; wrote:<br>
+C: &gt; O! lest the world should task you to recite<br>&gt; &nbsp;What merit lived in me, that you should love<br>&gt; &nbsp;After my death,--dear love, forget me quite,<br>&gt; &nbsp;For you in me can nothing worthy prove;<br>&gt; &nbsp;Unless you would devise some virtuous lie,<br>
+C: &gt; &nbsp;To do more for me than mine own desert,<br>&gt; &nbsp;And hang more praise upon deceased I<br>&gt; &nbsp;Than niggard truth would willingly impart:<br>&gt; &nbsp;O! lest your true love may seem false in this<br>&gt; &nbsp;That you for love speak well of me untrue,<br>
+C: &gt; &nbsp;My name be buried where my body is,<br>&gt; &nbsp;And live no more to shame nor me nor you.<br>&gt; &nbsp; For I am shamed by that which I bring forth,<br>&gt; &nbsp; And so should you, to love things nothing worth.<br>&gt; &nbsp;<br><br>
+C: 
+C: ------=_Part_4003_18492227.1205261626856
+C: Content-Type: text/calendar; method=REQUEST; name=invite.ics; charset=ISO-8859-1
+C: Content-Transfer-Encoding: 7bit
+C: Content-Disposition: inline
+C: 
+C: BEGIN:VCALENDAR
+C: PRODID:-//Google Inc//Google Calendar 70.9054//EN
+C: VERSION:2.0
+C: CALSCALE:GREGORIAN
+C: METHOD:REQUEST
+C: BEGIN:VEVENT
+C: DTSTART;VALUE=DATE:20080407
+C: DTEND;VALUE=DATE:20080412
+C: DTSTAMP:20080311T185338Z
+C: ORGANIZER;CN=Robert Burrell Donkin:MAILTO:robertburrelldonkin@gmail.com
+C: UID:i12ksc4hr5uud1gs9dsos1ipj8@google.com
+C: ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+C:  TRUE;X-NUM-GUESTS=0:MAILTO:robertburrelldonkin@blueyonder.co.uk
+C: ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE
+C:  ;CN=Robert Burrell Donkin;X-NUM-GUESTS=0:MAILTO:robertburrelldonkin@gmail.c
+C:  om
+C: ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+C:  TRUE;X-NUM-GUESTS=0:MAILTO:rdonkin@apache.org
+C: CLASS:PRIVATE
+C: CREATED:20080311T185337Z
+C: DESCRIPTION:<b><span style="font-family: trebuchet ms\,sans-serif\;">Ah yes
+C:  !</span></b><br><br>On Tue\, Mar 11\, 2008 at 6:45 PM\, Robert Burrell Donk
+C:  in &lt\;robertburrelldonkin@blueyonder.co.uk&gt\; wrote:<br>&gt\; O! lest t
+C:  he world should task you to recite<br>&gt\; &nbsp\;What merit lived in me\,
+C:   that you should love<br>&gt\; &nbsp\;After my death\,--dear love\, forget 
+C:  me quite\,<br>&gt\; &nbsp\;For you in me can nothing worthy prove\;<br>&gt\
+C:  ; &nbsp\;Unless you would devise some virtuous lie\,<br>&gt\; &nbsp\;To do 
+C:  more for me than mine own desert\,<br>&gt\; &nbsp\;And hang more praise upo
+C:  n deceased I<br>&gt\; &nbsp\;Than niggard truth would willingly impart:<br>
+C:  &gt\; &nbsp\;O! lest your true love may seem false in this<br>&gt\; &nbsp\;
+C:  That you for love speak well of me untrue\,<br>&gt\; &nbsp\;My name be buri
+C:  ed where my body is\,<br>&gt\; &nbsp\;And live no more to shame nor me nor 
+C:  you.<br>&gt\; &nbsp\; For I am shamed by that which I bring forth\,<br>&gt\
+C:  ; &nbsp\; And so should you\, to love things nothing worth.<br>&gt\; &nbsp\
+C:  ;<br><br>\nView your event at http://www.google.com/calendar/event?action=V
+C:  IEW&ueid=i12ksc4hr5uud1gs9dsos1ipj8.
+C: LAST-MODIFIED:20080311T185337Z
+C: LOCATION:Amsterdam
+C: SEQUENCE:0
+C: STATUS:CONFIRMED
+C: SUMMARY:ApacheCon Europe 2008!
+C: TRANSP:OPAQUE
+C: END:VEVENT
+C: END:VCALENDAR
+C: 
+C: ------=_Part_4003_18492227.1205261626856--
+C: 
+C: ------=_Part_4002_22491526.1205261626856
+C: Content-Type: application/ics; name=invite20080407T190000.ics
+C: Content-Transfer-Encoding: base64
+C: Content-Disposition: attachment; filename=invite20080407T190000.ics
+C: 
+C: QkVHSU46VkNBTEVOREFSDQpQUk9ESUQ6LS8vR29vZ2xlIEluYy8vR29vZ2xlIENhbGVuZGFyIDcw
+C: LjkwNTQvL0VODQpWRVJTSU9OOjIuMA0KQ0FMU0NBTEU6R1JFR09SSUFODQpNRVRIT0Q6UkVRVUVT
+C: VA0KQkVHSU46VkVWRU5UDQpEVFNUQVJUO1ZBTFVFPURBVEU6MjAwODA0MDcNCkRURU5EO1ZBTFVF
+C: PURBVEU6MjAwODA0MTINCkRUU1RBTVA6MjAwODAzMTFUMTg1MzM4Wg0KT1JHQU5JWkVSO0NOPVJv
+C: YmVydCBCdXJyZWxsIERvbmtpbjpNQUlMVE86cm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb20N
+C: ClVJRDppMTJrc2M0aHI1dXVkMWdzOWRzb3MxaXBqOEBnb29nbGUuY29tDQpBVFRFTkRFRTtDVVRZ
+C: UEU9SU5ESVZJRFVBTDtST0xFPVJFUS1QQVJUSUNJUEFOVDtQQVJUU1RBVD1ORUVEUy1BQ1RJT047
+C: UlNWUD0NCiBUUlVFO1gtTlVNLUdVRVNUUz0wOk1BSUxUTzpyb2JlcnRidXJyZWxsZG9ua2luQGJs
+C: dWV5b25kZXIuY28udWsNCkFUVEVOREVFO0NVVFlQRT1JTkRJVklEVUFMO1JPTEU9UkVRLVBBUlRJ
+C: Q0lQQU5UO1BBUlRTVEFUPUFDQ0VQVEVEO1JTVlA9VFJVRQ0KIDtDTj1Sb2JlcnQgQnVycmVsbCBE
+C: b25raW47WC1OVU0tR1VFU1RTPTA6TUFJTFRPOnJvYmVydGJ1cnJlbGxkb25raW5AZ21haWwuYw0K
+C: IG9tDQpBVFRFTkRFRTtDVVRZUEU9SU5ESVZJRFVBTDtST0xFPVJFUS1QQVJUSUNJUEFOVDtQQVJU
+C: U1RBVD1ORUVEUy1BQ1RJT047UlNWUD0NCiBUUlVFO1gtTlVNLUdVRVNUUz0wOk1BSUxUTzpyZG9u
+C: a2luQGFwYWNoZS5vcmcNCkNMQVNTOlBSSVZBVEUNCkNSRUFURUQ6MjAwODAzMTFUMTg1MzM3Wg0K
+C: REVTQ1JJUFRJT046PGI+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5OiB0cmVidWNoZXQgbXNcLHNh
+C: bnMtc2VyaWZcOyI+QWggeWVzDQogITwvc3Bhbj48L2I+PGJyPjxicj5PbiBUdWVcLCBNYXIgMTFc
+C: LCAyMDA4IGF0IDY6NDUgUE1cLCBSb2JlcnQgQnVycmVsbCBEb25rDQogaW4gJmx0XDtyb2JlcnRi
+C: dXJyZWxsZG9ua2luQGJsdWV5b25kZXIuY28udWsmZ3RcOyB3cm90ZTo8YnI+Jmd0XDsgTyEgbGVz
+C: dCB0DQogaGUgd29ybGQgc2hvdWxkIHRhc2sgeW91IHRvIHJlY2l0ZTxicj4mZ3RcOyAmbmJzcFw7
+C: V2hhdCBtZXJpdCBsaXZlZCBpbiBtZVwsDQogIHRoYXQgeW91IHNob3VsZCBsb3ZlPGJyPiZndFw7
+C: ICZuYnNwXDtBZnRlciBteSBkZWF0aFwsLS1kZWFyIGxvdmVcLCBmb3JnZXQgDQogbWUgcXVpdGVc
+C: LDxicj4mZ3RcOyAmbmJzcFw7Rm9yIHlvdSBpbiBtZSBjYW4gbm90aGluZyB3b3J0aHkgcHJvdmVc
+C: Ozxicj4mZ3RcDQogOyAmbmJzcFw7VW5sZXNzIHlvdSB3b3VsZCBkZXZpc2Ugc29tZSB2aXJ0dW91
+C: cyBsaWVcLDxicj4mZ3RcOyAmbmJzcFw7VG8gZG8gDQogbW9yZSBmb3IgbWUgdGhhbiBtaW5lIG93
+C: biBkZXNlcnRcLDxicj4mZ3RcOyAmbmJzcFw7QW5kIGhhbmcgbW9yZSBwcmFpc2UgdXBvDQogbiBk
+C: ZWNlYXNlZCBJPGJyPiZndFw7ICZuYnNwXDtUaGFuIG5pZ2dhcmQgdHJ1dGggd291bGQgd2lsbGlu
+C: Z2x5IGltcGFydDo8YnI+DQogJmd0XDsgJm5ic3BcO08hIGxlc3QgeW91ciB0cnVlIGxvdmUgbWF5
+C: IHNlZW0gZmFsc2UgaW4gdGhpczxicj4mZ3RcOyAmbmJzcFw7DQogVGhhdCB5b3UgZm9yIGxvdmUg
+C: c3BlYWsgd2VsbCBvZiBtZSB1bnRydWVcLDxicj4mZ3RcOyAmbmJzcFw7TXkgbmFtZSBiZSBidXJp
+C: DQogZWQgd2hlcmUgbXkgYm9keSBpc1wsPGJyPiZndFw7ICZuYnNwXDtBbmQgbGl2ZSBubyBtb3Jl
+C: IHRvIHNoYW1lIG5vciBtZSBub3IgDQogeW91Ljxicj4mZ3RcOyAmbmJzcFw7IEZvciBJIGFtIHNo
+C: YW1lZCBieSB0aGF0IHdoaWNoIEkgYnJpbmcgZm9ydGhcLDxicj4mZ3RcDQogOyAmbmJzcFw7IEFu
+C: ZCBzbyBzaG91bGQgeW91XCwgdG8gbG92ZSB0aGluZ3Mgbm90aGluZyB3b3J0aC48YnI+Jmd0XDsg
+C: Jm5ic3BcDQogOzxicj48YnI+XG5WaWV3IHlvdXIgZXZlbnQgYXQgaHR0cDovL3d3dy5nb29nbGUu
+C: Y29tL2NhbGVuZGFyL2V2ZW50P2FjdGlvbj1WDQogSUVXJnVlaWQ9aTEya3NjNGhyNXV1ZDFnczlk
+C: c29zMWlwajguDQpMQVNULU1PRElGSUVEOjIwMDgwMzExVDE4NTMzN1oNCkxPQ0FUSU9OOkFtc3Rl
+C: cmRhbQ0KU0VRVUVOQ0U6MA0KU1RBVFVTOkNPTkZJUk1FRA0KU1VNTUFSWTpBcGFjaGVDb24gRXVy
+C: b3BlIDIwMDghDQpUUkFOU1A6T1BBUVVFDQpFTkQ6VkVWRU5UDQpFTkQ6VkNBTEVOREFSDQo=
+C: ------=_Part_4002_22491526.1205261626856
+C: Content-Type: text/html; name=sonnet.html
+C: Content-Transfer-Encoding: base64
+C: X-Attachment-Id: 0.1
+C: Content-Disposition: attachment; filename=sonnet.html
+C: 
+C: PGh0bWw+PGhlYWQ+PHRpdGxlPjwvdGl0bGU+PC9oZWFkPgo8Ym9keT4KPGJsb2NrcXVvdGUgY2l0
+C: ZT0naHR0cDovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9XaWxsaWFtX1NoYWtlc3BlYXJlJz48cHJl
+C: PgpUaG9zZSBwYXJ0cyBvZiB0aGVlIHRoYXQgdGhlIHdvcmxkJ3MgZXllIGRvdGggdmlldwpXYW50
+C: IG5vdGhpbmcgdGhhdCB0aGUgdGhvdWdodCBvZiBoZWFydHMgY2FuIG1lbmQ7CkFsbCB0b25ndWVz
+C: LS10aGUgdm9pY2Ugb2Ygc291bHMtLWdpdmUgdGhlZSB0aGF0IGR1ZSwKVXR0ZXJpbmcgYmFyZSB0
+C: cnV0aCwgZXZlbiBzbyBhcyBmb2VzIGNvbW1lbmQuClRoeSBvdXR3YXJkIHRodXMgd2l0aCBvdXR3
+C: YXJkIHByYWlzZSBpcyBjcm93bidkOwpCdXQgdGhvc2Ugc2FtZSB0b25ndWVzLCB0aGF0IGdpdmUg
+C: dGhlZSBzbyB0aGluZSBvd24sCkluIG90aGVyIGFjY2VudHMgZG8gdGhpcyBwcmFpc2UgY29uZm91
+C: bmQKQnkgc2VlaW5nIGZhcnRoZXIgdGhhbiB0aGUgZXllIGhhdGggc2hvd24uClRoZXkgbG9vayBp
+C: bnRvIHRoZSBiZWF1dHkgb2YgdGh5IG1pbmQsCkFuZCB0aGF0IGluIGd1ZXNzIHRoZXkgbWVhc3Vy
+C: ZSBieSB0aHkgZGVlZHM7ClRoZW4tLWNodXJscy0tdGhlaXIgdGhvdWdodHMsIGFsdGhvdWdoIHRo
+C: ZWlyIGV5ZXMgd2VyZSBraW5kLApUbyB0aHkgZmFpciBmbG93ZXIgYWRkIHRoZSByYW5rIHNtZWxs
+C: IG9mIHdlZWRzOiAKICBCdXQgd2h5IHRoeSBvZG91ciBtYXRjaGV0aCBub3QgdGh5IHNob3csCiAg
+C: VGhlIHNvaWwgaXMgdGhpcywgdGhhdCB0aG91IGRvc3QgY29tbW9uIGdyb3cuCjwvcHJlPjwvYmxv
+C: Y2txdW90ZT4KPC9ib2R5PjwvaHRtbD4K
+C: ------=_Part_4002_22491526.1205261626856
+C: Content-Type: text/plain; name=sonnet.txt
+C: Content-Transfer-Encoding: base64
+C: X-Attachment-Id: 0.2
+C: Content-Disposition: attachment; filename=sonnet.txt
+C: 
+C: QWghIHdoZXJlZm9yZSB3aXRoIGluZmVjdGlvbiBzaG91bGQgaGUgbGl2ZSwKQW5kIHdpdGggaGlz
+C: IHByZXNlbmNlIGdyYWNlIGltcGlldHksClRoYXQgc2luIGJ5IGhpbSBhZHZhbnRhZ2Ugc2hvdWxk
+C: IGFjaGlldmUsCkFuZCBsYWNlIGl0c2VsZiB3aXRoIGhpcyBzb2NpZXR5PyAKV2h5IHNob3VsZCBm
+C: YWxzZSBwYWludGluZyBpbWl0YXRlIGhpcyBjaGVlaywKQW5kIHN0ZWVsIGRlYWQgc2VlbWluZyBv
+C: ZiBoaXMgbGl2aW5nIGh1ZT8KV2h5IHNob3VsZCBwb29yIGJlYXV0eSBpbmRpcmVjdGx5IHNlZWsK
+C: Um9zZXMgb2Ygc2hhZG93LCBzaW5jZSBoaXMgcm9zZSBpcyB0cnVlPwpXaHkgc2hvdWxkIGhlIGxp
+C: dmUsIG5vdyBOYXR1cmUgYmFua3J1cHQgaXMsCkJlZ2dhcidkIG9mIGJsb29kIHRvIGJsdXNoIHRo
+C: cm91Z2ggbGl2ZWx5IHZlaW5zPwpGb3Igc2hlIGhhdGggbm8gZXhjaGVxdWVyIG5vdyBidXQgaGlz
+C: LApBbmQgcHJvdWQgb2YgbWFueSwgbGl2ZXMgdXBvbiBoaXMgZ2FpbnMuCiAgTyEgaGltIHNoZSBz
+C: dG9yZXMsIHRvIHNob3cgd2hhdCB3ZWFsdGggc2hlIGhhZAogIEluIGRheXMgbG9uZyBzaW5jZSwg
+C: YmVmb3JlIHRoZXNlIGxhc3Qgc28gYmFkLgo=
+C: ------=_Part_4002_22491526.1205261626856
+C: Content-Type: text/plain; name=another-sonnet.txt
+C: Content-Transfer-Encoding: base64
+C: X-Attachment-Id: f_fdotkfhj2
+C: Content-Disposition: attachment; filename=another-sonnet.txt
+C: 
+C: U28gYXJlIHlvdSB0byBteSB0aG91Z2h0cyBhcyBmb29kIHRvIGxpZmUsCk9yIGFzIHN3ZWV0LXNl
+C: YXNvbidkIHNob3dlcnMgYXJlIHRvIHRoZSBncm91bmQ7CkFuZCBmb3IgdGhlIHBlYWNlIG9mIHlv
+C: dSBJIGhvbGQgc3VjaCBzdHJpZmUKQXMgJ3R3aXh0IGEgbWlzZXIgYW5kIGhpcyB3ZWFsdGggaXMg
+C: Zm91bmQuCk5vdyBwcm91ZCBhcyBhbiBlbmpveWVyLCBhbmQgYW5vbgpEb3VidGluZyB0aGUgZmls
+C: Y2hpbmcgYWdlIHdpbGwgc3RlYWwgaGlzIHRyZWFzdXJlOwpOb3cgY291bnRpbmcgYmVzdCB0byBi
+C: ZSB3aXRoIHlvdSBhbG9uZSwKVGhlbiBiZXR0ZXInZCB0aGF0IHRoZSB3b3JsZCBtYXkgc2VlIG15
+C: IHBsZWFzdXJlOgpTb21ldGltZSBhbGwgZnVsbCB3aXRoIGZlYXN0aW5nIG9uIHlvdXIgc2lnaHQs
+C: CkFuZCBieSBhbmQgYnkgY2xlYW4gc3RhcnZlZCBmb3IgYSBsb29rOwpQb3NzZXNzaW5nIG9yIHB1
+C: cnN1aW5nIG5vIGRlbGlnaHQsClNhdmUgd2hhdCBpcyBoYWQsIG9yIG11c3QgZnJvbSB5b3UgYmUg
+C: dG9vay4KICBUaHVzIGRvIEkgcGluZSBhbmQgc3VyZmVpdCBkYXkgYnkgZGF5LAogIE9yIGdsdXR0
+C: b25pbmcgb24gYWxsLCBvciBhbGwgYXdheS4K
+C: ------=_Part_4002_22491526.1205261626856--
+C: 
+C: 
+S: \* 10 EXISTS
+S: \* 10 RECENT
+S: A13 OK (\[.+\] )?APPEND completed.
+C: A14 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 10 EXISTS
+S: \* 10 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\](.)*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 11\].*
+S: A14 OK \[READ-WRITE\] SELECT completed.
+C: A15 STORE 4  FLAGS (\DELETED)
+S: \* 4 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: A15 OK STORE completed.
+C: A16 STORE 6  FLAGS (\DELETED)
+S: \* 6 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: A16 OK STORE completed.
+C: A17 STORE 7  FLAGS (\DELETED)
+S: \* 7 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: A17 OK STORE completed.
+C: A18 EXPUNGE
+S: \* 4 EXPUNGE
+S: \* 5 EXPUNGE
+S: \* 5 EXPUNGE
+S: \* 7 RECENT
+S: A18 OK EXPUNGE completed.
+C: A19 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 7 EXISTS
+S: \* 7 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\](.)*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 11\].*
+S: A19 OK \[READ-WRITE\] SELECT completed.
+C: A20 DELETE testmailbox
+S: A20 OK DELETE completed.

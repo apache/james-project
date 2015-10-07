@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ! Licensed to the Apache Software Foundation (ASF) under one ! ! or
+    more contributor license agreements. See the NOTICE file ! !
+    distributed with this work for additional information ! ! regarding
+    copyright ownership. The ASF licenses this file ! ! to you under the
+    Apache License, Version 2.0 (the ! ! "License"); you may not use this
+    file except in compliance ! ! with the License. You may obtain a copy
+    of the License at ! ! ! ! http://www.apache.org/licenses/LICENSE-2.0 !
+    ! ! ! Unless required by applicable law or agreed to in writing, ! !
+    software distributed under the License is distributed on an ! ! "AS
+    IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY ! ! KIND, either
+    express or implied. See the License for the ! ! specific language
+    governing permissions and limitations ! ! under the License. !
+-->
+
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="imapserver" class="org.apache.james.imapserver.netty.IMAPServerFactory">
+        <property name="imapProcessor" ref="imapProcessor"/>
+        <property name="imapEncoder" ref="imapEncoder"/>
+        <property name="imapDecoder" ref="imapDecoder"/>
+        <property name="fileSystem" ref="filesystem"/>
+    </bean>
+
+    <!-- The imapProcessor configuration will be reviewed when IMAP will be integrated into Protocols project -->
+    <!-- Temporary configuration - see IMAP-357 -->
+    <bean id="imapProcessor" class="org.apache.james.imap.processor.main.DefaultImapProcessorFactory"
+          factory-method="createXListSupportingProcessor">
+        <constructor-arg index="0" ref="mailboxmanager"/>
+        <constructor-arg index="1" ref="subscriptionManager"/>
+        <!-- The mailboxTyper -->
+        <constructor-arg index="2" value="#{null}"/>
+        <constructor-arg index="3" ref="quotaManager"/>
+        <constructor-arg index="4" ref="quotaRootResolver"/>
+        <!-- The idleKeepAlive -->
+        <constructor-arg index="5" value="120"/>
+        <!-- The list of disabled capabilities -->
+        <constructor-arg index="6">
+            <set>
+                <value>ACL</value>
+                <value>MOVE</value>
+            </set>
+        </constructor-arg>
+    </bean>
+
+    <bean id="imapDecoderFactory" class="org.apache.james.imap.main.DefaultImapDecoderFactory"/>
+    <bean id="imapDecoder" factory-bean="imapDecoderFactory" factory-method="buildImapDecoder"/>
+
+    <bean id="imapEncoderFactory" class="org.apache.james.imap.encode.main.DefaultImapEncoderFactory"/>
+    <bean id="imapEncoder" factory-bean="imapEncoderFactory" factory-method="buildImapEncoder"/>
+
+</beans>

@@ -525,6 +525,14 @@
         <deployTechnicalSiteDirectory/>
     </properties>
 
+    <modules>
+        <module>mailbox</module>
+        <module>mailet</module>
+        <module>mpt</module>
+        <module>protocols</module>
+        <module>server</module>
+    </modules>
+    
     <build>
         <extensions>
             <extension>

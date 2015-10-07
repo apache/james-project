@@ -1,0 +1,160 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Tests that updates made by one session trigger a fetch response
+# in a concurrent session on the same mailbox
+SESSION: 1
+C: 1a CREATE multibox
+S: 1a OK CREATE completed.
+
+C: 1b STATUS multibox (MESSAGES)
+S: \* STATUS "multibox" \(MESSAGES 0\)
+S: 1b OK STATUS completed.
+
+C: 1c APPEND multibox {310+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, do you think we can meet at 3:30 tomorrow?
+C:
+S: 1c OK (\[.+\] )?APPEND completed.
+
+C: 1c APPEND multibox {312+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, do you think we can meet at 3:30 tomorrow?
+C:
+S: 1c OK (\[.+\] )?APPEND completed.
+
+C: 1d SELECT multibox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: 1d OK \[READ-WRITE\] SELECT completed.
+
+SESSION: 2
+C: 2a SELECT multibox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: 2a OK \[READ-WRITE\] SELECT completed.
+
+SESSION: 3
+C: 3a SELECT multibox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: 3a OK \[READ-WRITE\] SELECT completed.
+
+SESSION: 4
+C: 4a SELECT multibox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: 4a OK \[READ-WRITE\] SELECT completed.
+
+SESSION: 1
+C: 1e STORE 1 FLAGS (\Flagged)
+S: \* 1 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: 1e OK STORE completed.
+
+# On NOOP, we get the Fetch Response from the Session1 update.
+SESSION: 2
+C: 2b NOOP
+S: \* 1 FETCH \(FLAGS \(\\Flagged\)\)
+S: 2b OK NOOP completed.
+
+# On STORE, we get the Fetch Response from the Session1 update.
+SESSION: 3
+C: 3b COPY 2 inbox
+S: \* 1 FETCH \(FLAGS \(\\Flagged\)\)
+S: 3b OK (\[.+\] )?COPY completed.
+
+# Update another flag, this time SILENT 
+# Still get notifications on *other* sessions, but not this one.
+SESSION: 1
+C: 1e STORE 2 FLAGS.SILENT (\Flagged)
+S: 1e OK STORE completed.
+
+# We should only get one flag notification on SESSION 2,
+# but 2 notifications on SESSION 4.
+SESSION: 2
+C: 2b NOOP
+S: \* 2 FETCH \(FLAGS \(\\Flagged\)\)
+S: 2b OK NOOP completed.
+
+# On CREATE, we get the Fetch Response from both of the Session1 updates.
+SESSION: 4
+C: 4b CREATE another
+S: \* 1 FETCH \(FLAGS \(\\Flagged\)\)
+S: \* 2 FETCH \(FLAGS \(\\Flagged\)\)
+S: 4b OK CREATE completed.
+
+C: 4c DELETE another
+S: 4c OK DELETE completed.
+
+SESSION: 1
+C: 1f CLOSE
+S: 1f OK CLOSE completed.
+
+SESSION: 2
+C: 2c CLOSE
+S: 2c OK CLOSE completed.
+
+SESSION: 3
+C: 3c CLOSE
+S: 3c OK CLOSE completed.
+
+SESSION: 4
+C: 4c CLOSE
+S: 4c OK CLOSE completed.
+
+SESSION: 1
+C: 1g DELETE multibox
+S: 1g OK DELETE completed.

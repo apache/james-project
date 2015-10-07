@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<!-- Configure User Repositories here. -->
+
+<!-- -->
+<!-- User repositories are required for the following purposes: -->
+<!--    - storing James user information and authentication data. -->
+<!-- -->
+ 
+<!-- JPA based backend. Support password algorithm are:
+  MD5, SHA-256, SHA-512, NONE
+-->
+<usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
+    <algorithm>MD5</algorithm>
+    <enableVirtualHosting>true</enableVirtualHosting>    
+</usersrepository>
+
+<!-- Read-Only LDAP based UsersRepository -->
+<!--
+<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389" 
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/>;
+-->
+
+<!-- The UsersRepository implementations below are DEPRECATED and will get removed in the next release -->
+<!-- They are just listed here for backward-compatibility-->
+
+<!-- File-based user repositories  Use these configurations to store user info in the filesystem  -->
+<!-- The LocalUsers repository, for storing James' User info. -->
+<!-- DEPRECATED: This implementation will get removed in the next release -->
+<!--
+<usersrepository name="LocalUsers" class="org.apache.james.user.file.UsersFileRepository">
+    <destination URL="file://var/users/"/>
+    <ignoreCase>true</ignoreCase>
+    <enableAliases>true</enableAliases>
+    <enableForwarding>true</enableForwarding>
+    <enableVirtualHosting>false</enableVirtualHosting>    
+</usersrepository>
+-->
+
+<!-- Database backed user repositories -->
+<!-- -->
+<!-- Use these configurations to store user info in a database. -->
+<!-- Note: The<data-source>element must refer to a connection configured -->
+<!--       in the<database-connections>configuration section. -->
+<!-- The LocalUsers repository, for storing James' User info. -->
+<!-- DEPRECATED: This implementation will get removed in the next release -->
+<!--             Use JPAUsersRepository if you want to store the Users in a database -->
+<!-- 
+<usersrepository name="LocalUsers" class="org.apache.james.user.jdbc.JamesUsersJdbcRepository" destinationURL="db://maildb/users">
+    <sqlFile>file://conf/sqlResources.xml</sqlFile>
+    <ignoreCase>true</ignoreCase>
+    <enableAliases>true</enableAliases>
+    <enableForwarding>true</enableForwarding>
+    <enableVirtualHosting>false</enableVirtualHosting>    
+</usersrepository>
+-->

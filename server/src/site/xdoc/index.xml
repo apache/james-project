@@ -1,0 +1,213 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+  <properties>
+     <title>Apache James Server 3 - Index</title>
+  </properties>
+
+  <head>
+  
+    <script type="text/javascript" src="./js/index.js" />
+    
+  </head>
+
+<body>
+
+  <table><tr><td>
+
+    <div id="tabs" style="min-width:550px;">
+    
+      <ul>
+        <li><a href="#tabs-1">Apache James Server 3</a></li>
+        <li><a href="#tabs-2">Advantages</a></li>
+      </ul>
+
+     <div id="tabs-1">
+     
+        <div class="ui-widget">
+			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
+				<p>
+                  <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+				  <span style="font-weight:bold; color:white;">Hey! Apache James Server 3.0-beta4 is out - <a href="quick-start.html" style="color:white;">Click here to Quick Start Apache James Server!.</a>
+                  Some issues are identified in some use cases with clients such as Outlook Express,...
+                  You are kindly invited to report any issue on <a href="https://issues.apache.org/jira/browse/JAMES" style="color:white;">https://issues.apache.org/jira/browse/JAMES</a>
+                  or on our mailing list (<a href="http://james.apache.org/mail.html" style="color:white;">http://james.apache.org/mail.html</a>)</span>
+                </p>
+			</div>
+		</div>
+      
+	    <p>The Apache Java Mail Server Version 3.0
+	      is a 100% pure Java SMTP, IMAP4 and POP3 Mail 
+	      server designed to be a complete and portable enterprise mail engine solution.  
+	      Apache James Server is based on currently available open protocols.</p>
+	    
+	    <p>This documentation is intended to be an introduction to the concepts behind the Apache James Server usage, as well 
+	      as a guide to <a href="install.html">install</a>, <a href="config.html">configure</a> , 
+	      <a href="manage.html">manage</a>, <a href="monitor.html">monitor</a> 
+	      and <a href="dev.html">develop</a> Apache James Server.</p>
+	      
+        <p>Download Apache James Mail Server 3.0-beta4 and <a href="quick-start.html">quick-start</a> it!</p>
+        <p>
+          <span class="minibutton btn-download">
+            <a href="http://james.apache.org/download.cgi#Apache_James_Server">
+              <span><span class="icon"></span>Early Apache James Server 3.0-beta4</span>
+            </a>
+          </span>
+        </p>
+        <p>We also have snapshot builds for the braves (no guarantee!).</p>
+        <p>
+          <span class="minibutton btn-download">
+            <a href="http://people.apache.org/builds/james/nightly/">
+              <span><span class="icon"></span>Snapshot Apache James Server 3.0</span>
+            </a>
+          </span>
+        </p>
+	
+        <p>Apache James Server 3.0 represents the leading edge of development. This codestream has many more
+          features than the 2.3 code, but is not as well tested in production. Reasonable
+          configuration compatibility has been retained with 2.3.2.</p>
+          
+        <p>Apache James Server 3.0 requires Java 1.5 but Java 1.6 is recommended. A migration guide for 
+           users willing to upgrade from 2.3 to 3.0 is <a href="upgrade-2.3.html">available</a>.</p>
+           
+         <p>The NNTP News server and the Mailing List Manager present in Apache James Server 2.3 have been 
+            temporary removed from the 3.0 release line.</p>
+    
+     </div>
+     
+     <div id="tabs-2">
+     
+        <table>
+        
+         <tr><td width="50%">
+
+          <subsection name="Standard">
+          
+	        <p>100% pure Java Mail server designed to be a complete and portable enterprise 
+	           mail engine solution.</p>
+	           
+	        <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3 and IMAP4.</p>
+	         
+	        <p>Apache James Server is able to store user and message data either in a file-system (Maildir), 
+	           any JPA-compatible database and even JCR, allowing fast, reliable, 
+	           even real-time replicated storage.</p>
+	         
+	        <p>Provides a powerful, flexible mail application engine through support for the Apache Mailet 
+	           API.  With its Mailet pipeline architecture, Apache James Server can be used not only to provide standard e-mail 
+	           services, but also to implement custom e-mail applications.</p>
+	           
+	      </subsection>
+		      
+         </td><td width="50%">
+
+          <subsection name="Configureable">
+          
+            <p>Configure the stores,... via the well-known Spring framework - <a href="config.html">read more</a>.</p>
+        
+            <p><img src="images/conf/config-example.png" /></p>
+        
+          </subsection>
+          
+         </td></tr>
+        
+         <tr><td width="50%">
+
+          <subsection name="Manageable">
+        
+            <p>Manage domains, users,... via well-known JMX tools - <a href="manage.html">read more</a>.</p>
+            
+            <p><img src="images/jmx-management/jmx-user-part.png" /></p>
+
+          </subsection>
+          
+         </td><td width="50%">
+
+  	      <subsection name="Extensible">
+	    
+	        <p>Apache James Server serves as a mail application platform.</p>
+	        
+	        <p>The Apache James Project hosts the Apache Mailet API, 
+	          and provides the Mailet container. These features makes it easy
+	          to design, write, and deploy custom applications for mail processing.</p>
+	          
+	        <p>This modularity and ease of customization is one of Apache James' 
+	           strengths, and can allow administrators to produce powerful
+               applications surprisingly easily. - <a href="dev-extend.html">read more</a></p>
+	 
+	      </subsection>
+
+         </td></tr>
+        
+        <tr><td width="50%">
+        
+ 	      <subsection name="Developer-Friendly">
+	    
+	        <p>Apache James Server 3.0 is now built on top of Spring 3.0 in replacement of trunk version of the <a href="http://avalon.apache.org/">Avalon</a> Application Framework.
+	           With Spring, We keep the good development practices introduced by Avalon such as 
+	           Component Oriented Programming and  Inversion of Control. The stable and robust 
+	           Spring container provides a strong foundation for the Apache James Server.</p>
+	    
+	        <p>The internal and exposed APIs for this 3.0-beta4 release are under current validation and are 
+	          expected to be subject to change - <a href="dev.html">read more</a>.</p>
+	         
+            <p><img src="images/uml/org.apache.james-package-small.png" width="400px" /></p>
+        
+  	      </subsection>
+  	      
+  	    </td><td width="50%">
+	
+          <subsection name="Performant">
+           
+            <p>A special focuss has been brought to the performance: Apache James Server can process more than
+               100 mails per second. Deployed in production environments and has proven itself 
+               to be a robust  and high performance mail solution. Tests indicate that 
+               version 3.0 is able to maintain a constant mail throughput rate of thousands of 
+	           messages/minute for continuous periods  - <a href="feature-performance.html">read more</a></p>
+
+            <p><img src="images/jmx-monitoring/jmx-process-root.png"/></p>	
+        
+          </subsection>
+         
+  	    </td></tr>
+  	      
+        <tr><td width="50%">
+        
+          <subsection name="Secured">
+        
+            <p>Apache James Server is a secured mail server by default - <a href="feature-security.html">read more</a>.</p>
+        
+          </subsection>
+
+  	    </td><td width="50%">
+	
+  	    </td></tr>
+  	      
+   	    </table>
+   	    
+   	 </div>
+   	 
+   </div>
+
+  </td></tr></table>
+
+</body>
+
+</document>

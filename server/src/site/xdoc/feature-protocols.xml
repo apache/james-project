@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Feature - Servers</title>
+ </properties>
+
+<body>
+
+  <section name="Servers">
+  
+    <subsection name="Introduction">
+    
+      <p>Apache James is an open source project intended to produce a robust, flexible, and powerful 
+      enterprise class server that provides email and email-related services.  It is also designed to
+      be highly customizable, allowing administrators to configure Apache James to process email in a 
+      nearly endless variety of fashions.</p>
+      
+      <p>The standard Apache James distribution deploys inside the Spring dependency injection container.
+      In addition to providing a robust server architecture for James, the use of Spring allows Apache James administrators 
+      to deploy their own applications inside the container.  These applications can then be accessed during 
+      mail processing.</p>
+      
+      <p>The Apache James Server is implemented as a complete collection of servers and related components that, taken together,
+      provide an email solution.  These components are described below.</p>
+  
+    </subsection>
+    
+    <subsection name="SMTP Protocol">
+    
+      <p>SMTP (Simple Mail Transport Protocol) is the standard method of sending and delivering 
+      email on the internet. Apache James provides a full-function implementation of the SMTP specification,
+      with support for some optional features such as message size limits, SMTP auth, and encrypted 
+      client/server communication.</p>
+      
+      <p>More information on configuring the SMTP service can be found <a href="config-smtp-lmtp.html">here</a>.</p>
+    
+    </subsection>
+    
+    <subsection name="IMAP4 Protocol">
+    
+      <p>The IMAP4 protocol allows users to retrieve email messages.  It is the method
+      most commonly used by email clients to download and manage email messages.</p>
+      
+      <p>The Apache James version of the IMAP4 service is a simple and straightforward implementation that 
+      provides full compliance with the specification and maximum compatibility with common
+      IMAP4 clients.  In addition, Apache James can be configured to require SSL/TLS connections for
+      IMAP4 client connecting to the server.</p>
+      
+      <p>More information on configuring the IMAP4 service can be found <a href="config-imap4.html">here</a>.</p>
+    
+    </subsection>
+    
+    <subsection name="POP3 Protocol">
+    
+      <p>The POP3 protocol allows users to retrieve email messages.  It is the method
+      most commonly used by email clients to download and manage email messages.</p>
+      
+      <p>The Apache James version of the POP3 service is a simple and straightforward implementation that 
+      provides full compliance with the specification and maximum compatibility with common
+      POP3 clients.  In addition, Apache James can be configured to require SSL/TLS connections for
+      POP3 client connecting to the server.</p>
+      
+      <p>More information on configuring the POP3 service can be found <a href="config-pop3.html">here</a>.</p>
+    
+    </subsection>
+    
+    <subsection name="FetchMail">
+    
+      <p>FetchMail, unlike the other Apache James components, is not an implementation of an RFC.  Instead, it's a 
+      component that allows the administrator to configure Apache James to retrieve email from a number of POP3 
+      servers and deliver them to the local spool.  This is useful for consolidating mail delivered to a
+      number of accounts on different machines to a single account.</p>
+      
+      <p>More information on configuring FetchMail can be found <a href="config-fetchmail.html">here</a>.</p>
+
+    </subsection>
+    
+    <subsection name="JMX">
+    
+      <p>JMX (Java Management Extension) is used for the management.</p>
+  
+    </subsection>  
+
+  </section>
+  
+</body>
+
+</document>

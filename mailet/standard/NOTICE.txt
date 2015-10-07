@@ -1,0 +1,16 @@
+   =========================================================================
+   ==      NOTICE file for use with the Apache License, Version 2.0,      ==
+   =========================================================================
+
+   Apache JAMES Standard Mailets
+   Copyright 2008-2011 The Apache Software Foundation
+
+   This product includes software developed at
+   The Apache Software Foundation (http://www.apache.org/).
+
+   This product also includes software developed by :
+     - Sun Microsystems (http://java.sun.com/)
+     
+
+   Please read the LICENSE.txt and NOTICE.txt files in the root directory of 
+   this distribution.

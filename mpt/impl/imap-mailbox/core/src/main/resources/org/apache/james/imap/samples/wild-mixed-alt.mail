@@ -1,0 +1,108 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+                                                                                                                                                                                                                                                                                                     
+Delivered-To: robertburrelldonkin@gmail.com
+Received: by 10.114.126.16 with SMTP id y16cs68962wac;
+        Tue, 11 Mar 2008 11:41:47 -0700 (PDT)
+Received: by 10.78.193.19 with SMTP id q19mr18798706huf.15.1205260904964;
+        Tue, 11 Mar 2008 11:41:44 -0700 (PDT)
+Return-Path: <robertburrelldonkin@blueyonder.co.uk>
+Received: from smtp-out4.blueyonder.co.uk (smtp-out4.blueyonder.co.uk [195.188.213.7])
+        by mx.google.com with ESMTP id c22si4019124ika.3.2008.03.11.11.41.42;
+        Tue, 11 Mar 2008 11:41:44 -0700 (PDT)
+Received-SPF: pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.7 as permitted sender) client-ip=195.188.213.7;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.7 as permitted sender) smtp.mail=robertburrelldonkin@blueyonder.co.uk
+Received: from [172.23.170.136] (helo=anti-virus01-07)
+	by smtp-out4.blueyonder.co.uk with smtp (Exim 4.52)
+	id 1JZ9Px-0001OZ-VF
+	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:41:42 +0000
+Received: from [82.38.65.6] (helo=[10.0.0.27])
+	by asmtp-out1.blueyonder.co.uk with esmtpa (Exim 4.52)
+	id 1JZ9Px-0007FO-G5
+	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:41:41 +0000
+Subject: An HTML Email
+From: Robert Burrell Donkin <robertburrelldonkin@blueyonder.co.uk>
+To: robertburrelldonkin@gmail.com
+Content-Type: multipart/alternative; boundary="=-blWYb/063JwXox8nBGv5"
+Date: Tue, 11 Mar 2008 18:41:40 +0000
+Message-Id: <1205260900.7516.3.camel@localhost>
+Mime-Version: 1.0
+X-Mailer: Evolution 2.12.1 
+
+
+--=-blWYb/063JwXox8nBGv5
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+A Sonnet By William Shakespeare
+
+
+
+Tired with all these, for restful death I cry,
+As to behold desert a beggar born,
+And needy nothing trimm'd in jollity,
+And purest faith unhappily forsworn,
+And gilded honour shamefully misplac'd,
+And maiden virtue rudely strumpeted,
+And right perfection wrongfully disgrac'd,
+And strength by limping sway disabled
+And art made tongue-tied by authority,
+And folly--doctor-like--controlling skill,
+And simple truth miscall'd simplicity,
+And captive good attending captain ill:
+  Tir'd with all these, from these would I be gone,
+  Save that, to die, I leave my love alone.
+
+--=-blWYb/063JwXox8nBGv5
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 TRANSITIONAL//EN">
+<HTML>
+<HEAD>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; CHARSET=UTF-8">
+  <META NAME="GENERATOR" CONTENT="GtkHTML/3.16.1">
+</HEAD>
+<BODY>
+<H1>
+A Sonnet By William Shakespeare
+</H1>
+<BR>
+<PRE>
+Tired with all these, for restful death I cry,
+As to behold desert a beggar born,
+And needy nothing trimm'd in jollity,
+And purest faith unhappily forsworn,
+And gilded honour shamefully misplac'd,
+And maiden virtue rudely strumpeted,
+And right perfection wrongfully disgrac'd,
+And strength by limping sway disabled
+And art made tongue-tied by authority,
+And folly--doctor-like--controlling skill,
+And simple truth miscall'd simplicity,
+And captive good attending captain ill:
+  Tir'd with all these, from these would I be gone,
+  Save that, to die, I leave my love alone.
+</PRE>
+</BODY>
+</HTML>
+
+--=-blWYb/063JwXox8nBGv5--
+
+

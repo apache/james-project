@@ -1,0 +1,93 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.core;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Enumeration;
+
+import javax.mail.internet.InternetHeaders;
+
+/**
+ * Provide an {@link InputStream} over an {@link InternetHeaders} instance. When
+ * the end of {@link InternetHeaders} are reached a {@link #LINE_SEPERATOR} is
+ * append
+ */
+public class InternetHeadersInputStream extends InputStream {
+
+    private final static String LINE_SEPERATOR = "\r\n";
+
+    private final Enumeration<String> headerLines;
+    private byte[] currLine;
+    private int pos = 0;
+
+    @SuppressWarnings("unchecked")
+    public InternetHeadersInputStream(InternetHeaders headers) {
+        this(headers.getAllHeaderLines());
+    }
+
+    public InternetHeadersInputStream(Enumeration<String> headerLines) {
+        this.headerLines = headerLines;
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (currLine == null || pos == currLine.length) {
+            if (!readNextLine()) {
+                return -1;
+            }
+        }
+        return currLine[pos++];
+    }
+
+    /**
+     * Load the next header line if possible
+     * 
+     * @return true if there was an headerline which could be read
+     * 
+     * @throws IOException
+     */
+    private boolean readNextLine() throws IOException {
+        if (headerLines.hasMoreElements()) {
+            try {
+                pos = 0;
+                String line = (headerLines.nextElement() + LINE_SEPERATOR);
+                // Add seperator to show that headers are complete
+                if (!headerLines.hasMoreElements()) {
+                    line += LINE_SEPERATOR;
+                }
+                currLine = line.getBytes("US-ASCII");
+                return true;
+            } catch (UnsupportedEncodingException e) {
+                // should never happen
+                throw new IOException("US-ASCII encoding not supported by this platform ?!");
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        currLine = null;
+    }
+
+}

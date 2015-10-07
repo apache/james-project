@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+  <properties>
+    <title>Apache James Server 3 - Develop on James</title>
+    <author email="site-dev@james.apache.org">James Project Web Team</author>
+  </properties>
+  
+  <head>
+    <script type="text/javascript" src="./js/dev.js" />
+  </head>
+
+<body>
+
+  <section name="High Level Architecture">
+  
+    <a href="images/uml/org.apache.james-package_large.png" id="high-level-arch-img-id"><img src="images/uml/org.apache.james-package_small.png"/></a>
+    <p><a href="images/uml/org.apache.james-package_large.png" id="high-level-arch-txt-id">Click to enlarge image</a></p>
+    
+    <p>James is a multi-protocol message processing and storage engine. James
+      currently consists of:
+      <ul>
+        <li>Four mail protocol services: SMTP, POP3, IMAP4 and LMTP.</li>
+        <li>Support for SMTP Auth.</li>
+        <li>A remote administration server.</li>
+  <!--      <li>an NNTP server,</li>-->
+        <li>Support for TLS/SSL.</li>
+        <li>A mail processing engine that supports the Mailet API.</li>
+        <li>File-system message storage and a message storage interface to RDBMS's.</li>
+        <li>File-system user record storage and an experimental interface to LDAP directories.</li>
+      </ul>
+    </p>
+    
+    <p>The mail protocol services use the mailbox librairies to fetch/store mails.</p>
+    
+    <p>When a mail arrives via SMTP, it gets processed by the SMTP services and is placed
+       in a Apache ActiveMQ queue (ActiveMQ  is the Java Messaging Service JMS implementation at Apache)</p>
+       
+    <p>This allow to decouple mail spooling from the rest of the incoming traffic.</p>
+    
+    <p>After being the put in the queue, the mailetcontainer is responsible to get the 
+       next mail to process from the ActiveMQ queue.</p>
+       
+    <p>The mailets defined in mailetcontainer.xml are applied to define if the mail is to be 
+       treated as a Local or Remote delivery.</p>
+       
+    <p>The Local and Remote deliveries are treated by their corresponding mailet.</p>
+    
+    <p>The LocalDelivery mailet uses the SieveMailet which uses the mailbox/message manager to store the mail.</p>
+
+   <p>The result of the mail can be either:</p>
+   <ul>
+     <li>Gets stored in the mailbox.</li>
+     <li>Gets relayed to another server.</li>
+     <li>Gets relayed to another server.</li>
+     <li>Gets bounced back if it can not be handle by the james instance (this may happen during a previous step)</li>
+     <li>Gets stored in the "mailstore" which is a special format for spam, virus,... (in future release, we may also store those mails in the mailbox).</li>
+   </ul>
+  </section>
+
+  <section name="Technical Architecture">
+  
+    <a href="images/uml/org.apache.james-package-detail_large.png" id="arch-img-id"><img src="images/uml/org.apache.james-package-detail_small.png"/></a>
+    <p><a href="images/uml/org.apache.james-package-detail_large.png" id="arch-txt-id">Click to enlarge image</a></p>
+    
+    <p>James uses many other components: Spring, ActiveMQ, OpenJPA, Netty, Jackrabbit, Derby...</p>
+    
+    <p>The modules can be classified into 3 categories:</p>
+    <ul>
+      <li>API: They do not include implementation details, they do not have dependencies (or at most they have very common dependencies like mailet-api, javamail, commons-logging).</li>
+      <li>Library: They only depend on API modules or external jars. They don't depend on other internal libraries. These libraries should be shared by functions (no need to have a Library when it is used only by a function).</li>
+      <li>Functions: Everything else. It is harder to see a case of "direct" reuse of a function jar. Most times we'll only have code reuse. It is preferable to limit Function to Functions dependencies.</li>
+    </ul>
+    
+  </section>
+    
+  <section name="Server Coding Guidelines">
+    
+    <p>LogEnabled interface as the preferred way, except for non-server code and classes that have no bean definition.
+       LogEnabled should be used wherever logging is needed and no "session-scoped" Log is provided.</p>
+  
+  </section>
+    
+  <section name="Design Objectives">
+      
+      <subsection name="Features">
+      
+        <p>These are some of the currently implemented features:</p>
+
+        <p><i><b>Complete portability</b></i> Apache James is be a 100% pure Java application
+           based on the Java 2 platform and the JavaMail 1.4 API.</p>
+
+        <p><i><b>Protocol abstraction</b></i> Unlike other mail engines, protocols are seen only
+           like "communication languages" ruling comunications between clients and
+           the server. Apache James is not be tied to any particular protocol but
+           follow an abstracted server design (like JavaMail did on the
+           client side)</p>
+
+        <p><i><b>Complete solution</b></i> The mail system is able to handle both mail
+           transport and storage in a single server application. Apache James
+           works alone without the need for any other server or solution.</p>
+
+        <p><i><b>Mailet support</b></i> Apache James supports the Apache Mailet API. A Mailet
+               is a discrete piece of mail-processing logic which is incorporated into
+               a Mailet-compliant mail-server's processing. This easy-to-write,
+               easy-to-use pattern allows developers to build powerful customized mail
+               systems. Examples of the services a Mailet might provide include: a
+               mail-to-fax or mail-to-phone transformer, a filter, a language translator, a mailing
+               list manager, etc. Several Mailets are included in the James
+               distribution (see <a href="dev-provided-mailets.html">documentation</a>).</p>
+
+        <p><i><b>Resource abstraction</b></i> Like protocols, resources are abstracted and,
+           accessed through defined interfaces (JavaMail for transport, JDBC for
+           spool storage or user accounts in RDBMS's, Apache Mailet API). The server is
+           highly modular and reuse solutions from other projects.</p>
+
+        <p><i><b>Secure and multi-threaded design</b></i> Based on well known
+           frameworks such as Spring, ActiveMQ, OpenJPA, Netty,..., Apache James has a careful,
+           security-oriented, full multi-threaded design, to allow performance,
+           scalability and mission-critical use.</p>
+
+        <p>Anything else you may want if you help us write it :-)</p>
+
+      </subsection>
+
+      <subsection name="Standards Compliance">
+
+        <p>It is the existence of published "open" standards which 
+           allows independant teams to develop interoperable software.</p>
+      
+        <p>James attempts to support a number of these standards most of which are 
+          IETF RFC's and in the areas covered by these standards the published standard 
+          is our requirements document.</p>
+        
+        <p>This sometimes leads to confusion where behaviour is not 
+          the subject of a relevant standard, or conflict where common 
+          (de-facto) behaviour is actually at odds with a supported standard.</p>
+        
+        <p>We believe that it is our responsibility to adhere to the published standard. 
+          If we allow our implementation to deviate it means that we are tacitly encouraging 
+          the situation whereby interoperability is no longer guarenteed by standards 
+          compliance alone, but also requires access to undocumented and possibly 
+          even commercially licenced technology. There is no easy route for a 
+          newcomer to aquire these secrets, and interoperabilty 
+          becomes something only available to the elite.</p>
+        
+        <p>The James policy for issues of non-compliance tries to tread the fine line
+          between a pragmatic acceptance of other people's misinterpretation of the
+          RFC's and an evangelical defence of open standards as the key to freedom of interoperation.</p>
+        
+        <p>In practice this policy is that certain well argued of cases of
+          non-compliance which can be *safely* worked around, will be tolerated by
+          James.</p>
+      
+        <p>In cases (like jira issue JAMES-344) where variance from a published standard is
+           required it is desirable that this functionality is disabled in James by default,
+           it must be prominently and clearly documented that this causes James 
+           to violate the relevant standard, and should be enabled by explicit 
+           configuration, making its use a conscious decision of the user rather 
+           than an decision taken by the James team.</p>
+        
+        <p>In cases where the required behaviour is not within the scope of any standard which
+           James claims to support (such as behaviour which is a de-facto standard or
+           an <i>internet draft</i> RFC but not yet subject of a <i>standards track</i> RFC) it is
+           acceptable to implement the behaviour so long as it is adequately
+           documented (for instance by refrence to an <i>internet draft</i> or 
+           other public document) and users can be clear about what to expect from James.</p>
+
+      </subsection>
+
+  </section>
+
+</body>
+
+</document>

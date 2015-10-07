@@ -1,0 +1,39 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Create a few folders
+C: 10 CREATE deletetest
+S: 10 OK CREATE completed.
+C: 11 CREATE deletetest.subfolder
+S: 11 OK CREATE completed.
+C: 12 CREATE deletetest1
+S: 12 OK CREATE completed.
+C: 13 CREATE deletetest1.subfolder1
+S: 13 OK CREATE completed.
+
+# Delete subfolder, then folder
+C: 10 DELETE deletetest.subfolder
+S: 10 OK DELETE completed.
+C: 11 DELETE deletetest
+S: 11 OK DELETE completed.
+
+# Delete folder first, then subfolder.
+C: 14 DELETE deletetest1.subfolder1
+S: 14 OK DELETE completed.
+C: 13 DELETE deletetest1
+S: 13 OK DELETE completed.

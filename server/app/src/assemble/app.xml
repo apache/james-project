@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed  under the  License is distributed on an "AS IS" BASIS,
+WITHOUT  WARRANTIES OR CONDITIONS  OF ANY KIND, either  express  or
+implied.
+
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>app</id>
+
+    <formats>
+        <format>zip</format>
+        <format>tar.gz</format>
+    </formats>
+
+    <fileSets>
+        <!-- include txt files -->
+        <fileSet>
+            <directory>.</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>README*</include>
+            </includes>
+        </fileSet>
+        <!-- include configs -->
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>conf</outputDirectory>
+            <!-- set some sane security defaults for config files -->
+            <fileMode>0600</fileMode>
+        </fileSet>
+
+        <!--  create empty folders by copy a .dummy file -->
+        <fileSet>
+            <directory>.</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>log</outputDirectory>
+            <includes>
+                <include>.dummy</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/app/var</directory>
+            <outputDirectory>var</outputDirectory>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/app/sieve</directory>
+            <outputDirectory>var</outputDirectory>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/app/lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+
+        <!-- include stuff from appassembler -->
+        <fileSet>
+            <directory>target/appassembler/lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0600</fileMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>target/appassembler/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
+            <lineEnding>dos</lineEnding>
+            <includes>
+                <include>*.bat</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>target/appassembler/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0755</fileMode>
+            <lineEnding>unix</lineEnding>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/app/bin/</directory>
+            <outputDirectory>bin</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
+            <lineEnding>dos</lineEnding>
+            <includes>
+                <include>*.bat</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/app/bin/</directory>
+            <outputDirectory>bin</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0755</fileMode>
+            <lineEnding>unix</lineEnding>
+            <includes>
+                <include>setenv.sh</include>
+            </includes>
+        </fileSet>
+
+        <!-- include stuff from appassembler  daemons-->
+        <fileSet>
+            <directory>target/appassembler/jsw/james/lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>target/appassembler/jsw/james/conf</directory>
+            <outputDirectory>conf</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <!-- set some sane security defaults for config files -->
+            <fileMode>0600</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>target/appassembler/jsw/james/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0755</fileMode>
+            <includes>
+                <include>*.bat</include>
+                <include>*.exe</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>target/appassembler/jsw/james/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0755</fileMode>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <source>src/main/licensing/app/notice-for-binary.txt</source>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <destName>NOTICE</destName>
+            <lineEnding>crlf</lineEnding>
+        </file>
+        <file>
+            <source>src/main/licensing/app/license-for-binary.txt</source>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <destName>LICENSE</destName>
+            <lineEnding>crlf</lineEnding>
+        </file>
+    </files>
+</assembly>

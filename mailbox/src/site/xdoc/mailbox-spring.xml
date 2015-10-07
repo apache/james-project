@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+    <properties>
+        <title>Mailbox Spring</title>
+    </properties>
+
+    <body>
+        
+        <section name="Mailbox Spring Responsability">
+            <p>The Mailbox Spring module is designed to test the loading of mailbox implementations. </p>
+        </section>
+        
+        <section name="Mailbox Spring Classes">
+            <p>The module is small. It contains just two classes:</p>
+            <ul>
+                <li>SpringMailbox - this loads the spring-mailbox.xml </li>    
+                <li>AnonymousAuthenticator - provides a dummy org.apache.james.mailbox.store.Authenticator</li>
+            </ul>            
+            <p>SpringMailbox class is used to load the spring application context from <em>spring-mailbox.xml</em> 
+            and provides a method to get beans declared in that context.
+            </p>
+            
+            <p> <em>spring-mailbox.xml</em> contains references to Spring configuration files, one for each mailbox implementation and for other components.
+            You might find the following files: <br/></p>
+            <ul>
+                <li>spring-mailbox-memory.xml</li>
+                <li>spring-mailbox-maildir.xml</li>
+                <li>spring-mailbox-hbase.xml</li>
+                <li>spring-mailbox-jcr.xml</li>
+                <li>spring-mailbox-jpa.xml</li>
+                <li>spring-mailbox-authenticator.xml</li>
+                <li>spring-mailbox-locker.xml</li>
+                <li>spring-mailbox-lucene.xml</li>
+            </ul>
+            
+            <p>Each mailbox configuration file is used to declare beans that will instantiate all components 
+            (MailboxSessionMapperFactory, MailboxManager, UidProvider, etc) needed to start that mailbox implementation.</p>
+                    
+        </section>
+
+    </body>
+
+</document>

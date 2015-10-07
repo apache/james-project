@@ -1,0 +1,165 @@
+{
+ "id": 25,
+ "mailboxId": "18",
+ "modSeq": 42,
+ "size": 25,
+ "date": "2015-06-07T00:00:00+02:00",
+ "mediaType": "plain",
+ "subtype": "text",
+ "userFlags": [
+  "security",
+  "debian"
+ ],
+ "headers": {
+  "mime-version": [
+   "1.0"
+  ],
+  "date": [
+   "Thu, 4 Jun 2015 06:08:41 +0200"
+  ],
+  "return-path": [
+   "<arch-general-bounces@archlinux.org>"
+  ],
+  "subject": [
+   "[arch-general] Inkscape fails to open svg files"
+  ],
+  "x-spam-score": [
+   "-1.499"
+  ],
+  "precedence": [
+   "list"
+  ],
+  "list-subscribe": [
+   "<https://lists.archlinux.org/listinfo/arch-general>, <mailto:arch-general-request@archlinux.org?subject=subscribe>"
+  ],
+  "x-sieve": [
+   "CMU Sieve 2.4"
+  ],
+  "list-help": [
+   "<mailto:arch-general-request@archlinux.org?subject=help>"
+  ],
+  "received-spf": [
+   "Pass (sender SPF authorized) identity=mailfrom; client-ip=5.9.250.164; helo=luna.archlinux.org; envelope-from=arch-general-bounces@archlinux.org; receiver=benwa@minet.net "
+  ],
+  "x-received": [
+   "by 10.180.98.103 with SMTP id eh7mr3462314wib.75.1433390941725; Wed, 03 Jun 2015 21:09:01 -0700 (PDT)"
+  ],
+  "x-spam-level": [
+   ""
+  ],
+  "message-id": [
+   "<CAN1zdnW5PW7z5msM-TjUpouygxWY6z-25A3WCB-C5BvqDuP1Qw@mail.gmail.com>"
+  ],
+  "from": [
+   "Murari <murari.ksr@gmail.com>"
+  ],
+  "content-type": [
+   "text/plain; charset=UTF-8"
+  ],
+  "authentication-results": [
+   "mx2.minet.net; dkim=fail\treason=\"verification failed; insecure key\"\theader.d=gmail.com header.i=@gmail.com header.b=rtUETpuc;\tdkim-adsp=none (insecure policy); dkim-atps=neutral"
+  ],
+  "reply-to": [
+   "General Discussion about Arch Linux <arch-general@archlinux.org>"
+  ],
+  "x-spam-flag": [
+   "NO"
+  ],
+  "dkim-signature": [
+   "v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113; h=mime-version:from:date:message-id:subject:to:content-type; bh=7st+jAfRrEnSrTq3/eOYg/0asNUH7fqHCXCyOguOIsk=; b=rtUETpucDR6xziqI/1XndSQnFd2CaWEoxeg653HtuScH5ZTP33vNW+xqBQO8Y0M50S zFoE4UYgAkuZKo0Y4wafRRqx4bNRheLSbApXXXhh9op73/cABS0nVAQeGaQf8Dg0vLO7 TvpiDlWt4AtsFlJkKTzZ0aGGk7FuRc+aN8n5Azc/LW4Utem61smWNaTmipkQDvacx6xh Zyvq4q0K2HGNWTaTif7QJ75ScYC8newm1LJ/PDl1UjLkisFC/DOvTFx+24J+gpZD2tzT leLWtpNLjF1sHReHS6hpMahD7jas1iBnx71s9USGq9Mxk7OM3HHyV9VyfBJlv7fTqzLM mdUA=="
+  ],
+  "x-beenthere": [
+   "arch-general@archlinux.org"
+  ],
+  "list-unsubscribe": [
+   "<https://lists.archlinux.org/options/arch-general>, <mailto:arch-general-request@archlinux.org?subject=unsubscribe>"
+  ],
+  "list-post": [
+   "<mailto:arch-general@archlinux.org>"
+  ],
+  "received": [
+   "from mx2.minet.net (mx2.minet.net [192.168.102.26])\t by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;\t Thu, 04 Jun 2015 06:09:06 +0200",
+   "from localhost (spam.minet.net [192.168.102.97])\tby mx2.minet.net (Postfix) with ESMTP id 4492D821966\tfor <benwa@minet.net>; Thu,  4 Jun 2015 06:09:11 +0200 (CEST)",
+   "from mx2.minet.net ([IPv6:::ffff:192.168.102.26])\tby localhost (spam.minet.net [::ffff:192.168.102.97]) (amavisd-new, port 10024)\twith ESMTP id Meygb-OHe7nm for <benwa@minet.net>;\tThu,  4 Jun 2015 04:09:10 +0000 (UTC)",
+   "from luna.archlinux.org (luna.archlinux.org [5.9.250.164])\t(using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))\t(No client certificate requested)\tby mx2.minet.net (Postfix) with ESMTPS id DD66B821952\tfor <benwa@minet.net>; Thu,  4 Jun 2015 06:09:09 +0200 (CEST)",
+   "from luna.archlinux.org (luna.archlinux.org [127.0.0.1])\tby luna.archlinux.org (Postfix) with ESMTP id A0E06260C6;\tThu,  4 Jun 2015 04:09:05 +0000 (UTC)",
+   "from luna.archlinux.org (luna.archlinux.org [127.0.0.1]) by luna.archlinux.org (Postfix) with ESMTP id 0CD88260C5 for <arch-general@lists.archlinux.org>; Thu,  4 Jun 2015 04:09:04 +0000 (UTC)",
+   "from nymeria.archlinux.org (nymeria.archlinux.org [89.238.67.251]) by luna.archlinux.org (Postfix) with ESMTPS for <arch-general@lists.archlinux.org>; Thu,  4 Jun 2015 04:09:04 +0000 (UTC)",
+   "from nymeria.archlinux.org (localhost.localdomain [127.0.0.1]) by nymeria.archlinux.org (Postfix) with ESMTP id DDBB240260 for <arch-general@archlinux.org>; Thu,  4 Jun 2015 06:09:02 +0200 (CEST)",
+   "from mail-wg0-x22c.google.com (mail-wg0-x22c.google.com [IPv6:2a00:1450:400c:c00::22c]) (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA (256/256 bits)) (No client certificate requested) by nymeria.archlinux.org (Postfix) with ESMTPS for <arch-general@archlinux.org>; Thu,  4 Jun 2015 06:09:02 +0200 (CEST)",
+   "by wgme6 with SMTP id e6so23798103wgm.2 for <arch-general@archlinux.org>; Wed, 03 Jun 2015 21:09:01 -0700 (PDT)",
+   "by 10.27.96.135 with HTTP; Wed, 3 Jun 2015 21:08:41 -0700 (PDT)"
+  ],
+  "errors-to": [
+   "arch-general-bounces@archlinux.org"
+  ],
+  "list-archive": [
+   "<https://lists.archlinux.org/pipermail/arch-general/>"
+  ],
+  "x-virus-scanned": [
+   "by amavisd-new using ClamAV at minet.net"
+  ],
+  "sender": [
+   "\"arch-general\" <arch-general-bounces@archlinux.org>"
+  ],
+  "x-spam-status": [
+   "No, score=-1.499 required=1 tests=[BAYES_00=-1.5,\tFREEMAIL_FROM=0.001, T_DKIM_INVALID=0.01, T_RP_MATCHES_RCVD=-0.01]\tautolearn=ham"
+  ],
+  "x-mailman-version": [
+   "2.1.20"
+  ],
+  "to": [
+   "General Discussion about Arch Linux <arch-general@archlinux.org>"
+  ],
+  "x-content-filtered-by": [
+   "Mailman/MimeDel 2.1.20"
+  ],
+  "list-id": [
+   "General Discussion about Arch Linux <arch-general.archlinux.org>"
+  ]
+ },
+ "from": [
+  {
+   "name": "Murari",
+   "address": "murari.ksr@gmail.com"
+  }
+ ],
+ "to": [
+  {
+   "name": "General Discussion about Arch Linux",
+   "address": "arch-general@archlinux.org"
+  }
+ ],
+ "cc": [],
+ "bcc": [],
+ "subject": [
+  "[arch-general] Inkscape fails to open svg files"
+ ],
+ "sentDate": "2015-06-04T06:08:41+02:00",
+ "properties": [
+  {
+   "namespace": "http://james.apache.org/rfc2045/Content-Type",
+   "localName": "type",
+   "value": "plain"
+  },
+  {
+   "namespace": "http://james.apache.org/rfc2045/Content-Type",
+   "localName": "subtype",
+   "value": "text"
+  },
+  {
+   "namespace": "http://james.apache.org/rfc2045",
+   "localName": "Content-Description",
+   "value": "An e-mail"
+  }
+ ],
+ "attachments": [],
+ "textBody": "Hi all,\n\nAn update between the 17th of May and the 1st of June seems to have broken\nInkscape's ability to open existing svg files on my computer. Any svg I\nopen (including stock files off the internet) cause Inkscape to crash with\n\"Inkscape encountered an internal error and will close now\". I even created\na new, test svg consisting only of a few shapes and text, but I can't open\nit again after saving. Has anyone else seen anything like this?\n\nThanks!\n",
+ "isDraft": false,
+ "isFlagged": true,
+ "isAnswered": false,
+ "isDeleted": true,
+ "isRecent": false,
+ "hasAttachment": false,
+ "isUnread": false
+}

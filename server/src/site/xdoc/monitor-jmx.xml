@@ -1,0 +1,112 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Monitor via JMX</title>
+ </properties>
+
+<body>
+
+  <section name="Monitor via JMX">
+<!-- 
+Additional Notes to be documented
+- - - - - - - - - - - - - - - - - 
+  what you mean with how I see permanent errors ?
+  unknow users are in ValidRcptHandler
+  but if someone would just ignore the 5xx return code on rcpt and suply the data it would return a permanent error
+  so yes it could be in there too
+  maybe we should only count the first 5xx in a transaction
+  
+  for the rejected message, I would except to be counted as ok in the stats
+  why
+  it's not an smtp protocol error
+  5xx is an error
+  thats the whole point of the stats
+  see how many messages are rejected via permanent error and how many via temporary error
+  what's the difference between permanet and temporary ?
+  temporary will get try to redelivered later
+  like greylisting is temporary
+-->
+    <p>You can monitor James Server via JMX.</p>
+
+    <p>The managed objects are exposed from localhost only (for security reasons) on the following URL:</p>
+      
+    <p><code>service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi</code></p>
+      
+    <p>Simply launch jconsole to access the exposed attributes and methods.
+       Active Connections active per component, limits,... can be displayed and following services can 
+       be monitored:</p>
+
+    <ul>
+      <li>IMAP</li>
+      <li>POP3</li>
+      <li>SMTP</li>
+      <li>LMTP</li>
+      <li>RemoteManager</li>
+      <li>DNSService</li>
+      <li>Queues</li>
+    </ul>
+     
+    <p>If you want to access the JXM server from a remote location, you can <a href="config-system.html">configure
+       the hostname and port</a> on which James listens to.</p>
+    
+  </section>
+    
+  <section name="Statistics via JMX">
+  
+    <p>You can enable satistics collection for SMTP/LMPT/POP3 Servers via JMX. 
+       Configure for example smtpserver.xml with</p>
+       
+    <source>
+&lt;handler class="org.apache.james.smtpserver.jmx.ConnectHandlerResultJMXMonitor"/&gt;
+&lt;handler class="org.apache.james.smtpserver.jmx.LineHandlerResultJMXMonitor"/&gt;
+&lt;handler class="org.apache.james.smtpserver.jmx.CommandHandlerResultJMXMonitor"/&gt;
+&lt;handler class="org.apache.james.smtpserver.jmx.HookResultJMXMonitor"/&gt; (only for smtp)
+    </source>
+
+    <p><img src="images/jmx-monitoring/jmx-org.apache.james.smtpserver.JamesDataCmdHandler.png"/></p>
+
+  </section>
+
+  <section name="Statistics via JMX">
+  
+    <p>You can enable satistics collection for SMTP/LMPT/POP3 Servers via JMX. 
+       Configure for example smtpserver.xml with</p>
+       
+    <p><img src="images/jmx-monitoring/jmx-org.apache.james.smtpserver.JamesDataCmdHandler.png"/></p>
+
+    </section>
+       
+  <section name="JMX Remote Access">
+  
+    <p>If you want a remote access, you can install a web application management tool such as jmanage. 
+       You will get screens such as the following one.</p>
+       
+    <p><img src="images/jmx-monitoring/jmx-current-connections.png"/></p>
+
+    <p><img src="images/jmx-monitoring/jmx-memory.png"/></p>
+
+    <p><img src="images/jmx-monitoring/jmx-gc.png"/></p>
+  
+  </section>
+
+</body>
+
+</document>

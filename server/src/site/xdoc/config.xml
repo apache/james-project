@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="Configure Apache James Server">
+  
+    <p>All configuration files resides in the ./conf and ./conf/META-INF folder.</p>
+    
+    <p>We ship with default configuration (embedded in jars) and -template files
+       you can use to override the default configuration. Simply copy in conf folder *-template.xml
+       to *.xml (example: smtpserver-template.xml to smtpserver.xml), and change
+       in *.xml the settings to map your needs.</p>
+       
+    <p>You can/must configure James for the following:</p>
+    
+    <table>
+
+      <tr>
+        <th>Config File Sample</th>
+        <th>Config Area</th>
+        <th>Config Comment</th>
+      </tr>
+    
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/domainlist-template.xml">domainlist.xml</a></td>
+        <td><a href="config-domainlist.html">Domain List Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/usersrepository-template.xml">usersrepository.xml</a></td>
+        <td><a href="config-users.html">Users Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/recipientrewritetable-template.xml">recipientrewritetable.xml</a></td>
+        <td><a href="config-recipientrewritetable.html">Recipient Rewrite Table Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailbox-template.xml">mailbox.xml</a></td>
+        <td><a href="config-mailbox.html">Mailbox Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/quota-template.xml">mailbox.xml</a></td>
+        <td><a href="config-quota.html">Quota Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailrepositorystore-template.xml">mailrepositorystore.xml</a></td>
+        <td><a href="config-mailrepositorystore.html">Mail Repository Stores Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/dnsservice-template.xml">dnsservice.xml</a></td>
+        <td><a href="config-dnsservice.html">DNS Service Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/smtpserver-template.xml">smtpserver.xml</a></td>
+        <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/lmtpserver-template.xml">lmtpserver.xml</a></td>
+        <td><a href="config-smtp-lmtp.html">LMTP Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/pop3server-template.xml">pop3server.xml</a></td>
+        <td><a href="config-pop3.html">POP3 Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/imapserver-template.xml">imapserver.xml</a></td>
+        <td><a href="config-imap4.html">IMAP4 Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer.xml</a></td>
+        <td><a href="config-mailetcontainer.html">Mailet Container Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/fetchmail-template.xml">fetchmail.xml</a></td>
+        <td><a href="config-fetchmail.html">FetchMail Configuration</a></td>
+        <td></td>
+      </tr>
+<!-- 
+Removed from trunk for now.
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/james-listmanager.xml">james-listmanager.xml</a></td>
+        <td><a href="config-listmanager.html">List Manager Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/miResources.xml">miResources.xml</a></td>
+        <td>SQL Resources for Mailing lists</td>
+        <td></td>
+      </tr>
+-->
+
+    </table>
+    
+    <p>For most advanced system configuration, you can configure James for the following:</p>
+    
+    <table>
+
+      <tr>
+        <th>System Config File Sample</th>
+        <th>System Config Area</th>
+        <th>System Config Comment</th>
+      </tr>
+    
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a></td>
+        <td><a href="config-system.html">System Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/james-database-template.properties">james-database.properties</a></td>
+        <td><a href="config-system.html">System Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/META-INF/persistence-template.xml">META-INF/persistence.xml</a></td>
+        <td><a href="config-system.html">System Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>
+          <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/jmx-template.properties">jmx.properties</a><br/>
+<!-- 
+          <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/jmx.access">jmx.access</a><br/>
+          <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/jmx.password">jmx.password</a><br/>
+-->
+         </td>
+        <td><a href="config-system.html">System Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/log4j-template.properties">log4j.properties</a></td>
+        <td>See <a href="monitor-logging.html">monitoring with log4j</a> section.</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/sqlResources-template.xml">sqlResources.xml</a></td>
+        <td><a href="config-system.html">System Configuration</a></td>
+        <td>Deprecated</td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/jcr-repository-template.xml">jcr-repository.xml</a></td>
+        <td><a href="config-system.html">System Configuration</a></td>
+        <td></td>
+      </tr>
+      
+    </table>
+    
+    <p>See also more specific configurations related to <a href="config-ssl-tls.html">TLS</a>, 
+       <a href="config-sieve.html">Sieve</a> and 
+       <a href="config-antispam.html">Antispam</a>.</p>
+
+  </section>
+
+</body>
+
+</document>

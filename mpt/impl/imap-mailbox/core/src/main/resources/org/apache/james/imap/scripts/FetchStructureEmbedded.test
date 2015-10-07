@@ -1,0 +1,558 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+C: A2 CREATE testmailbox
+S: A2 OK CREATE completed\.
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A3 OK \[READ-WRITE\] SELECT completed\.
+C: A4 APPEND testmailbox {1767+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/mixed;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: application/octet-stream
+C: Content-Transfer-Encoding: base64
+C: 
+C: 987654321AHPLA
+C: 
+C: --1729
+C: Content-Type: message/rfc822
+C: 
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Alternative Email
+C: Content-Type: multipart/alternative;boundary=42
+C: 
+C: This message has a premable
+C: 
+C: --42
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Custard!
+C: 
+C: --42
+C: Content-Type: application/octet-stream
+C: 
+C: CUSTARDCUSTARDCUSTARD
+C: 
+C: --42--
+C: 
+C: --1729
+C: Content-Type: multipart/mixed; boundary=4.66920160910299
+C: 
+C: --4.66920160910299
+C: Content-Type: image/gif
+C: Content-Transfer-Encoding: base64
+C: MIME-Version: 1.0
+C: Content-ID: 238478934723847238947892374
+C: Content-Description: Bogus Image Data
+C: 
+C: ABCDFEGHIJKLMNO
+C: 
+C: --4.66920160910299
+C: Content-Type: message/rfc822
+C: 
+C: From: Timothy Tayler <timothy@example.org>
+C: To: John Smith <john@example.org>
+C: Date: Sat, 16 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: Another Example Email
+C: Content-Type: multipart/mixed;boundary=2.50290787509
+C: 
+C: Yet another preamble
+C: 
+C: --2.50290787509
+C: Content-Type: text/plain
+C: 
+C: Rhubard AND Custard!
+C: 
+C: --2.50290787509
+C: Content-Type: multipart/alternative;boundary=3.243F6A8885A308D3
+C: 
+C: --3.243F6A8885A308D3
+C: Content-Type: text/plain
+C: 
+C: Rhubard?Custard?
+C: 
+C: --3.243F6A8885A308D3
+C: 
+C: Content-Type: text/richtext
+C: 
+C: Rhubard?Custard?
+C: 
+C: --3.243F6A8885A308D3--
+C: 
+C: --2.50290787509--
+C: 
+C: --4.66920160910299--
+C: --1729--
+C: 
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+C: A5 FETCH 1 (BODY[])
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) BODY\[\] \{1767\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: application/octet-stream
+S: Content-Transfer-Encoding: base64
+S: 
+S: 987654321AHPLA
+S: 
+S: --1729
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Alternative Email
+S: Content-Type: multipart/alternative;boundary=42
+S: 
+S: This message has a premable
+S: 
+S: --42
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Custard!
+S: 
+S: --42
+S: Content-Type: application/octet-stream
+S: 
+S: CUSTARDCUSTARDCUSTARD
+S: 
+S: --42--
+S: 
+S: --1729
+S: Content-Type: multipart/mixed; boundary=4\.66920160910299
+S: 
+S: --4\.66920160910299
+S: Content-Type: image/gif
+S: Content-Transfer-Encoding: base64
+S: MIME-Version: 1\.0
+S: Content-ID: 238478934723847238947892374
+S: Content-Description: Bogus Image Data
+S: 
+S: ABCDFEGHIJKLMNO
+S: 
+S: --4\.66920160910299
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: John Smith <john@example\.org>
+S: Date: Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: Another Example Email
+S: Content-Type: multipart/mixed;boundary=2\.50290787509
+S: 
+S: Yet another preamble
+S: 
+S: --2\.50290787509
+S: Content-Type: text/plain
+S: 
+S: Rhubard AND Custard!
+S: 
+S: --2\.50290787509
+S: Content-Type: multipart/alternative;boundary=3\.243F6A8885A308D3
+S: 
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: 
+S: --2\.50290787509--
+S: 
+S: --4\.66920160910299--
+S: --1729--
+S: \)
+S: A5 OK FETCH completed\.
+C: A6 FETCH 1 (BODY[TEXT])
+S: \* 1 FETCH \(BODY\[TEXT\] \{1564\}
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: application/octet-stream
+S: Content-Transfer-Encoding: base64
+S: 
+S: 987654321AHPLA
+S: 
+S: --1729
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Alternative Email
+S: Content-Type: multipart/alternative;boundary=42
+S: 
+S: This message has a premable
+S: 
+S: --42
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Custard!
+S: 
+S: --42
+S: Content-Type: application/octet-stream
+S: 
+S: CUSTARDCUSTARDCUSTARD
+S: 
+S: --42--
+S: 
+S: --1729
+S: Content-Type: multipart/mixed; boundary=4\.66920160910299
+S: 
+S: --4\.66920160910299
+S: Content-Type: image/gif
+S: Content-Transfer-Encoding: base64
+S: MIME-Version: 1\.0
+S: Content-ID: 238478934723847238947892374
+S: Content-Description: Bogus Image Data
+S: 
+S: ABCDFEGHIJKLMNO
+S: 
+S: --4\.66920160910299
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: John Smith <john@example\.org>
+S: Date: Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: Another Example Email
+S: Content-Type: multipart/mixed;boundary=2\.50290787509
+S: 
+S: Yet another preamble
+S: 
+S: --2\.50290787509
+S: Content-Type: text/plain
+S: 
+S: Rhubard AND Custard!
+S: 
+S: --2\.50290787509
+S: Content-Type: multipart/alternative;boundary=3\.243F6A8885A308D3
+S: 
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: 
+S: --2\.50290787509--
+S: 
+S: --4\.66920160910299--
+S: --1729--
+S: \)
+S: A6 OK FETCH completed\.
+C: A7 FETCH 1 (BODY[HEADER])
+S: \* 1 FETCH \(BODY\[HEADER\] \{203\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: \)
+S: A7 OK FETCH completed\.
+C: A8 FETCH 1 (BODY[1])
+S: \* 1 FETCH \(BODY\[1\] \{10\}
+S: Rhubarb!
+S: \)
+S: A8 OK FETCH completed\.
+C: A9 FETCH 1 (BODY[2])
+S: \* 1 FETCH \(BODY\[2\] \{16\}
+S: 987654321AHPLA
+S: \)
+S: A9 OK FETCH completed\.
+C: A10 FETCH 1 (BODY[3])
+S: \* 1 FETCH \(BODY\[3\] \{395\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Alternative Email
+S: Content-Type: multipart/alternative;boundary=42
+S: 
+S: This message has a premable
+S: 
+S: --42
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Custard!
+S: 
+S: --42
+S: Content-Type: application/octet-stream
+S: 
+S: CUSTARDCUSTARDCUSTARD
+S: 
+S: --42--
+S: \)
+S: A10 OK FETCH completed\.
+C: A11 FETCH 1 (BODY[3.HEADER])
+S: \* 1 FETCH \(BODY\[3\.HEADER\] \{219\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Alternative Email
+S: Content-Type: multipart/alternative;boundary=42
+S: 
+S: \)
+S: A11 OK FETCH completed\.
+C: A12 FETCH 1 (BODY[3.TEXT])
+S: \* 1 FETCH \(BODY\[3\.TEXT\] \{176\}
+S: This message has a premable
+S: 
+S: --42
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Custard!
+S: 
+S: --42
+S: Content-Type: application/octet-stream
+S: 
+S: CUSTARDCUSTARDCUSTARD
+S: 
+S: --42--
+S: \)
+S: A12 OK FETCH completed\.
+C: A13 FETCH 1 (BODY[3.1])
+S: \* 1 FETCH \(BODY\[3\.1\] \{10\}
+S: Custard!
+S: \)
+S: A13 OK FETCH completed\.
+C: A14 FETCH 1 (BODY[3.2])
+S: \* 1 FETCH \(BODY\[3\.2\] \{23\}
+S: CUSTARDCUSTARDCUSTARD
+S: \)
+S: A14 OK FETCH completed\.
+C: A15 FETCH 1 (BODY[4])
+S: \* 1 FETCH \(BODY\[4\] \{853\}
+S: --4\.66920160910299
+S: Content-Type: image/gif
+S: Content-Transfer-Encoding: base64
+S: MIME-Version: 1\.0
+S: Content-ID: 238478934723847238947892374
+S: Content-Description: Bogus Image Data
+S: 
+S: ABCDFEGHIJKLMNO
+S: 
+S: --4\.66920160910299
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: John Smith <john@example\.org>
+S: Date: Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: Another Example Email
+S: Content-Type: multipart/mixed;boundary=2\.50290787509
+S: 
+S: Yet another preamble
+S: 
+S: --2\.50290787509
+S: Content-Type: text/plain
+S: 
+S: Rhubard AND Custard!
+S: 
+S: --2\.50290787509
+S: Content-Type: multipart/alternative;boundary=3\.243F6A8885A308D3
+S: 
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: 
+S: --2\.50290787509--
+S: 
+S: --4\.66920160910299--\)
+S: A15 OK FETCH completed\.
+C: A16 FETCH 1 (BODY[4.1])
+S: \* 1 FETCH \(BODY\[4\.1\] \{17\}
+S: ABCDFEGHIJKLMNO
+S: \)
+S: A16 OK FETCH completed\.
+C: A17 FETCH 1 (BODY[4.1.MIME])
+S: \* 1 FETCH \(BODY\[4\.1\.MIME\] \{161\}
+S: Content-Type: image/gif
+S: Content-Transfer-Encoding: base64
+S: MIME-Version: 1\.0
+S: Content-ID: 238478934723847238947892374
+S: Content-Description: Bogus Image Data
+S: 
+S: \)
+S: A17 OK FETCH completed\.
+C: A18 FETCH 1 (BODY[4.2])
+S: \* 1 FETCH \(BODY\[4\.2\] \{579\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: John Smith <john@example\.org>
+S: Date: Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: Another Example Email
+S: Content-Type: multipart/mixed;boundary=2\.50290787509
+S: 
+S: Yet another preamble
+S: 
+S: --2\.50290787509
+S: Content-Type: text/plain
+S: 
+S: Rhubard AND Custard!
+S: 
+S: --2\.50290787509
+S: Content-Type: multipart/alternative;boundary=3\.243F6A8885A308D3
+S: 
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: 
+S: --2\.50290787509--
+S: \)
+S: A18 OK FETCH completed\.
+C: A19 FETCH 1 (BODY[4.2.HEADER])
+S: \* 1 FETCH \(BODY\[4\.2\.HEADER\] \{212\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: John Smith <john@example\.org>
+S: Date: Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: Another Example Email
+S: Content-Type: multipart/mixed;boundary=2\.50290787509
+S: 
+S: \)
+S: A19 OK FETCH completed\.
+C: A20 FETCH 1 (BODY[4.2.TEXT])
+S: \* 1 FETCH \(BODY\[4\.2\.TEXT\] \{367\}
+S: Yet another preamble
+S: 
+S: --2\.50290787509
+S: Content-Type: text/plain
+S: 
+S: Rhubard AND Custard!
+S: 
+S: --2\.50290787509
+S: Content-Type: multipart/alternative;boundary=3\.243F6A8885A308D3
+S: 
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: 
+S: --2\.50290787509--
+S: \)
+S: A20 OK FETCH completed\.
+C: A21 FETCH 1 (BODY[4.2.1])
+S: \* 1 FETCH \(BODY\[4\.2\.1\] \{22\}
+S: Rhubard AND Custard!
+S: \)
+S: A21 OK FETCH completed\.
+C: A22 FETCH 1 (BODY[4.2.2])
+S: \* 1 FETCH \(BODY\[4\.2\.2\] \{169\}
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: \)
+S: A22 OK FETCH completed\.
+C: A23 FETCH 1 (BODY[4.2.2.1])
+S: \* 1 FETCH \(BODY\[4\.2\.2\.1\] \{18\}
+S: Rhubard\?Custard\?
+S: \)
+S: A23 OK FETCH completed\.
+C: A24 FETCH 1 (BODY[4.2.2.2])
+S: \* 1 FETCH \(BODY\[4\.2\.2\.2\] \{49\}
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: \)
+S: A24 OK FETCH completed\.
+C: A25 FETCH 1:* (BODY BODYSTRUCTURE)
+S: \* 1 FETCH \(BODY \(\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 10 1\)\("APPLICATION" "OCTET-STREAM" NIL NIL NIL "BASE64" 16\)\("MESSAGE" "RFC822" NIL NIL NIL "7BIT" 395 \("Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)" "A Multipart Alternative Email" \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Samual Smith" NIL "samual" "example\.org"\)\) NIL NIL NIL NIL\) \(\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 10 1\)\("APPLICATION" "OCTET-STREAM" NIL NIL NIL "7BIT" 23\) "ALTERNATIVE"\) 19\)\(\("IMAGE" "GIF" NIL "238478934723847238947892374" "Bogus Image Data" "BASE64" 17\)\("MESSAGE" "RFC822" NIL NIL NIL "7BIT" 579 \("Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)" "Another Example Email" \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("John Smith" NIL "john" "example\.org"\)\) NIL NIL NIL NIL\) \(\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 22 1\)\(\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 18 1\)\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 49 3\) "ALTERNATIVE"\) "MIXED"\) 30\) "MIXED"\) "MIXED"\) BODYSTRUCTURE \(\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 10 1 NIL NIL NIL NIL\)\("APPLICATION" "OCTET-STREAM" NIL NIL NIL "BASE64" 16 NIL NIL NIL NIL\)\("MESSAGE" "RFC822" NIL NIL NIL "7BIT" 395 \("Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)" "A Multipart Alternative Email" \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Samual Smith" NIL "samual" "example\.org"\)\) NIL NIL NIL NIL\) \(\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 10 1 NIL NIL NIL NIL\)\("APPLICATION" "OCTET-STREAM" NIL NIL NIL "7BIT" 23 NIL NIL NIL NIL\) "ALTERNATIVE" \("boundary" "42"\) NIL NIL NIL\) 19 NIL NIL NIL NIL\)\(\("IMAGE" "GIF" NIL "238478934723847238947892374" "Bogus Image Data" "BASE64" 17 NIL NIL NIL NIL\)\("MESSAGE" "RFC822" NIL NIL NIL "7BIT" 579 \("Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)" "Another Example Email" \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("Timothy Tayler" NIL "timothy" "example\.org"\)\) \(\("John Smith" NIL "john" "example\.org"\)\) NIL NIL NIL NIL\) \(\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 22 1 NIL NIL NIL NIL\)\(\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 18 1 NIL NIL NIL NIL\)\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 49 3 NIL NIL NIL NIL\) "ALTERNATIVE" \("boundary" "3\.243F6A8885A308D3"\) NIL NIL NIL\) "MIXED" \("boundary" "2\.50290787509"\) NIL NIL NIL\) 30 NIL NIL NIL NIL\) "MIXED" \("boundary" "4\.66920160910299"\) NIL NIL NIL\) "MIXED" \("boundary" "1729"\) NIL NIL NIL\)\)
+S: A25 OK FETCH completed\.
+C: A26 DELETE testmailbox
+S: A26 OK DELETE completed\.

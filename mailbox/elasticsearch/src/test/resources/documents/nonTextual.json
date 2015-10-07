@@ -1,0 +1,156 @@
+{
+  "id":0,
+  "mailboxId":"18",
+  "modSeq":42,
+  "size":25,
+  "date":"2015-06-07T00:00:00+0200",
+  "mediaType":"plain",
+  "subtype":"text",
+  "userFlags":[],
+  "headers":{
+    "date":[
+      "Thu, 18 Jun 2015 12:43:26 +0200"
+    ],
+    "mime-version":[
+      "1.0"
+    ],
+    "x-sieve":[
+      "CMU Sieve 2.2"
+    ],
+    "return-path":[
+      "<btellier@linagora.com>"
+    ],
+    "subject":[
+      "Test message"
+    ],
+    "message-id":[
+      "<5582A0CE.4020801@linagora.com>"
+    ],
+    "received":[
+      "from alderaan.linagora.com (smtp.linagora.dc1 [172.16.18.53])\t by imap (Cyrus v2.2.13-Debian-2.2.13-19+squeeze3) with LMTPA;\t Thu, 18 Jun 2015 12:43:28 +0200","from [10.75.9.154] (unknown [92.103.166.6])\t(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))\t(No client certificate requested)\tby alderaan.linagora.com (Postfix) with ESMTPSA id 0EB1078A\tfor <btellier@linagora.com>; Thu, 18 Jun 2015 12:43:28 +0200 (CEST)"
+    ],
+    "from":[
+      "Benoit Tellier <btellier@linagora.com>"
+    ],
+    "content-type":[
+      "multipart/mixed; boundary=\"------------030000010109090603040500\""
+    ],
+    "to":[
+      "btellier@linagora.com"
+    ],
+    "user-agent":[
+      "Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Thunderbird/38.0.1"
+    ]
+  },
+  "from":[
+    {
+      "name":"Benoit Tellier",
+      "address":"btellier@linagora.com"
+    }
+  ],
+  "to":[
+    {
+      "name":"btellier@linagora.com",
+      "address":"btellier@linagora.com"
+    }
+  ],
+  "cc":[],
+  "bcc":[],
+  "subject":["Test message"],
+  "sentDate":"2015-06-18T12:43:26+0200",
+  "properties":[
+    {
+      "namespace":"http://james.apache.org/rfc2045/Content-Type",
+      "localName":"type",
+      "value":"plain"
+    },
+    {
+      "namespace":"http://james.apache.org/rfc2045/Content-Type",
+      "localName":"subtype",
+      "value":"text"
+    },
+    {
+      "namespace":"http://james.apache.org/rfc2045",
+      "localName":"Content-Description",
+      "value":"An e-mail"
+    }
+  ],
+  "attachments":[
+    {
+      "mediaType":"text",
+      "subtype":"plain",
+      "fileName":null,
+      "fileExtension":null,
+      "contentDisposition":null,
+      "fileMetadata":{
+        "X-Parsed-By":["org.apache.tika.parser.DefaultParser","org.apache.tika.parser.txt.TXTParser"],
+        "Content-Encoding":["ISO-8859-1"],
+        "Content-Type":["text/plain; charset=ISO-8859-1"]
+      },
+      "headers":{
+        "content-transfer-encoding":["7bit"],
+        "content-type":["text/plain; charset=utf-8"]
+      },
+      "textContent":"This mail have a non textual attachment !\n\n"
+    },
+    {
+      "mediaType":"application",
+      "subtype":"vnd.oasis.opendocument.text",
+      "fileName":"toto.odt",
+      "fileExtension":"odt",
+      "contentDisposition":"attachment",
+      "fileMetadata":{
+        "date":["2015-06-18T12:43:07.489893918"],
+        "meta:paragraph-count":["1"],
+        "meta:word-count":["7"],
+        "Table-Count":["0"],
+        "generator":["LibreOffice/4.4.3.2$Linux_X86_64 LibreOffice_project/40m0$Build-2"],
+        "Word-Count":["7"],
+        "dcterms:created":["2015-06-18T12:41:25.197399866"],
+        "dcterms:modified":["2015-06-18T12:43:07.489893918"],
+        "Last-Modified":["2015-06-18T12:43:07.489893918"],
+        "nbPara":["1"],
+        "Last-Save-Date":["2015-06-18T12:43:07.489893918"],
+        "meta:object-count":["0"],
+        "meta:character-count":["47"],
+        "Paragraph-Count":["1"],
+        "nbImg":["0"],
+        "meta:save-date":["2015-06-18T12:43:07.489893918"],
+        "modified":["2015-06-18T12:43:07.489893918"],
+        "Edit-Time":["PT1M42S"],
+        "meta:image-count":["0"],
+        "Image-Count":["0"],
+        "nbCharacter":["47"],
+        "nbObject":["0"],
+        "nbPage":["1"],
+        "Object-Count":["0"],
+        "nbWord":["7"],
+        "Content-Type":["application/vnd.oasis.opendocument.text"],
+        "X-Parsed-By":["org.apache.tika.parser.DefaultParser","org.apache.tika.parser.odf.OpenDocumentParser"],
+        "meta:creation-date":["2015-06-18T12:41:25.197399866"],
+        "meta:table-count":["0"],
+        "Creation-Date":["2015-06-18T12:41:25.197399866"],
+        "xmpTPg:NPages":["1"],
+        "resourceName":["toto.odt"],
+        "Character Count":["47"],
+        "editing-cycles":["2"],
+        "Page-Count":["1"],
+        "nbTab":["0"],
+        "meta:page-count":["1"]
+      },
+      "headers":{
+        "content-transfer-encoding":["base64"],
+        "content-disposition":["attachment; filename=\"toto.odt\""],
+        "content-type":["application/vnd.oasis.opendocument.text; name=\"toto.odt\""]
+      },
+      "textContent":"Awesome document provided for text extraction !\n"}
+  ],
+  "textBody":"This mail have a non textual attachment !\n\n",
+  "isAnswered":false,
+  "isDeleted":false,
+  "isDraft":false,
+  "isFlagged":false,
+  "isRecent":false,
+  "hasAttachment":true,
+  "isUnread":true
+}

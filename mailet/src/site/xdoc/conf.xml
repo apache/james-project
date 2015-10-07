@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+  <properties>
+    <title>Configuration</title>
+    <author email="server-dev@james.apache.org">
+      JAMES Project Team
+    </author>
+  </properties>
+  <body>
+    <section name="Configuration">
+    <p>(TODO)</p>
+    <!--  
+      <p>
+        To use cryptography mailets, the required
+        <a href='http://www.bouncycastle.org'>Bouncy Castle</a>
+        libraries must be installed in
+        <code>james/lib</code>
+        . It is recommended that the correct versions for the JVM are
+        used.
+      </p>
+      <p>
+      To use the mailets, the package 
+      <code>org.apache.james.mailet.crypto.mailet</code> must be available.
+      To use the matchers, <code>org.apache.james.mailet.crypto.matcher</code> must be.
+      For example:
+      </p>
+      <source>
+        <pre>
+    &lt;mailetpackages&gt; 
+      ...
+      &lt;mailetpackage&gt;org.apache.james.mailet.crypto.mailet&lt;/mailetpackage&gt; 
+    &lt;/mailetpackages&gt;
+    &lt;matcherpackages&gt; 
+      ...
+      &lt;matcherpackage&gt;org.apache.james.mailet.crypto.matcher&lt;/matcherpackage&gt; 
+    &lt;/matcherpackages&gt;
+        </pre>
+      </source>
+      <p>Example SMIME mailet configurations:</p>
+      <source>
+        <pre>
+    &lt;mailet match="IsSMIMEEncrypted" class="SMIMEDecrypt"&gt;
+      &lt;keyStoreType&gt;pkcs12&lt;/keyStoreType&gt;
+      &lt;keyStoreFileName&gt;c:/path.pfx&lt;/keyStoreFileName&gt;
+      &lt;keyStorePassword&gt;myKeyStorePass&lt;/keyStorePassword&gt;
+      &lt;keyAlias&gt;myKeyAlias&lt;/keyAlias&gt;
+      &lt;keyAliasPassword&gt;myKeyPass&lt;/keyAliasPassword&gt;
+    &lt;/mailet&gt;
+
+    &lt;mailet match="IsSMIMESigned" class="SMIMECheckSignature"&gt;
+      &lt;keyStoreType&gt;pkcs12&lt;/keyStoreType&gt;
+      &lt;keyStoreFileName&gt;c:/path.pfx&lt;/keyStoreFileName&gt;
+      &lt;keyStorePassword&gt; myKeyStorePass
+      &lt;/keyStorePassword&gt; &lt;strip&gt;false&lt;/strip&gt;
+      &lt;onlyTrusted&gt;true&lt;/onlyTrusted&gt; 
+    &lt;/mailet&gt;
+        </pre>
+      </source>
+      <p></p>
+      Matcher example: messages signed by trusted users never are spam
+      Messages with valid signatures will never be considered spam. This
+      can be a valid policy *if* SMIMECheckSignature was invoked with
+      <onlyTrusted>true</onlyTrusted>
+      set
+      <source>
+        <pre>
+    &lt;mailet
+        match="HasMailAttribute=org.apache.james.SMIMECheckSignature"
+        class="ToProcessor"&gt;
+      &lt;processor&gt;transport&lt;/processor&gt; 
+    &lt;/mailet&gt;
+        </pre>
+      </source>
+      <p>Signing example: Add a server-side signature to all mail.</p>
+      <source>
+        <pre>
+    &lt;mailet
+        match="HasMailAttribute=org.apache.james.SMIMECheckSignature"
+        class="SetMimeHeader"&gt; 
+      &lt;name&gt;X-WasSigned&lt;/name&gt;
+      &lt;value&gt;true&lt;/value&gt; 
+    &lt;/mailet&gt; 
+    
+    &lt;mailet match="All" class="SMIMESign" onMailetException="ignore"&gt;
+      &lt;keyStoreType&gt;jks&lt;/keyStoreType&gt;
+      &lt;keyStoreFileName&gt;path.keystore&lt;/keyStoreFileName&gt; 
+      &lt;keyStorePassword&gt;myKeyStorePass&lt;/keyStorePassword&gt;
+      &lt;keyAlias&gt;myKeyAlias&lt;/keyAlias&gt;
+      &lt;keyAliasPassword&gt;myKeyPass&lt;/keyAliasPassword&gt;
+      &lt;signerName&gt;XXX Trusted Server&lt;/signerName&gt;
+      &lt;rebuildFrom&gt;true&lt;/rebuildFrom&gt;
+      &lt;postmasterSigns&gt;true&lt;/postmasterSigns&gt;
+      &lt;debug&gt;true&lt;/debug&gt; 
+    &lt;/mailet&gt;
+        </pre>
+      </source>
+      -->
+    </section>
+  </body>
+</document>

@@ -1,0 +1,71 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# FLAGS
+C: f1 FETCH 1:4 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 2 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 3 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 4 FETCH \(FLAGS \(\\Recent\)\)
+S: f1 OK FETCH completed.
+
+#Simple store
+C: f2 STORE 1 FLAGS (\Deleted)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: f2 OK STORE completed.
+
+C: f3 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: f3 OK FETCH completed.
+
+#Override previous value (silent)
+C: f2 STORE 1 FLAGS.SILENT (\Draft \Flagged)
+S: f2 OK STORE completed.
+
+C: f1 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Draft \\Flagged \\Recent\)\)
+S: f1 OK FETCH completed.
+
+#Add to existing flags
+C: f2 STORE 1 +FLAGS (\Deleted)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Draft \\Flagged \\Recent\)\)
+S: f2 OK STORE completed.
+
+C: f1 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Draft \\Flagged \\Recent\)\)
+S: f1 OK FETCH completed.
+
+#Remove from existing flags (silent)
+C: f2 STORE 1 -FLAGS.SILENT (\Draft)
+S: f2 OK STORE completed.
+
+C: f1 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent\)\)
+S: f1 OK FETCH completed.
+
+C: f4 STORE 3:4 FLAGS (\Flagged)
+S: \* 3 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: \* 4 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: f4 OK STORE completed.
+
+C: f1 FETCH 1:4 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent\)\)
+S: \* 2 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 3 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: \* 4 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: f1 OK FETCH completed.

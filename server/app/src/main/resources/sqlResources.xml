@@ -1,0 +1,1076 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<sqlResources>
+
+<!--
+     This section provided configuration to determine the
+     database product which is being used for storage. Different database
+     products may require different SQL syntax.
+
+     The jdbc database connection is examined to see if it matches with the
+     regular expressions specified in any of the defined matchers. The matchers
+     are processed in the over provided here, with the first successful match
+     defining the "db" value for this connection.
+
+     This value is then used to choose between different definitions for various
+     named sql statements, defined below. If no match is found,
+     the default sql statements are used.
+-->
+<dbMatchers>
+    <dbMatcher db="mssql" databaseProductName="microsoft sql server"/>
+    <dbMatcher db="oracle" databaseProductName="oracle.*"/>
+    <dbMatcher db="mysql" databaseProductName="my.*"/>
+    <dbMatcher db="derby" databaseProductName="derby.*"/>
+    <dbMatcher db="postgresql" databaseProductName="postgres.*"/>
+    <dbMatcher db="hsqldb" databaseProductName="hsql.*"/>
+    <dbMatcher db="sapdb" databaseProductName="sap.*"/>
+    <dbMatcher db="hypersonic" databaseProductName="HypersonicSQL"/>
+    <dbMatcher db="db2" databaseProductName="db2.*"/>
+    <dbMatcher db="ingres" databaseProductName="ingres.*"/>
+</dbMatchers>
+
+<!--
+    With the following section it is possible to associate several name/value pairs
+        of options to a database product, identified by the "db" XML attribute name.
+    
+    An element without a "db" attribute, if used for an option name, will become a default value for such option.
+    Each option may have a "default default", i.e. a default that applies if no element with an empty
+        "db" attribute (default element) exists as said above;
+        such default default must be documented for such option below.
+    
+    The order of the XML elements is meaningless.
+    
+    Here only "getBody" and "getAttributes" option names are set, but others could be used in the future.
+    Option names:
+        "getBody" - a string (case insensitive) telling which JDBC ResultSet method will be used to
+            get the message body field for a database product.
+            The default default value is "useBytes"..
+            Values (case insensitive):
+                "useBytes"  - use getBytes(int).
+                "useBlob"   - use getBlob(int).
+        "getAttributes" - a string (case insensitive) telling which JDBC ResultSet method will be used to
+            get the message attributes field for a database product.
+           The default default value is "useBytes"..
+            Values (case insensitive):
+                "useBytes"  - use getBytes(int).
+                "useBlob"   - use getBlob(int).
+-->
+<dbOptions>
+    <dbOption name="getBody" value="useBytes"/>
+    <dbOption name="getAttributes" value="useBytes"/>
+    <dbOption db="mssql" name="getBody" value="useBytes"/>
+    <dbOption db="mssql" name="getAttributes" value="useBytes"/>
+    <dbOption db="oracle" name="getBody" value="useBlob"/>
+    <dbOption db="oracle" name="getAttributes" value="useBlob"/>
+    <dbOption db="mysql" name="getBody" value="useBytes"/>
+    <dbOption db="mysql" name="getAttributes" value="useBytes"/>
+    <dbOption db="derby" name="getBody" value="useBytes"/>
+    <dbOption db="derby" name="getAttributes" value="useBytes"/>
+    <dbOption db="postgresql" name="getBody" value="useBytes"/>
+    <dbOption db="postgresql" name="getAttributes" value="useBytes"/>
+    <dbOption db="sapdb" name="getBody" value="useBytes"/>
+    <dbOption db="sapdb" name="getAttributes" value="useBytes"/>
+    <dbOption db="hypersonic" name="getBody" value="useBytes"/>
+    <dbOption db="hypersonic" name="getAttributes" value="useBytes"/>
+    <dbOption db="hsqldb" name="getBody" value="useBytes"/>
+    <dbOption db="hsqldb" name="getAttributes" value="useBytes"/>
+    <dbOption db="db2" name="getBody" value="useBlob"/>
+    <dbOption db="db2" name="getAttributes" value="useBlob"/>
+    <dbOption db="ingres" name="getBody" value="useBytes"/>
+    <dbOption db="ingres" name="getAttributes" value="useBytes"/>
+</dbOptions>
+
+<!-- SQL statements to use for various components. -->
+<!-- -->
+<!-- Parameter definitions ${param} are replaced with parameter values -->
+<!-- read from the configuration file. -->
+<!-- -->
+<!-- If a named statement has a definition defined for the current database product, -->
+<!-- then that statement is used. Otherwise the default statement is used. -->
+
+<!-- SQL statements for the JamesUsersJdbcRepository -->
+<!-- -->
+<!-- The JamesUsersJdbcRepository allows James to use a JDBC compliant database -->
+<!-- to hold user related data.  This includes aliases, forward addresses, -->
+<!-- and password data.  The last is stored as an irreversible hash. -->
+<sqlDefs name="org.apache.james.user.jdbc.JamesUsersJdbcRepository">
+    <sql name="tableName">${table}</sql>
+
+    <!-- Statements used to retrieve all user information for a user from this repository. -->
+    <sql name="select">SELECT username, pwdHash, pwdAlgorithm, useForwarding,
+                        forwardDestination, useAlias, alias
+                 FROM ${table}
+                 ORDER BY username
+    </sql>
+
+    <!-- Statements used to get all user information for a user with a particular user name in a -->
+    <!-- case-insensitive fashion from this repository. -->
+    <sql name="selectByLowercaseName">
+                SELECT username, pwdHash, pwdAlgorithm, useForwarding,
+                        forwardDestination, useAlias, alias
+                FROM ${table}
+                WHERE lower(username) = ?
+    </sql>
+
+    <sql name="selectByLowercaseName" db="mysql">
+                SELECT username, pwdHash, pwdAlgorithm, useForwarding,
+                        forwardDestination, useAlias, alias
+                FROM ${table}
+                WHERE username = ?
+    </sql>
+
+    <!-- Statements used to insert a user into this repository. -->
+    <sql name="insert">INSERT INTO ${table}
+                    (username, pwdHash, pwdAlgorithm, useForwarding, forwardDestination, useAlias, alias)
+                VALUES (?,?,?,?,?,?,?)
+    </sql>
+
+    <!-- Statements used to update information for a user from this repository. -->
+    <sql name="update">UPDATE ${table} SET
+                    pwdHash = ?, pwdAlgorithm = ?, useForwarding = ?, forwardDestination = ?, useAlias = ?, alias = ?
+                WHERE username = ?
+    </sql>
+
+    <!-- Statements used to delete a user from this repository. -->
+    <sql name="delete">DELETE FROM ${table} WHERE username = ?</sql>
+
+    <!-- Statements used to create the table associated with this class. -->
+    <sql name="createTable" db="hypersonic">CREATE CACHED TABLE ${table} (username VARCHAR(64) NOT NULL, pwdHash VARCHAR(50), pwdAlgorithm VARCHAR(20), useForwarding INTEGER, forwardDestination VARCHAR(255), useAlias INTEGER, alias VARCHAR(255), PRIMARY KEY(username))</sql>
+    <sql name="createTable">CREATE TABLE ${table} (username VARCHAR(64) NOT NULL, pwdHash VARCHAR(50), pwdAlgorithm VARCHAR(20), useForwarding SMALLINT, forwardDestination VARCHAR(255), useAlias SMALLINT, alias VARCHAR(255), PRIMARY KEY(username))</sql>
+    <!-- An example of a database-specific sql statement
+    <sql name="createTable" db="mssql">CREATE TABLE ${table} (uniqueId UNIQUEIDENTIFIER, username VARCHAR(64) NOT NULL, pwdHash VARCHAR(50), pwdAlgorithm VARCHAR(20), useForwarding SMALLINT, forwardDestination VARCHAR(255), useAlias SMALLINT, alias VARCHAR(255), PRIMARY KEY(username))</sql>
+    -->
+</sqlDefs>
+
+<!-- SQL statements for the DefaultUsersJdbcRepository -->
+<!-- -->
+<!-- The DefaultUsersJdbcRepository allows James to use a JDBC compliant database -->
+<!-- to hold user ids and password data. The password is stored as an irreversible hash. -->
+<!-- Unlike the JamesUsersJdbcRepository, this repository implementation doesn't support -->
+<!-- aliases or forwards. -->
+<sqlDefs name="org.apache.james.user.jdbc.DefaultUsersJdbcRepository">
+    <sql name="tableName">${table}</sql>
+
+    <!-- Statements used to retrieve all user information for a user from this repository. -->
+    <sql name="select">SELECT username, pwdHash, pwdAlgorithm
+                 FROM ${table}
+    </sql>
+
+    <!-- Statements used to insert a user into this repository. -->
+    <sql name="insert">INSERT INTO ${table}
+                    (username, pwdHash, pwdAlgorithm)
+                VALUES (?,?,?)
+    </sql>
+
+    <!-- Statements used to update information for a user from this repository. -->
+    <sql name="update">UPDATE ${table} SET
+                    pwdHash = ?, pwdAlgorithm = ?
+                WHERE username = ?
+    </sql>
+
+    <!-- Statements used to delete a user from this repository. -->
+    <sql name="delete">DELETE FROM ${table} WHERE username = ?</sql>
+
+    <!-- Statements used to create the table associated with this class. -->
+    <sql name="createTable" db="hypersonic">CREATE CACHED TABLE ${table} (username VARCHAR(64) NOT NULL, pwdHash VARCHAR(50), pwdAlgorithm VARCHAR(20), PRIMARY KEY(username))</sql>
+    <sql name="createTable">CREATE TABLE ${table} (username VARCHAR(64) NOT NULL, pwdHash VARCHAR(50), pwdAlgorithm VARCHAR(20), PRIMARY KEY(username))</sql>
+</sqlDefs>
+
+<!-- SQL statements for the ListUsersJdbcRepository -->
+<!-- -->
+<!-- This class is used for basic list management.  The database table can -->
+<!-- be used to store subscriber data for mulitple lists.  -->
+<sqlDefs name="org.apache.james.user.jdbc.ListUsersJdbcRepository">
+    <!-- An example of defining "default" parameters within the definition file.
+         This is used if no key parameter is specified in config. -->
+    <parameters key="unknownList"/>
+
+    <sql name="tableName">${table}</sql>
+
+    <!-- Statements used to retrieve all users on a particular list from this repository. -->
+    <sql name="select">SELECT listSubscriber
+                 FROM ${table}
+                 WHERE listName = '${key}'
+    </sql>
+
+    <!-- Statements used to insert a user/list mapping into this repository. -->
+    <sql name="insert">INSERT INTO ${table}
+                    (listSubscriber, listName)
+                VALUES (?, '${key}')
+    </sql>
+
+    <!-- Statements used to update a user/list mapping in this repository. -->
+    <sql name="update">UPDATE ${table} SET
+                    listSubscriber = ?
+                WHERE listSubscriber = ? AND listName = '${key}'
+    </sql>
+
+    <!-- Statements used to delete a user/list mapping from this repository. -->
+    <sql name="delete">DELETE FROM ${table}
+                WHERE listSubscriber = ? AND listName = '${key}'
+    </sql>
+
+    <!-- Statements used to create the table associated with this class. -->
+    <sql name="createTable" db="hypersonic">CREATE CACHED TABLE ${table} (listName VARCHAR(64) NOT NULL, listSubscriber VARCHAR(255) NOT NULL, PRIMARY KEY(listName, listSubscriber))</sql>
+    <sql name="createTable">CREATE TABLE ${table} (listName VARCHAR(64) NOT NULL, listSubscriber VARCHAR(255) NOT NULL, PRIMARY KEY(listName, listSubscriber))</sql>
+</sqlDefs>
+
+<!-- SQL statements for the JdbcMailRepository  -->
+<sqlDefs name="org.apache.james.mailrepository.jdbc.JDBCMailRepository">
+
+    <!-- Statements used to check whether a particular message exists in this repository. -->
+    <sql name="checkMessageExistsSQL">SELECT count(*) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to update a message stored in this repository. -->
+    <sql name="updateMessageSQL">UPDATE ${table} SET message_state = ?, error_message = ?, sender = ?, recipients = ?, remote_host = ?, remote_addr = ?, last_updated = ? WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to update the body of a message stored in this repository. -->
+    <sql name="updateMessageBodySQL">UPDATE ${table} SET message_body = ? WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to update the attributes of a message stored in this repository. -->
+    <sql name="updateMessageAttributesSQL">UPDATE ${table} SET message_attributes = ? WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to insert a message into this repository. -->
+    <sql name="insertMessageSQL">INSERT INTO ${table} (message_name,
+    repository_name, message_state, error_message, sender, recipients,
+    remote_host, remote_addr, last_updated, message_body,
+    message_attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)</sql>
+
+    <!-- Statements used to retrieve a message stored in this repository. -->
+    <sql name="retrieveMessageSQL">SELECT message_state, error_message, sender, recipients, remote_host, remote_addr, last_updated FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to retrieve the body of a message stored in this repository. -->
+    <sql name="retrieveMessageBodySQL">SELECT message_body FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to retrieve the attributes of a message stored in this repository. -->
+    <sql name="retrieveMessageAttributesSQL">SELECT message_attributes FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to retrieve the size of the body of a message stored in this repository. -->
+    <!-- NOTE: This statement is optional and need not be implemented for a particular database to be supported. -->
+    <sql name="retrieveMessageBodySizeSQL" db="mssql">SELECT datalength(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="mysql">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="hypersonic">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="hsqldb">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="postgresql">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="oracle">SELECT dbms_lob.getlength(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="db2">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="ingres">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageBodySizeSQL" db="derby">SELECT length(message_body) FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to delete a message stored in this repository. -->
+    <sql name="removeMessageSQL">DELETE FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+
+    <!-- Statements used to list all messages stored in this repository. -->
+    <sql name="listMessagesSQL">SELECT message_name, message_state, last_updated FROM ${table} WHERE repository_name = ? ORDER BY last_updated ASC</sql>
+
+    <!-- Statements used to create the table associated with this class. -->
+    <sql name="createTable" db="mysql">
+        CREATE TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (100) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) NULL ,
+            sender varchar (255) NULL ,
+            recipients text NOT NULL ,
+            remote_host varchar (255) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body longblob NOT NULL ,
+            message_attributes longblob NULL ,
+            last_updated datetime NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="hypersonic">
+        CREATE CACHED TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (255) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) NULL ,
+            sender varchar (255) NULL ,
+            recipients varchar NOT NULL ,
+            remote_host varchar (255) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body varchar NOT NULL ,
+            message_attributes varchar NULL ,
+            last_updated timestamp NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="hsqldb">
+        CREATE CACHED TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (255) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) NULL ,
+            sender varchar (255) NULL ,
+            recipients varchar NOT NULL ,
+            remote_host varchar (255) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body varchar NOT NULL ,
+            message_attributes varchar NULL ,
+            last_updated timestamp NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="mssql">
+        CREATE TABLE [${table}] (
+            [message_name] [varchar] (200) NOT NULL,
+            [repository_name] [varchar] (255) NOT NULL,
+            [message_state] [varchar] (30) NOT NULL ,
+            [error_message] [varchar] (1000) NULL ,
+            [sender] [varchar] (255) NULL ,
+            [recipients] [text] NOT NULL ,
+            [remote_host] [varchar] (255) NOT NULL ,
+            [remote_addr] [varchar] (20) NOT NULL ,
+            [message_body] [image] NOT NULL ,
+            [message_attributes] [image] NULL ,
+            [last_updated] [datetime] NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="oracle">
+        CREATE TABLE ${table} (
+            message_name varchar2(200) NOT NULL ,
+            repository_name varchar2(255) NOT NULL ,
+            message_state varchar2(30) NOT NULL ,
+            error_message varchar2(200) NULL ,
+            sender varchar2(255) ,
+            recipients varchar2(1000) NOT NULL ,
+            remote_host varchar2(100) NOT NULL ,
+            remote_addr varchar2(20) NOT NULL ,
+            message_body blob NOT NULL ,
+            message_attributes blob NULL ,
+            last_updated date NOT NULL ,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="postgresql">
+        CREATE TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (255) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) NULL ,
+            sender varchar (255) NULL ,
+            recipients text NOT NULL ,
+            remote_host varchar (255) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body bytea NOT NULL ,
+            message_attributes bytea NULL ,
+            last_updated timestamp NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="sapdb">
+        CREATE TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (200) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) NULL ,
+            sender varchar (200) NULL ,
+            recipients long NOT NULL ,
+            remote_host varchar (100) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body long byte NOT NULL ,
+            message_attributes long byte NULL ,
+            last_updated date NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="db2">
+        CREATE TABLE ${table} (
+            message_name varchar(200) NOT NULL ,
+            repository_name varchar(255) NOT NULL ,
+            message_state varchar(30) NOT NULL ,
+            error_message varchar(200) ,
+            sender varchar(255) ,
+            recipients varchar(1000) NOT NULL ,
+            remote_host varchar(100) NOT NULL ,
+            remote_addr varchar(20) NOT NULL ,
+            message_body blob NOT NULL ,
+            message_attributes blob ,
+            last_updated timestamp NOT NULL ,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+    <sql name="createTable" db="ingres">
+        CREATE TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (255) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) ,
+            sender varchar (255) ,
+            recipients LONG VARCHAR NOT NULL ,
+            remote_host varchar (255) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body LONG BYTE NOT NULL ,
+            message_attributes LONG BYTE ,
+            last_updated DATE NOT NULL
+        )
+    </sql>
+    <sql name="createTable" db="derby">
+        CREATE TABLE ${table} (
+            message_name varchar (200) NOT NULL,
+            repository_name varchar (255) NOT NULL,
+            message_state varchar (30) NOT NULL ,
+            error_message varchar (200) ,
+            sender varchar (255) ,
+            recipients long varchar NOT NULL ,
+            remote_host varchar (255) NOT NULL ,
+            remote_addr varchar (20) NOT NULL ,
+            message_body blob NOT NULL ,
+            message_attributes blob ,
+            last_updated timestamp NOT NULL,
+            PRIMARY KEY (repository_name, message_name)
+        )
+    </sql>
+</sqlDefs>
+
+
+<!-- SQL statements to support the BayesianAnalysis and the BayesianAnalysisFeeder mailets -->
+<!-- -->
+<sqlDefs name="org.apache.james.util.bayesian.JDBCBayesianAnalyzer">
+
+    <sql name="hamTableName">bayesiananalysis_ham</sql>
+    <sql name="spamTableName">bayesiananalysis_spam</sql>
+    <sql name="messageCountsTableName">bayesiananalysis_messagecounts</sql>
+
+    <!-- Statements used to retrieve the message counts. -->
+    <sql name="selectMessageCounts">SELECT HAMCOUNT, SPAMCOUNT FROM bayesiananalysis_messagecounts</sql>
+
+    <!-- Statements used to initialize the message counts. -->
+    <sql name="initializeMessageCounts">INSERT INTO bayesiananalysis_messagecounts (HAMCOUNT, SPAMCOUNT) VALUES (0,0)</sql>
+
+    <!-- Statements used to update the ham message counts. -->
+    <sql name="updateHamMessageCounts">UPDATE bayesiananalysis_messagecounts SET HAMCOUNT=(HAMCOUNT + ?)</sql>
+
+    <!-- Statements used to update the spam message counts. -->
+    <sql name="updateSpamMessageCounts">UPDATE bayesiananalysis_messagecounts SET SPAMCOUNT=(SPAMCOUNT + ?)</sql>
+
+    <!-- Statements used to retrieve the ham token counts. -->
+    <sql name="selectHamTokens">SELECT TOKEN, OCCURRENCES FROM bayesiananalysis_ham</sql>
+
+    <!-- Statements used to retrieve the spam token counts. -->
+    <sql name="selectSpamTokens">SELECT TOKEN, OCCURRENCES FROM bayesiananalysis_spam</sql>
+
+    <!-- Statements used to insert the ham token counts. -->
+    <sql name="insertHamToken">INSERT INTO bayesiananalysis_ham (TOKEN, OCCURRENCES) VALUES (?,?)</sql>
+
+    <!-- Statements used to insert the spam token counts. -->
+    <sql name="insertSpamToken">INSERT INTO bayesiananalysis_spam (TOKEN, OCCURRENCES) VALUES (?,?)</sql>
+
+    <!-- Statements used to update the ham token counts. -->
+    <sql name="updateHamToken">UPDATE bayesiananalysis_ham SET OCCURRENCES=(OCCURRENCES + ?) WHERE (TOKEN=?)</sql>
+
+    <!-- Statements used to update the spam token counts. -->
+    <sql name="updateSpamToken">UPDATE bayesiananalysis_spam SET OCCURRENCES=(OCCURRENCES + ?) WHERE (TOKEN=?)</sql>
+
+    <!-- Statements used to delete ham tokens. -->
+    <sql name="deleteHamTokens">DELETE FROM bayesiananalysis_ham</sql>
+    
+    <!-- Statements used to delete spam tokens. -->
+    <sql name="deleteSpamTokens">DELETE FROM bayesiananalysis_spam</sql>
+    
+    <!-- Statements used to delete message counts. -->
+    <sql name="deleteMessageCounts">DELETE FROM bayesiananalysis_messagecounts</sql>
+
+
+    <!-- Statements used to create the "ham" table (the 'token' field must be case sensitive). -->
+    <sql name="createHamTable" db="mysql">
+        CREATE TABLE bayesiananalysis_ham (
+            token varchar(128) binary NOT NULL default '',
+            occurrences int(11) NOT NULL default '0',
+            PRIMARY KEY (token)
+        ) TYPE=InnoDB
+    </sql>
+    <sql name="createHamTable" db="mssql">
+        CREATE TABLE [bayesiananalysis_ham] (
+        [token] [varchar] (128) COLLATE Latin1_General_CS_AS NOT NULL,
+        [occurrences] [int] NOT NULL default (0),
+            PRIMARY KEY (token)
+        )
+    </sql>
+    <sql name="createHamTable" db="derby">
+        CREATE TABLE bayesiananalysis_ham (
+            token varchar(128) NOT NULL,
+            occurrences INTEGER NOT NULL default 0,
+            PRIMARY KEY (token)
+        )
+    </sql>
+    <sql name="createHamTable" db="postgresql">
+        CREATE TABLE bayesiananalysis_ham (
+            token varchar(128) NOT NULL,
+            occurrences int NOT NULL default 0,
+            PRIMARY KEY (token)
+        )
+    </sql>
+
+    <!-- Statements used to create the "spam" table (the 'token' field must be case sensitive). -->
+    <sql name="createSpamTable" db="mysql">
+        CREATE TABLE bayesiananalysis_spam (
+            token varchar(128) binary NOT NULL default '',
+            occurrences int(11) NOT NULL default '0',
+            PRIMARY KEY (token)
+        ) TYPE=InnoDB
+    </sql>
+    <sql name="createSpamTable" db="mssql">
+        CREATE TABLE [bayesiananalysis_spam] (
+        [token] [varchar] (128) COLLATE Latin1_General_CS_AS NOT NULL,
+        [occurrences] [int] NOT NULL default (0),
+            PRIMARY KEY (token)
+        )
+    </sql>
+    <sql name="createSpamTable" db="derby">
+        CREATE TABLE bayesiananalysis_spam (
+            token varchar (128) NOT NULL,
+            occurrences INTEGER  NOT NULL default 0,
+            PRIMARY KEY (token)
+        )
+    </sql>
+    <sql name="createSpamTable" db="postgresql">
+        CREATE TABLE bayesiananalysis_spam (
+            token varchar (128) NOT NULL,
+            occurrences int  NOT NULL default 0,
+            PRIMARY KEY (token)
+        )
+    </sql>
+
+    <!-- Statements used to create the "message counts" table. -->
+    <sql name="createMessageCountsTable" db="mysql">
+        CREATE TABLE bayesiananalysis_messagecounts (
+            hamcount int(11) NOT NULL default '0',
+            spamcount int(11) NOT NULL default '0'
+        ) TYPE=InnoDB
+    </sql>
+    <sql name="createMessageCountsTable" db="mssql">
+        CREATE TABLE [bayesiananalysis_messagecounts] (
+        [hamcount] [int] NOT NULL default (0),
+        [spamcount] [int] NOT NULL default (0)
+        )
+    </sql>
+    <sql name="createMessageCountsTable" db="derby">
+        CREATE TABLE bayesiananalysis_messagecounts (
+            hamcount INTEGER NOT NULL default 0,
+            spamcount INTEGER  NOT NULL default 0
+        )
+    </sql>
+    <sql name="createMessageCountsTable" db="postgresql">
+        CREATE TABLE bayesiananalysis_messagecounts (
+            hamcount int NOT NULL default 0,
+            spamcount int  NOT NULL default 0
+        )
+    </sql>
+</sqlDefs>
+
+<!-- SQL statements to support the WhiteListManager mailet and the IsInWhiteList matcher -->
+<!-- -->
+<sqlDefs name="WhiteList">
+
+    <sql name="whiteListTableName">whitelist</sql>
+
+    <!-- Statements used to retrieve a single entry. -->
+    <sql name="selectByPK">SELECT localUser, localHost FROM whitelist where (localUser=? AND localHost=? AND remoteUser=? AND remoteHost=?)</sql>
+
+    <!-- Statements used to all entries by sender address. -->
+    <sql name="selectBySender">SELECT remoteUser, remoteHost FROM whitelist where (localUser=? AND localHost=?) ORDER BY remoteUser, remoteHost</sql>
+
+    <!-- Statements used to insert an entry. -->
+    <sql name="insert">INSERT INTO whitelist (localUser, localHost, remoteUser, remoteHost) VALUES (?,?,?,?)</sql>
+
+    <!-- Statements used to delete an entry. -->
+    <sql name="deleteByPK">DELETE FROM whitelist where (localUser=? AND localHost=? AND remoteUser=? AND remoteHost=?)</sql>
+
+    <!-- Statements used to create the "whitelist" table. -->
+    <sql name="createWhiteListTable" db="hypersonic">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )    </sql>
+    <sql name="createWhiteListTable" db="hsqldb">
+        CREATE CACHED TABLE ${table} (
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )    </sql>
+    <sql name="createWhiteListTable" db="mysql">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) character set latin1 NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) character set latin1 NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        ) TYPE=InnoDB
+    </sql>
+    <sql name="createWhiteListTable" db="mssql">
+        CREATE TABLE [whitelist] (
+            [localUser] [varchar] (64) NOT NULL,
+            [localHost] [varchar] (255) NOT NULL,
+            [remoteUser] [varchar] (64) NOT NULL,
+            [remoteHost] [varchar] (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+    <sql name="createWhiteListTable" db="oracle">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+    <sql name="createWhiteListTable" db="postgresql">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+    <sql name="createWhiteListTable" db="sapdb">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+    <sql name="createWhiteListTable" db="db2">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+    <sql name="createWhiteListTable" db="ingres">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+    <sql name="createWhiteListTable" db="derby">
+        CREATE TABLE whitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            remoteUser varchar (64) NOT NULL,
+            remoteHost varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost, remoteUser, remoteHost)
+        )
+    </sql>
+
+</sqlDefs>
+
+<sqlDefs name="NetworkWhiteList">
+
+    <sql name="networkWhiteListTableName">networkWhitelist</sql>
+
+    <!-- Statements used to retrieve a single entry. -->
+    <sql name="selectNetwork">SELECT network FROM networkWhitelist where (localUser=? AND localHost=?)</sql>
+
+    <!-- Statements used to create the "whitelist" table. -->
+    <sql name="createNetworkWhiteListTable" db="hypersonic">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL,
+            PRIMARY KEY (localUser, localHost)
+        )    </sql>
+    <sql name="createNetworkWhiteListTable" db="hsqldb">
+        CREATE CACHED TABLE ${table} (
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )    </sql>
+    <sql name="createNetworkWhiteListTable" db="mysql">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) character set latin1 NOT NULL,
+            network varchar (255) NOT NULL
+        ) TYPE=InnoDB
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="mssql">
+        CREATE TABLE [networkWhitelist] (
+            [localUser] [varchar] (64) NOT NULL,
+            [localHost] [varchar] (255) NOT NULL,
+            [network] [varchar] (255) NOT NULL
+        )
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="oracle">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="postgresql">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="sapdb">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="db2">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="ingres">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )
+    </sql>
+    <sql name="createNetworkWhiteListTable" db="derby">
+        CREATE TABLE networkWhitelist (
+            localUser varchar (64) NOT NULL,
+            localHost varchar (255) NOT NULL,
+            network varchar (255) NOT NULL
+        )
+    </sql>
+
+</sqlDefs>
+
+<!-- SQL statements to support the GreyList Handler-->
+<!-- -->
+<sqlDefs name="GreyList">
+
+    <sql name="greyListTableName">greylist</sql>
+
+    <!-- Statements used to retrieve a single entry. -->
+    <sql name="selectQuery">SELECT create_time,count FROM greylist WHERE ipaddress = ? AND sender = ? AND recip = ?</sql>
+
+    <!-- Statements used to insert an entry. -->
+    <sql name="insertQuery">INSERT INTO greylist (ipaddress,sender,recip,count,create_time) values (?,?,?,?,?)</sql>
+
+    <!-- Statements used to delete an entry. -->
+    <sql name="deleteQuery">DELETE FROM greylist WHERE create_time &lt; ? AND count = 0</sql>
+    
+    <!-- Statements used to delete an entry. -->
+    <sql name="deleteAutoWhitelistQuery">DELETE FROM greylist WHERE create_time &lt; ?</sql>
+    
+    <!-- Statements used to delete an entry. -->
+    <sql name="updateQuery">UPDATE greylist SET create_time = ? , count = ? WHERE ipaddress = ? AND sender = ? AND recip = ?</sql>
+
+    <!-- Statements used to create the "whitelist" table. -->
+    <sql name="createGreyListTable" db="hypersonic">
+        CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time datetime NOT NULL,           
+            PRIMARY KEY (ipaddress,sender,recip)
+        )    </sql>
+        
+    <sql name="createGreyListTable" db="hsqldb">
+        CREATE CACHED TABLE ${table} (
+        CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time timestamo NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )    </sql>
+    <sql name="createGreyListTable" db="mysql">
+            CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time datetime NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        ) TYPE=InnoDB
+    </sql>
+    <sql name="createGreyListTable" db="mssql">
+        CREATE TABLE [greylist] (
+            [ipaddress] [varchar] (20) NOT NULL,
+            [sender] [varchar] (255) NOT NULL,
+            [recip] [varchar] (255) NOT NULL,
+            [count] [int] NOT NULL,
+            [create_time] [datetime] NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+    <sql name="createGreyListTable" db="oracle">
+            CREATE TABLE greylist (
+            ipaddress varchar2(20) NOT NULL,
+            sender varchar2(255) NOT NULL,
+            recip varchar2(255) NOT NULL,
+            count int NOT NULL,
+            create_time datetime NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+    <sql name="createGreyListTable" db="postgresql">
+            CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time timestamp NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+    <sql name="createGreyListTable" db="sapdb">
+            CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time date NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+    <sql name="createGreyListTable" db="db2">
+            CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time timestamp NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+    <sql name="createGreyListTable" db="ingres">
+            CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time date NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+    <sql name="createGreyListTable" db="derby">
+            CREATE TABLE greylist (
+            ipaddress varchar (20) NOT NULL,
+            sender varchar (255) NOT NULL,
+            recip varchar (255) NOT NULL,
+            count int NOT NULL,
+            create_time timestamp NOT NULL,  
+            PRIMARY KEY (ipaddress,sender,recip)
+        )
+    </sql>
+</sqlDefs>
+
+<!-- SQL statements for the JdbcRecipientRewriteTable  -->
+<sqlDefs name="org.apache.james.rrt.jdbc.JDBCRecipientRewriteTable">
+
+    <!-- Statements used to check whether a particular message exists in this repository. -->
+    <sql name="selectMappings" db="derby">select RecipientRewriteTable.target_address,(RecipientRewriteTable."user" || '@' ||RecipientRewriteTable.domain) from RecipientRewriteTable, RecipientRewriteTable as VUTDomains where ((RecipientRewriteTable."user") like ? or (RecipientRewriteTable."user") = '*') and (RecipientRewriteTable.domain like ? or (RecipientRewriteTable.domain = '*')) order by 2 desc</sql>
+    <sql name="selectMappings">select RecipientRewriteTable.target_address from RecipientRewriteTable, RecipientRewriteTable as VUTDomains where (RecipientRewriteTable.user like ? or RecipientRewriteTable.user = '*') and (RecipientRewriteTable.domain like ? or (RecipientRewriteTable.domain = '*')) order by concat(RecipientRewriteTable.user,'@',RecipientRewriteTable.domain) desc limit 1</sql>
+    <sql name="selectMappings" db="postgresql">select RecipientRewriteTable.target_address from RecipientRewriteTable, RecipientRewriteTable as VUTDomains where (RecipientRewriteTable.user like ? or RecipientRewriteTable.user = '*') and (RecipientRewriteTable.domain like ? or (RecipientRewriteTable.domain = '*')) order by (RecipientRewriteTable.user || '@' || RecipientRewriteTable.domain) desc limit 1</sql>
+    
+    <sql name="selectUserDomainMapping" db="derby">select RecipientRewriteTable.target_address from RecipientRewriteTable where RecipientRewriteTable."user" = ? and RecipientRewriteTable.domain = ? </sql>
+    <sql name="selectUserDomainMapping">select RecipientRewriteTable.target_address from RecipientRewriteTable where RecipientRewriteTable.user = ? and RecipientRewriteTable.domain = ? </sql>
+   
+    <sql name="deleteMapping">delete from RecipientRewriteTable where RecipientRewriteTable."user" = ? and RecipientRewriteTable.domain = ? and RecipientRewriteTable.target_address = ?</sql>
+   
+    <sql name="updateMapping">update RecipientRewriteTable set RecipientRewriteTable.target_address = ? where RecipientRewriteTable."user" = ? and RecipientRewriteTable.domain = ? </sql>
+   
+    <sql name="addMapping">insert into RecipientRewriteTable values(?,?,?) </sql>
+    
+    <sql name="selectAllMappings">select * from RecipientRewriteTable </sql>
+    
+    <sql name="selectDomains">select distinct domain from RecipientRewriteTable</sql>
+    
+    <sql name="selectDomain">select distinct domain from RecipientRewriteTable where domain = ? </sql>
+    
+    <!-- Statements used to create the table associated with this class. -->
+    <sql name="createTable" db="mysql">
+        CREATE TABLE RecipientRewriteTable (
+            user varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <!-- TEMPORARY DISABLED -->
+    <!--
+    <sql name="createTable" db="hypersonic">
+        CREATE CACHED TABLE RecipientRewriteTable (
+            user varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <sql name="createTable" db="hsqldb">
+        CREATE CACHED TABLE RecipientRewriteTable (
+            user varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <sql name="createTable" db="mssql">
+        CREATE TABLE [RecipientRewriteTable] (
+            [user] [varchar] (64) NOT NULL default '',
+            [domain] [varchar] (255) NOT NULL default '',
+            [target_address] [varchar] (255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <sql name="createTable" db="oracle">
+        CREATE TABLE RecipientRewriteTable (
+            user varchar2(64) NOT NULL default '',
+            domain varchar2(255) NOT NULL default '',
+            target_address varchar2(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <sql name="createTable" db="sapdb">
+        CREATE TABLE RecipientRewriteTable (
+            user varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <sql name="createTable" db="db2">
+        CREATE TABLE RecipientRewriteTable (
+            user varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    <sql name="createTable" db="ingres">
+        CREATE TABLE RecipientRewriteTable (
+            user varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY (user,domain)
+        )
+    </sql>
+    -->
+    <sql name="createTable" db="postgresql">
+        CREATE TABLE RecipientRewriteTable (
+            "user" varchar(64) NOT NULL default '',
+            domain varchar(255) NOT NULL default '',
+            target_address varchar(255) NOT NULL default '',
+            PRIMARY KEY ("user",domain)
+        )
+    </sql>
+    <sql name="createTable" db="derby">
+        CREATE TABLE RecipientRewriteTable (
+            "user" varchar (64) NOT NULL default '',
+            domain varchar (255) NOT NULL default '',
+            target_address varchar (255) NOT NULL default '',
+            PRIMARY KEY ("user",domain)
+        )
+    </sql>
+</sqlDefs>
+
+<!-- SQL statements for the JDBCDomainList  -->
+<sqlDefs name="org.apache.james.domainlist.jdbc.JDBCDomainList">
+    <sql name="selectDomains">select distinct domain from ${table} </sql>
+    
+    <sql name="selectDomain">select distinct domain from ${table} where domain = ? </sql>
+    
+    <sql name="addDomain">insert into ${table} values (?) </sql>
+    
+    <sql name="removeDomain">delete from ${table} where domain = ? </sql>
+    
+        <!-- Statements used to create the table associated with this class. -->
+    <sql name="createTable" db="mysql">
+        CREATE TABLE ${table} (
+            domain varchar(100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="hypersonic">
+        CREATE CACHED TABLE ${table} (
+            user varchar(100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="hsqldb">
+        CREATE CACHED TABLE  ${table} (
+            domain varchar(100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="mssql">
+        CREATE TABLE [${table}] (
+            [user] [domain] (100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="oracle">
+        CREATE TABLE ${table} (
+            domain varchar2(100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="postgresql">
+        CREATE TABLE ${table} (
+            domain varchar(64) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="sapdb">
+        CREATE TABLE ${table} (
+            domain varchar(100) NOT NULL default '',
+        )
+    </sql>
+    <sql name="createTable" db="db2">
+        CREATE TABLE ${table} (
+            domain varchar(100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="ingres">
+        CREATE TABLE ${table} (
+            domain varchar(100) NOT NULL default ''
+        )
+    </sql>
+    <sql name="createTable" db="derby">
+        CREATE TABLE ${table} (
+            domain varchar (100) NOT NULL default ''
+        )
+    </sql>
+</sqlDefs>
+</sqlResources>
+

@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Persistence</title>
+ </properties>
+
+<body>
+
+  <section name="Mailbox and Mail Repository Store for Mail Persistence">
+  
+    <subsection name="Introduction">
+  
+      <p>The <b>Mailbox</b> persists users' Inbox, Sent Items, Trash... folders with their mails.</p>
+      
+      <p>The <b>Mail Repository Store</b> persists  spam, error,... mails, so nothing to do with users visible mails.</p>
+  
+      <p>In case of database access, both Mailbox and Mail Repository Store use database connection defined via database.properties.</p>
+      
+    </subsection>
+
+    <subsection name="Mailbox Persistence">
+  
+      <p>Apache James Server uses the <a href="http://james.apache.org/mailbox">Apache James Mailbox</a> storage system 
+         to store the users mailboxes.</p>
+  
+      <p>The mailbox library supports different persistence mecanisms: MailDir, Database (via JPA) and JCR.</p>
+  
+      <p>Mailbox persistence is configured in spring-beans.xml (by default JPA, 
+         you set the database connection properties in database.properties - can also be 
+         MailDir, JCR).</p>
+
+    </subsection>
+  
+    <subsection name="Mail Repository Store Persistence">
+  
+      <p>Available Mail Repository Store are defined in mailrepositorystore.xml. 
+         Each has an URL prefix (file, db, dbfile,...) that can be used in mailetcontainer.xml 
+         to define where to store spam,... mails (example: file://var/mail/error/).</p>
+
+      <p>More information about the mailstores configuration can be 
+        found <a href="config-mailrepositorystore.html">here</a>.</p>
+        
+      <p>Mail Repository Stores are distinguished by how they store data. There are five types of 
+        storage: File, Database, DBFile, MBox and JCR.</p>
+        
+    </subsection>
+      
+  </section>
+  
+  <section name="Domain Persistence">
+  
+    <p>Read more on how to configure <a href="config-domainlist.html">domain persistence</a>.</p>
+  
+  </section>
+
+  <section name="User Persistence">
+  
+    <p>Read more on how to configure <a href="config-users.html">users persistence</a>.</p>
+  
+  </section>
+
+</body>
+
+</document>
+

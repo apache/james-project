@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+
+<document>
+
+ <properties>
+  <title>Overview</title>
+  <author email="server-dev@james.apache.org">Mail Protocol Tester</author>
+ </properties>
+
+<body>
+<section name="What is the Apache James MPT?">
+<p>
+Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
+scritable functional testing of ASCII based line protocols.</p>
+<p>
+This contains a lightweight scripting framework suitable for the
+functional testing of the ASCII line based protocols common in mail.
+A script contains a list of client requests and templated server
+responses. The framework runs the client lines against a host system
+and then compares the server lines received in response against the
+template responses. 
+</p>
+</section>
+<section name='Development Interface'>
+<p>
+This module contains an executable interface useful when developing scripts. The application ships as a 
+self-contained executable jar. To run:
+</p>
+<source>
+java -jar apache-james-mpt-app-<em>version</em>.jar
+</source>
+<p>
+Usage:
+</p>
+<source><pre><![CDATA[
+ -f,--file <file>         run this script
+ -h,--host <host>         runs against this host (defaults to localhost)
+ -p,--port <port>         runs against this port
+ -s,--shabang <shabang>   sets shabang (defaults to empty)
+ -v,--verbose             prints lots of logging
+]]></pre></source>
+</section>
+<section name='Features'>
+<subsection name='Run Single Script'>
+<p>
+Executes a single script from a file against a given port and host. The host default to <code>localhost</code>.
+For example, to run the script in file <code>&lt;file&gt;</code> against localhost port <code>&lt;port&gt;</code>:
+</p>
+<source>
+java -jar apache-james-mpt-app-<em>version</em>.jar -f <![CDATA[<file> -p <port> ]]>
+</source>
+</subsection>
+</section>
+</body>
+</document>

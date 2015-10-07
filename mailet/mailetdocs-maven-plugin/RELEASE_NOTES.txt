@@ -1,0 +1,18 @@
+                               Release Notes
+
+The MailetDocs plugin for {{{http://maven.apache.org}Apache Maven}} documents 
+implementations of the {{{http://james.apache.org/mailet/api}Apache Mailet API}}.
+A mailet is an independent mail processor designed to be run in a mailet container.
+A catalog of mailets and matchers is created, together with reports on each one.
+
+0.2
+
+ 0.2 is the second relase of this plugin. Only dependecies were change to use javamail 1.4.3 
+ which can be found in maven repository
+    
+
+0.1
+
+ 0.1 is the first release of this plugin. Basic function is complete. The API 
+ is expected to change as the code is developed. Feedback to 
+ server-dev@james.apache.org is appreciated.

@@ -1,0 +1,310 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+package org.apache.james.smtpserver.fastfail;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.jspf.core.DNSService;
+import org.apache.james.jspf.core.exceptions.SPFErrorConstants;
+import org.apache.james.jspf.executor.SPFResult;
+import org.apache.james.jspf.impl.DefaultSPF;
+import org.apache.james.jspf.impl.SPF;
+import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.smtp.MailAddress;
+import org.apache.james.protocols.smtp.SMTPRetCode;
+import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
+import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.smtp.hook.HookReturnCode;
+import org.apache.james.protocols.smtp.hook.MailHook;
+import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.apache.james.smtpserver.JamesMessageHook;
+import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, InitializingLifecycleAwareProtocolHandler {
+
+    /** This log is the fall back shared by all instances */
+    private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(SPFHandler.class);
+
+    /**
+     * Non context specific log should only be used when no context specific log
+     * is available
+     */
+    private final Logger serviceLog = FALLBACK_LOG;
+
+    public static final String SPF_BLOCKLISTED = "SPF_BLOCKLISTED";
+
+    public static final String SPF_DETAIL = "SPF_DETAIL";
+
+    public static final String SPF_TEMPBLOCKLISTED = "SPF_TEMPBLOCKLISTED";
+
+    public final static String SPF_HEADER = "SPF_HEADER";
+
+    public final static String SPF_HEADER_MAIL_ATTRIBUTE_NAME = "org.apache.james.spf.header";
+
+    /** If set to true the mail will also be rejected on a softfail */
+    private boolean blockSoftFail = false;
+
+    private boolean blockPermError = true;
+
+    private SPF spf = new DefaultSPF(new SPFLogger());
+
+    /**
+     * block the email on a softfail
+     * 
+     * @param blockSoftFail
+     *            true or false
+     */
+    public void setBlockSoftFail(boolean blockSoftFail) {
+        this.blockSoftFail = blockSoftFail;
+    }
+
+    /**
+     * block the email on a permerror
+     * 
+     * @param blockPermError
+     *            true or false
+     */
+    public void setBlockPermError(boolean blockPermError) {
+        this.blockPermError = blockPermError;
+    }
+
+    /**
+     * DNSService to use
+     * 
+     * @param dnsService
+     *            The DNSService
+     */
+    @Inject
+    public void setDNSService(@Named("dnsservice") DNSService dnsService) {
+        spf = new SPF(dnsService, new SPFLogger());
+    }
+
+    /**
+     * Calls a SPF check
+     * 
+     * @param session
+     *            SMTP session object
+     */
+    private void doSPFCheck(SMTPSession session, MailAddress sender) {
+        String heloEhlo = (String) session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Transaction);
+
+        // We have no Sender or HELO/EHLO yet return false
+        if (sender == null || heloEhlo == null) {
+            session.getLogger().info("No Sender or HELO/EHLO present");
+        } else {
+
+            String ip = session.getRemoteAddress().getAddress().getHostAddress();
+
+            SPFResult result = spf.checkSPF(ip, sender.toString(), heloEhlo);
+
+            String spfResult = result.getResult();
+
+            String explanation = "Blocked - see: " + result.getExplanation();
+
+            // Store the header
+            session.setAttachment(SPF_HEADER, result.getHeaderText(), State.Transaction);
+
+            session.getLogger().info("Result for " + ip + " - " + sender + " - " + heloEhlo + " = " + spfResult);
+
+            // Check if we should block!
+            if ((spfResult.equals(SPFErrorConstants.FAIL_CONV)) || (spfResult.equals(SPFErrorConstants.SOFTFAIL_CONV) && blockSoftFail) || (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV) && blockPermError)) {
+
+                if (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV)) {
+                    explanation = "Block caused by an invalid SPF record";
+                }
+                session.setAttachment(SPF_DETAIL, explanation, State.Transaction);
+                session.setAttachment(SPF_BLOCKLISTED, "true", State.Transaction);
+
+            } else if (spfResult.equals(SPFErrorConstants.TEMP_ERROR_CONV)) {
+                session.setAttachment(SPF_TEMPBLOCKLISTED, "true", State.Transaction);
+            }
+
+        }
+
+    }
+
+    /**
+     */
+    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+        if (!session.isRelayingAllowed()) {
+            // Check if session is blocklisted
+            if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction) != null) {
+                return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction));
+            } else if (session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction) != null) {
+                return new HookResult(HookReturnCode.DENYSOFT, SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " " + "Temporarily rejected: Problem on SPF lookup");
+            }
+        }
+        return new HookResult(HookReturnCode.DECLINED);
+    }
+
+    /**
+     */
+    public HookResult doMail(SMTPSession session, MailAddress sender) {
+        doSPFCheck(session, sender);
+        return new HookResult(HookReturnCode.DECLINED);
+    }
+
+    /**
+     * Adapts service log.
+     */
+    private final class SPFLogger implements org.apache.james.jspf.core.Logger {
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#debug(String)
+         */
+        public void debug(String message) {
+            serviceLog.debug(message);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#debug(String, Throwable)
+         */
+        public void debug(String message, Throwable t) {
+            serviceLog.debug(message, t);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#error(String)
+         */
+        public void error(String message) {
+            serviceLog.error(message);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#error(String, Throwable)
+         */
+        public void error(String message, Throwable t) {
+            serviceLog.error(message, t);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#fatalError(String)
+         */
+        public void fatalError(String message) {
+            serviceLog.error(message);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#fatalError(String, Throwable)
+         */
+        public void fatalError(String message, Throwable t) {
+            serviceLog.error(message, t);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#info(String)
+         */
+        public void info(String message) {
+            serviceLog.info(message);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#info(String, Throwable)
+         */
+        public void info(String message, Throwable t) {
+            serviceLog.info(message, t);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#isDebugEnabled()
+         */
+        public boolean isDebugEnabled() {
+            return serviceLog.isDebugEnabled();
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#isErrorEnabled()
+         */
+        public boolean isErrorEnabled() {
+            return serviceLog.isErrorEnabled();
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#isFatalErrorEnabled()
+         */
+        public boolean isFatalErrorEnabled() {
+            return serviceLog.isErrorEnabled();
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#isInfoEnabled()
+         */
+        public boolean isInfoEnabled() {
+            return serviceLog.isInfoEnabled();
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#isWarnEnabled()
+         */
+        public boolean isWarnEnabled() {
+            return serviceLog.isWarnEnabled();
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#warn(String)
+         */
+        public void warn(String message) {
+            serviceLog.warn(message);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#warn(String, Throwable)
+         */
+        public void warn(String message, Throwable t) {
+            serviceLog.warn(message, t);
+        }
+
+        /**
+         * @see org.apache.james.jspf.core.Logger#getChildLogger(String)
+         */
+        public org.apache.james.jspf.core.Logger getChildLogger(String name) {
+            return this;
+        }
+    }
+
+    /**
+     * @see org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
+     *      org.apache.mailet.Mail)
+     */
+    public HookResult onMessage(SMTPSession session, Mail mail) {
+        // Store the spf header as attribute for later using
+        mail.setAttribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, (String) session.getAttachment(SPF_HEADER, State.Transaction));
+
+        return null;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+        setBlockSoftFail(config.getBoolean("blockSoftFail", false));
+        setBlockPermError(config.getBoolean("blockPermError", true));        
+    }
+
+    @Override
+    public void destroy() {
+        // nothing to-do
+    }
+
+}

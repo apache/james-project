@@ -1,0 +1,113 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+                                                                                                                                                                                                                    
+Delivered-To: robertburrelldonkin@gmail.com
+Received: by 10.114.126.16 with SMTP id y16cs69319wac;
+        Tue, 11 Mar 2008 11:45:12 -0700 (PDT)
+Received: by 10.78.107.8 with SMTP id f8mr18855121huc.40.1205261111174;
+        Tue, 11 Mar 2008 11:45:11 -0700 (PDT)
+Return-Path: <robertburrelldonkin@blueyonder.co.uk>
+Received: from smtp-out2.blueyonder.co.uk (smtp-out2.blueyonder.co.uk [195.188.213.5])
+        by mx.google.com with ESMTP id z34si465534ikz.8.2008.03.11.11.45.09;
+        Tue, 11 Mar 2008 11:45:11 -0700 (PDT)
+Received-SPF: pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.5 as permitted sender) client-ip=195.188.213.5;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of robertburrelldonkin@blueyonder.co.uk designates 195.188.213.5 as permitted sender) smtp.mail=robertburrelldonkin@blueyonder.co.uk
+Received: from [172.23.170.147] (helo=anti-virus03-10)
+	by smtp-out2.blueyonder.co.uk with smtp (Exim 4.52)
+	id 1JZ9TJ-0000ZL-49
+	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:45:09 +0000
+Received: from [82.38.65.6] (helo=[10.0.0.27])
+	by asmtp-out3.blueyonder.co.uk with esmtpa (Exim 4.52)
+	id 1JZ9TI-0000A6-8B
+	for robertburrelldonkin@gmail.com; Tue, 11 Mar 2008 18:45:08 +0000
+Subject: Sonnets By William Shakespeare
+From: Robert Burrell Donkin <robertburrelldonkin@blueyonder.co.uk>
+To: robertburrelldonkin@gmail.com
+Content-Type: multipart/mixed; boundary="=-iC8rnNDvTPHypqsz+j7t"
+Date: Tue, 11 Mar 2008 18:45:07 +0000
+Message-Id: <1205261107.7516.6.camel@localhost>
+Mime-Version: 1.0
+X-Mailer: Evolution 2.12.1 
+
+
+--=-iC8rnNDvTPHypqsz+j7t
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+O! lest the world should task you to recite
+What merit lived in me, that you should love
+After my death,--dear love, forget me quite,
+For you in me can nothing worthy prove;
+Unless you would devise some virtuous lie,
+To do more for me than mine own desert,
+And hang more praise upon deceased I
+Than niggard truth would willingly impart:
+O! lest your true love may seem false in this
+That you for love speak well of me untrue,
+My name be buried where my body is,
+And live no more to shame nor me nor you.
+  For I am shamed by that which I bring forth,
+  And so should you, to love things nothing worth.
+
+--=-iC8rnNDvTPHypqsz+j7t
+Content-Disposition: attachment; filename=sonnet.html
+Content-Type: text/html; name=sonnet.html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+<html><head><title></title></head>
+<body>
+<blockquote cite='http://en.wikipedia.org/wiki/William_Shakespeare'><pre>
+Those parts of thee that the world's eye doth view
+Want nothing that the thought of hearts can mend;
+All tongues--the voice of souls--give thee that due,
+Uttering bare truth, even so as foes commend.
+Thy outward thus with outward praise is crown'd;
+But those same tongues, that give thee so thine own,
+In other accents do this praise confound
+By seeing farther than the eye hath shown.
+They look into the beauty of thy mind,
+And that in guess they measure by thy deeds;
+Then--churls--their thoughts, although their eyes were kind,
+To thy fair flower add the rank smell of weeds: 
+  But why thy odour matcheth not thy show,
+  The soil is this, that thou dost common grow.
+</pre></blockquote>
+</body></html>
+
+--=-iC8rnNDvTPHypqsz+j7t
+Content-Disposition: attachment; filename=sonnet.txt
+Content-Type: text/plain; name=sonnet.txt; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Ah! wherefore with infection should he live,
+And with his presence grace impiety,
+That sin by him advantage should achieve,
+And lace itself with his society? 
+Why should false painting imitate his cheek,
+And steel dead seeming of his living hue?
+Why should poor beauty indirectly seek
+Roses of shadow, since his rose is true?
+Why should he live, now Nature bankrupt is,
+Beggar'd of blood to blush through lively veins?
+For she hath no exchequer now but his,
+And proud of many, lives upon his gains.
+  O! him she stores, to show what wealth she had
+  In days long since, before these last so bad.
+
+--=-iC8rnNDvTPHypqsz+j7t--

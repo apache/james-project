@@ -1,0 +1,211 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Configuring the SMTP and LMTP Service</title>
+ </properties>
+
+<body>
+
+  <section name="Incoming and outgoing SMTP">
+
+    <p>This page details the configuration for Incoming SMTP</p>
+    
+    <p>The outgoing (remote delivery) is implemented in the RemoteDelivery mailets. The configuration details for 
+       outgoing SMTP traffic can be read on <a href="dev-provided-mailets.html">this page</a> (section RemoteDelivery) and
+       shoud be update in the <a href="config-mailetcontainer.html">mailetcontainer</a>.</p>
+  
+  </section>
+
+  <section name="SMTP Configuration">
+  
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/smtpserver-template.xml">smtpserver-template.xml</a> in SVN to get some examples and hints.</p>
+
+    <p>The SMTP service is controlled by a configuration block in the smptserver.xml.
+       The smtpserver tag defines the boundaries of the configuration block.  It encloses 
+       all the relevant configuration for the SMTP server.  The behavior of the SMTP service is
+       controlled by the attributes and children of this tag.</p>
+    
+    <p>This tag has an optional boolean attribute - <strong>enabled</strong> - that defines whether the service is active or not.  The value defaults to "true" if
+       not present.</p>
+
+    <p>The standard children of the smtpserver tag are:</p>
+    
+    <dl>
+      <dt><strong>bind</strong></dt>
+      <dd>A list of address:port - This is an optional value.  If present, this value is a string describing 
+      the IP address to which this service should be bound.  If the tag or value is absent then the service 
+      will bind to all network interfaces for the machine on port 25. Port 25 is the well-known/IANA registered port for SMTP. 
+            Port 465 is the well-known/IANA registered port for SMTP over TLS.</dd>
+      <dt><strong>connectBacklog</strong></dt>
+      <dd></dd>
+      <dt><strong>tls</strong></dt>
+      <dd>Set to true to support STARTTLS or SSL for the Socket.
+         To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
+        keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore. The algorithm is optional and only needs to be specified when using something other
+        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime.</dd>
+      <dt><strong>handler.helloName</strong></dt>
+      <dd>This is a required tag with an optional body that defines the server name 
+      used in the initial service greeting.  The tag may have an optional attribute - <strong>autodetect</strong>.  If 
+      the autodetect attribute is present and true, the service will use the local hostname
+      returned by the Java libraries.  If autodetect is absent or false, the body of the tag will be used.  In
+      this case, if no body is present, the value "localhost" will be used.</dd>
+      <dt><strong>handler.connectionTimeout</strong></dt>
+      <dd>This is an optional tag with a non-negative integer body. Connection timeout in secconds.</dd>
+      <dt><strong>handler.connectionLimit</strong></dt>
+      <dd>Set the maximum simultaneous incoming connections for this service.</dd>
+      <dt><strong>handler.connectionLimitPerIP</strong></dt>
+      <dd>Set the maximum simultaneous incoming connections per IP for this service.</dd>
+      <dt><strong>handler.authRequired</strong></dt>
+      <dd>This is an optional tag with a boolean body.  If true, then the server will 
+      require authentication before delivering mail to non-local email addresses.  If this tag is absent, or the value 
+      is false then the client will not be prompted for authentication.  Only simple user/password authentication is
+      supported at this time. supported values:
+               true: required but announced only to not authorizedAddresses
+               false: don't use AUTH
+               announce: like true, but always announce AUTH capability to clients
+
+               The correct behaviour per RFC value would be false or announce
+               but we still support true for backward compatibility and because
+               some webmail client fails when AUTH is announced but no authentication
+               information has been provided</dd>
+      <dt><strong>handler.authorizedAddresses</strong></dt>
+      <dd>Authorize specific addresses/networks.
+               If you use SMTP AUTH, addresses that match those specified here will
+               be permitted to relay without SMTP AUTH.  If you do not use SMTP
+               AUTH, and you specify addreses here, then only addresses that match
+               those specified will be permitted to relay.
+
+               Addresses may be specified as a an IP address or domain name, with an
+               optional netmask, e.g.,
+
+               127.*, 127.0.0.0/8, 127.0.0.0/255.0.0.0, and localhost/8 are all the same
+
+               See also the RemoteAddrNotInNetwork matcher in the transport processor.
+               You would generally use one OR the other approach.</dd>
+      <dt><strong>handler.verifyIdentity</strong></dt>
+      <dd>This is an optional tag with a boolean body.  This option can only be used 
+      if SMTP authentication is required.  If the parameter is set to true then the sender address for the submitted message
+      will be verified against the authenticated subject. Verify sender addresses, ensuring that
+         the sender address matches the user who has authenticated.
+         This prevents a user of your mail server from acting as someone else
+         If unspecified, default value is true.</dd>
+      <dt><strong>handler.maxmessagesize</strong></dt>
+      <dd>This is an optional tag with a non-negative integer body.  It specifies the maximum 
+      size, in kbytes, of any message that will be transmitted by this SMTP server.  It is a service-wide, as opposed to 
+      a per user, limit.  If the value is zero then there is no limit.  If the tag isn't specified, the service will
+      default to an unlimited message size.</dd>
+      <dt><strong>handler.heloEhloEnforcement</strong></dt>
+      <dd>This sets wether to enforce the use of HELO/EHLO salutation before a 
+         MAIL command is accepted. If unspecified, the value defaults to true.</dd>
+      <dt><strong>handler.addressBracketsEnforcement</strong></dt>
+      <dd>WARNING: This is Non-RFC compliant (default value: true)
+         See: http://wiki.apache.org/james/StandardsComplianceStatement</dd>
+      <dt><strong>handler.smtpGreeting</strong></dt>
+      <dd>This sets the SMTPGreeting which will be used when connect to the smtpserver 
+          If none is specified a default is generated</dd>
+      <dt><strong>handler.handlerchain</strong></dt>
+      <dd></dd>
+      <dt><strong>handler.handlerchain</strong></dt>
+      <dd>The configuration handler chain</dd>
+    </dl>
+
+    <subsection name="Configure Authenticated SMTP (SMTP AUTH)">
+
+      <p>Authenticated SMTP is a method of securing your SMTP server.  With SMTP AUTH enabled senders who wish to 
+        relay mail through the SMTP server (that is, send mail that is eventually to be delivered to another SMTP 
+        server) must authenticate themselves to Apache James Server before sending their message.  Mail that is to be delivered 
+        locally does not require authentication.  This method ensures that spammers cannot use your SMTP server
+        to send unauthorized mail, while still enabling users who may not have fixed IP addresses to send their 
+        messages.</p>
+      
+      <p>Mail servers that allow spammers to send unauthorized email are known as open relays.  So SMTP AUTH
+        is a mechanism for ensuring that your server is not an open relay .</p>
+      
+        <p>At this time Apache James Server only supports simple user name / password authentication.</p>
+    
+      <p>Configuring Apache James Server for Authentication SMTP is a multi-step process.  It requires several adjustments of 
+        the smtpserver.xml.  To enable SMTP AUTH, do the following:</p>
+      
+      <ol>
+      
+        <li>As mentioned above, SMTP AUTH requires that Apache James Server be able to distinguish between mail intended 
+            for local delivery and mail intended for remote delivery.  Apache James Server makes this determination by matching the 
+            domain to which the mail was sent against the &lt;servernames&gt; element of the Apache James Server configuration block.  Any 
+            local domains should be explicitly listed as &lt;servername&gt; elements in this section.</li>
+<!-- 
+Correct this.
+      <li>Apache James Server is configured out of the box so as to not serve as an open relay for spammers.  This is done 
+      by restricting the IP addresses from which mail will be accepted using the RemoteAddrNotInNetwork mailet.  This
+      restriction must be lifted before users can send from arbitrary clients.  To do this, comment out or remove the 
+      mailet tag containing the class attribute "RemoteAddrNotInNetwork".  This tag can be found in the spoolmanager 
+      configuration block, in the root processor configuration.</li>
+-->
+        <li>set the authRequired element of the smtpserver configuration block to "true".</li>
+        
+        <li>if you wish to ensure that authenticated users can only send email from their own account, you may
+            optionally set the verifyIdentity element of the smtpserver configuration block to "true".</li>
+
+        <li>Restart Apache James Server.  This will pull in all of your configuration changes.</li>
+      
+      </ol>
+
+      <p>Finally, you need to verify that your configuration was done correctly.  This step is 
+         <strong>important</strong> and should not be skipped.</p>
+      
+      <p>Verify that you have not inadvertantly configured your server as an open relay. This is most easily 
+         accomplished by using the service provided at <a href="http://www.abuse.net/relay.html">abuse.net</a>. abuse.net will 
+         check your mail server and inform you if it is an open relay.</p>
+      
+      <p>It is extremely important that your server not be configured as an open relay.  Aside from potential 
+         costs associated with usage by spammers, connections from servers that are determined to be open relays 
+         are routinely rejected by SMTP servers.  This can severely impede the ability of your mail server to 
+         send mail.</p>
+      
+      <p>Of course it is also necessary to confirm that users and log in and send 
+         mail through your server.  This can be accomplished using any standard mail client (i.e. Thunderbird, Outlook, 
+         Eudora, Evolution).</p>
+
+    </subsection>
+
+    <subsection name="Configure multiple SMTP servers">
+<!--    
+      <p>Read <a href="https://issues.apache.org/jira/browse/JAMES-1105">https://issues.apache.org/jira/browse/JAMES-1105</a>
+         for ideas to have multiple SMTP port open.</p>
+-->
+    </subsection>
+    
+  </section>
+  
+  <section name="LMTP Configuration">
+    
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/lmtpserver-template.xml">lmtpserver-template.xml</a> in SVN to get some examples and hints.</p>
+    
+    <p>The configuration is the same of for SMTP.</p>
+    
+    <p>By default, it is desactivated. You can activate it with SMTP and bind for example on port 24.</p>
+
+  </section>
+    
+</body>
+
+</document>
+

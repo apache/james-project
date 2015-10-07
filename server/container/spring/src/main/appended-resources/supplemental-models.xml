@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.    
+-->
+<supplementalDataModels xmlns="http://maven.apache.org/supplemental-model/1.0.0"
+                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:schemaLocation="http://maven.apache.org/supplemental-model/1.0.0 http://maven.apache.org/xsd/supplemental-model-1.0.0.xsd">
+
+<!-- 
+
+
+==========================================================
+spring-framework-3.0.5.RELEASE
+
+LICENSE: Apache License, Version 2
+NOTICE:
+START spring-framework-3.0.5.RELEASE
+   ======================================================================
+   == NOTICE file corresponding to section 4 d of the Apache License,  ==
+   == Version 2.0, for the Spring Framework distribution.              ==
+   ======================================================================
+
+   This product includes software developed by
+   the Apache Software Foundation (http://www.apache.org).
+
+   The end-user documentation included with a redistribution, if any,
+   must include the following acknowledgement:
+
+     "This product includes software developed by the Spring Framework
+      Project (http://www.springframework.org)."
+
+   Alternately, this acknowledgement may appear in the software itself,
+   if and wherever such third-party acknowledgements normally appear.
+
+   The names "Spring", "Spring Framework", and "Spring Web Flow" must
+   not be used to endorse or promote products derived from this
+   software without prior written permission. For written permission,
+   please contact enquiries@springsource.com.
+END spring-framework-3.0.5.RELEASE
+  
+SHA1SUMS:
+0c7a17803cc10512e26e285073639543f0c7c764  org.springframework.aop-3.0.5.RELEASE.jar
+07f22a0e9f325e6565b4ea56b479ad76311d146b  org.springframework.asm-3.0.5.RELEASE.jar
+13f585a0ee2575778975eea0568ec6947e255e41  org.springframework.aspects-3.0.5.RELEASE.jar
+4b352a9c3b427294e264ca4d460d07417ca9350e  org.springframework.beans-3.0.5.RELEASE.jar
+6b05e397566cc7750d2d25f81a7441fe1aeecb75  org.springframework.context-3.0.5.RELEASE.jar
+d954c447bf274048bd5a6b7ed575f15cd0924fd0  org.springframework.context.support-3.0.5.RELEASE.jar
+1633e94943d57746ef76910489f1cd71fe667e04  org.springframework.core-3.0.5.RELEASE.jar
+5b8e53877cb58c94f15a0d8172da3569f4b4f3fb  org.springframework.expression-3.0.5.RELEASE.jar
+e21d62306c949cc68b7bd0127862f363c9041c0a  org.springframework.instrument-3.0.5.RELEASE.jar
+4acac65e02d875152dd4ee3c67b65397c7d0a647  org.springframework.instrument.tomcat-3.0.5.RELEASE.jar
+2af0bad1d8d681ed2e014b684287acc448ab30cb  org.springframework.jdbc-3.0.5.RELEASE.jar
+5a880fd07605747e5a641f78fd8039a761c5865e  org.springframework.jms-3.0.5.RELEASE.jar
+cff2c955d1a510bab6e1eb2d1ced309f6ec37ce9  org.springframework.orm-3.0.5.RELEASE.jar
+40f68d7e580d4a6154baff96c5a42a1945186d49  org.springframework.oxm-3.0.5.RELEASE.jar
+4540fba71d41869a6ed5fb504317f2e702761690  org.springframework.test-3.0.5.RELEASE.jar
+91eb9bd9baa61a62590a8093667107cb2c7c8184  org.springframework.transaction-3.0.5.RELEASE.jar
+d5c550739c4c0cb7ca527ef46c9aed72fb215eee  org.springframework.web-3.0.5.RELEASE.jar
+857efba2bc91ff330bd43ea1c6430e04eae1f3b5  org.springframework.web.portlet-3.0.5.RELEASE.jar
+8b1c7176edb4a7e5381ffc5a398a5e2e8ed88909  org.springframework.web.servlet-3.0.5.RELEASE.jar
+6bb3e63293ddf183dc8cb6d0210e109807a27a5a  org.springframework.web.struts-3.0.5.RELEASE.jar
+
+-->
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-orm</artifactId>
+        <!-- 
+        cff2c955d1a510bab6e1eb2d1ced309f6ec37ce9  spring-orm-3.0.5.RELEASE.jar
+        cff2c955d1a510bab6e1eb2d1ced309f6ec37ce9  org.springframework.orm-3.0.5.RELEASE.jar        
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>    
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-expression</artifactId>
+        <!-- 
+        5b8e53877cb58c94f15a0d8172da3569f4b4f3fb  spring-expression-3.0.5.RELEASE.jar
+        5b8e53877cb58c94f15a0d8172da3569f4b4f3fb  org.springframework.expression-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>ApApache License, Version 2.0</name>           
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>    
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-asm</artifactId>
+        <!-- 
+        07f22a0e9f325e6565b4ea56b479ad76311d146b  org.springframework.asm-3.0.5.RELEASE.jar
+        07f22a0e9f325e6565b4ea56b479ad76311d146b  spring-asm-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>    
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <!-- 
+        1633e94943d57746ef76910489f1cd71fe667e04  spring-core-3.0.5.RELEASE.jar
+        1633e94943d57746ef76910489f1cd71fe667e04  org.springframework.core-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>    
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-web</artifactId>
+        <!-- 
+        d5c550739c4c0cb7ca527ef46c9aed72fb215eee  spring-web-3.0.5.RELEASE.jar
+        d5c550739c4c0cb7ca527ef46c9aed72fb215eee  org.springframework.web-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+        <!-- 
+        4b352a9c3b427294e264ca4d460d07417ca9350e  org.springframework.beans-3.0.5.RELEASE.jar
+        4b352a9c3b427294e264ca4d460d07417ca9350e  spring-beans-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <!-- 
+6b05e397566cc7750d2d25f81a7441fe1aeecb75  org.springframework.context-3.0.5.RELEASE.jar
+6b05e397566cc7750d2d25f81a7441fe1aeecb75  spring-context-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <!-- 
+        2af0bad1d8d681ed2e014b684287acc448ab30cb  spring-jdbc-3.0.5.RELEASE.jar
+        2af0bad1d8d681ed2e014b684287acc448ab30cb  org.springframework.jdbc-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-tx</artifactId>
+        <!-- 
+91eb9bd9baa61a62590a8093667107cb2c7c8184  org.springframework.transaction-3.0.5.RELEASE.jar
+91eb9bd9baa61a62590a8093667107cb2c7c8184  spring-tx-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jms</artifactId>
+        <!-- 
+        5a880fd07605747e5a641f78fd8039a761c5865e  spring-jms-3.0.5.RELEASE.jar
+        5a880fd07605747e5a641f78fd8039a761c5865e  org.springframework.jms-3.0.5.RELEASE.jar
+         -->
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+        <groupId>org.springframework</groupId>
+<!-- 
+0c7a17803cc10512e26e285073639543f0c7c764  org.springframework.aop-3.0.5.RELEASE.jar
+0c7a17803cc10512e26e285073639543f0c7c764  spring-aop-3.0.5.RELEASE.jar
+ -->
+        <artifactId>spring-aop</artifactId>
+          <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+        <organization>
+            <name>Spring Framework Project</name>
+            <url>http://www.springframework.org</url>
+        </organization>
+    </project>
+  </supplement>
+  
+  
+<!-- 
+
+===========================================================
+The Legion Of The Bouncy Castle
+ -->
+   <supplement>
+    <project>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcmail-jdk15</artifactId>
+        <organization>
+            <name>The Legion of the Bouncy Castle</name>
+            <url>http://www.bouncycastle.org/</url>
+        </organization>
+    </project>
+  </supplement>
+   <supplement>
+    <project>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk15</artifactId>
+        <organization>
+            <name>The Legion of the Bouncy Castle</name>
+            <url>http://www.bouncycastle.org/</url>
+        </organization>
+    </project>
+  </supplement>
+ <!-- 
+ 
+ =============================================================
+ The AOP Alliance
+  -->
+   <supplement>
+    <project>
+        <groupId>aopalliance</groupId>
+        <artifactId>aopalliance</artifactId>
+        <organization>
+            <name>The AOP Alliance</name>
+            <url>http://aopalliance.sourceforge.net/</url>
+        </organization>
+    </project>
+  </supplement>
+ <!-- 
+ 
+ =============================================================
+ Doug Lea
+  -->
+   <supplement>
+    <project>
+        <groupId>concurrent</groupId>
+        <artifactId>concurrent</artifactId>
+        <organization>
+            <name>Doug Lea</name>
+            <url>http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html/</url>
+        </organization>
+    </project>
+  </supplement>
+ <!-- 
+ 
+ =============================================================
+ Drew Noakes
+  -->
+   <supplement>
+    <project>
+        <groupId>com.drewnoakes</groupId>
+        <artifactId>metadata-extractor</artifactId>
+        <organization>
+            <name>Drew Noakes</name>
+            <url>http://www.drewnoakes.com/code/exif/</url>
+        </organization>
+    </project>
+  </supplement>  
+<!-- 
+
+
+==============================================================
+dnsjava
+ -->
+   <supplement>
+    <project>
+        <groupId>dnsjava</groupId>
+        <artifactId>dnsjava</artifactId>
+        <organization>
+            <name>dnsjava</name>
+            <url>http://www.dnsjava.org</url>
+        </organization>
+    </project>
+  </supplement>  
+<!-- 
+
+=============================================================
+Boilerpipe
+ -->
+   <supplement>
+    <project>
+        <groupId>de.l3s.boilerpipe</groupId>
+        <artifactId>boilerpipe</artifactId>
+        <organization>
+            <name>Boilerpipe</name>
+            <url>http://code.google.com/p/boilerpipe/</url>
+        </organization>
+    </project>
+  </supplement>  
+<!-- 
+
+=============================================================
+John Cowan
+ -->
+  <supplement>
+    <project>
+        <groupId>org.ccil.cowan.tagsoup</groupId>
+        <artifactId>tagsoup</artifactId>
+        <organization>
+            <name>John Cowan</name>
+            <url>http://home.ccil.org/~cowan</url>
+        </organization>
+    </project>
+  </supplement>  
+<!-- 
+
+=============================================================
+Serp
+ -->
+  <supplement>
+    <project>
+        <groupId>net.sourceforge.serp</groupId>
+        <artifactId>serp</artifactId>
+        <organization>
+            <name>Serp</name>
+            <url>http://serp.sourceforge.net</url>
+        </organization>
+    </project>
+  </supplement>  
+  
+<!-- 
+
+
+==============================================================
+Geronimo
+ -->
+  <supplement>
+    <project>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jms_1.1_spec</artifactId>
+        <organization>
+            <name>The Apache Software Foundation</name>
+            <url>http://www.apache.org</url>
+        </organization>
+        <licenses>
+            <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
+            </license>
+        </licenses>
+    </project>
+  </supplement>
+ 
+</supplementalDataModels>

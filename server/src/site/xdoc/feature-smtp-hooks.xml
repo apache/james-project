@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+  <properties>
+     <title>Apache James Server 3 - James - Features - SMTP Hooks</title>
+  </properties>
+
+<body>
+
+  <section name="SMTP Hooks">
+  
+    <p>The James SMTP Server Component allows to easy write your own code which will get executed 
+       in the SMTP-Transaction. Thats a bit different then using a Mailet a.k.a Mailet-API.</p>
+      
+    <p>To customize your SMTP Server, you have a few interfaces which helps you to "hook-in" a 
+       specific SMTP Command. That means your class which implements the given interface(s) will get
+       called after the SMTP-Command was parsed and depending on your implementation it will handle it.</p>
+
+    <p>As your code will get executed before the mail was even accepted. This can help you in many ways,
+       most times its used for rejecting SPAM/Junk within the SMTP-Dialog. But it can be used for 
+       other things too.</p>
+      
+    <p>Its up to you and your use case.</p>
+
+    <p>But be aware as your code needs to get executed during the SMTP-Transaction it should not 
+       take to long to execute. As it will need to fit in before the timeout was hit which can be 
+       different on every mail server. But as a general rule as long as your code can get executed 
+       within 30 seconds it should be fine.</p>
+      
+  </section>
+ 
+  <section name="Provided SMTP Hooks">
+  
+    Read more on the <a href="dev-provided-smtp-hooks.html">provided SMTP Hooks</a>.
+  
+  </section>
+
+  <section name="Create your own SMTP Hooks">
+  
+    Read more on how to create your <a href="dev-extend-smtp-hook.html">own SMTP Hook</a>.
+  
+  </section>
+ 
+</body>
+
+</document>

@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Upgrading from Apache James Server 2.3</title>
+ </properties>
+ 
+<body>
+
+  <section name="Migrate Apache James Server 2.3 to 3.0">
+  
+    <subsection name="New Configuration">
+
+      <p>You need to carefully review each <a href="config.html">configuration file</a>
+         and set the needed parameters according to your needs.</p>
+         
+      <p>You will find in Apache James 3.0 "more or less" the same parameters than 
+         in Apache James 2.3, but you will need to set them in different files.
+         Unfortunately, it is not possible to provide you with a direct mapping between 
+         2.3 and 3.0 configurations.</p>
+         
+      <p>A fundamental difference in the configuration is about the <a href="feature-persistence.html">mails persistence</a>.
+         James 3.0 uses a different storage for user mails that for spam,... mails.</p>
+       
+    </subsection>
+
+    <subsection name="Tool to Migrate Users and Mails">
+
+     <p>Set in usersrepository23.xml configuration file the type of user repository you were
+        using in James 2.3 (example: org.apache.james.user.file.UsersFileRepository).
+        You also need to set the URL you was using in 2.3 (db, file,..., example: URL="file://var/users/).
+        If you were using file, you need to manually copy the user files to the folder you have specified (example: var/users).</p>
+
+     <p>You can now go to JMX console and invoke the 'james23importer' MBean.
+        It needs two parameters : james23MailRepositoryPath (the mail repository you were using in James 2.3),
+        and the defaultPassword(the default password that will be used to create the users).</p>
+         
+    </subsection>
+
+  </section>
+  
+</body>
+
+</document>

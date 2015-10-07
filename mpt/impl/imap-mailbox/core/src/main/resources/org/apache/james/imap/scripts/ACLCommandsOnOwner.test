@@ -1,0 +1,77 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: a000 LOGIN imapuser password
+S: \* OK IMAP4rev1 Server ready
+S: a000 OK .*
+
+C: a001 GETACL INBOX
+S: \* ACL INBOX imapuser lrswipkxtecda
+S: a001 OK Completed
+
+C: a002 SETACL INBOX Boby +rsw
+S: a002 OK Completed
+
+C: a003 GETACL INBOX
+S: \* ACL INBOX imapuser lrswipkxtecda boby rsw
+S: a003 OK Completed
+
+C: a004 SETACL INBOX Boby +wa
+S: a004 OK Completed
+
+C: a005 GETACL INBOX
+S: \* ACL INBOX imapuser lrswipkxtecda boby rswa
+S: a005 OK Completed
+
+C: a006 SETACL INBOX Boby -rat
+S: a006 OK Completed
+
+C: a007 GETACL INBOX
+S: \* ACL INBOX imapuser lrswipkxtecda boby sw
+S: a007 OK Completed
+
+C: a008 DELETEACL INBOX Boby
+S: a008 OK Completed
+
+C: a009 GETACL INBOX
+S: \* ACL INBOX imapuser lrswipkxtecda
+S: a009 OK Completed
+
+C: a010 GETACL INBOX
+S: \* ACL INBOX imapuser lrswipkxtecda
+S: a010 OK Completed
+
+C: a011 LISTRIGHTS INBOX imapuser
+S: \* LISTRIGHTS INBOX imapuser lkxca r s w i p t e d 0 1 2 3 4 5 6 7 8 9
+S: a011 OK Completed
+
+C: a012 LISTRIGHTS INBOX Boby
+S: \* LISTRIGHTS INBOX Boby p l r s w i k x t e c d a 0 1 2 3 4 5 6 7 8 9
+S: a012 OK Completed
+
+C: a013 SETACL INBOX Boby +rsw
+S: a013 OK Completed
+
+C: a014 LISTRIGHTS INBOX Boby
+S: \* LISTRIGHTS INBOX Boby p l r s w i k x t e c d a 0 1 2 3 4 5 6 7 8 9
+S: a014 OK Completed
+
+C: a015 MYRIGHTS INBOX
+S: \* MYRIGHTS INBOX lrswipkxtecda
+S: a015 OK Completed

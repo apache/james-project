@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+ 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<imapservers>
+
+	<!-- IMAP server is enabled by default -->
+	<!-- Disabling blocks will stop them from listening, -->
+	<!-- but does not free as many resources as removing them would -->
+	<imapserver enabled="true">
+	
+       <jmxName>imapserver</jmxName>
+
+	   <!-- Configure this if you want to bind to a specific inetaddress -->
+	   <!-- port 143 is the well-known/IANA registered port for IMAP -->
+	   <!-- port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS -->
+	   <!-- Please NOTE: you should add this IP also to your RemoteAddrNotInNetwork -->
+	   <!-- in order to avoid relay check for locally generated bounces -->    
+	   <bind>0.0.0.0:143</bind>
+	    
+	   <connectionBacklog>200</connectionBacklog>
+	    
+	   <!-- Set to true to use TLS for the Socket.
+	         To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
+	    -->
+	   <tls socketTLS="false" startTLS="false">
+	     <!-- To create a new keystore execute:
+	      keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+	       -->
+	     <keystore>file://conf/keystore</keystore>
+	     <secret>yoursecret</secret>
+	     <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+	   </tls>
+	      
+       <!-- This is the name used by the server to identify itself in the IMAP -->
+       <!-- protocol.  If autodetect is TRUE, the server will discover its -->
+       <!-- own host name and use that in the protocol.  If discovery fails, -->
+       <!-- the value of 'localhost' is used.  If autodetect is FALSE, James -->
+       <!-- will use the specified value. -->
+       <!--
+       <helloName autodetect="true">myMailServer</helloName>
+        -->
+         
+       <!-- Connection timeout is 30 minutes and can not be changed - See rfc2060 5.4 for details -->
+            
+       <!-- Set the maximum simultaneous incoming connections for this service -->
+       <connectionLimit>0</connectionLimit>
+         
+       <!-- Set the maximum simultaneous incoming connections per IP for this service -->
+       <connectionLimitPerIP>0</connectionLimitPerIP>
+
+	</imapserver>
+
+</imapservers>

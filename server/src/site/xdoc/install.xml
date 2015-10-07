@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Installation</title>
+ </properties>
+
+<body>
+
+<section name="Requirements">
+
+  <subsection name="Java Virtual Machine">
+  
+    <p>James requires a Java Runtime Environment. Java version 1.6 or higher is required to run the 
+       James application. The exact JREs available depends on the platform. In addition, the environment variable JAVA_HOME should be set to
+       the JRE home directory before running James.</p>
+       
+    <p>If you run JDK7, James will not start due to a bug in JAXB. As temporary workaround, you can
+       download the latest 2.1 version of JAXB from <a href="http://jaxb.java.net/2.1.13/JAXB2_20100510.jar">
+       http://jaxb.java.net/2.1.13/JAXB2_20100510.jar</a>
+       and copy the extracted jaxb-impl.jar into conf/lib.</p>
+    
+    <p>James 3.0 has been successfully tested on OpenJDK, Sun JDK and IBM JDK</p>
+  
+  </subsection>
+  
+  <subsection name="User Privileges">
+    
+    <p>On Linux/Unix platforms, root access will be required to run James (access to ports 
+       below 1024 is generally restricted to the root user).  As SMTP, POP3, and IMAP4 
+       need to open server sockets on such ports in standard configurations, 
+       James requires root access.</p>
+    
+    <p>On Windows platforms, you also need to run James as Administrator privilege.</p>
+  
+  </subsection>
+    
+  <subsection name="Libc6">
+    
+    <p>On Linux, to run the startup/shutdown script via the 'james' command, you also need <code>libc6</code> 
+        (on Ubuntu for example: <code>sudo apt-get install libc6-i386 libc6-dev-i386</code>).</p>
+        
+  </subsection>
+  
+  <subsection name="System Resources">
+    
+    <p>Obviously James also requires sufficient disk space, processor power, and network bandwidth.  But, 
+       other than what's been discussed here, it has no additional special requirements.</p>
+    
+    <p>James is configured to run with 512 MB RAM (-Xmx512M in the bat/sh) available, but may need more or 
+       less depending on the load. With the default configuraiton, JVM can use until 512M (It does not mean it will do).
+       It really depends on your traffic, and also which mailbox you will use (you can save much memory 
+       if you don't use the default embedded derby database but an external database of your choice).
+       Work is still done to minimize the needed memory.
+    </p>
+  
+  </subsection>
+  
+  </section>
+  
+  <section name="Install Step by Step">
+  
+  <subsection name="Step 1: Download James"> 
+  
+    <p>Obtain the full James binary (or source) distribution from 
+       the <a href="http://james.apache.org/download.cgi">James 
+       release mirrors</a>.</p>
+      
+    <p>If you have downloaded a binary distribution, you do not need to build James. 
+      Proceed directly to Step 2.</p>
+    
+    <p>If you have downloaded a source package, process first to 
+       the <a href="dev-build.html">build</a> and come back to Step 2.</p>
+  
+  </subsection>
+  
+  <subsection name="Step 2: Deploy James">
+  
+    <p>Unpack the archive into your James installation directory.</p>
+  
+  </subsection>
+  
+  <subsection name="Step 3: Configure James">
+  <!-- 
+      <div class="ui-widget">
+        <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+          <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+          <strong>Preliminary step for JMX on Windows: </strong>
+          to let windows start with JMX username/password enabled, 
+          you need to modify the security settings for the JMX files (./conf/jmx.password and ./conf/jmx.access) 
+          like described here:
+          <a href="http://download.oracle.com/javase/1.5.0/docs/guide/management/security-windows.html">
+          http://download.oracle.com/javase/1.5.0/docs/guide/management/security-windows.html</a>
+        </p>
+        </div>
+      </div>
+  -->
+    <p>After unpacking the binary, the next step is to adjust the initial configuration.  
+       All configuration files are embedded in jars. We ship in the conf foler template configuration files.
+    </p>
+    
+    <p>You can override the default configuration : copy the conf folder any ...-template... you need and update according to your needs.</p>
+    
+    <p>Additional system files reside under the./conf/META-INF folder.</p>
+    
+    <p>The out of the box configuration makes certain assumptions and has some default 
+       values that are unlikely to be appropriate for real-world servers. 
+       There are a few issues that should be addressed immediately upon installation:</p>
+       <ul>
+        <li>Postmaster Address - Change according to your need - <a href="config-system.html">read more</a>.</li>
+        <li>Most UNIX systems require superuser privileges to open sockets below 1024,
+            which includes the IANA-standard SMTP (on port 25), POP3 (on port 110) and IMAP4 (on port 143).
+            These default ports can be changed in the conf file 
+            (read for <a href="config-pop3.html">pop3</a>, <a href="config-smtp.html">smtp</a> 
+            and <a href="config-imap4.html">imap4</a>. Obviously, you
+            would then need to reconfigure your clients. This may not be an option if
+            you want to receive mail from external mail servers.</li>
+      </ul>
+    
+    <p>In addition to adjusting these parameters, you may wish to consult the documentation for a discussion of
+       all other configurations.  A list of such configurations, as well as the steps necessary to configure them, can
+       be found <a href="config.html">here</a>.</p>
+    
+  </subsection>
+  
+  <subsection name="Step 4: Start James">
+  
+    <p>Go to the bin subdirectory of the installation directory and run <code>$ ./james start</code>.</p>
+      
+    <p>Running <code>$ ./james help</code> help will provide the list of commands you can invoke. </p>
+    
+    <p>Once started, you'll see in the log file (./logs/james-server.log) that 
+       James is running. This means that Spring has loaded James and is now waiting for a request.</p>
+  
+  </subsection>
+    
+  <subsection name="Step 5: Create Domains and Users">
+  
+    <p>Finally, after launch, it will be necessary to create domain and user accounts 
+       before the James server will be fully operational. Read instructions on creating 
+       <a href="manage-domains.html">domains</a> and <a href="manage-users.html">user accounts</a>.</p>
+    
+    <p>Since at the beginning James is empty, it will not have any domain (except the default one)nor local users
+       registered.</p>
+       
+    <p>To register a local domain and user, cd bin and type james-cli.sh.
+       Follow the given instructions</p>
+       
+    <p>Invoke "james-cli.sh adddomain &lt;mydomain.tls&gt; &lt;mydomain.tls&gt; is the domain name 
+      of the domain you wish to create.</p>
+      
+    <p>Invoke "james-cli.sh adduser &lt;user&gt; &lt;password&gt;" where &lt;user&gt; is the user name 
+      and &lt;password&gt; is the password of the account you wish to create.</p>
+      
+    <p>Please note that the user name MUST be a complete email address of the form &lt;user&gt;@&lt;domain&gt; 
+      (where &lt;domain&gt; is any of the values specified in the &lt;servernames&gt; block of XMLDomainList or
+      a domain defined via the <a href="manage-domains.html">domain management</a>).</p>
+      
+  </subsection>
+  
+  <subsection name="Step 6: Test James">
+
+    <p>Once you have some local users registered, try sending mail to one of them
+        with SMTP (port 25).</p>
+  
+<source>
+$ telnet 127.0.0.1 25
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 172.16.1.131 SMTP Server (JAMES SMTP Server 3.0-beta4) ready Sat, 6 Nov 2010 17:31:33 +0100 (CET)
+ehlo test
+250-172.16.1.131 Hello test (aoscommunity.com [127.0.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+mail from:&lt;YOUR_NAME@YOUR_DOMAIN&gt;
+250 2.1.0 Sender &lt;YOUR_NAME@YOUR_DOMAIN&gt; OK
+rcpt to:&lt;YOUR_NAME@YOUR_DOMAIN>
+250 2.1.5 Recipient &lt;YOUR_NAME@YOUR_DOMAIN&gt; OK
+data
+354 Ok Send data ending with &lt;CRLF&gt;.&lt;CRLF&gt;
+subject: test
+
+this is a test
+.
+250 2.6.0 Message received
+quit
+Connection closed by foreign host.
+</source>
+
+    <p>Try now to retrieve that mail using POP3 (port 110) or IMAP (port 143).</p>
+    
+    <p>Trace out James actions in ./logs/james-server.log.</p>
+    
+    <p>Actions that will be taken by James on incoming mail are configured in
+       the mailet pipe line (./conf/mailetcontainer.xml). Look at it if you want to
+       understand what's happening.</p>
+    
+  </subsection>
+
+</section>
+
+</body>
+
+</document>

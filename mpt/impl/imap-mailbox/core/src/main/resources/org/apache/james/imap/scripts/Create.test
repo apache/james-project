@@ -1,0 +1,81 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Create a simple name
+C: 10 CREATE test
+S: 10 OK CREATE completed.
+# Create a subfolder with simple name
+C: 11 CREATE test.subfolder
+S: 11 OK CREATE completed.
+# Create a fully qualified folder
+C: 12 CREATE test1
+S: 12 OK CREATE completed.
+# Create a fully qualified sub folder
+C: 13 CREATE test1.subfolder1
+S: 13 OK CREATE completed.
+# Create quoted
+C: 14 CREATE "Pepe juan"
+S: 14 OK CREATE completed.
+#
+# RFC3501@6.3.3p2
+# When mailbox name is suffixed with hierarchy separator
+# name created must remove tailing delimiter
+C: 15 CREATE another.test.
+S: 15 OK CREATE completed.
+C: 16 LIST "" another*
+S: \* LIST \(\\HasChildren\) "." "another"
+S: \* LIST \(\\HasNoChildren\) "." "another.test"
+S: 16 OK LIST completed.
+#
+# RFC3501@6.3.3p2
+# Intermediary mailboxes which don't exist should be created
+C: 17 CREATE alpha.beta.gamma
+S: 17 OK CREATE completed.
+C: 18 LIST "" alpha*
+S: \* LIST \(\\HasChildren\) "." "alpha"
+S: \* LIST \(\\HasChildren\) "." "alpha.beta"
+S: \* LIST \(\\HasNoChildren\) "." "alpha.beta.gamma"
+S: 18 OK LIST completed.
+
+#
+# When mailbox already exists, ensure message is user friendly
+#
+C: 19 CREATE alpha
+S: 19 NO CREATE failed. Mailbox already exists.
+
+# Cleanup
+C: a1 DELETE test1.subfolder1
+S: a1 OK DELETE completed.
+C: a1 DELETE test1
+S: a1 OK DELETE completed.
+C: a1 DELETE test.subfolder
+S: a1 OK DELETE completed.
+C: a1 DELETE test
+S: a1 OK DELETE completed.
+C: a10 DELETE "Pepe juan"
+S: a10 OK DELETE completed.
+C: a11 DELETE alpha.beta.gamma
+S: a11 OK DELETE completed.
+C: a11 DELETE alpha.beta
+S: a11 OK DELETE completed.
+C: a11 DELETE alpha
+S: a11 OK DELETE completed.
+C: a11 DELETE another.test
+S: a11 OK DELETE completed.
+C: a11 DELETE another
+S: a11 OK DELETE completed.

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<project name='mailets'>
+
+    <bannerLeft>
+        <name>Apache James Project</name>
+        <src>images/logos/james-mailets-logo.gif</src>
+        <href>http://james.apache.org/index.html</href>
+        <alt>james-mailets-logo.gif</alt>
+    </bannerLeft>
+
+    <body>
+        <menu name="Mailet">
+            <item name="Mailet API" href="http://james.apache.org/mailet/api"/>
+            <item name="Mailet AI" href="http://james.apache.org/mailet/ai"/>
+            <item name="Basic Mailet Toolkit" href="http://james.apache.org/mailet/base"/>
+            <item name="Crypto Mailets" href="http://james.apache.org/mailet/crypto"/>
+            <item name="MailetDocs" href="http://james.apache.org/mailet/mailetdocs-maven-plugin"/>
+            <item name="Sieve Mailet" href='http://james.apache.org/jsieve/mailet/'/>
+            <item name="Standard Mailets" href="http://james.apache.org/mailet/standard"/>
+        </menu>
+
+        <menu name="Useful Information">
+            <item name="Java Docs" href="http://james.apache.org/mailet/apidocs"/>
+            <item name="Quick Start" href="quickstart.html"/>
+            <item name="Release Notes" href="release-notes.html"/>
+        </menu>
+
+        <menu ref="reports"/>
+
+    </body>
+
+</project>

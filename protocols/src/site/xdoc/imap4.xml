@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language govaerning permissions and limitations
+  under the License.    
+-->
+
+<document>
+
+ <properties>
+  <title>Apache James Protocols IMAP4</title>
+  <author email="server-dev@james.apache.org">Apache James Protocols IMAP4</author>
+ </properties>
+
+<body>
+
+  <section name="What Is Apache James Protocols IMAP4?">
+    <p>A library providing a flexible codec for IMAP4, command processors 
+       and a sample data access layer.</p>
+     <p>In combination with a socket layer, and a mailbox persistence, 
+         this library can be used to create an IMAP server.</p>
+    <p><a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>RFC 2060 IMAP4rev1</a> 
+       is functionally complete, tested and usable. The data access layer is still 
+       under optimization on performance perspectives. API is susceptible to change.</p>
+    <p>You can <a href="http://james.apache.org/download.cgi">download</a> current 0.3 release. 
+       The <a href="apidocs/">API</a> are susceptible to evolve.</p>
+     <p>There are many extensions defined for IMAP (see a list <a href="http://www.iana.org/assignments/imap4-capabilities">here</a>)</p>
+     <p>Apache James IMAP implements the following:</p>
+     <ul>
+       <li>IMAP4rev1 (RFC 3501 http://www.ietf.org/rfc/rfc3501.txt)</li>
+       <li>NAMESPACE (in release 0.2) (RFC 2342 http://www.ietf.org/rfc/rfc2342.txt)</li>
+       <li>IDLE (in release 0.2)  (RFC 2177 http://www.ietf.org/rfc/rfc2177.txt)</li>
+       <li>LITERAL+ (in release 0.2)</li>
+       <li>CHILDREN (in release 0.2)</li>
+       <li>WITHIN (in release 0.2)</li>
+       <li>UIDPLUS (in release 0.2)</li>
+       <li>UNSELECT (in release 0.2)</li>
+       <li>I18NLEVEL=1 (in release 0.2.1)</li>
+       <li>ESEARCH (in release 0.2.1)</li>
+       <li>SEARCHRES (in release 0.2.1)</li>
+       <li>AUTH=PLAIN (in release 0.2.1)</li>
+       <li>SASL-IR (in release 0.2.1)</li>
+       <li>ENABLE (in release 0.2.1)</li>
+       <li>CONDSTORE (RFC 4551 http://www.ietf.org/rfc/rfc4551.txt in release 0.3)</li>
+       <li>RESYNCH (RFC 5162 http://www.ietf.org/rfc/rfc5162.txt in trunk)</li>
+     </ul>
+     <p>We follow RFC2683 recommandations for our implementations:</p>
+     <ul>
+       <li>IMAP4 Implementation Recommandations (RFC 2683 http://www.ietf.org/rfc/rfc2683.txt)</li>
+     </ul>
+     <p>Interesting features:</p>
+     <ul>
+       <li>Users FLAGS</li>
+     </ul>
+     <p>Other RFCs of interest we are looking at:</p>
+     <ul>
+       <li>IMAP4 SORT and THREAD Extensions (RFC 5256 http://www.ietf.org/rfc/rfc5256.txt)</li>
+     </ul>
+     <p>We have <a href="http://svn.apache.org/repos/asf/james/mpt/trunk/">integration tests</a> for IMAP.</p>
+     <p>Our implementation is also tested against external tools such as <a href="http://www.imapwiki.org/ImapTest">http://www.imapwiki.org/ImapTest</a>.</p>
+  </section>
+
+  <section name='Apache James IMAP in Server and as component'>
+    <p><a href='http://james.apache.org/server/3'>Apache James Server 3</a> supports IMAP 
+       (using this library).</p>
+    <p>The <a href="source-code.html">source code</a> page contains information on how 
+       to develop on James IMAP.</p>
+    <img src="images/uml/org.apache.james.imap-package.png"/>
+  </section>
+
+</body>
+
+</document>

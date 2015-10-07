@@ -1,0 +1,689 @@
+C: A2 CREATE testmailbox
+S: A2 OK CREATE completed\.
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A3 OK \[READ-WRITE\] SELECT completed\.
+C: A4 APPEND testmailbox {8989+}
+C: Return-Path: <robertburrelldonkin@blueyonder.co.uk>
+C: Received: (qmail 18554 invoked from network); 25 May 2008 14:38:53 -0000
+C: Received: from unknown (HELO p3presmtp01-16.prod.phx3.secureserver.net)
+C:         ([208.109.80.165]) (envelope-sender <rdonkin-owner@locus.apache.org>) by
+C:         smtp20-01.prod.mesa1.secureserver.net (qmail-1.03) with SMTP for
+C:         <asf@xmlmapt.org>; 25 May 2008 14:38:53 -0000
+C: Received: (qmail 9751 invoked from network); 25 May 2008 14:38:53 -0000
+C: Received: from minotaur.apache.org ([140.211.11.9]) (envelope-sender
+C:         <rdonkin-owner@locus.apache.org>) by
+C:         p3presmtp01-16.prod.phx3.secureserver.net (qmail-ldap-1.03) with SMTP for
+C:         <asf@xmlmapt.org>; 25 May 2008 14:38:50 -0000
+C: Received: (qmail 46768 invoked by uid 1289); 25 May 2008 14:38:46 -0000
+C: Delivered-To: rdonkin@locus.apache.org
+C: Received: (qmail 46763 invoked from network); 25 May 2008 14:38:46 -0000
+C: Received: from hermes.apache.org (HELO mail.apache.org) (140.211.11.2) by
+C:         minotaur.apache.org with SMTP; 25 May 2008 14:38:46 -0000
+C: Received: (qmail 61275 invoked by uid 500); 25 May 2008 14:38:48 -0000
+C: Delivered-To: apmail-rdonkin@apache.org
+C: Delivered-To: rob@localhost
+C: Delivered-To: rob@localhost
+C: Received: (qmail 61272 invoked by uid 99); 25 May 2008 14:38:48 -0000
+C: Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+C:         by apache.org (qpsmtpd/0.29) with ESMTP; Sun, 25 May 2008 07:38:48 -0700
+C: X-ASF-Spam-Status: No, hits=-0.0 required=10.0 tests=SPF_PASS
+C: X-Spam-Check-By: apache.org
+C: Received-SPF: pass (athena.apache.org: domain of
+C:         robertburrelldonkin@blueyonder.co.uk designates 195.188.213.5 as permitted
+C:         sender)
+C: Received: from [195.188.213.5] (HELO smtp-out2.blueyonder.co.uk)
+C:         (195.188.213.5) by apache.org (qpsmtpd/0.29) with ESMTP; Sun, 25 May 2008
+C:         14:38:00 +0000
+C: Received: from [172.23.170.140] (helo=anti-virus02-07) by
+C:         smtp-out2.blueyonder.co.uk with smtp (Exim 4.52) id 1K0HMV-00087e-HY for
+C:         rdonkin@apache.org; Sun, 25 May 2008 15:38:15 +0100
+C: Received: from [82.38.65.6] (helo=[10.0.0.27]) by
+C:         asmtp-out5.blueyonder.co.uk with esmtpa (Exim 4.52) id 1K0HMU-0001A2-3q for
+C:         rdonkin@apache.org; Sun, 25 May 2008 15:38:14 +0100
+C: Subject: This is an example of a multipart mixed email with image content
+C: From: Robert Burrell Donkin <robertburrelldonkin@blueyonder.co.uk>
+C: To: Robert Burrell Donkin <rdonkin@apache.org>
+C: Content-Type: multipart/mixed; boundary="=-tIdGYVstQJghyEDATnJ+"
+C: Content-Location: http://www.example.org/
+C: Date: Sun, 25 May 2008 15:38:13 +0100
+C: Message-Id: <1211726293.5772.10.camel@localhost>
+C: Mime-Version: 1.0
+C: X-Mailer: Evolution 2.12.3 
+C: X-Virus-Checked: Checked by ClamAV on apache.org
+C: X-Nonspam: None
+C: X-fetched-from: mail.xmlmapt.org
+C: X-Evolution-Source: imap://rob@thebes/
+C: 
+C: 
+C: --=-tIdGYVstQJghyEDATnJ+
+C: Content-Type: text/plain
+C: Content-Transfer-Encoding: 7bit
+C: Content-Location: relative/license.txt
+C: 
+C: Licensed to the Apache Software Foundation (ASF) under one
+C: or more contributor license agreements.  See the NOTICE file
+C: distributed with this work for additional information
+C: regarding copyright ownership.  The ASF licenses this file
+C: to you under the Apache License, Version 2.0 (the
+C: \"License\"); you may not use this file except in compliance
+C: with the License.  You may obtain a copy of the License at
+C: 
+C:     http://www.apache.org/licenses/LICENSE-2.0
+C:  
+C: Unless required by applicable law or agreed to in writing,
+C: software distributed under the License is distributed on an
+C: \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+C: KIND, either express or implied.  See the License for the
+C: specific language governing permissions and limitations
+C: under the License.
+C:  
+C: 
+C: --=-tIdGYVstQJghyEDATnJ+
+C: Content-Disposition: attachment; filename=blob.png;
+C:    modification-date="Sun, 21 Jun 2008 15:32:18 +0000";
+C:    creation-date="Sat, 20 Jun 2008 10:15:09 +0000"; 
+C:    read-date="Mon, 22 Jun 2008 12:08:56 +0000";size=482;
+C: Content-Type: image/png; name=blob.png
+C: Content-Transfer-Encoding: base64
+C: Content-Location: http://www.example.org/blob.png
+C: 
+C: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+C: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+C: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+C: /7qIG/VsPziMTw+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+C: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+C: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ+4/kIi0g88zlXd66++QaQDG5GPZyp
+C: rQAAAABJRU5ErkJggg==
+C: 
+C: 
+C: --=-tIdGYVstQJghyEDATnJ+
+C: Content-Disposition: attachment; filename=blob.png
+C: Content-Type: image/png; name=blob.png
+C: Content-Transfer-Encoding: base64
+C: Content-Location: (Comments before) http://www.example.org/blob.png (And comments afterwards)
+C: 
+C: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+C: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+C: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+C: /7qIG/VsPziMTw+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+C: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+C: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ+4/kIi0g88zlXd66++QaQDG5GPZyp
+C: rQAAAABJRU5ErkJggg==
+C: 
+C: 
+C: --=-tIdGYVstQJghyEDATnJ+
+C: Content-Disposition: attachment; filename=rhubarb.txt
+C: Content-Type: text/plain; name=rhubarb.txt; charset=us-ascii
+C: Content-Language: en, en-US, en-CA, en-AU
+C: Content-Transfer-Encoding: quoted-printable
+C: Content-Location: "ftp://ftp.example.org/lots/lots/lots/
+C:                    lots/lots/lots/lots/lots/lots/lots/
+C:                    rhubard.txt"
+C: 
+C: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+C: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+C: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+C: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+C: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+C:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+C: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+C: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+C: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+C: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+C: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+C: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+C: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+C:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+C: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+C: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+C: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+C: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+C: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+C: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+C: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+C:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+C: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+C: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+C: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+C: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+C: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+C: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+C: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+C:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+C: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+C: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+C: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+C: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+C: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+C: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+C: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+C:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+C: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+C: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+C: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb
+C: 
+C: --=-tIdGYVstQJghyEDATnJ+--
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+C: A5 APPEND testmailbox {569+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/alternative;boundary=1729
+C: 
+C: Some translations of Hello, World!
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: Content-Language: en, en-US, en-CA
+C: 
+C: Hello, World!
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: Content-Language: fr, fr-Latn-CA
+C: 
+C: Bonjour, monde !
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: Content-Language: nl-BE
+C: 
+C: Hello, Wereld!
+C: 
+C: --1729--
+C: 
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: A5 OK (\[.+\] )?APPEND completed\.
+C: A6 FETCH 1:* ()
+S: \* 1 FETCH \(\)
+S: \* 2 FETCH \(\)
+S: A6 OK FETCH completed\.
+C: A7 FETCH 1 (BODY[])
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) BODY\[\] \{8989\}
+S: Return-Path: <robertburrelldonkin@blueyonder\.co\.uk>
+S: Received: \(qmail 18554 invoked from network\); 25 May 2008 14:38:53 -0000
+S: Received: from unknown \(HELO p3presmtp01-16\.prod\.phx3\.secureserver\.net\)
+S:         \(\[208\.109\.80\.165\]\) \(envelope-sender <rdonkin-owner@locus\.apache\.org>\) by
+S:         smtp20-01\.prod\.mesa1\.secureserver\.net \(qmail-1\.03\) with SMTP for
+S:         <asf@xmlmapt\.org>; 25 May 2008 14:38:53 -0000
+S: Received: \(qmail 9751 invoked from network\); 25 May 2008 14:38:53 -0000
+S: Received: from minotaur\.apache\.org \(\[140\.211\.11\.9\]\) \(envelope-sender
+S:         <rdonkin-owner@locus\.apache\.org>\) by
+S:         p3presmtp01-16\.prod\.phx3\.secureserver\.net \(qmail-ldap-1\.03\) with SMTP for
+S:         <asf@xmlmapt\.org>; 25 May 2008 14:38:50 -0000
+S: Received: \(qmail 46768 invoked by uid 1289\); 25 May 2008 14:38:46 -0000
+S: Delivered-To: rdonkin@locus\.apache\.org
+S: Received: \(qmail 46763 invoked from network\); 25 May 2008 14:38:46 -0000
+S: Received: from hermes\.apache\.org \(HELO mail\.apache\.org\) \(140\.211\.11\.2\) by
+S:         minotaur\.apache\.org with SMTP; 25 May 2008 14:38:46 -0000
+S: Received: \(qmail 61275 invoked by uid 500\); 25 May 2008 14:38:48 -0000
+S: Delivered-To: apmail-rdonkin@apache\.org
+S: Delivered-To: rob@localhost
+S: Delivered-To: rob@localhost
+S: Received: \(qmail 61272 invoked by uid 99\); 25 May 2008 14:38:48 -0000
+S: Received: from athena\.apache\.org \(HELO athena\.apache\.org\) \(140\.211\.11\.136\)
+S:         by apache\.org \(qpsmtpd/0\.29\) with ESMTP; Sun, 25 May 2008 07:38:48 -0700
+S: X-ASF-Spam-Status: No, hits=-0\.0 required=10\.0 tests=SPF_PASS
+S: X-Spam-Check-By: apache\.org
+S: Received-SPF: pass \(athena\.apache\.org: domain of
+S:         robertburrelldonkin@blueyonder\.co\.uk designates 195\.188\.213\.5 as permitted
+S:         sender\)
+S: Received: from \[195\.188\.213\.5\] \(HELO smtp-out2\.blueyonder\.co\.uk\)
+S:         \(195\.188\.213\.5\) by apache\.org \(qpsmtpd/0\.29\) with ESMTP; Sun, 25 May 2008
+S:         14:38:00 \+0000
+S: Received: from \[172\.23\.170\.140\] \(helo=anti-virus02-07\) by
+S:         smtp-out2\.blueyonder\.co\.uk with smtp \(Exim 4\.52\) id 1K0HMV-00087e-HY for
+S:         rdonkin@apache\.org; Sun, 25 May 2008 15:38:15 \+0100
+S: Received: from \[82\.38\.65\.6\] \(helo=\[10\.0\.0\.27\]\) by
+S:         asmtp-out5\.blueyonder\.co\.uk with esmtpa \(Exim 4\.52\) id 1K0HMU-0001A2-3q for
+S:         rdonkin@apache\.org; Sun, 25 May 2008 15:38:14 \+0100
+S: Subject: This is an example of a multipart mixed email with image content
+S: From: Robert Burrell Donkin <robertburrelldonkin@blueyonder\.co\.uk>
+S: To: Robert Burrell Donkin <rdonkin@apache\.org>
+S: Content-Type: multipart/mixed; boundary="=-tIdGYVstQJghyEDATnJ\+"
+S: Content-Location: http://www\.example\.org/
+S: Date: Sun, 25 May 2008 15:38:13 \+0100
+S: Message-Id: <1211726293\.5772\.10\.camel@localhost>
+S: Mime-Version: 1\.0
+S: X-Mailer: Evolution 2\.12\.3 
+S: X-Virus-Checked: Checked by ClamAV on apache\.org
+S: X-Nonspam: None
+S: X-fetched-from: mail\.xmlmapt\.org
+S: X-Evolution-Source: imap://rob@thebes/
+S: 
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Type: text/plain
+S: Content-Transfer-Encoding: 7bit
+S: Content-Location: relative/license\.txt
+S: 
+S: Licensed to the Apache Software Foundation \(ASF\) under one
+S: or more contributor license agreements\.  See the NOTICE file
+S: distributed with this work for additional information
+S: regarding copyright ownership\.  The ASF licenses this file
+S: to you under the Apache License, Version 2\.0 \(the
+S: \\"License\\"\); you may not use this file except in compliance
+S: with the License\.  You may obtain a copy of the License at
+S: 
+S:     http://www\.apache\.org/licenses/LICENSE-2\.0
+S:  
+S: Unless required by applicable law or agreed to in writing,
+S: software distributed under the License is distributed on an
+S: \\"AS IS\\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+S: KIND, either express or implied\.  See the License for the
+S: specific language governing permissions and limitations
+S: under the License\.
+S:  
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Disposition: attachment; filename=blob\.png;
+S:    modification-date="Sun, 21 Jun 2008 15:32:18 \+0000";
+S:    creation-date="Sat, 20 Jun 2008 10:15:09 \+0000"; 
+S:    read-date="Mon, 22 Jun 2008 12:08:56 \+0000";size=482;
+S: Content-Type: image/png; name=blob\.png
+S: Content-Transfer-Encoding: base64
+S: Content-Location: http://www\.example\.org/blob\.png
+S: 
+S: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+S: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+S: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+S: /7qIG/VsPziMTw\+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+S: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+S: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ\+4/kIi0g88zlXd66\+\+QaQDG5GPZyp
+S: rQAAAABJRU5ErkJggg==
+S: 
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Disposition: attachment; filename=blob\.png
+S: Content-Type: image/png; name=blob\.png
+S: Content-Transfer-Encoding: base64
+S: Content-Location: \(Comments before\) http://www\.example\.org/blob\.png \(And comments afterwards\)
+S: 
+S: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+S: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+S: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+S: /7qIG/VsPziMTw\+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+S: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+S: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ\+4/kIi0g88zlXd66\+\+QaQDG5GPZyp
+S: rQAAAABJRU5ErkJggg==
+S: 
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Disposition: attachment; filename=rhubarb\.txt
+S: Content-Type: text/plain; name=rhubarb\.txt; charset=us-ascii
+S: Content-Language: en, en-US, en-CA, en-AU
+S: Content-Transfer-Encoding: quoted-printable
+S: Content-Location: "ftp://ftp\.example\.org/lots/lots/lots/
+S:                    lots/lots/lots/lots/lots/lots/lots/
+S:                    rhubard\.txt"
+S: 
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+--\)
+S: A7 OK FETCH completed\.
+C: A8 FETCH 1 (BODY[TEXT])
+S: \* 1 FETCH \(BODY\[TEXT\] \{6127\}
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Type: text/plain
+S: Content-Transfer-Encoding: 7bit
+S: Content-Location: relative/license\.txt
+S: 
+S: Licensed to the Apache Software Foundation \(ASF\) under one
+S: or more contributor license agreements\.  See the NOTICE file
+S: distributed with this work for additional information
+S: regarding copyright ownership\.  The ASF licenses this file
+S: to you under the Apache License, Version 2\.0 \(the
+S: \\"License\\"\); you may not use this file except in compliance
+S: with the License\.  You may obtain a copy of the License at
+S: 
+S:     http://www\.apache\.org/licenses/LICENSE-2\.0
+S:  
+S: Unless required by applicable law or agreed to in writing,
+S: software distributed under the License is distributed on an
+S: \\"AS IS\\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+S: KIND, either express or implied\.  See the License for the
+S: specific language governing permissions and limitations
+S: under the License\.
+S:  
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Disposition: attachment; filename=blob\.png;
+S:    modification-date="Sun, 21 Jun 2008 15:32:18 \+0000";
+S:    creation-date="Sat, 20 Jun 2008 10:15:09 \+0000"; 
+S:    read-date="Mon, 22 Jun 2008 12:08:56 \+0000";size=482;
+S: Content-Type: image/png; name=blob\.png
+S: Content-Transfer-Encoding: base64
+S: Content-Location: http://www\.example\.org/blob\.png
+S: 
+S: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+S: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+S: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+S: /7qIG/VsPziMTw\+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+S: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+S: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ\+4/kIi0g88zlXd66\+\+QaQDG5GPZyp
+S: rQAAAABJRU5ErkJggg==
+S: 
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Disposition: attachment; filename=blob\.png
+S: Content-Type: image/png; name=blob\.png
+S: Content-Transfer-Encoding: base64
+S: Content-Location: \(Comments before\) http://www\.example\.org/blob\.png \(And comments afterwards\)
+S: 
+S: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+S: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+S: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+S: /7qIG/VsPziMTw\+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+S: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+S: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ\+4/kIi0g88zlXd66\+\+QaQDG5GPZyp
+S: rQAAAABJRU5ErkJggg==
+S: 
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+
+S: Content-Disposition: attachment; filename=rhubarb\.txt
+S: Content-Type: text/plain; name=rhubarb\.txt; charset=us-ascii
+S: Content-Language: en, en-US, en-CA, en-AU
+S: Content-Transfer-Encoding: quoted-printable
+S: Content-Location: "ftp://ftp\.example\.org/lots/lots/lots/
+S:                    lots/lots/lots/lots/lots/lots/lots/
+S:                    rhubard\.txt"
+S: 
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb
+S: 
+S: --=-tIdGYVstQJghyEDATnJ\+--\)
+S: A8 OK FETCH completed\.
+C: A9 FETCH 1 (BODY[HEADER])
+S: \* 1 FETCH \(BODY\[HEADER\] \{2862\}
+S: Return-Path: <robertburrelldonkin@blueyonder\.co\.uk>
+S: Received: \(qmail 18554 invoked from network\); 25 May 2008 14:38:53 -0000
+S: Received: from unknown \(HELO p3presmtp01-16\.prod\.phx3\.secureserver\.net\)
+S:         \(\[208\.109\.80\.165\]\) \(envelope-sender <rdonkin-owner@locus\.apache\.org>\) by
+S:         smtp20-01\.prod\.mesa1\.secureserver\.net \(qmail-1\.03\) with SMTP for
+S:         <asf@xmlmapt\.org>; 25 May 2008 14:38:53 -0000
+S: Received: \(qmail 9751 invoked from network\); 25 May 2008 14:38:53 -0000
+S: Received: from minotaur\.apache\.org \(\[140\.211\.11\.9\]\) \(envelope-sender
+S:         <rdonkin-owner@locus\.apache\.org>\) by
+S:         p3presmtp01-16\.prod\.phx3\.secureserver\.net \(qmail-ldap-1\.03\) with SMTP for
+S:         <asf@xmlmapt\.org>; 25 May 2008 14:38:50 -0000
+S: Received: \(qmail 46768 invoked by uid 1289\); 25 May 2008 14:38:46 -0000
+S: Delivered-To: rdonkin@locus\.apache\.org
+S: Received: \(qmail 46763 invoked from network\); 25 May 2008 14:38:46 -0000
+S: Received: from hermes\.apache\.org \(HELO mail\.apache\.org\) \(140\.211\.11\.2\) by
+S:         minotaur\.apache\.org with SMTP; 25 May 2008 14:38:46 -0000
+S: Received: \(qmail 61275 invoked by uid 500\); 25 May 2008 14:38:48 -0000
+S: Delivered-To: apmail-rdonkin@apache\.org
+S: Delivered-To: rob@localhost
+S: Delivered-To: rob@localhost
+S: Received: \(qmail 61272 invoked by uid 99\); 25 May 2008 14:38:48 -0000
+S: Received: from athena\.apache\.org \(HELO athena\.apache\.org\) \(140\.211\.11\.136\)
+S:         by apache\.org \(qpsmtpd/0\.29\) with ESMTP; Sun, 25 May 2008 07:38:48 -0700
+S: X-ASF-Spam-Status: No, hits=-0\.0 required=10\.0 tests=SPF_PASS
+S: X-Spam-Check-By: apache\.org
+S: Received-SPF: pass \(athena\.apache\.org: domain of
+S:         robertburrelldonkin@blueyonder\.co\.uk designates 195\.188\.213\.5 as permitted
+S:         sender\)
+S: Received: from \[195\.188\.213\.5\] \(HELO smtp-out2\.blueyonder\.co\.uk\)
+S:         \(195\.188\.213\.5\) by apache\.org \(qpsmtpd/0\.29\) with ESMTP; Sun, 25 May 2008
+S:         14:38:00 \+0000
+S: Received: from \[172\.23\.170\.140\] \(helo=anti-virus02-07\) by
+S:         smtp-out2\.blueyonder\.co\.uk with smtp \(Exim 4\.52\) id 1K0HMV-00087e-HY for
+S:         rdonkin@apache\.org; Sun, 25 May 2008 15:38:15 \+0100
+S: Received: from \[82\.38\.65\.6\] \(helo=\[10\.0\.0\.27\]\) by
+S:         asmtp-out5\.blueyonder\.co\.uk with esmtpa \(Exim 4\.52\) id 1K0HMU-0001A2-3q for
+S:         rdonkin@apache\.org; Sun, 25 May 2008 15:38:14 \+0100
+S: Subject: This is an example of a multipart mixed email with image content
+S: From: Robert Burrell Donkin <robertburrelldonkin@blueyonder\.co\.uk>
+S: To: Robert Burrell Donkin <rdonkin@apache\.org>
+S: Content-Type: multipart/mixed; boundary="=-tIdGYVstQJghyEDATnJ\+"
+S: Content-Location: http://www\.example\.org/
+S: Date: Sun, 25 May 2008 15:38:13 \+0100
+S: Message-Id: <1211726293\.5772\.10\.camel@localhost>
+S: Mime-Version: 1\.0
+S: X-Mailer: Evolution 2\.12\.3 
+S: X-Virus-Checked: Checked by ClamAV on apache\.org
+S: X-Nonspam: None
+S: X-fetched-from: mail\.xmlmapt\.org
+S: X-Evolution-Source: imap://rob@thebes/
+S: 
+S: \)
+S: A9 OK FETCH completed\.
+C: A10 FETCH 1 (BODY[1])
+S: \* 1 FETCH \(BODY\[1\] \{781\}
+S: Licensed to the Apache Software Foundation \(ASF\) under one
+S: or more contributor license agreements\.  See the NOTICE file
+S: distributed with this work for additional information
+S: regarding copyright ownership\.  The ASF licenses this file
+S: to you under the Apache License, Version 2\.0 \(the
+S: \\"License\\"\); you may not use this file except in compliance
+S: with the License\.  You may obtain a copy of the License at
+S: 
+S:     http://www\.apache\.org/licenses/LICENSE-2\.0
+S:  
+S: Unless required by applicable law or agreed to in writing,
+S: software distributed under the License is distributed on an
+S: \\"AS IS\\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+S: KIND, either express or implied\.  See the License for the
+S: specific language governing permissions and limitations
+S: under the License\.
+S:  
+S: \)
+S: A10 OK FETCH completed\.
+C: A11 FETCH 1 (BODY[2])
+S: \* 1 FETCH \(BODY\[2\] \{492\}
+S: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+S: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+S: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+S: /7qIG/VsPziMTw\+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+S: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+S: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ\+4/kIi0g88zlXd66\+\+QaQDG5GPZyp
+S: rQAAAABJRU5ErkJggg==
+S: 
+S: \)
+S: A11 OK FETCH completed\.
+C: A12 FETCH 1 (BODY[3])
+S: \* 1 FETCH \(BODY\[3\] \{492\}
+S: iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+S: EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+S: IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+S: /7qIG/VsPziMTw\+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+S: E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+S: iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ\+4/kIi0g88zlXd66\+\+QaQDG5GPZyp
+S: rQAAAABJRU5ErkJggg==
+S: 
+S: \)
+S: A12 OK FETCH completed\.
+C: A13 FETCH 1 (BODY[3.HEADER])
+S: \* 1 FETCH \(BODY\[3\.HEADER\] \{0\}
+S: \)
+S: A13 OK FETCH completed\.
+C: A14 FETCH 1 (BODY[3.TEXT])
+S: \* 1 FETCH \(BODY\[3\.TEXT\] \{0\}
+S: \)
+S: A14 OK FETCH completed\.
+C: A15 FETCH 1 (BODY[3.1])
+S: \* 1 FETCH \(BODY\[3\.1\] \{0\}
+S: \)
+S: A15 OK FETCH completed\.
+C: A16 FETCH 1 (BODY[3.2])
+S: \* 1 FETCH \(BODY\[3\.2\] \{0\}
+S: \)
+S: A16 OK FETCH completed\.
+C: A17 FETCH 1 (BODY[4])
+S: \* 1 FETCH \(BODY\[4\] \{3193\}
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+S: barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+S: b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+S: hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+S: arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+S:  Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+S: ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+S: rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+S: Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb
+S: \)
+S: A17 OK FETCH completed\.
+C: A18 FETCH 1 (BODY[4.1])
+S: \* 1 FETCH \(BODY\[4\.1\] \{0\}
+S: \)
+S: A18 OK FETCH completed\.
+C: A19 FETCH 1 (BODY[4.1.MIME])
+S: \* 1 FETCH \(BODY\[4\.1\.MIME\] \{0\}
+S: \)
+S: A19 OK FETCH completed\.
+C: A20 FETCH 1 (BODY[4.2])
+S: \* 1 FETCH \(BODY\[4\.2\] \{0\}
+S: \)
+S: A20 OK FETCH completed\.
+C: A21 FETCH 1 (BODY[4.2.HEADER])
+S: \* 1 FETCH \(BODY\[4\.2\.HEADER\] \{0\}
+S: \)
+S: A21 OK FETCH completed\.
+C: A22 FETCH 1 (BODY[4.2.TEXT])
+S: \* 1 FETCH \(BODY\[4\.2\.TEXT\] \{0\}
+S: \)
+S: A22 OK FETCH completed\.
+C: A23 FETCH 1 (BODY[4.2.1])
+S: \* 1 FETCH \(BODY\[4\.2\.1\] \{0\}
+S: \)
+S: A23 OK FETCH completed\.
+C: A24 FETCH 1 (BODY[4.2.2])
+S: \* 1 FETCH \(BODY\[4\.2\.2\] \{0\}
+S: \)
+S: A24 OK FETCH completed\.
+C: A25 FETCH 1 (BODY[4.2.2.1])
+S: \* 1 FETCH \(BODY\[4\.2\.2\.1\] \{0\}
+S: \)
+S: A25 OK FETCH completed\.
+C: A26 FETCH 1 (BODY[4.2.2.2])
+S: \* 1 FETCH \(BODY\[4\.2\.2\.2\] \{0\}
+S: \)
+S: A26 OK FETCH completed\.
+C: A27 FETCH 1:* (BODY BODYSTRUCTURE)
+S: \* 1 FETCH \(BODY \(\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 781 17\)\("IMAGE" "PNG" \("name" "blob\.png"\) NIL NIL "BASE64" 492\)\("IMAGE" "PNG" \("name" "blob\.png"\) NIL NIL "BASE64" 492\)\("TEXT" "PLAIN" \("charset" "us-ascii" "name" "rhubarb\.txt"\) NIL NIL "QUOTED-PRINTABLE" 3193 41\) "MIXED"\) BODYSTRUCTURE \(\("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 781 17 NIL NIL NIL "relative/license.txt"\)\("IMAGE" "PNG" \("name" "blob\.png"\) NIL NIL "BASE64" 492 NIL \("attachment" \("creation-date" "Sat, 20 Jun 2008 10:15:09 \+0000" "filename" "blob\.png" "modification-date" "Sun, 21 Jun 2008 15:32:18 \+0000" "read-date" "Mon, 22 Jun 2008 12:08:56 \+0000" "size" "482"\)\) NIL "http://www.example.org/blob.png"\)\("IMAGE" "PNG" \("name" "blob\.png"\) NIL NIL "BASE64" 492 NIL \("attachment" \("filename" "blob\.png"\)\) NIL "http://www.example.org/blob.png"\)\("TEXT" "PLAIN" \("charset" "us-ascii" "name" "rhubarb\.txt"\) NIL NIL "QUOTED-PRINTABLE" 3193 41 NIL \("attachment" \("filename" "rhubarb\.txt"\)\) \("en" "en-US" "en-CA" "en-AU"\) "ftp://ftp.example.org/lots/lots/lots/lots/lots/lots/lots/lots/lots/lots/rhubard.txt"\) "MIXED" \("boundary" "=-tIdGYVstQJghyEDATnJ\+"\) NIL NIL "http://www.example.org/"\)\)
+S: \* 2 FETCH \(BODY \(\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 15 1\)\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 18 1\)\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 16 1\) "ALTERNATIVE"\) BODYSTRUCTURE \(\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 15 1 NIL NIL \("en" "en-US" "en-CA"\) NIL\)\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 18 1 NIL NIL \("fr" "fr-Latn-CA"\) NIL\)\("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 16 1 NIL NIL \("nl-BE"\) NIL\) "ALTERNATIVE" \("boundary" "1729"\) NIL NIL NIL\)\)
+S: A27 OK FETCH completed\.
+C: A28 DELETE testmailbox
+S: A28 OK DELETE completed\.

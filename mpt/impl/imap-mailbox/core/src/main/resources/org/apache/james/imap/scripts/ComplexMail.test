@@ -1,0 +1,330 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+#
+# TODO: This mail is not parsed correctly by JavaMail.
+# TODO: use Mime4J
+#
+C: A2 CREATE testmailbox
+S: A2 OK CREATE completed\.
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY (.)*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\](.)*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A3 OK \[READ-WRITE\] SELECT completed\.
+C: A20 APPEND testmailbox {14862+}
+C: Return-Path: <robertburrelldonkin@gmail.com>
+C: Received: (qmail 16059 invoked from network); 11 Mar 2008 18:54:16 -0000
+C: Received: from unknown (HELO pre-smtp34-01.prod.mesa1.secureserver.net)
+C:         ([10.0.19.134]) (envelope-sender <rdonkin-owner@locus.apache.org>) by
+C:         smtp28.prod.mesa1.secureserver.net (qmail-1.03) with SMTP for
+C:         <asf@xmlmapt.org>; 11 Mar 2008 18:54:16 -0000
+C: Received: (qmail 24109 invoked from network); 11 Mar 2008 18:54:16 -0000
+C: Received: from minotaur.apache.org ([140.211.11.9]) (envelope-sender
+C:         <rdonkin-owner@locus.apache.org>) by
+C:         pre-smtp34-01.prod.mesa1.secureserver.net (qmail-ldap-1.03) with SMTP for
+C:         <asf@xmlmapt.org>; 11 Mar 2008 18:54:15 -0000
+C: Received: (qmail 33110 invoked by uid 1289); 11 Mar 2008 18:54:14 -0000
+C: Delivered-To: rdonkin@locus.apache.org
+C: Received: (qmail 33091 invoked from network); 11 Mar 2008 18:54:14 -0000
+C: Received: from hermes.apache.org (HELO mail.apache.org) (140.211.11.2) by
+C:         minotaur.apache.org with SMTP; 11 Mar 2008 18:54:14 -0000
+C: Received: (qmail 12832 invoked by uid 500); 11 Mar 2008 18:54:10 -0000
+C: Delivered-To: apmail-rdonkin@apache.org
+C: Delivered-To: rob@localhost
+C: Delivered-To: rob@localhost
+C: Received: (qmail 12693 invoked by uid 99); 11 Mar 2008 18:54:10 -0000
+C: Received: from nike.apache.org (HELO nike.apache.org) (192.87.106.230) by
+C:         apache.org (qpsmtpd/0.29) with ESMTP; Tue, 11 Mar 2008 11:54:10 -0700
+C: X-ASF-Spam-Status: No, hits=5.3 required=10.0
+C:         tests=HTML_MESSAGE,MIME_QP_LONG_LINE,MSGID_FROM_MTA_HEADER,SPF_PASS
+C: X-Spam-Check-By: apache.org
+C: Received-SPF: pass (nike.apache.org: domain of
+C:         3MtXWRxUKByYECNGPFCT-PQVKHKECVKQPIQQING.EQOTFQPMKPCRCEJG.QTI@calendar-server.bounces.google.com
+C:         designates 64.233.166.140 as permitted sender)
+C: Received: from [64.233.166.140] (HELO py-out-f140.google.com)
+C:         (64.233.166.140) by apache.org (qpsmtpd/0.29) with ESMTP; Tue, 11 Mar 2008
+C:         18:53:18 +0000
+C: Received: by py-out-f140.google.com with SMTP id a74so255262pye.5 for
+C:         <rdonkin@apache.org>; Tue, 11 Mar 2008 11:53:38 -0700 (PDT)
+C: DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=beta;
+C:         h=domainkey-signature:mime-version:message-id:date:reply-to:sender:received:subject:from:to:content-type;
+C:         bh=a0xHxfGwMbTaCb1AQbvdZZ4bcSJ2pPfhH9+aq/N8Iio=;
+C:         b=XcR46ahkaRiXL6w4DXB16+pG9O4qvSUyCHzL8N3rebn6+s3HAlztkGBCdXbNTOSeLnjEQnv+2slUMkdQy+ZJdg==
+C: DomainKey-Signature: a=rsa-sha1; c=nofws; d=google.com; s=beta;
+C:         h=mime-version:message-id:date:reply-to:sender:subject:from:to:content-type;
+C:         b=E3kUX5aHg+csZ3D0TcHKt9Wie43boX+xpyARVjHAhQ0fJVt9OAzCI/xPDTBpTBjGaDcjnFeFcHWZF9UeXbx8Lg==
+C: MIME-Version: 1.0
+C: Message-ID: <00163600d06e04482dd6a10e7610628b0@google.com>
+C: Date: Tue, 11 Mar 2008 11:53:38 -0700
+C: Reply-To: Robert Burrell Donkin <robertburrelldonkin@gmail.com>
+C: Sender: Google Calendar <calendar-notification@google.com>
+C: Received: by 10.35.108.12 with SMTP id k12mr18969364pym.3.1205261618449;
+C:         Tue,  11 Mar 2008 11:53:38 -0700 (PDT)
+C: Subject:
+C:         =?windows-1256?Q?=5BInvitation=5D_ApacheCon_Europe_2008=21_=40_Mon_7_Apr_=96_?=
+C:         =?windows-1256?Q?Fri_11_Apr_2008_=28=29?=
+C: From: Robert Burrell Donkin <robertburrelldonkin@gmail.com>
+C: To: rdonkin@apache.org
+C: Content-Type: multipart/mixed; boundary=00163600d06e04482dd6a10e458cd80be
+C: X-Virus-Checked: Checked by ClamAV on apache.org
+C: X-Nonspam: None
+C: X-fetched-from: mail.xmlmapt.org
+C: X-Evolution-Source: imap://rob@thebes/
+C: 
+C: 
+C: --00163600d06e04482dd6a10e458cd80be
+C: Content-Type: multipart/alternative;  boundary=00163600d06e04482dd6a10e408cd80bd
+C: 
+C: 
+C: --00163600d06e04482dd6a10e408cd80bd
+C: Content-Type: text/plain; charset=windows-1256
+C: Content-Transfer-Encoding: quoted-printable
+C: 
+C: rdonkin@apache.org, you are invited to
+C: 
+C: Title: ApacheCon Europe 2008!
+C: Time: Mon 7 Apr =96 Fri 11 Apr 2008 (Time zone: London)
+C: Where: Amsterdam
+C: Calendar: 
+C: Description: Ah yes!On Tue, Mar 11, 2008 at 6:45 PM, Robert Burrell Donkin &=
+C: lt;robertburrelldonkin@blueyonder.co.uk&gt; wrote:&gt; O! lest the world sho=
+C: uld task you to recite&gt; &nbsp;What merit lived in me, that you should lov=
+C: e&gt; &nbsp;After my death,--dear love, forget me quite,&gt; &nbsp;For you i=
+C: n me can nothing worthy prove;&gt; &nbsp;Unless you would devise some virtuo=
+C: us lie,&gt; &nbsp;To do more for me than mine own desert,&gt; &nbsp;And hang=
+C:  more praise upon deceased I&gt; &nbsp;Than niggard truth would willingly im=
+C: part:&gt; &nbsp;O! lest your true love may seem false in this&gt; &nbsp;That=
+C:  you for love speak well of me untrue,&gt; &nbsp;My name be buried where my =
+C: body is,&gt; &nbsp;And live no more to shame nor me nor you.&gt; &nbsp; For =
+C: I am shamed by that which I bring forth,&gt; &nbsp; And so should you, to lo=
+C: ve things nothing worth.&gt; &nbsp;
+C: 
+C: You can view this event at http://www.google.com/calendar/event?action=3DVIE=
+C: W&eid=3DaTEya3NjNGhyNXV1ZDFnczlkc29zMWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&tok=3DM=
+C: jkjcm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhOTRmOTJjO=
+C: Tg0Nzg2N2E4NTk4NWM5&ctz=3DEurope%2FLondon&hl=3Den_GB
+C: 
+C: 
+C: 
+C: You are receiving this courtesy email at the account rdonkin@apache.org beca=
+C: use you are an attendee of this event.
+C: 
+C: To stop receiving future notifications for this event, decline this event. A=
+C: lternatively, you can sign up for a Google Calendar account at http://www.go=
+C: ogle.com/calendar/ and control your notification settings for your entire ca=
+C: lendar.
+C: --00163600d06e04482dd6a10e408cd80bd
+C: Content-Type: text/html; charset=windows-1256
+C: Content-Transfer-Encoding: quoted-printable
+C: 
+C: <div style=3D"padding:10px 7px; font-size:12px; line-height:1.4 font-family:=
+C: Arial,Sans-serif; text-align:center;"><div><a href=3D"http://www.google.com/=
+C: calendar/"><img style=3D"border-width:0" src=3D"http://www.google.com/calend=
+C: ar/images/blue_beta_en-GB.gif" alt=3D"Google Calendar"></a></div>
+C: <div style=3D"width:370px; background:#D2E6D2; border-style:solid;       bor=
+C: der-color:#ccc; border-width:1px 1px 0 1px; padding:15px 15px 5px 15px;     =
+C:   margin:0 auto"><p style=3D"margin:0;color:#0">rdonkin@apache.org,
+C: you are invited to</p>
+C: <h2 style=3D"margin:5px 0; font-size:18px; line-height:1.4;color:#0">ApacheC=
+C: on Europe 2008!</h2>
+C: <p style=3D"margin:0 0 .5em;"><span style=3D"color:#0">Mon 7 Apr =96 Fri 11 =
+C: Apr 2008</span>
+C: <br>
+C: <span style=3D"color:#676;">(Time zone:
+C: London)</span>
+C: <br>
+C: <span style=3D"color:#0">Amsterdam (<a href=3D"http://maps.google.co.uk/maps=
+C: ?q=3DAmsterdam&amp;hl=3Den-GB">map</a>)</span>
+C: <br>
+C: <span style=3D"color:#0">Calendar:
+C: </span></p>
+C: <p style=3D"margin:0 0 1em;color:#0; white-space:pre-wrap !important; white-=
+C: space:-moz-pre-wrap !important; white-space:-pre-wrap !important; white-spac=
+C: e:-o-pre-wrap !important; white-space:pre; word-wrap:break-word;">&lt;b&gt;&=
+C: lt;span style=3D&quot;font-family: trebuchet ms,sans-serif;&quot;&gt;Ah yes!=
+C: &lt;/span&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;On Tue, Mar 11, 2008 at 6:45 PM, =
+C: Robert Burrell Donkin &amp;lt;robertburrelldonkin@blueyonder.co.uk&amp;gt; w=
+C: rote:&lt;br&gt;&amp;gt; O! lest the world should task you to recite&lt;br&gt=
+C: ;&amp;gt; &amp;nbsp;What merit lived in me, that you should love&lt;br&gt;&a=
+C: mp;gt; &amp;nbsp;After my death,--dear love, forget me quite,&lt;br&gt;&amp;=
+C: gt; &amp;nbsp;For you in me can nothing worthy prove;&lt;br&gt;&amp;gt; &amp=
+C: ;nbsp;Unless you would devise some virtuous lie,&lt;br&gt;&amp;gt; &amp;nbsp=
+C: ;To do more for me than mine own desert,&lt;br&gt;&amp;gt; &amp;nbsp;And han=
+C: g more praise upon deceased I&lt;br&gt;&amp;gt; &amp;nbsp;Than niggard truth=
+C:  would willingly impart:&lt;br&gt;&amp;gt; &amp;nbsp;O! lest your true love =
+C: may seem false in this&lt;br&gt;&amp;gt; &amp;nbsp;That you for love speak w=
+C: ell of me untrue,&lt;br&gt;&amp;gt; &amp;nbsp;My name be buried where my bod=
+C: y is,&lt;br&gt;&amp;gt; &amp;nbsp;And live no more to shame nor me nor you.&=
+C: lt;br&gt;&amp;gt; &amp;nbsp; For I am shamed by that which I bring forth,&lt=
+C: ;br&gt;&amp;gt; &amp;nbsp; And so should you, to love things nothing worth.&=
+C: lt;br&gt;&amp;gt; &amp;nbsp;&lt;br&gt;&lt;br&gt;<br><a href=3D"http://www.go=
+C: ogle.com/calendar/event?action=3DVIEW&amp;eid=3DaTEya3NjNGhyNXV1ZDFnczlkc29z=
+C: MWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&amp;tok=3DMjkjcm9iZXJ0YnVycmVsbGRvbmtpbkBnb=
+C: WFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhOTRmOTJjOTg0Nzg2N2E4NTk4NWM5&amp;ctz=3DEu=
+C: rope%2FLondon&amp;hl=3Den_GB">More event details&raquo;</a></p>
+C: <div style=3D"margin:.5em 0 0; text-align:center;color:#0"><strong>Will you =
+C: attend?</strong></div>
+C: <div style=3D"margin:4px 0 0; text-align:center;"><span style=3D"background:=
+C: #fff; border:1px solid #676;              padding:3px 5px; line-height:1.5;"=
+C: ><a href=3D"http://www.google.com/calendar/event?action=3DRESPOND&amp;eid=3D=
+C: aTEya3NjNGhyNXV1ZDFnczlkc29zMWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&amp;rst=3D1&amp=
+C: ;tok=3DMjkjcm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhO=
+C: TRmOTJjOTg0Nzg2N2E4NTk4NWM5&amp;ctz=3DEurope%2FLondon&amp;hl=3Den_GB">Yes</a=
+C: >
+C: |<a href=3D"http://www.google.com/calendar/event?action=3DRESPOND&amp;eid=3D=
+C: aTEya3NjNGhyNXV1ZDFnczlkc29zMWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&amp;rst=3D2&amp=
+C: ;tok=3DMjkjcm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhO=
+C: TRmOTJjOTg0Nzg2N2E4NTk4NWM5&amp;ctz=3DEurope%2FLondon&amp;hl=3Den_GB">No</a>=
+C: 
+C: |<a href=3D"http://www.google.com/calendar/event?action=3DRESPOND&amp;eid=3D=
+C: aTEya3NjNGhyNXV1ZDFnczlkc29zMWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&amp;rst=3D3&amp=
+C: ;tok=3DMjkjcm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhO=
+C: TRmOTJjOTg0Nzg2N2E4NTk4NWM5&amp;ctz=3DEurope%2FLondon&amp;hl=3Den_GB">Maybe<=
+C: /a></span></div></div>
+C: <div><img src=3D"http://www.google.com/calendar/images/envelope.gif" style=
+C: =3D"background:#D2E6D2; width:420px height:95px" alt=3D""></div><p style=3D"=
+C: margin:-15px 0 0;">&nbsp;</p>
+C: <p style=3D"color:#676;">You are receiving this courtesy email at the accoun=
+C: t rdonkin@apache.org because you are an attendee of this event.</p><p style=
+C: =3D"color:#676;">To stop receiving future notifications for this event, decl=
+C: ine this event. Alternatively, you can sign up for a Google Calendar account=
+C:  at http://www.google.com/calendar/ and control your notification settings f=
+C: or your entire calendar.</p></div>
+C: --00163600d06e04482dd6a10e408cd80bd
+C: Content-Type: text/calendar; charset=windows-1256; method=REQUEST
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: BEGIN:VCALENDAR
+C: PRODID:-//Google Inc//Google Calendar 70.9054//EN
+C: VERSION:2.0
+C: CALSCALE:GREGORIAN
+C: METHOD:REQUEST
+C: BEGIN:VEVENT
+C: DTSTART;VALUE=DATE:20080407
+C: DTEND;VALUE=DATE:20080412
+C: DTSTAMP:20080311T185338Z
+C: ORGANIZER;CN=Robert Burrell Donkin:MAILTO:robertburrelldonkin@gmail.com
+C: UID:i12ksc4hr5uud1gs9dsos1ipj8@google.com
+C: ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+C:  TRUE;X-NUM-GUESTS=0:MAILTO:rdonkin@apache.org
+C: CLASS:PRIVATE
+C: CREATED:20080311T185337Z
+C: DESCRIPTION:<b><span style="font-family: trebuchet ms\,sans-serif\;">Ah yes
+C:  !</span></b><br><br>On Tue\, Mar 11\, 2008 at 6:45 PM\, Robert Burrell Donk
+C:  in &lt\;robertburrelldonkin@blueyonder.co.uk&gt\; wrote:<br>&gt\; O! lest t
+C:  he world should task you to recite<br>&gt\; &nbsp\;What merit lived in me\,
+C:   that you should love<br>&gt\; &nbsp\;After my death\,--dear love\, forget 
+C:  me quite\,<br>&gt\; &nbsp\;For you in me can nothing worthy prove\;<br>&gt\
+C:  ; &nbsp\;Unless you would devise some virtuous lie\,<br>&gt\; &nbsp\;To do 
+C:  more for me than mine own desert\,<br>&gt\; &nbsp\;And hang more praise upo
+C:  n deceased I<br>&gt\; &nbsp\;Than niggard truth would willingly impart:<br>
+C:  &gt\; &nbsp\;O! lest your true love may seem false in this<br>&gt\; &nbsp\;
+C:  That you for love speak well of me untrue\,<br>&gt\; &nbsp\;My name be buri
+C:  ed where my body is\,<br>&gt\; &nbsp\;And live no more to shame nor me nor 
+C:  you.<br>&gt\; &nbsp\; For I am shamed by that which I bring forth\,<br>&gt\
+C:  ; &nbsp\; And so should you\, to love things nothing worth.<br>&gt\; &nbsp\
+C:  ;<br><br>\nView your event at http://www.google.com/calendar/event?action=V
+C:  IEW&eid=aTEya3NjNGhyNXV1ZDFnczlkc29zMWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&tok=Mj
+C:  kjcm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhOTRmOTJjO
+C:  Tg0Nzg2N2E4NTk4NWM5&ctz=Europe%2FLondon&hl=en_GB.
+C: LAST-MODIFIED:20080311T185337Z
+C: LOCATION:Amsterdam
+C: SEQUENCE:0
+C: STATUS:CONFIRMED
+C: SUMMARY:ApacheCon Europe 2008!
+C: TRANSP:OPAQUE
+C: END:VEVENT
+C: END:VCALENDAR
+C: 
+C: --00163600d06e04482dd6a10e408cd80bd--
+C: 
+C: --00163600d06e04482dd6a10e458cd80be
+C: Content-Type: application/ics; name="invite.ics"
+C: Content-Disposition: attachment; filename="invite.ics"
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: BEGIN:VCALENDAR
+C: PRODID:-//Google Inc//Google Calendar 70.9054//EN
+C: VERSION:2.0
+C: CALSCALE:GREGORIAN
+C: METHOD:REQUEST
+C: BEGIN:VEVENT
+C: DTSTART;VALUE=DATE:20080407
+C: DTEND;VALUE=DATE:20080412
+C: DTSTAMP:20080311T185338Z
+C: ORGANIZER;CN=Robert Burrell Donkin:MAILTO:robertburrelldonkin@gmail.com
+C: UID:i12ksc4hr5uud1gs9dsos1ipj8@google.com
+C: ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+C:  TRUE;X-NUM-GUESTS=0:MAILTO:rdonkin@apache.org
+C: CLASS:PRIVATE
+C: CREATED:20080311T185337Z
+C: DESCRIPTION:<b><span style="font-family: trebuchet ms\,sans-serif\;">Ah yes
+C:  !</span></b><br><br>On Tue\, Mar 11\, 2008 at 6:45 PM\, Robert Burrell Donk
+C:  in &lt\;robertburrelldonkin@blueyonder.co.uk&gt\; wrote:<br>&gt\; O! lest t
+C:  he world should task you to recite<br>&gt\; &nbsp\;What merit lived in me\,
+C:   that you should love<br>&gt\; &nbsp\;After my death\,--dear love\, forget 
+C:  me quite\,<br>&gt\; &nbsp\;For you in me can nothing worthy prove\;<br>&gt\
+C:  ; &nbsp\;Unless you would devise some virtuous lie\,<br>&gt\; &nbsp\;To do 
+C:  more for me than mine own desert\,<br>&gt\; &nbsp\;And hang more praise upo
+C:  n deceased I<br>&gt\; &nbsp\;Than niggard truth would willingly impart:<br>
+C:  &gt\; &nbsp\;O! lest your true love may seem false in this<br>&gt\; &nbsp\;
+C:  That you for love speak well of me untrue\,<br>&gt\; &nbsp\;My name be buri
+C:  ed where my body is\,<br>&gt\; &nbsp\;And live no more to shame nor me nor 
+C:  you.<br>&gt\; &nbsp\; For I am shamed by that which I bring forth\,<br>&gt\
+C:  ; &nbsp\; And so should you\, to love things nothing worth.<br>&gt\; &nbsp\
+C:  ;<br><br>\nView your event at http://www.google.com/calendar/event?action=V
+C:  IEW&eid=aTEya3NjNGhyNXV1ZDFnczlkc29zMWlwajggcmRvbmtpbkBhcGFjaGUub3Jn&tok=Mj
+C:  kjcm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb21mODRkNmZkODg5MjQzNGE2NDNhOTRmOTJjO
+C:  Tg0Nzg2N2E4NTk4NWM5&ctz=Europe%2FLondon&hl=en_GB.
+C: LAST-MODIFIED:20080311T185337Z
+C: LOCATION:Amsterdam
+C: SEQUENCE:0
+C: STATUS:CONFIRMED
+C: SUMMARY:ApacheCon Europe 2008!
+C: TRANSP:OPAQUE
+C: END:VEVENT
+C: END:VCALENDAR
+C: 
+C: --00163600d06e04482dd6a10e458cd80be--
+C: 
+C: 
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A20 OK (\[.+\] )?APPEND completed\.
+C: A125 SEARCH SUBJECT o
+S: \* SEARCH 1
+S: A125 OK SEARCH completed\.
+C: A126 SEARCH SUBJECT the
+S: \* SEARCH
+S: A126 OK SEARCH completed\.
+C: A127 SEARCH SUBJECT "nothing worthy prove"
+S: \* SEARCH
+S: A127 OK SEARCH completed\.
+C: A128 SEARCH SUBJECT thy
+S: \* SEARCH
+S: A128 OK SEARCH completed\.
+C: A150 DELETE testmailbox
+S: A150 OK Delete completed\.
+C: A151 LOGOUT
+S: \* BYE Logging out
+S: A151 OK Logout completed\.

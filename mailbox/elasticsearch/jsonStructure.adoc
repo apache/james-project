@@ -1,0 +1,64 @@
+= Structure of indexed documents
+
+== Message
+
+A message is transformed in JSON in a way that looks like JMAP.
+
+A message has the following fields :
+ - An *id* : corresponds to the message uid. This fields is a long.
+ - A *mailboxId* : identifies in which mailbox this message belongs. This field is a string.
+ - A *date* : corresponds to the internal date ( date James parse it and APPENDED it to a mailbox ). This field is a date this the following format : "yyyy-MM-dd HH:mm:ssZZ" ( Z is the offset with GMT ), corresponding to the date_time_no_millis ElasticSearch date format. Note that if the internal date is null, current time will be used instead.
+ - A *size* : Number of bytes composing this message. This field is a long.
+ - A *hasAttachments* : Tells you if this message has attachments. This field is a boolean.
+ - A *mediaType* : First part of the contentType for the Maim MIME part. This field is a string.
+ - A *subType* : Second part of the contentType for the Maim MIME par. This field is a string.
+ - A *modSeq* : Corresponds to IMAP modification sequence of this mail. This field is a long.
+ - *headers* : A multimap of header name to (decoded) list of header value for all headers in the message. This field is a nested document using header names as key and list of strings as value ( corresponding to the list of the corresponding header values ).
+ - *attachments* : An array of Attachments Json object. See below.
+ - *properties* : An Array of property. See below.
+ - *textBody* : Text body. Corresponds to what a user should see in an e-mail client. If this message is not multipart, we will use the Body. If it is multipart, we will use the first textual mime part body found. This field is a string.
+
+Flags properties are directly attached to the Json message structure. You will found :
+ - *isAnswered* : Is this message answered ? This field is a boolean.
+ - *isDeleted* : Is this message deleted ? This field is a boolean.
+ - *isDraft* : Is this message a draft ? This field is a boolean.
+ - *isFlagged* : Is this message flagged ? This field is a boolean.
+ - *isRecent* : Is this message recent ? This field is a boolean.
+ - *isUnread* : Is this message unread ? This field is a boolean.
+ - *userFlags* : List of the user flags attached to this e-mail. This field is a array of strings.
+
+Some informations are extracted from the headers :
+ - *from* : Emailers at the origin of the e-mail. Array of Emailer.
+ - *to* : Emailers for who this Email was sent. Array of Emailer.
+ - *cc* : Emailers notified about this e-mail. Array of Emailer.
+ - *bcc* : Emailers blindly notified about this e-mail. Array of Emailer.
+ - *sentDate* : Date this message was sent. This field is a date this the following format : "yyyy-MM-dd HH:mm:ssZZ" ( Z is the offset with GMT ), corresponding to the date_time_no_millis ElasticSearch date format. If null, non parsable or absent from headers, this field is set to the internal date.
+ - *subject* : Subject for this message. As several Subject headers can be found, this field is an array of string.
+
+== Emailer
+
+An Emailer represents someone sending an e-mail.
+
+It has the following properties :
+
+ - A *name* : The Fully qualified name of the Emailer. This field is a string.
+ - An *email* : The email of the emailer. This field is a string.
+
+== Attachments
+
+An attachment is composed of the following fields :
+ - A *mediaType* : Similar to the message property. This is a string field.
+ - A *subType* : Similar to the message property. This is a string field.
+ - A *contentDisposition* : Content-Disposition header field extracted. This is a string field.
+ - A *fileName* : Name of the attached file. This is a string field.
+ - A *fileExtension* : Extension part of the file name. This is a string field.
+
+== Properties
+
+A property is a string value computed by James when storing the message.
+
+A property contains :
+
+ - A *namespace* : identifies the domain of this property. This field is a string.
+ - A *name* : identifies this property. This field is a string.
+ - A *value* : value of the property. This field is a string.

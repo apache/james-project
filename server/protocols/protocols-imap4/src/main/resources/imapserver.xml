@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<imapservers>
+
+  <imapserver enabled="true">
+
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:143</bind>
+    <connectionBacklog>200</connectionBacklog>
+
+    <tls socketTLS="false" startTLS="false">
+      <keystore>file://conf/keystore</keystore>
+      <secret>yoursecret</secret>
+      <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+    </tls>
+ 
+    <!-- Disallow plain authenticate / login. So any client will need to STARTTLS before try to login -->
+    <!-- or the socket must be using TLS in general -->
+    <plainAuthDisallowed>false</plainAuthDisallowed>
+ 
+    <!-- COMPRESS extension -->
+    <compress>false</compress>
+ 
+    <!-- Maximal allowed line-length before a BAD response will get returned to the client -->
+    <!-- This should be set with caution as a to high value can make the server a target for DOS! -->
+    <maxLineLength>65536</maxLineLength>
+  
+    <!-- 10MB size limit before we will start to stream to a temporary file -->
+    <inMemorySizeLimit>10485760</inMemorySizeLimit>
+    <handler>
+      <connectionLimit> 0 </connectionLimit>
+      <connectionLimitPerIP> 0 </connectionLimitPerIP>
+    </handler>
+
+  </imapserver>
+
+</imapservers>

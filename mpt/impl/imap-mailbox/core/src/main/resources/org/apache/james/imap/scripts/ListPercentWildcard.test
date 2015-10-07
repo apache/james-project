@@ -1,0 +1,75 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+C: A01 CREATE one
+S: A01 OK CREATE completed.
+C: A02 CREATE two
+S: A02 OK CREATE completed.
+C: A03 CREATE three.sub
+S: A03 OK CREATE completed.
+C: A04 CREATE four.sub.sub
+S: A04 OK CREATE completed.
+C: A05 CREATE five
+S: A05 OK CREATE completed.
+
+C: A06 LIST "" %
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"one\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"two\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"three\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"four\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"five\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+}
+S: A06 OK LIST completed.
+
+C: A07 LIST "" "%"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"one\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"two\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"three\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"four\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"five\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+}
+S: A07 OK LIST completed.
+
+C: A08 LIST "" "%.%"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"three.sub\"
+S: \* LIST \(\\HasChildren\) \"\.\" \"four.sub\"
+}
+S: A08 OK LIST completed.
+
+# Cleanup
+C: D1 DELETE "one"
+S: D1 OK DELETE completed.
+C: D2 DELETE "two"
+S: D2 OK DELETE completed.
+C: D3 DELETE "three"
+S: D3 OK DELETE completed.
+C: D4 DELETE "four"
+S: D4 OK DELETE completed.
+C: D5 DELETE "five"
+S: D5 OK DELETE completed.
+C: D6 DELETE "three.sub"
+S: D6 OK DELETE completed.
+C: D7 DELETE "four.sub"
+S: D7 OK DELETE completed.
+C: D8 DELETE "four.sub.sub"
+S: D8 OK DELETE completed.

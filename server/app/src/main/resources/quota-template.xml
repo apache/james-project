@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+ -->
+
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<!--
+        This configuration file allows you to customize the way quota are handled on this server.
+        You need to rename it in quota.xml so that it gets interpreted by James on startup.
+
+        The different configuration options are detailed here.
+
+        Read RFC-2087 for full details.
+-->
+
+<quota>
+    <!--
+        Quota implementation is based on several components :
+          - QuotaRootResolver : In regard of quota management, mailboxes forms abstract groups called QUOTA ROOT. This
+          component finds to which QUOTA ROOT a mailbox belongs
+          - Current quota manager : Counters for current values : how many messages belongs to this quota root ? Which
+          size ?
+          - Max Quota manager : Sets a maximum value QUOTA ROOT resources can not exceed.
+          - QuotaManager : assemble Current quota manager and Max quota manager.
+          - Listening quota updater : Event system based quota update. On each APPED / COPY /EXPUNGE command, current
+          quotas gets updated.
+    -->
+
+    <quotaRootResolver>
+        <!--
+        Possible value :
+         - default
+        -->
+        <provider>default</provider>
+    </quotaRootResolver>
+    <currentQuotaManager>
+        <!--
+        Possible value for provider :
+         - none : when you use fake as a value for quotaManager's provider
+         - inmemory
+         - cassandra
+
+        The inmemory implementation :
+         - Does not work in a distributed context
+        Note that quota need to be (lazy) re-calculated after each starts
+
+        Cassandra implementation.
+        Non existing quota are considered as null. No cache. It needs to be always enabled, or you might get some
+        quota synchronisation issues.
+         -->
+        <provider>none</provider>
+    </currentQuotaManager>
+    <maxQuotaManager>
+        <!--
+        This component is exposed to the CLI for quota administration tasks.
+
+        Possible value are :
+         - fake : will always return UNLIMITED. Throws on modifications.
+         - fixed : all QUOTA ROOT get the same upper bound for their quotas.
+         - inmemory : allows you to define QUOTA ROOT specific limits, backed with a fixed policy. It does not
+         work in a distributed context.
+         - cassandra : Same thing than inmemory but backed on cassandra. Works on a distributed context. Note that using
+         the default* configuration options and the CLI to set default options is dangerous as server startup might override
+         CLI values.
+        -->
+        <provider>fake</provider>
+        <!--
+        Configuration option for setting max policies for MaxQuotaManager ( message count and byte )
+        -->
+        <!--
+        <defaultMaxMessage>100000</defaultMaxMessage>
+        <defaultMaxStorage>5368709120</defaultMaxStorage>
+        -->
+        <!--
+        Configuration option for setting max values per quota root ( message count and byte )
+        -->
+        <!--
+        <maxMessage>
+            <quotaRoot>#private&amp;btellier@apache.org</quotaRoot>
+            <value>200000</value>
+        </maxMessage>
+        <maxStorage>
+            <quotaRoot>#private&amp;btellier@apache.org</quotaRoot>
+            <value>10737418240</value>
+        </maxStorage>
+        -->
+    </maxQuotaManager>
+    <quotaManager>
+        <!--
+        The QuotaManager you use.
+
+        Possible values are :
+         - fake : returns only UNKNOWN/UNLIMITED quotas
+         - store : returns quotas using a CurrentQuotaManager and a MaxQuotaManager
+        -->
+        <provider>fake</provider>
+    </quotaManager>
+    <updates>
+        <!--
+        This defines the way your quotas gets updated.
+        Possible values are :
+         - fake
+         - event
+        -->
+        <provider>fake</provider>
+    </updates>
+</quota>

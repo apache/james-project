@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Provided SMTP Hooks</title>
+ </properties>
+
+<body>
+
+  <section name="Provided Hooks in James Server">
+  
+    <p>The following hooks are supported:</p>
+
+    <subsection name="AuthHook">
+      <p>Allows to hook in your code for authenticate users for sending mail via SMTP AUTH. 
+      You could for example query your own database table to see if a user should be allowed to 
+      send mail with the given username and password.</p>
+    </subsection>
+
+    <subsection name="ConnectionHandler">
+      <p>Allows to hook in your code on a new connection. So you could just drop it 
+      or do something else.</p>
+    </subsection>
+ 
+    <subsection name="HeloHook">
+      <p>Allows to hook in your code in the HELO and EHLO commands.</p>
+    </subsection>
+
+    <subsection name="MailHook">
+      <p>Allows to hook in your code in the MAIL command. Like checking the sender 
+      which was given with MAIL FROM: &lt;whatever@example&gt;</p>
+    </subsection>
+
+    <subsection name="MailParametersHook">
+      <p>Allows to hook in given parameters in the EHLO command.</p>
+    </subsection>
+
+    <subsection name="JamesMessageHook">
+      <p>Allow to hook in your code after the email was received via the DATA command and 
+         was marked for queuing by the CLRF.CRLF sequence. This will get executed right before 
+         the message will actual get queued.</p>
+      <p>IMPORTANT: If you want to do heavy processing here 
+         and not want to reject the method based on a criteria you are most times better of to 
+         use the Mailet API!</p>
+    </subsection>
+
+    <subsection name="QuitHook">
+      <p>Allow to hook in your code in the QUIT command.</p>
+    </subsection>
+
+    <subsection name="RcptHook">
+      <p>Allows to hook in your code in the RCPT command. Like implementing a custom logic to 
+      check if the mail for a given recipient should get accepted or rejected.</p>
+    </subsection>
+
+    <subsection name="UnknownCmdHook">
+      <p>Allows to hook in your code on every unknown command.</p>
+    </subsection>
+
+    <subsection name="MailPriorityHandler">
+      <p>Allows to set priority on mails for the spool queues, depending on the destination domain.</p>
+    </subsection>
+    
+    <subsection name="HookResultJMXMonitor">
+      <p>Allows to register a HookStatsMBean under JMX for every processed Hook. 
+         You will get statistics about the configured hooks via JMX </p>
+    </subsection>
+
+  </section>
+
+</body>
+
+</document>
