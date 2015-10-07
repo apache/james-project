@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+ 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<!-- DNS Service Block -->
+<!-- -->
+<!-- Specifies DNS Server information for use by various components inside -->
+<!-- James. -->
+<!-- -->
+<!-- If autodiscover is true, James will attempt to autodiscover the DNS servers configured on your underlying system.-->
+<!-- Currently, this works if the OS has a unix-like /etc/resolv.conf,-->
+<!-- or the system is Windows based with ipconfig or winipcfg.-->
+<!-- -->
+<!-- If no DNS servers are found and you have not specified any below, 127.0.0.1 will be used-->
+<!-- If you use autodiscover and add DNS servers manually a combination of all the dns servers will be used  -->
+<!--  -->
+<!-- Information includes a list of DNS Servers to be used by James.  These are -->
+<!-- specified by the server elements, each of which is a child element of the -->
+<!-- servers element.  Each server element is the IP address of a single DNS server. -->
+<!-- The servers element can have multiple server children. -->
+<dnsservice>
+   <servers>
+       <!--Enter ip address of your DNS server, one IP address per server -->
+       <!-- element. -->
+       <!--
+       <server>127.0.0.1</server>
+        -->
+   </servers>
+   <!-- Change autodiscover to false if you would like to turn off autodiscovery -->
+   <!-- and set the DNS servers manually in the<servers>section -->
+   <autodiscover>true</autodiscover>
+   <authoritative>false</authoritative>
+
+   <!-- Maximum number of entries to maintain in the DNS cache -->
+   <maxcachesize>50000</maxcachesize>
+      
+   <!-- Uncomment this if you want James to try a single server for each -->
+   <!-- multihomed mx host. -->
+   <!--
+   <singleIPperMX>true</singleIPperMX>
+    -->
+</dnsservice>

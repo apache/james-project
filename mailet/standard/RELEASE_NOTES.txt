@@ -1,0 +1,24 @@
+               Apache James Standard Mailets
+               -----------------------------
+
+Release Notes
+-------------
+   Apache James Standard Mailets is a collection of general purpose
+   mail processing agents with minimal dependencies.
+   Mailets are defined by the 
+   Apache Mailet API (a framework assisting the rapid development of 
+   email processing functionality see http://james.apache.org/mailet). 
+   
+1.0
+---
+   This is the first independent release of this code. Previously 
+   it was shipped as part of the Apache James Mail Server
+   (an advanced mail server see http://james.apache.org/mailet). 
+   This release is not dependent on that server but can be used in any Mailet container. 
+  
+  
+Since James Server 2.3.1
+  * Upgrade to Apache Mailet API 2.4 and Apache Mailets Base 1.0
+  * JAMES-728 - ClamAV and IOUtil updates to close streams/readers/writers and sockets
+  * JAMES-733 - Fix javadoc 
+  * JAMES-579 -  Update license headers and NOTICE to follow the latest ASF requirements

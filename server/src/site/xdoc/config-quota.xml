@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Quota Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="Quota Configuration">
+
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/quota-template.xml">quota-template.xml</a> in SVN to get some examples and hints.</p>
+    
+    <p>Use this configuration to define the type of quota storage used to persist the quotas.</p>
+    
+    <p>This allow you to configure the behaviour of your James server in regard of the RFC 2087 Quotas.</p>
+
+    <p><a href="https://tools.ietf.org/html/rfc2087">RFC 2087</a> introduces Quotas. A quota is related to a resource. In James, resources are MESSAGE (message count) and
+      STORAGE (size occupied by the messages in bytes). A quota is composed of two values. The first one is the maximum value
+    related to the value. The second one is the current value of the resource. Quota are handled for a Quota Root, a (potentially
+    configurable group of mailboxes.</p>
+
+    <p>
+      The goal of RFC-2087 and related James implementation is to forbid users to exceed a given value for available resources.
+    </p>
+
+    <p>
+      James' implementation is split in different components, and each one of them gets its own responsibility :
+
+      <ul>
+        <li>Quota Root Resolver : This component is responsible of the correspondence between mailboxes and QUOTA ROOT. A default implementation is
+        available and simply group mailboxes in QUOTA ROOT on the base of the owner name.</li>
+        <li>Quota Manager : This component retrieves quota associated with a QUOTA ROOT. A store implementation is available and relies on other components.
+          A fake implementation is available in order to add no overhead.</li>
+        <li>Max Quota Manager : This component retrieves maximum values associated with quotas and gives a way to potentially
+        (depending on the implementation) update these per QUOTA ROOT maximum values. Three implementation are available for now. A NoQuotaManager implementation
+        is read only and returns UNLIMITED maximum values. FixedMaxQuotaManager returns one and only one value for all user. You can configure these maximum values
+          threw the configuration files. A InMemoryPerUserMaxQuotaManager allows you to configure quota for each QUOTA ROOT. Note that it needs to be done threw
+          configuration to be persistent. And finally a Cassandra implementation allows to store maximum quota values in Cassandra.</li>
+        <li>Current Quota Manager : This component can be omitted if you are running a fake QUOTA manager. inmemory implementation is an event updated cache on
+        top of a Quota calculator (that fetches every e-mail metadata of every mailboxes belonging to the QUOTA ROOT: it is expensive). A cassandra implementation
+        is also available.</li>
+        <li>Quota Updater : This components allows to update current quota values. A fake implementation is available. A real, event base solution also exists.</li>
+      </ul>
+    </p>
+
+    <p>
+      To choose the implementation you want for the given components you want simply have a look to the <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/quota-template.xml">quota-template.xml</a> file.
+    </p>
+
+    <p>
+      Quota integration consists of :
+
+      <ul>
+        <li>Checks in the message manager. An operation that will bring the QUOTA ROOT over quota will be dropped. APPEND and COPY operations are concerned.</li>
+        <li>A matcher is available (IsOverQuota) to better respond to client sending e-mail via SMTP to an over quota mailbox (and prevent the e-mail from being
+          stored in MailRepositories). This matcher just performs a call to the Quota Manager, and is efficient.</li>
+        <li>A user can consult his Quotas using RFC 2087 IMAP commands. Note that SETQUOTA command is disabled. No quota configuration can be done threw IMAP.</li>
+        <li>CLI authorises an admin to consult and manage ones quotas.</li>
+      </ul>
+    </p>
+
+    <p>
+      The administration of QUOTAs can be done :
+
+      <ul>
+        <li>Threw configuration file. Note that this is required to persist a change made to the inmemory or fixed Max Quota
+          Manager. It needs a James reboot to take effect. Finally, using configuration file for setting maximum quota values
+          will override CLI set values. Avoid this option this persistent Max Quota Manager (for instance Cassandra)</li>
+        <li>Threw the CLI : offers immediate configuration changes on quota maximum values. Note that if you are using either a
+        fixed or inmemory Max QUota Manager, your changes need to be done to the XML configuration to be persisted.</li>
+      </ul>
+    </p>
+
+  </section>
+
+</body>
+
+</document>
+

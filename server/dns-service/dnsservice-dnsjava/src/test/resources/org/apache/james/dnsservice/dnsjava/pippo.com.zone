@@ -1,0 +1,30 @@
+;
+;  Licensed to the Apache Software Foundation (ASF) under one
+;  or more contributor license agreements.  See the NOTICE file
+;  distributed with this work for additional information
+;  regarding copyright ownership.  The ASF licenses this file
+;  to you under the Apache License, Version 2.0 (the
+;  "License"); you may not use this file except in compliance
+;  with the License.  You may obtain a copy of the License at
+;
+;    http://www.apache.org/licenses/LICENSE-2.0
+
+;  Unless required by applicable law or agreed to in writing,
+;  software distributed under the License is distributed on an
+;  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+;  KIND, either express or implied.  See the License for the
+;  specific language governing permissions and limitations
+;  under the License.    
+;
+pippo.com.		14440	IN	SOA	ns1.hyperdrivedns.net. admin.hyperdrivedns.com. 2004121207 14400 7200 3600000 86400
+pippo.com.		14400	IN	MX	0 pippo.com.inbound.mxlogic.net.
+pippo.com.		14400	IN	NS	ns1.hyperdrivedns.net.
+pippo.com.		14400	IN	A	204.11.236.232
+mail.pippo.com.		14400	IN	A	216.183.119.114
+hk.pippo.com.		14400	IN	A	204.11.236.232
+www.pippo.com.		14400	IN	CNAME	pippo.com.
+localhost.pippo.com.	14400	IN	A	127.0.0.1
+www.pluto.pippo.com.	14400	IN	A	204.11.236.232
+pluto.pippo.com.	14400	IN	A	204.11.236.232
+www.hk.pippo.com.	14400	IN	A	204.11.236.232
+ftp.pippo.com.		14400	IN	A	204.11.236.232

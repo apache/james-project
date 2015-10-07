@@ -1,0 +1,570 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: A2 CREATE testmailbox
+S: A2 OK CREATE completed\.
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY (.)*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\](.)*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A3 OK \[READ-WRITE\] SELECT completed\.
+C: A4 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C: 
+C: This is a very simple email.
+C: 
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A4 OK (\[.+\] )?APPEND completed\.
+C: A5 APPEND testmailbox {704+}
+C: Received: by 10.114.81.13 with HTTP; Sat, 2 Feb 2008 05:14:19 -0800 (PST)
+C: Message-ID: <f470f68e0802020514m6eaba233u96a9021a2697a48d@mail.gmail.com>
+C: Date: Sat, 2 Feb 2008 13:14:19 +0000
+C: From: "Robert Burrell Donkin" <robertburrelldonkin@gmail.com>
+C: To: "James Developers List" <server-dev@james.apache.org>
+C: Subject: JCR -> trunk ...?
+C: MIME-Version: 1.0
+C: Content-Type: text/plain; charset=ISO-8859-1
+C: Content-Transfer-Encoding: 7bit
+C: Content-Disposition: inline
+C: Delivered-To: robertburrelldonkin@gmail.com
+C: 
+C: i'd like to copy james-jcr into trunk and add some example
+C: configurations. development can continue in the sandbox (or not) and
+C: merged in later (if necessary).
+C: 
+C: any objections?
+C: 
+C: - robert
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: A5 OK (\[.+\] )?APPEND completed\.
+C: A6 APPEND testmailbox {668+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/alternative;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: applcation/xhtml+xml
+C: 
+C: <!DOCTYPE html
+C: PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+C: "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: text/html; charset=US-ASCII
+C: 
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729--
+C: 
+S: \* 3 EXISTS
+S: \* 3 RECENT
+S: A6 OK (\[.+\] )?APPEND completed\.
+C: A7 APPEND testmailbox {765+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/mixed;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: text/html; charset=US-ASCII
+C: 
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729
+C: Content-Type: application/xhtml+xml
+C: 
+C: <!DOCTYPE html
+C: PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+C: "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729
+C: Content-Type: image/jpeg
+C: Content-Transfer-Encoding: base64
+C: 
+C: 1234567890ABCDEFGHIJKLMNOPQ
+C: 
+C: --1729--
+C: 
+S: \* 4 EXISTS
+S: \* 4 RECENT
+S: A7 OK (\[.+\] )?APPEND completed\.
+C: A8 APPEND testmailbox {1767+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/mixed;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: application/octet-stream
+C: Content-Transfer-Encoding: base64
+C: 
+C: 987654321AHPLA
+C: 
+C: --1729
+C: Content-Type: message/rfc822
+C: 
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Alternative Email
+C: Content-Type: multipart/alternative;boundary=42
+C: 
+C: This message has a premable
+C: 
+C: --42
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Custard!
+C: 
+C: --42
+C: Content-Type: application/octet-stream
+C: 
+C: CUSTARDCUSTARDCUSTARD
+C: 
+C: --42--
+C: 
+C: --1729
+C: Content-Type: multipart/mixed; boundary=4.66920160910299
+C: 
+C: --4.66920160910299
+C: Content-Type: image/gif
+C: Content-Transfer-Encoding: base64
+C: MIME-Version: 1.0
+C: Content-ID: 238478934723847238947892374
+C: Content-Description: Bogus Image Data
+C: 
+C: ABCDFEGHIJKLMNO
+C: 
+C: --4.66920160910299
+C: Content-Type: message/rfc822
+C: 
+C: From: Timothy Tayler <timothy@example.org>
+C: To: John Smith <john@example.org>
+C: Date: Sat, 16 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: Another Example Email
+C: Content-Type: multipart/mixed;boundary=2.50290787509
+C: 
+C: Yet another preamble
+C: 
+C: --2.50290787509
+C: Content-Type: text/plain
+C: 
+C: Rhubard AND Custard!
+C: 
+C: --2.50290787509
+C: Content-Type: multipart/alternative;boundary=3.243F6A8885A308D3
+C: 
+C: --3.243F6A8885A308D3
+C: Content-Type: text/plain
+C: 
+C: Rhubard?Custard?
+C: 
+C: --3.243F6A8885A308D3
+C: 
+C: Content-Type: text/richtext
+C: 
+C: Rhubard?Custard?
+C: 
+C: --3.243F6A8885A308D3--
+C: 
+C: --2.50290787509--
+C: 
+C: --4.66920160910299--
+C: --1729--
+C: 
+S: \* 5 EXISTS
+S: \* 5 RECENT
+S: A8 OK (\[.+\] )?APPEND completed\.
+C: A9 APPEND testmailbox {185+}
+C: From: John Smith <john@example.org>
+C: To: Timothy Taylor <tim@example.org>
+C: Subject: Hello
+C: Date: Sat, 23 Feb 2008 07:48:03 -0600
+C: Message-ID: <1729@machine.example.org>
+C: 
+C: Hello, World!
+S: \* 6 EXISTS
+S: \* 6 RECENT
+S: A9 OK (\[.+\] )?APPEND completed\.
+C: A10 APPEND testmailbox {227+}
+C: From: John Smith <john@example.org>
+C: Sender: Samual Smith <sam@example.org>
+C: To: Timothy Taylor <tim@example.org>
+C: Subject: Hello
+C: Date: Sat, 23 Feb 2008 07:48:03 -0600
+C: Message-ID: <172942@machine.example.org>
+C: 
+C: Hello, World!
+S: \* 7 EXISTS
+S: \* 7 RECENT
+S: A10 OK (\[.+\] )?APPEND completed\.
+C: A11 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C: 
+C: This is a very simple email.
+C: 
+S: \* 8 EXISTS
+S: \* 8 RECENT
+S: A11 OK (\[.+\] )?APPEND completed\.
+C: A12 APPEND testmailbox {318+}
+C: From: "Brian G. Hutton" <brian@example.org>
+C: To: Timothy Taylor <tim@example.org>, faith@example.org, Huh? <sam@example.org>
+C: CC: <ben@example.org>, "David \"The Thin White Duke\" Bowie" <duke@example.org>
+C: Subject: Rhubarb
+C: Date: Sat, 23 Feb 2008 07:48:03 -0600
+C: Message-ID: <17291729@machine.example.org>
+C: 
+C: Rhubarb!
+S: \* 9 EXISTS
+S: \* 9 RECENT
+S: A12 OK (\[.+\] )?APPEND completed\.
+C: A13 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 9 EXISTS
+S: \* 9 RECENT
+S: \* OK \[UIDVALIDITY (.)*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\](.)*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 10\].*
+S: A13 OK \[READ-WRITE\] SELECT completed\.
+C: A14 FETCH 1:* (BODY.PEEK[])
+S: \* 1 FETCH \(BODY\[\] \{185\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Simple Email
+S: 
+S: This is a very simple email\.
+S: \)
+S: \* 2 FETCH \(BODY\[\] \{704\}
+S: Received: by 10\.114\.81\.13 with HTTP; Sat, 2 Feb 2008 05:14:19 -0800 \(PST\)
+S: Message-ID: <f470f68e0802020514m6eaba233u96a9021a2697a48d@mail\.gmail\.com>
+S: Date: Sat, 2 Feb 2008 13:14:19 \+0000
+S: From: "Robert Burrell Donkin" <robertburrelldonkin@gmail\.com>
+S: To: "James Developers List" <server-dev@james\.apache\.org>
+S: Subject: JCR -> trunk \.\.\.\?
+S: MIME-Version: 1\.0
+S: Content-Type: text/plain; charset=ISO-8859-1
+S: Content-Transfer-Encoding: 7bit
+S: Content-Disposition: inline
+S: Delivered-To: robertburrelldonkin@gmail\.com
+S: 
+S: i'd like to copy james-jcr into trunk and add some example
+S: configurations\. development can continue in the sandbox \(or not\) and
+S: merged in later \(if necessary\)\.
+S: 
+S: any objections\?
+S: 
+S: - robert\)
+S: \* 3 FETCH \(BODY\[\] \{668\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/alternative;boundary=1729
+S: 
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: applcation/xhtml\+xml
+S: 
+S: <!DOCTYPE html
+S: PUBLIC "-//W3C//DTD XHTML 1\.0 Strict//EN"
+S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: text/html; charset=US-ASCII
+S: 
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729--
+S: \)
+S: \* 4 FETCH \(BODY\[\] \{765\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: text/html; charset=US-ASCII
+S: 
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: application/xhtml\+xml
+S: 
+S: <!DOCTYPE html
+S: PUBLIC "-//W3C//DTD XHTML 1\.0 Strict//EN"
+S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: image/jpeg
+S: Content-Transfer-Encoding: base64
+S: 
+S: 1234567890ABCDEFGHIJKLMNOPQ
+S: 
+S: --1729--
+S: \)
+S: \* 5 FETCH \(BODY\[\] \{1767\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: application/octet-stream
+S: Content-Transfer-Encoding: base64
+S: 
+S: 987654321AHPLA
+S: 
+S: --1729
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Alternative Email
+S: Content-Type: multipart/alternative;boundary=42
+S: 
+S: This message has a premable
+S: 
+S: --42
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Custard!
+S: 
+S: --42
+S: Content-Type: application/octet-stream
+S: 
+S: CUSTARDCUSTARDCUSTARD
+S: 
+S: --42--
+S: 
+S: --1729
+S: Content-Type: multipart/mixed; boundary=4\.66920160910299
+S: 
+S: --4\.66920160910299
+S: Content-Type: image/gif
+S: Content-Transfer-Encoding: base64
+S: MIME-Version: 1\.0
+S: Content-ID: 238478934723847238947892374
+S: Content-Description: Bogus Image Data
+S: 
+S: ABCDFEGHIJKLMNO
+S: 
+S: --4\.66920160910299
+S: Content-Type: message/rfc822
+S: 
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: John Smith <john@example\.org>
+S: Date: Sat, 16 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: Another Example Email
+S: Content-Type: multipart/mixed;boundary=2\.50290787509
+S: 
+S: Yet another preamble
+S: 
+S: --2\.50290787509
+S: Content-Type: text/plain
+S: 
+S: Rhubard AND Custard!
+S: 
+S: --2\.50290787509
+S: Content-Type: multipart/alternative;boundary=3\.243F6A8885A308D3
+S: 
+S: --3\.243F6A8885A308D3
+S: Content-Type: text/plain
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3
+S: 
+S: Content-Type: text/richtext
+S: 
+S: Rhubard\?Custard\?
+S: 
+S: --3\.243F6A8885A308D3--
+S: 
+S: --2\.50290787509--
+S: 
+S: --4\.66920160910299--
+S: --1729--
+S: \)
+S: \* 6 FETCH \(BODY\[\] \{185\}
+S: From: John Smith <john@example\.org>
+S: To: Timothy Taylor <tim@example\.org>
+S: Subject: Hello
+S: Date: Sat, 23 Feb 2008 07:48:03 -0600
+S: Message-ID: <1729@machine\.example\.org>
+S: 
+S: Hello, World!\)
+S: \* 7 FETCH \(BODY\[\] \{227\}
+S: From: John Smith <john@example\.org>
+S: Sender: Samual Smith <sam@example\.org>
+S: To: Timothy Taylor <tim@example\.org>
+S: Subject: Hello
+S: Date: Sat, 23 Feb 2008 07:48:03 -0600
+S: Message-ID: <172942@machine\.example\.org>
+S: 
+S: Hello, World!\)
+S: \* 8 FETCH \(BODY\[\] \{185\}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Simple Email
+S: 
+S: This is a very simple email\.
+S: \)
+S: \* 9 FETCH \(BODY\[\] \{318\}
+S: From: "Brian G\. Hutton" <brian@example\.org>
+S: To: Timothy Taylor <tim@example\.org>, faith@example\.org, Huh\? <sam@example\.org>
+S: CC: <ben@example\.org>, "David \\"The Thin White Duke\\" Bowie" <duke@example\.org>
+S: Subject: Rhubarb
+S: Date: Sat, 23 Feb 2008 07:48:03 -0600
+S: Message-ID: <17291729@machine\.example\.org>
+S: 
+S: Rhubarb!\)
+S: A14 OK FETCH completed\.
+C: A15 FETCH 1:* (BODY.PEEK[HEADER.FIELDS.NOT (DATE FROM TO ORIGINATOR X-LIST)])
+S: \* 1 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{27\}
+S: Subject: A Simple Email
+S: 
+S: \)
+S: \* 2 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{352\}
+S: Received: by 10\.114\.81\.13 with HTTP; Sat, 2 Feb 2008 05:14:19 -0800 \(PST\)
+S: Message-ID: <f470f68e0802020514m6eaba233u96a9021a2697a48d@mail\.gmail\.com>
+S: Subject: JCR -> trunk \.\.\.\?
+S: MIME-Version: 1\.0
+S: Content-Type: text/plain; charset=ISO-8859-1
+S: Content-Transfer-Encoding: 7bit
+S: Content-Disposition: inline
+S: Delivered-To: robertburrelldonkin@gmail\.com
+S: 
+S: \)
+S: \* 3 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{81\}
+S: Subject: A Multipart Email
+S: Content-Type: multipart/alternative;boundary=1729
+S: 
+S: \)
+S: \* 4 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{75\}
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: \)
+S: \* 5 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{75\}
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: \)
+S: \* 6 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{58\}
+S: Subject: Hello
+S: Message-ID: <1729@machine\.example\.org>
+S: 
+S: \)
+S: \* 7 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{100\}
+S: Sender: Samual Smith <sam@example\.org>
+S: Subject: Hello
+S: Message-ID: <172942@machine\.example\.org>
+S: 
+S: \)
+S: \* 8 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{27\}
+S: Subject: A Simple Email
+S: 
+S: \)
+S: \* 9 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(DATE FROM TO ORIGINATOR X-LIST\)\] \{145\}
+S: CC: <ben@example\.org>, "David \\"The Thin White Duke\\" Bowie" <duke@example\.org>
+S: Subject: Rhubarb
+S: Message-ID: <17291729@machine\.example\.org>
+S: 
+S: \)
+S: A15 OK FETCH completed\.
+C: A16 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 9 EXISTS
+S: \* 9 RECENT
+S: \* OK \[UIDVALIDITY (.)*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\](.)*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 10\].*
+S: A16 OK \[READ-WRITE\] SELECT completed\.
+C: A17 DELETE testmailbox
+S: A17 OK DELETE completed\.

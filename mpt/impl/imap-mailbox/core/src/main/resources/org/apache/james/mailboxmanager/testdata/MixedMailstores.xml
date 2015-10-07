@@ -1,0 +1,185 @@
+<config>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+    <mailboxmanager>
+        <namespaces>
+            <usernamespace name="#mail" delimiter="."/>
+        </namespaces>
+        <factory
+            class="org.apache.james.mailboxmanager.impl.VirtualMailboxManagerFactory">
+            <mounts>
+                <mount>
+                    <point point="#mail.user1"/>
+                    <target
+                        class="org.apache.james.mailboxmanager.mailstore.MailStoreMailboxManagerFactory">
+                        <repository destinationURL="file://target/var/vm/user1"
+                            type="MAIL"/>
+                    </target>
+                </mount>     
+                <mount>
+                    <point point="#mail.user2"/>
+                    <target
+                        class="org.apache.james.mailboxmanager.mailstore.MailStoreMailboxManagerFactory">
+                        <repository destinationURL="file://target/var/vm/user2_test"
+                            type="MAIL"/>
+                    </target>
+                </mount>    				   
+            </mounts>
+        </factory>
+    </mailboxmanager>
+   <mailstore>
+      <repositories>
+        <repository class="org.apache.james.mailboxmanager.repository.MailboxManagerMailRepository">
+            <protocols>
+               <protocol>mailboxmanager</protocol>
+            </protocols>
+            <types>
+               <type>MAIL</type>
+            </types>
+            <config>
+               <sqlFile>file://conf/mailboxManagerSqlResources.xml</sqlFile>
+            </config>
+         </repository>
+         <!-- File based repositories.  These repositories store all message data -->
+         <!-- in the file system. -->
+         <repository class="org.apache.james.mailrepository.AvalonMailRepository">
+            <protocols>
+               <protocol>file</protocol>
+            </protocols>
+            <types>
+               <type>MAIL</type>
+            </types>
+            <!-- Set if the messages should be listed sorted. False by default -->
+            <config FIFO="false"/> 
+         </repository>
+         <repository class="org.apache.james.mailrepository.AvalonSpoolRepository">
+            <protocols>
+               <protocol>file</protocol>
+            </protocols>
+            <types>
+               <type>SPOOL</type>
+            </types>
+         </repository>
+
+         <!-- JDBC based repositories.  These repositories store all message data -->
+         <!-- in the database. -->
+         <repository class="org.apache.james.mailrepository.JDBCMailRepository">
+            <protocols>
+               <protocol>db</protocol>
+            </protocols>
+            <types>
+               <type>MAIL</type>
+            </types>
+            <config>
+               <sqlFile>file://conf/sqlResources.xml</sqlFile>
+               <!-- Set the size threshold for in memory handling of storing operations -->
+               <!-- Default is currently 409600000 due to a bug with mysql and binary stream -->
+               <!-- currently under investigation. Please change this only if you know what -->
+               <!-- you do. -->
+               <!--
+               <inMemorySizeLimit>4096</inMemorySizeLimit>
+                -->
+            </config>
+         </repository>
+
+         <repository class="org.apache.james.mailrepository.JDBCSpoolRepository">
+            <protocols>
+               <protocol>db</protocol>
+            </protocols>
+            <types>
+               <type>SPOOL</type>
+            </types>
+            <config>
+               <sqlFile>file://conf/sqlResources.xml</sqlFile>
+               <maxcache>1000</maxcache>
+            </config>
+         </repository>
+
+         <!-- These repositories store message delivery and headers in the DB, and the body to the filesystem -->
+         <repository class="org.apache.james.mailrepository.JDBCMailRepository">
+            <protocols>
+               <protocol>dbfile</protocol>
+            </protocols>
+            <types>
+               <type>MAIL</type>
+            </types>
+            <config>
+               <sqlFile>file://conf/sqlResources.xml</sqlFile>
+               <filestore>file://var/dbmail</filestore>
+            </config>
+         </repository>
+
+         <repository class="org.apache.james.mailrepository.JDBCSpoolRepository">
+            <protocols>
+               <protocol>dbfile</protocol>
+            </protocols>
+            <types>
+               <type>SPOOL</type>
+            </types>
+            <config>
+               <sqlFile>file://conf/sqlResources.xml</sqlFile>
+               <filestore>file://var/dbmail</filestore>
+               <maxcache>1000</maxcache>
+            </config>
+         </repository>
+
+         <!-- The mbox repository is designed for MAIL only; SPOOL performance would be less than ideal-->
+         <repository class="org.apache.james.mailrepository.MBoxMailRepository">
+            <protocols>
+               <protocol>mbox</protocol>
+            </protocols>
+            <types>
+               <type>MAIL</type>
+            </types>
+            <!-- Set if the messages should be listed sorted. False by default -->
+            <config FIFO="false"/> 
+         </repository>
+
+         <repository class="org.apache.james.mailrepository.filepair.File_Persistent_Object_Repository">
+            <protocols>
+               <protocol>file</protocol>
+            </protocols>
+            <types>
+               <type>OBJECT</type>
+            </types>
+            <models>
+               <model>SYNCHRONOUS</model>
+               <model>ASYNCHRONOUS</model>
+               <model>CACHE</model>
+            </models>
+         </repository>
+
+         <repository class="org.apache.james.mailrepository.filepair.File_Persistent_Stream_Repository">
+            <protocols>
+               <protocol>file</protocol>
+            </protocols>
+            <types>
+               <type>STREAM</type>
+            </types>
+            <models>
+               <model>SYNCHRONOUS</model>
+               <model>ASYNCHRONOUS</model>
+               <model>CACHE</model>
+            </models>
+         </repository>
+      </repositories>
+      
+   </mailstore>
+</config>
+

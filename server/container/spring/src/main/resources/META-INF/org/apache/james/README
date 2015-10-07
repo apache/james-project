@@ -1,0 +1,6 @@
+You can place here any configuration file you find in 
+http://svn.apache.org/repos/asf/james/mailbox/trunk/spring/src/main/resources/META-INF/org/apache/james/
+
+This will override the configuration loaded from classpath from mailbox-spring.jar.
+
+If you create a file, ensure that the configuration in that file in complete (we don't support partial file-based configuration).

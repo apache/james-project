@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<project name="Apache James Server 3.0">
+
+  <skin>
+    <groupId>org.apache.james</groupId>
+    <artifactId>james-skin</artifactId>
+    <version>${james-skin.version}</version>
+  </skin>
+
+  <bannerLeft>
+    <name>Apache James Server 3.0</name>
+    <src>images/logos/james-server-logo.gif</src>
+    <href>http://james.apache.org/server/index.html</href>
+    <alt>james-server-logo.gif</alt>
+  </bannerLeft>
+  
+  <body>
+  
+    <menu name="Overview">
+      <item name="Introduction" href="/index.html"/>
+      <item name="Release Notes" href="/release-notes.html"/>
+<!--       <item name="Sitemap" href="/sitemap.html"/> -->
+<!--      <item name="JIRA Report" href="/jira-report.html"/>-->
+    </menu>
+  
+    <menu name="Features">
+      <item name="Mailet Container" href="/feature-mailetcontainer.html" />
+      <item name="Queue Priority" href="/feature-queue-priority.html" />
+      <item name="Persistence" href="/feature-persistence.html" />
+      <item name="Protocols" href="/feature-protocols.html" />
+      <item name="SMTP Hooks" href="/feature-smtp-hooks.html" />
+      <item name="Performance" href="/feature-performance.html" />
+      <item name="Security" href="/feature-security.html" />
+    </menu>
+    
+    <menu name="User Manual">
+      <item name="1. Quick Start" href="/quick-start.html" />
+      <item name="2. Install James" href="/install.html" />
+      <item name="3. Configure James" href="/config.html" collapse="true" >
+        <item name="System" href="/config-system.html" />
+        <item name="Domain List" href="/config-domainlist.html" />
+        <item name="Users" href="/config-users.html" />
+        <item name="Recipient Rewrite" href="/config-recipientrewritetable.html" />
+        <item name="Mailbox" href="/config-mailbox.html" />
+        <item name="Mail Repository Stores" href="/config-mailrepositorystore.html" />
+        <item name="DNS Service" href="/config-dnsservice.html" />
+        <item name="SMTP LMTP" href="/config-smtp-lmtp.html" />
+        <item name="POP3" href="/config-pop3.html" />
+        <item name="IMAP4" href="/config-imap4.html" />
+        <item name="Mailet Container" href="/config-mailetcontainer.html" />
+        <item name="FetchMail" href="/config-fetchmail.html" />
+<!--        
+Removed from trunk for now.
+        <item name="List Manager" href="/config-listmanager.html" />
+-->
+        <item name="SSL/TLS" href="/config-ssl-tls.html" />
+        <item name="Sieve" href="/config-sieve.html" />
+        <item name="Anti Spam" href="/config-antispam.html" />
+      </item>
+      <item name="4. Manage" href="/manage.html" collapse="true" >
+        <item name="Domains" href="/manage-domains.html" />
+        <item name="Users" href="/manage-users.html" />
+        <item name="Recipient Rewrite" href="/manage-recipientrewrite.html" />
+      </item>
+      <item name="5. Monitor" href="/monitor.html" collapse="true" >
+        <item name="Logging" href="/monitor-logging.html" />
+        <item name="JMX" href="/monitor-jmx.html" />
+        <item name="Folders" href="/monitor-folders.html" />
+      </item>
+      <item name="6. Upgrade" href="upgrade.html" collapse="true" >
+        <item name="Upgrade from 2.3" href="/upgrade-2.3.html" />
+        <item name="Upgrade database" href="/upgrade-database.html" />
+      </item>
+    </menu>
+
+    <menu name="Developers Corner">
+      <item name="Architecture" href="/dev.html" />
+      <item name="Build from source" href="/dev-build.html" />
+      <item name="Database Schema" href="/dev-database-schema.html" />
+      <item name="Develop Extensions" href="/dev-extend.html" collapse="true" >
+        <item name="Mailet" href="/dev-extend-mailet.html" />
+        <item name="Matcher" href="/dev-extend-matcher.html" />
+        <item name="SMTP Hook" href="/dev-extend-smtp-hook.html" />
+      </item>
+      <item name="Provided Extensions" href="/dev-provided.html" collapse="true" >
+        <item name="Mailets" href="/dev-provided-mailets.html" />
+        <item name="Matchers" href="/dev-provided-matchers.html" />
+        <item name="SMTP Hooks" href="/dev-provided-smtp-hooks.html" />
+      </item>
+    </menu>
+
+    <menu name="References">
+      <item name="Javadoc" href="/apidocs/index.html" />
+      <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
+    </menu>
+
+  </body>  
+
+</project>

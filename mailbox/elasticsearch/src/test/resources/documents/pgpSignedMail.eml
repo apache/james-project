@@ -1,0 +1,136 @@
+Return-Path: <bounce-debian-security-announce=benwa=minet.net@lists.debian.org>
+Received: from mx2.minet.net (mx2.minet.net [192.168.102.26])
+	 by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;
+	 Wed, 03 Jun 2015 21:19:59 +0200
+X-Sieve: CMU Sieve 2.4
+Received: from localhost (spam.minet.net [192.168.102.97])
+	by mx2.minet.net (Postfix) with ESMTP id 8A9DAA27DA1
+	for <benwa@minet.net>; Wed,  3 Jun 2015 21:20:03 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new using ClamAV at minet.net
+X-Spam-Flag: NO
+X-Spam-Score: -1.51
+X-Spam-Level:
+X-Spam-Status: No, score=-1.51 required=1 tests=[BAYES_00=-1.5,
+	T_RP_MATCHES_RCVD=-0.01] autolearn=unavailable
+Received: from mx2.minet.net ([IPv6:::ffff:192.168.102.26])
+	by localhost (spam.minet.net [::ffff:192.168.102.97]) (amavisd-new, port 10024)
+	with ESMTP id cF6J0AAnzsTX for <benwa@minet.net>;
+	Wed,  3 Jun 2015 19:20:02 +0000 (UTC)
+Received-SPF: None (no SPF record) identity=mailfrom; client-ip=82.195.75.100; helo=bendel.debian.org; envelope-from=bounce-debian-security-announce=benwa=minet.net@lists.debian.org; receiver=benwa@minet.net
+Received: from bendel.debian.org (bendel.debian.org [82.195.75.100])
+	(using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.minet.net (Postfix) with ESMTPS id 7F69FA27D98
+	for <benwa@minet.net>; Wed,  3 Jun 2015 21:20:01 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by bendel.debian.org (Postfix) with QMQP
+	id 1C2F6275; Wed,  3 Jun 2015 19:14:50 +0000 (UTC)
+Old-Return-Path: <carnil@master.debian.org>
+X-Original-To: lists-debian-security-announce@bendel.debian.org
+Delivered-To: lists-debian-security-announce@bendel.debian.org
+Received: from localhost (localhost [127.0.0.1])
+	by bendel.debian.org (Postfix) with ESMTP id 7EFBF228
+	for <lists-debian-security-announce@bendel.debian.org>; Wed,  3 Jun 2015 19:14:39 +0000 (UTC)
+X-Amavis-Spam-Status: No, score=-8.99 tagged_above=-10000 required=5.3
+	tests=[BAYES_00=-2, DIGITS_LETTERS=1, FVGT_m_MULTI_ODD=0.02,
+	LDO_WHITELIST=-5, OUR_MTA_MSGID=2, PGPSIGNATURE=-5,
+	T_RP_MATCHES_RCVD=-0.01] autolearn=ham
+Received: from bendel.debian.org ([127.0.0.1])
+	by localhost (lists.debian.org [127.0.0.1]) (amavisd-new, port 2525)
+	with ESMTP id RiKdt2PVwXOm
+	for <lists-debian-security-announce@bendel.debian.org>;
+	Wed,  3 Jun 2015 19:14:34 +0000 (UTC)
+Received: from master.debian.org (master.debian.org [IPv6:2001:41b8:202:deb:216:36ff:fe40:4001])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(Client CN "master.debian.org", Issuer "Debian SMTP CA" (not verified))
+	by bendel.debian.org (Postfix) with ESMTPS id ABE761B7
+	for <debian-security-announce@lists.debian.org>; Wed,  3 Jun 2015 19:14:34 +0000 (UTC)
+Received: from carnil by master.debian.org with local (Exim 4.84)
+	(envelope-from <carnil@master.debian.org>)
+	id 1Z0E7U-0004Bc-Jv
+	for debian-security-announce@lists.debian.org; Wed, 03 Jun 2015 19:14:32 +0000
+From: Markus Koschany <apo@gambaru.de>
+To: debian-security-announce@lists.debian.org
+Message-Id: <E1Z0E7U-0004Bc-Jv@master.debian.org>
+Date: Wed, 03 Jun 2015 19:14:32 +0000
+X-Debian: PGP check passed for security officers
+Subject: [SECURITY] [DSA 3278-1] libapache-mod-jk security update
+Priority: urgent
+Reply-To: debian-security@lists.debian.org
+X-Rc-Virus: 2007-09-13_01
+X-Rc-Spam: 2008-11-04_01
+Resent-Message-ID: <Aqb4x1ejWlF.A.ltC.qI1bVB@bendel>
+Resent-From: debian-security-announce@lists.debian.org
+X-Mailing-List: <debian-security-announce@lists.debian.org> archive/latest/2089
+X-Loop: debian-security-announce@lists.debian.org
+List-Id: <debian-security-announce.lists.debian.org>
+List-Post: <mailto:debian-security-announce@lists.debian.org>
+List-Help: <mailto:debian-security-announce-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-security-announce-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-security-announce-request@lists.debian.org?subject=unsubscribe>
+Precedence: list
+Resent-Sender: debian-security-announce-request@lists.debian.org
+Resent-Date: Wed,  3 Jun 2015 19:14:50 +0000 (UTC)
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+- -------------------------------------------------------------------------
+Debian Security Advisory DSA-3278-1                   security@debian.org
+http://www.debian.org/security/                           Markus Koschany
+June 03, 2015                          http://www.debian.org/security/faq
+- -------------------------------------------------------------------------
+
+Package        : libapache-mod-jk
+CVE ID         : CVE-2014-8111
+Debian Bug     : 783233
+
+An information disclosure flaw due to incorrect JkMount/JkUnmount
+directives processing was found in the Apache 2 module mod_jk to forward
+requests from the Apache web server to Tomcat. A JkUnmount rule for a
+subtree of a previous JkMount rule could be ignored. This could allow a
+remote attacker to potentially access a private artifact in a tree that
+would otherwise not be accessible to them.
+
+For the oldstable distribution (wheezy), this problem has been fixed
+in version 1:1.2.37-1+deb7u1.
+
+For the stable distribution (jessie), this problem has been fixed in
+version 1:1.2.37-4+deb8u1.
+
+For the testing distribution (stretch), this problem has been fixed
+in version 1:1.2.40+svn150520-1.
+
+For the unstable distribution (sid), this problem has been fixed in
+version 1:1.2.40+svn150520-1.
+
+We recommend that you upgrade your libapache-mod-jk packages.
+
+Further information about Debian Security Advisories, how to apply
+these updates to your system and frequently asked questions can be
+found at: https://www.debian.org/security/
+
+Mailing list: debian-security-announce@lists.debian.org
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJVb0AhAAoJEAVMuPMTQ89Ef+gP/1e6ZRHna5rrHYiaclwnWg8Y
+YHIjWwqfsnldjqfTirrBtf9TlLZrqIUHhaeaA0PEbzvzqVfh5QToOvvMeFHqXLS2
+4eSmUtc3hb5BQlSvPsuP5RzeDYPy0S2zRaJlQ6dKSXmxb3Zh1drjxUg9kzpEGU9v
+ykwDIRO7w+YpfcNqoxldgL0JOngMa9Qhl/wSwLV559wrESiSp2QifN/JZz2YRvsp
+XeZvCHV5dHYJLfCOn3bQ6QRf0votEFObrW2T14noo/Srxv1n+4sstql7bCDbKW8c
+O3SrlEk7HX5N4qPlG8Jo288NH1gqxXbuJ9SqF1MlIJsYE2UWT2nydfHVM1vMH23+
+Spfd51SfmrK2GSOg2tna29BDGInDZ0Tud+GqsTKMMICgtg7SCK4FIrZYhhFFompG
+li9h7DE96Cbv6J5a8JSIYg/kyzFOO8VcYakOUOJ2Oyo8Tv2a6GJLF9azjsThE7bv
+LBUWbk2cOsd98BYtsUwFKJhqQLBvRCYnw85/WbC8EDmkbyrxIKf0uaF1e6vc9qV9
+4OKmIgbNageXDzrfnc9PrwZ05xPiPhFJUk3Bu3XzosMzqU7XBPhtjkvPGJGcMv9g
+cCepn+vtFQFBR612a4Gm16XN068zbnBR8VHx3PRNIVkPyhoxR55RdFtwPL7FCHX0
+XVZyRUFDwW4cMiJnJ49U
+=M39D
+-----END PGP SIGNATURE-----
+
+
+--
+To UNSUBSCRIBE, email to debian-security-announce-REQUEST@lists.debian.org
+with a subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.org
+Archive: https://lists.debian.org/E1Z0E7U-0004Bc-Jv@master.debian.org

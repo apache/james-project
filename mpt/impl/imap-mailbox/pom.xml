@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>apache-james-mpt</artifactId>
+        <groupId>org.apache.james</groupId>
+        <version>0.2-SNAPSHOT</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <artifactId>apache-james-mpt-imapmailbox</artifactId>
+    <name>Apache James MPT Imap Mailbox</name>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>core</module>
+        <module>cassandra</module>
+        <module>cyrus</module>
+        <module>elasticsearch</module>
+        <module>external-james</module>
+        <module>hbase</module>
+        <module>inmemory</module>
+        <module>jcr</module>
+        <module>jpa</module>
+        <module>maildir</module>
+    </modules>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-cassandra</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-hbase</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-inmemory</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-jcr</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-jpa</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-maildir</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-cyrus</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-elasticsearch</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <profiles>
+        <profile>
+            <id>geronimo</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <javax.mail.groupId>org.apache.geronimo.javamail</javax.mail.groupId>
+                <javax.mail.artifactId>geronimo-javamail_1.4_mail</javax.mail.artifactId>
+                <javax.mail.version>1.6</javax.mail.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>cassandra</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/cassandra/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>hbase</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/hbase/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>inmemory</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/inmemory/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jcr</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/jcr/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jpa</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/jpa/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>maildir</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/maildir/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>cyrus</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/cyrus/**/*.java</include>
+                            </includes>
+                           <excludes>
+                             <exclude>**/suite/*.java</exclude>
+                             <exclude>**/suite/**/*.java</exclude>
+                           </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>elasticsearch</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/elasticsearch/**/*.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/suite/*.java</exclude>
+                                <exclude>**/suite/**/*.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
+

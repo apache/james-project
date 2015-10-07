@@ -1,0 +1,268 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+Return-Path: <robertburrelldonkin@gmail.com>
+Received: (qmail 26928 invoked from network); 11 Mar 2008 18:54:17 -0000
+Received: from unknown (HELO pre-smtp21-01.prod.mesa1.secureserver.net)
+        ([10.0.19.121]) (envelope-sender <rdonkin-owner@locus.apache.org>) by
+        smtp18-01.prod.mesa1.secureserver.net (qmail-1.03) with SMTP for
+        <asf@xmlmapt.org>; 11 Mar 2008 18:54:17 -0000
+Received: (qmail 8159 invoked from network); 11 Mar 2008 18:54:16 -0000
+Received: from unknown (HELO minotaur.apache.org) ([140.211.11.9])
+        (envelope-sender <rdonkin-owner@locus.apache.org>) by
+        pre-smtp21-01.prod.mesa1.secureserver.net (qmail-ldap-1.03) with SMTP for
+        <asf@xmlmapt.org>; 11 Mar 2008 18:54:16 -0000
+Received: (qmail 33158 invoked by uid 1289); 11 Mar 2008 18:54:15 -0000
+Delivered-To: rdonkin@locus.apache.org
+Received: (qmail 33153 invoked from network); 11 Mar 2008 18:54:15 -0000
+Received: from hermes.apache.org (HELO mail.apache.org) (140.211.11.2) by
+        minotaur.apache.org with SMTP; 11 Mar 2008 18:54:15 -0000
+Received: (qmail 13020 invoked by uid 500); 11 Mar 2008 18:54:12 -0000
+Delivered-To: apmail-rdonkin@apache.org
+Delivered-To: rob@localhost
+Delivered-To: rob@localhost
+Received: (qmail 13017 invoked by uid 99); 11 Mar 2008 18:54:12 -0000
+Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+        by apache.org (qpsmtpd/0.29) with ESMTP; Tue, 11 Mar 2008 11:54:12 -0700
+X-ASF-Spam-Status: No, hits=2.0 required=10.0 tests=HTML_MESSAGE,SPF_PASS
+X-Spam-Check-By: apache.org
+Received-SPF: pass (athena.apache.org: domain of
+        robertburrelldonkin@gmail.com designates 209.85.146.176 as permitted sender)
+Received: from [209.85.146.176] (HELO wa-out-1112.google.com)
+        (209.85.146.176) by apache.org (qpsmtpd/0.29) with ESMTP; Tue, 11 Mar 2008
+        18:53:36 +0000
+Received: by wa-out-1112.google.com with SMTP id m28so3142139wag.13 for
+        <rdonkin@apache.org>; Tue, 11 Mar 2008 11:53:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=gamma;
+        h=domainkey-signature:received:received:message-id:date:from:to:subject:cc:in-reply-to:mime-version:content-type:references;
+        bh=yuycNteU3R8u06MvlZyMGfEM6XWUsfZNdi4MXOvDmJM=;
+        b=YlpZWlL8q5FXdYMMXo1tUnxhwvV6uGNszLQ7f7p0LXDa0YLsPi8GQRckuRlB8aHvO6aVR14qbuLTbFHZJ5+cwITLZhtQrFzq/BiBzh5F1UjbcgwLkulHRkw2ulBGN06rK4FJCH976aaf7M8qKkK3i+xkwo2ptTzve4VFzGXh4gg=
+DomainKey-Signature: a=rsa-sha1; c=nofws; d=gmail.com; s=gamma;
+        h=message-id:date:from:to:subject:cc:in-reply-to:mime-version:content-type:references;
+        b=CITXFMszoBpjfabn47oOdBGGj3ULwqJ3L1P84fQz0ZY/LdPk1qW3oC0bsmJPK6swRfHYDkz695QKHn9XG/d0B7lFmODrXZ1jxSqyz6N6WgvE4vqyiZ+fniz0sZHvpXGub06y1DI8b7vGLA5fj5BoJ9tFk8uIthJbrKb2j4WbJco=
+Received: by 10.114.197.1 with SMTP id u1mr5302053waf.61.1205261626861;
+        Tue, 11 Mar 2008 11:53:46 -0700 (PDT)
+Received: by 10.114.126.16 with HTTP; Tue, 11 Mar 2008 11:53:38 -0700 (PDT)
+Message-ID: <f470f68e0803111153w2262a775sdefc8c423c5d5c95@mail.gmail.com>
+Date: Tue, 11 Mar 2008 18:53:38 +0000
+From: "Robert Burrell Donkin" <robertburrelldonkin@gmail.com>
+To: "Robert Burrell Donkin" <robertburrelldonkin@blueyonder.co.uk>
+Subject: Re: Sonnets By William Shakespeare
+Cc: "Robert Burrell Donkin" <robertburrelldonkin@gmail.com>
+In-Reply-To: <1205261107.7516.6.camel@localhost>
+MIME-Version: 1.0
+Content-Type: multipart/mixed;  boundary="----=_Part_4002_22491526.1205261626856"
+References: <1205261107.7516.6.camel@localhost>
+X-Virus-Checked: Checked by ClamAV on apache.org
+X-Nonspam: None
+X-fetched-from: mail.xmlmapt.org
+X-Evolution-Source: imap://rob@thebes/
+
+
+------=_Part_4002_22491526.1205261626856
+Content-Type: multipart/alternative;  boundary="----=_Part_4003_18492227.1205261626856"
+
+
+------=_Part_4003_18492227.1205261626856
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+*Ah yes!*
+
+On Tue, Mar 11, 2008 at 6:45 PM, Robert Burrell Donkin <
+robertburrelldonkin@blueyonder.co.uk> wrote:
+> O! lest the world should task you to recite
+>  What merit lived in me, that you should love
+>  After my death,--dear love, forget me quite,
+>  For you in me can nothing worthy prove;
+>  Unless you would devise some virtuous lie,
+>  To do more for me than mine own desert,
+>  And hang more praise upon deceased I
+>  Than niggard truth would willingly impart:
+>  O! lest your true love may seem false in this
+>  That you for love speak well of me untrue,
+>  My name be buried where my body is,
+>  And live no more to shame nor me nor you.
+>   For I am shamed by that which I bring forth,
+>   And so should you, to love things nothing worth.
+>
+
+------=_Part_4003_18492227.1205261626856
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+<b><span style="font-family: trebuchet ms,sans-serif;">Ah yes!</span></b><br><br>On Tue, Mar 11, 2008 at 6:45 PM, Robert Burrell Donkin &lt;<a href="mailto:robertburrelldonkin@blueyonder.co.uk">robertburrelldonkin@blueyonder.co.uk</a>&gt; wrote:<br>
+&gt; O! lest the world should task you to recite<br>&gt; &nbsp;What merit lived in me, that you should love<br>&gt; &nbsp;After my death,--dear love, forget me quite,<br>&gt; &nbsp;For you in me can nothing worthy prove;<br>&gt; &nbsp;Unless you would devise some virtuous lie,<br>
+&gt; &nbsp;To do more for me than mine own desert,<br>&gt; &nbsp;And hang more praise upon deceased I<br>&gt; &nbsp;Than niggard truth would willingly impart:<br>&gt; &nbsp;O! lest your true love may seem false in this<br>&gt; &nbsp;That you for love speak well of me untrue,<br>
+&gt; &nbsp;My name be buried where my body is,<br>&gt; &nbsp;And live no more to shame nor me nor you.<br>&gt; &nbsp; For I am shamed by that which I bring forth,<br>&gt; &nbsp; And so should you, to love things nothing worth.<br>&gt; &nbsp;<br><br>
+
+------=_Part_4003_18492227.1205261626856
+Content-Type: text/calendar; method=REQUEST; name=invite.ics; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20080407
+DTEND;VALUE=DATE:20080412
+DTSTAMP:20080311T185338Z
+ORGANIZER;CN=Robert Burrell Donkin:MAILTO:robertburrelldonkin@gmail.com
+UID:i12ksc4hr5uud1gs9dsos1ipj8@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;X-NUM-GUESTS=0:MAILTO:robertburrelldonkin@blueyonder.co.uk
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE
+ ;CN=Robert Burrell Donkin;X-NUM-GUESTS=0:MAILTO:robertburrelldonkin@gmail.c
+ om
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;X-NUM-GUESTS=0:MAILTO:rdonkin@apache.org
+CLASS:PRIVATE
+CREATED:20080311T185337Z
+DESCRIPTION:<b><span style="font-family: trebuchet ms\,sans-serif\;">Ah yes
+ !</span></b><br><br>On Tue\, Mar 11\, 2008 at 6:45 PM\, Robert Burrell Donk
+ in &lt\;robertburrelldonkin@blueyonder.co.uk&gt\; wrote:<br>&gt\; O! lest t
+ he world should task you to recite<br>&gt\; &nbsp\;What merit lived in me\,
+  that you should love<br>&gt\; &nbsp\;After my death\,--dear love\, forget 
+ me quite\,<br>&gt\; &nbsp\;For you in me can nothing worthy prove\;<br>&gt\
+ ; &nbsp\;Unless you would devise some virtuous lie\,<br>&gt\; &nbsp\;To do 
+ more for me than mine own desert\,<br>&gt\; &nbsp\;And hang more praise upo
+ n deceased I<br>&gt\; &nbsp\;Than niggard truth would willingly impart:<br>
+ &gt\; &nbsp\;O! lest your true love may seem false in this<br>&gt\; &nbsp\;
+ That you for love speak well of me untrue\,<br>&gt\; &nbsp\;My name be buri
+ ed where my body is\,<br>&gt\; &nbsp\;And live no more to shame nor me nor 
+ you.<br>&gt\; &nbsp\; For I am shamed by that which I bring forth\,<br>&gt\
+ ; &nbsp\; And so should you\, to love things nothing worth.<br>&gt\; &nbsp\
+ ;<br><br>\nView your event at http://www.google.com/calendar/event?action=V
+ IEW&ueid=i12ksc4hr5uud1gs9dsos1ipj8.
+LAST-MODIFIED:20080311T185337Z
+LOCATION:Amsterdam
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:ApacheCon Europe 2008!
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR
+
+------=_Part_4003_18492227.1205261626856--
+
+------=_Part_4002_22491526.1205261626856
+Content-Type: application/ics; name=invite20080407T190000.ics
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=invite20080407T190000.ics
+
+QkVHSU46VkNBTEVOREFSDQpQUk9ESUQ6LS8vR29vZ2xlIEluYy8vR29vZ2xlIENhbGVuZGFyIDcw
+LjkwNTQvL0VODQpWRVJTSU9OOjIuMA0KQ0FMU0NBTEU6R1JFR09SSUFODQpNRVRIT0Q6UkVRVUVT
+VA0KQkVHSU46VkVWRU5UDQpEVFNUQVJUO1ZBTFVFPURBVEU6MjAwODA0MDcNCkRURU5EO1ZBTFVF
+PURBVEU6MjAwODA0MTINCkRUU1RBTVA6MjAwODAzMTFUMTg1MzM4Wg0KT1JHQU5JWkVSO0NOPVJv
+YmVydCBCdXJyZWxsIERvbmtpbjpNQUlMVE86cm9iZXJ0YnVycmVsbGRvbmtpbkBnbWFpbC5jb20N
+ClVJRDppMTJrc2M0aHI1dXVkMWdzOWRzb3MxaXBqOEBnb29nbGUuY29tDQpBVFRFTkRFRTtDVVRZ
+UEU9SU5ESVZJRFVBTDtST0xFPVJFUS1QQVJUSUNJUEFOVDtQQVJUU1RBVD1ORUVEUy1BQ1RJT047
+UlNWUD0NCiBUUlVFO1gtTlVNLUdVRVNUUz0wOk1BSUxUTzpyb2JlcnRidXJyZWxsZG9ua2luQGJs
+dWV5b25kZXIuY28udWsNCkFUVEVOREVFO0NVVFlQRT1JTkRJVklEVUFMO1JPTEU9UkVRLVBBUlRJ
+Q0lQQU5UO1BBUlRTVEFUPUFDQ0VQVEVEO1JTVlA9VFJVRQ0KIDtDTj1Sb2JlcnQgQnVycmVsbCBE
+b25raW47WC1OVU0tR1VFU1RTPTA6TUFJTFRPOnJvYmVydGJ1cnJlbGxkb25raW5AZ21haWwuYw0K
+IG9tDQpBVFRFTkRFRTtDVVRZUEU9SU5ESVZJRFVBTDtST0xFPVJFUS1QQVJUSUNJUEFOVDtQQVJU
+U1RBVD1ORUVEUy1BQ1RJT047UlNWUD0NCiBUUlVFO1gtTlVNLUdVRVNUUz0wOk1BSUxUTzpyZG9u
+a2luQGFwYWNoZS5vcmcNCkNMQVNTOlBSSVZBVEUNCkNSRUFURUQ6MjAwODAzMTFUMTg1MzM3Wg0K
+REVTQ1JJUFRJT046PGI+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5OiB0cmVidWNoZXQgbXNcLHNh
+bnMtc2VyaWZcOyI+QWggeWVzDQogITwvc3Bhbj48L2I+PGJyPjxicj5PbiBUdWVcLCBNYXIgMTFc
+LCAyMDA4IGF0IDY6NDUgUE1cLCBSb2JlcnQgQnVycmVsbCBEb25rDQogaW4gJmx0XDtyb2JlcnRi
+dXJyZWxsZG9ua2luQGJsdWV5b25kZXIuY28udWsmZ3RcOyB3cm90ZTo8YnI+Jmd0XDsgTyEgbGVz
+dCB0DQogaGUgd29ybGQgc2hvdWxkIHRhc2sgeW91IHRvIHJlY2l0ZTxicj4mZ3RcOyAmbmJzcFw7
+V2hhdCBtZXJpdCBsaXZlZCBpbiBtZVwsDQogIHRoYXQgeW91IHNob3VsZCBsb3ZlPGJyPiZndFw7
+ICZuYnNwXDtBZnRlciBteSBkZWF0aFwsLS1kZWFyIGxvdmVcLCBmb3JnZXQgDQogbWUgcXVpdGVc
+LDxicj4mZ3RcOyAmbmJzcFw7Rm9yIHlvdSBpbiBtZSBjYW4gbm90aGluZyB3b3J0aHkgcHJvdmVc
+Ozxicj4mZ3RcDQogOyAmbmJzcFw7VW5sZXNzIHlvdSB3b3VsZCBkZXZpc2Ugc29tZSB2aXJ0dW91
+cyBsaWVcLDxicj4mZ3RcOyAmbmJzcFw7VG8gZG8gDQogbW9yZSBmb3IgbWUgdGhhbiBtaW5lIG93
+biBkZXNlcnRcLDxicj4mZ3RcOyAmbmJzcFw7QW5kIGhhbmcgbW9yZSBwcmFpc2UgdXBvDQogbiBk
+ZWNlYXNlZCBJPGJyPiZndFw7ICZuYnNwXDtUaGFuIG5pZ2dhcmQgdHJ1dGggd291bGQgd2lsbGlu
+Z2x5IGltcGFydDo8YnI+DQogJmd0XDsgJm5ic3BcO08hIGxlc3QgeW91ciB0cnVlIGxvdmUgbWF5
+IHNlZW0gZmFsc2UgaW4gdGhpczxicj4mZ3RcOyAmbmJzcFw7DQogVGhhdCB5b3UgZm9yIGxvdmUg
+c3BlYWsgd2VsbCBvZiBtZSB1bnRydWVcLDxicj4mZ3RcOyAmbmJzcFw7TXkgbmFtZSBiZSBidXJp
+DQogZWQgd2hlcmUgbXkgYm9keSBpc1wsPGJyPiZndFw7ICZuYnNwXDtBbmQgbGl2ZSBubyBtb3Jl
+IHRvIHNoYW1lIG5vciBtZSBub3IgDQogeW91Ljxicj4mZ3RcOyAmbmJzcFw7IEZvciBJIGFtIHNo
+YW1lZCBieSB0aGF0IHdoaWNoIEkgYnJpbmcgZm9ydGhcLDxicj4mZ3RcDQogOyAmbmJzcFw7IEFu
+ZCBzbyBzaG91bGQgeW91XCwgdG8gbG92ZSB0aGluZ3Mgbm90aGluZyB3b3J0aC48YnI+Jmd0XDsg
+Jm5ic3BcDQogOzxicj48YnI+XG5WaWV3IHlvdXIgZXZlbnQgYXQgaHR0cDovL3d3dy5nb29nbGUu
+Y29tL2NhbGVuZGFyL2V2ZW50P2FjdGlvbj1WDQogSUVXJnVlaWQ9aTEya3NjNGhyNXV1ZDFnczlk
+c29zMWlwajguDQpMQVNULU1PRElGSUVEOjIwMDgwMzExVDE4NTMzN1oNCkxPQ0FUSU9OOkFtc3Rl
+cmRhbQ0KU0VRVUVOQ0U6MA0KU1RBVFVTOkNPTkZJUk1FRA0KU1VNTUFSWTpBcGFjaGVDb24gRXVy
+b3BlIDIwMDghDQpUUkFOU1A6T1BBUVVFDQpFTkQ6VkVWRU5UDQpFTkQ6VkNBTEVOREFSDQo=
+------=_Part_4002_22491526.1205261626856
+Content-Type: text/html; name=sonnet.html
+Content-Transfer-Encoding: base64
+X-Attachment-Id: 0.1
+Content-Disposition: attachment; filename=sonnet.html
+
+PGh0bWw+PGhlYWQ+PHRpdGxlPjwvdGl0bGU+PC9oZWFkPgo8Ym9keT4KPGJsb2NrcXVvdGUgY2l0
+ZT0naHR0cDovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9XaWxsaWFtX1NoYWtlc3BlYXJlJz48cHJl
+PgpUaG9zZSBwYXJ0cyBvZiB0aGVlIHRoYXQgdGhlIHdvcmxkJ3MgZXllIGRvdGggdmlldwpXYW50
+IG5vdGhpbmcgdGhhdCB0aGUgdGhvdWdodCBvZiBoZWFydHMgY2FuIG1lbmQ7CkFsbCB0b25ndWVz
+LS10aGUgdm9pY2Ugb2Ygc291bHMtLWdpdmUgdGhlZSB0aGF0IGR1ZSwKVXR0ZXJpbmcgYmFyZSB0
+cnV0aCwgZXZlbiBzbyBhcyBmb2VzIGNvbW1lbmQuClRoeSBvdXR3YXJkIHRodXMgd2l0aCBvdXR3
+YXJkIHByYWlzZSBpcyBjcm93bidkOwpCdXQgdGhvc2Ugc2FtZSB0b25ndWVzLCB0aGF0IGdpdmUg
+dGhlZSBzbyB0aGluZSBvd24sCkluIG90aGVyIGFjY2VudHMgZG8gdGhpcyBwcmFpc2UgY29uZm91
+bmQKQnkgc2VlaW5nIGZhcnRoZXIgdGhhbiB0aGUgZXllIGhhdGggc2hvd24uClRoZXkgbG9vayBp
+bnRvIHRoZSBiZWF1dHkgb2YgdGh5IG1pbmQsCkFuZCB0aGF0IGluIGd1ZXNzIHRoZXkgbWVhc3Vy
+ZSBieSB0aHkgZGVlZHM7ClRoZW4tLWNodXJscy0tdGhlaXIgdGhvdWdodHMsIGFsdGhvdWdoIHRo
+ZWlyIGV5ZXMgd2VyZSBraW5kLApUbyB0aHkgZmFpciBmbG93ZXIgYWRkIHRoZSByYW5rIHNtZWxs
+IG9mIHdlZWRzOiAKICBCdXQgd2h5IHRoeSBvZG91ciBtYXRjaGV0aCBub3QgdGh5IHNob3csCiAg
+VGhlIHNvaWwgaXMgdGhpcywgdGhhdCB0aG91IGRvc3QgY29tbW9uIGdyb3cuCjwvcHJlPjwvYmxv
+Y2txdW90ZT4KPC9ib2R5PjwvaHRtbD4K
+------=_Part_4002_22491526.1205261626856
+Content-Type: text/plain; name=sonnet.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: 0.2
+Content-Disposition: attachment; filename=sonnet.txt
+
+QWghIHdoZXJlZm9yZSB3aXRoIGluZmVjdGlvbiBzaG91bGQgaGUgbGl2ZSwKQW5kIHdpdGggaGlz
+IHByZXNlbmNlIGdyYWNlIGltcGlldHksClRoYXQgc2luIGJ5IGhpbSBhZHZhbnRhZ2Ugc2hvdWxk
+IGFjaGlldmUsCkFuZCBsYWNlIGl0c2VsZiB3aXRoIGhpcyBzb2NpZXR5PyAKV2h5IHNob3VsZCBm
+YWxzZSBwYWludGluZyBpbWl0YXRlIGhpcyBjaGVlaywKQW5kIHN0ZWVsIGRlYWQgc2VlbWluZyBv
+ZiBoaXMgbGl2aW5nIGh1ZT8KV2h5IHNob3VsZCBwb29yIGJlYXV0eSBpbmRpcmVjdGx5IHNlZWsK
+Um9zZXMgb2Ygc2hhZG93LCBzaW5jZSBoaXMgcm9zZSBpcyB0cnVlPwpXaHkgc2hvdWxkIGhlIGxp
+dmUsIG5vdyBOYXR1cmUgYmFua3J1cHQgaXMsCkJlZ2dhcidkIG9mIGJsb29kIHRvIGJsdXNoIHRo
+cm91Z2ggbGl2ZWx5IHZlaW5zPwpGb3Igc2hlIGhhdGggbm8gZXhjaGVxdWVyIG5vdyBidXQgaGlz
+LApBbmQgcHJvdWQgb2YgbWFueSwgbGl2ZXMgdXBvbiBoaXMgZ2FpbnMuCiAgTyEgaGltIHNoZSBz
+dG9yZXMsIHRvIHNob3cgd2hhdCB3ZWFsdGggc2hlIGhhZAogIEluIGRheXMgbG9uZyBzaW5jZSwg
+YmVmb3JlIHRoZXNlIGxhc3Qgc28gYmFkLgo=
+------=_Part_4002_22491526.1205261626856
+Content-Type: text/plain; name=another-sonnet.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fdotkfhj2
+Content-Disposition: attachment; filename=another-sonnet.txt
+
+U28gYXJlIHlvdSB0byBteSB0aG91Z2h0cyBhcyBmb29kIHRvIGxpZmUsCk9yIGFzIHN3ZWV0LXNl
+YXNvbidkIHNob3dlcnMgYXJlIHRvIHRoZSBncm91bmQ7CkFuZCBmb3IgdGhlIHBlYWNlIG9mIHlv
+dSBJIGhvbGQgc3VjaCBzdHJpZmUKQXMgJ3R3aXh0IGEgbWlzZXIgYW5kIGhpcyB3ZWFsdGggaXMg
+Zm91bmQuCk5vdyBwcm91ZCBhcyBhbiBlbmpveWVyLCBhbmQgYW5vbgpEb3VidGluZyB0aGUgZmls
+Y2hpbmcgYWdlIHdpbGwgc3RlYWwgaGlzIHRyZWFzdXJlOwpOb3cgY291bnRpbmcgYmVzdCB0byBi
+ZSB3aXRoIHlvdSBhbG9uZSwKVGhlbiBiZXR0ZXInZCB0aGF0IHRoZSB3b3JsZCBtYXkgc2VlIG15
+IHBsZWFzdXJlOgpTb21ldGltZSBhbGwgZnVsbCB3aXRoIGZlYXN0aW5nIG9uIHlvdXIgc2lnaHQs
+CkFuZCBieSBhbmQgYnkgY2xlYW4gc3RhcnZlZCBmb3IgYSBsb29rOwpQb3NzZXNzaW5nIG9yIHB1
+cnN1aW5nIG5vIGRlbGlnaHQsClNhdmUgd2hhdCBpcyBoYWQsIG9yIG11c3QgZnJvbSB5b3UgYmUg
+dG9vay4KICBUaHVzIGRvIEkgcGluZSBhbmQgc3VyZmVpdCBkYXkgYnkgZGF5LAogIE9yIGdsdXR0
+b25pbmcgb24gYWxsLCBvciBhbGwgYXdheS4K
+------=_Part_4002_22491526.1205261626856--
+

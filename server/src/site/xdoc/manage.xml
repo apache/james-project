@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Manage James Server</title>
+ </properties>
+
+<body>
+
+  <section name="Manage James Server">
+<!-- 
+-->  
+    <p>You need to make sure that your user/domain/mail repository configuration is correct before managing.  If 
+    you change your user/domain/mail repository type (i.e. file to database) or the configuration of your user repository 
+    (i.e. the file or database URL) after you have added user/domain/mail, you may lose your user/domain/mail data.  Please change these 
+    values with care.</p>
+  
+    <p>After you've done this, restart James to ensure that any changes you've made in 
+       the configuration are incorporated into the running system.</p>
+       
+     <p>You are now ready to manage <a href="manage-domains.html">Domains</a>, 
+       <a href="manage-users.html">Users</a> and <a href="manage-recipientrewrite.html">Recipient Rewrite Table</a>.</p>
+
+    <p>You can manage James via:</p>
+    
+    <ol>
+      <li><a href="#Manage_via_CLI">CLI (Client Line Interface)</a></li>
+      <li><a href="#Manage_via_JMX">JMX (Java Management Extension)</a></li>
+    </ol>
+    
+    <subsection name="Manage via CLI">
+  
+      <p>Once James is up and listening, managing via the command line interface is simple.</p>
+      
+      <p>cd bin</p>
+      
+      <p>./james-cli.sh (or james-cli.bat on windows) ./james-cli.sh -h localhost -p 9999</p>
+
+      <p>You will be shown with a list of commands.</p>
+
+      <source>
+  usage: java org.apache.james.cli.ServerCmd --host &lt;arg&gt; &lt;command&gt;
+    -h,--host &lt;/arg&gt;   node hostname or ip address
+    -p,--port &lt;/arg&gt;   remote jmx agent port number
+  Available commands:
+    adduser &lt;/username&gt; &lt;/password&gt;
+    removeuser &lt;/username&gt;
+    listusers
+    adddomain &lt;/domainname&gt;
+    removedomain &lt;/domainname&gt;
+    listdomains
+    containsdomain
+      </source>
+  
+      <p>Note the address and port defined in conf/jmx.properties (default is jmx.address=127.0.0.1 and jmx.port=9999)</p>
+
+    </subsection>
+    
+    <subsection name="Manage via JMX">
+    
+      <p>James can be managed via JMX.</p>
+      
+      <p>The managed objects are exposed from localhost only (for security reasons) on the following URL:</p>
+      
+      <p><code>service:jmx:rmi://localhost/jndi/rmi://localhost:999/jmxrmi </code></p>
+      
+      <p>Simply launch jconsole to access the exposed attributes and methods.</p>
+<!-- 
+      <div class="ui-widget">
+        <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+          <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+          <strong>JMX on Windows:</strong>
+          to let windows start with jmx username/password enabled, 
+          you need to modify the security settings for the jmx files like descripted here:
+          <a href="http://download.oracle.com/javase/1.5.0/docs/guide/management/security-windows.html">
+          http://download.oracle.com/javase/1.5.0/docs/guide/management/security-windows.html</a>
+        </p>
+        </div>
+      </div>
+-->
+      <p>If you want a remote access, change 'localhost' to your server hostname in the previous URL:</p>
+      
+      <p><code>service:jmx:rmi://localhost/jndi/rmi://localhost:999/jmxrmi </code></p>
+      
+      <p>To manage through a firewall, you will have to take care to random ports creation (read
+         <a href="http://docs.oracle.com/javase/6/docs/technotes/guides/management/agent.html">JMX agent</a>
+         , 
+         <a href="http://olegz.wordpress.com/2009/03/23/jmx-connectivity-through-the-firewall">JMX through firewall</a>
+         and
+         <a href="http://blogs.law.harvard.edu/hoanga/2006/07/07/getting-java-jmx-to-work-through-firewalls-properly">Getting Java JMX to work through firewalls properly</a>.
+      </p>
+      
+      <p>You can install a web application management tool such as jmanage. 
+         You will get screens such as the following one.</p>
+      
+       <p><img src="images/jmx-management/jmx-domainlist.png"/></p>
+
+    </subsection>
+  
+  </section>
+
+</body>
+
+</document>

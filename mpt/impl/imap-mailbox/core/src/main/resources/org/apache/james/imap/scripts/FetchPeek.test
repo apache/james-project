@@ -1,0 +1,92 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Tests for PEEK fetches, ensuring that the SEEN flag is not set.
+C: f1 STORE 2 +FLAGS.SILENT (\Flagged)
+S: f1 OK STORE completed.
+
+# Check that the initial flags are correct
+C: f1 FETCH 2 (FLAGS)
+S: \* 2 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: f1 OK FETCH completed.
+
+# BODY.PEEK[]
+C: f1 FETCH 2 (BODY.PEEK[])
+S: \* 2 FETCH \(BODY\[\] \{254\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 02
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: Test 02
+S: \)
+S: f1 OK FETCH completed.
+
+# BODY.PEEK[HEADER]
+C: f1 FETCH 2 (BODY.PEEK[HEADER])
+S: \* 2 FETCH \(BODY\[HEADER\] \{245\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 02
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f1 OK FETCH completed.
+
+# BODY.PEEK[HEADER.FIELDS]
+C: f1 FETCH 2 (BODY.PEEK[HEADER.FIELDS (From To)])
+S: \* 2 FETCH \(BODY\[HEADER\.FIELDS \(From To\)\] \{74\}
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: To: mooch@owatagu\.siam\.edu
+S:
+S: \)
+S: f1 OK FETCH completed.
+
+# BODY.PEEK[HEADER.FIELDS.NOT]
+C: f1 FETCH 2 (BODY.PEEK[HEADER.FIELDS.NOT (From To)])
+S: \* 2 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(From To\)\] \{173\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: Subject: Test 02
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f1 OK FETCH completed.
+
+# BODY.PEEK[MIME]
+# TODO - not yet implemented
+
+# BODY.PEEK[TEXT]
+C: f1 FETCH 2 (BODY.PEEK[TEXT])
+S: \* 2 FETCH \(BODY\[TEXT\] \{9\}
+S: Test 02
+S: \)
+S: f1 OK FETCH completed.
+
+# Check that the flags are still correct
+C: f1 FETCH 2 (FLAGS)
+S: \* 2 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
+S: f1 OK FETCH completed.
+

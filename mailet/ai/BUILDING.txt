@@ -1,0 +1,23 @@
+Building Apache James AI Mailets 
+================================
+
+Requisites
+----------
+
+* Build with Maven 3 (http://maven.apache.org)
+* Compile with JDK 1.5 or above 
+
+Quickstart
+----------
+
+* To execute tests
+ mvn test
+
+* To build and package (into target directory)
+ mvn package
+
+* To generate documentation 
+ mvn javadoc:javadoc
+
+* To build web site 
+ mvn site

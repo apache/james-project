@@ -1,0 +1,191 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: A2 CREATE testmailbox
+S: A2 OK Create completed\.
+C: A3 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY 1203163935\] UIDs valid
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\] Predicted next UID
+S: A3 OK \[READ-WRITE\] Select completed\.
+C: A4 APPEND testmailbox {765+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Multipart Email
+C: Content-Type: multipart/mixed;boundary=1729
+C: 
+C: Start with a preamble
+C: 
+C: --1729
+C: Content-Type: text/plain; charset=US-ASCII
+C: 
+C: Rhubarb!
+C: 
+C: --1729
+C: Content-Type: text/html; charset=US-ASCII
+C: 
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729
+C: Content-Type: application/xhtml+xml
+C: 
+C: <!DOCTYPE html
+C: PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+C: "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+C: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+C: 
+C: --1729
+C: Content-Type: image/jpeg
+C: Content-Transfer-Encoding: base64
+C: 
+C: 1234567890ABCDEFGHIJKLMNOPQ
+C: 
+C: --1729--
+C: 
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A4 OK Append completed\.
+C: A5 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: \* OK \[UNSEEN 1\] First unseen\.
+S: \* OK \[UIDVALIDITY 1203163935\] UIDs valid
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 2\] Predicted next UID
+S: A5 OK \[READ-WRITE\] Select completed\.
+C: A6 FETCH 1 (BODY.PEEK[])
+S: \* 1 FETCH \(BODY\[\] {765}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: text/html; charset=US-ASCII
+S: 
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: application/xhtml\+xml
+S: 
+S: <!DOCTYPE html
+S: PUBLIC "-//W3C//DTD XHTML 1\.0 Strict//EN"
+S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: image/jpeg
+S: Content-Transfer-Encoding: base64
+S: 
+S: 1234567890ABCDEFGHIJKLMNOPQ
+S: 
+S: --1729--
+S: \)
+S: A6 OK Fetch completed\.
+C: A7 FETCH 1 (BODY.PEEK[TEXT])
+S: \* 1 FETCH \(BODY\[TEXT\] {562}
+S: Start with a preamble
+S: 
+S: --1729
+S: Content-Type: text/plain; charset=US-ASCII
+S: 
+S: Rhubarb!
+S: 
+S: --1729
+S: Content-Type: text/html; charset=US-ASCII
+S: 
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: application/xhtml\+xml
+S: 
+S: <!DOCTYPE html
+S: PUBLIC "-//W3C//DTD XHTML 1\.0 Strict//EN"
+S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: 
+S: --1729
+S: Content-Type: image/jpeg
+S: Content-Transfer-Encoding: base64
+S: 
+S: 1234567890ABCDEFGHIJKLMNOPQ
+S: 
+S: --1729--
+S: \)
+S: A7 OK Fetch completed\.
+C: A8 FETCH 1 (BODY.PEEK[HEADER])
+S: \* 1 FETCH \(BODY\[HEADER\] {203}
+S: From: Timothy Tayler <timothy@example\.org>
+S: To: Samual Smith <samual@example\.org>
+S: Date: Thu, 14 Feb 2008 12:00:00 \+0000 \(GMT\)
+S: Subject: A Multipart Email
+S: Content-Type: multipart/mixed;boundary=1729
+S: 
+S: \)
+S: A8 OK Fetch completed\.
+C: A9 FETCH 1 (BODY.PEEK[1])
+S: \* 1 FETCH \(BODY\[1\] {10}
+S: Rhubarb!
+S: \)
+S: A9 OK Fetch completed\.
+C: A10 FETCH 1 (BODY.PEEK[2])
+S: \* 1 FETCH \(BODY\[2\] {71}
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: \)
+S: A10 OK Fetch completed\.
+C: A11 FETCH 1 (BODY.PEEK[3])
+S: \* 1 FETCH \(BODY\[3\] {184}
+S: <!DOCTYPE html
+S: PUBLIC "-//W3C//DTD XHTML 1\.0 Strict//EN"
+S: "http://www\.w3\.org/TR/xhtml1/DTD/xhtml1-strict\.dtd">
+S: <html><head><title>Rhubarb</title></head><body>Rhubarb!</body></html>
+S: \)
+S: A11 OK Fetch completed\.
+C: A12 FETCH 1 (BODY.PEEK[4])
+S: \* 1 FETCH \(BODY\[4\] {29}
+S: 1234567890ABCDEFGHIJKLMNOPQ
+S: \)
+S: A12 OK Fetch completed\.
+C: A13 SELECT testmailbox
+S: \* FLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft\)
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Deleted \\Seen \\Draft \\\*\)\] Flags permitted\.
+S: \* 1 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UNSEEN 1\] First unseen\.
+S: \* OK \[UIDVALIDITY 1203163935\] UIDs valid
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 2\] Predicted next UID
+S: A13 OK \[READ-WRITE\] Select completed\.
+C: A14 DELETE testmailbox
+S: A14 OK Delete completed\.

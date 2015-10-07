@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+    <appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{ISO8601} %-5p [%-11t] [%-50c{4}] %L %m%n" />
+        </layout>
+    </appender>
+
+    <logger name="james" additivity="false">
+        <level value="info"></level>
+        <appender-ref ref="stdout" />
+    </logger>
+    <logger name="org.apache.james" additivity="false">
+        <level value="info"></level>
+        <appender-ref ref="stdout" />
+    </logger>
+
+    
+    <root>
+        <priority value="info" />
+        <appender-ref ref="stdout" />
+    </root>
+</log4j:configuration>

@@ -1,0 +1,142 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+<!-- Sieve configuration. -->
+<sieve>
+    <!-- Declare supported command mappings -->
+    <commandMap>
+        <!-- Condition Commands -->
+        <!--  RFC3082 - Implementations MUST support these: -->
+        <entry> 
+            <name>if</name> 
+            <class>org.apache.jsieve.commands.If</class>
+        </entry>    
+        <entry>
+            <name>else</name>
+            <class>org.apache.jsieve.commands.Else</class>
+        </entry>            
+        <entry>
+            <name>elsif</name>
+            <class>org.apache.jsieve.commands.Elsif</class>
+        </entry>            
+        <entry>
+            <name>require</name>
+            <class>org.apache.jsieve.commands.Require</class>
+        </entry>            
+        <entry>
+            <name>stop</name>
+            <class>org.apache.jsieve.commands.Stop</class>
+        </entry>            
+
+        <!--  Action Commands -->       
+        <!--  RFC3082 - Implementations MUST support these: -->
+        <entry>
+            <name>keep</name>
+            <class>org.apache.jsieve.commands.Keep</class>
+        </entry>            
+        <entry>
+            <name>discard</name>
+            <class>org.apache.jsieve.commands.Discard</class>
+        </entry>            
+        <entry>
+            <name>redirect</name>
+            <class>org.apache.jsieve.commands.Redirect</class>
+        </entry>            
+         <!--  RFC3082 - Implementations SHOULD support these: -->      
+        <entry>
+            <name>reject</name>
+            <class>org.apache.jsieve.commands.optional.Reject</class>
+        </entry>            
+        <entry>
+            <name>fileinto</name>
+            <class>org.apache.jsieve.commands.optional.FileInto</class>
+        </entry>            
+
+        <!-- JUnit Commands for Testing -->       
+        <entry>
+            <name>throwtestexception</name>
+            <class>org.apache.jsieve.junit.commands.ThrowTestException</class>
+        </entry>
+        
+        <!-- Extension Commands -->       
+        <entry>
+            <name>log</name>
+            <class>org.apache.jsieve.commands.extensions.Log</class>
+        </entry>                        
+    </commandMap>
+
+    <!-- Declare supported test mappings -->    
+    <testMap>
+        <!--  RFC3082 - Implementations MUST support these tests: -->
+        <entry>
+            <name>address</name>
+            <class>org.apache.jsieve.tests.Address</class>
+        </entry>            
+        <entry>
+            <name>allof</name>
+            <class>org.apache.jsieve.tests.AllOf</class>
+        </entry>            
+        <entry>
+            <name>anyof</name>
+            <class>org.apache.jsieve.tests.AnyOf</class>
+        </entry>            
+        <entry>
+            <name>exists</name>
+            <class>org.apache.jsieve.tests.Exists</class>
+        </entry>            
+        <entry>
+            <name>false</name>
+            <class>org.apache.jsieve.tests.False</class>
+        </entry>            
+        <entry>
+            <name>header</name>
+            <class>org.apache.jsieve.tests.Header</class>
+        </entry>            
+        <entry>
+            <name>not</name>
+            <class>org.apache.jsieve.tests.Not</class>
+        </entry>            
+        <entry>
+            <name>size</name>
+            <class>org.apache.jsieve.tests.Size</class>
+        </entry>            
+        <entry>
+            <name>true</name>
+            <class>org.apache.jsieve.tests.True</class>
+        </entry>            
+
+        <!--  RFC3082 - Implementations SHOULD support these: -->
+        <entry>
+            <name>envelope</name>
+            <class>org.apache.jsieve.tests.optional.Envelope</class>
+        </entry>            
+    </testMap>
+
+    <!-- Declare supported comparator mappings -->    
+    <comparatorMap>
+        <!--  RFC3082 - Implementations MUST support these: -->
+        <entry>
+            <name>i;octet</name>
+            <class>org.apache.jsieve.comparators.Octet</class>
+        </entry>            
+        <entry>
+            <name>i;ascii-casemap</name>
+            <class>org.apache.jsieve.comparators.AsciiCasemap</class>
+        </entry>                    
+    </comparatorMap>                    
+</sieve>            

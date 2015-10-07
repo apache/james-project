@@ -1,0 +1,288 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+ 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<!-- Fetch mail block, fetches mail from message servers and inserts it into the incoming spool -->
+<!-- Warning: It is important to prevent mail from looping by setting the  -->
+<!-- fetched domains in the<servernames>section of the<James>block      -->
+<!-- above. This block is disabled by default.                              -->
+      
+<!-- See http://james.apache.org/server/2.3.0/fetchmail_configuration.html for detailed -->
+<!-- configuration instructions and examples.                                  -->  
+
+<!-- I M P O R T A N T -->
+<!-- Setting markseen="true" will have no effect on many POP3 servers as the POP3 -->
+<!-- protocol does not require the markSeen flag to be supported. When this is the -->
+<!-- case, the only way to ensure that messages are fetched just once is to delete -->
+<!-- fetched messages from the server with leaveonserver="false". -->
+   
+<!-- If you want to perform mailet processing on messages fetched by fetchmail, -->
+<!-- use the HasMailAttribute matcher to detect messages with the MailAttribute -->
+<!-- org.apache.james.fetchmail.taskName. The attribute's value is that of the -->
+<!-- fetch task's name parameter described below. -->
+   
+<fetchmail enabled="false">
+
+   <!-- The number of threads to use for the scheduled execution -->
+   <threads>5</threads>
+    
+   <!-- The JMX Name to use -->
+   <jmxName>fetchmail</jmxName>
+    
+   <!-- You can have as many fetch tasks as you want, but each must have a -->
+   <!-- unique name by which it is identified. -->
+   <!-- Each task runs at the specified<interval>, tasks may run concurrently. -->
+
+   <fetch name="mydomain.com">
+       <!-- There must be one<accounts>entry per fetch task. An accounts entry can have 0 to many -->
+       <!--<account>entries and 0 or 1<alllocal>entries.<alllocal>generates -->
+       <!--<accounts>for every user defined to James.<accounts>run consecutively within the -->
+       <!-- scope of their fetch task and inherit all the properties of the fetch task. -->
+            
+       <!-- The advantage of running consecutively is that we can avoid conflicting fetch tasks -->
+       <!-- operating concurrently on the same mailboxes. -->
+            
+       <!-- Fetchmail attempts to deduce the correct recipient of each message, but sometimes there is -->
+       <!-- insufficient information in the headers to do so. When the correct recipient cannot be deduced, -->
+       <!-- fetchmail can be configured to leave the mail on the server or deliver it to a default recipient. -->         
+            
+       <!-- When a message server delivers mail for a single user to a specific INBOX you can define -->
+       <!-- each user to James (via the console) and use<alllocal>with ignorercpt-header="true" to deliver mail -->
+       <!-- directly from each users INBOX onto James' spool. There is no need to update 'config.xml' -->
+       <!-- each time you add or remove users, fetchmail checks the list of users at the start of each fetch. -->
+            
+       <!-- When a message server provides an account that gives access to all mail for a domain through a single -->
+       <!-- INBOX, you can use an<account>to fetch all the mail for that domain, using the filter facilities -->
+       <!-- described below to reject unwanted messages. -->
+            
+       <!-- When a message server supports BOTH delivery for a single user to a specific INBOX and access to all mail -->
+       <!-- for a domain through a single INBOX, you can use<alllocal>and<account>together to guarantee that all -->
+       <!-- local mail gets delivered to the correct user and all unwanted mail is deleted from the message -->
+       <!-- server. See http://james.apache.org/server/2.3.0/fetchmail_configuration.html for details. -->
+            
+       <!-- Limitations and Future Directions -->
+       <!-- 1)<alllocal>requires the password for all accounts for a domain on the message server be the same. True -->
+       <!-- in many cases, but not all. A future version might work out a way of associating James users with a set -->
+       <!-- of account properties. -->
+       <!-- 2)<alllocal>will try to access an INBOX on the message server for all local users. The instance of James used -->
+       <!-- for this purpose should not have extraneous users defined. This is inefficient, but not fatal. -->
+       <!-- Again, a future version might work out a way of associating James users with message account properties. -->
+       <!-- This would allow all local users with an account on a particular message server to be fetched. -->
+            
+       <accounts>
+           <alllocal userprefix="" usersuffix="@myaccount" password="password" recipientprefix="" recipientsuffix="@mydomain.com" ignorercpt-header="true"/>
+           <account user="myglobalaccount" password="password" recipient="postmaster@localhost" ignorercpt-header="false"/>
+           <!-- Custom recipient header handling -->
+           <!-- this example search an header named X-Envelope-To and use the recipient found in that header -->
+           <!-- 
+           <account customrcpt-header="X-Envelope-To" user="myglobalaccount" password="password" recipient="postmaster@localhost" ignorercpt-header="false"/>
+            -->
+       </accounts>
+            
+       <!-- The address of the server from which to fetch the mail -->
+       <host>pop.server.com</host>
+                      
+       <!-- How frequently this host is checked - in milliseconds. 600000 is every ten minutes -->
+       <interval>600000</interval>
+            
+       <!-- name of the javamail provider you wish to use -->
+       <!-- (pop3, imap, etc. -->
+       <javaMailProviderName>pop3</javaMailProviderName>
+
+       <!-- name of the folder to open -->
+       <javaMailFolderName>INBOX</javaMailFolderName>
+            
+       <!-- Properties to be applied to the JavaMail Session. -->
+       <!-- Properties are specific to the selected JavaMail provider. -->
+       <!-- Any number may be specified. -->
+       <javaMailProperties>
+           <!-- Set the connection timeout to 3 minutes -->
+           <property name="mail.pop3.connectiontimeout" value="180000"/>
+           <!-- Set the I/O timeout to 3 minutes -->               
+           <property name="mail.pop3.timeout" value="180000"/>               
+       </javaMailProperties>           
+
+       <!-- Retrieve both old (seen) and new messages from mailserver.  The default -->
+       <!-- is to fetch only messages the server has not marked as seen -->
+       <fetchall>false</fetchall>
+
+       <!-- If the folder javaMailFolderName contains subfolders do you -->
+       <!-- want to recurse into the subfolders as well? true = yes, false = no -->
+       <recursesubfolders>false</recursesubfolders>
+
+       <!-- If the From: header of a fetched message has a valid user part -->
+       <!-- but no domain part the fetch task will correct this by appending -->
+       <!-- a default domain. eg: 'james' becomes 'james@defaultdomain' -->
+       <!-- The default behaviour is to append the canonical host name of the James server.  -->
+       <!-- You can override this behaviour here by specifying the name of the domain -->
+       <!-- you wish to append. The name you choose must be a local server or you can -->
+       <!-- use the name localhost -->
+       <!-- Example using a locally served domain -->
+       <!--
+       <defaultdomain>mydomain.com</defaultdomain>
+        -->
+       <!-- Example using localhost -->
+       <!--            
+       <defaultdomain>localhost</defaultdomain>           
+        -->
+            
+       <!-- Specify what happens to messages succesfully fetched from the mailserver -->
+       <!-- leaveonserver -->
+       <!--     if true, messages will be left on the server -->
+       <!--     if false, messages will be deleted from the server -->
+       <!-- markseen -->
+       <!--     if true, messages left on the server will be marked as seen -->
+       <!--     if false, messages left on the server will not be marked as seen -->           
+       <fetched leaveonserver="false" markseen="true"/>
+
+       <!-- Specify the index of the RECEIVED Header used to compute the remote address and remote host name -->
+       <!-- and what happens to messages that contain an invalid header at that index. -->
+       <!-- Matchers such as InSpammerBlacklist use the remote address and/or remote host name to identify illegitimate -->
+       <!-- remote MTAs. -->
+       <!-- This tag is optional. If omitted, the remote address will be set to 127.0.0.1 and the remote domain -->
+       <!-- will be set to 'localhost'. Both are almost always considered legitimate. -->
+       <!-- index -->                    
+       <!--     The zero based index of the RECEIVED Header used to compute the remote address and remote host name -->
+       <!--     of the MTA that delivered a fetched message. -->
+       <!--     Typically, the first (index = 0) RECEIVED Header is for the local MTA that delivers mail to the message store -->
+       <!--     and the second RECEIVED Header (index = 1) is the remote domain delivering mail to the MTA, so the second -->
+       <!--     RECEIVED Header is the one to use. -->
+       <!--     Some configurations will differ. Look at the RECEIVED Headers and set the index to point to the first remote MTA. -->
+       <!--     An index of -1 is is interpreted as use 127.0.0.1 for the remote address and use 'localhost' for the remote host name. -->
+       <!-- reject -->
+       <!--     if true, messages whose received header at the specified index is invalid will be rejected -->
+       <!--     if false, messages whose received header at the specified index is invalid will be accepted -->
+       <!--     and the Mail Attribute "org.apache.james.fetchmail.isInvalidReceivedHeader" -->
+       <!--     will be added to the message. Use the HasMailAttribute matcher to detect them. -->
+       <!-- The following apply if reject="true" and a message is rejected... -->
+       <!--     leaveonserver -->
+       <!--         if true, messages will be left on the server -->
+       <!--         if false, messages will be deleted from the server -->
+       <!--     markseen -->
+       <!--         if true, messages left on the server will be marked as seen -->
+       <!--         if false, messages left on the server will not be marked as seen -->            
+       <remotereceivedheader index="1" reject="true" leaveonserver="true" markseen="false"/>
+                
+       <!-- Specify what happens to messages whose size exceeds the specified limit. -->
+       <!-- This tag is optional. If omitted, there is no limit. -->
+       <!-- limit -->
+       <!--     The maximum message size in Kilobytes of messages injected into James. -->
+       <!--     A value of 0 means no limit. -->
+       <!-- reject -->
+       <!--     if true, messages whose size exceeds the limit will be rejected -->
+       <!--     if false, messages whose size exceeds the limit will be stripped of their message bodies -->
+       <!--     prior to injection into James and the MailAttribute "org.apache.james.fetchmail.isMaxMessageSizeExceeded" -->
+       <!--     will be added to the message with the value set to the original message size in bytes. -->
+       <!--     Use the HasMailAttribute matcher to detect them. -->
+       <!-- The following apply if reject="true" and a message is rejected... -->
+       <!--     leaveonserver -->
+       <!--         if true, messages will be left on the server -->
+       <!--         if false, messages will be deleted from the server -->
+       <!--     markseen -->
+       <!--         if true, messages left on the server will be marked as seen -->
+       <!--         if false, messages left on the server will not be marked as seen -->           
+       <maxmessagesize limit="0" reject="false" leaveonserver="true" markseen="false"/>
+            
+       <!-- Specify what happens to undeliverable messages -->
+       <!-- leaveonserver -->
+       <!--     if true, messages will be left on the server -->
+       <!--     if false, messages will be deleted from the server -->
+       <!-- markseen -->
+       <!--     if true, messages left on the server will be marked as seen -->
+       <!--     if false, messages left on the server will not be marked as seen -->           
+       <undeliverable leaveonserver="true" markseen="false"/>
+            
+       <!-- Specify what happens to messages for which a recipient cannot be determined. -->
+       <!-- defer -->
+       <!--     if true, processing of messages for which a recipient cannot be determined will deferred -->
+       <!--     until the next fetch of the Account. This gives an opportunity for other Accounts in the -->
+       <!--     fetch task to determine the recipient and process the mail. -->
+       <!--     if false, messages for which a recipient cannot be determined are processed immediately. -->
+       <!-- reject -->
+       <!--     if true, messages for which a recipient cannot be determined will be rejected -->
+       <!--     if false, messages for which a recipient cannot be determined will be accepted, -->
+       <!--     the account recipient will be used and the MailAttribute "org.apache.james.fetchmail.isRecipientNotFound" -->
+       <!--     will be added to the message. Use the HasMailAttribute matcher to detect them. -->
+       <!-- The following apply if reject="true" and a message is rejected... -->
+       <!--     leaveonserver -->
+       <!--         if true, messages will be left on the server -->
+       <!--         if false, messages will be deleted from the server -->
+       <!--     markseen -->
+       <!--         if true, messages left on the server will be marked as seen -->
+       <!--         if false, messages left on the server will not be marked as seen -->           
+       <recipientnotfound defer="true" reject="true" leaveonserver="true" markseen="false"/>                                        
+
+       <!-- Specify a list of recipients for whom messages will be rejected -->
+       <!-- and what happens to rejected messages. -->
+       <!-- The list can be comma, tab or space delimited. -->
+       <!-- reject -->
+       <!--     if true, messages for users on the blacklist will be rejected -->           
+       <!--     if false, messages for users on the blacklist will be accepted -->        
+       <!--     and the Mail Attribute "org.apache.james.fetchmail.isBlacklistedRecipient" -->
+       <!--     will be added to the message. Use the HasMailAttribute matcher to detect them. -->           
+       <!-- The following apply if reject="true" and a message is rejected... -->
+       <!--     leaveonserver -->
+       <!--         if true, messages will be left on the server -->
+       <!--         if false, messages will be deleted from the server -->
+       <!--     markseen -->
+       <!--         if true, messages left on the server will be marked as seen -->
+       <!--         if false, messages left on the server will not be marked as seen -->                       
+       <blacklist reject="true" leaveonserver="true" markseen="false">wibble@localhost, flobble@localhost</blacklist>
+
+       <!-- Specify if messages for users who are not defined to James should -->
+       <!-- be rejected and what happens to rejected messages. -->
+       <!-- reject -->
+       <!--     if true, messages for users who are not defined to James will be rejected -->
+       <!--     if false, messages for users who are not defined to James will be accepted -->
+       <!--     and the Mail Attribute "org.apache.james.fetchmail.isUserUndefined" -->
+       <!--     will be added to the message. Use the HasMailAttribute matcher to detect them. -->           
+       <!-- The following apply if reject="true" and a message is rejected... -->
+       <!--     leaveonserver -->
+       <!--         if true, messages will be left on the server -->
+       <!--         if false, messages will be deleted from the server -->
+       <!--     markseen -->
+       <!--         if true, messages left on the server will be marked as seen -->
+       <!--         if false, messages left on the server will not be marked as seen -->                                          
+       <userundefined reject="true" leaveonserver="true" markseen="false" />
+
+       <!-- Specify if messages for recipients on remote hosts should -->
+       <!-- be rejected and what happens to rejected messages. -->
+       <!-- reject -->
+       <!--     if true, messages for remote recipients will be rejected -->
+       <!--     if false, messages for remote recipients will be accepted -->
+       <!--     and the Mail Attribute "org.apache.james.fetchmail.isRemoteRecipient" -->
+       <!--     will be added to the message. Use the HasMailAttribute matcher to detect them. -->           
+       <!-- The following apply if reject="true" and a message is rejected... -->
+       <!--     leaveonserver -->
+       <!--         if true, messages will be left on the server -->
+       <!--         if false, messages will be deleted from the server -->
+       <!--     markseen -->
+       <!--         if true, messages left on the server will be marked as seen -->
+       <!--         if false, messages left on the server will not be marked as seen -->      
+       <remoterecipient reject="true" leaveonserver="true" markseen="false" />
+   </fetch>
+   
+</fetchmail>       

@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Build Apache James from Source</title>
+</properties>
+
+<body>
+
+  <section name="Why Build from Source?">
+
+    <p>This step is not necessary to use the standard out of the box version of James.  A
+       pre-built binary version of James is available from the James download directory.</p>
+
+     <p>But if you wish to customize the James source code, it will be necessary for you to
+        build the distribution yourself.</p>
+
+     <p>You can read on this page how to build from the command line and from eclipse IDE.</p>
+
+  </section>
+
+  <section name="Get Source Code">
+
+    <p>There are two ways to get the James source code.</p>
+
+    <ol>
+      <li>Download the source distribution - the source is available from the
+          <a href="http://james.apache.org/download.cgi">James release mirrors</a>.
+          Simply choose the version of James you'd like to download, and pick the source
+          distribution appropriate for your platform.</li>
+      <li>Get the source code using SVN - this method gives you access to the cutting edge code
+          base.  Instructions on how to use SVN to get the James source code
+          can be found <a href="http://www.apache.org/dev/version-control.html">here</a>.
+          Apache James Server beta4 repository is <a href="http://svn.apache.org/repos/asf/james/server/tags/james-server-3.0-beta4/">http://svn.apache.org/repos/asf/james/server/tags/james-server-3.0-beta4/</a>.</li>
+      <li>For information, you can download all Apache James sources (server, mailbox, imap, mailet...) if you check out <a href="http://svn.apache.org/repos/asf/james/current">http://svn.apache.org/repos/asf/james/current/</a>.
+         Watch out!: you will get a release, but what we call a "trunk", that is on constant development and debugging.</li>
+    </ol>
+
+    <p>We consider in this document that you have checked-out James source code in JAMES_SRC_HOME directory.</p>
+
+    <p>Consult the <a href="dev.html">architecture</a> page if you want to learn
+    more on the internal source structure.</p>
+
+  </section>
+
+  <section name="Required Tools">
+
+    <p>To run the build you need two third-party tools.</p>
+    <ol>
+      <li>Java Development Kit - You must have a JDK of Java version 1.6 or higher installed to build the
+          James distribution.  The exact JDKs available depend on the platform.  A JDK must be downloaded and
+          installed before the build can run.</li>
+      <li>Maven 3.0.2 - This is a Java-tailored, XML-configured, extensible build or make system. You need maven (3.0.2+) in order
+          to build James. You can get maven 3.0.2 from <a href="http://maven.apache.org/download.html">here</a>.
+          Installation instructions for maven are also available on the same page <a href="http://maven.apache.org/download.html">http://maven.apache.org/download.html</a>.</li>
+    </ol>
+    <p>Set (on windows) or export (on Unix) MAVEN_OPTS to tune the memory needed by maven with "MAVEN_OPTS=-Xmx1024m -XX:MaxPermSize=128m"</p>
+
+  </section>
+
+  <section name="Build James Source from Command Line">
+
+    <p>In the JAMES_SRC_HOME top level directory (where the parent pom.xml resides), invoke maven with 'mvn' with any of the following command line arguments:
+    <ul>
+      <li>clean - deletes the target directory, making the system ready for a clean build.</li>
+      <li>compile - compiles the source code.</li>
+      <li>test - run unit tests for James.</li>
+      <li><b>package - generates all the James distributions, packed.
+      From the root directory, cd to 'server/container/spring/target' to have the build distribution.
+      Notice, for the latest trunk(revision 1430655+), a specific profile argument need to be set: '-Pwith-assembly'.
+      The location of final distributions is also changed to 'JAMES_SRC_HOME/server/app/target'.</b></li>
+      <li>javadocs:javadocs - builds the James javadocs.</li>
+      <li>site - builds the entirety of the James website.</li>
+    </ul>
+    </p>
+    <p>For example, invoke <code>mvn package</code> to get a zip/tar of James distribution.</p>
+    <p>All built products are output in the <code>server/container/spring/target</code>
+      subdirectory of the James source directory.
+      This directory will be deleted if you run build with the clean argument.</p>
+    <p><strong>Warning!</strong> Any changes you've made in the 'dist' directory
+      will be lost after a recompilation. If you are running James for this directory
+      we recommend you backup to avoid losing work. </p>
+    <p>You can also invoke the command line from a shell. Go to the server project cli folder and type mvn exec:java -Dexec.args="-h localhost -p 9999 help"</p>
+
+  </section>
+
+  <section name="Build James Source from Eclipse">
+
+    <p>Upon the following documentation, an interessting resource 
+       <a href="http://blog.bonnydoonmedia.com/post.cfm/walkthrough-tutorials-compiling-apache-james-v3-with-eclipse">
+       can be found here</a>
+    </p>
+
+    <subsection name="Import projects in Eclipse with m2eclipse">
+
+      <p>You should have Eclipse IDE with <a href="http://m2eclipse.sonatype.org">m2eclipse</a> plugin installed.</p>
+      <p>You now need to import the maven projects in the Eclipse workspace.</p>
+      <p>Therefore, click on the <code>File</code> menu and select <code>Import</code>.
+      Choose <code>Existing Maven Project</code> and click on <code>Next</code> button.</p>
+      <img src="./images/eclipse/eclipse-import-maven-view-1.gif"/>
+
+    </subsection>
+
+    <subsection name="Select Projects to Import">
+
+      <p>Select the JAMES_SRC_HOME directory where you have checked out the source code.</p>
+      <p>Eclipse should present you with the list of James server modules.</p>
+      <p>Select the modules you want to import (by default, all) and click on <code>Finish</code>
+        to execute the import.</p>
+
+      <img src="./images/eclipse/eclipse-import-maven-view-2.gif"/>
+
+    </subsection>
+
+    <subsection name="Enable Workspace Resolution">
+
+      <p>Check that 'Workspace resolution' is enable in m2eclipse plugin.</p>
+      <p>Your changes in code will be directly taken into account.</p>
+      <img src="./images/eclipse/eclipse-m2eclipse-project-dependencies.gif"/>
+
+    </subsection>
+
+    <subsection name="Prepare projects">
+
+      <p>Now you have James projects in Eclipse workspace.</p>
+      <p>You still have to prepare the following to be able to run from Eclipse:</p>
+      <ol>
+        <li>Copy the <code>context</code> folder, <code>log4j.properties</code>
+            and <code>META-INF</code> folder from <code>server/container/spring/src/main/config/james</code>
+             directory to a source folder of <code>james-server-spring</code> project (you can use for example a
+             new folder called <code>stage</code> as Eclipse source folder).</li>
+        <li>Copy all files (except context folder log4j.properties and META-INF/persistence.xml)
+            from <code>server/container/src/main/config/james</code> folder to a <code>conf</code> folder
+            (<code>conf</code> folder must be a sub-folder of the JAMES_SRC_HOME directory where you made the check-out).
+            As non-root privilege user, you may need to change the SMTP/IMAP/POP3 ports to values higher than 1024.</li>
+         <li>For ease, you can also create 2 new eclipse projects to edit the files and visualize the created mails/store/...:
+             james-server-container-spring-conf and james-server-container-spring-var.</li>
+     </ol>
+     <img src="./images/eclipse/eclipse-m2eclipse-projects.gif"/>
+
+    </subsection>
+
+    <subsection name="Run James from Eclipse">
+
+      <p>That's it. Run or Debug James in Eclipse (right-click on the Main class) and Have Fun!.</p>
+      <img src="./images/eclipse/eclipse-run-james.gif"/>
+
+      <p>If you change a JPA Entity class, your will need to run 'mvn package'
+          or add the following option to the VM argument of your run configuration
+          '-javaagent:my_home_folder/.m2/repository/org/apache/openjpa/openjpa/2.2.1/openjpa-2.2.1.jar'
+      </p>
+
+    </subsection>
+
+  </section>
+
+  <section name="Build James from NetBeans">
+
+      <p>This was done using NetBeans 7, which comes bundeled with Maven 3, needed to build James 3.
+      Older versions of NetBeans should be able to build James fine, provided that you configure them to use an instance of Maven 3, if they do not have it.
+      I used james 3.0-beta1 release and it builded in 7:40 min on my notebook running Debian Squeeze.
+      </p>
+
+      <subsection name="Getting the sources from the repository">
+          <p>Building James with NetBeans is very easy as it comes with Subersion and Maven support already build in.
+          Maven is bundeled with the IDE, but Subverion is not, so you will have to install Subversion yourself and NetBeans will be able to use it.
+          You can get more details on how to install and where to get Subversion from the NetBeans Help menu by clicking on <strong>Help Contents</strong> and from there go to the <strong>IDE Basics->Version Control and File Hierarchy->Subversion</strong> topic.
+          </p>
+          <p>For Linux users, Subversion is probably packaged by your distribution so use your distribution tools to install it (aptitude, yum, etc.)</p>
+          <p>Once you have Subversion, go to <strong>Team->Subversion->Checkout</strong> menu entry. <br/>
+          You will see an dialog window used to enter the information about the Subversion repository you are going to use. It looks like this:</p>
+          <img src="./images/netbeans/netbeans-svn-checkout1.png"/>
+          <p>In the <code>Repository URL</code> field enter the location for James repository and click <code>Next</code>.
+          You can use the following URL to get the trunk or development version:
+          <a href="http://svn.apache.org/repos/asf/james/server/trunk">http://svn.apache.org/repos/asf/james/server/trunk</a>.<br/>
+          After this you will be presented with another dialog window where you can configure which folders to check out and where to save them on your machine.</p>
+          <img src="./images/netbeans/netbeans-svn-checkout2.png"/>
+          <p>If you supplied the above URL you can click <code>Finish</code> to get trunk version and start hacking.
+          You can choose another folder by clicking <code>Browse</code>. A new dialog window will open and from there you can browse
+          the whole subversion repository. I wanted to build James 3.0beta so I choosed <code>james-serve-3.0-beta1</code> under james/server/tags/ folder. <br/></p>
+          <img src="./images/netbeans/netbeans-svn-checkout-browse.png"/>
+
+          <p>After you click <code>Finish</code> NetBeans will checkout the sources. It will detect the Maven project and ask you if you wish to open the project.
+          If you open the project you will see in the Projects Window (<code>CTRL+1</code> if not visible) something similar to the next image:<br/></p>
+          <img src="./images/netbeans/netbeans-james-project.png"/>
+
+      </subsection>
+
+      <subsection name="Building the project">
+        <p> Building the project does not require too much work. Just go to <code>Run->Build Project</code> menu option.
+        Make sure that James is the main project (if you have other projects open) or NetBeans will build that project instead of James.
+        Once the build is finished you will find the binary distribution in <code>container-spring/target</code> directory. <br/></p>
+        <img src="./images/netbeans/james-build-dir.png"/>
+      </subsection>
+
+  </section>
+
+  <section name="Build James from IntelliJ IDEA">
+
+      <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the trunk version of the server
+          from <code>http://svn.apache.org/repos/asf/james/server/trunk/</code>.
+      </p>
+
+      <subsection name="Getting the sources from the repository">
+          <p>To download the source code, you can use the Subversion support that comes with IntelliJ IDEA following the next steps:</p>
+
+          <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Subversion</strong>.</p>
+          <img src="./images/intellij-idea/intellij-new-project.png"/>
+          <p>In the pop-up window, press the <strong>+</strong> button to add the James code repository in the next pop-up.</p>
+          <img src="./images/intellij-idea/intellij-svn-repo.png"/>            <br/>
+          <img src="./images/intellij-idea/intellij-svn-repo-add-repo.png"/>        <br/>
+          <p>Then, choose the location for the project.</p>
+          <img src="./images/intellij-idea/intellij-svn-repo-checkout-choose-folder.png"/>
+
+          <p>When this process is done, the project should look like this. <br/></p>
+          <img src="./images/intellij-idea/intellij-james-project.png"/>
+
+      </subsection>
+
+    <subsection name="Building the project">
+        <p> To build the project, you must open the <strong>Maven Projects</strong> panel. Then double click on the install goal to run this goal.<br/></p>
+        <img src="./images/intellij-idea/intellij-mvn.png"/>
+        <p>Then you will find the James server zip in the <strong>app/target</strong> folder.<br/></p>
+        <img src="./images/intellij-idea/intellij-james-zip.png"/>
+    </subsection>
+  </section>
+
+
+    <section name="Build James Source from other IDEs">
+
+    <p>We will be happy to include on this page any other tutorial you could send
+       use about developing James with your favorite Integrated Development Environment.</p>
+
+  </section>
+
+</body>
+
+</document>

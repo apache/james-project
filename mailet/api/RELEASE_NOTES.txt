@@ -1,0 +1,24 @@
+                     Apache Mailet API
+                     -----------------
+                     
+
+The Apache Mailet API is a Java API which allows the rapid development 
+and flexible deployment of email processing functionality. A mailet is
+a mail processing component which can be composed with others to create
+flexible mail processing applications. Matchers allow the conditional 
+application of mailets based on mail qualities.
+
+Apache James uses mailets extensively to provide flexible and powerful
+mail processing. The Mailet API is independent of James and mailets
+can run in any complaint container.
+
+Version 2.4
+-----------
+This is the first independent release of this mature API. The last 
+release of this API shipped with Apache James 2.3. The only changes
+are minor bug fixes and is compatible with the last shipped version.
+
+Earlier Releases
+----------------
+Previous versions of the Mailet API shipped with Apache James server.
+ 

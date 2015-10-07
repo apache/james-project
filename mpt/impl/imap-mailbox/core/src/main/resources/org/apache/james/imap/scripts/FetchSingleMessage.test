@@ -1,0 +1,169 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# BODY
+C: f1 FETCH 1 (BODY)
+S: \* 1 FETCH \(BODY \(\"TEXT\" \"PLAIN\" \(\"charset\" \"US-ASCII\"\) NIL NIL \"7BIT\" 9 1\)\)
+S: f1 OK FETCH completed.
+
+# BODY[]
+# Not PEEK, so the Seen flag is implicitly set.
+C: f2 FETCH 1 (BODY[])
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) BODY\[\] \{254\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: Test 01
+S: \)
+S: f2 OK FETCH completed.
+
+# BODY[HEADER]
+C: f3 FETCH 1 (BODY[HEADER])
+S: \* 1 FETCH \(BODY\[HEADER\] \{245\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f3 OK FETCH completed.
+
+# BODY[HEADER.FIELDS]
+C: f4 FETCH 1 (BODY[HEADER.FIELDS (From To)])
+S: \* 1 FETCH \(BODY\[HEADER\.FIELDS \(From To\)\] \{74\}
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: To: mooch@owatagu\.siam\.edu
+S:
+S: \)
+S: f4 OK FETCH completed.
+
+# BODY[HEADER.FIELDS.NOT]
+C: f5 FETCH 1 (BODY[HEADER.FIELDS.NOT (From To)])
+S: \* 1 FETCH \(BODY\[HEADER\.FIELDS\.NOT \(From To\)\] \{173\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: Subject: Test 01
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f5 OK FETCH completed.
+
+# BODY[MIME]
+# NOT implemented
+
+# BODY[TEXT]
+C: f6 FETCH 1 (BODY[TEXT])
+S: \* 1 FETCH \(BODY\[TEXT\] \{9\}
+S: Test 01
+S: \)
+S: f6 OK FETCH completed.
+
+# todo - multipart messages.
+# todo - partial fetch BODY[]<0.100>
+
+# BODYSTRUCTURE 
+C: f7 FETCH 1 (BODYSTRUCTURE)
+S: \* 1 FETCH \(BODYSTRUCTURE \(\"TEXT\" \"PLAIN\" \(\"charset\" \"US-ASCII\"\) NIL NIL \"7BIT\" 9 1 NIL NIL NIL NIL\)\)
+S: f7 OK FETCH completed.
+
+# ENVELOPE
+C: f8 FETCH 1 (ENVELOPE)
+S: \* 1 FETCH \(ENVELOPE \(\".*\" \"Test 01\" \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(NIL NIL \"mooch\" \"owatagu\.siam\.edu\"\)\) NIL NIL NIL \"<B27397-0100000@Blurdybloop\.COM>\"\)\)
+S: f8 OK FETCH completed.
+
+# FLAGS
+C: f9 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\)\)
+S: f9 OK FETCH completed.
+
+# INTERNALDATE
+C: f10 FETCH 1 (INTERNALDATE)
+S: \* 1 FETCH \(INTERNALDATE \".*\"\)
+S: f10 OK FETCH completed.
+
+# RFC822 ( === BODY[])
+C: f11 FETCH 1 (RFC822)
+S: \* 1 FETCH \(RFC822 \{254\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: Test 01
+S: \)
+S: f11 OK FETCH completed.
+
+# RFC822.HEADER ( === BODY.PEEK[HEADER])
+C: f12 FETCH 1 (RFC822.HEADER)
+S: \* 1 FETCH \(RFC822\.HEADER \{245\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f12 OK FETCH completed.
+
+# RFC822.SIZE
+C: f13 FETCH 1 (RFC822.SIZE)
+S: \* 1 FETCH \(RFC822\.SIZE 254\)
+S: f13 OK FETCH completed.
+
+# RFC822.TEXT ( === BODY[TEXT])
+C: f14 FETCH 1 (RFC822.TEXT)
+S: \* 1 FETCH \(RFC822\.TEXT \{9\}
+S: Test 01
+S: \)
+S: f14 OK FETCH completed.
+
+# UID
+C: f15 FETCH 1 (UID)
+S: \* 1 FETCH \(UID \d+\)
+S: f15 OK FETCH completed.
+
+
+# Macro Commands
+# ALL ( === FLAGS INTERNALDATE RFC822.SIZE ENVELOPE)
+C: f16 FETCH 1 (ALL)
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) INTERNALDATE \".*\" RFC822.SIZE 254 ENVELOPE \(\".*\" \"Test 01\" \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(NIL NIL \"mooch\" \"owatagu\.siam\.edu\"\)\) NIL NIL NIL \"<B27397-0100000@Blurdybloop\.COM>\"\)\)
+S: f16 OK FETCH completed.
+
+# FULL ( === FLAGS INTERNALDATE RFC822.SIZE ENVELOPE BODY )
+C: f17 FETCH 1 (FULL)
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) INTERNALDATE \".*\" RFC822\.SIZE 254 ENVELOPE \(\".*\" \"Test 01\" \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop\.COM\"\)\) \(\(NIL NIL \"mooch\" \"owatagu\.siam\.edu\"\)\) NIL NIL NIL \"<B27397-0100000@Blurdybloop\.COM>\"\) BODY \(\"TEXT\" \"PLAIN\" \(\"charset\" \"US-ASCII\"\) NIL NIL \"7BIT\" 9 1\)\)
+S: f17 OK FETCH completed.
+
+# FAST ( === FLAGS INTERNALDATE RFC822.SIZE )
+C: f18 FETCH 1 (FAST)
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) INTERNALDATE \".*\" RFC822.SIZE 254\)
+S: f18 OK FETCH completed.

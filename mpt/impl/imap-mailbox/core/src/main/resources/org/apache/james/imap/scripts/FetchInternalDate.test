@@ -1,0 +1,38 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: A004 APPEND selected (\Seen) "17-Jul-1996 02:44:25 -0700" {310+}
+# use synchronising literal
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, could we change that to 4:00pm tomorrow?
+C:
+S: \* 5 EXISTS
+S: \* 5 RECENT
+S: A004 OK (\[.+\] )?APPEND completed.
+
+C: F11 FETCH 5 INTERNALDATE
+S: \* 5 FETCH \(INTERNALDATE \"\d{1,2}-\w{3}-\d{4} \d{2}:\d{2}:\d{2} \+\d{4}\"\)
+S: F11 OK FETCH completed.

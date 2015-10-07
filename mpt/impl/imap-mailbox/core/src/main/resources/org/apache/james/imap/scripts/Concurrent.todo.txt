@@ -1,0 +1,57 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+#
+Simple tests:
+FETCH should set the /SEEN flag, and this should be propogated to other sessions.
+
+3.4. The server MAY allow the RENAME of a multi-accessed mailbox by
+     simply changing the name attribute on the mailbox.
+
+-----------------------------------------------------------------------
+4.1. Fetching of expunged messages
+
+4.1.2 The server MAY allow the EXPUNGE of a multi-accessed mailbox,
+      and on subsequent FETCH commands return FETCH responses only for
+      non-expunged messages and a tagged NO.
+
+             C2: B001 FETCH 3:5 ENVELOPE
+             S2: * 3 FETCH ENVELOPE . . . (ENVELOPE info returned)
+             S2: B001 NO Some of the requested messages no longer exist
+### Return what you can, and send a "no": i like this.
+-0---------------------------------------------------------------------
+
+4.2. Storing of expunged messages
+
+4.2.1 If the ".SILENT" suffix is used, and the STORE completed
+      successfully for all the non-expunged messages, the server SHOULD
+      return a tagged OK.
+
+4.2.2. If the ".SILENT" suffix is not used, and only expunged messages
+       are referenced, the server SHOULD return only a tagged NO.
+
+4.2.3. If the ".SILENT" suffix is not used, and a mixture of expunged
+       and non-expunged messages are referenced, the server MAY set the
+       flags and return a FETCH response for the non-expunged messages
+       along with a tagged NO.
+### Update what you can, and return "NO"
+
+4.2.4. If the ".SILENT" suffix is not used, and a mixture of expunged
+       and non-expunged messages are referenced, the server MAY return
+       an untagged NO and not set any flags.
+### Don't update anything, and return "NO"

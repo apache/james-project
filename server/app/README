@@ -1,0 +1,8 @@
+RUN FROM IDE
+============
+
+If you want to run James App (the main class, or a test) from your favorite IDE,
+the JPA classes will need to be enhanced by openjpa, so add the following option 
+to the VM argument of your run configuration (replace MY_HOME_FOLDER with your real home folder):
+
+'-javaagent:MY_HOME_FOLDER/.m2/repository/org/apache/openjpa/openjpa/2.2.1/openjpa-2.2.1.jar' 

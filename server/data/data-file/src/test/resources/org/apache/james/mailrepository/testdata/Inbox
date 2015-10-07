@@ -1,0 +1,45 @@
+From - Sat Sep 16 14:01:26 2006
+X-Account-Key: account4
+X-UIDL: Mail1158408075937-0
+X-Mozilla-Status: 0001
+X-Mozilla-Status2: 00000000
+Message-ID: <12617107.11158408076390.JavaMail.maurer@byteacti-757792>
+MIME-Version: 1.0
+Return-Path: <nm@localhost>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Delivered-To: test@localhost
+Received: from localhost ([127.0.0.1])
+          by byteacti-757792 (JAMES SMTP Server 3.0-dev) with SMTP ID 842
+          for <test@localhost>;
+          Sat, 16 Sep 2006 14:01:14 +0200 (CEST)
+Date: Sat, 16 Sep 2006 14:01:14 +0200 (CEST)
+From: nm@localhost
+invalid
+test: test
+test
+
+
+
+From - Sat Sep 16 14:02:40 2006
+X-Account-Key: account4
+X-UIDL: Mail1158408158171-1
+X-Mozilla-Status: 0001
+X-Mozilla-Status2: 00000000
+Message-ID: <3534544.31158408158203.JavaMail.maurer@byteacti-757792>
+MIME-Version: 1.0
+Return-Path: <nm@localhost>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Delivered-To: test@localhost
+Received: from localhost ([127.0.0.1])
+          by byteacti-757792 (JAMES SMTP Server 3.0-dev) with SMTP ID 317
+          for <test@localhost>;
+          Sat, 16 Sep 2006 14:02:38 +0200 (CEST)
+Date: Sat, 16 Sep 2006 14:02:38 +0200 (CEST)
+From: nm@localhost
+testmail
+test: test
+
+test
+

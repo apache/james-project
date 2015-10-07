@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <!--
+      Spring "Bean-Post-Processor" for LogEnabled interface.
+     -->
+    <bean class="org.apache.james.container.spring.lifecycle.LogEnabledBeanPostProcessor">
+        <property name="logProvider" ref="logprovider"/>
+        <property name="order" value="0"/>
+    </bean>
+    <bean id="logprovider" class="org.apache.james.container.spring.lifecycle.LogProviderImpl">
+    </bean>
+
+    <!--
+      Configuration "Bean-Factory-Post-Processor"
+        responsible to register beans from James specific configuration files
+    -->
+    <bean class="org.apache.james.container.spring.bean.factorypostprocessor.ConfigurationBeanFactoryPostProcessor">
+        <property name="beans">
+            <map>
+                <!-- User Repository-->
+                <entry>
+                    <key>
+                        <value>usersrepository</value>
+                    </key>
+                    <!-- no alias needed -->
+                    <value></value>
+                </entry>
+                <!-- Recipient Rewrite Table-->
+                <entry>
+                    <key>
+                        <value>recipientrewritetable</value>
+                    </key>
+                    <!-- no alias needed -->
+                    <value></value>
+                </entry>
+                <!-- Domain List -->
+                <entry>
+                    <key>
+                        <value>domainlist</value>
+                    </key>
+                    <!-- no alias needed -->
+                    <value></value>
+                </entry>
+                <!--
+                            <entry>
+                              <key>
+                                <value>usersrepository23</value>
+                              </key>
+                              <value></value>
+                            </entry>
+                -->
+            </map>
+        </property>
+    </bean>
+
+    <!-- Spring "Bean-Post-Processor" for Configurable interface. -->
+    <bean class="org.apache.james.container.spring.lifecycle.ConfigurableBeanPostProcessor">
+        <property name="configurationProvider" ref="configurationprovider"/>
+        <property name="order" value="1"/>
+    </bean>
+    <bean id="configurationprovider" class="org.apache.james.container.spring.lifecycle.ConfigurationProviderImpl">
+        <property name="configurationMappings">
+            <map>
+                <entry key="mailprocessor" value="mailetcontainer.processors"/>
+                <entry key="mailspooler" value="mailetcontainer.spooler"/>
+                <entry key="mailetcontext" value="mailetcontainer.context"/>
+            </map>
+        </property>
+    </bean>
+
+    <!-- Mail Repository Store "Bean-Factory" -->
+    <bean id="mailrepositorystore"
+          class="org.apache.james.container.spring.bean.factory.mailrepositorystore.MailRepositoryStoreBeanFactory"/>
+
+    <!--  Mailet and Matcher "Bean-Factory". -->
+
+    <bean id="mailetloader"
+          class="org.apache.james.container.spring.bean.factory.mailetcontainer.MailetLoaderBeanFactory"/>
+    <bean id="matcherloader"
+          class="org.apache.james.container.spring.bean.factory.mailetcontainer.MatcherLoaderBeanFactory"/>
+
+    <!-- 
+    ===========================================================================
+       Mail Protocol Servers
+    ===========================================================================
+    -->
+    <bean id="protocolhandlerloader"
+          class="org.apache.james.container.spring.bean.factory.protocols.ProtocolHandlerLoaderBeanFactory"/>
+
+
+    <!--
+    ===========================================================================
+       File System
+    ===========================================================================
+    -->
+
+    <bean class="org.apache.james.container.spring.bean.factorypostprocessor.FileSystemBeanFactoryPostProcessor">
+        <property name="fileSystem" ref="filesystem"/>
+    </bean>
+
+    <!--<bean id="filesystem" class="org.apache.james.container.spring.filesystem.FileSystemImpl" autowire="byName"/>-->
+    <bean id="filesystem" class="org.apache.james.container.spring.filesystem.ResourceLoaderFileSystem"/>
+
+    <bean id="sieverepository" class="org.apache.james.filesystem.api.SieveFileRepository">
+        <constructor-arg index="0" ref="filesystem"/>
+    </bean>
+
+    <bean id="sieveparser" class="org.apache.james.managesieve.jsieve.Parser">
+        <property name="configurationManager" ref="configurationmanager"/>
+    </bean>
+
+    <bean id="configurationmanager" class="org.apache.jsieve.ConfigurationManager"/>
+
+</beans>

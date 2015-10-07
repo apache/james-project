@@ -1,0 +1,344 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Monitor via Logging</title>
+ </properties>
+
+<body>
+
+  <section name="Monitor via Logging">
+  
+    <p>Use the well-known log4j system.</p>
+    
+    <p>The log4j.properties reside in the ./conf folder. You can edit it to change the 
+       logging level, per component.</p>
+       
+    <p>You can change the logging level while the server is running via JMX 
+       (under org.apache.james/container).</p>
+       
+    <p>All log files are written in the ./log folder. The ./log/james-sever.log gathers all the other logs.
+      Log file rotation is also available.</p>
+    
+<source>
+[root@srv001 log]# ls -alp
+total 2892
+drwxrwxrwx. 2 root root   4096 2010-11-07 07:58 ./
+drwxrwxrwx. 7 root root   4096 2010-11-06 09:01 ../
+-rw-r--r--. 1 root root      0 2010-11-06 09:24 dnsserver.log
+-rw-r--r--. 1 root root    811 2010-11-06 17:37 domainlist.log
+-rwxrwxrwx. 1 root root      0 2010-10-21 14:07 .dummy
+-rw-r--r--. 1 root root     58 2010-11-06 09:24 fetchmail.log
+-rw-r--r--. 1 root root    552 2010-11-07 08:27 imapserver.log
+-rw-r--r--. 1 root root    959 2010-11-06 18:50 imapserver.log.2010-11-06
+-rw-r--r--. 1 root root 677090 2010-11-07 08:29 james-server.log
+-rw-r--r--. 1 root root 761987 2010-11-06 23:59 james-server.log.2010-11-06
+-rw-r--r--. 1 root root   1941 2010-11-06 09:24 lmtpserver.log
+-rw-r--r--. 1 root root      0 2010-11-06 09:24 mailboxmanager.log
+-rw-r--r--. 1 root root   7935 2010-11-06 09:24 mailetcontainer.log
+-rw-r--r--. 1 root root  61129 2010-11-07 08:26 mailet.log
+-rw-r--r--. 1 root root  23393 2010-11-06 23:57 mailet.log.2010-11-06
+-rw-r--r--. 1 root root    325 2010-11-06 09:24 mailserver.log
+-rw-r--r--. 1 root root   5008 2010-11-06 09:24 mailstore.log
+-rw-r--r--. 1 root root      0 2010-11-06 09:24 objectstore.log
+-rw-r--r--. 1 root root   2001 2010-11-06 09:24 pop3server.log
+-rw-r--r--. 1 root root    138 2010-11-07 08:18 remotemanager.log
+-rw-r--r--. 1 root root    746 2010-11-06 17:57 remotemanager.log.2010-11-06
+-rw-r--r--. 1 root root 615271 2010-11-07 08:29 smtpserver.log
+-rw-r--r--. 1 root root 717888 2010-11-06 23:59 smtpserver.log.2010-11-06
+-rw-r--r--. 1 root root     71 2010-11-06 09:24 usersrepository.log
+</source>    
+       
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/log4j.properties">log4j.properties</a> in SVN to get some examples and hints.</p>
+
+    <p>You can rise the logging level on protocols.</p>
+    <p>Set log4j.logger.james.smtpserver=DEBUG, SMTPSERVER</p>
+    <p>In the following log example, the 250 in front of it is the session id.. so you can now see the whole transaction flow even if you have many stuff currently going on.</p>
+    <p>As you see 5xx and 4xx stuff is logged with INFO .. the rest with DEBUG</p>
+    <p>You can do the same on IMAP, POP3.</p>
+
+<source>
+DEBUG 16:16:06,705 | james.smtpserver | 250 Lookup command handler for command: EHLO
+DEBUG 16:16:06,706 | james.smtpserver | 250 org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler: 250 [noname. Hello test.de (localhost [127.0.0.1]), PIPELINING, ENHANCEDSTATUSCODES, 8BITMIME]
+DEBUG 16:16:11,098 | james.smtpserver | 250 Lookup command handler for command: MAIL
+ERROR 16:16:11,108 | james.smtpserver | 250 Error parsing sender address: &lt;gdgwewe: did not start and end with &gt; &gt;
+INFO  16:16:11,110 | james.smtpserver | 250 org.apache.james.smtpserver.JamesMailCmdHandler: 501 [5.1.7 Syntax error in MAIL command]
+DEBUG 16:16:14,442 | james.smtpserver | 250 Lookup command handler for command: MAIL
+DEBUG 16:16:14,442 | james.smtpserver | 250 org.apache.james.smtpserver.JamesMailCmdHandler: 250 [2.1.0 Sender &lt;test@localhost&gt; OK]
+DEBUG 16:16:22,385 | james.smtpserver | 250 Lookup command handler for command: RCPT
+DEBUG 16:16:22,386 | james.smtpserver | 250 executing hook org.apache.james.smtpserver.AuthRequiredToRelayRcptHook
+DEBUG 16:16:22,386 | james.smtpserver | 250 executing hook org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook
+DEBUG 16:16:22,485 | james.smtpserver | 250 executing hook org.apache.james.protocols.smtp.core.PostmasterAbuseRcptHook
+DEBUG 16:16:22,485 | james.smtpserver | 250 executing hook org.apache.james.smtpserver.fastfail.ValidRcptHandler
+DEBUG 16:16:22,485 | james.smtpserver | 250 Sender allowed
+DEBUG 16:16:22,485 | james.smtpserver | 250 org.apache.james.smtpserver.JamesRcptCmdHandler: 250 [2.1.5 Recipient &lt;go@localhost&gt; OK]
+DEBUG 16:16:30,008 | james.smtpserver | 250 Lookup command handler for command: RCPT
+ERROR 16:16:30,009 | james.smtpserver | 250 Error parsing recipient address: Address did not start and end with &lt; &gt; [to:&lt;d] [from:test@localhost]
+INFO  16:16:30,009 | james.smtpserver | 250 org.apache.james.smtpserver.JamesRcptCmdHandler: 501 [5.5.2 Syntax error in parameters or arguments]
+DEBUG 16:16:33,424 | james.smtpserver | 250 Lookup command handler for command: RCPT
+DEBUG 16:16:33,424 | james.smtpserver | 250 executing hook org.apache.james.smtpserver.AuthRequiredToRelayRcptHook
+DEBUG 16:16:33,424 | james.smtpserver | 250 executing hook org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook
+DEBUG 16:16:33,425 | james.smtpserver | 250 executing hook org.apache.james.protocols.smtp.core.PostmasterAbuseRcptHook
+DEBUG 16:16:33,425 | james.smtpserver | 250 executing hook org.apache.james.smtpserver.fastfail.ValidRcptHandler
+DEBUG 16:16:33,425 | james.smtpserver | 250 Sender allowed
+DEBUG 16:16:33,425 | james.smtpserver | 250 org.apache.james.smtpserver.JamesRcptCmdHandler: 250 [2.1.5 Recipient &lt;g@localhost&gt; OK]
+DEBUG 16:16:35,072 | james.smtpserver | 250 Lookup command handler for command: DATA
+DEBUG 16:16:35,076 | james.smtpserver | 250 org.apache.james.smtpserver.JamesDataCmdHandler: 354 [Ok Send data ending with &lt;CRLF&gt;.&lt;CRLF&gt;]
+DEBUG 16:16:39,205 | james.smtpserver | 250 executing james message handler org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension@4b25ee49
+DEBUG 16:16:39,206 | james.smtpserver | 250 executing james message handler org.apache.james.smtpserver.AddDefaultAttributesMessageHook@6c408893
+DEBUG 16:16:39,206 | james.smtpserver | 250 executing james message handler org.apache.james.smtpserver.SendMailHandler@5636bc0a
+DEBUG 16:16:39,206 | james.smtpserver | 250 sending mail
+INFO  16:16:39,223 | james.smtpserver | 250 Successfully spooled mail Mail1291907799185-4af99ab3-9dd2-4d04-b8c9-37c12dd94686 from test@localhost on 127.0.0.1 for [go@localhost, g@localhost]
+INFO  16:16:40,230 | james.mailetcontext | Storing mail Mail1291907799185-4af99ab3-9dd2-4d04-b8c9-37c12dd94686 in file://var/mail/address-error/
+INFO  16:16:30,009 | james.smtpserver | 250 org.apache.james.smtpserver.JamesRcptCmdHandler: 501 [5.5.2 Syntax error in parameters or arguments]
+
+DEBUG 16:41:42,174 | james.smtpserver | 167 org.apache.james.smtpserver.JamesWelcomeMessageHandler disconnect=false
+DEBUG 16:41:44,207 | james.smtpserver | 167 Lookup command handler for command: EHLO
+DEBUG 16:41:44,209 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler: 250 [noname. Hello test (localhost [127.0.0.1]), PIPELINING, ENHANCEDSTATUSCODES, 8BITMIME]
+DEBUG 16:41:44,214 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 16:42:12,720 | james.smtpserver | 167 Lookup command handler for command: EHLO
+DEBUG 16:42:12,720 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler: 250 [noname. Hello t (localhost [127.0.0.1]), PIPELINING, ENHANCEDSTATUSCODES, 8BITMIME]
+DEBUG 16:42:12,721 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 16:42:15,008 | james.smtpserver | 167 Lookup command handler for command: MAIL
+INFO  16:42:15,010 | james.smtpserver | 167 org.apache.james.smtpserver.JamesMailCmdHandler: 501 [5.5.4 Usage: MAIL FROM:&lt;sender&gt;]
+DEBUG 16:42:15,010 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 16:42:17,048 | james.smtpserver | 167 Lookup command handler for command: MAIL
+DEBUG 16:42:17,048 | james.smtpserver | 167 org.apache.james.smtpserver.JamesMailCmdHandler: 250 [2.1.0 Sender &lt;&gt; OK]
+DEBUG 16:42:17,048 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 16:42:19,088 | james.smtpserver | 167 Lookup command handler for command: RCPT
+DEBUG 16:42:19,088 | james.smtpserver | 167 executing hook org.apache.james.smtpserver.AuthRequiredToRelayRcptHook
+DEBUG 16:42:19,089 | james.smtpserver | 167 executing hook org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook
+DEBUG 16:42:19,089 | james.smtpserver | 167 executing hook org.apache.james.protocols.smtp.core.PostmasterAbuseRcptHook
+DEBUG 16:42:19,089 | james.smtpserver | 167 executing hook org.apache.james.smtpserver.fastfail.ValidRcptHandler
+DEBUG 16:42:19,089 | james.smtpserver | 167 Sender allowed
+DEBUG 16:42:19,089 | james.smtpserver | 167 org.apache.james.smtpserver.JamesRcptCmdHandler: 250 [2.1.5 Recipient &lt;nm@localhost&gt; OK]
+DEBUG 16:42:19,090 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 16:42:19,767 | james.smtpserver | 167 Lookup command handler for command: DATA
+DEBUG 16:42:19,774 | james.smtpserver | 167 org.apache.james.smtpserver.JamesDataCmdHandler: 354 [Ok Send data ending with &lt;CRLF&gt;.&lt;CRLF&gt;]
+DEBUG 16:42:19,775 | james.smtpserver | 167 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 16:42:22,950 | james.smtpserver | 167 executing james message handler org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension@5585c0de
+DEBUG 16:42:22,952 | james.smtpserver | 167 executing james message handler org.apache.james.smtpserver.AddDefaultAttributesMessageHook@2827f394
+DEBUG 16:42:22,952 | james.smtpserver | 167 executing james message handler org.apache.james.smtpserver.SendMailHandler@3f81d405
+DEBUG 16:42:22,952 | james.smtpserver | 167 sending mail
+INFO  16:42:22,977 | james.smtpserver | 167 Successfully spooled mail Mail1291909342936-99263c11-c287-42e9-93a5-4f3468842d9f from null on 127.0.0.1 for [nm@localhost]
+
+DEBUG 17:23:42,297 | james.smtpserver | 262 org.apache.james.smtpserver.JamesWelcomeMessageHandler disconnect=false
+DEBUG 17:23:46,091 | james.smtpserver | 262 Lookup command handler for command: EHLO
+DEBUG 17:23:46,093 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler: 250 [noname. Hello test (fileserver [192.168.0.254]), AUTH LOGIN PLAIN, AUTH=LOGIN PLAIN, PIPELINING, ENHANCEDSTATUSCODES, 8BITMIME]
+DEBUG 17:23:46,098 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 17:23:54,029 | james.smtpserver | 262 Lookup command handler for command: MAIL
+DEBUG 17:23:54,031 | james.smtpserver | 262 org.apache.james.smtpserver.JamesMailCmdHandler: 250 [2.1.0 Sender &lt;&gt; OK]
+DEBUG 17:23:54,032 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 17:24:00,775 | james.smtpserver | 262 Lookup command handler for command: RCPT
+DEBUG 17:24:00,776 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.AuthRequiredToRelayRcptHook
+DEBUG 17:24:00,777 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.log.HookResultLogger@2a36bb87
+INFO  17:24:00,777 | james.smtpserver | 262 org.apache.james.smtpserver.AuthRequiredToRelayRcptHook: result=2 (DENY)
+INFO  17:24:00,777 | james.smtpserver | 262 org.apache.james.smtpserver.JamesRcptCmdHandler: 530 [5.7.1 Authentication Required]
+DEBUG 17:24:00,778 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 17:24:17,828 | james.smtpserver | 262 Lookup command handler for command: RCPT
+DEBUG 17:24:17,828 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.AuthRequiredToRelayRcptHook
+DEBUG 17:24:17,828 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.log.HookResultLogger@2a36bb87
+DEBUG 17:24:17,829 | james.smtpserver | 262 org.apache.james.smtpserver.AuthRequiredToRelayRcptHook: result=8 (DECLINED)
+DEBUG 17:24:17,829 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook
+DEBUG 17:24:17,829 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.log.HookResultLogger@2a36bb87
+DEBUG 17:24:17,829 | james.smtpserver | 262 org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook: result=8 (DECLINED)
+DEBUG 17:24:17,830 | james.smtpserver | 262 executing hook org.apache.james.protocols.smtp.core.PostmasterAbuseRcptHook
+DEBUG 17:24:17,830 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.log.HookResultLogger@2a36bb87
+DEBUG 17:24:17,830 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.PostmasterAbuseRcptHook: result=8 (DECLINED)
+DEBUG 17:24:17,830 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.fastfail.ValidRcptHandler
+DEBUG 17:24:18,670 | james.smtpserver | 262 Unknown user nm check if its an alias
+INFO  17:24:18,724 | james.smtpserver | 262 Rejected message. Unknown user: nm@localhost
+DEBUG 17:24:18,725 | james.smtpserver | 262 executing hook org.apache.james.smtpserver.log.HookResultLogger@2a36bb87
+INFO  17:24:18,726 | james.smtpserver | 262 org.apache.james.smtpserver.fastfail.ValidRcptHandler: result=2 (DENY)
+INFO  17:24:18,726 | james.smtpserver | 262 org.apache.james.smtpserver.JamesRcptCmdHandler: 550 [5.1.1 Unknown user: nm@localhost]
+DEBUG 17:24:18,727 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+DEBUG 17:24:23,843 | james.smtpserver | 262 Lookup command handler for command: QUIT
+DEBUG 17:24:23,843 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.QuitCmdHandler: 221 [2.0.0 noname. Service closing transmission channel]
+DEBUG 17:24:23,844 | james.smtpserver | Dispose objects while closing channel 1431702401
+DEBUG 17:24:23,845 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
+INFO  17:24:00,777 | james.smtpserver | 262 org.apache.james.smtpserver.AuthRequiredToRelayRcptHook: result=2 (DENY)
+INFO  17:24:18,726 | james.smtpserver | 262 org.apache.james.smtpserver.fastfail.ValidRcptHandler: result=2 (DENY)
+DEBUG 17:24:17,829 | james.smtpserver | 262 org.apache.james.smtpserver.SenderAuthIdentifyVerificationRcptHook: result=8 (DECLINED)
+</source>
+
+    <p>The default log4j.properties is taken hereafter for information.</p>
+
+<source>
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+
+# See http://james.apache.org/server/3/config.html for usage
+
+log4j.rootLogger=DEBUG
+
+log4j.appender.CONS=org.apache.log4j.ConsoleAppender
+log4j.appender.CONS.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONS.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.FILE=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.FILE.File=../log/james-server.log
+log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.FILE.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.MAILBOXMANAGER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.MAILBOXMANAGER.File=../log/mailboxmanager.log
+log4j.appender.MAILBOXMANAGER.DatePattern='.'yyyy-MM-dd
+log4j.appender.MAILBOXMANAGER.layout=org.apache.log4j.PatternLayout
+log4j.appender.MAILBOXMANAGER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+
+log4j.appender.IMAPSERVER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.IMAPSERVER.File=../log/imapserver.log
+log4j.appender.IMAPSERVER.DatePattern='.'yyyy-MM-dd
+log4j.appender.IMAPSERVER.layout=org.apache.log4j.PatternLayout
+log4j.appender.IMAPSERVER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.MAILSERVER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.MAILSERVER.File=../log/mailserver.log
+log4j.appender.MAILSERVER.DatePattern='.'yyyy-MM-dd
+log4j.appender.MAILSERVER.layout=org.apache.log4j.PatternLayout
+log4j.appender.MAILSERVER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.MAILET=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.MAILET.File=../log/mailet.log
+log4j.appender.MAILET.DatePattern='.'yyyy-MM-dd
+log4j.appender.MAILET.layout=org.apache.log4j.PatternLayout
+log4j.appender.MAILET.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+
+log4j.appender.MAILETCONTAINER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.MAILETCONTAINER.File=../log/mailetcontainer.log
+log4j.appender.MAILETCONTAINER.DatePattern='.'yyyy-MM-dd
+log4j.appender.MAILETCONTAINER.layout=org.apache.log4j.PatternLayout
+log4j.appender.MAILETCONTAINER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+
+log4j.appender.DNSSERVER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.DNSSERVER.File=../log/dnsserver.log
+log4j.appender.DNSSERVER.DatePattern='.'yyyy-MM-dd
+log4j.appender.DNSSERVER.layout=org.apache.log4j.PatternLayout
+log4j.appender.DNSSERVER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.REMOTEMANAGER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.REMOTEMANAGER.File=../log/remotemanager.log
+log4j.appender.REMOTEMANAGER.DatePattern='.'yyyy-MM-dd
+log4j.appender.REMOTEMANAGER.layout=org.apache.log4j.PatternLayout
+log4j.appender.REMOTEMANAGER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.POP3SERVER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.POP3SERVER.File=../log/pop3server.log
+log4j.appender.POP3SERVER.DatePattern='.'yyyy-MM-dd
+log4j.appender.POP3SERVER.layout=org.apache.log4j.PatternLayout
+log4j.appender.POP3SERVER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.SMTPSERVER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.SMTPSERVER.File=../log/smtpserver.log
+log4j.appender.SMTPSERVER.DatePattern='.'yyyy-MM-dd
+log4j.appender.SMTPSERVER.layout=org.apache.log4j.PatternLayout
+log4j.appender.SMTPSERVER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.LMTPSERVER=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.LMTPSERVER.File=../log/lmtpserver.log
+log4j.appender.LMTPSERVER.DatePattern='.'yyyy-MM-dd
+log4j.appender.LMTPSERVER.layout=org.apache.log4j.PatternLayout
+log4j.appender.LMTPSERVER.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.MAILSTORE=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.MAILSTORE.File=../log/mailstore.log
+log4j.appender.MAILSTORE.DatePattern='.'yyyy-MM-dd
+log4j.appender.MAILSTORE.layout=org.apache.log4j.PatternLayout
+log4j.appender.MAILSTORE.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.USERSREPOSITORY=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.USERSREPOSITORY.File=../log/usersrepository.log
+log4j.appender.USERSREPOSITORY.DatePattern='.'yyyy-MM-dd
+log4j.appender.USERSREPOSITORY.layout=org.apache.log4j.PatternLayout
+log4j.appender.USERSREPOSITORY.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.OBJECTSTORAGE=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.OBJECTSTORAGE.File=../log/objectstore.log
+log4j.appender.OBJECTSTORAGE.DatePattern='.'yyyy-MM-dd
+log4j.appender.OBJECTSTORAGE.layout=org.apache.log4j.PatternLayout
+log4j.appender.OBJECTSTORAGE.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.FETCHMAIL=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.FETCHMAIL.File=../log/fetchmail.log
+log4j.appender.FETCHMAIL.DatePattern='.'yyyy-MM-dd
+log4j.appender.FETCHMAIL.layout=org.apache.log4j.PatternLayout
+log4j.appender.FETCHMAIL.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+log4j.appender.DOMAINLIST=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.DOMAINLIST.File=../log/domainlist.log
+log4j.appender.DOMAINLIST.DatePattern='.'yyyy-MM-dd
+log4j.appender.DOMAINLIST.layout=org.apache.log4j.PatternLayout
+log4j.appender.DOMAINLIST.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | %m%n
+
+# logger for jackrabbit
+log4j.logger.org.apache.jackrabbit=ERROR, CONS, FILE
+
+# logger for activemq
+log4j.logger.org.apache.xbean.spring=WARN, CONS, FILE
+log4j.logger.org.apache.activemq=WARN, CONS, FILE
+
+# logger for camel
+log4j.logger.org.apache.camel=WARN, CONS, FILE
+log4j.logger.org.springframework=WARN, CONS, FILE
+log4j.logger.org.apache.james=INFO, CONS, FILE
+#log4j.logger.james: set from default value WARN to INFO or even DEBUG to see (even) more logging
+log4j.logger.james=WARN, CONS, FILE
+log4j.logger=DEBUG, CONS, FILE
+
+log4j.logger.james.mailboxmanager=INFO, MAILBOXMANAGER
+log4j.logger.james.imapserver=INFO, IMAPSERVER
+log4j.logger.james.mailserver=INFO, MAILSERVER
+log4j.logger.james.mailetcontext=INFO, MAILET
+log4j.logger.james.mailetcontainer=INFO, MAILETCONTAINER
+log4j.logger.james.dnsserver=INFO, DNSSERVER
+log4j.logger.james.remotemanager=INFO, REMOTEMANAGER
+log4j.logger.james.pop3server=INFO, POP3SERVER
+log4j.logger.james.smtpserver=INFO, SMTPSERVER
+log4j.logger.james.lmtpserver=INFO, LMTPSERVER
+log4j.logger.james.mailstore=INFO, MAILSTORE
+log4j.logger.james.usersrepository=INFO, USERSREPOSITORY
+log4j.logger.james.objectstorage=INFO, OBJECTSTORAGE
+log4j.logger.james.fetchmail=INFO, FETCHMAIL
+log4j.logger.james.domainlist=INFO, DOMAINLIST
+</source>
+  
+  </section>
+
+</body>
+
+</document>

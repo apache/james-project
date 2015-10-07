@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+<properties>
+ <title>Apache James Server 3 - DNS Service Configuration</title>
+</properties>
+
+<body>
+ 
+ <section name="DNS Service Configuration">
+
+    <subsection name="dnsservice.xml">
+
+      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/dnsservice-template.xml">dnsservice-template.xml</a> in SVN to get some examples and hints.</p>
+
+      <p>Specifies DNS Server information for use by various components inside Apache James Server.</p>
+
+      <p>DNS Transport services are controlled by a configuration block in
+         the dnsservice.xml. This block affects SMTP remote delivery.</p>
+    
+      <p>The dnsservice tag defines the boundaries of the configuration
+         block. It encloses all the relevant configuration for the DNS server.
+         The behavior of the DNS service is controlled by the attributes and
+         children of this tag.</p> 
+    
+      <dl>
+        <dt><strong>servers</strong></dt>
+        <dd>Information includes a list of DNS Servers to be used by James.  These are 
+           specified by the server elements, each of which is a child element of the 
+           servers element.  Each server element is the IP address of a single DNS server. 
+           The servers element can have multiple server children. Enter ip address of your DNS server, one IP address per server 
+         element. If no DNS servers are found and you have not specified any below, 127.0.0.1 will be used </dd>
+        <dt><strong>autodiscover</strong></dt>
+        <dd>true or false -  If you use autodiscover and add DNS servers manually a combination of all the DNS servers will be used
+            If autodiscover is true, James will attempt to autodiscover the DNS servers configured on your underlying system.
+            Currently, this works if the OS has a unix-like /etc/resolv.xml,
+            or the system is Windows based with ipconfig or winipcfg. Change autodiscover to false if you would like to turn off autodiscovery 
+            and set the DNS servers manually in the servers section </dd>
+        <dt><strong>authoritative</strong></dt>
+        <dd><strong>true/false</strong> - This tag specifies whether or not 
+           to require authoritative (non-cached) DNS records; to only accept DNS responses that are 
+           authoritative for the domain. It is primarily useful in an intranet/extranet environment.
+           This should always be <strong>false</strong> unless you understand the implications.</dd>
+        <dt><strong>maxcachesize</strong></dt>
+        <dd>Maximum number of entries to maintain in the DNS cache (typically 50000)</dd>
+        <dt><strong>singleIPperMX</strong></dt>
+        <dd>true or false (default) - Sepcifies if Apache James Server must try a single server for each multihomed mx host</dd>
+      </dl>
+      
+    </subsection>
+    
+  </section>
+<!--
+Commented because no more applicable? (we are running now on JDK 1.5)
+
+  <section name="Sun JVM DNS Lookup Configuration.">
+ 
+    <p>Sun's JVM Internet address lookup uses a cache which is unbounded and doesn't time out.<br/>
+       This is obviously not great for a long running process like a mail server so we have introduced a system property <strong>networkaddress.cache.ttl</strong> 
+       that is used by the distributed phoenix start-up scripts, at startup, to override the java 1.4 <strong>Security.setProperty("networkaddress.cache.ttl")</strong>.<br/> 
+       By default this is set to <strong>300</strong> seconds.</p>
+  
+    <p>This workaround will only be present if you use James as distributed. If you use James in any other container, including different versions of Spring, 
+        you will need to ensure that you make a similar configuration change to allow the internet address cache to perform acceptably.</p>
+  
+    <p>Apache James Server 3.0 has this workaround and it requires it to operate acceptably. Future versions of James will continue to have the workaround in place 
+      but will *not* require it. This will provide continued support for any mailets which you may deploy from other sources which might continue to use Sun's InetAddress class for DNS resolution.</p>
+  
+    <p>We are not currently aware of the behaviour of this cache in other JVM implementations, nor of the effect, if any, which this change might have on them</p>
+  
+    <p>For more on this read defect report <a href="http://issues.apache.org/jira/browse/JAMES-592">JAMES-592</a> and related defects.</p>
+ 
+  </section>
+-->
+</body>
+
+</document>
+

@@ -1,0 +1,130 @@
+
+  =========================================================================
+  ==      NOTICE file for use with the Apache License, Version 2.0,      ==
+  =========================================================================
+  
+  Apache JAMES Server
+  Copyright 1999-2011 The Apache Software Foundation
+  
+  This product includes software developed at
+  The Apache Software Foundation (http://www.apache.org/).
+      
+
+
+  Download the source for:
+    mail-1.4.4.jar from http://kenai.com/projects/javamail/downloads
+
+  This distribution contains third party resources requiring the following notices:
+
+    
+  For 
+    jasypt-1.6.jar
+  
+
+        This distribution includes cryptographic software.  The country in 
+        which you currently reside may have restrictions on the import, 
+        possession, use, and/or re-export to another country, of 
+        encryption software.  BEFORE using any encryption software, please 
+        check your country's laws, regulations and policies concerning the
+        import, possession, or use, and re-export of encryption software, to 
+        see if this is permitted.  See http://www.wassenaar.org/ for more
+        information.
+        
+        The U.S. Government Department of Commerce, Bureau of Industry and
+        Security (BIS), has classified this software as Export Commodity 
+        Control Number (ECCN) 5D002.C.1, which includes information security
+        software using or performing cryptographic functions with asymmetric
+        algorithms.  The form and manner of this distribution makes it 
+        eligible for export under the License Exception ENC Technology 
+        Software Unrestricted (TSU) exception (see the BIS Export 
+        Administration Regulations, Section 740.13) for both object code and 
+        source code.
+        
+        The following provides more details on the cryptographic software 
+        used (note that this software is not included in the distribution):
+        
+          * The PBE Encryption facilities require the Java Cryptography 
+            extensions: http://java.sun.com/javase/technologies/security/.
+        
+        ---------------------------------
+        
+        Distributions of this software may include software developed by
+        The Apache Software Foundation (http://www.apache.org/).
+        
+        ---------------------------------
+        
+        
+        ICU License - ICU 1.8.1 and later
+        
+        COPYRIGHT AND PERMISSION NOTICE
+        
+        Copyright (c) 1995-2006 International Business Machines 
+        Corporation and others
+        
+        All rights reserved.
+        
+        Permission is hereby granted, free of charge, to any 
+        person obtaining a copy of this software and associated 
+        documentation files (the "Software"), to deal in the 
+        Software without restriction, including without limitation 
+        the rights to use, copy, modify, merge, publish, 
+        distribute, and/or sell copies of the Software, and to 
+        permit persons to whom the Software is furnished to do so, 
+        provided that the above copyright notice(s) and this 
+        permission notice appear in all copies of the Software and 
+        that both the above copyright notice(s) and this 
+        permission notice appear in supporting documentation.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY 
+        KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+        WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
+        PURPOSE AND NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN NO 
+        EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN 
+        THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL 
+        INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES 
+        WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
+        WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER 
+        TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE 
+        USE OR PERFORMANCE OF THIS SOFTWARE.
+        
+        Except as contained in this notice, the name of a copyright 
+        holder shall not be used in advertising or otherwise to 
+        promote the sale, use or other dealings in this Software 
+        without prior written authorization of the copyright holder.
+
+    
+  For 
+    spring-aop-3.1.RELEASE.jar
+    spring-asm-3.1.RELEASE.jar
+    spring-beans-3.1.RELEASE.jar
+    spring-context-3.1.RELEASE.jar
+    spring-core-3.1.RELEASE.jar
+    spring-expression-3.1.RELEASE.jar
+    spring-jdbc-3.1.RELEASE.jar
+    spring-jms-3.1.RELEASE.jar
+    spring-orm-3.1.RELEASE.jar
+    spring-tx-3.1.RELEASE.jar
+    spring-web-3.1.RELEASE.jar
+  
+
+        == NOTICE file corresponding to section 4 d of the Apache License,  ==
+        == Version 2.0, for the Spring Framework distribution.              ==
+        ======================================================================
+        
+        This product includes software developed by
+        the Apache Software Foundation (http://www.apache.org).
+        
+        The end-user documentation included with a redistribution, if any,
+        must include the following acknowledgement:
+        
+         "This product includes software developed by the Spring Framework
+          Project (http://www.springframework.org)."
+        
+        Alternately, this acknowledgement may appear in the software itself,
+        if and wherever such third-party acknowledgements normally appear.
+        
+        The names "Spring", "Spring Framework", and "Spring Web Flow" must
+        not be used to endorse or promote products derived from this
+        software without prior written permission. For written permission,
+        please contact enquiries@springsource.com.
+

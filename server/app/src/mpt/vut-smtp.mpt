@@ -1,0 +1,55 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+S: 220 .* SMTP Server \(JAMES SMTP Server .*
+C: HELO example.org
+S: 250 .* Hello example.org .*
+C: MAIL FROM:<joe@example.org>
+S: 250 2.1.0 Sender <joe@example.org> OK
+C: RCPT TO:<john.smith@localhost>
+S: 250 2.1.5 Recipient <john.smith@localhost> OK
+C: DATA
+S: 354 Ok Send data ending with <CRLF>.<CRLF>
+C: Date: 12 Dec 2008 GMT
+C: From: <joe@example.org>
+C: To: <john.smith@localhost>
+C: Subject: A Test Message
+C:
+C: Simple plain mail content
+C:
+C: .
+S: 250 2.6.0 Message received
+C: MAIL FROM:<alex@example.org>
+S: 250 2.1.0 Sender <alex@example.org> OK
+C: RCPT TO:<support@example.org>
+S: 250 2.1.5 Recipient <support@example.org> OK
+C: DATA
+S: 354 Ok Send data ending with <CRLF>.<CRLF>
+C: Date: 13 Dec 2008 GMT
+C: From: <alex@example.org>
+C: To: <support@example.org>
+C: Subject: Virtual Host Test Message
+C:
+C: This message tests James virtual user mapping.
+C: support@example.org should be mapping to john.smith@localhost
+C: and delivered to that mailbox.
+C:
+C: .
+S: 250 2.6.0 Message received
+C: QUIT
+S: 221 2.0.0 .* Service closing transmission channel

@@ -1,0 +1,1489 @@
+Delivered-To: benoittellier3@gmail.com
+Received: by 10.28.170.202 with SMTP id t193csp327634wme;
+        Thu, 4 Jun 2015 00:36:15 -0700 (PDT)
+X-Received: by 10.180.77.195 with SMTP id u3mr5042880wiw.30.1433403375307;
+        Thu, 04 Jun 2015 00:36:15 -0700 (PDT)
+Return-Path: <bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com>
+Received: from o7.email.airbnb.com (o7.email.airbnb.com. [167.89.32.249])
+        by mx.google.com with ESMTPS id i2si5691730wjz.123.2015.06.04.00.36.13
+        for <benoittellier3@gmail.com>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 04 Jun 2015 00:36:15 -0700 (PDT)
+Received-SPF: pass (google.com: domain of bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com designates 167.89.32.249 as permitted sender) client-ip=167.89.32.249;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com designates 167.89.32.249 as permitted sender) smtp.mail=bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com;
+       dkim=pass header.i=@email.airbnb.com;
+       dmarc=pass (p=REJECT dis=NONE) header.from=airbnb.com
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=email.airbnb.com;
+	h=from:to:subject:mime-version:content-type:content-transfer-encoding;
+	s=s20150428; bh=2mhWUwzjtQTC0KljgpaEsuvrqok=; b=EhC2QHKb5+63egDD
+	qDCAepUELCeUZXCkw8+31kGT+O1va3iAKvQSAvzXJ3qJlIL9FgdeFk8sR78Vszn/
+	A73vp6NGjAW60M4gUZjxEOIPzGKIS95KfmHxg10fXUOFW0uePojNEg4ZPCcuitrZ
+	HuWvzHK5I2siGnqupiivwxDgs5c=
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=sendgrid.info;
+	h=from:to:subject:mime-version:content-type:content-transfer-encoding:x-feedback-id;
+	s=smtpapi; bh=2mhWUwzjtQTC0KljgpaEsuvrqok=; b=FPiYMmNJLCrL2e8v/0
+	DQC4voofe8nuuE7rhXZ25oqNAhAQja4oKIysJ1qAME2aEaqh+N5aJlCEuHrSG/7+
+	NAQ0OY8KaJ2zlnxAbmgJETOjnf4oGdAa+nU/nVVEPfN2NRcBCNLGQZ80U4T5k8Xi
+	PakIuZvKDTRq7PiosSCSHT/FQ=
+Received: by filter0490p1mdw1.sendgrid.net with SMTP id filter0490p1mdw1.13271.556FFFE7B
+        2015-06-04 07:36:09.249601779 +0000 UTC
+Received: from i-dee0850e.inst.aws.airbnb.com (ec2-54-90-154-187.compute-1.amazonaws.com [54.90.154.187])
+	by ismtpd-017 (SG) with ESMTP id 14dbd7fa6b4.779a.254b43
+	for <benoittellier3@gmail.com>; Thu, 04 Jun 2015 07:36:09 +0000 (UTC)
+Received: by i-dee0850e.inst.aws.airbnb.com (Postfix, from userid 1041)
+	id 19CBA24C60; Thu,  4 Jun 2015 07:36:09 +0000 (UTC)
+Date: Thu, 04 Jun 2015 07:36:08 +0000
+From: Airbnb <discover@airbnb.com>
+To: benoittellier3@gmail.com
+Message-ID: <556fffe8cac78_7ed0e0fe204457be@i-dee0850e.mail>
+Subject: Regardez les meilleures destinations depuis Paris
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_556fffe8c7e84_7ed0e0fe20445637";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-User-ID: 32692788
+X-Locale: fr
+X-Category: engagement
+X-Template: low_intent_top_destinations
+recipients:
+sent-on:
+X-SG-EID: mgVKhb3i1xMIKbRk82EYOUTMOPmiNk6g5BaWGQQKDTQchtClhw7VcIxig2BMwy1QMCr7h56hNVush8
+ 4aRV0ieMn+WZ1XVnpY0OcmMYNZnuuvlOoNkBaiuiqeWuKVZO9c9S5OyxPy7WQeI0mccenq35NpLqjI
+ nQt7IAl2sIUksUD4lM8Ai0u2C88YW13cL+Lo
+X-SG-ID: pQ7zy0fBcyQB3Gm22dZtqT6AR3zbAquH5ABZFkQfSKaxWRhz0YhtD36Li5uybRUjnPsuB21NpreKvG
+ t8iQBUn2ygs6hx6sMcgyI7L7bAY28p14Qj47KqA3JXbtMa0Xa3wdZaUUjZpemCg078XxMM5VaSHdDO
+ ChUhSV+z9RAJ38wAdUfXkpbO+m97vpU+mtWzVBoOrSiWCVYoNxPhvE4yIQ==
+X-Feedback-ID: 1453977:N5+DXWRfRBXSDDbqVYXPNg8MjWYWwZibliGo1i/oSqY=:Ibl/atjs+SOcHCINmWWv/YvIGzDUihUrks9jdHsNF1+pafkc987UhcxmuyggxNgdCkEmMZDb9gJcndcUJy5KOw==:SG
+
+----==_mimepart_556fffe8c7e84_7ed0e0fe20445637
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Meilleures destinations depuis Paris
+D=C3=A9couvrez notre s=C3=A9lection de destinations populaires.
+
+Lisbonne - http://www.airbnb.fr/discovery/getaways?euid=3Ddf1e15a9-8137-607=
+a-5090-2285b5a2b578&market=3DLisbonne
+Amsterdam - http://www.airbnb.fr/discovery/getaways?euid=3Ddf1e15a9-8137-60=
+7a-5090-2285b5a2b578&market=3DAmsterdam
+New York - http://www.airbnb.fr/discovery/getaways?euid=3Ddf1e15a9-8137-607=
+a-5090-2285b5a2b578&market=3DNew+York
+Londres - http://www.airbnb.fr/discovery/getaways?euid=3Ddf1e15a9-8137-607a=
+-5090-2285b5a2b578&market=3DLondres
+
+Voir toutes les destinations
+https://www.airbnb.fr/go/Paris?euid=3Ddf1e15a9-8137-607a-5090-2285b5a2b578
+
+Merci,
+L'=C3=A9quipe Airbnb
+
+P.O. Box 410807, San Francisco, CA 94121
+
+D=C3=A9sinscription
+https://www.airbnb.com/email/unsubscribe?token=3DeyJlbWFpbF9hZGRyZXNzIjoiYm=
+Vub2l0dGVsbGllcjNAZ21haWwuY29tIiwiY2F0ZWdvcnkiOiJlbmdhZ2VtZW50IiwidGVtcGxhd=
+GUiOiJsb3dfaW50ZW50X3RvcF9kZXN0aW5hdGlvbnMiLCJ1dWlkIjoiZGYxZTE1YTktODEzNy02=
+MDdhLTUwOTAtMjI4NWI1YTJiNTc4In0=3D&mac=3DvGS62X2THS-Sb_5rdhsnrnff7tQ=3D
+
+### Airbnb ###
+
+----==_mimepart_556fffe8c7e84_7ed0e0fe20445637
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml" style=3D'margin:0;padding:0;fo=
+nt-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;backg=
+round-color:#f7f7f7;font-size:16px;color:#565a5c;line-height:150%'>
+
+  <head style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'>
+  <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8" =
+style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helv=
+etica, Arial, sans-serif'>
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width" style=3D'margin:=
+0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sa=
+ns-serif'>
+  <meta name=3D"filler" content=3D"        _      _           _      " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+  <meta name=3D"filler" content=3D"       (_)    | |         | |     " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+  <meta name=3D"filler" content=3D"   __ _ _ _ __| |__  _ __ | |__   " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+  <meta name=3D"filler" content=3D"  / _` | | '__| '_ \| '_ \| '_ \  " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+  <meta name=3D"filler" content=3D" | (_| | | |  | |_) | | | | |_) | " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+  <meta name=3D"filler" content=3D"  \__,_|_|_|  |_.__/|_| |_|_.__/  " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+  <meta name=3D"filler" content=3D"                                  " styl=
+e=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetic=
+a, Arial, sans-serif'>
+=20=20
+=20=20
+</head>
+
+
+  <body bgcolor=3D"#EEEEEE" style=3D'margin:0;padding:0;font-family:"Helvet=
+ica Neue", "Helvetica", Helvetica, Arial, sans-serif;-webkit-text-size-adju=
+st:none;-webkit-font-smoothing:antialiased;color:#565a5c;height:100%;backgr=
+ound-color:#f7f7f7;font-size:16px;line-height:150%;width:100% !important'>
+    <div class=3D"preheader" style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif;visibility:hidden;wid=
+th:0;opacity:0;height:0;color:transparent;display:none !important'></div>
+    <table class=3D"body-wrap" style=3D'margin:0;padding:0;font-family:"Hel=
+vetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;bo=
+rder-spacing:0;background-color:#f7f7f7;width:100%'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif'></td>
+        <td class=3D"container" style=3D'padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;display:block !important;ma=
+rgin:0 auto !important;clear:both !important;max-width:610px !important'>
+          <div class=3D"content" style=3D'font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;padding:15px;max-width:600px;display=
+:block;margin:0 auto;padding-left:5px;padding-right:5px;padding-bottom:5px;=
+padding-top:0px'>
+            <table class=3D"head-wrap" style=3D'margin:0;padding:0;font-fam=
+ily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height=
+:150%;border-spacing:0;margin-bottom:10px;margin-top:10px;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container header" style=3D'padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;display:block !important=
+;margin:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"content" style=3D'font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif;padding:15px;max-width:600px;display:blo=
+ck;margin:0 auto;padding-left:5px;padding-right:5px;padding-bottom:5px;padd=
+ing-top:0px'>
+        <table style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "H=
+elvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-height:150%;w=
+idth:100%'>
+          <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif'>
+            <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "=
+Helvetica", Helvetica, Arial, sans-serif;text-align: center;'>
+              <a href=3D"https://www.airbnb.fr?euid=3Ddf1e15a9-8137-607a-50=
+90-2285b5a2b578" title=3D"Airbnb" style=3D'margin:0;padding:0;font-family:"=
+Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#ff5a5f;te=
+xt-decoration:none'>
+                <img src=3D"http://a0.muscache.com/airbnb/rookery/email/log=
+os/logo2x-954e17b014b90e4ed3a9565864fa4676.png" border=3D"0" alt=3D"Airbnb"=
+ width=3D"123" height=3D"55" style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:100%;border=
+:0'>
+              </a>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+=20=20=20=20=20=20=20=20=20=20=20=20
+=20=20=20=20=20=20=20=20=20=20=20=20
+
+<div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;padding-bot=
+tom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1px;backg=
+round-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-left-wid=
+th:1px;border-right-width:1px;border-top-width:0;padding: 0;'>
+=20=20
+  <img src=3D"http://a1.muscache.com/airbnb/rookery/email/engagement/email-=
+top-destinations-header-b0fa5f6caa96df90ed926058e4473c50.jpg" style=3D'marg=
+in:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial,=
+ sans-serif;max-width:100%'>
+
+</div>
+
+<div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;padding-bot=
+tom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1px;backg=
+round-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-left-wid=
+th:1px;border-right-width:1px;border-top-width:0;border: none;'>
+=20=20
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-heigh=
+t:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <h2 class=3D"center" style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;font-weight:bold;padding-=
+bottom:10px;font-size:24px;line-height:28px;text-rendering:optimizelegibili=
+ty;text-align:center'>
+      Meilleures destinations depuis Paris
+    </h2>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-heigh=
+t:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+      <div class=3D"p center" style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;text-align:center;'>
+=20=20
+        <h5 style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif;text-rendering:optimizelegibility;font=
+-size:14px;font-weight:normal;text-transform:uppercase;color:#9ca299;text-t=
+ransform: none'>
+          D=C3=A9couvrez notre s=C3=A9lection de destinations populaires.
+        </h5>
+
+</div>
+
+
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+    <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-hei=
+ght:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"row-space-top-4 row-space-4" style=3D'margin:0;padding:=
+0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;m=
+argin-bottom:25px;margin-top:25px'>
+=20=20=20=20=20=20=20=20
+      <div class=3D"p center" style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;text-align:center;'>
+=20=20
+        <a href=3D"https://www.airbnb.fr/go/Paris?euid=3Ddf1e15a9-8137-607a=
+-5090-2285b5a2b578" class=3D"btn btn-primary btn-small" style=3D'margin:0;f=
+ont-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;vert=
+ical-align:middle;cursor:pointer;padding:10px 16px;text-decoration:none;bor=
+der-radius:2px;border:1px solid;text-align:center;font-weight:bold;white-sp=
+ace:nowrap;background:#ffffff;box-shadow:0 1px 0 0 #e00007;border-color:#ff=
+5a5f;background-color:#ff5a5f;color:#ffffff;border-top-width:1px;display:in=
+line-block;padding-left:40px;padding-right:40px'>
+          Regarder
+        </a>
+
+</div>
+
+
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+</div>
+
+
+<table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica Neu=
+e", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-height:=
+150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"row-space-5" style=3D'margin:0;padding:0;font-family:"H=
+elvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;margin-bottom:31.=
+25px'>
+=20=20=20=20=20=20=20=20
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-heigh=
+t:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <h5 style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif;text-rendering:optimizelegibility;font-siz=
+e:14px;font-weight:normal;text-transform:uppercase;color:#9ca299;text-trans=
+form: uppercase; text-align: center'>
+      <strong style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif'>
+        Destinations tendance depuis Paris
+      </strong>
+    </h5>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+    <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-hei=
+ght:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"row-space-top-4 container-small" style=3D'margin:0;padd=
+ing:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-ser=
+if;margin-top:25px'>
+=20=20=20=20=20=20=20=20
+
+      <div class=3D"column padding" style=3D'margin:0;padding:0;font-family=
+:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;fl=
+oat:left;width: 300px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+        <div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;pad=
+ding-bottom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1=
+px;background-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-=
+left-width:1px;border-right-width:1px;border-top-width:0;padding: 0'>
+=20=20
+  <a href=3D"https://www.airbnb.fr/go/world?destination=3DLisbon&amp;euid=
+=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;font-f=
+amily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#ff=
+5a5f;text-decoration:none'>
+    <img src=3D"https://a0.muscache.com/ic/discover/178?interpolation=3Dlan=
+czos-none&amp;output-format=3Djpg&amp;output-quality=3D70&amp;v=3D33b4f2&am=
+p;downsize=3D655px:435px" alt=3D"Lisbonne" style=3D'margin:0;padding:0;font=
+-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-wid=
+th:100%;border:0;display: block'>
+  </a>
+
+</div>
+
+<div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;padding-bot=
+tom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1px;backg=
+round-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-left-wid=
+th:1px;border-right-width:1px;border-top-width:0;border: none; padding: 8px=
+ 0 15px 13px'>
+=20=20
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"h1 " style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;text-rendering:optimizele=
+gibility;font-weight:bold;font-size:24px;line-height:28px;padding-bottom:10=
+px;padding-bottom: 5px'>
+=20=20
+        Lisbonne
+
+</div>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%; margin-top: 5px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"p " style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height: 120%'>
+=20=20
+        <h5 style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif;text-rendering:optimizelegibility;font=
+-size:14px;font-weight:normal;text-transform:uppercase;color:#9ca299;text-t=
+ransform: none'>
+          On y va pour=C2=A0: Le fado et le street art
+        </h5>
+
+</div>
+
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <a href=3D"https://www.airbnb.fr/go/world?destination=3DLisbon&amp;eu=
+id=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;font=
+-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#=
+ff5a5f;text-decoration:none'>
+        <img alt=3D"" height=3D"30" src=3D"http://a1.muscache.com/airbnb/ro=
+okery/email/icons/chevron-right-f49cc475eed633e84991c49caaf2c235.png" style=
+=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica=
+, Arial, sans-serif;max-width:100%;border:0;margin: 0 0 0 10px' width=3D"15=
+">
+      </a>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+
+</div>
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+        <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:le=
+ft;width: 300px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+          <div class=3D"panel " style=3D'margin:0;padding:0;font-family:"He=
+lvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;p=
+adding-bottom:15px;padding-left:15px;padding-right:15px;border-bottom-width=
+:1px;background-color:#ffffff;border-style:solid;border-color:#dbdbdb;borde=
+r-left-width:1px;border-right-width:1px;border-top-width:0;padding: 0'>
+=20=20
+  <a href=3D"https://www.airbnb.fr/go/world?destination=3DAmsterdam&amp;eui=
+d=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;font-=
+family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#f=
+f5a5f;text-decoration:none'>
+    <img src=3D"https://a2.muscache.com/ic/discover/8?interpolation=3Dlancz=
+os-none&amp;output-format=3Djpg&amp;output-quality=3D70&amp;v=3D33b4f2&amp;=
+downsize=3D655px:435px" alt=3D"Amsterdam" style=3D'margin:0;padding:0;font-=
+family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-widt=
+h:100%;border:0;display: block'>
+  </a>
+
+</div>
+
+<div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;padding-bot=
+tom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1px;backg=
+round-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-left-wid=
+th:1px;border-right-width:1px;border-top-width:0;border: none; padding: 8px=
+ 0 15px 13px'>
+=20=20
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"h1 " style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;text-rendering:optimizele=
+gibility;font-weight:bold;font-size:24px;line-height:28px;padding-bottom:10=
+px;padding-bottom: 5px'>
+=20=20
+        Amsterdam
+
+</div>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%; margin-top: 5px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"p " style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height: 120%'>
+=20=20
+        <h5 style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif;text-rendering:optimizelegibility;font=
+-size:14px;font-weight:normal;text-transform:uppercase;color:#9ca299;text-t=
+ransform: none'>
+          On y va pour=C2=A0: Les v=C3=A9los plus nombreux que les p=C3=A9n=
+iches
+        </h5>
+
+</div>
+
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <a href=3D"https://www.airbnb.fr/go/world?destination=3DAmsterdam&amp=
+;euid=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;f=
+ont-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;colo=
+r:#ff5a5f;text-decoration:none'>
+        <img alt=3D"" height=3D"30" src=3D"http://a1.muscache.com/airbnb/ro=
+okery/email/icons/chevron-right-f49cc475eed633e84991c49caaf2c235.png" style=
+=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica=
+, Arial, sans-serif;max-width:100%;border:0;margin: 0 0 0 10px' width=3D"15=
+">
+      </a>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+
+</div>
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+    <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-hei=
+ght:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"row-space-top-4 container-small" style=3D'margin:0;padd=
+ing:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-ser=
+if;margin-top:25px'>
+=20=20=20=20=20=20=20=20
+
+      <div class=3D"column padding" style=3D'margin:0;padding:0;font-family=
+:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;fl=
+oat:left;width: 300px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+        <div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;pad=
+ding-bottom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1=
+px;background-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-=
+left-width:1px;border-right-width:1px;border-top-width:0;padding: 0'>
+=20=20
+  <a href=3D"https://www.airbnb.fr/go/world?destination=3DNew-York&amp;euid=
+=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;font-f=
+amily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#ff=
+5a5f;text-decoration:none'>
+    <img src=3D"https://a0.muscache.com/ic/discover/83?interpolation=3Dlanc=
+zos-none&amp;output-format=3Djpg&amp;output-quality=3D70&amp;v=3D33b4f2&amp=
+;downsize=3D655px:435px" alt=3D"New York" style=3D'margin:0;padding:0;font-=
+family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-widt=
+h:100%;border:0;display: block'>
+  </a>
+
+</div>
+
+<div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;padding-bot=
+tom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1px;backg=
+round-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-left-wid=
+th:1px;border-right-width:1px;border-top-width:0;border: none; padding: 8px=
+ 0 15px 13px'>
+=20=20
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"h1 " style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;text-rendering:optimizele=
+gibility;font-weight:bold;font-size:24px;line-height:28px;padding-bottom:10=
+px;padding-bottom: 5px'>
+=20=20
+        New York
+
+</div>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%; margin-top: 5px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"p " style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height: 120%'>
+=20=20
+        <h5 style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif;text-rendering:optimizelegibility;font=
+-size:14px;font-weight:normal;text-transform:uppercase;color:#9ca299;text-t=
+ransform: none'>
+          On y va pour=C2=A0: Les lumi=C3=A8res et la ville qui ne dort jam=
+ais
+        </h5>
+
+</div>
+
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <a href=3D"https://www.airbnb.fr/go/world?destination=3DNew-York&amp;=
+euid=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;fo=
+nt-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color=
+:#ff5a5f;text-decoration:none'>
+        <img alt=3D"" height=3D"30" src=3D"http://a1.muscache.com/airbnb/ro=
+okery/email/icons/chevron-right-f49cc475eed633e84991c49caaf2c235.png" style=
+=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica=
+, Arial, sans-serif;max-width:100%;border:0;margin: 0 0 0 10px' width=3D"15=
+">
+      </a>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+
+</div>
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+        <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:le=
+ft;width: 300px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+          <div class=3D"panel " style=3D'margin:0;padding:0;font-family:"He=
+lvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;p=
+adding-bottom:15px;padding-left:15px;padding-right:15px;border-bottom-width=
+:1px;background-color:#ffffff;border-style:solid;border-color:#dbdbdb;borde=
+r-left-width:1px;border-right-width:1px;border-top-width:0;padding: 0'>
+=20=20
+  <a href=3D"https://www.airbnb.fr/go/world?destination=3DLondon&amp;euid=
+=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;font-f=
+amily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#ff=
+5a5f;text-decoration:none'>
+    <img src=3D"https://a2.muscache.com/ic/discover/40?interpolation=3Dlanc=
+zos-none&amp;output-format=3Djpg&amp;output-quality=3D70&amp;v=3D33b4f2&amp=
+;downsize=3D655px:435px" alt=3D"Londres" style=3D'margin:0;padding:0;font-f=
+amily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width=
+:100%;border:0;display: block'>
+  </a>
+
+</div>
+
+<div class=3D"panel " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:15px;padding-bot=
+tom:15px;padding-left:15px;padding-right:15px;border-bottom-width:1px;backg=
+round-color:#ffffff;border-style:solid;border-color:#dbdbdb;border-left-wid=
+th:1px;border-right-width:1px;border-top-width:0;border: none; padding: 8px=
+ 0 15px 13px'>
+=20=20
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"h1 " style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;text-rendering:optimizele=
+gibility;font-weight:bold;font-size:24px;line-height:28px;padding-bottom:10=
+px;padding-bottom: 5px'>
+=20=20
+        Londres
+
+</div>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%; margin-top: 5px'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%=
+;border-spacing:0'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+    <td class=3D"container" style=3D'font-family:"Helvetica Neue", "Helveti=
+ca", Helvetica, Arial, sans-serif;padding:0 0px;clear:both !important;displ=
+ay:block !important;max-width:610px !important;margin:0 auto !important'>
+      <div style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 80%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <div class=3D"p " style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height: 120%'>
+=20=20
+        <h5 style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif;text-rendering:optimizelegibility;font=
+-size:14px;font-weight:normal;text-transform:uppercase;color:#9ca299;text-t=
+ransform: none'>
+          On y va pour=C2=A0: Les pubs, l'heure du th=C3=A9, la famille roy=
+ale
+        </h5>
+
+</div>
+
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    <div class=3D"column" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;width:300px;float:left;w=
+idth: 20%'>
+  <table align=3D"left" style=3D'margin:0;font-family:"Helvetica Neue", "He=
+lvetica", Helvetica, Arial, sans-serif;line-height:150%;width:100%;padding:=
+0 5px;border-spacing:0'>
+    <tbody style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helve=
+tica", Helvetica, Arial, sans-serif'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", He=
+lvetica, Arial, sans-serif;padding:0 0px'>
+      <a href=3D"https://www.airbnb.fr/go/world?destination=3DLondon&amp;eu=
+id=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" style=3D'margin:0;padding:0;font=
+-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#=
+ff5a5f;text-decoration:none'>
+        <img alt=3D"" height=3D"30" src=3D"http://a1.muscache.com/airbnb/ro=
+okery/email/icons/chevron-right-f49cc475eed633e84991c49caaf2c235.png" style=
+=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica=
+, Arial, sans-serif;max-width:100%;border:0;margin: 0 0 0 10px' width=3D"15=
+">
+      </a>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+      </div>
+    </td>
+    <td style=3D'margin:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;padding:0 0px'></td>
+  </tr>
+</table>
+
+</div>
+
+</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+  <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica N=
+eue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-heigh=
+t:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"row-space-top-4 row-space-8" style=3D'margin:0;padding:=
+0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;m=
+argin-top:25px;margin-bottom:50px'>
+=20=20=20=20=20=20=20=20
+    <div class=3D"p " style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;' align=3D"center">
+=20=20
+      <a href=3D"https://www.airbnb.fr/go/Paris?euid=3Ddf1e15a9-8137-607a-5=
+090-2285b5a2b578" class=3D"btn btn-primary btn-small" style=3D'margin:0;fon=
+t-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;vertic=
+al-align:middle;cursor:pointer;padding:10px 16px;text-decoration:none;borde=
+r-radius:2px;border:1px solid;text-align:center;font-weight:bold;white-spac=
+e:nowrap;background:#ffffff;box-shadow:0 1px 0 0 #e00007;border-color:#ff5a=
+5f;background-color:#ff5a5f;color:#ffffff;border-top-width:1px;display:inli=
+ne-block;padding-left:40px;padding-right:40px'>
+        Voir toutes les destinations
+      </a>
+
+</div>
+
+
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+
+
+          </div>
+        </td>
+        <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif'></td>
+      </tr>
+
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif'></td>
+        <td class=3D"container no-max-width" style=3D'padding:0;font-family=
+:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;display:block =
+!important;margin:0 auto !important;clear:both !important;max-width:610px !=
+important'>
+          <div class=3D"section footer" style=3D'margin:0;padding:0;font-fa=
+mily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+=20=20
+    <div class=3D"row-padding-top-4" style=3D'margin:0;padding:0;font-famil=
+y:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-top:2=
+5px'><div class=3D"background-white" style=3D'margin:0;padding:0;font-famil=
+y:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;background-co=
+lor:#ffffff'>
+    <table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" class=3D"row-=
+padding-top-5 row-padding-5" style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:150%;bord=
+er-spacing:0;padding-bottom:31.25px;padding-top:31.25px'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td align=3D"center" valign=3D"top" style=3D'margin:0;padding:0;fon=
+t-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+          <table width=3D"420px" style=3D'margin:0;padding:0;font-family:"H=
+elvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;=
+line-height:150%'>
+            <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "=
+Helvetica", Helvetica, Arial, sans-serif'>
+              <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue",=
+ "Helvetica", Helvetica, Arial, sans-serif'>
+                <table cellpadding=3D"5" style=3D'margin:0;padding:0;font-f=
+amily:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;border-sp=
+acing:0;line-height:150%;width: auto;'>
+                  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif'>
+                    <td style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-left: 5px; padding=
+-right: 20px;' width=3D"95px">
+                      <img src=3D"http://a1.muscache.com/airbnb/rookery/ema=
+il/footer/illustration-5715ff5cf4f4d0687649ea7183b005f2.jpg" border=3D"0" a=
+lt=3D"Airbnb-traveler" width=3D"95" style=3D'margin:0;padding:0;font-family=
+:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:100%=
+;margin:0;display:block;'>
+                    </td>
+
+                    <td style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;padding: 5px;'>
+                      <table style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line=
+-height:150%'>
+                        <tr style=3D'margin:0;padding:0;font-family:"Helvet=
+ica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+                          <td colspan=3D"4" style=3D'margin:0;padding:0;fon=
+t-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+                            <h2 style=3D'margin:0;padding:0;font-family:"He=
+lvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;text-rendering:opt=
+imizelegibility;font-weight:bold;font-size:24px;line-height:28px;padding-bo=
+ttom:10px'>
+                              Vivez le monde comme un local.
+                            </h2>
+                          </td>
+                        </tr>
+                        <tr style=3D'margin:0;padding:0;font-family:"Helvet=
+ica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+                          <td style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+                            <img src=3D"http://a1.muscache.com/airbnb/rooke=
+ry/email/footer/globe-70cdd2ed2615a13754d1cf2b50940b60.jpg" style=3D'margin=
+:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, s=
+ans-serif;max-width:100%'>
+                          </td>
+                          <td style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-left: 5px; t=
+ext-align: left;'>
+                            <h4 class=3D"accent-babu" style=3D'margin:0;pad=
+ding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-se=
+rif;font-size:16px;text-rendering:optimizelegibility;font-weight:bold;color=
+:#00d1c1'>190</h4> <h6 class=3D"row-space-top-neg text-muted" style=3D'marg=
+in:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial,=
+ sans-serif;text-transform:uppercase;font-size:12px;font-weight:normal;text=
+-rendering:optimizelegibility;margin-top:-5px;color:#9ca299;font-weight: no=
+rmal; text-transform: uppercase;'>pays</h6>
+                          </td>
+                          <td style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+                            <img src=3D"http://a1.muscache.com/airbnb/rooke=
+ry/email/footer/door-72de99e798d99b4321f1e88444216d6f.jpg" style=3D'margin:=
+0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sa=
+ns-serif;max-width:100%'>
+                          </td>
+                          <td style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;padding-left: 5px; t=
+ext-align: left;'>
+                            <h4 class=3D"accent-babu" style=3D'margin:0;pad=
+ding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-se=
+rif;font-size:16px;text-rendering:optimizelegibility;font-weight:bold;color=
+:#00d1c1'>1,000,000</h4> <h6 class=3D"row-space-top-neg text-muted" style=
+=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica=
+, Arial, sans-serif;text-transform:uppercase;font-size:12px;font-weight:nor=
+mal;text-rendering:optimizelegibility;margin-top:-5px;color:#9ca299;font-we=
+ight: normal; text-transform: uppercase;'>de logements</h6>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+</div></div>
+
+<h5 class=3D"center row-padding-top-4 row-padding-4" style=3D'margin:0;padd=
+ing:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-ser=
+if;text-transform:uppercase;color:#9ca299;font-weight:normal;font-size:14px=
+;text-rendering:optimizelegibility;padding-top:25px;padding-bottom:25px;tex=
+t-align:center;text-transform:none;'>
+  Vous voyagez pour la premi=C3=A8re fois ? <a href=3D"https://www.airbnb.f=
+r/help/getting-started/how-it-works?euid=3Ddf1e15a9-8137-607a-5090-2285b5a2=
+b578" style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif;color:#ff5a5f;text-decoration:none'>Retrouve=
+z nos conseils pour d=C3=A9couvrir comment r=C3=A9server le logement id=C3=
+=A9al</a>.
+</h5>
+<hr class=3D"row-space-4" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;border:none;height:1px;b=
+ackground-color:#dbdbdb;margin-bottom:25px;margin-left: 20px; margin-right:=
+ 20px;'>
+
+
+  <div class=3D"content center text-center" style=3D'font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:600px;padding:1=
+5px;margin:0 auto;display:block;padding-bottom:5px;padding-top:0px;color:#9=
+ca299;font-size:14px;text-align:center;text-shadow:0 1px #ffffff;padding-le=
+ft:5px;padding-right:5px'>
+    <table cellpadding=3D"10" style=3D'margin:0;padding:0;font-family:"Helv=
+etica Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;lin=
+e-height:150%;width:100%;padding: 10px;'>
+      <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif'>
+        <td align=3D"center" style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+          <table cellpadding=3D"5" style=3D'margin:0;padding:0;font-family:=
+"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:=
+0;line-height:150%;width:100%;width: auto;'>
+            <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "=
+Helvetica", Helvetica, Arial, sans-serif'>
+              <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue",=
+ "Helvetica", Helvetica, Arial, sans-serif;padding: 5px;'>
+                <a href=3D"https://www.facebook.com/airbnb?euid=3Ddf1e15a9-=
+8137-607a-5090-2285b5a2b578" title=3D"Facebook" style=3D'margin:0;padding:0=
+;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;co=
+lor:#ff5a5f;text-decoration:none'>
+                  <img alt=3D"Facebook" height=3D"42" src=3D"http://a0.musc=
+ache.com/airbnb/rookery/email/footer/facebook-3c1b46bf609e7b12c2b8b9576911e=
+11a.png" width=3D"42" style=3D'margin:0;padding:0;font-family:"Helvetica Ne=
+ue", "Helvetica", Helvetica, Arial, sans-serif;max-width:100%;border:0'>
+</a>              </td>
+
+              <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue",=
+ "Helvetica", Helvetica, Arial, sans-serif;padding: 5px;'>
+                <a href=3D"https://twitter.com/airbnb?euid=3Ddf1e15a9-8137-=
+607a-5090-2285b5a2b578" title=3D"Twitter" style=3D'margin:0;padding:0;font-=
+family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#f=
+f5a5f;text-decoration:none'>
+                  <img alt=3D"Twitter" height=3D"42" src=3D"http://a0.musca=
+che.com/airbnb/rookery/email/footer/twitter-380e6f33075cc0e9c18231507ae9368=
+4.png" width=3D"42" style=3D'margin:0;padding:0;font-family:"Helvetica Neue=
+", "Helvetica", Helvetica, Arial, sans-serif;max-width:100%;border:0'>
+</a>              </td>
+
+              <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue",=
+ "Helvetica", Helvetica, Arial, sans-serif;padding: 5px;'>
+                <a href=3D"https://plus.google.com/+airbnb?euid=3Ddf1e15a9-=
+8137-607a-5090-2285b5a2b578" title=3D"Google+" style=3D'margin:0;padding:0;=
+font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;col=
+or:#ff5a5f;text-decoration:none'>
+                  <img alt=3D"Google+" height=3D"42" src=3D"http://a1.musca=
+che.com/airbnb/rookery/email/footer/gplus-ecd915cbce9c4696bd2cbfaf05631547.=
+png" width=3D"42" style=3D'margin:0;padding:0;font-family:"Helvetica Neue",=
+ "Helvetica", Helvetica, Arial, sans-serif;max-width:100%;border:0'>
+</a>              </td>
+
+              <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue",=
+ "Helvetica", Helvetica, Arial, sans-serif;padding: 5px;'>
+                <a href=3D"https://www.pinterest.com/airbnb/?euid=3Ddf1e15a=
+9-8137-607a-5090-2285b5a2b578" title=3D"Pinterest" style=3D'margin:0;paddin=
+g:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif=
+;color:#ff5a5f;text-decoration:none'>
+                  <img alt=3D"Pinterest" height=3D"42" src=3D"http://a1.mus=
+cache.com/airbnb/rookery/email/footer/pinterest-3d350b44ba720d4d254d59b9014=
+d3838.png" width=3D"42" style=3D'margin:0;padding:0;font-family:"Helvetica =
+Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:100%;border:0'>
+</a>              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table class=3D"row" style=3D'margin:0;padding:0;font-family:"Helvetica=
+ Neue", "Helvetica", Helvetica, Arial, sans-serif;border-spacing:0;line-hei=
+ght:150%;width:100%'>
+  <tr style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica"=
+, Helvetica, Arial, sans-serif'>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+    <td class=3D"container" style=3D'padding:0;font-family:"Helvetica Neue"=
+, "Helvetica", Helvetica, Arial, sans-serif;display:block !important;margin=
+:0 auto !important;clear:both !important;max-width:610px !important'>
+      <div class=3D"content" style=3D'font-family:"Helvetica Neue", "Helvet=
+ica", Helvetica, Arial, sans-serif;padding:15px;max-width:600px;margin:0 au=
+to;display:block;padding-left:5px;padding-right:5px;padding-bottom:5px;padd=
+ing-top:0px;color:#9ca299;font-size:14px;text-align:center;text-shadow:0 1p=
+x #ffffff'>
+=20=20=20=20=20=20=20=20
+        Envoy=C3=A9 avec <img alt=3D"&amp;#9829;" height=3D"10" src=3D"http=
+://a1.muscache.com/airbnb/rookery/email/footer/heart-eeaa9b6467981f6b84031f=
+c9570ed630.png" width=3D"12" style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:100%'> depu=
+is le si=C3=A8ge d'Airbnb<br style=3D'margin:0;padding:0;font-family:"Helve=
+tica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+        P.O. Box 410807, San Francisco, CA 94121 <br style=3D'margin:0;padd=
+ing:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-ser=
+if'>
+        <a class=3D"muted" href=3D"https://www.airbnb.com/email/unsubscribe=
+?token=3DeyJlbWFpbF9hZGRyZXNzIjoiYmVub2l0dGVsbGllcjNAZ21haWwuY29tIiwiY2F0ZW=
+dvcnkiOiJlbmdhZ2VtZW50IiwidGVtcGxhdGUiOiJsb3dfaW50ZW50X3RvcF9kZXN0aW5hdGlvb=
+nMiLCJ1dWlkIjoiZGYxZTE1YTktODEzNy02MDdhLTUwOTAtMjI4NWI1YTJiNTc4In0=3D&amp;m=
+ac=3DvGS62X2THS-Sb_5rdhsnrnff7tQ=3D" style=3D'margin:0;padding:0;font-famil=
+y:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#9ca299=
+;text-decoration:underline'>
+  D=C3=A9sinscription
+</a>
+
+
+      </div>
+    </td>
+    <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetic=
+a", Helvetica, Arial, sans-serif'></td>
+  </tr>
+</table>
+  </div>
+
+  <div class=3D"timestamp" style=3D'margin:0;padding:0;font-family:"Helveti=
+ca Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#EEEEEE;font-size=
+:1px;height:1px;line-height:1px'>2015-06-04 07:36:07 +0000</div>
+</div>
+<br style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", =
+Helvetica, Arial, sans-serif'><br style=3D'margin:0;padding:0;font-family:"=
+Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif'>
+
+        </td>
+        <td style=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helv=
+etica", Helvetica, Arial, sans-serif'></td>
+      </tr>
+    </table>
+
+    <span class=3D"ghost" style=3D'margin:0;padding:0;font-family:"Helvetic=
+a Neue", "Helvetica", Helvetica, Arial, sans-serif;opacity:0 !important;fon=
+t-size:1px !important;color:#EEEEEE !important'>### Airbnb ###</span>
+  </body>
+  <img class=3D"tracking" src=3D"https://www.airbnb.com/tracking/pixel/emai=
+l_opened/1433403367?rookery_uuid=3Ddf1e15a9-8137-607a-5090-2285b5a2b578" st=
+yle=3D'margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvet=
+ica, Arial, sans-serif;max-width:100%'>
+
+</html>
+
+----==_mimepart_556fffe8c7e84_7ed0e0fe20445637--

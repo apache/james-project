@@ -1,0 +1,20 @@
+Source: apache-james
+Package: ${artifactId}
+Version: ${project.version}
+Section: contrib/java
+Priority: optional
+Maintainer: Apache James Team <server-dev@james.apache.org>
+Uploaders: Ioan Eugen Stan <ieugen@apache.org>
+Architecture: all
+Homepage: http://james.apache.org
+Depends: default-jre-headless | java6-runtime-headless | java-6-runtime
+Provides: imap-server, mail-transport-agent, pop3-server
+Conflicts: mail-transport-agent
+Description: Hi-performance, modular and extensible Java based email server.
+  The Apache James Project delivers a rich set of open source modules and 
+ libraries, written in Java, related to Internet mail communication which build
+ into an advanced enterprise mail server.
+ James Server provides a mailet container: the email processing is delegated to 
+ independent, extensible, pluggable agents specified by the Mailet API. Any 
+ function which is not already available (from James or from a third party) can
+ be developed.

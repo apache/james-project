@@ -1,0 +1,109 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+From: Timothy Tayler <timothy@example.org>
+To: Samual Smith <samual@example.org>
+Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+Subject: A Multipart Email
+Content-Type: multipart/mixed;boundary=1729
+
+Start with a preamble
+
+--1729
+Content-Type: text/plain; charset=US-ASCII
+
+Rhubarb!
+
+--1729
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+
+987654321AHPLA
+
+--1729
+Content-Type: message/rfc822
+
+From: Timothy Tayler <timothy@example.org>
+To: Samual Smith <samual@example.org>
+Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+Subject: A Multipart Alternative Email
+Content-Type: multipart/alternative;boundary=42
+
+This message has a premable
+
+--42
+Content-Type: text/plain; charset=US-ASCII
+
+Custard!
+
+--42
+Content-Type: application/octet-stream
+
+CUSTARDCUSTARDCUSTARD
+
+--42--
+
+--1729
+Content-Type: multipart/mixed; boundary=4.66920160910299
+
+--4.66920160910299
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-ID: 238478934723847238947892374
+Content-Description: Bogus Image Data
+
+ABCDFEGHIJKLMNO
+
+--4.66920160910299
+Content-Type: message/rfc822
+
+From: Timothy Tayler <timothy@example.org>
+To: John Smith <john@example.org>
+Date: Sat, 16 Feb 2008 12:00:00 +0000 (GMT)
+Subject: Another Example Email
+Content-Type: multipart/mixed;boundary=2.50290787509
+
+Yet another preamble
+
+--2.50290787509
+Content-Type: text/plain
+
+Rhubard AND Custard!
+
+--2.50290787509
+Content-Type: multipart/alternative;boundary=3.243F6A8885A308D3
+
+--3.243F6A8885A308D3
+Content-Type: text/plain
+
+Rhubard?Custard?
+
+--3.243F6A8885A308D3
+
+Content-Type: text/richtext
+
+Rhubard?Custard?
+
+--3.243F6A8885A308D3--
+
+--2.50290787509--
+
+--4.66920160910299--
+--1729--

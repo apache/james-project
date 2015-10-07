@@ -1,0 +1,324 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+ 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<smtpservers>
+
+   <!-- The SMTP server is enabled by default -->
+   <!-- Disabling blocks will stop them from listening, -->
+   <!-- but does not free as many resources as removing them would -->
+   <smtpserver enabled="true">
+
+     <jmxName>smtpserver</jmxName>
+
+     <!-- Configure this to bind to a specific inetaddress -->
+     <!-- Please NOTE: you should add this IP also to your RemoteAddrNotInNetwork -->
+     <!-- in order to avoid relay check for locallly generated bounces -->
+     <!-- 
+            Port 25 is the well-known/IANA registered port for SMTP. 
+            Port 465 is the well-known/IANA registered port for SMTP over TLS.
+            -->
+     <bind>0.0.0.0:25</bind>
+
+     <connectionBacklog>200</connectionBacklog>
+
+     <!-- Set to true to support STARTTLS or TLS for the Socket.
+           To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
+      -->
+     <tls socketTLS="false" startTLS="false">
+       <!-- To create a new keystore execute:
+        keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+         -->
+       <keystore>file://conf/keystore</keystore>
+       <secret>yoursecret</secret>
+       <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+       <!-- The algorithm is optional and only needs to be specified when using something other
+        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime. -->
+       <algorithm>SunX509</algorithm>
+     </tls>
+      
+        <!-- This is the name used by the server to identify itself in the SMTP -->
+        <!-- protocol.  If autodetect is TRUE, the server will discover its -->
+        <!-- own host name and use that in the protocol.  If discovery fails, -->
+        <!-- the value of 'localhost' is used.  If autodetect is FALSE, James -->
+        <!-- will use the specified value. -->
+        <!--
+        <helloName autodetect="true">myMailServer</helloName>
+         -->
+         
+        <!-- connection timeout in secconds -->
+        <connectiontimeout>360</connectiontimeout>
+
+        <!-- Set the maximum simultaneous incoming connections for this service -->
+        <connectionLimit>0</connectionLimit>
+         
+        <!-- Set the maximum simultaneous incoming connections per IP for this service -->
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+         
+        <!--  Uncomment this if you want to require SMTP authentication.
+
+               supported values:
+               true: required but announced only to not authorizedAddresses
+               false: don't use AUTH
+               announce: like true, but always announce AUTH capability to clients
+
+               The correct behaviour per RFC value would be false or announce
+               but we still support true for backward compatibility and because
+               some webmail client fails when AUTH is announced but no authentication
+               information has been provided
+          -->
+        <!--
+        <authRequired>true</authRequired>
+         -->
+
+<!-- CHECKME! -->
+        <!--  Uncomment this if you want to authorize specific addresses/networks.
+               If you use SMTP AUTH, addresses that match those specified here will
+               be permitted to relay without SMTP AUTH.  If you do not use SMTP
+               AUTH, and you specify addreses here, then only addresses that match
+               those specified will be permitted to relay.
+
+               Addresses may be specified as a an IP address or domain name, with an
+               optional netmask, e.g.,
+
+               127.*, 127.0.0.0/8, 127.0.0.0/255.0.0.0, and localhost/8 are all the same
+
+               See also the RemoteAddrNotInNetwork matcher in the transport processor.
+               You would generally use one OR the other approach.
+         -->
+        <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
+
+        <!--  Uncomment this if you want to verify sender addresses, ensuring that -->
+        <!--  the sender address matches the user who has authenticated. -->
+        <!--  This prevents a user of your mail server from acting as someone else -->
+        <!--  If unspecified, default value is true -->
+        <!--
+        <verifyIdentity>true</verifyIdentity>
+         -->
+
+        <!--  This sets the maximum allowed message size (in kilobytes) for this -->
+        <!--  SMTP service. If unspecified, the value defaults to 0, which means no limit. -->
+        <maxmessagesize>0</maxmessagesize>
+         
+        <!--  This sets wether to enforce the use of HELO/EHLO salutation before a -->
+        <!--  MAIL command is accepted. If unspecified, the value defaults to true -->
+        <!-- 
+        <heloEhloEnforcement>true</heloEhloEnforcement>
+         -->
+         
+        <!-- WARNING: This is Non-RFC compliant (default value: true) -->
+        <!-- See: http://wiki.apache.org/james/StandardsComplianceStatement -->
+        <!-- TODO: CHANGE TO OFFICIAL URL LATER -->
+        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+         
+        <!-- This sets the SMTPGreeting which will be used when connect to the smtpserver -->
+        <!-- If none is specified a default is generated -->
+        <!--
+        <smtpGreeting>JAMES SMTP Server</smtpGreeting>
+         -->
+         
+        <!-- The configuration handler chain -->
+        <handlerchain>
+
+            <!-- This connect handler can be used to enable POP3 before SMTP support -->
+            <!-- Plz note that only the ip get stored to indentify an authenticated client -->
+            <!-- The expireTime is the time after which an ipAddress is handled as expired -->
+            <!--
+            <handler class="org.apache.james.smtpserver.POP3BeforeSMTPHandler">
+                <expireTime>1 hour</expireTime>
+            </handler>
+             -->
+            
+            <!-- This command handler check against RBL-Lists -->
+            <!-- If getDetail is set to true it try to retrieve information from TXT Record -->
+            <!-- why the ip was blocked. Default to false -->           
+            <!-- STOP - before you uncomment out the DNS RBL handler,
+                  please take a moment to review each block list.  We
+                  have included some that various JAMES committers use,
+                  but you must decide which, if any, are appropriate
+                  for your environment.  The mail servers hosting
+                  @apache.org mailing lists, for example, use a
+                  slightly different list than we have included below.
+                  And it is likely that most JAMES committes also have
+                  slightly different sets of lists.  The SpamAssassin
+                  user's list would be one good place to discuss the
+                  measured quality of various block lists.
+
+                  NOTA BENE: the domain names, below, are terminated
+                  with '.' to ensure that they are absolute names in
+                  DNS lookups.  Under some circumstances, names that
+                  are not explicitly absolute could be treated as
+                  relative names, leading to incorrect results.  This
+                  has been observed on *nix and MS-Windows platforms
+                  by users of multiple mail servers, and is not JAMES
+                  specific.  If you are unsure what this means for you,
+                  please speak with your local system/network admins.
+              -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.DNSRBLHandler">
+                <getDetail>false</getDetail>
+                <rblservers>
+                    <whitelist>query.bondedsender.org.</whitelist>
+                    <blacklist>sbl-xbl.spamhaus.org.</blacklist>
+                    <blacklist>dul.dnsbl.sorbs.net.</blacklist>
+                    <blacklist>list.dsbl.org.</blacklist>
+                </rblservers>
+            </handler>           
+             -->
+     
+            <!-- This command handler can be used to reject emails with not match the SPF record of the sender domain -->
+            <!-- If checkAuthNetworks is set to true sender domain will be checked also for clients that -->
+            <!-- are allowed to relay. Default is false. --> 
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.SPFHandler">
+                <blockSoftFail>false</blockSoftFail>
+                <blockPermError>true</blockPermError>
+            </handler>
+             -->   
+                 
+            <!-- checks for resolvable HELO/EHLO before accept the HELO/EHLO -->
+            <!-- If checkAuthNetworks is set to true sender domain will be checked also for clients that -->
+            <!-- are allowed to relay. Default is false. -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.ResolvableEhloHeloHandler"/>
+             -->
+            
+            <!-- Checks HELO/EHLO is equal the reverse of the connecting client before accept it -->
+            <!-- If checkAuthNetworks is set to true sender domain will be checked also for clients that -->
+            <!-- are allowed to relay. Default is false. -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.ReverseEqualsEhloHeloHandler"/>
+             -->
+            
+            <!-- If activated mail is only accepted if the sender contains -->
+            <!-- a resolvable domain having a valid MX Record or A Record associated! -->
+            <!-- If checkAuthNetworks is set to true sender domain will be checked also for clients that -->
+            <!-- are allowed to relay. Default is false. -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler"/>
+             -->
+         
+            <!-- With ValidRcptHandler, all email will get rejected which has no valid user -->
+            <!-- You need to add the recipient to the validRecipient list if you want -->
+            <!-- to accept email for a recipient which not exist on the server -->
+            <!-- If you want James to act as a spamtrap or honeypot, you may comment ValidRcptHandler -->
+            <!-- and implement the needed processors in spoolmanager.xml -->
+            <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
+            
+            <!-- If activated you can limit the maximal recipients -->
+            <!-- 
+            <handler class="org.apache.james.smtpserver.fastfail.MaxRcptHandler">
+                <maxRcpt>10</maxRcpt>               
+            </handler>
+             -->
+            
+            <!-- If uncomment this block you can enable greylisting. For more infos-->
+            <!-- how greylisting work see: http://projects.puremagic.com/greylisting/whitepaper.html -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.JDBCGreylistHandler">
+                <repositoryPath>db://maildb</repositoryPath>
+                <sqlFile>file://conf/sqlResources.xml</sqlFile>
+                <tempBlockTime>1 hour</tempBlockTime>
+                <unseenLifeTime>4 hours</unseenLifeTime>
+                <autoWhiteListLifeTime>36 days</autoWhiteListLifeTime>
+                <whitelistedNetworks>127.0.0.0/8</whitelistedNetworks>
+            </handler>
+             -->
+            
+            <!-- Tarpitting is a method to insert a small sleep after each rcpt. For more -->
+            <!-- infos read this: http://www.palomine.net/qmail/tarpit.html . -->
+            <!-- Default is set to 0 (disabled). -->
+            <!-- You can also configure the time to sleep in milliseconds -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.TarpitHandler">
+                <tarpitRcptCount>5</tarpitRcptCount>
+                <tarpitSleepTime>5000</tarpitSleepTime>
+            </handler>
+             -->
+         
+            <!-- This handler ignore duplicated recipients per session. So the email will get only send on time even -->
+            <!-- if the recipient is specified more then once -->
+            <!--
+            <handler class="org.apache.james.smtpserver.protocol.core.fastfail.SuppressDuplicateRcptHandler"/>
+             -->
+     
+            <!-- Load the core command handlers -->
+            <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>       
+           
+            <!-- This handler can add a hint to the mail which tells the MailQueue which email should get processed first -->
+            <!-- Normally the MailQueue will just handles Mails in FIFO manner -->
+            <!-- Valid priority values are 1,5,9 where 9 is the highest-->
+            <!-- 
+            <handler class="org.apache.james.smtpserver.MailPriortyHandler">
+                <priorityEntries>
+                    <priorityEntry>
+                        <domain>yourdomain1</domain>
+                        <priority>1</priority>
+                    </priorityEntry>
+                    <priorityEntry>
+                        <domain>yourdomain2</domain>
+                        <priority>9</priority>
+                    </priorityEntry>
+                <priorityEntries>
+            </handler>
+             -->
+             
+            <!-- This MessageHandler could be used to check message against spamd before -->
+            <!-- accept the email. So its possible to reject a message on smtplevel if a -->
+            <!-- configured hits amount is reached. -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.SpamAssassinHandler">
+                <spamdHost>127.0.0.1</spamdHost>
+                <spamdPort>783</spamdPort>
+                <spamdRejectionHits>10</spamdRejectionHits>
+            </handler>
+             -->
+     
+            <!-- This MessageHandler could be used to extract domain out of the message and check -->
+            <!-- this domains against uriRbllists. See http://www.surbl.org for more informations. -->
+            <!-- The message get rejected if a domain matched . -->
+            <!--
+            <handler class="org.apache.james.smtpserver.fastfail.URIRBLHandler">
+                <action>reject</action>
+                <getDetail>true</getDetail>
+                <uriRblServers>
+                    <server>multi.surbl.org</server>
+                </uriRblServers>
+            </handler>    
+             -->
+            <!-- 
+            <handler class="org.apache.james.smtpserver.SetMimeHeaderHandler">
+                <headername>SPF-test</headername>
+                <headervalue>passed</headervalue>
+            </handler>
+             -->
+        </handlerchain>           
+  
+   </smtpserver>
+
+</smtpservers>
+
+

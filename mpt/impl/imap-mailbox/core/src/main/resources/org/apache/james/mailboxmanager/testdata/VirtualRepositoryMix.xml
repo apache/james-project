@@ -1,0 +1,129 @@
+<config>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+	<mailboxmanager>
+		<namespaces>
+			<usernamespace name="#mail" delimiter="."/>
+		</namespaces>
+		<factory
+			class="org.apache.james.mailboxmanager.impl.VirtualMailboxManagerFactory">
+			<mounts>
+				<mount>
+					<point point="#user"/>
+					<point point="#user1"/>
+					<target
+						class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
+						<myconf attr="test"/>
+					</target>
+				</mount>
+
+				<mount>
+					<point point="#user2"/>
+					<point point="#user3"/>
+					<target
+						class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
+						<myconf attr="test2"/>
+					</target>
+				</mount>
+				<mount>
+					<point point="#system"/>
+					<target
+						class="org.apache.james.mailboxmanager.mailstore.MailStoreMailboxManagerFactory">
+						<repository destinationURL="file://var/mail/"
+							type="MAIL"/>
+					</target>
+				</mount>
+				<mount>
+					<point point="#mail"/>
+					<target
+						class="org.apache.james.mailboxmanager.torque.TorqueMailboxManagerFactory">
+						<configFile name="file://conf/mailboxManagerSqlResources.xml"/>
+						<torque-properties>
+							<property name="torque.database.default"
+								value="mailboxmanager"/>
+							<property
+								name="torque.database.mailboxmanager.adapter"
+								value="derby"/>
+							<property
+								name="torque.dsfactory.mailboxmanager.factory"
+								value="org.apache.torque.dsfactory.SharedPoolDataSourceFactory"/>
+							<property
+								name="torque.dsfactory.mailboxmanager.connection.driver"
+								value="org.apache.derby.jdbc.EmbeddedDriver"/>
+							<property
+								name="torque.dsfactory.mailboxmanager.connection.url"
+								value="jdbc:derby:tmp/mailboxmanager-derbydb;create=true"/>
+							<property
+								name="torque.dsfactory.mailboxmanager.connection.user"
+								value="app"/>
+							<property
+								name="torque.dsfactory.mailboxmanager.connection.password"
+								value="app"/>
+							<property
+								name="torque.dsfactory.mailboxmanager.pool.maxActive"
+								value="100"/>
+						</torque-properties>
+					</target>
+				</mount>
+			</mounts>
+		</factory>
+	</mailboxmanager>
+	<mailboxmanager-without-torque>
+		<namespaces>
+			<usernamespace name="#mail" delimiter="."/>
+		</namespaces>
+		<factory
+			class="org.apache.james.mailboxmanager.impl.VirtualMailboxManagerFactory">
+			<mounts>
+				<mount>
+					<point point="#user"/>
+					<point point="#user1"/>
+					<target
+						class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
+						<myconf attr="test"/>
+					</target>
+				</mount>
+
+				<mount>
+					<point point="#user2"/>
+					<point point="#user3"/>
+					<target
+						class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
+						<myconf attr="test2"/>
+					</target>
+				</mount>
+				<mount>
+					<point point="#system"/>
+					<target
+						class="org.apache.james.mailboxmanager.mailstore.MailStoreMailboxManagerFactory">
+						<repository destinationURL="file://var/mail/"
+							type="MAIL"/>
+					</target>
+				</mount>
+				<mount>
+					<point point="#mail"/>
+					<target
+						class="org.apache.james.mailboxmanager.mock.MockMailboxManagerFactory">
+						<myconf attr="test3"/>
+					</target>
+				</mount>
+			</mounts>
+		</factory>
+	</mailboxmanager-without-torque>
+</config>

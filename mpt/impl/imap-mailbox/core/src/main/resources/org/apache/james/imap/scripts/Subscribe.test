@@ -1,0 +1,101 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# Create a few folders
+C: 10 CREATE subscribetest
+S: 10 OK CREATE completed.
+C: 11 CREATE subscribetest.subfolder
+S: 11 OK CREATE completed.
+C: 12 CREATE subscribetest1
+S: 12 OK CREATE completed.
+C: 13 CREATE subscribetest1.subfolder1
+S: 13 OK CREATE completed.
+
+C: a01 LSUB "" "*"
+S: a01 OK LSUB completed.
+
+C: a02 SUBSCRIBE subscribetest
+S: a02 OK SUBSCRIBE completed.
+
+C: a03 LSUB "" "*"
+S: \* LSUB \(\) \"\.\" \"subscribetest\"
+S: a03 OK LSUB completed.
+
+C: a04 SUBSCRIBE subscribetest.subfolder
+S: a04 OK SUBSCRIBE completed.
+
+C: a05 SUBSCRIBE subscribetest1.subfolder1
+S: a05 OK SUBSCRIBE completed.
+
+# LIST All subscribed
+C: a06 LSUB "" "*"
+SUB {
+S: \* LSUB \(\) \"\.\" \"subscribetest\"
+S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
+S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
+}
+S: a06 OK LSUB completed.
+
+# LIST A subset of subscribed
+C: a07 LSUB "" "subscribetest.sub*"
+S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
+S: a07 OK LSUB completed.
+
+# Unsubscribe from a parent mailbox, make sure that subscribetest.subfolder is still subscribed.
+C: a08 UNSUBSCRIBE subscribetest
+S: a08 OK UNSUBSCRIBE completed.
+
+C: a09 LSUB "" "sub*"
+SUB {
+S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
+S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
+}
+S: a09 OK LSUB completed.
+
+C: b01 LSUB "" "%"    
+SUB {
+S: \* LSUB \(\\Noselect\) \"\.\" \"subscribetest\"
+S: \* LSUB \(\\Noselect\) \"\.\" \"subscribetest1\"
+}
+S: b01 OK LSUB completed.
+
+
+# Attempt to unsubscribe from a mailbox that isn't subscribed
+C: a10 UNSUBSCRIBE subscribetest1
+S: a10 OK UNSUBSCRIBE completed.
+
+C: a11 UNSUBSCRIBE subscribetest.subfolder
+S: a11 OK UNSUBSCRIBE completed.
+
+# LIST All subscribed
+C: a12 LSUB "" "*"
+S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
+S: a12 OK LSUB completed.
+
+# Cleanup
+C: a13 UNSUBSCRIBE subscribetest1.subfolder1
+S: a13 OK UNSUBSCRIBE completed.
+
+C: a14 DELETE subscribetest1.subfolder1
+S: a14 OK DELETE completed.
+C: a15 DELETE subscribetest1
+S: a15 OK DELETE completed.
+C: a16 DELETE subscribetest.subfolder
+S: a16 OK DELETE completed.
+C: a17 DELETE subscribetest
+S: a17 OK DELETE completed.

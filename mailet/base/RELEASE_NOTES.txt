@@ -1,0 +1,32 @@
+                     James Mailets Base
+                     ------------------
+
+Apache James Mailets Base collects a number of utilities and lightweight
+frameworks useful when working with the Apache Mailet API (a framework
+assisting the rapid development of email processing functionality
+see http://james.apache.org/mailet). Mailets base is used as the basis
+for the email processing functions shipped with the Apache James server 
+(an advanced mail server http://james.apache.org/server) but is not
+dependent on that server.
+
+
+Version 1.1
+-----------
+Fix a NPE in MatcherInverter 
+
+Version 1.0
+-----------
+
+This is the first independent release of these mature components last 
+shipped with Apache James 2.3. 
+
+Earlier Releases
+----------------
+Previous versions of the components in base shipped with Apache James 
+server. This product contains repackaged versions which are otherwise
+compatible with these versions. All classes are package 
+org.apache.mailet.base except test helpers (which are now packaged in
+org.apache.mailet.base.test).
+
+It is recommended that anyone using these older versions updates to 
+the new library.

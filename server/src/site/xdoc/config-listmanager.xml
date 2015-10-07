@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - List Manager Configuration</title>
+ </properties>
+
+<body>
+
+<p>
+    <div class="ui-widget">
+      <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+        <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+        <strong>This page still contains text related to James 2.3 and needs to 
+        be updated for James 3.0</strong>
+		</p>
+      </div>
+    </div>
+</p>
+
+<section name="List Manager Configuration">
+
+  <subsection>
+
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/james-listmanager-template.xml">james-listmanager.xml</a> in SVN to get some examples and hints.</p>
+
+    <p>One of the frequent questions on the James-User Mailing List is how
+    to create a mailing list. This document explains one way of using the
+    currently supplied Matchers and Mailets in James v3.0.</p>
+    
+    <p>Basically, the process requires creating two &lt;mailet&gt; entries
+    and a repository.  The first mailet handles list commands (currently
+    only <i>list-name</i>-on and <i>list-name</i>-off).  The second mailet
+    handles list messages.  The repository will hold the e-mail addresses
+    of list subscribers.</p>
+    
+    <p>The mailets go into the processor chain (e.g., at the top of the
+    <i>transport</i> processor), the repository goes into the
+    &lt;users-store&gt; block.</p>
+    
+  </subsection>
+    
+    <subsection name="Setting up the Repository">
+    
+    <p>The mailing list mailets need a repository within which to store
+    the subscriber list.  There is a separate repository for each mailing
+    list, and is completely independent of the user repository used by
+    James to manage e-mail accounts.  This is configured in the
+    &lt;users-store&gt; block of james-listmanager.xml.</p>
+    
+    <p>The following illustrates a database-backed repository using JDBC
+    with the ListUsersJdbcRepository class.  Notice that there will be a
+    single table, <i>lists</i>, created in the db://maildb resource
+    defined elsewhere.  There are currently two columns: the list name and
+    the list subscriber.</p>
+    
+    <source>
+&lt;repository name="<i>list-name</i>"
+               class="org.apache.james.userrepository.ListUsersJdbcRepository"
+               destinationURL="db://maildb/lists/<i>list-name</i>"&gt;
+  &lt;sqlFile&gt;file://conf/sqlResources.xml&lt;/sqlFile&gt;
+&lt;/repository&gt;
+    </source>
+    
+    <p>The following illustrates a file-system repository using the
+    UsersFileRepository class. [Note: the destination URL is a child
+    element when configuring a file-system repository, and an attribute
+    when configuring a database-backed repository.  This inconsistency
+    will be addressed in a future version of James.]</p>
+    
+    <source>
+&lt;repository name="<i>list-name</i>"
+               class="org.apache.james.userrepository.UsersFileRepository"&gt;
+  &lt;destination URL="file://var/lists/<i>list-name</i>/" /&gt; 
+&lt;/repository&gt;
+    </source>
+    
+    </subsection>
+        
+    <subsection name="Alternate Explanation">
+    
+        <p>James currently includes only the most basic list functionality, users can subscribe and unsubscribe, but there is no moderation of messages or subscriptions</p>
+        <p>To enable a list you need the following in config.xml in the root processor block and above the final mailet block -</p>
+        <source>
+&lt;mailet match="CommandForListserv=james@localhost"
+    class="AvalonListservManager">
+    &lt;repositoryName>list-james&lt;/repositoryName>
+&lt;/mailet>
+</source>
+        <p>that will intercept the command emails sent to
+<ul>
+            <li>james-on@localhost to subscribe the sender</li>
+            <li>james-off@localhost to unsubscribe the sender</li>
+          </ul>
+        </p>
+        <p>and-</p>
+        <source>
+&lt;mailet match="RecipientIs=james@localhost" class="AvalonListserv">
+    &lt;membersonly> false &lt;/membersonly>
+    &lt;attachmentsallowed> true &lt;/attachmentsallowed>
+    &lt;replytolist> true &lt;/replytolist>
+    &lt;repositoryName>list-james&lt;/repositoryName>
+    &lt;subjectprefix>JamesList&lt;/subjectprefix>
+&lt;/mailet>
+</source>
+        <p>Which will distribute the mail to the current subscribers</p>
+        <p>in addition to the above you need to have a repository configured in the users-store block(usually near the bottom of config.xml) like so (database)-</p>
+        <source>
+&lt;repository name="list-james"
+    class="org.apache.james.userrepository.ListUsersJdbcRepository"
+    destinationURL="db://maildb/lists/list-james">
+    &lt;sqlFile>file://conf/sqlResources.xml&lt;/sqlFile>
+&lt;/repository>
+</source>
+        <p>Database users will also need to ensure that they have <a href="2.3.1/using_database.html">configured a data-source</a> named to match the destination URL</p>
+        <p>Using the filesystem:-</p>
+        <source>
+&lt;repository name="list-james"
+    class="org.apache.james.userrepository.UsersFileRepository">
+    &lt;destination URL="file://var/lists/list-james/"/>
+&lt;/repository>
+</source>
+        <p>Restart James, send a mail to james-on@localhost and you should be subscribed.</p>
+        <p>The repository, be it a database table or directory in the filesystem will be created automatically.</p>
+        <p>Database users can manipulate the users repository using SQL, and hence any application capable of running SQL queries against it.</p>
+
+    </subsection>
+    
+  </section>
+  
+  <section name="miResources.xml">
+  
+    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/miResources.xml">miResources.xml</a> in SVN to get some examples and hints.</p>
+
+  </section>
+  
+</body>
+
+</document>

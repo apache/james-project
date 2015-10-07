@@ -1,0 +1,47 @@
+ ------
+ Standard Mailets Example
+ ------
+ Apache JAMES Project Team
+ ------
+ 2009-01-17
+ ------
+
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements.  See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership.  The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License.  You may obtain a copy of the License at
+~~
+~~   http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied.  See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+
+Cataloging A Large Project
+
+ {{{http://james.apache.org/mailet/standard} James Standard Mailets}} contains
+ more than 50 matchers and mailets. MailetDocs is used to generate a 
+ {{{http://james.apache.org/mailet/standard/mailet-report.html} catalog}} with
+ reports on each mailet and matcher (for example 
+ {{{http://james.apache.org/mailet/standard/mailet-report.html#HasHeader}HasHeader}}).
+ 
+ Setting up this report is easy. Just add the plugin to the <<<reporting>>> section.
+ For example:
+ 
++----------------------------------------------
+    <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.james</groupId>
+        <artifactId>maven-mailetdocs-plugin</artifactId>
+        <version>0.1</version>
+      </plugin>
+      ...
++----------------------------------------------
+  

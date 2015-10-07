@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+  <properties>
+     <title>Source Code</title>
+  </properties>
+
+<body>
+
+  <section name="Source Code Organization">
+    <p>The available modules are the <a href="mailbox-api.html">Mailbox API</a>, 
+      <a href="mailbox-store.html">Mailbox Store</a>(the base and utility classes) 
+      and the different implementations we propose (<a href="mailbox-memory.html">Memory</a>, 
+      <a href="mailbox-maildir.html">Maildir</a>, 
+      <a href="mailbox-jpa.html">JPA</a>, 
+      <a href="mailbox-jcr.html">JCR</a> and
+      <a href="mailbox-hbase.html">HBase</a>).
+    </p>
+    <p>A module for <a href="mailbox-tool.html">tooling</a> is also available.
+    </p>
+    <p><img src="images/uml/org-apache-james-mailbox-package.png"/></p>
+  </section>
+
+  <section name="Get Source Code">
+
+    <subsection name="Anonymous Access">
+      <p>The source can be checked out anonymously from SVN with the following command.</p>
+      <p><code>$ svn checkout http://svn.apache.org/repos/asf/james/trunk/mailbox james-mailbox</code></p>
+    </subsection>
+
+    <subsection name="Developer Access">
+      <p>Everyone can access the Subversion repository via HTTP, but Committers must checkout the Subversion repository via HTTPS.</p>
+      <p><code>$ svn checkout https://svn.apache.org/repos/asf/james/trunk/mailbox james-mailbox</code></p>
+    </subsection>
+
+  </section>
+
+  <section name="Build Source Code">
+    <p>You can read a tutorial on how to build Apache James Server on <a href="http://james.apache.org/server/3/dev-build.html">http://james.apache.org/server/3/dev-build.html</a>.</p>
+    <p>The SVN URLs and the project names must be adapted, but the requirements and process are the same and you can inspire
+       from the build the Apache James Mailbox libraries.</p>
+  </section>
+
+</body>
+
+</document>

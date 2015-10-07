@@ -1,0 +1,179 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+ 
+Return-Path: <robertburrelldonkin@blueyonder.co.uk>
+Received: (qmail 18554 invoked from network); 25 May 2008 14:38:53 -0000
+Received: from unknown (HELO p3presmtp01-16.prod.phx3.secureserver.net)
+        ([208.109.80.165]) (envelope-sender <rdonkin-owner@locus.apache.org>) by
+        smtp20-01.prod.mesa1.secureserver.net (qmail-1.03) with SMTP for
+        <asf@xmlmapt.org>; 25 May 2008 14:38:53 -0000
+Received: (qmail 9751 invoked from network); 25 May 2008 14:38:53 -0000
+Received: from minotaur.apache.org ([140.211.11.9]) (envelope-sender
+        <rdonkin-owner@locus.apache.org>) by
+        p3presmtp01-16.prod.phx3.secureserver.net (qmail-ldap-1.03) with SMTP for
+        <asf@xmlmapt.org>; 25 May 2008 14:38:50 -0000
+Received: (qmail 46768 invoked by uid 1289); 25 May 2008 14:38:46 -0000
+Delivered-To: rdonkin@locus.apache.org
+Received: (qmail 46763 invoked from network); 25 May 2008 14:38:46 -0000
+Received: from hermes.apache.org (HELO mail.apache.org) (140.211.11.2) by
+        minotaur.apache.org with SMTP; 25 May 2008 14:38:46 -0000
+Received: (qmail 61275 invoked by uid 500); 25 May 2008 14:38:48 -0000
+Delivered-To: apmail-rdonkin@apache.org
+Delivered-To: rob@localhost
+Delivered-To: rob@localhost
+Received: (qmail 61272 invoked by uid 99); 25 May 2008 14:38:48 -0000
+Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+        by apache.org (qpsmtpd/0.29) with ESMTP; Sun, 25 May 2008 07:38:48 -0700
+X-ASF-Spam-Status: No, hits=-0.0 required=10.0 tests=SPF_PASS
+X-Spam-Check-By: apache.org
+Received-SPF: pass (athena.apache.org: domain of
+        robertburrelldonkin@blueyonder.co.uk designates 195.188.213.5 as permitted
+        sender)
+Received: from [195.188.213.5] (HELO smtp-out2.blueyonder.co.uk)
+        (195.188.213.5) by apache.org (qpsmtpd/0.29) with ESMTP; Sun, 25 May 2008
+        14:38:00 +0000
+Received: from [172.23.170.140] (helo=anti-virus02-07) by
+        smtp-out2.blueyonder.co.uk with smtp (Exim 4.52) id 1K0HMV-00087e-HY for
+        rdonkin@apache.org; Sun, 25 May 2008 15:38:15 +0100
+Received: from [82.38.65.6] (helo=[10.0.0.27]) by
+        asmtp-out5.blueyonder.co.uk with esmtpa (Exim 4.52) id 1K0HMU-0001A2-3q for
+        rdonkin@apache.org; Sun, 25 May 2008 15:38:14 +0100
+Subject: This is an example of a multipart mixed email with image content
+From: Robert Burrell Donkin <robertburrelldonkin@blueyonder.co.uk>
+To: Robert Burrell Donkin <rdonkin@apache.org>
+Content-Type: multipart/mixed; boundary=\"=-tIdGYVstQJghyEDATnJ+\"
+Content-Location: http://www.example.org/
+Date: Sun, 25 May 2008 15:38:13 +0100
+Message-Id: <1211726293.5772.10.camel@localhost>
+Mime-Version: 1.0
+X-Mailer: Evolution 2.12.3 
+X-Virus-Checked: Checked by ClamAV on apache.org
+X-Nonspam: None
+X-fetched-from: mail.xmlmapt.org
+X-Evolution-Source: imap://rob@thebes/
+
+
+--=-tIdGYVstQJghyEDATnJ+
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Content-Location: relative/license.txt
+
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+\"License\"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+ 
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+\"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ 
+
+--=-tIdGYVstQJghyEDATnJ+
+Content-Disposition: attachment; filename=blob.png;
+   modification-date="Sun, 21 Jun 2008 15:32:18 +0000";
+   creation-date="Sat, 20 Jun 2008 10:15:09 +0000"; 
+   read-date="Mon, 22 Jun 2008 12:08:56 +0000";size=482;
+Content-Type: image/png; name=blob.png
+Content-Transfer-Encoding: base64
+Content-Location: http://www.example.org/blob.png
+
+iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+/7qIG/VsPziMTw+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ+4/kIi0g88zlXd66++QaQDG5GPZyp
+rQAAAABJRU5ErkJggg==
+
+
+--=-tIdGYVstQJghyEDATnJ+
+Content-Disposition: attachment; filename=blob.png
+Content-Type: image/png; name=blob.png
+Content-Transfer-Encoding: base64
+Content-Location: (Comments before) http://www.example.org/blob.png (And comments afterwards)
+
+iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAL
+EwAACxMBAJqcGAAAAAd0SU1FB9gFGQ4iJ99ufcYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
+IEdJTVBXgQ4XAAAA0ElEQVQY02XMwUrDQBhF4XsnkyYhjWJaCloEN77/a/gERVwJLQiiNjYmbTqZ
+/7qIG/VsPziMTw+23Wj/ovZdMQJgViCvWNVusfa23djuUf2nugbnI2RynkWF5a2Fwdvrs7q9vhqE
+E2QAEIO6BhZBerUf6luMw49NyTR0OLw5kJD9sqk4Ipwc6GAREv5n5piXTDOQfy1JMSs8ZgXKq2kF
+iwDgEriEecnLlefFEmGAIvqD4ggJJNMM85qLtXfX9xYGuEQ+4/kIi0g88zlXd66++QaQDG5GPZyp
+rQAAAABJRU5ErkJggg==
+
+
+--=-tIdGYVstQJghyEDATnJ+
+Content-Disposition: attachment; filename=rhubarb.txt
+Content-Type: text/plain; name=rhubarb.txt; charset=us-ascii
+Content-Language: en, en-US, en-CA, en-AU
+Content-Transfer-Encoding: quoted-printable
+Content-Location: "ftp://ftp.example.org/lots/lots/lots/
+                   lots/lots/lots/lots/lots/lots/lots/
+                   rhubard.txt"
+
+Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+ Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+ Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+ Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+ Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhu=
+barb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubar=
+b Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb R=
+hubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhub=
+arb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb=
+ Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rh=
+ubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhuba=
+rb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb =
+Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb Rhubarb
+
+--=-tIdGYVstQJghyEDATnJ+--

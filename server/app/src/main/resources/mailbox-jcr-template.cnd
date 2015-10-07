@@ -1,0 +1,74 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<jamesMailbox = 'http://james.apache.org/imap/jcr/'>
+
+[jamesMailbox:user] > mix:created
+    mixin
+    - jamesMailbox:user (String)
+    - jamesMailbox:subscriptionMailboxes (STRING) multiple
+    + * (nt:unstructured) multiple
+    
+
+[jamesMailbox:messageHeader] > mix:created, mix:lockable
+    mixin
+    - jamesMailbox:headerFieldName (STRING) mandatory
+    - jamesMailbox:headerValue(STRING) mandatory
+    - jamesMailbox:headerLineNumber (LONG) mandatory
+
+[jamesMailbox:messageProperty] > mix:created
+    mixin
+    - jamesMailbox:propertyNamespace (STRING) mandatory
+    - jamesMailbox:propertyLocalName (STRING) mandatory
+    - jamesMailbox:propertyValue(STRING) mandatory
+    - jamesMailbox:propertyOrder (Long) mandatory
+   
+[jamesMailbox:message] >  mix:referenceable, mix:created, mix:created
+    mixin
+    - jamesMailbox:mailboxUUID (String) mandatory
+    - jamesMailbox:uid (LONG) mandatory
+    - jamesMailbox:modSeq (LONG)
+    - jamesMailbox:size (LONG) mandatory
+    - jamesMailbox:answered (BOOLEAN) 
+    - jamesMailbox:deleted (BOOLEAN) 
+    - jamesMailbox:draft (BOOLEAN) 
+    - jamesMailbox:flagged (BOOLEAN) 
+    - jamesMailbox:recent (BOOLEAN) 
+    - jamesMailbox:seen (BOOLEAN) 
+    - jamesMailbox:internalDate (DATE) 
+    - jamesMailbox:userFlags (STRING) multiple 
+    - jamesMailbox:messageBodyStartOctet (LONG) mandatory
+    - jamesMailbox:messageTextualLineCount (LONG)
+    - jamesMailbox:messageSubType (String) mandatory
+    + messageHeader (nt:unstructured)  multiple
+    + messageProperty (nt:unstructured) multiple
+
+[jamesMailbox:mailbox] >  mix:referenceable, mix:lockable, mix:created
+    mixin
+    - jamesMailbox:mailboxUidValidity (LONG) 
+    - jamesMailbox:mailboxName (STRING) 
+    - jamesMailbox:mailboxLastUid (LONG) 
+    - jamesMailbox:mailboxNamespace (STRING) 
+    - jamesMailbox:mailboxUser (STRING) 
+    + * (nt:unstructured) multiple

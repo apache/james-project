@@ -1,0 +1,113 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+C: 10 CREATE appendexpunge
+S: 10 OK CREATE completed.
+
+C: a001 STATUS appendexpunge (MESSAGES)
+S: \* STATUS "appendexpunge" \(MESSAGES 0\)
+S: a001 OK STATUS completed.
+
+C: A002 APPEND appendexpunge (\Deleted) {310+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, do you think we can meet at 3:30 tomorrow?
+C:
+S: A002 OK (\[.+\] )?APPEND completed.
+
+C: A003 APPEND appendexpunge {310+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, could we change that to 4:00pm tomorrow?
+C:
+S: A003 OK (\[.+\] )?APPEND completed.
+
+C: A004 APPEND appendexpunge {310+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, could we change that to 4:30pm tomorrow?
+C:
+S: A004 OK (\[.+\] )?APPEND completed.
+
+C: A005 STATUS appendexpunge (MESSAGES)
+S: \* STATUS "appendexpunge" \(MESSAGES 3\)
+S: A005 OK STATUS completed.
+
+C: A006 SELECT appendexpunge
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 3 EXISTS
+S: \* \d+ RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 4\].*
+S: A006 OK \[READ-WRITE\] SELECT completed.
+
+C: A109 STORE 2 FLAGS.SILENT (\Deleted)
+S: A109 OK STORE completed.
+
+C: A007 EXPUNGE
+S: \* 1 EXPUNGE
+S: \* 1 EXPUNGE
+S: \* \d+ RECENT
+S: A007 OK EXPUNGE completed.
+
+C: A008 STATUS appendexpunge (MESSAGES)
+S: \* STATUS "appendexpunge" \(MESSAGES 1\)
+S: A008 OK STATUS completed.
+
+C: A009 STORE 1 FLAGS.SILENT (\Deleted)
+S: A009 OK STORE completed.
+
+C: A010 EXPUNGE
+S: \* 1 EXPUNGE
+S: \* \d+ RECENT
+S: A010 OK EXPUNGE completed.
+
+C: A011 STATUS appendexpunge (MESSAGES)
+S: \* STATUS "appendexpunge" \(MESSAGES 0\)
+S: A011 OK STATUS completed.
+
+C: A012 DELETE appendexpunge
+S: A012 OK DELETE completed.
+
+
+
+
+
+
+

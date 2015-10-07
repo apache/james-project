@@ -1,0 +1,92 @@
+Return-Path: <frnog-owner@frnog.org>
+Received: from mx2.minet.net (mx2.minet.net [192.168.102.26])
+	 by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;
+	 Tue, 02 Jun 2015 12:01:42 +0200
+X-Sieve: CMU Sieve 2.4
+Received: from localhost (spam.minet.net [192.168.102.97])
+	by mx2.minet.net (Postfix) with ESMTP id E92F2A25320
+	for <benwa@minet.net>; Tue,  2 Jun 2015 12:01:46 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new using ClamAV at minet.net
+X-Spam-Flag: NO
+X-Spam-Score: -1.499
+X-Spam-Level:
+X-Spam-Status: No, score=-1.499 required=1 tests=[BAYES_00=-1.5,
+	UNPARSEABLE_RELAY=0.001] autolearn=ham
+Received: from mx2.minet.net ([IPv6:::ffff:192.168.102.26])
+	by localhost (spam.minet.net [::ffff:192.168.102.97]) (amavisd-new, port 10024)
+	with ESMTP id bRNLR9Tbk4Jg for <benwa@minet.net>;
+	Tue,  2 Jun 2015 10:01:46 +0000 (UTC)
+Received-SPF: Pass (sender SPF authorized) identity=mailfrom; client-ip=217.24.82.4; helo=cabale.usenet-fr.net; envelope-from=frnog-owner@frnog.org; receiver=benwa@minet.net
+Received: from cabale.usenet-fr.net (cabale.usenet-fr.net [217.24.82.4])
+	by mx2.minet.net (Postfix) with ESMTP id 089E7A2531A
+	for <benwa@minet.net>; Tue,  2 Jun 2015 12:01:45 +0200 (CEST)
+Received: by cabale.usenet-fr.net (Postfix, from userid 90)
+	id A267298A5DC6; Tue,  2 Jun 2015 12:01:44 +0200 (CEST)
+X-Original-To: frnog@frnog.org
+Delivered-To: frnog@frnog.org
+Received: from mta.mail.waycom.net (mta.mail.waycom.net [194.177.32.18])
+	by cabale.usenet-fr.net (Postfix) with ESMTP id AE2E798A58FC
+	for <frnog@frnog.org>; Tue,  2 Jun 2015 12:01:01 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mta.mail.waycom.net (Postfix) with ESMTP id D30D6567E1
+	for <frnog@frnog.org>; Tue,  2 Jun 2015 12:00:56 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+ wcm-hv1-exch1.wcmnoc.local (2002:c3d6:f04a::c3d6:f04a) with Microsoft SMTP
+ Server (TLS) id 15.0.847.32; Tue, 2 Jun 2015 12:00:56 +0200
+Message-ID: <556D7ED7.2090108@waycom.net>
+Date: Tue, 2 Jun 2015 12:00:55 +0200
+From: Guillaume Genty <ggenty@waycom.net>
+Organization: Waycom
+MIME-Version: 1.0
+To: <frnog@frnog.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: WCM-HV1-EXCH1.wcmnoc.local (2002:c3d6:f04a::c3d6:f04a) To
+ wcm-hv1-exch1.wcmnoc.local (2002:c3d6:f04a::c3d6:f04a)
+X-C2ProcessedOrg: 9180093e-3f32-48c9-b36b-0805cbe4c266
+Subject: [FRnOG] [BIZ] Collecte de liens C2E/CELAN en DOM
+X-Loop: frnog@frnog.org
+X-Sequence: 5349
+Errors-to: frnog-owner@frnog.org
+Precedence: list
+Precedence: bulk
+Sender: frnog-request@frnog.org
+X-mailing-list: frnog@frnog.org
+List-Id: <frnog.frnog.org>
+List-Archive: <http://sympa.frnog.org/wss/arc/frnog>
+List-Help: <mailto:sympa@frnog.org?subject=help>
+List-Owner: <mailto:frnog-request@frnog.org>
+List-Post: <mailto:frnog@frnog.org>
+List-Subscribe: <mailto:sympa@frnog.org?subject=subscribe%20frnog>
+List-Unsubscribe: <mailto:sympa@frnog.org?subject=unsubscribe%20frnog>
+
+Bonjour le FRnOG,
+
+
+Je cherche un partenaire dans les DOM avec de la collecte C2E et/ou
+CELAN capable de revendre des liens et de remonter le trafic (en niveau
+2, L2TP ou PPP sur L2TP) en mÃ©tropole, idÃ©alement Ã  TH2.
+
+Nous aurions besoin des DOM suivants:
+- Guadeloupe
+- Martinique
+- Guyane
+- La RÃ©union
+(Toutes les plaques DOM sauf Ã®les du nord)
+
+Merci d'avance !
+
+
+Cordialement,
+
+--
+Guillaume Genty | WAYCOM
+Directeur Technique Adjoint
+24-28 Avenue du GÃ©nÃ©ral de Gaulle | F-92150 Suresnes, FRANCE
+T. : +33 (0)1 41 44 83 00 | F. : +33 (0)1 41 44 00 22
+ggenty@waycom.net | www.waycom.net
+
+
+---------------------------
+Liste de diffusion du FRnOG
+http://www.frnog.org/

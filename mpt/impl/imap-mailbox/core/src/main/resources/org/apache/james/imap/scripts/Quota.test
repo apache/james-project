@@ -1,0 +1,97 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: 10 CREATE #private.imapuser.test
+S: 10 OK CREATE completed.
+
+C: A002 SELECT #private.imapuser.test
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen.*\)\] Limited
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\] Predicted next UID
+S: A002 OK \[READ-WRITE\] SELECT completed\.
+
+C: A003 APPEND #private.imapuser.test {310}
+# Use command continuation request
+S: \+
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, could we change that to 4:00pm tomorrow?
+C:
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A003 OK (\[.+\] )?APPEND completed.
+
+C: A004 APPEND #private.imapuser.test (\Seen) "17-Jul-1996 02:44:25 -0700" {310+}
+# use synchronising literal
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, could we change that to 4:00pm tomorrow?
+C:
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: A004 OK (\[.+\] )?APPEND completed.
+
+C: A005 APPEND #private.imapuser.test (\Seen \Draft) "09-Apr-2008 15:17:51 +0200" {310+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting 2
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, could we change that to 4:00pm tomorrow?
+C:
+S: \* 3 EXISTS
+S: \* 3 RECENT
+S: A005 OK (\[.+\] )?APPEND completed.
+
+LOG INFO awaiting commands
+
+C: A006 GETQUOTAROOT #private.imapuser.test
+S: \* QUOTAROOT "#private\.imapuser\.test" #private&imapuser
+S: \* QUOTA #private&imapuser \(MESSAGE 7 4096\)
+S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: A006 OK GETQUOTAROOT completed.
+
+C: A007 GETQUOTA #private&imapuser
+# seven because of pre inserted messages for imapuser
+S: \* QUOTA #private&imapuser \(MESSAGE 7 4096\)
+# 1 = 1KB : 254 * 4 + 3 * 310 = 1946 so shrinked to 1KB
+S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: A007 OK GETQUOTA completed.
+
+C: A007 SETQUOTA #private&imapuser (MESSAGE 4096) (STORAGE 5242880)
+S: A007 NO SETQUOTA You need the Full admin rights right to perform command SETQUOTA on mailbox Can not perform SETQUOTA commands.

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>apache-james-mpt</artifactId>
+        <groupId>org.apache.james</groupId>
+        <version>0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>maven-mpt-plugin</artifactId>
+    <packaging>maven-plugin</packaging>
+
+    <name>Apache James MPT Maven2 Plugin</name>
+    <description>Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
+scriptable functional testing of ASCII based line protocols. This Maven2 Plugin  is an easy interface
+to the library requiring no extra coding.</description>
+    <url>http://james.apache.org/mpt/mavenplugin</url>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mpt/trunk/mavenplugin</connection>
+        <developerConnection>scm:svn:https://rdonkin@svn.apache.org/repos/asf/james/mpt/trunk/mavenplugin</developerConnection>
+        <url>http://svn.apache.org/viewcvs.cgi/james/mpt/trunk/mavenplugin?root=Apache-SVN</url>
+    </scm>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mpt-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <configuration>
+                    <goalPrefix>mpt</goalPrefix>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <!--
+                        <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        <manifestEntries>
+                        <Specification-Title>Apache James MPT Maven2 Plogin</Specification-Title>
+                        <Specification-Version>${project.version}</Specification-Version>
+                        <Specification-Vendor>The Apache Software Foundation</Specification-Vendor>
+                        <Implementation-Title>Apache James MPT Maven2 Plugin</Implementation-Title>
+                        <Implementation-Version>${project.version}</Implementation-Version>
+                        <Implementation-Vendor>The Apache Software Foundation</Implementation-Vendor>
+                        <Implementation-Vendor-Id>org.apache</Implementation-Vendor-Id>
+                        <url>${project.url}</url>
+                        </manifestEntries>
+                        </archive>
+                    -->
+                </configuration>
+            </plugin>
+            <!--
+                <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>1.4.3</version>
+                <executions>
+                <execution>
+                <id>bundle-manifest</id>
+                <phase>process-classes</phase>
+                <goals>
+                <goal>manifest</goal>
+                </goals>
+                </execution>
+                </executions>
+                <extensions>true</extensions>
+                <configuration>
+                <instructions>
+                <Export-Package>org.apache.james.mpt.maven</Export-Package>
+                <Embed-Dependency>*;scope=runtime</Embed-Dependency>
+                </instructions>
+                </configuration>
+                </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>create-javadocs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>javadoc</goal>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+                <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <!- http://mojo.codehaus.org/aspectj-maven-plugin/ ->
+                <executions>
+                <execution>
+                <goals>
+                <goal>compile</goal>
+                </goals>
+                </execution>
+                </executions>
+                </plugin>
+                <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-docck-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                <execution>
+                <goals>
+                <goal>check</goal>
+                </goals>
+                </execution>
+                </executions>
+                </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <reportPlugins combine.children="append">
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-plugin-plugin</artifactId>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>site-reports</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <!--
+                            Disable generation of technical reports for 'pom' project, because
+                            of following problems:
+                            - site-plugin configuration can't be overwritten yet
+                              (https://jira.codehaus.org/browse/MSITE-484)
+                            - cobertura-plugin fails with NPE
+                              (http://jira.codehaus.org/browse/MCOBERTURA-148)
+                        -->
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-site-plugin</artifactId>
+                            <configuration>
+                                <generateReports>false</generateReports>
+                            </configuration>
+                        </plugin>
+                     </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
+            <id>doclint-java8-disable</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+         </profile>
+    </profiles>
+</project>

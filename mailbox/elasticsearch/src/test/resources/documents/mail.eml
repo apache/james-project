@@ -1,0 +1,94 @@
+Return-Path: <arch-general-bounces@archlinux.org>
+Received: from mx2.minet.net (mx2.minet.net [192.168.102.26])
+	 by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;
+	 Thu, 04 Jun 2015 06:09:06 +0200
+X-Sieve: CMU Sieve 2.4
+Received: from localhost (spam.minet.net [192.168.102.97])
+	by mx2.minet.net (Postfix) with ESMTP id 4492D821966
+	for <benwa@minet.net>; Thu,  4 Jun 2015 06:09:11 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new using ClamAV at minet.net
+X-Spam-Flag: NO
+X-Spam-Score: -1.499
+X-Spam-Level:
+X-Spam-Status: No, score=-1.499 required=1 tests=[BAYES_00=-1.5,
+	FREEMAIL_FROM=0.001, T_DKIM_INVALID=0.01, T_RP_MATCHES_RCVD=-0.01]
+	autolearn=ham
+Received: from mx2.minet.net ([IPv6:::ffff:192.168.102.26])
+	by localhost (spam.minet.net [::ffff:192.168.102.97]) (amavisd-new, port 10024)
+	with ESMTP id Meygb-OHe7nm for <benwa@minet.net>;
+	Thu,  4 Jun 2015 04:09:10 +0000 (UTC)
+Received-SPF: Pass (sender SPF authorized) identity=mailfrom; client-ip=5.9.250.164; helo=luna.archlinux.org; envelope-from=arch-general-bounces@archlinux.org; receiver=benwa@minet.net 
+Authentication-Results: mx2.minet.net; dkim=fail
+	reason="verification failed; insecure key"
+	header.d=gmail.com header.i=@gmail.com header.b=rtUETpuc;
+	dkim-adsp=none (insecure policy); dkim-atps=neutral
+Received: from luna.archlinux.org (luna.archlinux.org [5.9.250.164])
+	(using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.minet.net (Postfix) with ESMTPS id DD66B821952
+	for <benwa@minet.net>; Thu,  4 Jun 2015 06:09:09 +0200 (CEST)
+Received: from luna.archlinux.org (luna.archlinux.org [127.0.0.1])
+	by luna.archlinux.org (Postfix) with ESMTP id A0E06260C6;
+	Thu,  4 Jun 2015 04:09:05 +0000 (UTC)
+Received: from luna.archlinux.org (luna.archlinux.org [127.0.0.1])
+ by luna.archlinux.org (Postfix) with ESMTP id 0CD88260C5
+ for <arch-general@lists.archlinux.org>; Thu,  4 Jun 2015 04:09:04 +0000 (UTC)
+Received: from nymeria.archlinux.org (nymeria.archlinux.org [89.238.67.251])
+ by luna.archlinux.org (Postfix) with ESMTPS
+ for <arch-general@lists.archlinux.org>; Thu,  4 Jun 2015 04:09:04 +0000 (UTC)
+Received: from nymeria.archlinux.org (localhost.localdomain [127.0.0.1])
+ by nymeria.archlinux.org (Postfix) with ESMTP id DDBB240260
+ for <arch-general@archlinux.org>; Thu,  4 Jun 2015 06:09:02 +0200 (CEST)
+Received: from mail-wg0-x22c.google.com (mail-wg0-x22c.google.com
+ [IPv6:2a00:1450:400c:c00::22c])
+ (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+ (No client certificate requested)
+ by nymeria.archlinux.org (Postfix) with ESMTPS
+ for <arch-general@archlinux.org>; Thu,  4 Jun 2015 06:09:02 +0200 (CEST)
+Received: by wgme6 with SMTP id e6so23798103wgm.2
+ for <arch-general@archlinux.org>; Wed, 03 Jun 2015 21:09:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+ h=mime-version:from:date:message-id:subject:to:content-type;
+ bh=7st+jAfRrEnSrTq3/eOYg/0asNUH7fqHCXCyOguOIsk=;
+ b=rtUETpucDR6xziqI/1XndSQnFd2CaWEoxeg653HtuScH5ZTP33vNW+xqBQO8Y0M50S
+ zFoE4UYgAkuZKo0Y4wafRRqx4bNRheLSbApXXXhh9op73/cABS0nVAQeGaQf8Dg0vLO7
+ TvpiDlWt4AtsFlJkKTzZ0aGGk7FuRc+aN8n5Azc/LW4Utem61smWNaTmipkQDvacx6xh
+ Zyvq4q0K2HGNWTaTif7QJ75ScYC8newm1LJ/PDl1UjLkisFC/DOvTFx+24J+gpZD2tzT
+ leLWtpNLjF1sHReHS6hpMahD7jas1iBnx71s9USGq9Mxk7OM3HHyV9VyfBJlv7fTqzLM
+ mdUA==
+X-Received: by 10.180.98.103 with SMTP id eh7mr3462314wib.75.1433390941725;
+ Wed, 03 Jun 2015 21:09:01 -0700 (PDT)
+MIME-Version: 1.0
+Received: by 10.27.96.135 with HTTP; Wed, 3 Jun 2015 21:08:41 -0700 (PDT)
+From: Murari <murari.ksr@gmail.com>
+Date: Thu, 4 Jun 2015 06:08:41 +0200
+Message-ID: <CAN1zdnW5PW7z5msM-TjUpouygxWY6z-25A3WCB-C5BvqDuP1Qw@mail.gmail.com>
+To: General Discussion about Arch Linux <arch-general@archlinux.org>
+Content-Type: text/plain; charset=UTF-8
+X-Content-Filtered-By: Mailman/MimeDel 2.1.20
+Subject: [arch-general] Inkscape fails to open svg files
+X-BeenThere: arch-general@archlinux.org
+X-Mailman-Version: 2.1.20
+Precedence: list
+List-Id: General Discussion about Arch Linux <arch-general.archlinux.org>
+List-Unsubscribe: <https://lists.archlinux.org/options/arch-general>,
+ <mailto:arch-general-request@archlinux.org?subject=unsubscribe>
+List-Archive: <https://lists.archlinux.org/pipermail/arch-general/>
+List-Post: <mailto:arch-general@archlinux.org>
+List-Help: <mailto:arch-general-request@archlinux.org?subject=help>
+List-Subscribe: <https://lists.archlinux.org/listinfo/arch-general>,
+ <mailto:arch-general-request@archlinux.org?subject=subscribe>
+Reply-To: General Discussion about Arch Linux <arch-general@archlinux.org>
+Errors-To: arch-general-bounces@archlinux.org
+Sender: "arch-general" <arch-general-bounces@archlinux.org>
+
+Hi all,
+
+An update between the 17th of May and the 1st of June seems to have broken
+Inkscape's ability to open existing svg files on my computer. Any svg I
+open (including stock files off the internet) cause Inkscape to crash with
+"Inkscape encountered an internal error and will close now". I even created
+a new, test svg consisting only of a few shapes and text, but I can't open
+it again after saving. Has anyone else seen anything like this?
+
+Thanks!

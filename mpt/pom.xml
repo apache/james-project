@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>james-project</artifactId>
+        <groupId>org.apache.james</groupId>
+        <version>1.8.3-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>apache-james-mpt</artifactId>
+    <version>0.2-SNAPSHOT</version>
+
+    <packaging>pom</packaging>
+
+    <name>Apache James MPT</name>
+    <description>Functional test framework specialised for the ASCII line-base protocols common in mail.</description>
+    <url>http://james.apache.org/mpt/</url>
+    <inceptionYear>2008</inceptionYear>
+
+    <modules>
+        <module>antlib</module>
+        <module>app</module>
+        <module>all</module>
+        <module>core</module>
+        <module>impl/imap-mailbox</module>
+        <module>mavenplugin</module>
+    </modules>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mpt/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/mpt/trunk</developerConnection>
+        <url>http://svn.apache.org/viewcvs.cgi/james/mpt/trunk?root=Apache-SVN</url>
+    </scm>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://issues.apache.org/jira/browse/MPT</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <site>
+            <id>${james.www.id}</id>
+            <url>${james.mpt.www}</url>
+        </site>
+    </distributionManagement>
+
+    <properties>
+        <!--
+            The website is committed to subversion. This property can be overriden
+            to upload the site to a local staging location.
+            For example, adding the following to ~/.m2/settings.xml will upload
+            to localhost:
+
+            <profiles>
+            <profile>
+            <id>main</id>
+            <activation>
+            <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+            <james.www>scp://localhost/www</james.www>
+            <james.www.id>localhost</james.www.id>
+            ...
+        -->
+        <!-- General location for site stage -->
+        <james.www>scpexe://people.apache.org/www/james.apache.org/</james.www>
+        <!-- Project specific location, allowing specific override -->
+        <james.mpt.www>${james.www}/mpt/</james.mpt.www>
+        <!-- Overridding this value allows single set of loopback settings to be maintained -->
+        <james.www.id>mpt-website</james.www.id>
+        <target.jdk>1.5</target.jdk>
+
+        <commons-io.version>2.4</commons-io.version>
+        <commons-lang.version>2.6</commons-lang.version>
+        <derby.version>10.9.1.0</derby.version>
+        <guice.version>3.0</guice.version>
+        <h2.version>1.3.170</h2.version>
+        <hadoop.version>1.0.1</hadoop.version>
+        <hbase.version>0.94.27</hbase.version>
+        <jackrabbit-core.version>2.5.2</jackrabbit-core.version>
+        <james-protocols.version>1.6.4-SNAPSHOT</james-protocols.version>
+        <james-mailbox.version>0.6-SNAPSHOT</james-mailbox.version>
+        <javax.mail.version>1.4.1</javax.mail.version>
+        <jmock.version>2.6.0</jmock.version>
+        <junit.version>4.11</junit.version>
+        <log4j.version>1.2.16</log4j.version>
+        <lucene-core.version>3.6.0</lucene-core.version>
+        <onami.version>1.4.1-incubating-SNAPSHOT</onami.version>
+        <slf4j.version>1.6.6</slf4j.version>
+
+
+        <javax.mail.groupId>javax.mail</javax.mail.groupId>
+        <javax.mail.artifactId>mail</javax.mail.artifactId>
+    </properties>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- MPT dependencies -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-antlib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-antlib</artifactId>
+                <version>${project.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-app</artifactId>
+                <version>${project.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-core</artifactId>
+                <version>${project.version}</version>
+                <classifier>tests</classifier>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mpt-core</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <!-- Other Apache James sub projects -->
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-api</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-cassandra</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+                <type>test-jar</type>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-cassandra</artifactId>
+                <version>${james-mailbox.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-hbase</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-jcr</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-jpa</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-maildir</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-memory</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-store</artifactId>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-store</artifactId>
+                <type>test-jar</type>
+                <version>${james-mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james.protocols</groupId>
+                <artifactId>protocols-imap</artifactId>
+                <version>${james-protocols.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james.protocols</groupId>
+                <artifactId>protocols-imap</artifactId>
+                <type>test-jar</type>
+                <version>${james-protocols.version}</version>
+            </dependency>
+            <!-- Other dependencies -->
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant</artifactId>
+                <version>1.7.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant-antunit</artifactId>
+                <version>1.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-cli</artifactId>
+                <version>1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons-lang.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>logkit</artifactId>
+                        <groupId>logkit</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>avalon-framework</artifactId>
+                        <groupId>avalon-framework</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>log4j</artifactId>
+                        <groupId>log4j</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>servlet-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${derby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-test</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase</artifactId>
+                <version>${hbase.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase</artifactId>
+                <type>test-jar</type>
+                <version>${hbase.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>${guice.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jmock</groupId>
+                <artifactId>jmock</artifactId>
+                <version>1.1.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-core</artifactId>
+                <version>${jackrabbit-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${javax.mail.groupId}</groupId>
+                <artifactId>${javax.mail.artifactId}</artifactId>
+                <version>${javax.mail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jmock</groupId>
+                <artifactId>jmock</artifactId>
+                <version>${jmock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jmock</groupId>
+                <artifactId>jmock-junit4</artifactId>
+                <version>${jmock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.8.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.onami</groupId>
+                <artifactId>org.apache.onami.test</artifactId>
+                <version>${onami.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <!-- As mime4j use commons-logging we need to specify the binding here -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+                <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-doap-plugin</artifactId>
+                <executions>
+                <execution>
+                <id>site</id>
+                <phase>site</phase>
+                <goals>
+                <goal>generate</goal>
+                </goals>
+                </execution>
+                </executions>
+                <configuration>
+                <doapOptions>
+                <programmingLanguage>java</programmingLanguage>
+                <category>mail</category>
+                <download-page>http://james.apache.org/download.cgi</download-page>
+                </doapOptions>
+
+                <asfExtOptions>
+                <included>true</included>
+                <pmc>http://james.apache.org</pmc>
+                <name>Apache James</name>
+                </asfExtOptions>
+
+                </configuration>
+                </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

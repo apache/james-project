@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Upgrading Database</title>
+ </properties>
+ 
+<body>
+
+  <section name="Upgrade Users and Domains">
+  </section>
+  
+  <section name="Upgrade Mailbox">
+  
+    <p>The easiest is to export your JPA Mailbox to a JCR or MailDir Mailbox and then import again.</p>
+    
+    <ul>
+      <li>Start James with SMTP/POP3/IMAP4 disabled (to avoid new mails to come while copying mailbox).</li>
+      <li>In jconsole, I invoke the mailboxcopier.copy operation with parameters of "jpa-mailboxmanager", "maildir-mailboxmanager".  This will copy all of the mailboxes from the database and store them in maildir format into $JAMES_HOME/var/store/maildir.</li>
+      <li>Shutdown the current James.</li>
+      <li>Unzip the new James version in a separate location.</li>
+      <li>Copy (or move) the current var/store to the new var/store</li>
+      <li>Update the new configuration files to your needs, with SMTP/POP3/IMAP4 disabled.</li>
+      <li>Start up the new version of James.</li>
+      <li>In jconsole, invoke mailboxcopier.copy operation with parameters of "maildir-mailboxmanager", "jpa-mailboxmanager", which will copy the mailboxes from maildir format in $JAMES_HOME/var/store/maildir to the databasae with all of the relationships and UID's created properly.</li>
+      <li>The created uid's and uidvalidity will be new ones, as a consequence that the clients will have to resynch all their folders (flags are kept).</li>
+      <li>Reenable SMTP/POP3/IMAP4.</li>
+      
+    </ul>
+
+  </section>
+  
+</body>
+
+</document>

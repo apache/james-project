@@ -1,0 +1,97 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+C: A2 CREATE one
+S: A2 OK CREATE completed\.
+C: A3 CREATE one.two
+S: A3 OK CREATE completed\.
+C: A4 CREATE one.two.three
+S: A4 OK CREATE completed\.
+C: A5 CREATE one.two.three.four
+S: A5 OK CREATE completed\.
+C: A6 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasChildren\) "\." "one"
+S: \* LIST \(\\HasChildren\) "\." "one\.two"
+S: \* LIST \(\\HasChildren\) "\." "one\.two\.three"
+S: \* LIST \(\\HasNoChildren\) "\." "one\.two\.three\.four"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A6 OK LIST completed\.
+C: A7 RENAME one.two alpha.beta
+S: A7 OK RENAME completed\.
+C: A8 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta\.three"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.three\.four"
+S: \* LIST \(\\HasNoChildren\) "\." "one"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A8 OK LIST completed\.
+C: A9 RENAME alpha.beta.three.four alpha.beta.gamma.delta
+S: A9 OK RENAME completed\.
+C: A10 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.gamma\.delta"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.three"
+S: \* LIST \(\\HasNoChildren\) "\." "one"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A10 OK LIST completed\.
+C: A11 RENAME alpha.beta.three aleph
+S: A11 OK RENAME completed\.
+C: A12 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasNoChildren\) "\." "aleph"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.gamma\.delta"
+S: \* LIST \(\\HasNoChildren\) "\." "one"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A12 OK LIST completed\.
+C: A13 RENAME aleph alpha.beta.gamma.delta.epsilon
+S: A13 OK RENAME completed\.
+C: A14 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta\.gamma\.delta"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.gamma\.delta\.epsilon"
+S: \* LIST \(\\HasNoChildren\) "\." "one"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A14 OK LIST completed\.
+C: A15 RENAME alpha.beta.gamma one
+S: A15 NO RENAME failed. Mailbox already exists\.
+C: A16 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta\.gamma\.delta"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.gamma\.delta\.epsilon"
+S: \* LIST \(\\HasNoChildren\) "\." "one"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A16 OK LIST completed\.
+C: A17 DELETE one
+S: A17 OK DELETE completed\.
+C: A18 DELETE alpha
+S: A18 NO DELETE failed. No such mailbox\.
+C: A19 LIST "" "*"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta"
+S: \* LIST \(\\HasChildren\) "\." "alpha\.beta\.gamma\.delta"
+S: \* LIST \(\\HasNoChildren\) "\." "alpha\.beta\.gamma\.delta\.epsilon"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: A19 OK LIST completed\.
+C: A20 DELETE aleph
+S: A20 NO DELETE failed. No such mailbox\.

@@ -1,0 +1,52 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: a000 LOGIN imapuser password
+S: \* OK IMAP4rev1 Server ready
+S: a000 OK .*
+
+C: a001 MYRIGHTS user.Boby
+S: \* MYRIGHTS user.Boby lrswpkxtecda
+S: a001 OK Completed
+
+C: a002 SELECT user.imapuser
+S: \* 4 EXISTS
+S: \* 4 RECENT
+S: \* FLAGS \(\\Answered \\Flagged \\Draft \\Deleted \\Seen\)
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Flagged \\Draft \\Deleted \\Seen \\\*\)\] Ok
+S: \* OK \[UNSEEN 1\] Ok
+S: \* OK \[UIDVALIDITY .*
+S: \* OK \[UIDNEXT 5\] Ok
+S: \* OK \[HIGHESTMODSEQ 6\] Ok
+S: \* OK \[URLMECH INTERNAL\] Ok
+S: a002 OK \[READ-WRITE\] Completed
+
+C: a003 FETCH 1:4 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 2 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 3 FETCH \(FLAGS \(\\Recent \\Flagged\)\)
+S: \* 4 FETCH \(FLAGS \(\\Recent \\Deleted\)\)
+S: a003 OK Completed.*
+
+C: a004 COPY 1:1 user.Boby
+S: a004 NO Permission denied
+
+C: a008 CLOSE
+S: a008 OK Completed
+

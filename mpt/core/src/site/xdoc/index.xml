@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+
+<document>
+
+ <properties>
+  <title>Overview</title>
+  <author email="server-dev@james.apache.org">Mail Protocol Tester</author>
+ </properties>
+
+<body>
+<section name="What is the Apache James MPT?">
+<p>
+Apache James Mail Protocol Tester (MPT) is a library providing a framework for the 
+scritable functional testing of ASCII based line protocols.</p>
+<p>
+This contains a lightweight scripting framework suitable for the
+functional testing of the ASCII line based protocols common in mail.
+A script contains a list of client requests and templated server
+responses. The framework runs the client lines against a host system
+and then compares the server lines received in response against the
+template responses. 
+</p>
+</section>
+<section name='Using MPT'>
+<subsection name='Host System'>
+<p>
+MPT is a lightweight, flexible framework which is capable of being used
+in a variety of ways. <code>HostSystem</code> is pivotal, defining the 
+interface between the framework and the server system under test.
+</p>
+<ul>
+<li>
+The <code>ExternalHostSystem</code> implementation connects to a port on a server. 
+This is typically used to test a complete running server (including the sockets).
+<a href='../antlib'>MPT AntLib</a> provides an
+<a href='http://ant.apache.org' rel='tag'>Ant</a> task suitable for this use case.
+</li>
+<li>
+When performing in-JVM testing (without a live server socket) a custom implementation
+must be created connecting the framework to the components under test. This use case
+is typically developed as a <a href='http://www.junit.org'>JUnit</a> test case.
+</li>
+</ul>
+</subsection>
+<subsection name='With JUnit'>
+<p>
+In-JVM JUnit testing is a typical use case. The framework provides
+abstract superclasses which setup up appropriate fixtures. 
+</p>
+</subsection>
+</section>
+<section name="Script Features">
+<subsection name='Basic Syntax'>
+<p>
+MPT scripts are line based plain text files. The initial letter of each line determines it's type:
+</p>
+<table>
+<tr>
+    <td><strong>Line Prefix</strong></td> <td><strong>Description</strong></td>
+</tr> 
+<tr>
+    <td>#</td> 
+    <td>A comment: the rest of the line will be ignored</td> 
+</tr>
+<tr>
+    <td>C: </td> 
+    <td>A client request: the rest of the line will be sent to the server</td> 
+</tr>
+<tr>
+    <td>S: </td> 
+    <td>A server response: the framework will read one line of response from the server, 
+    and compare it to the rest of the line (see 
+    <a href='#Regex Matching Of Server Responses'>regex matching</a>)</td> 
+</tr>
+</table>
+<p>
+Example:
+</p>
+<source><pre>
+#
+# This script is a basic SMTP HELO.
+# 
+S: 220 localhost. SMTP Server \(JAMES SMTP Server .*
+C: HELO example.org
+S: 250 localhost. Hello example.org .*
+C: QUIT
+S: 221 2.0.0 localhost. Service closing transmission channel
+</pre></source>
+</subsection>
+<subsection name='Regex Matching Of Server Responses'>
+<p>
+The server responses in the script support regex matching. 
+<a href='http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html'>Java Pattern</a>
+is used for the regex comparison and so the syntax is identical. 
+</p>
+</subsection>
+<subsection name='Variable Substitution'>
+<p>
+Variables of form <code>${<em>variable-name</em>}</code> may be substituted by values
+passed into the script builder before interpretation.
+</p>
+</subsection>
+</section>
+</body>
+</document>
