@@ -45,7 +45,7 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
 
     @Inject
     public InMemoryCurrentQuotaManager(final CurrentQuotaCalculator quotaCalculator, final MailboxManager mailboxManager) {
-        this.quotaCache = CacheBuilder.<QuotaRoot, Entry>newBuilder().build(new CacheLoader<QuotaRoot, Entry>() {
+        this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, Entry>() {
             @Override
             public Entry load(QuotaRoot quotaRoot) throws Exception {
                 return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, mailboxManager.createSystemSession(quotaRoot.getValue(), LOGGER)));
