@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.store.event;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +31,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
