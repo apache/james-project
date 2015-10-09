@@ -28,10 +28,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher.AddedImpl;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher.ExpungedImpl;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher.FlagsUpdatedImpl;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher.MailboxDeletionImpl;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
@@ -75,8 +72,8 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
 
         try {
             if (event instanceof MessageEvent) {
-                if (event instanceof AddedImpl) {
-                    AddedImpl added = (AddedImpl) event;
+                if (event instanceof EventFactory.AddedImpl) {
+                    EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
                     final Mailbox<Id> mailbox = added.getMailbox();
                     Iterator<Long> uids = added.getUids().iterator();
 
@@ -93,8 +90,8 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                         }
 
                     }
-                } else if (event instanceof ExpungedImpl) {
-                    ExpungedImpl expunged = (ExpungedImpl) event;
+                } else if (event instanceof EventFactory.ExpungedImpl) {
+                    EventFactory.ExpungedImpl expunged = (EventFactory.ExpungedImpl) event;
                     final Mailbox<Id> mailbox = expunged.getMailbox();
                     List<Long> uids = expunged.getUids();
                     List<MessageRange> ranges = MessageRange.toRanges(uids);
@@ -106,8 +103,8 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                             session.getLog().debug("Unable to deleted range " + range.toString() + " from index for mailbox " + mailbox, e);
                         }
                     }
-                } else if (event instanceof FlagsUpdatedImpl) {
-                    FlagsUpdatedImpl flagsUpdated = (FlagsUpdatedImpl) event;
+                } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
+                    EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
                     final Mailbox<Id> mailbox = flagsUpdated.getMailbox();
 
                     Iterator<UpdatedFlags> flags = flagsUpdated.getUpdatedFlags().iterator();
@@ -120,9 +117,9 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                         }
                     }
                 }
-            } else if (event instanceof MailboxDeletionImpl) {
+            } else if (event instanceof EventFactory.MailboxDeletionImpl) {
                 // delete all indexed messages for the mailbox
-                delete(session, ((MailboxDeletionImpl) event).getMailbox(), MessageRange.all());
+                delete(session, ((EventFactory.MailboxDeletionImpl) event).getMailbox(), MessageRange.all());
             }
         } catch (MailboxException e) {
             session.getLog().debug("Unable to update index", e);
@@ -139,7 +136,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
 
     /**
      * Add the {@link Message} for the given {@link Mailbox} to the index
-     * 
+     *
      * @param session
      * @param mailbox
      * @param message
@@ -149,7 +146,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
 
     /**
      * Delete the {@link MessageRange} for the given {@link Mailbox} from the index
-     * 
+     *
      * @param session
      * @param mailbox
      * @param range
@@ -160,7 +157,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
     
     /**
      * Update the {@link MessageRange} for the given {@link Mailbox} with the new {@link Flags} in the index
-     *  
+     *
      * @param session
      * @param mailbox
      * @param range
