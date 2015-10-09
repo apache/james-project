@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -53,6 +54,10 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
         });
     }
 
+    @Override
+    public MailboxListener.ListenerType getAssociatedListenerType() {
+        return MailboxListener.ListenerType.EACH_NODE;
+    }
 
     @Override
     public void increase(QuotaRoot quotaRoot, long count, long size) throws MailboxException {

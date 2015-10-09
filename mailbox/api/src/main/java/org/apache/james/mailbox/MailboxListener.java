@@ -34,6 +34,14 @@ import org.apache.james.mailbox.model.UpdatedFlags;
  */
 public interface MailboxListener {
 
+    enum ListenerType {
+        ONCE,
+        EACH_NODE,
+        MAILBOX
+    }
+
+    ListenerType getType();
+
     /**
      * Informs this listener about the given event.
      * 
