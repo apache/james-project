@@ -51,8 +51,8 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.AbstractDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.HashMapDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
@@ -83,7 +83,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     public static final int DEFAULT_FETCH_BATCH_SIZE = 200;
 
     private MailboxEventDispatcher<Id> dispatcher;
-    private AbstractDelegatingMailboxListener delegatingListener = null;
+    private DelegatingMailboxListener delegatingListener = null;
     private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
 
     private final Authenticator authenticator;
@@ -186,13 +186,13 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     }
 
     /**
-     * Return the {@link AbstractDelegatingMailboxListener} which is used by this {@link MailboxManager}
+     * Return the {@link DelegatingMailboxListener} which is used by this {@link MailboxManager}
      *
      * @return delegatingListener
      */
-    public AbstractDelegatingMailboxListener getDelegationListener() {
+    public DelegatingMailboxListener getDelegationListener() {
         if (delegatingListener == null) {
-            delegatingListener = new HashMapDelegatingMailboxListener();
+            delegatingListener = new DefaultDelegatingMailboxListener();
         }
         return delegatingListener;
     }
@@ -246,12 +246,12 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     }
 
     /**
-     * Set the {@link AbstractDelegatingMailboxListener} to use with this {@link MailboxManager} instance. If none is set here a {@link HashMapDelegatingMailboxListener} instance will
+     * Set the {@link DelegatingMailboxListener} to use with this {@link MailboxManager} instance. If none is set here a {@link DefaultDelegatingMailboxListener} instance will
      * be created lazy
      *
      * @param delegatingListener
      */
-    public void setDelegatingMailboxListener(AbstractDelegatingMailboxListener delegatingListener) {
+    public void setDelegatingMailboxListener(DelegatingMailboxListener delegatingListener) {
         this.delegatingListener = delegatingListener;
         dispatcher = new MailboxEventDispatcher<Id>(getDelegationListener());
     }
