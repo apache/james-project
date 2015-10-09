@@ -38,6 +38,11 @@ public class HashMapDelegatingMailboxListener extends AbstractDelegatingMailboxL
     private List<MailboxListener> globalListeners = new ArrayList<MailboxListener>();
 
     @Override
+    public ListenerType getType() {
+        return ListenerType.EACH_NODE;
+    }
+
+    @Override
     protected Map<MailboxPath, List<MailboxListener>> getListeners() {
         return listeners;
     }

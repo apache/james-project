@@ -26,7 +26,26 @@ import org.apache.james.mailbox.MailboxListener;
 
 public class EventCollector implements MailboxListener {
 
-    public final List<Event> events = new ArrayList<Event>();
+    private final List<Event> events = new ArrayList<Event>();
+
+    private ListenerType listenerType;
+
+    public EventCollector(ListenerType listenerType) {
+        this.listenerType = listenerType;
+    }
+
+    public EventCollector() {
+        this(ListenerType.EACH_NODE);
+    }
+
+    @Override
+    public ListenerType getType() {
+        return listenerType;
+    }
+
+    public List<Event> getEvents() {
+        return events;
+    }
 
     public void event(Event event) {
         events.add(event);
