@@ -21,14 +21,30 @@ package org.apache.james.mailbox.store.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.util.EventCollector;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultDelegatingMailboxListenerTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDelegatingMailboxListenerTest.class);
 
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath OTHER_MAILBOX_PATH = new MailboxPath("namespace", "other", "name");
@@ -177,6 +193,22 @@ public class DefaultDelegatingMailboxListenerTest {
         assertThat(mailboxEventCollector.getEvents()).containsExactly(event);
         assertThat(eachNodeEventCollector.getEvents()).containsExactly(event);
         assertThat(onceEventCollector.getEvents()).isEmpty();
+    }
+
+    @Test
+    public void listenersErrorsShouldNotBePropageted() throws Exception {
+        MailboxSession session = new MockMailboxSession("benwa");
+        MailboxListener.Event event = new MailboxListener.Event(session, MAILBOX_PATH) {};
+        MailboxListener mockedListener = mock(MailboxListener.class);
+        when(mockedListener.getType()).thenAnswer(new Answer<MailboxListener.ListenerType>() {
+            @Override
+            public MailboxListener.ListenerType answer(InvocationOnMock invocation) throws Throwable {
+                return MailboxListener.ListenerType.ONCE;
+            }
+        });
+        doThrow(new RuntimeException()).when(mockedListener).event(event);
+        defaultDelegatingMailboxListener.addGlobalListener(mockedListener, null);
+        defaultDelegatingMailboxListener.event(event);
     }
 
 }

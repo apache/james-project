@@ -97,7 +97,17 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     private void deliverEvent(Event event, MailboxListener listener) {
-        listener.event(event);
+        try {
+            listener.event(event);
+        } catch(Throwable throwable) {
+            event.getSession()
+                .getLog()
+                .error("Error while processing listener "
+                    + listener.getClass().getCanonicalName()
+                    + " for "
+                    + event.getClass().getCanonicalName(),
+                    throwable);
+        }
     }
 
 }
