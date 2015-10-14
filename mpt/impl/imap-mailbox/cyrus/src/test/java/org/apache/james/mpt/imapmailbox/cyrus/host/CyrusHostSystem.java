@@ -122,6 +122,7 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
         try {
             Session session = newSession(null);
             try {
+                session.start();
                 protocolSession.runSessions(new Session[]{session});
             } finally {
                 session.stop();
