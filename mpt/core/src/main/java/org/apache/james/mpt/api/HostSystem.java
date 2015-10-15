@@ -35,6 +35,8 @@ import org.apache.james.mpt.host.ExternalHostSystem;
  */
 public interface HostSystem extends SessionFactory {
 
+    String NAMESPACE_SUPPORT = "namespace-support";
+    
     /**
      * Add a user for testing.
      * 

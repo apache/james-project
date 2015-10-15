@@ -20,6 +20,8 @@
 package org.apache.james.mpt.imapmailbox.external.james;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
+
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.api.UserAdder;
@@ -35,6 +37,7 @@ public class ExternalJamesModule extends AbstractModule {
         bind(HostSystem.class).to(ExternalJamesHostSystem.class);
         bind(ExternalHostSystem.class).to(ExternalJamesHostSystem.class);
         bind(UserAdder.class).to(ExternalJamesUserAdder.class);
+        bindConstant().annotatedWith(Names.named(HostSystem.NAMESPACE_SUPPORT)).to(true);
     }
 
 }

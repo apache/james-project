@@ -25,12 +25,14 @@ import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 public class JpaMailboxTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(HostSystem.class).to(ImapHostSystem.class);
+        bindConstant().annotatedWith(Names.named(HostSystem.NAMESPACE_SUPPORT)).to(true);
     }
 
     @Provides

@@ -25,12 +25,14 @@ import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 public class MaildirMailboxTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(HostSystem.class).to(ImapHostSystem.class);
+        bindConstant().annotatedWith(Names.named(HostSystem.NAMESPACE_SUPPORT)).to(false);
     }
 
     @Provides
