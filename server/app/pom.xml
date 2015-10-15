@@ -461,28 +461,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-tika</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
             <artifactId>james-server-data-file</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -565,6 +543,36 @@
     </build>
 
     <profiles>
+	<profile>
+            <id>build-for-jdk-8</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+	    <dependencies>
+	        <dependency>
+		    <groupId>org.apache.james</groupId>
+		    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+		    <scope>runtime</scope>
+		    <exclusions>
+                        <exclusion>
+			    <artifactId>mail</artifactId>
+			    <groupId>javax.mail</groupId>
+			</exclusion>
+		    </exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.james</groupId>
+		    <artifactId>apache-james-mailbox-tika</artifactId>
+		    <scope>runtime</scope>
+		    <exclusions>
+                        <exclusion>
+			  <artifactId>mail</artifactId>
+			  <groupId>javax.mail</groupId>
+			</exclusion>
+		    </exclusions>
+		</dependency>
+	    </dependencies>
+        </profile>
         <profile>
             <id>cassandra</id>
             <properties>
