@@ -275,6 +275,15 @@
                 <role>Developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>matthieu</id>
+            <name>Matthieu Baechler</name>
+            <email>matthieu@apache.org</email>
+            <timezone/>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
     </developers>
 
     <contributors>
