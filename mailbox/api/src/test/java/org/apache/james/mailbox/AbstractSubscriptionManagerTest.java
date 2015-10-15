@@ -81,7 +81,7 @@ public abstract class AbstractSubscriptionManagerTest {
         manager.subscribe(session, MAILBOX1);
         manager.subscribe(session, MAILBOX2);
         
-        assertThat(manager.subscriptions(session)).containsExactly(MAILBOX1, MAILBOX2);
+        assertThat(manager.subscriptions(session)).containsOnly(MAILBOX1, MAILBOX2);
     }
     
     @Test
