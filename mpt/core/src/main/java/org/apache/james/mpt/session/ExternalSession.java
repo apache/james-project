@@ -119,7 +119,7 @@ public final class ExternalSession implements Session {
             result = tryReadFromSocket();
             // Reset for transfer into string buffer
             readBuffer.flip();
-            monitor.debug("[Done]");
+            monitor.debug(String.format("[Read %d characters]", readBuffer.limit()));
         }
         return result;
     }
@@ -137,7 +137,11 @@ public final class ExternalSession implements Session {
                     return read != 0;
                 }
             });
-        return status.intValue() > 0;
+        if (status.intValue() == -1) {
+            monitor.debug("Error reading, got -1");
+            return false;
+        }
+        return true;
     }
 
     public void start() throws Exception {
