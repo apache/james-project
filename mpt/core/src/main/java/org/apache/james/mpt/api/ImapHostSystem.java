@@ -19,10 +19,12 @@
 package org.apache.james.mpt.api;
 
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 
 public interface ImapHostSystem extends HostSystem {
 
-    public abstract void createMailbox(MailboxPath mailboxPath)
-            throws Exception;
+    boolean supports(Feature... features);
+    
+    void createMailbox(MailboxPath mailboxPath) throws Exception;
 
 }

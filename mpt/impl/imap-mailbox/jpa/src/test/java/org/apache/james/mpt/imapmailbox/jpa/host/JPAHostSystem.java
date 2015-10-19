@@ -35,7 +35,6 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.JPASubscriptionManager;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
@@ -52,6 +51,8 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 import org.apache.openjpa.persistence.OpenJPAPersistence;
@@ -60,6 +61,7 @@ import org.slf4j.LoggerFactory;
 public class JPAHostSystem extends JamesImapHostSystem {
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
     public static JamesImapHostSystem build() throws Exception {
         JPAHostSystem host =  new JPAHostSystem();
@@ -161,6 +163,11 @@ public class JPAHostSystem extends JamesImapHostSystem {
     @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
         new MailboxCreationDelegate(mailboxManager).createMailbox(mailboxPath);
+    }
+    
+    @Override
+    public boolean supports(Feature... features) {
+        return SUPPORTED_FEATURES.supports(features);
     }
 
 }

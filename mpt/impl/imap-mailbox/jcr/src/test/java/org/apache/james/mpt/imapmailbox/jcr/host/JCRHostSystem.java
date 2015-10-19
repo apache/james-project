@@ -33,7 +33,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.jcr.GlobalMailboxSessionJCRRepository;
-import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRMailboxManager;
 import org.apache.james.mailbox.jcr.JCRMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jcr.JCRSubscriptionManager;
@@ -45,6 +44,8 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,8 @@ public class JCRHostSystem extends JamesImapHostSystem{
 
     private static final String JACKRABBIT_HOME = "target/jackrabbit";
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+
     private RepositoryImpl repository;
     
     public JCRHostSystem() throws Exception {
@@ -157,6 +160,11 @@ public class JCRHostSystem extends JamesImapHostSystem{
     @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
         new MailboxCreationDelegate(mailboxManager).createMailbox(mailboxPath);
+    }
+    
+    @Override
+    public boolean supports(Feature... features) {
+        return SUPPORTED_FEATURES.supports(features);
     }
     
 }

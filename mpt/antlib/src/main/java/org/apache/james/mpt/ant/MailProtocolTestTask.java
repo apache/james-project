@@ -30,6 +30,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.james.mpt.Runner;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
@@ -48,6 +50,8 @@ import org.apache.tools.ant.types.resources.Union;
  */
 public class MailProtocolTestTask extends Task implements Monitor {
 
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    
     private boolean quiet = false;
     private File script;
     private Union scripts;
@@ -230,7 +234,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
             userAdder.execute();
         }
         
-        final ExternalHostSystem host = new ExternalHostSystem(getHost(), getPort(), this, getShabang(), null);
+        final ExternalHostSystem host = new ExternalHostSystem(SUPPORTED_FEATURES, getHost(), getPort(), this, getShabang(), null);
         final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
         
         if (scripts == null) {
