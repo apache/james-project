@@ -24,14 +24,17 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.base.BaseAuthenticatedState;
+import org.junit.Assume;
 import org.junit.Test;
 
 public class AuthenticatedState extends BaseAuthenticatedState {
     
     @Inject
     private static ImapHostSystem system;
+
     
     public AuthenticatedState() throws Exception {
         super(system);
@@ -324,18 +327,21 @@ public class AuthenticatedState extends BaseAuthenticatedState {
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceUS() throws Exception {
+        Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
         system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
         scriptTest("ListMailboxes", Locale.US);
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceITALY() throws Exception {
+        Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
         system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
         scriptTest("ListMailboxes", Locale.ITALY);
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherNamspaceKOREA() throws Exception {
+        Assume.assumeTrue(system.supports(Feature.NAMESPACE_SUPPORT));
         system.createMailbox(new MailboxPath("#namespace", USER, "Other"));
         scriptTest("ListMailboxes", Locale.KOREA);
     }

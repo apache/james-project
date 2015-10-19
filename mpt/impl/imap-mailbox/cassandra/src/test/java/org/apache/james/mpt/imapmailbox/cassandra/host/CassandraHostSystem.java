@@ -38,11 +38,15 @@ import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 
 public class CassandraHostSystem extends JamesImapHostSystem {
 
+    private static final ImapFeatures IMAP_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    
     private final CassandraMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
     private CassandraClusterSingleton cassandraClusterSingleton;
@@ -107,4 +111,10 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     public void createMailbox(MailboxPath mailboxPath) throws Exception{
         new MailboxCreationDelegate(mailboxManager).createMailbox(mailboxPath);
     }
+    
+    @Override
+    public boolean supports(Feature... features) {
+        return IMAP_FEATURES.supports(features);
+    }
+    
 }

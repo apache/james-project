@@ -28,6 +28,8 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.apache.james.mpt.Runner;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
@@ -36,6 +38,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 public class MailProtocolTest implements Monitor{
+
+   private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
    private Integer port;
    
@@ -117,7 +121,7 @@ public class MailProtocolTest implements Monitor{
 		try {
 			inputStream = new FileInputStream(scriptFile);
 
-			final ExternalHostSystem hostSystem = new ExternalHostSystem(host, port, this, shabang, null);
+			final ExternalHostSystem hostSystem = new ExternalHostSystem(SUPPORTED_FEATURES, host, port, this, shabang, null);
 		    final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
 		     
 	        builder.addProtocolLines(scriptFile.getName(), inputStream, runner.getTestElements());

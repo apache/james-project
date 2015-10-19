@@ -41,10 +41,14 @@ import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 
 public class InMemoryHostSystem extends JamesImapHostSystem {
+
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
     private StoreMailboxManager<InMemoryId> mailboxManager;
     private MockAuthenticator userManager;
@@ -108,4 +112,10 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     public void createMailbox(MailboxPath mailboxPath) throws Exception{
         new MailboxCreationDelegate(mailboxManager).createMailbox(mailboxPath);
     }
+    
+    @Override
+    public boolean supports(Feature... features) {
+        return SUPPORTED_FEATURES.supports(features);
+    }
+    
 }

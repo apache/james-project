@@ -21,6 +21,8 @@ package org.apache.james.mpt.host;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.UserAdder;
@@ -40,10 +42,13 @@ import org.apache.james.mpt.session.ExternalSessionFactory;
 public class ExternalHostSystem extends ExternalSessionFactory implements ImapHostSystem {
 
     private final UserAdder userAdder;
+    private final ImapFeatures features;
 
     /**
      * Constructs a host system suitable for connection to an open port.
      * 
+     * @param supportedFeatures
+     *            set of features supported by the system
      * @param host
      *            host name that will be connected to, not null
      * @param port
@@ -59,15 +64,16 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
      * @param userAdder
      *            null when test system has appropriate users already set
      */
-    public ExternalHostSystem(final String host, final int port, final Monitor monitor, final String shabang,
-            final UserAdder userAdder) {
+    public ExternalHostSystem(ImapFeatures features, String host, int port, 
+            Monitor monitor, String shabang, UserAdder userAdder) {
         super(host, port, monitor, shabang);
+        this.features = features;
         this.userAdder = userAdder;
     }
     
-    public ExternalHostSystem(final Monitor monitor, final String shabang,
-            final UserAdder userAdder) {
+    public ExternalHostSystem(ImapFeatures features, Monitor monitor, String shabang, UserAdder userAdder) {
         super(monitor, shabang);
+        this.features = features;
         this.userAdder = userAdder;
     }
     public boolean addUser(String user, String password) throws Exception {
@@ -96,4 +102,10 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     
     public void afterTest() throws Exception {
     }
+
+    @Override
+    public boolean supports(Feature... features) {
+        return this.features.supports(features);
+    }
+    
 }
