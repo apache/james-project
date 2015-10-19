@@ -29,6 +29,7 @@ import javax.annotation.PreDestroy;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.queue.api.MailQueue;
@@ -43,6 +44,8 @@ import org.slf4j.Logger;
  */
 public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogEnabled {
 
+    public static final String MBEAN_NAME_QUEUE_PREFIX = "org.apache.james:type=component,name=queue,queue=";
+
     protected final Map<String, MailQueue> queues = new HashMap<String, MailQueue>();
     protected Logger log;
     private boolean useJMX = true;
@@ -53,17 +56,26 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogE
         this.useJMX = useJMX;
     }
 
+    @VisibleForTesting
+    void setMbeanServer(MBeanServer mbeanServer) {
+        this.mbeanServer = mbeanServer;
+    }
+
     @PostConstruct
     public void init() {
         mbeanServer = ManagementFactory.getPlatformMBeanServer();
     }
 
     @PreDestroy
-    public void destroy() {
+    public synchronized void destroy() {
         for (String mbean : mbeans) {
-            unregisterMBean(mbean);
+            try {
+                mbeanServer.unregisterMBean(new ObjectName(mbean));
+            } catch (Exception e) {
+                log.error("Error while destroying AbstractMailQueueFactory : ", e);
+            }
         }
-
+        mbeans.clear();
         for (MailQueue mailQueue : queues.values()) {
             LifecycleUtil.dispose(mailQueue);
         }
@@ -97,7 +109,7 @@ public abstract class AbstractMailQueueFactory implements MailQueueFactory, LogE
 
     protected synchronized void registerMBean(String queuename, MailQueue queue) {
 
-        String mbeanName = "org.apache.james:type=component,name=queue,queue=" + queuename;
+        String mbeanName = MBEAN_NAME_QUEUE_PREFIX + queuename;
         try {
             MailQueueManagementMBean mbean = null;
             if (queue instanceof ManageableMailQueue) {
