@@ -18,9 +18,15 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.cyrus.host;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.jayway.awaitility.Awaitility;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
@@ -57,7 +63,25 @@ public class Docker {
     public ContainerCreation start() throws Exception {
         ContainerCreation container = dockerClient.createContainer(containerConfig);
         dockerClient.startContainer(container.id(), ALL_PORTS_HOST_CONFIG);
+        waitingForSocketToBeReady(container);
         return container;
+    }
+
+    private void waitingForSocketToBeReady(final ContainerCreation container) {
+        Awaitility
+            .await()
+            .atMost(30, TimeUnit.SECONDS)
+            .with()
+            .pollInterval(10, TimeUnit.MILLISECONDS)
+            .and()
+            .ignoreExceptions()
+            .until(() -> socketIsReady(container));
+    }
+
+    private boolean socketIsReady(ContainerCreation container) throws UnknownHostException, IOException {
+        try (Socket socket = new Socket(getHost(container), getIMAPPort(container))) {
+            return socket.getInputStream().read() >= 0;
+        }
     }
 
     public void stop(ContainerCreation container) {
