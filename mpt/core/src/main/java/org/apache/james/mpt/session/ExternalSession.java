@@ -19,17 +19,21 @@
 
 package org.apache.james.mpt.session;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.Session;
 
-public final class ExternalSession implements Session {
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
-    /** Number of milliseconds to sleep after empty read */
-    private static final int SHORT_WAIT_FOR_INPUT = 10;
+public final class ExternalSession implements Session {
 
     private static final byte[] CRLF = { '\r', '\n' };
 
@@ -112,17 +116,28 @@ public final class ExternalSession implements Session {
         else {
             monitor.debug("[Reading into buffer]");
             readBuffer.clear();
-            while (socket.read(readBuffer) == 0) {
-                // No response yet
-                // Wait a little while
-                Thread.sleep(SHORT_WAIT_FOR_INPUT);
-            }
+            result = tryReadFromSocket();
             // Reset for transfer into string buffer
             readBuffer.flip();
             monitor.debug("[Done]");
-            result = true;
         }
         return result;
+    }
+
+    private boolean tryReadFromSocket() throws IOException, InterruptedException {
+        final MutableInt status = new MutableInt(0);
+        Awaitility
+            .waitAtMost(Duration.ONE_MINUTE)
+            .pollDelay(new Duration(10, TimeUnit.MILLISECONDS))
+            .until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    int read = socket.read(readBuffer);
+                    status.setValue(read);
+                    return read != 0;
+                }
+            });
+        return status.intValue() > 0;
     }
 
     public void start() throws Exception {
