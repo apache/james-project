@@ -20,6 +20,8 @@
 package org.apache.james.mpt.imapmailbox.elasticsearch;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
+
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.elasticsearch.host.ElasticSearchHostSystem;
@@ -29,5 +31,6 @@ public class ElasticSearchMailboxTestModule extends AbstractModule {
     protected void configure() {
         bind(ImapHostSystem.class).to(ElasticSearchHostSystem.class);
         bind(HostSystem.class).to(ElasticSearchHostSystem.class);
+        bindConstant().annotatedWith(Names.named(HostSystem.NAMESPACE_SUPPORT)).to(true);
     }
 }
