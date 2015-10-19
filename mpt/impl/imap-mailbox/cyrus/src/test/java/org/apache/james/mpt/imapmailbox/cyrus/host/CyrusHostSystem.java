@@ -20,16 +20,18 @@ package org.apache.james.mpt.imapmailbox.cyrus.host;
 
 import java.net.InetSocketAddress;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.NullMonitor;
 import org.apache.james.mpt.protocol.ProtocolSession;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -42,13 +44,15 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
 
     private static final String CREATE_MAILBOX_LOCATION = "CyrusHostSystem.createMailbox";
     private static final String SHABANG = "* OK IMAP4rev1 Server ready";
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+
     private final Docker docker;
     private Supplier<InetSocketAddress> addressSupplier;
     private ContainerCreation container;
 
     @Inject
     private CyrusHostSystem(Docker docker, UserAdder userAdder) {
-        super(new NullMonitor(), SHABANG, userAdder);
+        super(SUPPORTED_FEATURES, new NullMonitor(), SHABANG, userAdder);
         this.docker = docker;
         
     }
@@ -131,4 +135,6 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
             Throwables.propagate(e);
         }
     }
+    
+
 }

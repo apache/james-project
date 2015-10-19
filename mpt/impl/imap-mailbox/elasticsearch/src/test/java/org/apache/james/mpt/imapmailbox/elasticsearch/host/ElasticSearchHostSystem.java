@@ -52,6 +52,8 @@ import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 
@@ -60,6 +62,8 @@ import com.google.inject.Inject;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    
     private EmbeddedElasticSearch embeddedElasticSearch;
     private Path tempDirectory;
     private StoreMailboxManager<InMemoryId> mailboxManager;
@@ -131,4 +135,9 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         new MailboxCreationDelegate(mailboxManager).createMailbox(mailboxPath);
     }
 
+    @Override
+    public boolean supports(Feature... features) {
+        return SUPPORTED_FEATURES.supports(features);
+    }
+    
 }
