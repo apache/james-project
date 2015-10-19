@@ -40,6 +40,8 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 
@@ -47,6 +49,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
     private static final String MAILDIR_HOME = "target/Maildir";
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of();
     
     private final StoreMailboxManager<MaildirId> mailboxManager;
     private final MockAuthenticator userManager;
@@ -104,6 +107,9 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         new MailboxCreationDelegate(mailboxManager).createMailbox(mailboxPath);
     }
 
-
+    @Override
+    public boolean supports(Feature... features) {
+        return SUPPORTED_FEATURES.supports(features);
+    }
 
 }

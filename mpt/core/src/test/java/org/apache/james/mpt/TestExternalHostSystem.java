@@ -20,6 +20,8 @@
 package org.apache.james.mpt;
 
 import org.apache.james.mpt.api.Continuation;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
@@ -38,6 +40,9 @@ public class TestExternalHostSystem extends MockObjectTestCase {
     private static final String SHABANG = "This Is The Shabang";
 
     private static final int PORT = 10001;
+
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+
     
     private DiscardProtocol protocol;
     
@@ -87,7 +92,7 @@ public class TestExternalHostSystem extends MockObjectTestCase {
     }
 
     private ExternalHostSystem buildSystem(final String shabang) {
-        ExternalHostSystem system = new ExternalHostSystem("localhost", PORT ,
+        ExternalHostSystem system = new ExternalHostSystem(SUPPORTED_FEATURES, "localhost", PORT ,
                 new NullMonitor(), shabang, userAdder);
         return system;
     }

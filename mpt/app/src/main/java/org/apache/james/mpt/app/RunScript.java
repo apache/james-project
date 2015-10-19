@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import org.apache.james.mpt.Runner;
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
@@ -32,6 +34,8 @@ import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
  */
 class RunScript {
 
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    
     private final File file;
     private final int port;
     private final String host;
@@ -53,7 +57,7 @@ class RunScript {
     public void run() throws Exception {
        System.out.println("Running " + file + " against " + host + ":"  + port + "...");
        
-       final ExternalHostSystem host = new ExternalHostSystem(this.host, port, monitor, shabang, null);
+       final ExternalHostSystem host = new ExternalHostSystem(SUPPORTED_FEATURES, this.host, port, monitor, shabang, null);
        final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
        final Runner runner = new Runner();
        
