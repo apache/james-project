@@ -157,6 +157,17 @@
                 </plugins>
             </build>
         </profile>
+	<profile>
+          <id>test-external-james</id>
+	  <activation>
+	      <property>
+		  <name>!env.JAMES_ADDRESS</name>
+	      </property>
+	  </activation>
+	  <properties>
+	    <skipTests>true</skipTests>
+	  </properties>
+        </profile>
         <profile>
             <id>disable-animal-sniffer</id>
             <activation>
