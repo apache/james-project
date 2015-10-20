@@ -16,15 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.container.spring.resource;
+package org.apache.james.core.filesystem;
 
-import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.springframework.core.io.ResourceLoader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-/**
- * {@link ResourceLoader} which offer extra methods to retrieve the Path to all
- * important Directories, which are in use by JAMES.
- */
-public interface JamesResourceLoader extends ResourceLoader, JamesDirectoriesProvider {
+class FileSystemResource implements Resource {
+
+    private final File file;
+
+    public FileSystemResource(File file) {
+        this.file = file;
+    }
+
+    @Override
+    public File getFile() {
+        return this.file;
+    }
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return new FileInputStream(this.file);
+    }
 
 }

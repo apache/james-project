@@ -846,7 +846,11 @@
                 <version>1.7.1</version>
                 <scope>test</scope>
             </dependency>
-
+            <dependency>
+                <groupId>pl.pragmatists</groupId>
+                <artifactId>JUnitParams</artifactId>
+                <version>1.0.4</version>
+            </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>

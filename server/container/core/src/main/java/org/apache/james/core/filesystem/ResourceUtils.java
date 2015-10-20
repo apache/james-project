@@ -16,15 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.container.spring.resource;
+package org.apache.james.core.filesystem;
 
-import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.springframework.core.io.ResourceLoader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.URISyntaxException;
+import java.net.URL;
 
-/**
- * {@link ResourceLoader} which offer extra methods to retrieve the Path to all
- * important Directories, which are in use by JAMES.
- */
-public interface JamesResourceLoader extends ResourceLoader, JamesDirectoriesProvider {
+public class ResourceUtils {
+    public static final String URL_PROTOCOL_FILE = "file";
 
+    public static File getFile(URL url, String description) throws FileNotFoundException {
+        if (!URL_PROTOCOL_FILE.equals(url.getProtocol())) {
+            throw new FileNotFoundException(description + " cannot be resolved to absolute file path " + "because it does not reside in the file system: " + url);
+        }
+        try {
+            return new File(url.toURI().getSchemeSpecificPart());
+        } catch (URISyntaxException ex) {
+            // Fallback for URLs that are not valid URIs (should hardly ever
+            // happen).
+            return new File(url.getFile());
+        }
+    }
 }

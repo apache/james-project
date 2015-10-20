@@ -16,15 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.container.spring.resource;
+package org.apache.james.filesystem.api;
 
-import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.springframework.core.io.ResourceLoader;
+public interface JamesDirectoriesProvider {
 
-/**
- * {@link ResourceLoader} which offer extra methods to retrieve the Path to all
- * important Directories, which are in use by JAMES.
- */
-public interface JamesResourceLoader extends ResourceLoader, JamesDirectoriesProvider {
+    /**
+     * Return the configuration directory of the application
+     * 
+     * @return confDir
+     */
+    String getAbsoluteDirectory();
+
+    /**
+     * Return the var directory of the application
+     * 
+     * @return var
+     */
+    String getConfDirectory();
+
+    /**
+     * Return the absolute directory of the application
+     * 
+     * @return absolute
+     */
+    String getVarDirectory();
+
+    /**
+     * Return the root directory of the application
+     * 
+     * @return rootDir
+     */
+    String getRootDirectory();
 
 }

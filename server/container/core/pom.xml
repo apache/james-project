@@ -37,6 +37,16 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
 
@@ -50,7 +60,6 @@
             <groupId>org.apache.james</groupId>
             <artifactId>apache-mailet-base</artifactId>
         </dependency>
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -75,6 +84,16 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>pl.pragmatists</groupId>
+            <artifactId>JUnitParams</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
