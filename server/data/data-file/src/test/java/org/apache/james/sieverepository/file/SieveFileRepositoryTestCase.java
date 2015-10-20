@@ -17,7 +17,7 @@
  *   under the License.
  *
  */
-package org.apache.james.filesystem.api;
+package org.apache.james.sieverepository.file;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,16 +30,17 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.james.managesieve.api.DuplicateException;
-import org.apache.james.managesieve.api.DuplicateUserException;
-import org.apache.james.managesieve.api.IsActiveException;
-import org.apache.james.managesieve.api.QuotaExceededException;
-import org.apache.james.managesieve.api.QuotaNotFoundException;
-import org.apache.james.managesieve.api.ScriptNotFoundException;
-import org.apache.james.managesieve.api.ScriptSummary;
-import org.apache.james.managesieve.api.SieveRepository;
-import org.apache.james.managesieve.api.StorageException;
-import org.apache.james.managesieve.api.UserNotFoundException;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.sieverepository.api.exception.DuplicateException;
+import org.apache.james.sieverepository.api.exception.DuplicateUserException;
+import org.apache.james.sieverepository.api.exception.IsActiveException;
+import org.apache.james.sieverepository.api.exception.QuotaExceededException;
+import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
+import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.sieverepository.api.ScriptSummary;
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.api.exception.StorageException;
+import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 
