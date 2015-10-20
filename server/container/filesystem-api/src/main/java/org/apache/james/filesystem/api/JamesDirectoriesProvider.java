@@ -16,32 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.container.spring.context;
+package org.apache.james.filesystem.api;
 
-public class TestApplicationContextProvider extends JamesServerApplicationContext {
-    private String configurationRootDirectory;
+public interface JamesDirectoriesProvider {
 
-    public TestApplicationContextProvider(String configurationRootDirectory, String[] configs) {
-        super(configs);
-        this.configurationRootDirectory = configurationRootDirectory;
-    }
+    /**
+     * Return the configuration directory of the application
+     * 
+     * @return confDir
+     */
+    String getAbsoluteDirectory();
 
-    @Override
-    public JamesServerResourceLoader getResourceLoader() {
-        return new TestDirectoryProvider(configurationRootDirectory);
-    }
+    /**
+     * Return the var directory of the application
+     * 
+     * @return var
+     */
+    String getConfDirectory();
 
-    private static class TestDirectoryProvider extends JamesServerResourceLoader {
-        private String configurationRootDirectory;
+    /**
+     * Return the absolute directory of the application
+     * 
+     * @return absolute
+     */
+    String getVarDirectory();
 
-        public TestDirectoryProvider(String configurationRootDirectory) {
-            this.configurationRootDirectory = configurationRootDirectory;
-        }
-
-        @Override
-        public String getRootDirectory() {
-            return configurationRootDirectory;
-        }
-    }
+    /**
+     * Return the root directory of the application
+     * 
+     * @return rootDir
+     */
+    String getRootDirectory();
 
 }
