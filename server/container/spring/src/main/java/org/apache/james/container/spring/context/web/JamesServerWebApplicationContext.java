@@ -18,8 +18,9 @@
  ****************************************************************/
 package org.apache.james.container.spring.context.web;
 
-import org.apache.james.container.spring.resource.AbstractJamesResourceLoader;
+import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
 import org.apache.james.container.spring.resource.JamesResourceLoader;
+import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
@@ -32,10 +33,8 @@ public class JamesServerWebApplicationContext extends XmlWebApplicationContext i
     /**
      * The resourceloader to use
      */
-    private final JamesResourceLoader resourceLoader = new AbstractJamesResourceLoader() {
-
-        /**
-         */
+    private final JamesResourceLoader resourceLoader = new DefaultJamesResourceLoader(new JamesDirectoriesProvider() {
+        
         public String getAbsoluteDirectory() {
             if (absoluteDirectory == null) {
                 return getRootDirectory();
@@ -74,7 +73,8 @@ public class JamesServerWebApplicationContext extends XmlWebApplicationContext i
                 return varDirectory;
             }
         }
-    };
+    });
+    
     private String rootDirectory;
     private String absoluteDirectory;
     private String varDirectory;

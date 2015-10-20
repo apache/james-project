@@ -21,6 +21,7 @@ package org.apache.james.container.spring.resource;
 import java.io.File;
 
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -31,8 +32,14 @@ import org.springframework.core.io.Resource;
  * Abstract base class which load JAMES files based on the prefix. This can be
  * used in different {@link ApplicationContext} implementations
  */
-public abstract class AbstractJamesResourceLoader extends DefaultResourceLoader implements JamesResourceLoader {
+public class DefaultJamesResourceLoader extends DefaultResourceLoader implements JamesResourceLoader {
 
+    private JamesDirectoriesProvider jamesDirectoriesProvider;
+
+    public DefaultJamesResourceLoader(JamesDirectoriesProvider jamesDirectoriesProvider) {
+        this.jamesDirectoriesProvider = jamesDirectoriesProvider;
+    }
+    
     /**
      * Return the {@link Resource} for the given url. If the resource can not be
      * found null get returned
@@ -47,14 +54,14 @@ public abstract class AbstractJamesResourceLoader extends DefaultResourceLoader 
         } else if (fileURL.startsWith(FileSystem.FILE_PROTOCOL)) {
             File file;
             if (fileURL.startsWith(FileSystem.FILE_PROTOCOL_AND_CONF)) {
-                file = new File(getConfDirectory() + "/" + fileURL.substring(FileSystem.FILE_PROTOCOL_AND_CONF.length()));
+                file = new File(jamesDirectoriesProvider.getConfDirectory() + "/" + fileURL.substring(FileSystem.FILE_PROTOCOL_AND_CONF.length()));
             } else if (fileURL.startsWith(FileSystem.FILE_PROTOCOL_AND_VAR)) {
-                file = new File(getVarDirectory() + "/" + fileURL.substring(FileSystem.FILE_PROTOCOL_AND_VAR.length()));
+                file = new File(jamesDirectoriesProvider.getVarDirectory() + "/" + fileURL.substring(FileSystem.FILE_PROTOCOL_AND_VAR.length()));
             } else if (fileURL.startsWith(FileSystem.FILE_PROTOCOL_ABSOLUTE)) {
-                file = new File(getAbsoluteDirectory() + fileURL.substring(FileSystem.FILE_PROTOCOL_ABSOLUTE.length()));
+                file = new File(jamesDirectoriesProvider.getAbsoluteDirectory() + fileURL.substring(FileSystem.FILE_PROTOCOL_ABSOLUTE.length()));
             } else {
                 // move to the root folder of the spring deployment
-                file = new File(getRootDirectory() + "/" + fileURL.substring(FileSystem.FILE_PROTOCOL.length()));
+                file = new File(jamesDirectoriesProvider.getRootDirectory() + "/" + fileURL.substring(FileSystem.FILE_PROTOCOL.length()));
             }
             r = new FileSystemResource(file);
         } else {
@@ -63,4 +70,20 @@ public abstract class AbstractJamesResourceLoader extends DefaultResourceLoader 
         return r;
     }
 
+    public String getAbsoluteDirectory() {
+        return jamesDirectoriesProvider.getAbsoluteDirectory();
+    }
+
+    public String getConfDirectory() {
+        return jamesDirectoriesProvider.getConfDirectory();
+    }
+
+    public String getVarDirectory() {
+        return jamesDirectoriesProvider.getVarDirectory();
+    }
+
+    public String getRootDirectory() {
+        return jamesDirectoriesProvider.getRootDirectory();
+    }
+    
 }
