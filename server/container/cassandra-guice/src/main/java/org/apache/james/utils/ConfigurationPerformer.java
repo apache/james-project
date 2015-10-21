@@ -16,28 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james;
 
-import org.apache.james.utils.ConfigurationsPerformer;
+package org.apache.james.utils;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
 
-public class CassandraJamesServer {
+public interface ConfigurationPerformer {
 
-    private final Module serverModule;
-
-    public CassandraJamesServer(Module serverModule) {
-        this.serverModule = serverModule;
-    }
-
-    public void start() throws Exception {
-        Injector injector = Guice.createInjector(serverModule);
-        injector.getInstance(ConfigurationsPerformer.class).initModules();
-    }
-
-    public void stop() {
-    }
+    void initModule() throws Exception;
 
 }
