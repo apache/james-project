@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Optional;
-
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -31,6 +29,10 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.
 
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.base.Throwables;
+
+import java.util.Optional;
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.FunctionRunnerWithRetry;
@@ -38,11 +40,11 @@ import org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CassandraUidProvider implements UidProvider<CassandraId> {
     public final static int DEFAULT_MAX_RETRY = 100000;
@@ -57,6 +59,7 @@ public class CassandraUidProvider implements UidProvider<CassandraId> {
         this.runner = new FunctionRunnerWithRetry(maxRetry);
     }
 
+    @Inject
     public CassandraUidProvider(Session session) {
         this(session, DEFAULT_MAX_RETRY);
     }

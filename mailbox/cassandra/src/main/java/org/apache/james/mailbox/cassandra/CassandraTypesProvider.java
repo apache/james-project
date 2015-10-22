@@ -27,12 +27,15 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.datastax.driver.core.DataType.text;
 
+@Singleton
 public class CassandraTypesProvider {
 
     public enum TYPE {
@@ -65,6 +68,7 @@ public class CassandraTypesProvider {
     private final ImmutableMap<TYPE, UserType> userTypes;
     private final Session session;
 
+    @Inject
     public CassandraTypesProvider(Session session) {
         this.session = session;
         initializeTypes();

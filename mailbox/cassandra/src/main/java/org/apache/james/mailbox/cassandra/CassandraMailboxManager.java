@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -35,9 +38,11 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 /**
  * Cassandra implementation of {@link StoreMailboxManager}
  */
+@Singleton
 public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
     private MailboxPathLocker locker;
 
+    @Inject
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, final MailboxPathLocker locker) {
         super(mapperFactory,
             authenticator,

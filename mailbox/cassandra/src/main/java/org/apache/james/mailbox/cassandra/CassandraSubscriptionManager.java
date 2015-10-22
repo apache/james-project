@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.user.model.Subscription;
@@ -30,6 +32,7 @@ import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
  */
 public class CassandraSubscriptionManager extends StoreSubscriptionManager {
 
+    @Inject
     public CassandraSubscriptionManager(CassandraMailboxSessionMapperFactory mapperFactory) {
         super(mapperFactory);
     }

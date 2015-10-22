@@ -30,6 +30,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTab
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
 
 import java.util.Optional;
+import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.CassandraId;
@@ -59,6 +60,7 @@ public class CassandraModSeqProvider implements ModSeqProvider<CassandraId> {
         this.runner = new FunctionRunnerWithRetry(maxRetry);
     }
 
+    @Inject
     public CassandraModSeqProvider(Session session) {
         this(session, DEFAULT_MAX_RETRY);
     }
