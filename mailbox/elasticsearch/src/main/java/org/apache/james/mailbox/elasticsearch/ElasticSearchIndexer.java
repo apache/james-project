@@ -27,6 +27,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 import com.google.common.base.Preconditions;
 
+import javax.inject.Inject;
+
 public class ElasticSearchIndexer {
 
     public static final String MAILBOX_INDEX = "mailbox";
@@ -34,6 +36,7 @@ public class ElasticSearchIndexer {
     
     private final ClientProvider clientProvider;
 
+    @Inject
     public ElasticSearchIndexer(ClientProvider clientProvider) {
         this.clientProvider = clientProvider;
     }
