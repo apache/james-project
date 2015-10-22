@@ -23,7 +23,6 @@ import org.apache.james.mailrepository.api.MailRepositoryStore.MailRepositorySto
 import org.apache.james.user.api.UsersRepositoryException;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.MessagingException;
 import java.io.IOException;
 
@@ -33,7 +32,6 @@ import java.io.IOException;
 public class James23ImporterManagement implements James23ImporterManagementMBean {
 
     @Inject
-    @Named("james23importer")
     private James23Importer james23Importer;
 
     @Override

@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
@@ -47,9 +50,12 @@ import org.apache.james.mailbox.store.mail.model.Message;
  *
  * @param <Id>
  */
+@Singleton
 public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSearchIndex<Id> {
 
     private final MessageMapperFactory<Id> factory;
+    
+    @Inject
     public SimpleMessageSearchIndex(MessageMapperFactory<Id> factory) {
         this.factory = factory;
     }

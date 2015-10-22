@@ -54,12 +54,12 @@ public class LocalDelivery extends GenericMailet {
     private FileSystem fileSystem;
 
     @Inject
-    public void setRrt(@Named("recipientrewritetable") org.apache.james.rrt.api.RecipientRewriteTable rrt) {
+    public void setRrt(org.apache.james.rrt.api.RecipientRewriteTable rrt) {
         this.rrt = rrt;
     }
 
     @Inject
-    public void setUsersRepository(@Named("usersrepository") UsersRepository usersRepository) {
+    public void setUsersRepository(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
     
@@ -69,12 +69,12 @@ public class LocalDelivery extends GenericMailet {
     }
     
     @Inject
-    public void setDomainList(@Named("domainlist") DomainList domainList) {
+    public void setDomainList(DomainList domainList) {
         this.domainList = domainList;
     }
     
     @Inject
-    public void setFileSystem(@Named("filesystem") FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 
