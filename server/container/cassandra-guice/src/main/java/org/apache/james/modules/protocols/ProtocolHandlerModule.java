@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.protocols;
 
-import org.apache.james.core.filesystem.FileSystemImpl;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.utils.GuiceProtocolHandlerLoader;
 
@@ -30,7 +28,6 @@ public class ProtocolHandlerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(FileSystem.class).to(FileSystemImpl.class);
         bind(ProtocolHandlerLoader.class).to(GuiceProtocolHandlerLoader.class);
     }
 

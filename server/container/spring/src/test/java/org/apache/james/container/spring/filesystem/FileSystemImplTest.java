@@ -44,21 +44,7 @@ public class FileSystemImplTest extends AbstractFileSystemTest {
 
         @Override
         public JamesResourceLoader getResourceLoader() {
-            return new DefaultJamesResourceLoader(new TestDirectoryProvider(configurationRootDirectory));
-        }
-    }
-
-    private static class TestDirectoryProvider extends JamesServerResourceLoader {
-
-        private String configurationRootDirectory;
-
-        public TestDirectoryProvider(String configurationRootDirectory) {
-            this.configurationRootDirectory = configurationRootDirectory;
-        }
-
-        @Override
-        public String getRootDirectory() {
-            return configurationRootDirectory;
+            return new DefaultJamesResourceLoader(new JamesServerResourceLoader(configurationRootDirectory));
         }
     }
 

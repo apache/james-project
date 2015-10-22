@@ -20,7 +20,6 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -29,10 +28,9 @@ import java.nio.charset.Charset;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.core.JamesServerResourceLoader;
-import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestFilesystemModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,25 +60,6 @@ public class CassandraJamesServerTest {
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
-    private static class TestFilesystemModule extends AbstractModule {
-        
-        JamesServerResourceLoader jamesServerResourceLoader;
-
-        TestFilesystemModule(File tmpDir) {
-            jamesServerResourceLoader = new JamesServerResourceLoader() {
-                @Override
-                public String getRootDirectory() {
-                    return tmpDir.getAbsolutePath();
-                }
-            };
-        }
-        
-        @Override
-        protected void configure() {
-            bind(JamesDirectoriesProvider.class).toInstance(jamesServerResourceLoader);
-        }
-    }
-    
     @Before
     public void setup() throws Exception {
         server = new CassandraJamesServer(Modules.override(CassandraJamesServerMain.defaultModule)

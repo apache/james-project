@@ -71,7 +71,7 @@ public class CassandraSessionModule extends AbstractModule {
     }
 
     private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
-        return new PropertiesConfiguration(fileSystem.getFile("cassandra.properties"));
+        return new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "cassandra.properties"));
     }
     
 }

@@ -16,47 +16,46 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.core.filesystem;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+package org.apache.james.modules;
 
-import javax.inject.Inject;
+import java.util.Optional;
+
+import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.cli.MissingArgumentException;
+import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.utils.ConfigurationProvider;
+import org.apache.james.utils.FileConfigurationProvider;
 
-@Singleton
-public class FileSystemImpl implements FileSystem {
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 
-    private final JamesDirectoriesProvider directoryProvider;
-    private final ResourceFactory resourceLoader;
-
-    @Inject
-    public FileSystemImpl(JamesDirectoriesProvider directoryProvider) {
-        this.directoryProvider = directoryProvider;
-        this.resourceLoader = new ResourceFactory(directoryProvider);
-    }
-
+public class CommonServicesModule extends AbstractModule {
+    
+    public static final String CONFIGURATION_PATH = "configurationPath";
+    
     @Override
-    public File getBasedir() throws FileNotFoundException {
-        return new File(directoryProvider.getRootDirectory());
+    protected void configure() {
+        bind(FileSystem.class).to(FileSystemImpl.class);
+        bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
     }
 
-    @Override
-    public InputStream getResource(String url) throws IOException {
-        return resourceLoader.getResource(url).getInputStream();
+    @Provides @Singleton @Named(CONFIGURATION_PATH)
+    public String configurationPath() {
+        return FileSystem.FILE_PROTOCOL_AND_CONF;
     }
-
-    @Override
-    public File getFile(String fileURL) throws FileNotFoundException {
-        try {
-            return resourceLoader.getResource(fileURL).getFile();
-        } catch (IOException e) {
-            throw new FileNotFoundException(e.getMessage());
-        }
+    
+    @Provides @Singleton
+    public JamesDirectoriesProvider directories() throws MissingArgumentException {
+        String rootDirectory = Optional
+                .ofNullable(System.getProperty("working.directory"))
+                .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry"));
+        return new JamesServerResourceLoader(rootDirectory);
     }
+    
 }
