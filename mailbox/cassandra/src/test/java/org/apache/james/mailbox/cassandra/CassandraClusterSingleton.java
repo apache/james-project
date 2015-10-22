@@ -43,7 +43,7 @@ public final class CassandraClusterSingleton {
     private static final int MAX_RETRY = 200;
 
     private static final Logger LOG = LoggerFactory.getLogger(CassandraClusterSingleton.class);
-    private static CassandraClusterSingleton cluster = null;
+    private static CassandraClusterSingleton singleton = null;
     private Session session;
     private CassandraTypesProvider typesProvider;
 
@@ -55,10 +55,10 @@ public final class CassandraClusterSingleton {
      */
     public static synchronized CassandraClusterSingleton build() throws RuntimeException {
         LOG.info("Retrieving cluster instance.");
-        if (cluster == null) {
-            cluster = new CassandraClusterSingleton();
+        if (singleton == null) {
+            singleton = new CassandraClusterSingleton();
         }
-        return cluster;
+        return singleton;
     }
 
     private CassandraClusterSingleton() throws RuntimeException {
@@ -86,14 +86,17 @@ public final class CassandraClusterSingleton {
 
     private Optional<Session> tryInitializeSession() {
         try {
-            Cluster cluster = ClusterFactory.createClusterForSingleServerWithoutPassWord(CLUSTER_IP, CLUSTER_PORT_TEST);
             Cluster clusterWithInitializedKeyspace = ClusterWithKeyspaceCreatedFactory
-                .clusterWithInitializedKeyspace(cluster, KEYSPACE_NAME, REPLICATION_FACTOR);
+                .clusterWithInitializedKeyspace(getCluster(), KEYSPACE_NAME, REPLICATION_FACTOR);
             return Optional.of(SessionFactory.createSession(clusterWithInitializedKeyspace, KEYSPACE_NAME));
         } catch (NoHostAvailableException exception) {
             sleep(SLEEP_BEFORE_RETRY);
             return Optional.empty();
         }
+    }
+
+    public Cluster getCluster() {
+        return ClusterFactory.createClusterForSingleServerWithoutPassWord(CLUSTER_IP, CLUSTER_PORT_TEST);
     }
 
     private void sleep(long sleepMs) {

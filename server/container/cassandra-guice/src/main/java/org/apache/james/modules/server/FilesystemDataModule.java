@@ -20,19 +20,14 @@
 
 package org.apache.james.modules.server;
 
-import org.apache.james.core.JamesServerResourceLoader;
-import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.xml.XMLDomainList;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.file.XMLRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.file.UsersFileRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
-import org.apache.james.utils.FileConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +42,6 @@ public class FilesystemDataModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
-        bind(JamesDirectoriesProvider.class).to(JamesServerResourceLoader.class);
-        bind(FileSystem.class).to(FileSystemImpl.class);
         bind(DomainList.class).to(XMLDomainList.class);
         bind(UsersRepository.class).to(UsersFileRepository.class);
         bind(RecipientRewriteTable.class).to(XMLRecipientRewriteTable.class);

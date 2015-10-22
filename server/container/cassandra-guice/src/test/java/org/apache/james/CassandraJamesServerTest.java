@@ -20,29 +20,25 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
-import org.apache.james.core.JamesServerResourceLoader;
-import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.mailbox.cassandra.CassandraClusterSingleton;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.util.Modules;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.modules.TestCassandraModule;
 import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestFilesystemModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.inject.util.Modules;
 
 public class CassandraJamesServerTest {
 
@@ -62,25 +58,6 @@ public class CassandraJamesServerTest {
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
-    private static class TestFilesystemModule extends AbstractModule {
-        
-        JamesServerResourceLoader jamesServerResourceLoader;
-
-        TestFilesystemModule(File tmpDir) {
-            jamesServerResourceLoader = new JamesServerResourceLoader() {
-                @Override
-                public String getRootDirectory() {
-                    return tmpDir.getAbsolutePath();
-                }
-            };
-        }
-        
-        @Override
-        protected void configure() {
-            bind(JamesDirectoriesProvider.class).toInstance(jamesServerResourceLoader);
-        }
-    }
-    
     @Before
     public void setup() throws Exception {
         socketChannel = SocketChannel.open();
@@ -88,8 +65,9 @@ public class CassandraJamesServerTest {
 
         server = new CassandraJamesServer(
                 Modules.override(CassandraJamesServerMain.defaultModule)
-                .with(new TestElasticSearchModule(embeddedElasticSearch), 
-                      new TestFilesystemModule(temporaryFolder.newFolder())));
+                .with(new TestElasticSearchModule(embeddedElasticSearch),
+                      new TestFilesystemModule(temporaryFolder.newFolder()),
+                      new TestCassandraModule()));
         server.start();
     }
 

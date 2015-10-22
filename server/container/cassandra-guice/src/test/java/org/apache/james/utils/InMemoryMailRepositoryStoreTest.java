@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.fail;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
@@ -36,13 +37,15 @@ import com.google.common.collect.Sets;
 public class InMemoryMailRepositoryStoreTest {
 
     private InMemoryMailRepositoryStore repositoryStore;
+    private FileSystemImpl fileSystem;
 
     @Before
     public void setUp() throws Exception {
+        fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../"));
         repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
                 new MailStoreRepositoryModule.FileMailRepositoryProvider(
-                        new FileSystemImpl(new JamesServerResourceLoader()))));
-        repositoryStore.configure(new FileConfigurationProvider().getConfiguration("mailrepositorystore"));
+                        fileSystem)));
+        repositoryStore.configure(new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL).getConfiguration("mailrepositorystore"));
         repositoryStore.init();
     }
 
@@ -71,9 +74,9 @@ public class InMemoryMailRepositoryStoreTest {
         try {
             repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
                     new MailStoreRepositoryModule.FileMailRepositoryProvider(
-                            new FileSystemImpl(new JamesServerResourceLoader()))));
-            repositoryStore.configure(new FileConfigurationProvider().getConfiguration("fakemailrepositorystore"));
-        } catch (Exception e) {
+                            fileSystem)));
+            repositoryStore.configure(new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL).getConfiguration("fakemailrepositorystore"));
+        } catch (ConfigurationException e) {
             fail("Unexpected failure : ", e);
         }
         repositoryStore.init();

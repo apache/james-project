@@ -22,6 +22,12 @@ import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 
 public class JamesServerResourceLoader implements JamesDirectoriesProvider {
 
+    private final String rootDirectory;
+
+    public JamesServerResourceLoader(String rootDirectory) {
+        this.rootDirectory = rootDirectory;
+    }
+
     /**
      * @see org.apache.james.container.spring.resource.JamesResourceLoader#getAbsoluteDirectory()
      */
@@ -60,7 +66,7 @@ public class JamesServerResourceLoader implements JamesDirectoriesProvider {
      * org.apache.james.container.spring.resource.JamesResourceLoader#getRootDirectory()
      */
     public String getRootDirectory() {
-        return "../";
+        return rootDirectory;
     }
 
 }
