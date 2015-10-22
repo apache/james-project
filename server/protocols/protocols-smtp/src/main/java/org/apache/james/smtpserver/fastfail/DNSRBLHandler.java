@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -37,7 +36,7 @@ public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail
     private DNSService dns;
 
     @Inject
-    public void setDNSService(@Named("dnsservice") DNSService dns) {
+    public void setDNSService(DNSService dns) {
         this.dns = dns;
     }
 

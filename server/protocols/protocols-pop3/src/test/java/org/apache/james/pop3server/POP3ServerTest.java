@@ -36,7 +36,9 @@ import javax.mail.Flags;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -54,6 +56,7 @@ import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.mock.MockUsersRepository;
 import org.junit.After;
@@ -705,7 +708,7 @@ public class POP3ServerTest {
 
     protected void setUpServiceManager() throws Exception {
         protocolHandlerChain = new MockProtocolHandlerLoader();
-        protocolHandlerChain.put("usersrepository", usersRepository);
+        protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
     
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
@@ -724,10 +727,10 @@ public class POP3ServerTest {
         }, aclResolver, groupMembershipResolver);
         mailboxManager.init();
 
-        protocolHandlerChain.put("mailboxmanager", mailboxManager);
+        protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);
     
         fileSystem = new MockFileSystem();
-        protocolHandlerChain.put("fileSystem", fileSystem);
+        protocolHandlerChain.put("fileSystem", FileSystem.class, fileSystem);
     
     }
 

@@ -22,7 +22,6 @@ package org.apache.james.smtpserver;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.MessagingException;
 
 import org.apache.commons.configuration.Configuration;
@@ -45,7 +44,7 @@ public class SendMailHandler implements JamesMessageHook {
     private MailQueueFactory queueFactory;
 
     @Inject
-    public void setMailQueueFactory(@Named("mailqueuefactory") MailQueueFactory queueFactory) {
+    public void setMailQueueFactory(MailQueueFactory queueFactory) {
         this.queueFactory = queueFactory;
     }
 

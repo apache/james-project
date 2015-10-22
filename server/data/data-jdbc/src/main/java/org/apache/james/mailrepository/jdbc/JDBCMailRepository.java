@@ -43,7 +43,6 @@ import java.util.StringTokenizer;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
@@ -154,7 +153,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Inject
-    public void setFileSystem(@Named("filesystem") FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 

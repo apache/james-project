@@ -31,7 +31,6 @@ import org.apache.mailet.Mail;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
@@ -72,7 +71,7 @@ public class FileMailRepository extends AbstractMailRepository {
     private FileSystem fileSystem;
 
     @Inject
-    public void setFileSystem(@Named("filesystem") FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 
