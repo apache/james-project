@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -90,7 +89,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
      * @param dnsService the dnsService to set
      */
     @Inject
-    public final void setDNSService(@Named("dnsservice") DNSService dnsService) {
+    public final void setDNSService(DNSService dnsService) {
         this.dnsService = dnsService;
     }
 

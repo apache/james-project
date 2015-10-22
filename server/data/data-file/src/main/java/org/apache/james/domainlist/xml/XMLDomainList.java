@@ -29,9 +29,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Singleton;
+
 /**
  * Mimic the old behavior of JAMES
  */
+@Singleton
 public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     private final List<String> domainNames = new ArrayList<String>();

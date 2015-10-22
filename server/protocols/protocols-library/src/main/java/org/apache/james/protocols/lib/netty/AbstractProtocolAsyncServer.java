@@ -19,7 +19,6 @@
 package org.apache.james.protocols.lib.netty;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -41,7 +40,7 @@ public abstract class AbstractProtocolAsyncServer extends AbstractConfigurableAs
     private HierarchicalConfiguration config;
 
     @Inject
-    public void setProtocolHandlerLoader(@Named("protocolhandlerloader") ProtocolHandlerLoader loader) {
+    public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
         this.loader = loader;
     }
     

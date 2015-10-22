@@ -22,9 +22,7 @@ import static org.jboss.netty.channel.Channels.pipeline;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -75,17 +73,17 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     public final static int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
     @Inject
-    public void setImapProcessor(@Named("imapProcessor") ImapProcessor processor) {
+    public void setImapProcessor(ImapProcessor processor) {
         this.processor = processor;
     }
 
     @Inject
-    public void setImapDecoder(@Named("imapDecoder") ImapDecoder decoder) {
+    public void setImapDecoder(ImapDecoder decoder) {
         this.decoder = decoder;
     }
 
     @Inject
-    public void setImapEncoder(@Named("imapEncoder") ImapEncoder encoder) {
+    public void setImapEncoder(ImapEncoder encoder) {
         this.encoder = encoder;
     }
 

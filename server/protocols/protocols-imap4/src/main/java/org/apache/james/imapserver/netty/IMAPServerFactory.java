@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
@@ -41,22 +40,22 @@ public class IMAPServerFactory extends AbstractServerFactory {
     private ImapProcessor processor;
     
     @Inject
-    public final void setFileSystem(@Named("filesystem") FileSystem filesystem) {
+    public final void setFileSystem(FileSystem filesystem) {
         this.fileSystem = filesystem;
     }
 
     @Inject
-    public void setImapProcessor(@Named("imapProcessor") ImapProcessor processor) {
+    public void setImapProcessor(ImapProcessor processor) {
         this.processor = processor;
     }
     
     @Inject
-    public void setImapDecoder(@Named("imapDecoder") ImapDecoder decoder) {
+    public void setImapDecoder(ImapDecoder decoder) {
         this.decoder = decoder;
     }
 
     @Inject
-    public void setImapEncoder(@Named("imapEncoder") ImapEncoder encoder) {
+    public void setImapEncoder(ImapEncoder encoder) {
         this.encoder = encoder;
     }
 

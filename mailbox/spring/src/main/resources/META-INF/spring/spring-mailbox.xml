@@ -44,6 +44,8 @@
      -->
     <bean id="mailboxcopier" class="org.apache.james.mailbox.copier.MailboxCopierImpl"/>
 
+    <bean id="mailboxmanagerresolver" class="org.apache.james.container.spring.mailbox.SpringResolver" />
+
     <!-- 
       Mailbox ACL Resolver
      -->

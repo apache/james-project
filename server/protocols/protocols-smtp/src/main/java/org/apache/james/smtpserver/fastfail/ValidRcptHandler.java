@@ -21,7 +21,6 @@ package org.apache.james.smtpserver.fastfail;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -66,7 +65,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
      *            the users to set
      */
     @Inject
-    public final void setUsersRepository(@Named("usersrepository") UsersRepository users) {
+    public final void setUsersRepository(UsersRepository users) {
         this.users = users;
     }
 
@@ -82,7 +81,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     }
 
     @Inject
-    public void setDomainList(@Named("domainlist") DomainList domains) {
+    public void setDomainList(DomainList domains) {
         this.domains = domains;
     }
     

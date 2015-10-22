@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -46,9 +45,7 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
     private MailboxManagerResolver resolver;
 
     @Inject
-    @Named("mailboxcopier")
-    @Resource(name = "mailboxcopier")
-    public void setMailboxCopier(MailboxCopier copier) {
+    public void setMailboxCopier(@Named("mailboxcopier") MailboxCopier copier) {
         this.copier = copier;
     }
 
