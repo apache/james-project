@@ -25,9 +25,16 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
+import org.apache.james.modules.protocols.IMAPServerModule;
+import org.apache.james.modules.protocols.LMTPServerModule;
+import org.apache.james.modules.protocols.POP3ServerModule;
+import org.apache.james.modules.protocols.ProtocolHandlerModule;
+import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
+import org.apache.james.modules.server.FileSystemModule;
+import org.apache.james.modules.server.QuotaModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -43,7 +50,14 @@ public class CassandraJamesServerMain {
             new CassandraDomainListModule(),
             new CassandraRecipientRewriteTableModule(),
             new DNSServiceModule(),
-            new ActiveMQQueueModule());
+            new IMAPServerModule(),
+            new ProtocolHandlerModule(),
+            new POP3ServerModule(),
+            new SMTPServerModule(),
+            new LMTPServerModule(),
+            new ActiveMQQueueModule(),
+            new QuotaModule(),
+            new FileSystemModule());
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(defaultModule);
