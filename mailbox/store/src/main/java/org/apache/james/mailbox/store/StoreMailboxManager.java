@@ -26,6 +26,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -75,6 +79,7 @@ import org.slf4j.Logger;
  *
  * @param <Id>
  */
+@Singleton
 public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager {
 
     public static final char SQL_WILDCARD_CHAR = '%';
@@ -111,6 +116,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     private int fetchBatchSize = DEFAULT_FETCH_BATCH_SIZE;
 
 
+    @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory, final Authenticator authenticator, final MailboxPathLocker locker, final MailboxACLResolver aclResolver, final GroupMembershipResolver groupMembershipResolver) {
         this.authenticator = authenticator;
         this.locker = locker;
@@ -158,6 +164,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
      * @throws MailboxException
      */
     @SuppressWarnings("rawtypes")
+    @PostConstruct
     public void init() throws MailboxException {
         // The dispatcher need to have the delegating listener added
         dispatcher = new MailboxEventDispatcher<Id>(getDelegationListener());
