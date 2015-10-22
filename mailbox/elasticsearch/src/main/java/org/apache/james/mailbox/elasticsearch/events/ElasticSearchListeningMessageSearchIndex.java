@@ -20,6 +20,7 @@ package org.apache.james.mailbox.elasticsearch.events;
 
 import java.util.Iterator;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
@@ -48,6 +49,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     private final ElasticSearchSearcher<Id> searcher;
     private final MessageToElasticSearchJson messageToElasticSearchJson;
 
+    @Inject
     public ElasticSearchListeningMessageSearchIndex(MessageMapperFactory<Id> factory, ElasticSearchIndexer indexer,
         ElasticSearchSearcher<Id> searcher, MessageToElasticSearchJson messageToElasticSearchJson) {
         super(factory);

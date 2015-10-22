@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import java.time.ZoneId;
@@ -45,6 +46,7 @@ public class MessageToElasticSearchJson {
         this.mapper.registerModule(new Jdk8Module());
     }
 
+    @Inject
     public MessageToElasticSearchJson(TextExtractor textExtractor) {
         this(textExtractor, ZoneId.systemDefault());
     }

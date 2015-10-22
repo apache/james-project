@@ -202,6 +202,10 @@
                     <version>1.6.3</version>
                 </dependency>
                 <dependency>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>${javax.mail.groupId}</groupId>
                     <artifactId>${javax.mail.artifactId}</artifactId>
                 </dependency>
