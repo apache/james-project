@@ -40,6 +40,8 @@ import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+
 public class ElasticSearchSearcher<Id extends MailboxId> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
@@ -47,6 +49,7 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
     private final ClientProvider clientProvider;
     private final QueryConverter queryConverter;
 
+    @Inject
     public ElasticSearchSearcher(ClientProvider clientProvider, QueryConverter queryConverter) {
         this.clientProvider = clientProvider;
         this.queryConverter = queryConverter;
