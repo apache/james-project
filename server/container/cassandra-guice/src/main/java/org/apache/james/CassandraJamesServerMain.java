@@ -25,8 +25,7 @@ import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.DNSServiceModule;
-import org.apache.james.modules.server.JpaDomainListModule;
-import org.apache.james.modules.server.JpaUsersRepositoryModule;
+import org.apache.james.modules.server.FilesystemDataModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -38,8 +37,7 @@ public class CassandraJamesServerMain {
             new CassandraMailboxModule(),
             new CassandraSessionModule(),
             new ElasticSearchMailboxModule(),
-            new JpaUsersRepositoryModule(),
-            new JpaDomainListModule(),
+            new FilesystemDataModule(),
             new DNSServiceModule(),
             new ActiveMQQueueModule());
 
