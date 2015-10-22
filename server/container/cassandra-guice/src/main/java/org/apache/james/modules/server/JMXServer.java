@@ -19,17 +19,6 @@
 
 package org.apache.james.modules.server;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
-import org.apache.james.util.RestrictingRMISocketFactory;
-import org.apache.james.utils.PropertiesReader;
-
-import javax.annotation.PreDestroy;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.rmi.registry.LocateRegistry;
@@ -37,14 +26,32 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.util.RestrictingRMISocketFactory;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
+
 public class JMXServer {
 
+    private final FileSystem fileSystem;
     private final Set<String> registeredKeys;
     private final Object lock;
     private JMXConnectorServer jmxConnectorServer;
     private boolean isStarted;
 
-    public JMXServer() {
+    @Inject
+    public JMXServer(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
         isStarted = false;
         registeredKeys = new HashSet<>();
         lock = new Object();
@@ -79,11 +86,11 @@ public class JMXServer {
     }
 
     private void doStart() {
-        PropertiesReader propertiesReader = new PropertiesReader("jmx.properties");
-        String address = propertiesReader.getProperty("jmx.address");
-        int port = Integer.parseInt(propertiesReader.getProperty("jmx.port"));
-        String serviceURL = "service:jmx:rmi://" + address + "/jndi/rmi://" + address+ ":" + port +"/jmxrmi";
         try {
+            PropertiesConfiguration configuration = new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "jmx.properties"));
+            String address = configuration.getString("jmx.address");
+            int port = configuration.getInt("jmx.port");
+            String serviceURL = "service:jmx:rmi://" + address + "/jndi/rmi://" + address+ ":" + port +"/jmxrmi";
             RestrictingRMISocketFactory restrictingRMISocketFactory = new RestrictingRMISocketFactory(address);
             LocateRegistry.createRegistry(port, restrictingRMISocketFactory, restrictingRMISocketFactory);
 
