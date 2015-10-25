@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.event.distributed;
 
-import org.apache.james.backends.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class CassandraMailboxPathRegistrerMapperTest {
 
-    private static final CassandraClusterSingleton cassandra = CassandraClusterSingleton.create(new CassandraMailboxModule());
+    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraMailboxModule());
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("namespace2", "user2", "name2");
     private static final Topic TOPIC = new Topic("topic");
