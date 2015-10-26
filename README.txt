@@ -84,3 +84,77 @@ as we don't want to download all dependencies on each build
 as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or trunk if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
+
+Howto run James in Docker
+=========================
+
+This feature is only available for Java 8 / Cassandra mailbox backend yet.
+
+
+* Requirements
+You should have the zip resulting of the build in the ./dockerfiles/destination folder.
+
+
+* Howto ?
+You need a running cassandra in docker. To achieve this run :
+$ docker run -d --name=cassandra cassandra
+
+You need a running ElasticSearch in docker. To achieve this run :
+$ docker run -d --name=elasticsearch elasticsearch:1.5.2
+
+We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TSL keys to destination/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
+$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/destination/conf/keystore
+
+Then we need to build james container :
+$ docker build -t james_run dockerfiles
+
+To run this container :
+$ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+
+Where :
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+
+* Useful commands
+
+** How to add a domain ?
+# Add DOMAIN to 127.0.0.1 in your host /etc/hosts
+$ docker exec james_run /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh -h 127.0.0.1 -p 9999 adddomain DOMAIN
+
+Where :
+- DOMAIN: is the domain you want to add.
+
+** How to add a user ?
+$ docker exec james_run /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
+
+Where :
+- USER_MAIL_ADDRESS: is the mail address that will be used by this user.
+- PASSWORD: is the password that will be used by this user.
+
+You can then just add DOMAIN to your /etc/hosts and you can connect to your james account with for instance Thunderbird.
+
+** How to manage SIEVE scripts ?
+Each user can manage his SIEVE scripts threw the manage SIEVE mailet.
+
+To use the manage SIEVE mailet :
+
+ - You need to create the user sievemanager@DOMAIN ( if you don't, the SMTP server will check the domain, recognize it, and look for an absent local user, and will generate an error ).
+ - You can send Manage Sieve commands by mail to sievemanager@DOMAIN. Your subject must contain the command. Scripts needs to be added as attachments and need the ".sieve" extension.
+
+To activate a script for a user, you need the following combinaison :
+
+ - PUTSCRIPT scriptname
+ - SETACTIVE scriptname
+
+** I want to retrieve users and password from my previous container
+Some james data ( those non related to mailbox, eg : mail queue, domains, users, rrt, SIEVE scripts, mail repositories ) are not yet supported by our Cassandra implementation.
+
+To keep these data when you run a new container, you can mount the following volume :
+ -v /root/james-server-app-3.0.0-beta5-SNAPSHOT/var:WORKDIR/destination/var
+
+Where :
+- WORKDIR: is the absolute path to your james-parent workdir.
+
+Beware : you will have concurrency issues if multiple containers are running on this single volume.
