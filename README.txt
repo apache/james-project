@@ -181,3 +181,17 @@ Where :
  - JAMES_IP: IP address or DNS entry for your James server
  - JAMES_PORT: Port allocated to James' IMAP port (should be 143).
  - SHA1(optional): Branch to use in order to build integration tests or trunk
+
+
+Howto check the merge of a commit
+=================================
+
+First step, you have to build the Docker image
+$ docker build -t james/merge dockerfiles/merge
+
+In order to run the build, you have to launch the following command:
+$ docker run -v $PWD:/origin -t james/merge SHA1 RESULTING_BRANCH
+
+Where :
+- SHA1: is the given git SHA1 of the james-project repository to merge.
+- RESULTING_BRANCH: is the branch created when merging.
