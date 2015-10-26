@@ -48,6 +48,26 @@ Howto check the compilation
 ===========================
 
 In order to have a standard compilation environment, we introduce Dockerfiles.
+We need to check the compilation in both Java 6 & Java 8:
+- Java 6 is the historical Java release used in James.
+- Java 8 is used to compile the Cassandra backend.
+
+* Java 6
+First step, you have to build the Docker image
+$ docker build -t james/project dockerfiles/compilation/java-6
+
+In order to run the build, you have to launch the following command:
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/destination:/destination -t james/project -s SHA1
+
+Where:
+
+- $PWD/.m2:/root/.m2: is the first volume used to share the maven repository, 
+as we don't want to download all dependencies on each build
+- $PWD/dockerfiles/destination:/destination: is the third volume used to get the compiled elements, 
+as it is needed by the container that will run James.
+- SHA1 (optional): is the given git SHA1 of the james-project repository to build or trunk if none.
+- -s option: given tests will not be played while building. Not specifying means play tests.
+
 
 * Java 8
 First step, you have to build the Docker image
