@@ -121,7 +121,7 @@
                 <executions>
                     <execution>
                         <id>add-features-to-repo</id>
-                        <phase>compile</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>add-features-to-repo</goal>
                         </goals>
