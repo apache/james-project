@@ -18,6 +18,7 @@ RUN apt-get install -y git="$GIT_VERSION"
 
 # Copy the script
 COPY compile.sh /root/compile.sh
+COPY integration_tests.sh /root/integration_tests.sh
 
 # Define the entrypoint
 WORKDIR /james-project
