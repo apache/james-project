@@ -63,6 +63,7 @@
         <module>tika</module>
         <module>tool</module>
         <module>zoo-seq-provider</module>
+        <module>kafka</module>
     </modules>
 
     <scm>
