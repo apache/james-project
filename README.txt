@@ -68,7 +68,6 @@ as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or trunk if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
 
-
 * Java 8
 First step, you have to build the Docker image
 $ docker build -t james/project dockerfiles/compilation/java-8
@@ -158,6 +157,16 @@ Where :
 - WORKDIR: is the absolute path to your james-parent workdir.
 
 Beware : you will have concurrency issues if multiple containers are running on this single volume.
+
+
+How to run James in Docker using guice container
+================================================
+
+You have to follow above documentation and replace spring by guice in paths.
+
+Once you run the container, you have to use the following command to launch the cli :
+
+$ docker exec james_run java -jar /root/james-cli.jar -h localhost <command>
 
 
 Running deployement Tests
