@@ -37,6 +37,7 @@
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
+        <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
 
     <bean id ="cassandra-subscriptionManager"
@@ -81,5 +82,10 @@
     </bean>
 
     <bean id="cassandra-mailbox-id-deserializer" class="org.apache.james.mailbox.cassandra.CassandraMailboxIdDeserializer"/>
+
+    <bean id="cassandra-mailbox-path-register-mapper" class="org.apache.james.mailbox.cassandra.event.distributed.CassandraMailboxPathRegisterMapper" lazy-init="true">
+        <constructor-arg index="0" ref="cassandra-session"/>
+        <constructor-arg index="1" ref="cassandra-type-provider"/>
+    </bean>
 
 </beans>
