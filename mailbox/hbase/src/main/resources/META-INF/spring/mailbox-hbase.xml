@@ -46,6 +46,7 @@
         <property name="quotaManager" ref="quotaManager"/>
         <property name="maxQuotaManager" ref="maxQuotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
+        <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
 
     <bean id="hbase-sessionMapperFactory" class="org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory">
