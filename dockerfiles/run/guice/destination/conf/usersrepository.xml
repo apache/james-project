@@ -19,6 +19,7 @@
  -->
 
 <usersrepository name="LocalUsers">
+    <destination URL="file://users/"/>
     <algorithm>MD5</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>    
 </usersrepository>

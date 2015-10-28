@@ -20,7 +20,7 @@
 
 <domainlist class="org.apache.james.domainlist.jpa.JPADomainList">
     <domainnames>
-        <domainname>james.linagora.com</domainname>
+        <domainname>domain</domainname>
     </domainnames>
     <autodetect>true</autodetect>
     <autodetectIP>true</autodetectIP>
