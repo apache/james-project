@@ -18,17 +18,17 @@
  ****************************************************************/
 package org.apache.james.rrt.file;
 
-import com.google.common.collect.Maps;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 /**
  * Class responsible to implement the Virtual User Table in XML disk file.
@@ -44,12 +44,8 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     protected void doConfigure(HierarchicalConfiguration arg0) throws ConfigurationException {
         String[] mapConf = arg0.getStringArray("mapping");
         mappings = Maps.newHashMap();
-        if (mapConf != null && mapConf.length > 0) {
-            for (String aMapConf : mapConf) {
-                mappings.putAll(RecipientRewriteTableUtil.getXMLMappings(aMapConf));
-            }
-        } else {
-            throw new ConfigurationException("No mapping configured");
+        for (String aMapConf : mapConf) {
+            mappings.putAll(RecipientRewriteTableUtil.getXMLMappings(aMapConf));
         }
     }
 
