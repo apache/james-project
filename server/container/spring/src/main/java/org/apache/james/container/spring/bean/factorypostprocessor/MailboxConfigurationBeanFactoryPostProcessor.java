@@ -51,30 +51,37 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             String mailbox = null;
             String subscription = null;
             String messageMapperFactory = null;
+            String mailboxIdDeserializer = null;
             if (provider.equalsIgnoreCase("jpa")) {
                 mailbox = "jpa-mailboxmanager";
                 subscription = "jpa-subscriptionManager";
                 messageMapperFactory = "jpa-sessionMapperFactory";
+                mailboxIdDeserializer = "jpa-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("memory")) {
                 mailbox = "memory-mailboxmanager";
                 subscription = "memory-subscriptionManager";
                 messageMapperFactory = "memory-sessionMapperFactory";
+                mailboxIdDeserializer = "memory-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("jcr")) {
                 mailbox = "jcr-mailboxmanager";
                 subscription = "jcr-subscriptionManager";
                 messageMapperFactory = "jcr-sessionMapperFactory";
+                mailboxIdDeserializer = "jcr-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("maildir")) {
                 mailbox = "maildir-mailboxmanager";
                 subscription = "maildir-subscriptionManager";
                 messageMapperFactory = "maildir-sessionMapperFactory";
+                mailboxIdDeserializer = "maildir-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("hbase")) {
                 mailbox = "hbase-mailboxmanager";
                 subscription = "hbase-subscriptionManager";
                 messageMapperFactory = "hbase-sessionMapperFactory";
+                mailboxIdDeserializer = "hbase-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("cassandra")) {
                 mailbox = "cassandra-mailboxmanager";
                 subscription = "cassandra-subscriptionManager";
                 messageMapperFactory = "cassandra-sessionMapperFactory";
+                mailboxIdDeserializer = "cassandra-mailbox-id-deserializer";
             }
 
             if (mailbox == null)
@@ -82,6 +89,7 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             registry.registerAlias(mailbox, "mailboxmanager");
             registry.registerAlias(subscription, "subscriptionManager");
             registry.registerAlias(messageMapperFactory, "messageMapperFactory");
+            registry.registerAlias(mailboxIdDeserializer, "mailbox-id-deserializer");
 
         } catch (ConfigurationException e) {
             throw new FatalBeanException("Unable to config the mailboxmanager", e);

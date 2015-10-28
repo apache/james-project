@@ -62,4 +62,6 @@
 
     <alias name="jvm-locker" alias="hbase-locker"/>
 
+    <bean id="hbase-mailbox-id-deserializer" class="org.apache.james.mailbox.hbase.HBaseMailboxIdDeserializer"/>
+
 </beans>
