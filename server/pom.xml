@@ -165,7 +165,7 @@
         <geronimo-annotation-spec.version>1.0.1</geronimo-annotation-spec.version>
         <spring-osgi-extender.version>1.2.1</spring-osgi-extender.version>
         <org.osgi.core.version>5.0.0</org.osgi.core.version>
-        <guava.version>13.0</guava.version>
+        <guava.version>16.0</guava.version>
 
         <!-- karaf dependencies -->
         <exam.version>2.6.0</exam.version>
@@ -1231,13 +1231,6 @@
 
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-    </dependencies>
 
     <build>
         <plugins>

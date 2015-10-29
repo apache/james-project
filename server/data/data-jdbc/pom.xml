@@ -71,7 +71,10 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
         <dependency>
             <groupId>${javax.mail.groupId}</groupId>
             <artifactId>${javax.mail.artifactId}</artifactId>
