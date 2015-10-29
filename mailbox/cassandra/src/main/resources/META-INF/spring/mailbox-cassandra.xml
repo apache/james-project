@@ -26,7 +26,10 @@
     <!-- 
       Mailbox Cassandra
     -->
-    <bean id="cassandra-mailboxmanager" class="org.apache.james.mailbox.cassandra.CassandraMailboxManager" init-method="init">
+    <bean id="cassandra-mailboxmanager"
+          class="org.apache.james.mailbox.cassandra.CassandraMailboxManager"
+          init-method="init"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-sessionMapperFactory"/>
         <constructor-arg index="1" ref="authenticator"/>
         <constructor-arg index="2" ref="cassandra-locker"/>
@@ -36,64 +39,44 @@
         <property name="quotaUpdater" ref="quotaUpdater"/>
     </bean>
 
-    <bean id ="cassandra-subscriptionManager" class="org.apache.james.mailbox.cassandra.CassandraSubscriptionManager">
+    <bean id ="cassandra-subscriptionManager"
+          class="org.apache.james.mailbox.cassandra.CassandraSubscriptionManager"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-sessionMapperFactory"/>
     </bean>
 
-    <bean id="cassandra-sessionMapperFactory" class="org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory">
+    <bean id="cassandra-sessionMapperFactory"
+          class="org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-uidProvider"/>
         <constructor-arg index="1" ref="cassandra-modSeqProvider"/>
         <constructor-arg index="2" ref="cassandra-session"/>
         <constructor-arg index="3" ref="cassandra-type-provider"/>
     </bean>
 
-    <bean id="cassandra-uidProvider" class="org.apache.james.mailbox.cassandra.mail.CassandraUidProvider">
+    <bean id="cassandra-uidProvider"
+          class="org.apache.james.mailbox.cassandra.mail.CassandraUidProvider"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-session"/>
     </bean>
 
-    <bean id="cassandra-modSeqProvider" class="org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider">
+    <bean id="cassandra-modSeqProvider"
+          class="org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-session"/>
     </bean>
 
     <alias name="no-locker" alias="cassandra-locker"/>
 
-    <bean name="cassandraMaxQuotaManager" class="org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager">
+    <bean name="cassandraMaxQuotaManager"
+          class="org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-session"/>
     </bean>
 
-    <bean name="cassandraCurrentQuotaManager" class="org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager">
-        <constructor-arg index="0" ref="cassandra-session"/>
-    </bean>
-
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="ignoreUnresolvablePlaceholders" value="true"/>
-        <property name ="location" value="classpath:cassandra.properties"/>
-    </bean>
-
-    <!--
-      The Cluster factory is responsible for connecting the cluster
-
-      The ClusterWithKeyspaceCreatedFactory is responsible for creating the keyspace if not present.
-
-      The SessionFactory is responsible for giving a session we can work with
-    -->
-    <bean id="cassandra-cluster" class="org.apache.james.mailbox.cassandra.ClusterFactory" factory-method="createClusterForSingleServerWithoutPassWord">
-        <constructor-arg index="0" value="${cassandra.ip}"/>
-        <constructor-arg index="1" value="${cassandra.port}" type="int"/>
-    </bean>
-
-    <bean id="cassandra-cluster-initialized" class="org.apache.james.mailbox.cassandra.ClusterWithKeyspaceCreatedFactory" factory-method="clusterWithInitializedKeyspace">
-        <constructor-arg index="0" ref="cassandra-cluster"/>
-        <constructor-arg index="1" value="${cassandra.keyspace}"/>
-        <constructor-arg index="2" value="${cassandra.replication.factor}" type="int"/>
-    </bean>
-
-    <bean id="cassandra-session" class="org.apache.james.mailbox.cassandra.SessionFactory" factory-method="createSession">
-        <constructor-arg index="0" ref="cassandra-cluster-initialized"/>
-        <constructor-arg index="1" value="${cassandra.keyspace}"/>
-    </bean>
-
-    <bean id="cassandra-type-provider" class="org.apache.james.mailbox.cassandra.CassandraTypesProvider">
+    <bean name="cassandraCurrentQuotaManager"
+          class="org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager"
+          lazy-init="true">
         <constructor-arg index="0" ref="cassandra-session"/>
     </bean>
 
