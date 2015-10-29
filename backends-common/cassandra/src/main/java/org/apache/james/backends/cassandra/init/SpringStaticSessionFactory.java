@@ -19,20 +19,18 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.List;
-
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
 public class SpringStaticSessionFactory {
 
-    public static Session createSession(Cluster cluster, String keyspace, List<CassandraModule> modules) {
-        return new SessionWithInitializedTablesFactory(modules).createSession(cluster, keyspace);
+    public static Session createSession(Cluster cluster, String keyspace, CassandraModule module) {
+        return new SessionWithInitializedTablesFactory(module).createSession(cluster, keyspace);
     }
 
-    public static Session createSession(Cluster cluster, List<CassandraModule> modules) {
-        return new SessionWithInitializedTablesFactory(modules).createSession(cluster);
+    public static Session createSession(Cluster cluster, CassandraModule module) {
+        return new SessionWithInitializedTablesFactory(module).createSession(cluster);
     }
 
 }

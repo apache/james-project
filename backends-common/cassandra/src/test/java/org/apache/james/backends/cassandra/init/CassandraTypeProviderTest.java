@@ -33,7 +33,6 @@ import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,15 +81,15 @@ public class CassandraTypeProviderTest {
     @Test
     public void initializeTypesShouldCreateTheTypes() {
         deleteMailboxBaseType();
-        new CassandraTypesCreator(Arrays.asList(module), cassandra.getConf()).initializeTypes();
-        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(Arrays.asList(module), cassandra.getConf());
+        new CassandraTypesCreator(module, cassandra.getConf()).initializeTypes();
+        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(module, cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }
 
     @Test
     public void initializeTypesShouldNotFailIfCalledTwice() {
-        new CassandraTypesProvider(Arrays.asList(module), cassandra.getConf());
+        new CassandraTypesProvider(module, cassandra.getConf());
         assertThat(cassandra.getTypesProvider().getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }

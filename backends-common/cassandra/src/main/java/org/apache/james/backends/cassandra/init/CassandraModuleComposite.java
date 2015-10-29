@@ -19,36 +19,46 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.List;
 
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.UserType;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.Collectors;
 
-public class CassandraTypesProvider {
-    private final ImmutableMap<String, UserType> userTypes;
+public class CassandraModuleComposite implements CassandraModule {
 
-    public CassandraTypesProvider(CassandraModule module, Session session) {
-        userTypes = module.moduleTypes()
-            .stream()
-            .collect(Collectors.toImmutableMap(
-                    CassandraType::getName,
-                    type -> getSessionType(session, type)));
+    private final ImmutableList<CassandraTable> tables;
+    private final ImmutableList<CassandraIndex> index;
+    private final ImmutableList<CassandraType> types;
+
+    public CassandraModuleComposite(CassandraModule... modules) {
+        tables = Arrays.stream(modules)
+            .flatMap(module -> module.moduleTables().stream())
+            .collect(Collectors.toImmutableList());
+        index = Arrays.stream(modules)
+            .flatMap(module -> module.moduleIndex().stream())
+            .collect(Collectors.toImmutableList());
+        types = Arrays.stream(modules)
+            .flatMap(module -> module.moduleTypes().stream())
+            .collect(Collectors.toImmutableList());
     }
 
-    private UserType getSessionType(Session session, CassandraType type) {
-        return session.getCluster()
-            .getMetadata()
-            .getKeyspace(session.getLoggedKeyspace())
-            .getUserType(type.getName());
+    @Override
+    public List<CassandraTable> moduleTables() {
+        return tables;
     }
 
-    public UserType getDefinedUserType(String typeName) {
-        return Optional.ofNullable(userTypes.get(typeName))
-            .orElseThrow(() -> new RuntimeException("Cassandra UDT " + typeName + " can not be retrieved"));
+    @Override
+    public List<CassandraIndex> moduleIndex() {
+        return index;
     }
 
+    @Override
+    public List<CassandraType> moduleTypes() {
+        return types;
+    }
 }

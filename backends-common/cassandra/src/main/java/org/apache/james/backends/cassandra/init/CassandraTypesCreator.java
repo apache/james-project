@@ -19,14 +19,8 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraType;
 
@@ -34,10 +28,8 @@ public class CassandraTypesCreator {
     private final ImmutableList<CassandraType> types;
     private final Session session;
 
-    public CassandraTypesCreator(List<CassandraModule> modules, Session session) {
-        this.types = ImmutableList.copyOf(modules.stream()
-            .flatMap(module -> module.moduleTypes().stream())
-            .collect(Collectors.toList()));
+    public CassandraTypesCreator(CassandraModule module, Session session) {
+        this.types = ImmutableList.copyOf(module.moduleTypes());
         this.session = session;
     }
 

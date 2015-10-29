@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.List;
-
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -28,17 +26,17 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 public class SessionWithInitializedTablesFactory {
     private final static String DEFAULT_KEYSPACE_NAME = "apache_james";
 
-    private List<CassandraModule> modules;
+    private CassandraModule module;
 
-    public SessionWithInitializedTablesFactory(List<CassandraModule> modules) {
-        this.modules = modules;
+    public SessionWithInitializedTablesFactory(CassandraModule module) {
+        this.module = module;
     }
 
     public Session createSession(Cluster cluster, String keyspace) {
         Session session = cluster.connect(keyspace);
-        new CassandraTypesCreator(modules, session)
+        new CassandraTypesCreator(module, session)
             .initializeTypes();
-        new CassandraTableManager(modules, session)
+        new CassandraTableManager(module, session)
             .ensureAllTables();
         return session;
     }
