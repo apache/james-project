@@ -25,6 +25,8 @@
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
+    <import resource="classpath:META-INF/cassandra-session.xml"/>
+
     <!-- 
     ===========================================================================
        Spring Wiring for James Server: Annotation, Bean Post-Processors...
@@ -260,5 +262,6 @@
     <!--
         <import resource="classpath:jetm-monitoring.conf" />
     -->
+
 
 </beans>
