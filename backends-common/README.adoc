@@ -1,0 +1,10 @@
+= backends-common
+
+This project intends to share implementation details for commonly used back-ends accross james
+projects.
+
+For instance, as we are implementing a cassandra storage backend for James, we need to :
+
+ - Use tools to help to work with Cassandra in james-mailbox project
+ - We need to access test helpers in james-mpt project
+ - We need the same tools than those introduce in james-mailbox in James server data.

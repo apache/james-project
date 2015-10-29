@@ -535,6 +535,7 @@
     </properties>
 
     <modules>
+        <module>backends-common</module>
         <module>mailbox</module>
         <module>mailet</module>
         <module>mpt</module>
