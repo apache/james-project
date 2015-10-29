@@ -29,16 +29,14 @@ import static org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTabl
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
@@ -68,7 +66,7 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
 
     @Override
     public List<Subscription> findSubscriptionsForUser(String user) {
-        return convertToStream(
+        return CassandraUtils.convertToStream(
             session.execute(select(MAILBOX)
                 .from(TABLE_NAME)
                 .where(eq(USER, user))))
@@ -84,7 +82,7 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     }
 
     public List<SimpleSubscription> list() {
-        return convertToStream(
+        return CassandraUtils.convertToStream(
             session.execute(select(FIELDS)
                 .from(TABLE_NAME)))
             .map((row) -> new SimpleSubscription(row.getString(USER), row.getString(MAILBOX)))
@@ -94,10 +92,6 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     @Override
     public void endRequest() {
         // nothing to do
-    }
-
-    private Stream<Row> convertToStream(ResultSet resultSet) {
-        return StreamSupport.stream(resultSet.spliterator(), true);
     }
 
 }

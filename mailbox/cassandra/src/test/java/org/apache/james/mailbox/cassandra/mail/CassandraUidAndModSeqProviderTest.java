@@ -27,8 +27,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
 import java.util.stream.LongStream;
 
-import org.apache.james.mailbox.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraClusterSingleton;
 import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -44,7 +45,7 @@ import com.google.common.base.Throwables;
  */
 public class CassandraUidAndModSeqProviderTest {
 
-    private static final CassandraClusterSingleton CASSANDRA = CassandraClusterSingleton.build();
+    private static final CassandraClusterSingleton CASSANDRA = CassandraClusterSingleton.create(new CassandraMailboxModule());
     private static final int NAMESPACES = 5;
     private static final int USERS = 5;
     private static final int MAILBOX_NO = 5;

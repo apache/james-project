@@ -113,6 +113,7 @@
 
         <javax.mail.groupId>javax.mail</javax.mail.groupId>
         <javax.mail.artifactId>mail</javax.mail.artifactId>
+        <backends.version>1.8.3-SNAPSHOT</backends.version>
     </properties>
 
 
@@ -159,6 +160,17 @@
                 <type>test-jar</type>
             </dependency>
             <!-- Other Apache James sub projects -->
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <version>${backends.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <type>test-jar</type>
+                <version>${backends.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-api</artifactId>

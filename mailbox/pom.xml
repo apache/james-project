@@ -125,6 +125,7 @@
         <jackson-databinding.version>2.3.3</jackson-databinding.version>
         <cassandra-driver-core.version>2.1.5</cassandra-driver-core.version>
         <cassandra-unit.version>2.0.2.2</cassandra-unit.version>
+        <apache-backends-cassandra.version>1.8.3-SNAPSHOT</apache-backends-cassandra.version>
     </properties>
 
     <dependencyManagement>
@@ -280,6 +281,21 @@
                         <artifactId>mail</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <!--
+
+            -->
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <version>${apache-backends-cassandra.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <version>${apache-backends-cassandra.version}</version>
+                <type>test-jar</type>
             </dependency>
 
             <!--

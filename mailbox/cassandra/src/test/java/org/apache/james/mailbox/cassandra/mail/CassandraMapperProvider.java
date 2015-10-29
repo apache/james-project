@@ -1,7 +1,8 @@
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.mailbox.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraClusterSingleton;
 import org.apache.james.mailbox.cassandra.CassandraId;
+import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -11,7 +12,7 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
 public class CassandraMapperProvider implements MapperProvider<CassandraId> {
 
-    private static final CassandraClusterSingleton cassandra = CassandraClusterSingleton.build();
+    private static final CassandraClusterSingleton cassandra = CassandraClusterSingleton.create(new CassandraMailboxModule());
 
     @Override
     public MailboxMapper<CassandraId> createMailboxMapper() throws MailboxException {

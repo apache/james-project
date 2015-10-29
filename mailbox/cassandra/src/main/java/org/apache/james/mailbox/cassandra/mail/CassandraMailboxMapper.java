@@ -36,11 +36,11 @@ import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.CassandraTypesProvider;
-import org.apache.james.mailbox.cassandra.CassandraTypesProvider.TYPE;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.MailboxBase;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -118,9 +118,9 @@ public class CassandraMailboxMapper implements MailboxMapper<CassandraId> {
 
     @Override
     public List<Mailbox<CassandraId>> list() throws MailboxException {
-        return convertToStream(
-            session.execute(select(FIELDS)
-                .from(TABLE_NAME)))
+        return CassandraUtils.convertToStream(
+            session.execute(
+                select(FIELDS).from(TABLE_NAME)))
             .map(this::mailbox)
             .collect(Collectors.toList());
     }
@@ -172,7 +172,7 @@ public class CassandraMailboxMapper implements MailboxMapper<CassandraId> {
                 .value(ID, mailbox.getMailboxId().asUuid())
                 .value(NAME, mailbox.getName())
                 .value(UIDVALIDITY, mailbox.getUidValidity())
-                .value(MAILBOX_BASE, typesProvider.getDefinedUserType(TYPE.MailboxBase)
+                .value(MAILBOX_BASE, typesProvider.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE)
                     .newValue()
                     .setString(MailboxBase.NAMESPACE, mailbox.getNamespace())
                     .setString(MailboxBase.USER, mailbox.getUser()))
@@ -184,18 +184,11 @@ public class CassandraMailboxMapper implements MailboxMapper<CassandraId> {
         return new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
     }
 
-    private Stream<Row> convertToStream(ResultSet resultSet) {
-        return StreamSupport.stream(resultSet.spliterator(), true);
-    }
-
     private Stream<Row> getMailboxFilteredByNamespaceAndUserStream (String namespace, String user) {
-        return convertToStream(session.execute(
+        return CassandraUtils.convertToStream(session.execute(
             select(FIELDS)
                 .from(TABLE_NAME)
-                .where(eq(MAILBOX_BASE, typesProvider.getDefinedUserType(TYPE.MailboxBase)
-                    .newValue()
-                    .setString(MailboxBase.NAMESPACE, namespace)
-                    .setString(MailboxBase.USER, user)))));
+                .where(eq(MAILBOX_BASE, typesProvider.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE).newValue().setString(MailboxBase.NAMESPACE, namespace).setString(MailboxBase.USER, user)))));
     }
 
 }

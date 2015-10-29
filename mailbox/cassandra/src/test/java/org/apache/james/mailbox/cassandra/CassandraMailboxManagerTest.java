@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra;
 
+import org.apache.james.backends.cassandra.CassandraClusterSingleton;
 import org.apache.james.mailbox.AbstractMailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CassandraMailboxManagerTest extends AbstractMailboxManagerTest {
 
-    private static final CassandraClusterSingleton CASSANDRA = CassandraClusterSingleton.build();
+    private static final CassandraClusterSingleton CASSANDRA = CassandraClusterSingleton.create(new CassandraMailboxModule());
 
     /**
      * Setup the mailboxManager.
