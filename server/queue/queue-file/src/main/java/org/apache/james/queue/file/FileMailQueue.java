@@ -42,6 +42,7 @@ import javax.mail.MessagingException;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.core.MimeMessageSource;
 import org.apache.james.lifecycle.api.Disposable;
@@ -49,8 +50,6 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
-
-import com.google.common.io.Closeables;
 
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
@@ -353,7 +352,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
         @Override
         public void dispose() {
-            Closeables.closeQuietly(in);
+            IOUtils.closeQuietly(in);
             file = null;
         }
 

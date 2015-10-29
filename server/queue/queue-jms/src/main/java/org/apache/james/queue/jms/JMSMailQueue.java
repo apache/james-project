@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.queue.jms;
 
-import com.google.common.io.Closeables;
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.queue.api.MailPrioritySupport;
