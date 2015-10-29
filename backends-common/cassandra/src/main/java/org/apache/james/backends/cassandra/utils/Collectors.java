@@ -17,36 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.init;
+package org.apache.james.backends.cassandra.utils;
 
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collector;
 
-public class CassandraTableManager {
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
-    private final Session session;
-    private final CassandraModule module;
+public class Collectors {
 
-    public CassandraTableManager(CassandraModule module, Session session) {
-        this.session = session;
-        this.module = module;
+    public static <T> Collector<T, List<T>, ImmutableList<T>> toImmutableList() {
+        return Collector.of(ArrayList::new, List::add, (left, right) -> {
+            left.addAll(right);
+            return left;
+        }, ImmutableList::copyOf);
     }
-
-    public CassandraTableManager ensureAllTables() {
-        module.moduleTables().stream()
-            .forEach(table -> session.execute(table.getCreateStatement()));
-        module.moduleIndex().stream()
-            .forEach(index -> session.execute(index.getCreateIndexStatement()));
-        return this;
-    }
-
-    public void clearAllTables() {
-        module.moduleTables().stream()
-            .forEach(table -> clearTable(table.getName()));
-    }
-
-    private void clearTable(String tableName) {
-        session.execute(QueryBuilder.truncate(tableName));
+    
+    public static <T, K, V> Collector<T, ImmutableMap.Builder<K, V>, ImmutableMap<K, V>> toImmutableMap(
+            Function<? super T, ? extends K> keyMapper,
+            Function<? super T, ? extends V> valueMapper) {
+        return Collector.of(ImmutableMap::<K,V>builder,
+                (acc, v) -> acc.put(keyMapper.apply(v), valueMapper.apply(v)),
+                (map1, map2) -> map1.putAll(map2.build()),
+                ImmutableMap.Builder::build);
     }
 }

@@ -33,8 +33,6 @@ import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 public final class CassandraClusterSingleton {
@@ -48,25 +46,25 @@ public final class CassandraClusterSingleton {
 
     private static final Logger LOG = LoggerFactory.getLogger(CassandraClusterSingleton.class);
     private static CassandraClusterSingleton cluster = null;
-    private final List<CassandraModule> modules;
+    private final CassandraModule module;
     private Session session;
     private CassandraTypesProvider typesProvider;
 
     public static synchronized CassandraClusterSingleton create(CassandraModule module) throws RuntimeException {
         LOG.info("Retrieving cluster instance.");
         if (cluster == null) {
-            cluster = new CassandraClusterSingleton(Arrays.asList(module));
+            cluster = new CassandraClusterSingleton(module);
         }
         return cluster;
     }
 
-    private CassandraClusterSingleton(List<CassandraModule> modules) throws RuntimeException {
-        this.modules = modules;
+    private CassandraClusterSingleton(CassandraModule module) throws RuntimeException {
+        this.module = module;
         try {
             EmbeddedCassandraServerHelper.startEmbeddedCassandra();
             session = new FunctionRunnerWithRetry(MAX_RETRY)
                 .executeAndRetrieveObject(CassandraClusterSingleton.this::tryInitializeSession);
-            typesProvider = new CassandraTypesProvider(modules, session);
+            typesProvider = new CassandraTypesProvider(module, session);
         } catch(Exception exception) {
             Throwables.propagate(exception);
         }
@@ -77,11 +75,11 @@ public final class CassandraClusterSingleton {
     }
 
     public void ensureAllTables() {
-        new CassandraTableManager(modules, session).ensureAllTables();
+        new CassandraTableManager(module, session).ensureAllTables();
     }
 
     public void clearAllTables() {
-        new CassandraTableManager(modules, session).clearAllTables();
+        new CassandraTableManager(module, session).clearAllTables();
     }
 
     private Optional<Session> tryInitializeSession() {
@@ -89,7 +87,7 @@ public final class CassandraClusterSingleton {
             Cluster cluster = ClusterFactory.createClusterForSingleServerWithoutPassWord(CLUSTER_IP, CLUSTER_PORT_TEST);
             Cluster clusterWithInitializedKeyspace = ClusterWithKeyspaceCreatedFactory
                 .clusterWithInitializedKeyspace(cluster, KEYSPACE_NAME, REPLICATION_FACTOR);
-            return Optional.of(new SessionWithInitializedTablesFactory(modules).createSession(clusterWithInitializedKeyspace, KEYSPACE_NAME));
+            return Optional.of(new SessionWithInitializedTablesFactory(module).createSession(clusterWithInitializedKeyspace, KEYSPACE_NAME));
         } catch (NoHostAvailableException exception) {
             sleep(SLEEP_BEFORE_RETRY);
             return Optional.empty();

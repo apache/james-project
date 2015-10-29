@@ -43,6 +43,12 @@
           class="org.apache.james.mailbox.cassandra.CassandraMailboxModule"
           lazy-init="true"/>
 
+    <bean id="cassandra-module-composite"
+          class="org.apache.james.backends.cassandra.init.CassandraModuleComposite"
+          lazy-init="true">
+        <constructor-arg index="0" ref="cassandra-mailbox-module"/>
+    </bean>
+
     <bean id="cassandra-cluster"
           class="org.apache.james.backends.cassandra.init.ClusterFactory"
           factory-method="createClusterForSingleServerWithoutPassWord"
@@ -66,21 +72,13 @@
           lazy-init="true">
         <constructor-arg index="0" ref="cassandra-cluster-initialized"/>
         <constructor-arg index="1" value="${cassandra.keyspace}"/>
-        <constructor-arg index="2">
-            <list>
-                <ref bean="cassandra-mailbox-module"/>
-            </list>
-        </constructor-arg>
+        <constructor-arg index="2" ref="cassandra-module-composite"/>
     </bean>
 
     <bean id="cassandra-type-provider"
           class="org.apache.james.backends.cassandra.init.CassandraTypesProvider"
           lazy-init="true">
-        <constructor-arg index="0">
-            <list>
-                <ref bean="cassandra-mailbox-module"/>
-            </list>
-        </constructor-arg>
+        <constructor-arg index="0" ref="cassandra-module-composite"/>
         <constructor-arg index="1" ref="cassandra-session"/>
     </bean>
 
