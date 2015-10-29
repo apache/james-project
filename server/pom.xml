@@ -176,6 +176,7 @@
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <mockito-core.version>1.9.0</mockito-core.version>
+        <backends.version>1.8.3-SNAPSHOT</backends.version>
     </properties>
 
     <dependencyManagement>
@@ -283,6 +284,11 @@
                 <type>test-jar</type>
                 <scope>test</scope>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-backends-cassandra</artifactId>
+                <version>${backends.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>

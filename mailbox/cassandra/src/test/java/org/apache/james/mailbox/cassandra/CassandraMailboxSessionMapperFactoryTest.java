@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.james.backends.cassandra.CassandraClusterSingleton;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class CassandraMailboxSessionMapperFactoryTest {
-    private static final CassandraClusterSingleton CLUSTER = CassandraClusterSingleton.build();
+    private static final CassandraClusterSingleton CLUSTER = CassandraClusterSingleton.create(new CassandraMailboxModule());
     private final static Logger LOG = LoggerFactory.getLogger(CassandraMailboxSessionMapperFactoryTest.class);
 
     @Before

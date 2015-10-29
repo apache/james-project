@@ -378,6 +378,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-backends-cassandra</artifactId>
+        </dependency>
         <!-- Comment jackrabbit dependency to avoid lucene version clash with mailbox-lucene (JAMES-1297)
             <dependency>
             <groupId>org.apache.jackrabbit</groupId>

@@ -19,7 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
-import org.apache.james.mailbox.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraClusterSingleton;
+import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 import org.junit.After;
@@ -30,7 +31,7 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
-        cassandra = CassandraClusterSingleton.build();
+        cassandra = CassandraClusterSingleton.create(new CassandraMailboxModule());
         cassandra.ensureAllTables();
         return new CassandraPerUserMaxQuotaManager(cassandra.getConf());
     }

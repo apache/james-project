@@ -28,9 +28,10 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.apache.james.mailbox.cassandra.CassandraConstants;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.utils.FunctionRunnerWithRetry;
+import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.cassandra.mail.utils.SimpleMailboxACLJsonConverter;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -86,16 +87,20 @@ public class CassandraACLMapper {
     }
 
     public void updateACL(final MailboxACL.MailboxACLCommand command) throws MailboxException {
-        new FunctionRunnerWithRetry(maxRetry).execute(
-            () -> {
-                codeInjector.inject();
-                ResultSet resultSet = getAclWithVersion()
+        try {
+            new FunctionRunnerWithRetry(maxRetry).execute(
+                () -> {
+                    codeInjector.inject();
+                    ResultSet resultSet = getAclWithVersion()
                         .map((x) -> x.apply(command))
                         .map(this::updateStoredACL)
                         .orElseGet(() -> insertACL(applyCommandOnEmptyACL(command)));
-                return resultSet.one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
-            }
-        );
+                    return resultSet.one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
+                }
+            );
+        } catch (LightweightTransactionException e) {
+            throw new MailboxException("Exception during lightweight transaction", e);
+        }
     }
 
     private MailboxACL applyCommandOnEmptyACL(MailboxACL.MailboxACLCommand command) {

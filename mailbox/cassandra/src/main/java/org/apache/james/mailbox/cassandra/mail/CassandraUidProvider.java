@@ -26,14 +26,15 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
-import static org.apache.james.mailbox.cassandra.CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.NEXT_UID;
 
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.base.Throwables;
+import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.utils.FunctionRunnerWithRetry;
+import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.UidProvider;
@@ -70,16 +71,20 @@ public class CassandraUidProvider implements UidProvider<CassandraId> {
             }
         }
 
-        return runner.executeAndRetrieveObject(
-            () -> {
-                try {
-                    return tryUpdateUid(mailbox, findHighestUid(mailbox))
-                        .map(Uid::getValue);
-                } catch (Exception exception) {
-                    LOG.error("Can not retrieve next Uid", exception);
-                    throw Throwables.propagate(exception);
-                }
-            });
+        try {
+            return runner.executeAndRetrieveObject(
+                () -> {
+                    try {
+                        return tryUpdateUid(mailbox, findHighestUid(mailbox))
+                            .map(Uid::getValue);
+                    } catch (Exception exception) {
+                        LOG.error("Can not retrieve next Uid", exception);
+                        throw Throwables.propagate(exception);
+                    }
+                });
+        } catch (LightweightTransactionException e) {
+            throw new MailboxException("Error during Uid update", e);
+        }
     }
 
     @Override
@@ -118,7 +123,7 @@ public class CassandraUidProvider implements UidProvider<CassandraId> {
     }
 
     private Optional<Uid> transactionalStatementToOptionalUid(Uid uid, BuiltStatement statement) {
-        if(session.execute(statement).one().getBool(LIGHTWEIGHT_TRANSACTION_APPLIED)) {
+        if(session.execute(statement).one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED)) {
             return Optional.of(uid);
         }
         return Optional.empty();

@@ -62,21 +62,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Throwables;
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.cassandra.CassandraConstants;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.CassandraTypesProvider;
-import org.apache.james.mailbox.cassandra.CassandraTypesProvider.TYPE;
-import org.apache.james.mailbox.cassandra.mail.utils.FunctionRunnerWithRetry;
+import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.cassandra.mail.utils.MessageDeletedDuringFlagsUpdateException;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
@@ -166,7 +164,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public Iterator<Message<CassandraId>> findInMailbox(Mailbox<CassandraId> mailbox, MessageRange set, FetchType ftype, int max) throws MailboxException {
-        return convertToStream(session.execute(buildQuery(mailbox, set)))
+        return CassandraUtils.convertToStream(session.execute(buildQuery(mailbox, set)))
             .map(this::message)
             .sorted(Comparator.comparingLong(Message::getUid))
             .iterator();
@@ -174,7 +172,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public List<Long> findRecentMessageUidsInMailbox(Mailbox<CassandraId> mailbox) throws MailboxException {
-        return convertToStream(session.execute(selectAll(mailbox).and((eq(RECENT, true)))))
+        return CassandraUtils.convertToStream(session.execute(selectAll(mailbox).and((eq(RECENT, true)))))
             .map((row) -> row.getLong(IMAP_UID))
             .sorted()
             .collect(Collectors.toList());
@@ -182,7 +180,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public Long findFirstUnseenMessageUid(Mailbox<CassandraId> mailbox) throws MailboxException {
-        return convertToStream(session.execute(selectAll(mailbox).and((eq(SEEN, false)))))
+        return CassandraUtils.convertToStream(session.execute(selectAll(mailbox).and((eq(SEEN, false)))))
             .map((row) -> row.getLong(IMAP_UID))
             .sorted()
             .findFirst()
@@ -191,7 +189,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox<CassandraId> mailbox, MessageRange set) throws MailboxException {
-        return convertToStream(session.execute(buildQuery(mailbox, set).and(eq(DELETED, true))))
+        return CassandraUtils.convertToStream(session.execute(buildQuery(mailbox, set).and(eq(DELETED, true))))
             .map(this::message)
             .peek((message) -> delete(mailbox, message))
             .collect(Collectors.toMap(Message::getUid, SimpleMessageMetaData::new));
@@ -226,7 +224,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox<CassandraId> mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange set) throws MailboxException {
-        return convertToStream(session.execute(buildQuery(mailbox, set)))
+        return CassandraUtils.convertToStream(session.execute(buildQuery(mailbox, set)))
             .map((row) -> updateFlagsOnMessage(mailbox, flagUpdateCalculator, row))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -344,7 +342,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
                 .value(BODY_CONTENT, bindMarker())
                 .value(HEADER_CONTENT, bindMarker())
                 .value(PROPERTIES, message.getProperties().stream()
-                    .map(x -> typesProvider.getDefinedUserType(TYPE.Property)
+                    .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
                         .newValue()
                         .setString(Properties.NAMESPACE, x.getNamespace())
                         .setString(Properties.NAME, x.getLocalName())
@@ -406,16 +404,13 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
         } catch (MessageDeletedDuringFlagsUpdateException e) {
             mailboxSession.getLog().warn(e.getMessage());
             return Optional.empty();
-        } catch (MailboxException e) {
+        } catch (Exception e) {
             throw Throwables.propagate(e);
         }
     }
 
     private Optional<UpdatedFlags> retryMessageFlagsUpdate(Mailbox<CassandraId> mailbox, long uid, FlagsUpdateCalculator flagUpdateCalculator) {
-        return tryMessageFlagsUpdate(flagUpdateCalculator,
-            mailbox,
-            message(Optional.ofNullable(session.execute(selectMessage(mailbox, uid)).one())
-                .orElseThrow(() -> new MessageDeletedDuringFlagsUpdateException(mailbox.getMailboxId(), uid))));
+        return tryMessageFlagsUpdate(flagUpdateCalculator, mailbox, message(Optional.ofNullable(session.execute(selectMessage(mailbox, uid)).one()).orElseThrow(() -> new MessageDeletedDuringFlagsUpdateException(mailbox.getMailboxId(), uid))));
     }
 
     private boolean conditionalSave(Message<CassandraId> message, long oldModSeq) {
@@ -481,10 +476,6 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, mailbox.getMailboxId().asUuid()))
             .and(eq(IMAP_UID, uid));
-    }
-
-    private Stream<Row> convertToStream(ResultSet resultSet) {
-        return StreamSupport.stream(resultSet.spliterator(), true);
     }
 
 }
