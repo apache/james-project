@@ -58,8 +58,7 @@ public class MessagePackEventSerializerTest {
     public void setUp() {
         eventFactory = new EventFactory<TestId>();
         messagePackEventSerializer = new MessagePackEventSerializer<TestId>(
-            new MailboxConverter<TestId>(new TestIdDeserializer()),
-            eventFactory);
+            new MailboxConverter<TestId>(new TestIdDeserializer()));
         mailboxSession = new MockMailboxSession("benwa");
         mailbox = new SimpleMailbox<TestId>(new MailboxPath("#private", "benwa", "name"), 42);
         mailbox.setMailboxId(TestId.of(28L));
