@@ -31,6 +31,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraDefaultMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathRegisterTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable;
@@ -128,7 +129,12 @@ public class CassandraMailboxModule implements CassandraModule {
                     SchemaBuilder.createTable(CassandraDefaultMaxQuota.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraDefaultMaxQuota.TYPE, text())
-                    .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())));
+                    .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())),
+            new CassandraTable(CassandraMailboxPathRegisterTable.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraMailboxPathRegisterTable.TABLE_NAME)
+                    .ifNotExists()
+                    .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
+                    .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())));
         index = Arrays.asList(
             new CassandraIndex(
                 SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraMailboxTable.TABLE_NAME)
@@ -171,7 +177,13 @@ public class CassandraMailboxModule implements CassandraModule {
                     .ifNotExists()
                     .addColumn(CassandraMessageTable.Properties.NAMESPACE, text())
                     .addColumn(CassandraMessageTable.Properties.NAME, text())
-                    .addColumn(CassandraMessageTable.Properties.VALUE, text())));
+                    .addColumn(CassandraMessageTable.Properties.VALUE, text())),
+            new CassandraType(CassandraMailboxPathRegisterTable.MAILBOX_PATH,
+                SchemaBuilder.createType(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
+                    .ifNotExists()
+                    .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAMESPACE, text())
+                    .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAME, text())
+                    .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.USER, text())));
     }
 
     @Override
