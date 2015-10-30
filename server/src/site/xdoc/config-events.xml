@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+    <properties>
+        <title>Apache James Server 3 - Quota Configuration</title>
+    </properties>
+
+    <body>
+
+        <section name="Events System Configuration">
+
+            <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/events-template.xml">events-template.xml</a> in SVN to get some examples and hints.</p>
+
+            <p>Use this configuration to define the type of Event System you want.</p>
+
+            <p>
+                James relies on an event system. Each operations performed on the mailbox will trigger related events. Some software
+                components (MailboxListeners) can register themselves on this event system to be called when an event is fired.
+            </p>
+
+            <p>
+                Here are typical use cases for Mailbox Listeners (non exhaustive list) :
+                <ul>
+                    <li>Message search indexation, for instance in Lucene or ElasticSearch</li>
+                    <li>Local cache invalidation (caching mailbox project)</li>
+                    <li>Quota calculation</li>
+                    <li>IMAP IDLE feature : live notification of actions performed on a mailbox, allowing publish subscribe on mailboxes events</li>
+                    <li>Message Sequence Number consistence</li>
+                </ul>
+                The Mailbox Listeners can be classified in two categories :
+                <ul>
+                    <li>Mailbox registered : The mailbox listener is only notified on events affecting this mailbox. IDLE is a good example of this.</li>
+                    <li>Global Listeners : This event listener is triggered upon each events.</li>
+                </ul>
+                Note that Global Listeners can also be classified in two categories :
+                <ul>
+                    <li>Those which needs to be triggered only once in your cluster. For instance ElasticSearch indexing is an example of this.</li>
+                    <li>Those which needs to be triggered on each servers. For instance, each Lucene indexer needs to be triggered on each server
+                        for the search feature to stay consistent.</li>
+                </ul>
+            </p>
+
+            <p>
+                The default implementation is a synchronous in memory event system. The performance are really good, as their is no need to serialize
+                events, and no network overhead. However, this event system is limited to one computer and you might want a distributed systems.
+            </p>
+
+            <p>
+                Other implementations, distributed environment friendly are available.
+            </p>
+
+            <p>
+                The simplest one is broadcast based. Each James servers listen the same message queue, and each James server will be notified upon events.
+                Here are the pros and cons of this implementations :
+                <ul>
+                    Pros:
+                    <li>It supports every type of listener described above</li>
+                    <li>It allows you to scale your James infrastructure without changing your middlewares. You just need a message queue</li>
+                    Cons :
+                    <li>Your scalability is limited as each servers is notified on all events</li>
+                    <li>Network overhead on event transmissions</li>
+                    <li>Event serialization and deserialization</li>
+                </ul>
+                To use this implementation, you need two other components (that will be discussed) : a publishing system and an event serializer
+            </p>
+
+            <p>
+                The other mode is based on registrations.
+                Each server reads messages from a dedicated message queue, and other servers send messages addressed to this sever on this message queue.
+                Registrations are performed on an eternal data-store supporting document deletion after a fixed amount of time.
+                These registrations are periodically refreshed. This data-store is then triggered on event generation, that, if needed are serialized and
+                send to the given queues.
+                The pros and cons of this implementations are :
+                <ul>
+                    Pros :
+                    <li>Linear scalability</li>
+                    <li>A server receives only events concerning him</li>
+                    Cons :
+                    <li>Possible event serialization costs</li>
+                    <li>Registration and registration refresh costs</li>
+                    <li>Need to find interested servers on event delivery</li>
+                    <li>Network overhead on event transmissions</li>
+                </ul>
+            </p>
+
+            <h2>Failure modes</h2>
+
+            <ul>
+                Default implementation :
+                <li>The default implementation might not deliver some events on server stop.</li>
+            </ul>
+
+            <ul>
+                Broadcast implementation :
+                <li>The broadcast implementation might not deliver some events on server stop.</li>
+                <li>The broadcast implementation is tight to limitation of the underlying publisher.</li>
+            </ul>
+
+            <ul>
+                Registered implementation :
+                <li>The registered implementation might not deliver some events on server stop.</li>
+                <li>The registered implementation is tight to limitation of the underlying publisher, and underlying registration system.</li>
+            </ul>
+
+            <h2>Publisher</h2>
+
+            <p>
+                Available implementation is Kafka based. Kafka ensure at least one delivery. This means some messages might be delivered two times.
+            </p>
+
+            <h2>Event serializer</h2>
+
+            <p>There are two types of event serialization systems :
+                <ul>
+                    <li>Json : events are converted to JSON</li>
+                    <li>Message Pack : a binary representation of JSON. 2 times smaller in average but two times longer to compute. It allows you to trade
+                    bandwidth and data readability against CPU time.</li>
+                </ul>
+            </p>
+
+            <h2>Registration systems</h2>
+
+            <p>
+                Available implementation is based on Cassandra. It is used on an AP fashion, enforcing availability instead of consistency. Some
+                messages might get delivered to no more registered servers. This is just extra work. Worst, messages might not be delivered to
+                recently registered servers. But we make sure that we have the more up to date version of the registrations we can, and will not time out in
+                the face of network partitions, nor enforce some default behaviour.
+            </p>
+
+        </section>
+
+    </body>
+
+</document>
+
