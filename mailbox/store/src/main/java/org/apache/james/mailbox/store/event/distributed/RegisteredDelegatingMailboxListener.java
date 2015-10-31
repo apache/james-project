@@ -23,8 +23,10 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.event.EventDelivery;
 import org.apache.james.mailbox.store.event.EventSerializer;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
+import org.apache.james.mailbox.store.event.SynchronousEventDelivery;
 import org.apache.james.mailbox.store.publisher.MessageConsumer;
 import org.apache.james.mailbox.store.publisher.Publisher;
 import org.slf4j.Logger;
@@ -41,17 +43,27 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
     private final MailboxPathRegister mailboxPathRegister;
     private final Publisher publisher;
     private final EventSerializer eventSerializer;
+    private final EventDelivery eventDelivery;
+
+    public RegisteredDelegatingMailboxListener(EventSerializer eventSerializer,
+                                               Publisher publisher,
+                                               MessageConsumer messageConsumer,
+                                               MailboxPathRegister mailboxPathRegister,
+                                               EventDelivery eventDelivery) throws Exception {
+        this.eventSerializer = eventSerializer;
+        this.publisher = publisher;
+        this.mailboxPathRegister = mailboxPathRegister;
+        this.mailboxListenerRegistry = new MailboxListenerRegistry();
+        this.eventDelivery = eventDelivery;
+        messageConsumer.setMessageReceiver(this);
+        messageConsumer.init(mailboxPathRegister.getLocalTopic());
+    }
 
     public RegisteredDelegatingMailboxListener(EventSerializer eventSerializer,
                                                Publisher publisher,
                                                MessageConsumer messageConsumer,
                                                MailboxPathRegister mailboxPathRegister) throws Exception {
-        this.eventSerializer = eventSerializer;
-        this.publisher = publisher;
-        this.mailboxPathRegister = mailboxPathRegister;
-        this.mailboxListenerRegistry = new MailboxListenerRegistry();
-        messageConsumer.setMessageReceiver(this);
-        messageConsumer.init(mailboxPathRegister.getLocalTopic());
+        this(eventSerializer, publisher, messageConsumer, mailboxPathRegister, new SynchronousEventDelivery());
     }
 
     @Override
@@ -117,14 +129,14 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
             mailboxPathRegister.doRename(renamed.getMailboxPath(), renamed.getNewPath());
         }
         for (MailboxListener listener : listenerSnapshot) {
-            deliverEvent(event, listener);
+            eventDelivery.deliver(listener, event);
         }
     }
 
     private void deliverEventToOnceGlobalListeners(Event event) {
         for (MailboxListener mailboxListener : mailboxListenerRegistry.getGlobalListeners()) {
             if (mailboxListener.getType() == ListenerType.ONCE) {
-                deliverEvent(event, mailboxListener);
+                eventDelivery.deliver(mailboxListener, event);
             }
         }
     }
@@ -153,20 +165,6 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
             } catch (Throwable t) {
                 event.getSession().getLog().error("Unable to send serialized event to topic " + topic);
             }
-        }
-    }
-
-    private void deliverEvent(Event event, MailboxListener listener) {
-        try {
-            listener.event(event);
-        } catch(Throwable throwable) {
-            event.getSession()
-                .getLog()
-                .error("Error while processing listener "
-                        + listener.getClass().getCanonicalName()
-                        + " for "
-                        + event.getClass().getCanonicalName(),
-                    throwable);
         }
     }
 
