@@ -245,6 +245,8 @@
         </property>
     </bean>
 
+    <import resource="classpath:META-INF/spring/mailbox-tools.xml"/>
+
     <bean id="usersrepositorymanagement" class="org.apache.james.user.lib.UsersRepositoryManagement"/>
     <bean id="recipientrewritetablemanagement" class="org.apache.james.rrt.lib.RecipientRewriteTableManagement"/>
     <bean id="domainlistmanagement" class="org.apache.james.domainlist.lib.DomainListManagement"/>
