@@ -70,6 +70,11 @@
         <td></td>
       </tr>
       <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/events-template.xml">events.xml</a></td>
+        <td><a href="config-events.html">Event system Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
         <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailrepositorystore-template.xml">mailrepositorystore.xml</a></td>
         <td><a href="config-mailrepositorystore.html">Mail Repository Stores Configuration</a></td>
         <td></td>

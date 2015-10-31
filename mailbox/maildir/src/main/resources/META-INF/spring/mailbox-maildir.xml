@@ -43,6 +43,7 @@
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
+        <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
     <bean id ="maildir-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
@@ -55,5 +56,7 @@
         <property name="messageNameStrictParse" value="${maildir.messageNameParser.strictMode}"/>
     </bean>
     <alias name="jvm-locker" alias="maildir-locker"/>
+
+    <bean id="maildir-mailbox-id-deserializer" class="org.apache.james.mailbox.maildir.MaildirMailboxIdDeserializer"/>
 
 </beans>

@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
@@ -52,9 +53,12 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
         super(index.getFactory());
         this.index = index;
     }
-    
-    
-    
+
+    @Override
+    public ListenerType getType() {
+        return index.getType();
+    }
+
     @Override
     public void add(MailboxSession session, Mailbox<Id> mailbox, Message<Id> message) throws MailboxException {    
         index.add(session, mailbox, message);

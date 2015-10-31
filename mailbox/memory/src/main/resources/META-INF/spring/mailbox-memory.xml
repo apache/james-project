@@ -49,4 +49,6 @@
 
     <alias name="jvm-locker" alias="memory-locker"/>
 
+    <bean id="memory-mailbox-id-deserializer" class="org.apache.james.mailbox.inmemory.InMemoryMailboxIdDeserializer"/>
+
 </beans>

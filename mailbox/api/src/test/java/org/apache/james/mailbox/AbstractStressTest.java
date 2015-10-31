@@ -59,6 +59,10 @@ public abstract class AbstractStressTest {
         getMailboxManager().createMailbox(path, session);
         getMailboxManager().addListener(path, new MailboxListener() {
 
+            @Override
+            public ListenerType getType() {
+                return ListenerType.MAILBOX;
+            }
 
             @Override
             public void event(Event event) {

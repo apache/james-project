@@ -17,34 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.jpa;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 
-import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.model.MailboxPath;
-
-/**
- * Receive a {@link org.apache.james.mailbox.MailboxListener.Event} and delegate it to an other
- * {@link MailboxListener} depending on the registered name
- *
- */
-public class HashMapDelegatingMailboxListener extends AbstractDelegatingMailboxListener{
-
-    private Map<MailboxPath, List<MailboxListener>> listeners = new HashMap<MailboxPath, List<MailboxListener>>();
-    private List<MailboxListener> globalListeners = new ArrayList<MailboxListener>();
+public class JPAMailboxIdDeserializer implements MailboxIdDeserializer<JPAId> {
 
     @Override
-    protected Map<MailboxPath, List<MailboxListener>> getListeners() {
-        return listeners;
+    public JPAId deserialize(String serializedMailboxId) {
+        return JPAId.of(Long.valueOf(serializedMailboxId));
     }
-
-    @Override
-    protected List<MailboxListener> getGlobalListeners() {
-        return globalListeners;
-    }
-    
 }

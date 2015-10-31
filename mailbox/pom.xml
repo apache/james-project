@@ -63,6 +63,7 @@
         <module>tika</module>
         <module>tool</module>
         <module>zoo-seq-provider</module>
+        <module>kafka</module>
     </modules>
 
     <scm>
@@ -101,6 +102,7 @@
         <commons-io.version>2.4</commons-io.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-pool.version>1.6</commons-pool.version>
+        <commons-codec.version>1.7</commons-codec.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
         <commons-configuration.version>1.9</commons-configuration.version>
         <commons-beanutils-core.version>1.8.3</commons-beanutils-core.version>
@@ -319,6 +321,11 @@
             <!--
                 Start Commons
             -->
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons-codec.version}</version>
+            </dependency>
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>

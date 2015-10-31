@@ -30,6 +30,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -64,6 +65,11 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
         this.getCurrentStorageStatement = session.prepare(select(CassandraCurrentQuota.STORAGE)
             .from(CassandraCurrentQuota.TABLE_NAME)
             .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
+    }
+
+    @Override
+    public MailboxListener.ListenerType getAssociatedListenerType() {
+        return MailboxListener.ListenerType.ONCE;
     }
 
     @Override

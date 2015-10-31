@@ -17,15 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.utils;
+package org.apache.james.mailbox.store.json;
 
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import net.javacrumbs.jsonunit.core.Option;
+import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class SimpleMailboxACLJsonConverterTest {
         private Map<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights> map;
 
         public ACLMapBuilder() {
-            map = new HashMap<>();
+            map = new HashMap<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>();
         }
 
         public ACLMapBuilder addSingleUserEntryToMap() {
@@ -61,44 +61,44 @@ public class SimpleMailboxACLJsonConverterTest {
         }
 
         public MailboxACL buildAsACL() {
-            return new SimpleMailboxACL(new HashMap<>(map));
+            return new SimpleMailboxACL(new HashMap<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>(map));
         }
 
     }
 
     @Test
     public void emptyACLShouldBeWellSerialized() throws Exception {
-        assertThatJson(SimpleMailboxACLJsonConverter.toJson(SimpleMailboxACL.EMPTY))
+        JsonFluentAssert.assertThatJson(SimpleMailboxACLJsonConverter.toJson(SimpleMailboxACL.EMPTY))
             .isEqualTo("{\"entries\":{}}")
-            .when(IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER);
     }
 
     @Test
     public void singleUserEntryACLShouldBeWellSerialized() throws Exception {
-        assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().buildAsACL()))
+        JsonFluentAssert.assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().buildAsACL()))
             .isEqualTo("{\"entries\":{\"-user\":2040}}")
-            .when(IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER);
     }
 
     @Test
     public void singleGroupEntryACLShouldBeWellSerialized() throws Exception {
-        assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleGroupEntryToMap().buildAsACL()))
+        JsonFluentAssert.assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleGroupEntryToMap().buildAsACL()))
             .isEqualTo("{\"entries\":{\"-$group\":2032}}")
-            .when(IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER);
     }
 
     @Test
     public void singleSpecialEntryACLShouldBeWellSerialized() throws Exception {
-        assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleSpecialEntryToMap().buildAsACL()))
+        JsonFluentAssert.assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleSpecialEntryToMap().buildAsACL()))
             .isEqualTo("{\"entries\":{\"-special\":1968}}")
-            .when(IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER);
     }
 
     @Test
     public void multipleEntriesACLShouldBeWellSerialized() throws Exception {
-        assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().addSingleGroupEntryToMap().buildAsACL()))
+        JsonFluentAssert.assertThatJson(SimpleMailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().addSingleGroupEntryToMap().buildAsACL()))
             .isEqualTo("{\"entries\":{\"-user\":2040,\"-$group\":2032}}")
-            .when(IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER);
     }
 
     @Test
