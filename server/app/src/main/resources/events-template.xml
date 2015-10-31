@@ -28,6 +28,13 @@
     distributed and won't do the work with multiples servers -->
     <type>default</type>
 
+    <!-- Do you want to wait for MailboxListeners to be executed before returning result to the user ?
+
+     If yes set this to synchronous
+     If no set this to asynchronous
+     -->
+    <delivery>synchronous</delivery>
+
     <!-- Broadcast event system will send messages to all your James servers.
 
     It is the only viable options if you rely on Mailbox Listeners that do not perform well in a distributed system.

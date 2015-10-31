@@ -28,13 +28,16 @@
         <property name ="location" value="classpath:events.properties"/>
     </bean>
 
-    <bean id="default-delegating-listener" class="org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener" lazy-init="true"/>
+    <bean id="default-delegating-listener" class="org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener" lazy-init="true">
+        <constructor-arg index="0" ref="event-delivery"/>
+    </bean>
 
     <bean id="broadcast-delegating-listener" class="org.apache.james.mailbox.store.event.distributed.BroadcastDelegatingMailboxListener" lazy-init="true">
         <constructor-arg index="0" ref="publisher"/>
         <constructor-arg index="1" ref="consumer"/>
         <constructor-arg index="2" ref="event-serializer"/>
-        <constructor-arg index="3" ref="${global.topic}"/>
+        <constructor-arg index="3" ref="event-delivery"/>
+        <constructor-arg index="4" ref="${global.topic}"/>
     </bean>
 
     <bean id="registered-delegating-listener" class="org.apache.james.mailbox.store.event.distributed.RegisteredDelegatingMailboxListener" lazy-init="true">
@@ -42,6 +45,7 @@
         <constructor-arg index="1" ref="consumer"/>
         <constructor-arg index="2" ref="event-serializer"/>
         <constructor-arg index="3" ref="mailbox-path-register"/>
+        <constructor-arg index="4" ref="event-delivery"/>
     </bean>
 
     <bean id="mailbox-path-register" class="org.apache.james.mailbox.store.event.distributed.DistantMailboxPathRegister" lazy-init="true">
@@ -58,6 +62,13 @@
 
     <bean id="mailbox-converter" class="org.apache.james.mailbox.store.json.event.MailboxConverter" lazy-init="true">
         <constructor-arg index="0" ref="mailbox-id-deserializer"/>
+    </bean>
+
+    <bean id="synchronous-event-delivery" class="org.apache.james.mailbox.store.event.SynchronousEventDelivery" lazy-init="true"/>
+
+
+    <bean id="asynchronous-event-delivery" class="org.apache.james.mailbox.store.event.AsynchronousEventDelivery" lazy-init="true">
+        <constructor-arg index="0" ref="${event.delivery.thread.count}"/>
     </bean>
 
 </beans>
