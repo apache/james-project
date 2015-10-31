@@ -49,15 +49,19 @@ public class IndexerConfigurationBeanFactoryPostProcessor implements BeanFactory
 
             BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
             String indexer = null;
+            String reIndexer = null;
             if (provider.equalsIgnoreCase("lazyIndex")) {
                 indexer = "lazyIndex";
+                reIndexer = "fake-reindexer";
             } else if (provider.equalsIgnoreCase("elasticsearch")) {
                 indexer = "elasticsearch-listener";
+                reIndexer = "reindexer-impl";
             }
 
             if (indexer == null)
                 throw new ConfigurationException("Indexer provider " + provider + " not supported!");
             registry.registerAlias(indexer, "indexer");
+            registry.registerAlias(reIndexer, "reindexer");
 
         } catch (ConfigurationException e) {
             throw new FatalBeanException("Unable to config the indexer", e);

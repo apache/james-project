@@ -37,6 +37,7 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.search.indexer.ReIndexer;
 
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
@@ -48,12 +49,16 @@ import org.apache.james.mailbox.store.mail.model.Message;
 public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implements MessageSearchIndex<Id>, MailboxListener {
 
     private MessageMapperFactory<Id> factory;
+    private ReIndexer reIndexer;
 
     public ListeningMessageSearchIndex(MessageMapperFactory<Id> factory) {
         this.factory = factory;
     }
-    
-    
+
+    public void setReIndexer(ReIndexer reIndexer) {
+        this.reIndexer = reIndexer;
+    }
+
     /**
      * Return the {@link MessageMapperFactory}
      * 
@@ -123,6 +128,9 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
             } else if (event instanceof MailboxDeletionImpl) {
                 // delete all indexed messages for the mailbox
                 delete(session, ((MailboxDeletionImpl) event).getMailbox(), MessageRange.all());
+            } else if (event instanceof MailboxRenamed) {
+                delete(session, ((MailboxDeletionImpl) event).getMailbox(), MessageRange.all());
+                reIndexer.reIndex(((MailboxRenamed) event).getNewPath());
             }
         } catch (MailboxException e) {
             session.getLog().debug("Unable to update index", e);

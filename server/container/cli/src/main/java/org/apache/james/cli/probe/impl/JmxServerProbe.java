@@ -33,6 +33,7 @@ import javax.management.remote.JMXServiceURL;
 import org.apache.james.adapter.mailbox.MailboxCopierManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerManagementMBean;
 import org.apache.james.adapter.mailbox.QuotaManagementMBean;
+import org.apache.james.adapter.mailbox.ReIndexerManagementMBean;
 import org.apache.james.adapter.mailbox.SerializableQuota;
 import org.apache.james.cli.probe.ServerProbe;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
@@ -49,6 +50,7 @@ public class JmxServerProbe implements ServerProbe {
     private final static String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
     private final static String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
     private final static String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
+    private final static String REINDEXER_OBJECT_NAME = "org.apache.james:type=component,name=reindexerbean";
 
     private JMXConnector jmxc;
     
@@ -58,6 +60,7 @@ public class JmxServerProbe implements ServerProbe {
     private MailboxCopierManagementMBean mailboxCopierManagement;
     private MailboxManagerManagementMBean mailboxManagerManagement;
     private QuotaManagementMBean quotaManagement;
+    private ReIndexerManagementMBean reIndexerManagement;
 
     private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
     private static final int defaultPort = 9999;
@@ -118,6 +121,9 @@ public class JmxServerProbe implements ServerProbe {
             name = new ObjectName(QUOTAMANAGER_OBJECT_NAME);
             quotaManagement = MBeanServerInvocationHandler.newProxyInstance(
                     mbeanServerConn, name, QuotaManagementMBean.class, true);
+            name = new ObjectName(REINDEXER_OBJECT_NAME);
+            reIndexerManagement = MBeanServerInvocationHandler.newProxyInstance(
+                mbeanServerConn, name, ReIndexerManagementMBean.class, true);
         } catch (MalformedObjectNameException e) {
             throw new RuntimeException("Invalid ObjectName? Please report this as a bug.", e);
         }
@@ -276,5 +282,15 @@ public class JmxServerProbe implements ServerProbe {
     @Override
     public void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException {
         quotaManagement.setDefaultMaxStorage(maxDefaultSize);
+    }
+
+    @Override
+    public void reIndexMailbox(String namespace, String user, String name) throws Exception {
+        reIndexerManagement.reIndex(namespace, user, name);
+    }
+
+    @Override
+    public void reIndexAll() throws Exception {
+        reIndexerManagement.reIndex();
     }
 }

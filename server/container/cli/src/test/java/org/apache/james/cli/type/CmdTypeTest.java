@@ -189,8 +189,13 @@ public class CmdTypeTest {
     }
 
     @Test
-    public void lookupGetQuotaRootShouldReturnEnumValue() {
-        assertThat(CmdType.lookup("getquotaroot")).isEqualTo(CmdType.GETQUOTAROOT);
+    public void lookupReIndexMailboxShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("reindexall")).isEqualTo(CmdType.REINDEXALL);
+    }
+
+    @Test
+    public void lookupReIndexAllShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("reindexmailbox")).isEqualTo(CmdType.REINDEXMAILBOX);
     }
 
     @Test 
