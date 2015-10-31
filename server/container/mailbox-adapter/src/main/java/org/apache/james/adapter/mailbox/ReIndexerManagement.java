@@ -20,8 +20,8 @@
 package org.apache.james.adapter.mailbox;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.search.indexer.ReIndexer;
 
 public class ReIndexerManagement implements ReIndexerManagementMBean {
 

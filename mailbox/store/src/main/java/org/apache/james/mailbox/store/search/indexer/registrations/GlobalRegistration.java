@@ -17,14 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.events;
+package org.apache.james.mailbox.store.search.indexer.registrations;
 
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.MailboxPath;
 
-public interface ImpactingEvent {
+import java.util.concurrent.ConcurrentHashMap;
 
-    MailboxPath getMailboxPath();
+public class GlobalRegistration implements MailboxListener {
 
-    ImpactingEventType getType();
+    private final ConcurrentHashMap<MailboxPath, Boolean> impactingEvents;
 
+    public GlobalRegistration() {
+        this.impactingEvents = new ConcurrentHashMap<MailboxPath, Boolean>();
+    }
+
+    public boolean indexThisPath(MailboxPath mailboxPath) {
+        return impactingEvents.get(mailboxPath) != null;
+    }
+
+    @Override
+    public void event(Event event) {
+        if (event instanceof MailboxDeletion) {
+            impactingEvents.putIfAbsent(event.getMailboxPath(), true);
+        } else if (event instanceof Expunged) {
+            impactingEvents.putIfAbsent(event.getMailboxPath(), true);
+        }
+    }
 }

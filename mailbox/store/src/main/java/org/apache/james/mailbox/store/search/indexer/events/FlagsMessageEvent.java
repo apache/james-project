@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.events;
+package org.apache.james.mailbox.store.search.indexer.events;
 
 import org.apache.james.mailbox.model.MailboxPath;
 

@@ -17,16 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer;
+package org.apache.james.mailbox.store.search.indexer;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
-import org.apache.james.mailbox.indexer.events.ImpactingEventType;
-import org.apache.james.mailbox.indexer.events.ImpactingMessageEvent;
-import org.apache.james.mailbox.indexer.registrations.GlobalRegistration;
-import org.apache.james.mailbox.indexer.registrations.MailboxRegistration;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -35,6 +30,11 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.mailbox.store.search.indexer.events.FlagsMessageEvent;
+import org.apache.james.mailbox.store.search.indexer.events.ImpactingEventType;
+import org.apache.james.mailbox.store.search.indexer.events.ImpactingMessageEvent;
+import org.apache.james.mailbox.store.search.indexer.registrations.GlobalRegistration;
+import org.apache.james.mailbox.store.search.indexer.registrations.MailboxRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,20 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer;
+package org.apache.james.mailbox.store.search.indexer.events;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 
-public class FakeReIndexer implements ReIndexer {
+public class MessageDeletedEvent implements ImpactingMessageEvent {
 
-    @Override
-    public void reIndex(MailboxPath path) throws MailboxException {
-        throw new MailboxException("Not implemented");
+    private final MailboxPath mailboxPath;
+    private final long uid;
+
+    public MessageDeletedEvent(MailboxPath mailboxPath, long uid) {
+        this.mailboxPath = mailboxPath;
+        this.uid = uid;
     }
 
     @Override
-    public void reIndex() throws MailboxException {
-        throw new MailboxException("Not implemented");
+    public long getUid() {
+        return uid;
+    }
+
+    @Override
+    public MailboxPath getMailboxPath() {
+        return mailboxPath;
+    }
+
+    @Override
+    public ImpactingEventType getType() {
+        return ImpactingEventType.Deletion;
     }
 }

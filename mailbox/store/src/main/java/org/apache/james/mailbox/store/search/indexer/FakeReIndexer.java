@@ -17,15 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.events;
+package org.apache.james.mailbox.store.search.indexer;
 
-public enum ImpactingEventType {
-    Deletion,
-    FlagsUpdate,
-    MailboxDeletion,
-    MailboxRename
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
 
-    /*
-    Note : additions are never impacting as it is well handled in real time by the existing indexer
-     */
+public class FakeReIndexer implements ReIndexer {
+
+    @Override
+    public void reIndex(MailboxPath path) throws MailboxException {
+        throw new MailboxException("Not implemented");
+    }
+
+    @Override
+    public void reIndex() throws MailboxException {
+        throw new MailboxException("Not implemented");
+    }
 }

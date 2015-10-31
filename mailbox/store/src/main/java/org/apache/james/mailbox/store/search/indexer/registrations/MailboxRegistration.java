@@ -17,18 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.registrations;
+package org.apache.james.mailbox.store.search.indexer.registrations;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
-import org.apache.james.mailbox.indexer.events.ImpactingMessageEvent;
-import org.apache.james.mailbox.indexer.events.MessageDeletedEvent;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.search.indexer.events.FlagsMessageEvent;
+import org.apache.james.mailbox.store.search.indexer.events.ImpactingMessageEvent;
+import org.apache.james.mailbox.store.search.indexer.events.MessageDeletedEvent;
 
 import java.util.Collection;
 

@@ -17,32 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.events;
+package org.apache.james.mailbox.store.search.indexer.events;
 
-import org.apache.james.mailbox.model.MailboxPath;
+public enum ImpactingEventType {
+    Deletion,
+    FlagsUpdate,
+    MailboxDeletion,
+    MailboxRename
 
-public class MessageDeletedEvent implements ImpactingMessageEvent {
-
-    private final MailboxPath mailboxPath;
-    private final long uid;
-
-    public MessageDeletedEvent(MailboxPath mailboxPath, long uid) {
-        this.mailboxPath = mailboxPath;
-        this.uid = uid;
-    }
-
-    @Override
-    public long getUid() {
-        return uid;
-    }
-
-    @Override
-    public MailboxPath getMailboxPath() {
-        return mailboxPath;
-    }
-
-    @Override
-    public ImpactingEventType getType() {
-        return ImpactingEventType.Deletion;
-    }
+    /*
+    Note : additions are never impacting as it is well handled in real time by the existing indexer
+     */
 }
