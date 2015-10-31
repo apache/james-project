@@ -36,6 +36,7 @@
         <constructor-arg index="2" value="false"/>
         <constructor-arg index="3" value="true"/>
         <property name="enableSuffixMatch" value="true"/>
+        <property name="reIndexer" ref="reindexer"/>
     </bean>
     <bean id="ramDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">
         <constructor-arg index="0" value="../var/store/lucene"/>
