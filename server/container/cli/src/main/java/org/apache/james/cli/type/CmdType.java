@@ -51,7 +51,9 @@ public enum CmdType {
     SETDEFAULTMAXSTORAGEQUOTA("setdefaultmaxstoragequota", "max_storage"),
     SETDEFAULTMAXMESSAGECOUNTQUOTA("setdefaultmaxmessagecountquota", "max_message_count"),
     GETDEFAULTMAXSTORAGEQUOTA("getdefaultmaxstoragequota"),
-    GETDEFAULTMAXMESSAGECOUNTQUOTA("getdefaultmaxmessagecountquota");
+    GETDEFAULTMAXMESSAGECOUNTQUOTA("getdefaultmaxmessagecountquota"),
+    REINDEXMAILBOX("reindexmailbox", "namespace", "user", "name"),
+    REINDEXALL("reindexall");
 
     private final String command;
     private final String[] arguments;

@@ -256,6 +256,12 @@ public class ServerCmd {
         case GETDEFAULTMAXMESSAGECOUNTQUOTA:
             System.out.println("Default Maximum message count Quota : " + formatMessageValue(probe.getDefaultMaxMessageCount()));
             break;
+        case REINDEXMAILBOX:
+            probe.reIndexMailbox(arguments[1], arguments[2], arguments[3]);
+            break;
+        case REINDEXALL:
+            probe.reIndexAll();
+            break;
         default:
             throw new UnrecognizedCommandException(cmdType.getCommand());
         }
