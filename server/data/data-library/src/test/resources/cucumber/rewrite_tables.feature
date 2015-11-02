@@ -175,3 +175,45 @@ Feature: Rewrite Tables tests
     And store "aliasdomain" alias domain mapping for domain "localhost"
     When alias domain mapping "aliasdomain" for "localhost" domain is removed
     Then mappings for user "test" at domain "aliasdomain" should be empty
+
+# Recursive mapping
+
+  Scenario: direct mapping should be returned when recursive mapping is disable
+    Given recursive mapping is disable
+    And store "user2@domain2" address mapping for user "user1" at domain "domain1"
+    And store "user3@domain3" address mapping for user "user2" at domain "domain2"
+    Then mappings for user "user1" at domain "domain1" should contains only "user2@domain2"
+
+  Scenario: recursive mapping should work when two levels
+    Given recursive mapping is enable
+    And store "user2@domain2" address mapping for user "user1" at domain "domain1"
+    And store "user3@domain3" address mapping for user "user2" at domain "domain2"
+    Then mappings for user "user1" at domain "domain1" should contains only "user3@domain3"
+
+  Scenario: recursive mapping should work when three levels
+    Given recursive mapping is enable
+    And store "user2@domain2" address mapping for user "user1" at domain "domain1"
+    And store "user3@domain3" address mapping for user "user2" at domain "domain2"
+    And store "user4@domain4" address mapping for user "user3" at domain "domain3"
+    Then mappings for user "user1" at domain "domain1" should contains only "user4@domain4"
+
+  Scenario: recursive mapping should throw exception when a loop exists
+    Given recursive mapping is enable
+    And store "user2@domain2" address mapping for user "user1" at domain "domain1"
+    And store "user3@domain3" address mapping for user "user2" at domain "domain2"
+    And store "user1@domain1" address mapping for user "user3" at domain "domain3"
+    Then retrieving mappings for user "user1" at domain "domain1" should raise a "ErrorMappingException" exception with message "554 Too many mappings to process"
+
+  Scenario: recursive mapping should work when a level is removed
+    Given recursive mapping is enable
+    And store "user2@domain2" address mapping for user "user1" at domain "domain1"
+    And store "user3@domain3" address mapping for user "user2" at domain "domain2"
+    And store "user4@domain4" address mapping for user "user3" at domain "domain3"
+    When user "user2" at domain "domain2" removes a address mapping "user3@domain3"
+    Then mappings for user "user1" at domain "domain1" should contains only "user2@domain2"
+
+  Scenario: recursive mapping should work when three levels on alias domains
+    Given store "domain2" alias domain mapping for domain "domain1"
+    And store "domain3" alias domain mapping for domain "domain2"
+    And store "domain4" alias domain mapping for domain "domain3"
+    Then mappings for user "test" at domain "domain4" should contains only "test@domain1"
