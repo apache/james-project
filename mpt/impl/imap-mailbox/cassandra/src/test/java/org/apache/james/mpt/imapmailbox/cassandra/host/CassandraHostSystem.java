@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.cassandra.host;
 
-import org.apache.james.backends.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -52,11 +52,11 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     private final CassandraMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
     private final CassandraModule mailboxModule;
-    private CassandraClusterSingleton cassandraClusterSingleton;
+    private CassandraCluster cassandraClusterSingleton;
 
     public CassandraHostSystem() throws Exception {
         mailboxModule = new CassandraMailboxModule();
-        cassandraClusterSingleton = CassandraClusterSingleton.create(mailboxModule);
+        cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
         userManager = new MockAuthenticator();
         com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();
         CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);

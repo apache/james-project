@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;
-import org.apache.james.backends.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
@@ -42,7 +42,7 @@ public class CassandraTypeProviderTest {
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
     
-    private CassandraClusterSingleton cassandra;
+    private CassandraCluster cassandra;
     private CassandraModule module;
 
     @Before
@@ -63,7 +63,7 @@ public class CassandraTypeProviderTest {
                         .addColumn(PROPERTY, text()))));
             }
         };
-        cassandra = CassandraClusterSingleton.create(module);
+        cassandra = CassandraCluster.create(module);
         cassandra.getTypesProvider();
         cassandra.ensureAllTables();
     }

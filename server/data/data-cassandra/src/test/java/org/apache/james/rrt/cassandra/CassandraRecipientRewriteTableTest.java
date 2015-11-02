@@ -19,7 +19,7 @@
 package org.apache.james.rrt.cassandra;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.backends.cassandra.CassandraClusterSingleton;
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
@@ -30,12 +30,12 @@ import cucumber.api.java.Before;
 
 public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
-    private CassandraClusterSingleton cassandra;
+    private CassandraCluster cassandra;
 
     @Before
     @Override
     public void setUp() throws Exception {
-        cassandra = CassandraClusterSingleton.create(new CassandraRRTModule());
+        cassandra = CassandraCluster.create(new CassandraRRTModule());
         cassandra.ensureAllTables();
         super.setUp();
     }
