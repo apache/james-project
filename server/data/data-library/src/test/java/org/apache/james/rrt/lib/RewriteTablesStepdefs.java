@@ -65,6 +65,11 @@ public class RewriteTablesStepdefs {
         storeAddressMappingForUserAtDomain(address, RecipientRewriteTable.WILDCARD, domain);
     }
 
+    @Given("store \"([^\"]*)\" alias domain mapping for domain \"([^\"]*)\"")
+    public void storeAliasDomainMappingForDomain(String aliasDomain, String domain) throws Throwable {
+        rewriteTable.addAliasDomainMapping(aliasDomain, domain);
+    }
+
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a regexp mapping \"([^\"]*)\"")
     public void userAtDomainRemovesRegexpMapping(String user, String domain, String regexp) throws Throwable {
         rewriteTable.removeRegexMapping(user, domain, regexp);
@@ -83,6 +88,11 @@ public class RewriteTablesStepdefs {
     @When("wildcard address mapping \"([^\"]*)\" at domain \"([^\"]*)\" is removed")
     public void removeWildcardAddressMappingAtDomain(String address, String domain) throws Throwable {
         userAtDomainRemovesAddressMapping(RecipientRewriteTable.WILDCARD, domain, address);
+    }
+
+    @When("alias domain mapping \"([^\"]*)\" for \"([^\"]*)\" domain is removed")
+    public void removeAliasDomainMappingForDomain(String aliasdomain, String domain) throws Throwable {
+        rewriteTable.removeAliasDomainMapping(aliasdomain, domain);
     }
 
     @Then("mappings should be empty")

@@ -128,3 +128,50 @@ Feature: Rewrite Tables tests
     Given store "test@localhost" address mapping as wildcard for domain "localhost"
     And store "test2@localhost" address mapping as wildcard for domain "localhost"
     Then mappings for user "user" at domain "localhost" should contains only "test@localhost, test2@localhost"
+
+# Alias mapping
+
+  Scenario: address mapping should be retrieved when searching with a domain alias
+    Given store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contains only "test@localhost"
+
+  Scenario: address mapping should be retrieved when searching with a domain alias
+    Given store "test2@localhost" address mapping for user "test" at domain "localhost"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contains only "test2@localhost"
+
+  Scenario: address mapping should be retrieved when searching with a domain alias (reverse insertion order)
+    Given store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "test2@localhost" address mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contains only "test2@localhost"
+
+  Scenario: address mapping should be retrieved when searching with the correct domain and exists an alias domain
+    Given store "test2@localhost" address mapping for user "test" at domain "localhost"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "test2@localhost"
+
+  Scenario: wildcard address mapping should be retrieved when searching with a domain alias
+    Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contains only "wildcard@localhost"
+
+  Scenario: wildcard address mapping should be retrieved when searching with a domain and exists an alias domain
+    Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "wildcard@localhost"
+
+  Scenario: both wildcard address mapping and default user address should be retrieved when wildcard address mapping on alias domain
+    Given store "wildcard@localhost" address mapping as wildcard for domain "aliasdomain"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "aliasdomain" should contains only "test@localhost, wildcard@localhost"
+
+  Scenario: both wildcard address mapping and default user address should be retrieved when wildcard address mapping on alias domain (reverse insertion order)
+    Given store "aliasdomain" alias domain mapping for domain "localhost"
+    And store "wildcard@localhost" address mapping as wildcard for domain "aliasdomain"
+    Then mappings for user "test" at domain "aliasdomain" should contains only "test@localhost, wildcard@localhost"
+
+  Scenario: asking for a removed domain alias should fail
+    Given store "wildcard@localhost" address mapping as wildcard for domain "localhost"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    When alias domain mapping "aliasdomain" for "localhost" domain is removed
+    Then mappings for user "test" at domain "aliasdomain" should be empty
