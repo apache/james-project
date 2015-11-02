@@ -18,13 +18,28 @@
  ****************************************************************/
 package org.apache.james.rrt.file;
 
-import cucumber.api.java.en.Given;
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.slf4j.LoggerFactory;
 
-public class XMLStepdefs{
+import cucumber.api.java.Before;
 
-    @Given("perform backend setup")
-    public void given() throws Throwable {
-        System.out.println("XML");
+public class XMLStepdefs {
+
+    private RewriteTablesStepdefs mainStepdefs;
+
+    public XMLStepdefs(RewriteTablesStepdefs mainStepdefs) {
+        this.mainStepdefs = mainStepdefs;
     }
 
+    @Before
+    public void setup() throws Throwable {
+        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+    }
+
+    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+        XMLRecipientRewriteTable localVirtualUserTable = new XMLRecipientRewriteTable();
+        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
+        return localVirtualUserTable;
+    }
 }

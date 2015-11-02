@@ -18,24 +18,16 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
-import cucumber.api.java.en.Given;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
 
 public class RewriteTablesStepdefs {
 
-    @Given("i'm up")
-    public void given() throws Throwable {
-        System.out.println("i'm up");
-    }
+    public AbstractRecipientRewriteTable rewriteTable;
 
-    @When("it's time")
-    public void when() throws Throwable {
-        System.out.println("it's time");
-    }
-
-    @Then("say hello")
-    public void then() throws Throwable {
-        System.out.println("say hello");
+    @Then("mappings should be empty")
+    public void assertMappingsIsEmpty() throws Throwable {
+        assertThat(rewriteTable.getAllMappings()).isNullOrEmpty();
     }
 }

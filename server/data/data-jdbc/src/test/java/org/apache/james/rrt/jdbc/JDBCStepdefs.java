@@ -18,13 +18,48 @@
  ****************************************************************/
 package org.apache.james.rrt.jdbc;
 
-import cucumber.api.java.en.Given;
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.derby.jdbc.EmbeddedDriver;
+import org.apache.james.filesystem.api.mock.MockFileSystem;
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.slf4j.LoggerFactory;
 
-public class JDBCStepdefs{
+import cucumber.api.java.Before;
 
-    @Given("perform backend setup")
-    public void given() throws Throwable {
-        System.out.println("JDBC");
+public class JDBCStepdefs {
+
+    private RewriteTablesStepdefs mainStepdefs;
+
+    public JDBCStepdefs(RewriteTablesStepdefs mainStepdefs) {
+        this.mainStepdefs = mainStepdefs;
     }
 
+    @Before
+    public void setup() throws Throwable {
+        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+    }
+
+    protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+        JDBCRecipientRewriteTable localVirtualUserTable = new JDBCRecipientRewriteTable();
+        localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));
+        localVirtualUserTable.setDataSource(getDataSource());
+        localVirtualUserTable.setFileSystem(new MockFileSystem());
+        DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
+        defaultConfiguration.addProperty("[@destinationURL]", "db://maildb/RecipientRewriteTable");
+        defaultConfiguration.addProperty("sqlFile", "file://conf/sqlResources.xml");
+        localVirtualUserTable.configure(defaultConfiguration);
+        localVirtualUserTable.init();
+        return localVirtualUserTable;
+    }
+    
+    private BasicDataSource getDataSource() {
+        BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName(EmbeddedDriver.class.getName());
+        ds.setUrl("jdbc:derby:target/testdb;create=true");
+        ds.setUsername("james");
+        ds.setPassword("james");
+        return ds;
+    }
 }
