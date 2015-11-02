@@ -20,6 +20,7 @@
 
 package org.apache.james.rrt.lib;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -39,7 +40,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class MappingsImpl implements Mappings {
+public class MappingsImpl implements Mappings, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static MappingsImpl empty() {
         return builder().build();
