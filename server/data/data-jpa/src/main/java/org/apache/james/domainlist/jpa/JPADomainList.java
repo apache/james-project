@@ -71,9 +71,7 @@ public class JPADomainList extends AbstractDomainList {
             transaction.commit();
         } catch (PersistenceException e) {
             getLogger().error("Failed to list domains", e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
+            rollback(transaction);
             throw new DomainListException("Unable to retrieve domains", e);
         } finally {
             entityManager.close();
@@ -87,22 +85,17 @@ public class JPADomainList extends AbstractDomainList {
 
     @Override
     public boolean containsDomain(String domain) throws DomainListException {
+        String lowerCasedDomain = domain.toLowerCase();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            JPADomain jpaDomain = (JPADomain) entityManager.createNamedQuery("findDomainByName").setParameter("name", domain).getSingleResult();
+            boolean result = containsDomainInternal(lowerCasedDomain, entityManager);
             transaction.commit();
-            return (jpaDomain != null);
-        } catch (NoResultException e) {
-            getLogger().debug("No domain found", e);
-            transaction.commit();
-            return false;
+            return result;
         } catch (PersistenceException e) {
             getLogger().error("Failed to find domain", e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
+            rollback(transaction);
             throw new DomainListException("Unable to retrieve domains", e);
         } finally {
             entityManager.close();
@@ -112,21 +105,20 @@ public class JPADomainList extends AbstractDomainList {
     @Override
     public void addDomain(String domain) throws DomainListException {
         String lowerCasedDomain = domain.toLowerCase();
-        if (containsDomain(lowerCasedDomain)) {
-            throw new DomainListException(lowerCasedDomain + " already exists.");
-        }
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
+            if (containsDomainInternal(lowerCasedDomain, entityManager)) {
+                transaction.commit();
+                throw new DomainListException(lowerCasedDomain + " already exists.");
+            }
             JPADomain jpaDomain = new JPADomain(lowerCasedDomain);
             entityManager.persist(jpaDomain);
             transaction.commit();
         } catch (PersistenceException e) {
             getLogger().error("Failed to save domain", e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
+            rollback(transaction);
             throw new DomainListException("Unable to add domain " + domain, e);
         } finally {
             entityManager.close();
@@ -135,21 +127,40 @@ public class JPADomainList extends AbstractDomainList {
 
     @Override
     public void removeDomain(String domain) throws DomainListException {
+        String lowerCasedDomain = domain.toLowerCase();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            entityManager.createNamedQuery("deleteDomainByName").setParameter("name", domain).executeUpdate();
+            if (!containsDomainInternal(lowerCasedDomain, entityManager)) {
+                transaction.commit();
+                throw new DomainListException(domain + " was not found.");
+            }
+            entityManager.createNamedQuery("deleteDomainByName").setParameter("name", lowerCasedDomain).executeUpdate();
             transaction.commit();
         } catch (PersistenceException e) {
             getLogger().error("Failed to remove domain", e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
+            rollback(transaction);
             throw new DomainListException("Unable to remove domain " + domain, e);
-
         } finally {
             entityManager.close();
+        }
+    }
+
+    private void rollback(EntityTransaction transaction) {
+        if (transaction.isActive()) {
+            transaction.rollback();
+        }
+    }
+
+    private boolean containsDomainInternal(String domain, EntityManager entityManager) {
+        try {
+            return entityManager.createNamedQuery("findDomainByName")
+                .setParameter("name", domain)
+                .getSingleResult() != null;
+        } catch (NoResultException e) {
+            getLogger().debug("No domain found", e);
+            return false;
         }
     }
 
