@@ -112,12 +112,12 @@ public class RewriteTablesStepdefs {
 
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should be empty")
     public void assertMappingsIsEmpty(String user, String domain) throws Throwable {
-        assertThat(rewriteTable.getMappings(user, domain)).isNullOrEmpty();
+        assertThat(rewriteTable.getMappings(user, domain).asStrings()).isNullOrEmpty();
     }
 
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should contains only \"([^\"]*)\"")
     public void assertMappingsForUser(String user, String domain, List<String> mappings) throws Throwable {
-        assertThat(rewriteTable.getMappings(user, domain)).containsOnlyElementsOf(mappings);
+        assertThat(rewriteTable.getMappings(user, domain).asStrings()).containsOnlyElementsOf(mappings);
     }
 
     @Then("a \"([^\"]*)\" exception should have been thrown")

@@ -82,7 +82,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         
         if (!updatedMappings.isEmpty()) {
             defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + RecipientRewriteTableUtil.
-                    CollectionToMapping(updatedMappings));
+                    CollectionToMapping(updatedMappings.asStrings()));
         }
 
         try {
@@ -119,7 +119,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
         if (mappings.size() > 0) {
             defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + RecipientRewriteTableUtil.
-                    CollectionToMapping(mappings));
+                    CollectionToMapping(mappings.asStrings()));
         }
 
         try {
@@ -133,7 +133,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     private void removeMappingsFromConfig(String user, String domain, Mappings mappings) {
         List<String> stored = new ArrayList<String>();
         for (String c : defaultConfiguration.getStringArray("mapping")) {
-            String mapping = user + "@" + domain + "=" + RecipientRewriteTableUtil.CollectionToMapping(mappings);
+            String mapping = user + "@" + domain + "=" + RecipientRewriteTableUtil.CollectionToMapping(mappings.asStrings());
             if (!c.equalsIgnoreCase(mapping)) {
                 stored.add(c);
             }

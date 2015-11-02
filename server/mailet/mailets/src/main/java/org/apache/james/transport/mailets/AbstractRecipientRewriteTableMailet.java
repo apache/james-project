@@ -125,7 +125,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
      * @throws MessagingException
      */
     protected Collection<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
-        Iterator<String> i = mappings.iterator();
+        Iterator<String> i = mappings.asStrings().iterator();
         Collection<MailAddress> remoteRecipients = new ArrayList<MailAddress>();
         Collection<MailAddress> localRecipients = new ArrayList<MailAddress>();
         while (i.hasNext()) {

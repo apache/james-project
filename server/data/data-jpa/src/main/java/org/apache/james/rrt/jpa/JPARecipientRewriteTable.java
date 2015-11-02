@@ -66,7 +66,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings));
+            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
         } else {
             doAddMapping(fixedUser, fixedDomain, mapping);
         }
@@ -166,7 +166,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings));
+            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
         } else {
             doRemoveMapping(fixedUser, fixedDomain, mapping);
         }
