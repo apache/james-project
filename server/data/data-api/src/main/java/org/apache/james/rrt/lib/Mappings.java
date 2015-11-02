@@ -26,7 +26,7 @@ public interface Mappings extends Iterable<String> {
 
     Collection<String> getMappings();
     
-    void addAll(Mappings toAdd);
+    Mappings addAll(Mappings toAdd);
 
     void add(String mapping);
 

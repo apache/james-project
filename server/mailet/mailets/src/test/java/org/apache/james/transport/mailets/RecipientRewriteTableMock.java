@@ -79,7 +79,7 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
     public Mappings getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException {
         Mappings recipients = MappingsImpl.empty();
         for (Mapping m : findUserDomain(user, domain)) {
-            recipients.addAll(m.target);
+            recipients = recipients.addAll(m.target);
         }
         if (recipients.isEmpty()) {
             return null;

@@ -26,6 +26,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 public class MappingsImpl implements Mappings {
 
     public static MappingsImpl empty() {
@@ -67,8 +70,8 @@ public class MappingsImpl implements Mappings {
     }
     
     @Override
-    public void addAll(Mappings toAdd) {
-        mappings.addAll(toAdd.getMappings());
+    public Mappings addAll(Mappings toAdd) {
+        return MappingsImpl.fromCollection(Lists.newArrayList(Iterables.concat(this, toAdd.getMappings())));
     }
 
     @Override
