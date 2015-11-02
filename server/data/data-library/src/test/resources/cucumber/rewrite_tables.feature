@@ -57,7 +57,6 @@ Feature: Rewrite Tables tests
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
 
-# Bad messsage: "bounce!;test@localhost2" instead of "bounce!"
   Scenario: stored error mapping should be retrieved when two mappings matching
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     And store "error" error mapping for user "test" at domain "localhost"
@@ -73,15 +72,11 @@ Feature: Rewrite Tables tests
     When user "test" at domain "localhost" removes a error mapping "bounce!"
     Then mappings for user "test" at domain "localhost" should be empty
 
-# Should fail, but not currently
-  @ignore
   Scenario: an exception should be thrown when an error mapping is not the first stored
     Given store "test@localhost2" address mapping for user "test" at domain "localhost"
     And store "bounce!" error mapping for user "test" at domain "localhost"
     Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
 
-# Bad messsage: "bounce!;test@localhost2" instead of "bounce!"
-  @ignore
   Scenario: an exception should be thrown when an error mapping is the first stored
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     And store "test@localhost2" address mapping for user "test" at domain "localhost"
