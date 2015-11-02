@@ -100,9 +100,4 @@ public class MappingsImpl implements Mappings {
         return mappings.isEmpty();
     }
 
-    @Override
-    public String[] toArray(String[] strings) {
-        return mappings.toArray(strings);
-    }
-
 }

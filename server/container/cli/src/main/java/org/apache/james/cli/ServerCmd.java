@@ -20,6 +20,7 @@ package org.apache.james.cli;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -189,7 +190,7 @@ public class ServerCmd {
             break;
         case LISTUSERDOMAINMAPPINGS:
             Mappings userDomainMappings = probe.listUserDomainMappings(arguments[1], arguments[2]);
-            print(userDomainMappings.toArray(new String[0]), System.out);
+            print(userDomainMappings, System.out);
             break;
         case ADDADDRESSMAPPING:
             probe.addAddressMapping(arguments[1], arguments[2], arguments[3]);
@@ -264,6 +265,10 @@ public class ServerCmd {
     }
 
     private static void print(String[] data, PrintStream out) {
+        print(Arrays.asList(data), out);
+    }
+    
+    private static void print(Iterable<String> data, PrintStream out) {
         if (data != null) {
             for (String u : data) {
                 out.println(u);
