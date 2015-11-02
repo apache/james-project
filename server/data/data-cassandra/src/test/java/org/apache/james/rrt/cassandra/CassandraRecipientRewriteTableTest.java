@@ -18,27 +18,90 @@
  ****************************************************************/
 package org.apache.james.rrt.cassandra;
 
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.backends.cassandra.CassandraClusterSingleton;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.junit.Ignore;
+import org.slf4j.LoggerFactory;
 
-@Ignore
+import cucumber.api.java.After;
+import cucumber.api.java.Before;
+
 public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
+
+    private CassandraClusterSingleton cassandra;
+
+    @Before
+    @Override
+    public void setUp() throws Exception {
+        cassandra = CassandraClusterSingleton.create(new CassandraRRTModule());
+        cassandra.ensureAllTables();
+        super.setUp();
+    }
+
+    @After
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        cassandra.clearAllTables();
+    }
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        return null;
+        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable();
+        rrt.setSession(cassandra.getConf());
+        rrt.setLog(LoggerFactory.getLogger("MockLog"));
+        rrt.configure(new DefaultConfigurationBuilder());
+        return rrt;
     }
 
     @Override
     protected boolean addMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
-        return false;
+        try {
+            switch (type) {
+            case ERROR_TYPE:
+                virtualUserTable.addErrorMapping(user, domain, mapping);
+                return true;
+            case REGEX_TYPE:
+                virtualUserTable.addRegexMapping(user, domain, mapping);
+                return true;
+            case ADDRESS_TYPE:
+                virtualUserTable.addAddressMapping(user, domain, mapping);
+                return true;
+            case ALIASDOMAIN_TYPE:
+                virtualUserTable.addAliasDomainMapping(domain, mapping);
+                return true;
+            default:
+                return false;
+            }
+        } catch (RecipientRewriteTableException e) {
+            return false;
+        }
     }
 
     @Override
     protected boolean removeMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
-        return false;
+        try {
+            switch (type) {
+            case ERROR_TYPE:
+                virtualUserTable.removeErrorMapping(user, domain, mapping);
+                return true;
+            case REGEX_TYPE:
+                virtualUserTable.removeRegexMapping(user, domain, mapping);
+                return true;
+            case ADDRESS_TYPE:
+                virtualUserTable.removeAddressMapping(user, domain, mapping);
+                return true;
+            case ALIASDOMAIN_TYPE:
+                virtualUserTable.removeAliasDomainMapping(domain, mapping);
+                return true;
+            default:
+                return false;
+            }
+        } catch (RecipientRewriteTableException e) {
+            return false;
+        }
     }
 
 }

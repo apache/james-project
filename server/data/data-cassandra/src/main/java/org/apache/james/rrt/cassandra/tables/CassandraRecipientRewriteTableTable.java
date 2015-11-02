@@ -17,40 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rrt.cassandra;
+package org.apache.james.rrt.cassandra.tables;
 
-import java.util.Arrays;
-import java.util.List;
 
-import org.apache.james.backends.cassandra.components.CassandraIndex;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
+public interface CassandraRecipientRewriteTableTable {
 
-public class CassandraRRTModule implements CassandraModule {
+    String TABLE_NAME = "rrt";
 
-    private final List<CassandraTable> tables;
-    private final List<CassandraIndex> index;
-    private final List<CassandraType> types;
-
-    public CassandraRRTModule() {
-        tables = Arrays.asList();
-        index = Arrays.asList();
-        types = Arrays.asList();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraIndex> moduleIndex() {
-        return index;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+    String USER = "user";
+    String DOMAIN = "domain";
+    String MAPPING = "mapping";
 }
