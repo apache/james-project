@@ -33,7 +33,6 @@ import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
 /**
  * Class responsible to implement the Virtual User Table in database with JPA
@@ -66,7 +65,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
+            doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
             doAddMapping(fixedUser, fixedDomain, mapping);
         }
@@ -166,7 +165,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
+            doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
             doRemoveMapping(fixedUser, fixedDomain, mapping);
         }

@@ -40,7 +40,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 
@@ -210,7 +209,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(regex).build();
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
+            doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         }
         doAddMapping(fixedUser, fixedDomain, regex);
     }
@@ -327,7 +326,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
+            doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
             doRemoveMapping(fixedUser, fixedDomain, mapping);
         }

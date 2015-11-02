@@ -25,7 +25,6 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
 public class MockRecipientRewriteTableManagementImpl implements RecipientRewriteTable {
 
@@ -119,7 +118,7 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
                 throw new RecipientRewriteTableException("Mapping " + mapping + " already exist!");
             } else {
                 Mappings updateMappings = MappingsImpl.from(map).add(mapping).build();
-                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(updateMappings.asStrings()));
+                store.put(key, updateMappings.serialize());
             }
         } else {
             store.put(key, mapping);
@@ -133,7 +132,7 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
         if (mappings != null) {
             map = MappingsImpl.fromRawString(mappings);
             if (map.contains(mapping)) {
-                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map.remove(mapping).asStrings()));
+                store.put(key, map.remove(mapping).serialize());
             }
         }
         throw new RecipientRewriteTableException("Mapping does not exist");

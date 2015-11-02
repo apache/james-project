@@ -467,7 +467,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                     col.add(mapping);
                 }
             }
-            return RecipientRewriteTableUtil.CollectionToMapping(col);
+            return MappingsImpl.fromCollection(col).serialize();
         } else {
             return mappings;
         }

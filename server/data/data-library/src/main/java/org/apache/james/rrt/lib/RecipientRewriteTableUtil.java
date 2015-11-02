@@ -211,15 +211,4 @@ public class RecipientRewriteTableUtil {
         return mappings;
     }
 
-    /**
-     * Convert a Collection which holds mappings to a raw mapping String
-     * 
-     * @param map
-     *            the Collection
-     * @return mapping the mapping String
-     */
-    public static String CollectionToMapping(Iterable<String> map) {
-        return Joiner.on(';').join(map);
-    }
-
 }

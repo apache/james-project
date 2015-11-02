@@ -119,5 +119,22 @@ public class MappingsImplTest {
         assertThat(actual).containsExactly(MappingImpl.of("regex:test"));
     }
 
+    @Test
+    public void serializeShouldReturnEmptyStringWhenEmpty() {
+        assertThat(MappingsImpl.empty()).isEmpty();
+    }
+
+    @Test
+    public void serializeShouldReturnSimpleValueWhenSingleElement() {
+        String actual = MappingsImpl.builder().add("value").build().serialize();
+        assertThat(actual).isEqualTo("value");
+    }
+
+    @Test
+    public void collectionToMappingShouldReturnSeparatedValuesWhenSeveralElementsCollection() {
+        String actual = MappingsImpl.builder().add("value1").add("value2").build().serialize();
+        assertThat(actual).isEqualTo("value1;value2");
+    }
+
     
 }

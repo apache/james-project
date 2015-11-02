@@ -314,7 +314,7 @@ public class ServerCmd {
     private void print(Map<String, Mappings> map, PrintStream out) {
         if (map != null) {
             for (Entry<String, Mappings> entry : map.entrySet()) {
-                out.println(entry.getKey() + '=' + entry.getValue().asStrings().toString());
+                out.println(entry.getKey() + '=' + entry.getValue().serialize());
             }
             out.println();
         }
