@@ -1,7 +1,4 @@
 Feature: Rewrite Tables tests
 
-  Scenario: will say hello
-    Given i'm up
-    And perform backend setup
-    When it's time
-    Then say hello
+  Scenario: rewrite tables should be empty when none defined
+    Then mappings should be empty

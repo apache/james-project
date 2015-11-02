@@ -18,13 +18,43 @@
  ****************************************************************/
 package org.apache.james.rrt.hbase;
 
-import cucumber.api.java.en.Given;
+import java.io.IOException;
 
-public class HBaseStepdefs{
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.system.hbase.TablePool;
+import org.slf4j.LoggerFactory;
 
-    @Given("perform backend setup")
-    public void given() throws Throwable {
-        System.out.println("HBase");
+import com.google.common.base.Throwables;
+
+import cucumber.api.java.Before;
+
+public class HBaseStepdefs {
+
+    private static final HBaseClusterSingleton cluster = HBaseClusterSingleton.build();
+
+    private RewriteTablesStepdefs mainStepdefs;
+
+    public HBaseStepdefs(RewriteTablesStepdefs mainStepdefs) {
+        try {
+            this.mainStepdefs = mainStepdefs;
+            TablePool.getInstance(cluster.getConf());
+        } catch (IOException e) {
+            Throwables.propagate(e);
+        }
     }
 
+    @Before
+    public void setup() throws Throwable {
+        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+    }
+
+    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+        HBaseRecipientRewriteTable rrt = new HBaseRecipientRewriteTable();
+        rrt.setLog(LoggerFactory.getLogger("MockLog"));
+        rrt.configure(new DefaultConfigurationBuilder());
+        return rrt;
+    }
 }
