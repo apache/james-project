@@ -123,8 +123,8 @@
         <guava.version>16.0</guava.version>
         <assertj.version>1.7.1</assertj.version>
         <jackson-databinding.version>2.3.3</jackson-databinding.version>
-        <cassandra-driver-core.version>2.1.5</cassandra-driver-core.version>
-        <cassandra-unit.version>2.0.2.2</cassandra-unit.version>
+        <cassandra-driver-core.version>2.1.8</cassandra-driver-core.version>
+        <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <apache-backends-cassandra.version>1.8.3-SNAPSHOT</apache-backends-cassandra.version>
     </properties>
 
