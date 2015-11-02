@@ -29,6 +29,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.rrt.lib.MappingsImpl.Builder;
 import org.apache.james.user.api.JamesUsersRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -121,7 +122,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
      *      java.lang.String)
      */
     public Mappings getMappings(String username, String domain) throws ErrorMappingException, RecipientRewriteTableException {
-        MappingsImpl mappings = MappingsImpl.empty();
+        Builder mappingsBuilder = MappingsImpl.builder();
         try {
             User user = getUserByName(username);
 
@@ -131,14 +132,14 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                 if (enableAliases && jUser.getAliasing()) {
                     String alias = jUser.getAlias();
                     if (alias != null) {
-                        mappings.add(alias + "@" + domain);
+                        mappingsBuilder.add(alias + "@" + domain);
                     }
                 }
 
                 if (enableForwarding && jUser.getForwarding()) {
                     String forward;
                     if (jUser.getForwardingDestination() != null && ((forward = jUser.getForwardingDestination().toString()) != null)) {
-                        mappings.add(forward);
+                        mappingsBuilder.add(forward);
                     } else {
                         String errorBuffer = "Forwarding was enabled for " + username + " but no forwarding address was set for this account.";
                         getLogger().error(errorBuffer);
@@ -148,6 +149,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
         } catch (UsersRepositoryException e) {
             throw new RecipientRewriteTableException("Unable to lookup forwards/aliases", e);
         }
+        Mappings mappings = mappingsBuilder.build();
         if (mappings.size() == 0) {
             return null;
         } else {

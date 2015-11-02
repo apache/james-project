@@ -37,10 +37,13 @@ import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.rrt.lib.MappingsImpl.Builder;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
 
 /**
  * Implementation of the RecipientRewriteTable for a HBase persistence.
@@ -62,8 +65,8 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
-            map.add(mapping);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(map));
+            Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
+            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.getMappings()));
         } else {
             doAddMapping(fixedUser, fixedDomain, mapping);
         }
@@ -131,12 +134,14 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                         if (map == null) {
                             map = new HashMap<String, Mappings>();
                         }
-                        Mappings list = map.get(email);
-                        if (list == null) {
-                            list = MappingsImpl.empty();
-                        }
-                        list.add(Bytes.toString(keyValue.getRow()));
-                        map.put(email, list);
+                        Mappings mappings = 
+                                MappingsImpl.from(
+                                    Optional.fromNullable(
+                                        map.get(email))
+                                        .or(MappingsImpl.empty()))
+                                .add(Bytes.toString(keyValue.getRow()))
+                                .build();
+                        map.put(email, mappings);
                     }
                 }
             }
