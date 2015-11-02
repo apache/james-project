@@ -21,7 +21,6 @@ package org.apache.james.rrt.lib;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -30,6 +29,8 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.mailet.MailAddress;
+
+import com.google.common.base.Joiner;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations
@@ -246,15 +247,7 @@ public class RecipientRewriteTableUtil {
      * @return mapping the mapping String
      */
     public static String CollectionToMapping(Collection<String> map) {
-        StringBuilder mapping = new StringBuilder();
-        Iterator<String> mappings = map.iterator();
-        while (mappings.hasNext()) {
-            mapping.append(mappings.next());
-            if (mappings.hasNext()) {
-                mapping.append(";");
-            }
-        }
-        return mapping.toString();
+        return Joiner.on(';').join(map);
     }
 
 }
