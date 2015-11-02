@@ -21,7 +21,6 @@
 package org.apache.james.rrt.lib;
 
 import java.util.Collection;
-import java.util.List;
 
 public interface Mappings extends Iterable<String> {
 
@@ -36,8 +35,6 @@ public interface Mappings extends Iterable<String> {
     int size();
 
     boolean remove(String mapping);
-
-    void addAll(List<String> target);
 
     boolean isEmpty();
 
