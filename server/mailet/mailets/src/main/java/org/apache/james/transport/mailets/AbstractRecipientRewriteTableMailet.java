@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -125,22 +126,22 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
      * @throws MessagingException
      */
     protected Collection<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
-        Iterator<String> i = mappings.asStrings().iterator();
+        Iterator<Mapping> i = mappings.iterator();
         Collection<MailAddress> remoteRecipients = new ArrayList<MailAddress>();
         Collection<MailAddress> localRecipients = new ArrayList<MailAddress>();
         while (i.hasNext()) {
-            String rcpt = i.next();
+            Mapping rcpt = i.next();
 
-            if (!rcpt.contains("@")) {
+            if (!rcpt.hasDomain()) {
                 // the mapping contains no domain name, use the default domain
                 try {
-                    rcpt = rcpt + "@" + domainList.getDefaultDomain();
+                    rcpt = rcpt.appendDomain(domainList.getDefaultDomain());
                 } catch (DomainListException e) {
                     throw new MessagingException("Unable to access DomainList", e);
                 }
             }
 
-            MailAddress nextMap = new MailAddress(rcpt);
+            MailAddress nextMap = new MailAddress(rcpt.asString());
             if (getMailetContext().isLocalServer(nextMap.getDomain())) {
                 localRecipients.add(nextMap);
             } else {
