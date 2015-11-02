@@ -43,10 +43,19 @@
           class="org.apache.james.mailbox.cassandra.CassandraMailboxModule"
           lazy-init="true"/>
 
+    <bean id="cassandra-rrt-module"
+          class="org.apache.james.rrt.cassandra.CassandraRRTModule"
+          lazy-init="true"/>
+
     <bean id="cassandra-module-composite"
           class="org.apache.james.backends.cassandra.init.CassandraModuleComposite"
           lazy-init="true">
-        <constructor-arg index="0" ref="cassandra-mailbox-module"/>
+        <constructor-arg index="0">
+            <list>
+                <ref bean="cassandra-mailbox-module"/>
+                <ref bean="cassandra-rrt-module"/>
+            </list>
+        </constructor-arg>
     </bean>
 
     <bean id="cassandra-cluster"
