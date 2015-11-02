@@ -170,6 +170,14 @@ Feature: Rewrite Tables tests
     When alias domain mapping "aliasdomain" for "localhost" domain is removed
     Then mappings for user "test" at domain "aliasdomain" should be empty
 
+# Mixed mapping
+
+  Scenario: mixed mapping should work
+    Given store "test2@localhost" address mapping for user "test" at domain "localhost"
+    And store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "aliasdomain" alias domain mapping for domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "test2@localhost, regex:(.*)@localhost"
+
 # Recursive mapping
 
   Scenario: direct mapping should be returned when recursive mapping is disable
