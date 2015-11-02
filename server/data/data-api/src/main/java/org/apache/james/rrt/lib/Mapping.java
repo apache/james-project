@@ -25,4 +25,8 @@ public interface Mapping {
 
     String asString();
 
+    boolean hasDomain();
+
+    Mapping appendDomain(String domain);
+
 }
