@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.rrt.lib.MappingsImpl.Builder;
 
 import java.util.*;
 
@@ -77,10 +78,11 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
 
     @Override
     public Mappings getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException {
-        Mappings recipients = MappingsImpl.empty();
+        Builder builder = MappingsImpl.builder();
         for (Mapping m : findUserDomain(user, domain)) {
-            recipients = recipients.addAll(m.target);
+            builder.addAll(m.target);
         }
+        Mappings recipients = builder.build();
         if (recipients.isEmpty()) {
             return null;
         } else {

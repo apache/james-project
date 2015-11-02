@@ -26,8 +26,6 @@ public interface Mappings extends Iterable<String> {
 
     Collection<String> getMappings();
     
-    Mappings addAll(Mappings toAdd);
-
     boolean contains(String mapping);
 
     int size();

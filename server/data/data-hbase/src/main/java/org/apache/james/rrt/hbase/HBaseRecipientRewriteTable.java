@@ -37,7 +37,6 @@ import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.rrt.lib.MappingsImpl.Builder;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
@@ -83,7 +82,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         try {
             table = TablePool.getInstance().getRecipientRewriteTable();
             // Optimize this to only make one call.
-            feedUserDomainMappingsList(table, user, domain, list);
+            return feedUserDomainMappingsList(table, user, domain, list);
         } catch (IOException e) {
             log.error("Error while getting user domain mapping in HBase", e);
             throw new RecipientRewriteTableException("Error while getting user domain mapping in HBase", e);
@@ -96,7 +95,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 }
             }
         }
-        return list;
     }
 
     private Mappings feedUserDomainMappingsList(HTableInterface table, String user, String domain, Mappings list) throws
@@ -106,7 +104,8 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         List<KeyValue> keyValues = result.getColumn(HRecipientRewriteTable.COLUMN_FAMILY_NAME,
                                                     HRecipientRewriteTable.COLUMN.MAPPING);
         if (keyValues.size() > 0) {
-            return list.addAll(MappingsImpl.fromRawString(Bytes.toString(keyValues.get(0).getValue())));
+            return MappingsImpl.from(list)
+                    .addAll(MappingsImpl.fromRawString(Bytes.toString(keyValues.get(0).getValue()))).build();
         }
         return list;
     }
