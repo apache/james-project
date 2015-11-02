@@ -246,4 +246,8 @@ public interface ServerProbe extends Closeable {
     void setDefaultMaxMessageCount(long maxDefaultMessageCount) throws MailboxException;
 
     void setDefaultMaxStorage(long maxDefaultSize) throws MailboxException;
+
+    void reIndexMailbox(String namespace, String user, String name) throws Exception;
+
+    void reIndexAll() throws Exception;
 }

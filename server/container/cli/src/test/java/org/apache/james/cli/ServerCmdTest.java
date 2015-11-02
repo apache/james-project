@@ -480,6 +480,35 @@ public class ServerCmdTest {
         control.verify();
     }
 
+    @Test
+    public void reIndexAllQuotaCommandShouldWork() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        serverProbe.reIndexAll();
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
+    @Test
+    public void reIndexMailboxCommandShouldWork() throws Exception {
+        String namespace = "#private";
+        String user = "btellier@apache.org";
+        String name = "INBOX";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXMAILBOX.getCommand(), namespace, user, name};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        serverProbe.reIndexMailbox(namespace, user, name);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
     @Test(expected = InvalidArgumentNumberException.class)
     public void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand()};
@@ -973,6 +1002,35 @@ public class ServerCmdTest {
     public void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user, ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void reIndexAllCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand(), ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void reIndexMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String namespace = "#private";
+        String name = "INBOX.test";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXMAILBOX.getCommand(), namespace, user, name, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         control.replay();
