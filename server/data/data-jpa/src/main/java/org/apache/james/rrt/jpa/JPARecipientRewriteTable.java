@@ -77,11 +77,19 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
      *      java.lang.String)
      */
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
+        String mapping = getMapping(user, domain, "selectExactMappings");
+        if (mapping != null) {
+            return mapping;
+        }
+        return getMapping(user, domain, "selectMappings");
+    }
+
+    private String getMapping(String user, String domain, String queryName) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectMappings").setParameter("user", user).setParameter("domain", domain).getResultList();
+            List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery(queryName).setParameter("user", user).setParameter("domain", domain).getResultList();
             transaction.commit();
             if (virtualUsers.size() > 0) {
                 return virtualUsers.get(0).getTargetAddress();

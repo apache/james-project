@@ -93,16 +93,14 @@ Feature: Rewrite Tables tests
     Then mappings for user "user" at domain "localhost" should contains only "test@localhost"
     And mappings for user "user2" at domain "localhost" should contains only "test@localhost"
 
-# Wildcard is not overridden
-  @ignore
   Scenario: direct mapping should override address mapping as wildcard
+    Given recursive mapping is disable
     Given store "test@localhost" address mapping as wildcard for domain "localhost"
     And store "mine@localhost" address mapping for user "user" at domain "localhost"
     Then mappings for user "user" at domain "localhost" should contains only "mine@localhost"
 
-# Wildcard is not overridden
-  @ignore
   Scenario: direct mapping should override address mapping as wildcard (reverse insertion order)
+    Given recursive mapping is disable
     Given store "mine@localhost" address mapping for user "user" at domain "localhost"
     And store "test@localhost" address mapping as wildcard for domain "localhost"
     Then mappings for user "user" at domain "localhost" should contains only "mine@localhost"
