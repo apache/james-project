@@ -47,6 +47,10 @@
           class="org.apache.james.rrt.cassandra.CassandraRRTModule"
           lazy-init="true"/>
 
+    <bean id="cassandra-usersrepository-module"
+          class="org.apache.james.user.cassandra.CassandraUsersRepositoryModule"
+          lazy-init="true"/>
+
     <bean id="cassandra-module-composite"
           class="org.apache.james.backends.cassandra.init.CassandraModuleComposite"
           lazy-init="true">
@@ -54,6 +58,7 @@
             <list>
                 <ref bean="cassandra-mailbox-module"/>
                 <ref bean="cassandra-rrt-module"/>
+                <ref bean="cassandra-usersrepository-module"/>
             </list>
         </constructor-arg>
     </bean>
