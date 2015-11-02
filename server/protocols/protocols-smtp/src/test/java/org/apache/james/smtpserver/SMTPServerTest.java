@@ -18,6 +18,13 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,8 +39,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -49,18 +58,13 @@ import org.apache.james.queue.api.mock.MockMailQueue;
 import org.apache.james.queue.api.mock.MockMailQueueFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.user.lib.mock.MockUsersRepository;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -264,7 +268,7 @@ public class SMTPServerTest {
             }
     
             @Override
-            public Collection<String> getUserDomainMappings(String user, String domain) throws
+            public Mappings getUserDomainMappings(String user, String domain) throws
                     RecipientRewriteTableException {
                 throw new UnsupportedOperationException("Not implemented");
             }
@@ -280,7 +284,7 @@ public class SMTPServerTest {
             }
     
             @Override
-            public Map<String, Collection<String>> getAllMappings() throws RecipientRewriteTableException {
+            public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
                 throw new UnsupportedOperationException("Not implemented");
             }
     
@@ -297,7 +301,7 @@ public class SMTPServerTest {
             }
     
             @Override
-            public Collection<String> getMappings(String user, String domain) throws ErrorMappingException,
+            public Mappings getMappings(String user, String domain) throws ErrorMappingException,
                     RecipientRewriteTableException {
                 throw new UnsupportedOperationException("Not implemented");
             }

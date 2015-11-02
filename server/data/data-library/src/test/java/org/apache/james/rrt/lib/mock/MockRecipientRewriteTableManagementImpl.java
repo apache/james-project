@@ -18,12 +18,13 @@
  ****************************************************************/
 package org.apache.james.rrt.lib.mock;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
 public class MockRecipientRewriteTableManagementImpl implements RecipientRewriteTable {
@@ -66,10 +67,10 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
     }
 
     @Override
-    public Collection getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
+    public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
         String mapping = (String) store.get(user + "@" + domain);
         if (mapping != null) {
-            return RecipientRewriteTableUtil.mappingToCollection(mapping);
+            return MappingsImpl.fromRawString(mapping);
         } else {
             return null;
         }
@@ -102,18 +103,18 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
     }
 
     @Override
-    public Collection<String> getMappings(String user, String domain) throws ErrorMappingException,
+    public Mappings getMappings(String user, String domain) throws ErrorMappingException,
             RecipientRewriteTableException {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
     private void addRawMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        Collection map;
+        MappingsImpl map;
         String key = user + "@" + domain;
         String mappings = (String) store.get(key);
 
         if (mappings != null) {
-            map = RecipientRewriteTableUtil.mappingToCollection(mappings);
+            map = MappingsImpl.fromRawString(mappings);
 
             if (map.contains(mapping)) {
                 throw new RecipientRewriteTableException("Mapping " + mapping + " already exist!");
@@ -127,11 +128,11 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
     }
 
     private void removeRawMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        Collection map;
+        MappingsImpl map;
         String key = user + "@" + domain;
         String mappings = (String) store.get(key);
         if (mappings != null) {
-            map = RecipientRewriteTableUtil.mappingToCollection(mappings);
+            map = MappingsImpl.fromRawString(mappings);
             if (map.remove(mapping)) {
                 store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map));
             }

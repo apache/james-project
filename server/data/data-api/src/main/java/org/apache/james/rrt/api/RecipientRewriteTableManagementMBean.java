@@ -22,6 +22,8 @@ package org.apache.james.rrt.api;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.james.rrt.lib.Mappings;
+
 /**
  * Expose virtualusertable management functionality through JMX.
  */
@@ -145,7 +147,7 @@ public interface RecipientRewriteTableManagementMBean {
      * @throws Exception
      *            If an error occurred
      */
-    Collection<String> getUserDomainMappings(String user, String domain) throws Exception;
+    Mappings getUserDomainMappings(String user, String domain) throws Exception;
 
     /**
      * Try to identify the right method based on the prefix of the mapping and
@@ -185,5 +187,5 @@ public interface RecipientRewriteTableManagementMBean {
      * @throws Exception
      *            If an error occurred
      */
-    Map<String, Collection<String>> getAllMappings() throws Exception;
+    Map<String, Mappings> getAllMappings() throws Exception;
 }

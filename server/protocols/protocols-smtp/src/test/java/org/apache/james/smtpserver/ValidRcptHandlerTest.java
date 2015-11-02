@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.MailAddress;
@@ -31,11 +33,11 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.mock.MockUsersRepository;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -111,9 +113,9 @@ public class ValidRcptHandlerTest {
         final RecipientRewriteTable table = new RecipientRewriteTable() {
 
             @Override
-            public Collection<String> getMappings(String user, String domain) throws ErrorMappingException,
+            public Mappings getMappings(String user, String domain) throws ErrorMappingException,
                     RecipientRewriteTableException {
-                Collection<String> mappings = new ArrayList<String>();
+                Mappings mappings = MappingsImpl.empty();
                 if (user.equals(USER1)) {
                     mappings.add("address@localhost");
                 } else if (user.equals(USER2)) {
@@ -162,7 +164,7 @@ public class ValidRcptHandlerTest {
             }
 
             @Override
-            public Collection<String> getUserDomainMappings(String user, String domain) throws
+            public Mappings getUserDomainMappings(String user, String domain) throws
                     RecipientRewriteTableException {
                 throw new UnsupportedOperationException("Not implemented");
             }
@@ -180,7 +182,7 @@ public class ValidRcptHandlerTest {
             }
 
             @Override
-            public Map<String, Collection<String>> getAllMappings() throws RecipientRewriteTableException {
+            public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
                 throw new UnsupportedOperationException("Not implemented");
             }
 

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
-import java.util.Collection;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -146,7 +145,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
      * @see org.apache.james.rrt.api.RecipientRewriteTableManagementMBean
      * #getUserDomainMappings(java.lang.String, java.lang.String)
      */
-    public Collection<String> getUserDomainMappings(String user, String domain) throws Exception {
+    public Mappings getUserDomainMappings(String user, String domain) throws Exception {
         try {
             return rrt.getUserDomainMappings(user, domain);
         } catch (RecipientRewriteTableException e) {
@@ -184,7 +183,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
      * @see
      * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#getAllMappings()
      */
-    public Map<String, Collection<String>> getAllMappings() throws Exception {
+    public Map<String, Mappings> getAllMappings() throws Exception {
         try {
             return rrt.getAllMappings();
         } catch (RecipientRewriteTableException e) {

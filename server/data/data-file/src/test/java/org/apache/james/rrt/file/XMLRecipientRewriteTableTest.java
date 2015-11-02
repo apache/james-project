@@ -18,18 +18,19 @@
  ****************************************************************/
 package org.apache.james.rrt.file;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Test the XML Virtual User Table implementation.
@@ -56,10 +57,10 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     protected boolean addMapping(String user, String domain, String mapping, int type) throws
             RecipientRewriteTableException {
 
-        Collection<String> mappings = virtualUserTable.getUserDomainMappings(user, domain);
+        Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
 
         if (mappings == null) {
-            mappings = new ArrayList<String>();
+            mappings = MappingsImpl.empty();
         } else {
             removeMappingsFromConfig(user, domain, mappings);
         }
@@ -93,7 +94,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     protected boolean removeMapping(String user, String domain, String mapping, int type) throws
             RecipientRewriteTableException {
 
-        Collection<String> mappings = virtualUserTable.getUserDomainMappings(user, domain);
+        Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
 
         if (mappings == null) {
             return false;
@@ -124,7 +125,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         return true;
     }
 
-    private void removeMappingsFromConfig(String user, String domain, Collection<String> mappings) {
+    private void removeMappingsFromConfig(String user, String domain, Mappings mappings) {
         List<String> stored = new ArrayList<String>();
         for (String c : defaultConfiguration.getStringArray("mapping")) {
             String mapping = user + "@" + domain + "=" + RecipientRewriteTableUtil.CollectionToMapping(mappings);

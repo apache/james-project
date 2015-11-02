@@ -19,6 +19,8 @@
 package org.apache.james.transport.mailets;
 
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 
 import java.util.*;
 
@@ -74,8 +76,8 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
     }
 
     @Override
-    public Collection<String> getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException {
-        List<String> recipients = new LinkedList<String>();
+    public Mappings getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException {
+        Mappings recipients = MappingsImpl.empty();
         for (Mapping m : findUserDomain(user, domain)) {
             recipients.addAll(m.target);
         }
@@ -117,7 +119,7 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
     }
 
     @Override
-    public Collection<String> getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
+    public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -132,7 +134,7 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
     }
 
     @Override
-    public Map<String, Collection<String>> getAllMappings() throws RecipientRewriteTableException {
+    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
         throw new UnsupportedOperationException("Not implemented");
     }
 

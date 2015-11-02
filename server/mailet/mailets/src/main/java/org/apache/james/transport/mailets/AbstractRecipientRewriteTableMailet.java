@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
@@ -123,7 +124,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
      * 
      * @throws MessagingException
      */
-    protected Collection<MailAddress> handleMappings(Collection<String> mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
+    protected Collection<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
         Iterator<String> i = mappings.iterator();
         Collection<MailAddress> remoteRecipients = new ArrayList<MailAddress>();
         Collection<MailAddress> localRecipients = new ArrayList<MailAddress>();

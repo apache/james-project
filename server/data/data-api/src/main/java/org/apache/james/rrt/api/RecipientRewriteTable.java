@@ -21,6 +21,8 @@ package org.apache.james.rrt.api;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.james.rrt.lib.Mappings;
+
 /**
  * Interface which should be implemented of classes which map recipients.
  */
@@ -57,7 +59,7 @@ public interface RecipientRewriteTable {
      *             get thrown if an error mapping was found
      * @throws RecipientRewriteTableException
      */
-    Collection<String> getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException;
+    Mappings getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException;
 
     /**
      * Add regex mapping
@@ -145,7 +147,7 @@ public interface RecipientRewriteTable {
      * @return the collection which holds the mappings.
      * @throws RecipientRewriteTableException
      */
-    Collection<String> getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException;
+    Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException;
 
     /**
      * Add mapping
@@ -180,7 +182,7 @@ public interface RecipientRewriteTable {
      * @return Map which holds all mappings
      * @throws RecipientRewriteTableException
      */
-    Map<String, Collection<String>> getAllMappings() throws RecipientRewriteTableException;
+    Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException;
 
     /**
      * Add aliasDomain mapping

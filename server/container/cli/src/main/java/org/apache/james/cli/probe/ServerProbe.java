@@ -27,6 +27,8 @@ import java.io.Closeable;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.james.rrt.lib.Mappings;
+
 public interface ServerProbe extends Closeable {
     /**
      * Add a user to this mail server.
@@ -109,7 +111,7 @@ public interface ServerProbe extends Closeable {
      * @return a Map which holds all mappings.
      * @throws Exception
      */
-    public Map<String, Collection<String>> listMappings() throws Exception;
+	public Map<String, Mappings> listMappings() throws Exception;
 
     /**
      * Add address mapping.
@@ -149,7 +151,7 @@ public interface ServerProbe extends Closeable {
      *         found.
      * @throws Exception
      */
-    public Collection<String> listUserDomainMappings(String user, String domain) throws Exception;
+	public Mappings listUserDomainMappings(String user, String domain) throws Exception;
 
     /**
      * Remove regex mapping.

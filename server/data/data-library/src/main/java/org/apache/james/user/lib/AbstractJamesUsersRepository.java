@@ -19,22 +19,22 @@
 
 package org.apache.james.user.lib;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.user.api.JamesUsersRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.model.DefaultJamesUser;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * A partial implementation of a Repository to store users.
@@ -120,8 +120,8 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
      * @see org.apache.james.rrt.api.RecipientRewriteTable#getMappings(java.lang.String,
      *      java.lang.String)
      */
-    public Collection<String> getMappings(String username, String domain) throws ErrorMappingException, RecipientRewriteTableException {
-        Collection<String> mappings = new ArrayList<String>();
+    public Mappings getMappings(String username, String domain) throws ErrorMappingException, RecipientRewriteTableException {
+        MappingsImpl mappings = MappingsImpl.empty();
         try {
             User user = getUserByName(username);
 
@@ -179,8 +179,8 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     /**
      * @see org.apache.james.rrt.api.RecipientRewriteTable#getAllMappings()
      */
-    public Map<String, Collection<String>> getAllMappings() throws RecipientRewriteTableException {
-        Map<String, Collection<String>> mappings = new HashMap<String, Collection<String>>();
+    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
+        Map<String, Mappings> mappings = new HashMap<String, Mappings>();
         if (enableAliases || enableForwarding) {
             try {
                 Iterator<String> users = list();
@@ -214,8 +214,8 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
      * @see
      * org.apache.james.rrt.api.RecipientRewriteTable#getUserDomainMappings(java.lang.String, java.lang.String)
      */
-    public Collection<String> getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
-        return new ArrayList<String>();
+    public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
+        return MappingsImpl.empty();
     }
 
     public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
