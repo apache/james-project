@@ -25,8 +25,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import org.apache.james.rrt.lib.Mapping.Type;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -59,6 +65,14 @@ public class MappingsImpl implements Mappings {
         return builder.build();
     }
     
+    public static MappingsImpl fromMappings(Iterable<Mapping> mappings) {
+        Builder builder = builder();
+        for (Mapping mapping: mappings) {
+            builder.add(mapping);
+        }
+        return builder.build();
+    }
+    
     public static Builder from(Mappings from) {
         Builder builder = new Builder();
         builder.addAll(from);
@@ -78,10 +92,15 @@ public class MappingsImpl implements Mappings {
         }
 
         public Builder add(String mapping) {
-            mappings.add(MappingImpl.of(mapping));
+            return add(MappingImpl.of(mapping));
+        }
+
+        public Builder add(Mapping mapping) {
+            mappings.add(mapping);
             return this;
         }
 
+        
         public Builder addAll(Mappings mappings) {
             this.mappings.addAll(mappings);
             return this;
@@ -144,5 +163,53 @@ public class MappingsImpl implements Mappings {
     public String serialize() {
         return Joiner.on(';').join(asStrings());
     }
+    
+    private Predicate<Mapping> hasType(final Mapping.Type type) {
+        return new Predicate<Mapping>() {
+            @Override
+            public boolean apply(Mapping input) {
+                return input.getType().equals(type);
+            }
+        };
+    }
+    
+    @Override
+    public boolean contains(Type type) {
+        Preconditions.checkNotNull(type);
+        return FluentIterable.from(mappings).anyMatch(hasType(type));
+    }
+    
+    @Override
+    public Mappings select(Type type) {
+        Preconditions.checkNotNull(type);
+        return fromMappings(FluentIterable.from(mappings).filter(hasType(type)));
+    }
+    
+    
+    @Override
+    public Mappings exclude(Type type) {
+        Preconditions.checkNotNull(type);
+        return fromMappings(FluentIterable.from(mappings).filter(Predicates.not(hasType(type))));
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(mappings);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MappingsImpl) {
+            MappingsImpl other = (MappingsImpl) obj;
+            return Objects.equal(mappings, other.mappings);
+        }
+        return false;
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(getClass()).add("mappings", mappings).toString();
+    }
+    
 
 }
