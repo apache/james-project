@@ -19,6 +19,7 @@
 package org.apache.james.rrt.jpa;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
@@ -51,7 +52,7 @@ public class JPAStepdefs {
      */
         HashMap<String, String> properties = new HashMap<String, String>();
         properties.put("openjpa.ConnectionDriverName", "org.h2.Driver");
-        properties.put("openjpa.ConnectionURL", "jdbc:h2:target/users/db");
+        properties.put("openjpa.ConnectionURL", "jdbc:h2:target/users/" + UUID.randomUUID());
         properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
         properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
         properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
