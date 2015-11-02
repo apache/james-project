@@ -21,7 +21,6 @@ package org.apache.james.rrt.lib;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -301,7 +300,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     @Test
     public void sortMappingsShouldReturnEmptyWhenEmpty() {
-        assertThat(AbstractRecipientRewriteTable.sortMappings("")).isEqualTo("");
+        assertThat(AbstractRecipientRewriteTable.sortMappings("")).isEmpty();
     }
 
     @Test
@@ -312,19 +311,26 @@ public abstract class AbstractRecipientRewriteTableTest {
      
     @Test
     public void sortMappingsShouldReturnSameStringWhenTwoDomainAliases() {
-        String firstAliasMapping = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "first";
-        String secondAliasMapping = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "second";
-        String mappings = MappingsImpl.fromCollection(Arrays.asList(firstAliasMapping, secondAliasMapping)).serialize();
-        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings)).isEqualTo(mappings);
+        MappingsImpl mappings = MappingsImpl.builder()
+                .add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + "first")
+                .add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + "second")
+                .build();
+        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings.serialize())).isEqualTo(mappings.serialize());
     }
     
     @Test
     public void sortMappingsShouldPutDomainAliasFirstWhenVariousMappings() {
         String regexMapping = RecipientRewriteTable.REGEX_PREFIX + "first";
         String domainMapping = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "second";
-        String inputMappings = MappingsImpl.fromCollection(Arrays.asList(regexMapping, domainMapping)).serialize();
-        String expectedMappings = MappingsImpl.fromCollection(Arrays.asList(domainMapping, regexMapping)).serialize();
-        assertThat(AbstractRecipientRewriteTable.sortMappings(inputMappings)).isEqualTo(expectedMappings);
+        MappingsImpl mappings = MappingsImpl.builder()
+                .add(regexMapping)
+                .add(domainMapping)
+                .build();
+        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings.serialize()))
+                .isEqualTo(MappingsImpl.builder()
+                        .add(domainMapping)
+                        .add(regexMapping)
+                        .build().serialize());
     }
 
 
