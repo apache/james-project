@@ -28,7 +28,8 @@ import cucumber.api.junit.Cucumber;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = { "classpath:cucumber/" },
-        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.file" }
+        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.file" },
+        tags = { "~@ignore" }
     )
 public class RewriteTablesTest {
 }
