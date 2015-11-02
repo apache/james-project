@@ -20,80 +20,95 @@
 
 package org.apache.james.rrt.lib;
 
-import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
 
 public class MappingImplTest {
 
     @Test(expected=NullPointerException.class)
-    public void factoryMethodShouldThrowOnNull() {
-        assertThat(MappingImpl.of(null));
+    public void addressFactoryMethodShouldThrowOnNull() {
+        assertThat(MappingImpl.address(null));
+    }
+    
+    @Test(expected=NullPointerException.class)
+    public void regexFactoryMethodShouldThrowOnNull() {
+        assertThat(MappingImpl.regex(null));
+    }
+    
+    @Test(expected=NullPointerException.class)
+    public void domainFactoryMethodShouldThrowOnNull() {
+        assertThat(MappingImpl.domain(null));
+    }
+    
+    
+    @Test(expected=NullPointerException.class)
+    public void errorFactoryMethodShouldThrowOnNull() {
+        assertThat(MappingImpl.error(null));
     }
     
     @Test
     public void hasDomainshouldReturnTrueWhenMappingContainAtMark() {
-        assertThat(MappingImpl.of("a@b").hasDomain()).isTrue();
+        assertThat(MappingImpl.address("a@b").hasDomain()).isTrue();
     }
     
     @Test
     public void hasDomainshouldReturnFalseWhenMappingIsEmpty() {
-        assertThat(MappingImpl.of("").hasDomain()).isFalse();
+        assertThat(MappingImpl.address("").hasDomain()).isFalse();
     }
 
     @Test
     public void hasDomainshouldReturnFalseWhenMappingIsBlank() {
-        assertThat(MappingImpl.of(" ").hasDomain()).isFalse();
+        assertThat(MappingImpl.address(" ").hasDomain()).isFalse();
     }
 
     @Test
     public void hasDomainshouldReturnFalseWhenMappingDoesntContainAtMark() {
-        assertThat(MappingImpl.of("abc").hasDomain()).isFalse();
+        assertThat(MappingImpl.address("abc").hasDomain()).isFalse();
     }
     
     @Test
     public void appendDomainShouldWorkOnValidDomain() {
-        assertThat(MappingImpl.of("abc").appendDomain("domain")).isEqualTo(MappingImpl.of("abc@domain"));
+        assertThat(MappingImpl.address("abc").appendDomain("domain")).isEqualTo(MappingImpl.address("abc@domain"));
     }
     
     @Test
     public void appendDomainShouldWorkWhenMappingAlreadyContainsDomains() {
-        assertThat(MappingImpl.of("abc@d").appendDomain("domain")).isEqualTo(MappingImpl.of("abc@d@domain"));
+        assertThat(MappingImpl.address("abc@d").appendDomain("domain")).isEqualTo(MappingImpl.address("abc@d@domain"));
     }
     
     @Test(expected=NullPointerException.class)
     public void appendDomainShouldThrowWhenNullDomain() {
-        MappingImpl.of("abc@d").appendDomain(null);
+        MappingImpl.address("abc@d").appendDomain(null);
     }
     
     @Test
     public void appendDomainShouldWorkWhenEmptyDomain() {
-        assertThat(MappingImpl.of("abc").appendDomain("")).isEqualTo(MappingImpl.of("abc@"));
+        assertThat(MappingImpl.address("abc").appendDomain("")).isEqualTo(MappingImpl.address("abc@"));
     }
 
     @Test
     public void getTypeShouldReturnAddressWhenNoPrefix() {
-        assertThat(MappingImpl.of("abc").getType()).isEqualTo(Mapping.Type.Address);
+        assertThat(MappingImpl.address("abc").getType()).isEqualTo(Mapping.Type.Address);
     }
 
     @Test
     public void getTypeShouldReturnAddressWhenEmpty() {
-        assertThat(MappingImpl.of("").getType()).isEqualTo(Mapping.Type.Address);
+        assertThat(MappingImpl.address("").getType()).isEqualTo(Mapping.Type.Address);
     }
     
     @Test
     public void getTypeShouldReturnRegexWhenRegexPrefix() {
-        assertThat(MappingImpl.of(RecipientRewriteTable.REGEX_PREFIX + "abc").getType()).isEqualTo(Mapping.Type.Regex);
+        assertThat(MappingImpl.regex("abc").getType()).isEqualTo(Mapping.Type.Regex);
     }
 
     @Test
     public void getTypeShouldReturnErrorWhenErrorPrefix() {
-        assertThat(MappingImpl.of(RecipientRewriteTable.ERROR_PREFIX + "abc").getType()).isEqualTo(Mapping.Type.Error);
+        assertThat(MappingImpl.error("abc").getType()).isEqualTo(Mapping.Type.Error);
     }
 
     @Test
     public void getTypeShouldReturnDomainWhenDomainPrefix() {
-        assertThat(MappingImpl.of(RecipientRewriteTable.ALIASDOMAIN_PREFIX + "abc").getType()).isEqualTo(Mapping.Type.Domain);
+        assertThat(MappingImpl.domain("abc").getType()).isEqualTo(Mapping.Type.Domain);
     }
 }

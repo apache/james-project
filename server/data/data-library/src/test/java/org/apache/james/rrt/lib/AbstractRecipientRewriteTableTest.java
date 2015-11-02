@@ -241,7 +241,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             assertThat(addMapping(user1, domain1, user2 + "@" + domain2, ADDRESS_TYPE)).describedAs("Added mapping").isTrue();
             assertThat(addMapping(user2, domain2, user3 + "@" + domain3, ADDRESS_TYPE)).describedAs("Added mapping").isTrue();
-            assertThat(virtualUserTable.getMappings(user1, domain1)).containsOnly(MappingImpl.of(user3 + "@" + domain3));
+            assertThat(virtualUserTable.getMappings(user1, domain1)).containsOnly(MappingImpl.address(user3 + "@" + domain3));
             assertThat(addMapping(user3, domain3, user1 + "@" + domain1, ADDRESS_TYPE)).describedAs("Added mapping").isTrue();
             
             try {
@@ -253,7 +253,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             // disable recursive mapping
             virtualUserTable.setRecursiveMapping(false);
-            assertThat(virtualUserTable.getMappings(user1, domain1)).describedAs("Not recursive mapped").containsExactly(MappingImpl.of(user2 + "@" + domain2));
+            assertThat(virtualUserTable.getMappings(user1, domain1)).describedAs("Not recursive mapped").containsExactly(MappingImpl.address(user2 + "@" + domain2));
 
         } catch (IllegalArgumentException e) {
             fail("Storing failed");
@@ -279,7 +279,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             assertThat(virtualUserTable.getMappings(user, aliasDomain))
                 .describedAs("Domain mapped as first, Address mapped as second")
-                .containsExactly(MappingImpl.of(user + "@" + domain), MappingImpl.of(user2 + "@" + domain));
+                .containsExactly(MappingImpl.address(user + "@" + domain), MappingImpl.address(user2 + "@" + domain));
 
             assertThat(removeMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain,
                     ADDRESS_TYPE)).describedAs("Remove mapping").isTrue();
