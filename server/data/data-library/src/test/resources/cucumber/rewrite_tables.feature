@@ -87,3 +87,44 @@ Feature: Rewrite Tables tests
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     And store "test@localhost2" address mapping for user "test" at domain "localhost"
     Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
+
+# Wildcard mapping
+
+  Scenario: stored address mapping as wildcard should be retrieved by one user when one mapping matching
+    Given store "test@localhost" address mapping as wildcard for domain "localhost"
+    Then mappings for user "user" at domain "localhost" should contains only "test@localhost"
+
+  Scenario: stored address mapping as wildcard should be retrieved by two users when one mapping matching
+    Given store "test@localhost" address mapping as wildcard for domain "localhost"
+    Then mappings for user "user" at domain "localhost" should contains only "test@localhost"
+    And mappings for user "user2" at domain "localhost" should contains only "test@localhost"
+
+# Wildcard is not overridden
+  @ignore
+  Scenario: direct mapping should override address mapping as wildcard
+    Given store "test@localhost" address mapping as wildcard for domain "localhost"
+    And store "mine@localhost" address mapping for user "user" at domain "localhost"
+    Then mappings for user "user" at domain "localhost" should contains only "mine@localhost"
+
+# Wildcard is not overridden
+  @ignore
+  Scenario: direct mapping should override address mapping as wildcard (reverse insertion order)
+    Given store "mine@localhost" address mapping for user "user" at domain "localhost"
+    And store "test@localhost" address mapping as wildcard for domain "localhost"
+    Then mappings for user "user" at domain "localhost" should contains only "mine@localhost"
+
+  Scenario: direct mapping should not override address mapping as wildcard when other user
+    Given store "test@localhost" address mapping as wildcard for domain "localhost"
+    And store "mine@localhost" address mapping for user "user" at domain "localhost"
+    Then mappings for user "user2" at domain "localhost" should contains only "test@localhost"
+
+  Scenario: direct mapping should be retrieved when removing address mapping as wildcard
+    Given store "test@localhost" address mapping as wildcard for domain "localhost"
+    And store "mine@localhost" address mapping for user "user" at domain "localhost"
+    When wildcard address mapping "test@localhost" at domain "localhost" is removed
+    Then mappings for user "user" at domain "localhost" should contains only "mine@localhost"
+
+  Scenario: stored address mappings as wildcard should be retrieved when two address mappings as wildcard
+    Given store "test@localhost" address mapping as wildcard for domain "localhost"
+    And store "test2@localhost" address mapping as wildcard for domain "localhost"
+    Then mappings for user "user" at domain "localhost" should contains only "test@localhost, test2@localhost"
