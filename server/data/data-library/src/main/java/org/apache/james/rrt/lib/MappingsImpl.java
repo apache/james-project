@@ -103,10 +103,6 @@ public class MappingsImpl implements Mappings {
         return mappings;
     }
     
-    @Override
-    public Mappings addAll(Mappings toAdd) {
-        return MappingsImpl.fromCollection(Lists.newArrayList(Iterables.concat(this, toAdd.getMappings())));
-    }
 
     @Override
     public boolean contains(String mapping) {
