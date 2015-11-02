@@ -28,3 +28,25 @@ Feature: Rewrite Tables tests
   Scenario: storing an invalid regexp mapping should not work
     When store an invalid ".*):" regexp mapping for user "test" at domain "localhost"
     Then a "RecipientRewriteTableException" exception should have been thrown
+
+# Address mapping
+
+  Scenario: stored address mapping should be retrieved when one mapping matching
+    Given store "test@localhost2" address mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "test@localhost2"
+
+  Scenario: stored address mapping should be retrieved when two mappings matching
+    Given store "test@localhost2" address mapping for user "test" at domain "localhost"
+    And store "test@james" address mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "test@localhost2, test@james"
+
+  Scenario: stored address mapping should not be retrieved by another user
+    Given store "test@localhost2" address mapping for user "test" at domain "localhost"
+    And store "test@james" address mapping for user "test" at domain "localhost"
+    Then mappings for user "test2" at domain "localhost" should be empty
+
+  Scenario: removing a stored address mapping should work
+    Given store "test@localhost2" address mapping for user "test" at domain "localhost"
+    And store "test@james" address mapping for user "test" at domain "localhost"
+    When user "test" at domain "localhost" removes a address mapping "test@james"
+    Then mappings for user "test" at domain "localhost" should contains only "test@localhost2"
