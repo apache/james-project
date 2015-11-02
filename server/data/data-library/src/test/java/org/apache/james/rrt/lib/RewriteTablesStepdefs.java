@@ -70,6 +70,16 @@ public class RewriteTablesStepdefs {
         rewriteTable.addAliasDomainMapping(aliasDomain, domain);
     }
 
+    @Given("recursive mapping is disable")
+    public void disableRecursiveMapping() {
+        rewriteTable.setRecursiveMapping(false);
+    }
+
+    @Given("recursive mapping is enable")
+    public void enableRecursiveMapping() {
+        rewriteTable.setRecursiveMapping(true);
+    }
+
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a regexp mapping \"([^\"]*)\"")
     public void userAtDomainRemovesRegexpMapping(String user, String domain, String regexp) throws Throwable {
         rewriteTable.removeRegexMapping(user, domain, regexp);
