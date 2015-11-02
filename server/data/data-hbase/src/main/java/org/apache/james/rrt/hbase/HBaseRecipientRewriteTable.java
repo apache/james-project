@@ -65,7 +65,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.getMappings()));
+            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings));
         } else {
             doAddMapping(fixedUser, fixedDomain, mapping);
         }
