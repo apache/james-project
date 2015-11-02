@@ -35,6 +35,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class MappingsImpl implements Mappings {
@@ -190,6 +191,13 @@ public class MappingsImpl implements Mappings {
     public Mappings exclude(Type type) {
         Preconditions.checkNotNull(type);
         return fromMappings(FluentIterable.from(mappings).filter(Predicates.not(hasType(type))));
+    }
+ 
+    @Override
+    public Mapping getError() {
+        Mappings errors = select(Type.Error);
+        Preconditions.checkState(!errors.isEmpty());
+        return Iterables.getFirst(errors, null);
     }
     
     @Override

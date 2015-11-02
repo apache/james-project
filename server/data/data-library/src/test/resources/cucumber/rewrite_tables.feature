@@ -58,7 +58,6 @@ Feature: Rewrite Tables tests
     Then retrieving mappings for user "test" at domain "localhost" should raise a "ErrorMappingException" exception with message "bounce!"
 
 # Bad messsage: "bounce!;test@localhost2" instead of "bounce!"
-  @ignore
   Scenario: stored error mapping should be retrieved when two mappings matching
     Given store "bounce!" error mapping for user "test" at domain "localhost"
     And store "error" error mapping for user "test" at domain "localhost"

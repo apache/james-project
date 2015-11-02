@@ -35,6 +35,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.mailet.MailAddress;
 import org.slf4j.Logger;
 
@@ -123,14 +124,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         // Only non-null mappings are translated
         if (targetMappings != null) {
-            String targetString = targetMappings.serialize();
-            MappingsImpl.Builder mappings = MappingsImpl.builder();
-            if (targetString.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
-                throw new ErrorMappingException(targetString.substring(RecipientRewriteTable.ERROR_PREFIX.length()));
-
+            if (targetMappings.contains(Type.Error)) {
+                throw new ErrorMappingException(targetMappings.getError().getErrorMessage());
             } else {
+                MappingsImpl.Builder mappings = MappingsImpl.builder();
 
-                for (String target : MappingsImpl.fromRawString(targetString).asStrings()) {
+                for (String target : targetMappings.asStrings()) {
                     if (target.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
                         try {
                             target = RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain), target);
@@ -185,10 +184,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                         mappings.add(target);
                     }
                 }
+                return mappings.build();
             }
-
-            return mappings.build();
-
         }
 
         return null;
