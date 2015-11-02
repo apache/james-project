@@ -96,15 +96,16 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return list;
     }
 
-    private void feedUserDomainMappingsList(HTableInterface table, String user, String domain, Mappings list) throws
+    private Mappings feedUserDomainMappingsList(HTableInterface table, String user, String domain, Mappings list) throws
             IOException {
         Get get = new Get(Bytes.toBytes(getRowKey(user, domain)));
         Result result = table.get(get);
         List<KeyValue> keyValues = result.getColumn(HRecipientRewriteTable.COLUMN_FAMILY_NAME,
                                                     HRecipientRewriteTable.COLUMN.MAPPING);
         if (keyValues.size() > 0) {
-            list.addAll(MappingsImpl.fromRawString(Bytes.toString(keyValues.get(0).getValue())));
+            return list.addAll(MappingsImpl.fromRawString(Bytes.toString(keyValues.get(0).getValue())));
         }
+        return list;
     }
 
     /**
