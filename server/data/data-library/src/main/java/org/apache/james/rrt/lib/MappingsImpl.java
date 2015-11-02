@@ -25,17 +25,19 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class MappingsImpl implements Mappings {
 
     public static MappingsImpl empty() {
-        return new MappingsImpl(new ArrayList<String>());
+        return builder().build();
     }
     
     public static MappingsImpl fromRawString(String raw) {
-        return new MappingsImpl(mappingToCollection(raw));
+        return fromCollection(mappingToCollection(raw));
     }
     
     private static ArrayList<String> mappingToCollection(String rawMapping) {
@@ -48,8 +50,12 @@ public class MappingsImpl implements Mappings {
         return map;
     }
     
-    public static Mappings fromCollection(Collection<String> mappings) {
-        return new MappingsImpl(mappings);
+    public static MappingsImpl fromCollection(Collection<String> mappings) {
+        Builder builder = builder();
+        for (String mapping: mappings) {
+            builder.add(mapping);
+        }
+        return builder.build();
     }
     
     public static Builder from(Mappings from) {
@@ -64,37 +70,42 @@ public class MappingsImpl implements Mappings {
     
     public static class Builder {
         
-        private final ImmutableList.Builder<String> mappings;
+        private final ImmutableList.Builder<Mapping> mappings;
         
         private Builder() {
             mappings = ImmutableList.builder();
         }
 
         public Builder add(String mapping) {
-            mappings.add(mapping);
+            mappings.add(MappingImpl.of(mapping));
             return this;
         }
 
         public Builder addAll(Mappings mappings) {
-            this.mappings.addAll(mappings.asStrings());
+            this.mappings.addAll(mappings);
             return this;
         }
         
-        public Mappings build() {
+        public MappingsImpl build() {
             return new MappingsImpl(mappings.build());
         }
         
     }
     
-    private final ImmutableList<String> mappings;
+    private final ImmutableList<Mapping> mappings;
 
-    private MappingsImpl(Collection<String> mappings) {
+    private MappingsImpl(Collection<Mapping> mappings) {
         this.mappings = ImmutableList.copyOf(mappings);
     }
     
     @Override
     public Iterable<String> asStrings() {
-        return mappings;
+        return FluentIterable.from(mappings).transform(new Function<Mapping, String>() {
+            @Override
+            public String apply(Mapping input) {
+                return input.asString();
+            }
+        });
     }
 
     @Override
@@ -108,11 +119,12 @@ public class MappingsImpl implements Mappings {
     }
 
     @Override
-    public Mappings remove(String mapping) {
+    public Mappings remove(String mappingAsString) {
+        MappingImpl mapping = MappingImpl.of(mappingAsString);
         if (mappings.contains(mapping)) {
-            ArrayList<String> updatedMappings = Lists.newArrayList(mappings);
+            ArrayList<Mapping> updatedMappings = Lists.newArrayList(mappings);
             updatedMappings.remove(mapping);
-            return MappingsImpl.fromCollection(updatedMappings);
+            return new MappingsImpl(updatedMappings);
         }
         return this;
     }
@@ -120,6 +132,11 @@ public class MappingsImpl implements Mappings {
     @Override
     public boolean isEmpty() {
         return mappings.isEmpty();
+    }
+    
+    @Override
+    public Iterator<Mapping> iterator() {
+        return mappings.iterator();
     }
 
 }
