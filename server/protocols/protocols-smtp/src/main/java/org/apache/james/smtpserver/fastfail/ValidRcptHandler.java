@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.smtpserver.fastfail;
 
-import java.util.Collection;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -34,6 +32,7 @@ import org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
@@ -110,7 +109,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Initia
                     session.getLogger().debug("Unknown user " + username + " check if its an alias");
 
                     try {
-                        Collection<String> targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
+                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
                         if (targetString != null && !targetString.isEmpty()) {
                             return true;

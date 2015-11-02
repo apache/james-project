@@ -28,6 +28,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.mailet.MailAddress;
 
 /**
@@ -53,7 +54,7 @@ public class RecipientRewriteTable extends AbstractRecipientRewriteTableMailet {
      */
     public Collection<MailAddress> processMail(MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
         try {
-            Collection<String> mappings = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
+            Mappings mappings = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (mappings != null) {
                 return handleMappings(mappings, sender, recipient, message);

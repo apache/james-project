@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -57,14 +56,14 @@ public abstract class AbstractRecipientRewriteTableTest {
     @After
     public void tearDown() throws Exception {
 
-        Map<String, Collection<String>> mappings = virtualUserTable.getAllMappings();
+        Map<String, Mappings> mappings = virtualUserTable.getAllMappings();
 
         if (mappings != null) {
 
             for (String key : virtualUserTable.getAllMappings().keySet()) {
                 String args[] = key.split("@");
 
-                Collection<String> map = mappings.get(key);
+                Mappings map = mappings.get(key);
 
                 for (String aMap : map) {
                     try {

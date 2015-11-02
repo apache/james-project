@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.MailAddress;
 
@@ -88,7 +89,7 @@ public class UsersRepositoryAliasingForwarding extends AbstractRecipientRewriteT
         }
 
         if (usersRepository instanceof RecipientRewriteTable) {
-            Collection<String> mappings;
+            Mappings mappings;
             try {
                 mappings = ((RecipientRewriteTable) usersRepository).getMappings(recipient.getLocalPart(), recipient.getDomain());
             } catch (ErrorMappingException e) {

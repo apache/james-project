@@ -26,7 +26,6 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.commons.cli.CommandLine;
@@ -39,6 +38,8 @@ import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.probe.ServerProbe;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
@@ -160,7 +161,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.listMappings()).andReturn(new HashMap<String, Collection<String>>());
+        expect(serverProbe.listMappings()).andReturn(new HashMap<String, Mappings>());
 
         control.replay();
         testee.executeCommandLine(commandLine);
@@ -174,7 +175,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(serverProbe.listUserDomainMappings(user, domain)).andReturn(new ArrayList<String>());
+        expect(serverProbe.listUserDomainMappings(user, domain)).andReturn(MappingsImpl.empty());
 
         control.replay();
         testee.executeCommandLine(commandLine);

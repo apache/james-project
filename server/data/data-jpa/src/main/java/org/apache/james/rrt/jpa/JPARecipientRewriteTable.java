@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +31,8 @@ import javax.persistence.PersistenceUnit;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
 /**
@@ -62,7 +63,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     protected void addMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
-        Collection<String> map = getUserDomainMappings(fixedUser, fixedDomain);
+        Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             map.add(mapping);
             doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(map));
@@ -102,7 +103,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @throws RecipientRewriteTableException
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#mapAddress(java.lang.String, java.lang.String)
      */
-    protected Collection<String> getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
@@ -110,7 +111,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectUserDomainMapping").setParameter("user", user).setParameter("domain", domain).getResultList();
             transaction.commit();
             if (virtualUsers.size() > 0) {
-                return RecipientRewriteTableUtil.mappingToCollection(virtualUsers.get(0).getTargetAddress());
+                return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
             }
         } catch (PersistenceException e) {
             getLogger().debug("Failed to get user domain mappings", e);
@@ -129,16 +130,16 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @throws RecipientRewriteTableException
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#getAllMappingsInternal()
      */
-    protected Map<String, Collection<String>> getAllMappingsInternal() throws RecipientRewriteTableException {
+    protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
-        Map<String, Collection<String>> mapping = new HashMap<String, Collection<String>>();
+        Map<String, Mappings> mapping = new HashMap<String, Mappings>();
         try {
             transaction.begin();
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectAllMappings").getResultList();
             transaction.commit();
             for (JPARecipientRewrite virtualUser : virtualUsers) {
-                mapping.put(virtualUser.getUser() + "@" + virtualUser.getDomain(), RecipientRewriteTableUtil.mappingToCollection(virtualUser.getTargetAddress()));
+                mapping.put(virtualUser.getUser() + "@" + virtualUser.getDomain(), MappingsImpl.fromRawString(virtualUser.getTargetAddress()));
             }
             if (mapping.size() > 0)
                 return mapping;
@@ -162,7 +163,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     protected void removeMappingInternal(String user, String domain, String mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         String fixedDomain = getFixedDomain(domain);
-        Collection<String> map = getUserDomainMappings(fixedUser, fixedDomain);
+        Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             map.remove(mapping);
             doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(map));

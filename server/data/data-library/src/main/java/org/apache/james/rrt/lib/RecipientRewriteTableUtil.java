@@ -212,41 +212,13 @@ public class RecipientRewriteTableUtil {
     }
 
     /**
-     * Return a Collection which holds the extracted mappings of the given
-     * String
-     * 
-     * @param rawMapping
-     * @deprecated Use mappingToCollection(String rawMapping)
-     */
-    public static Collection<String> getMappings(String rawMapping) {
-        return mappingToCollection(rawMapping);
-    }
-
-    /**
-     * Convert a raw mapping String to a Collection
-     * 
-     * @param rawMapping
-     *            the mapping String
-     * @return map a collection which holds all mappings
-     */
-    public static ArrayList<String> mappingToCollection(String rawMapping) {
-        ArrayList<String> map = new ArrayList<String>();
-        StringTokenizer tokenizer = new StringTokenizer(rawMapping, RecipientRewriteTableUtil.getSeparator(rawMapping));
-        while (tokenizer.hasMoreTokens()) {
-            final String raw = tokenizer.nextToken().trim();
-            map.add(raw);
-        }
-        return map;
-    }
-
-    /**
      * Convert a Collection which holds mappings to a raw mapping String
      * 
      * @param map
      *            the Collection
      * @return mapping the mapping String
      */
-    public static String CollectionToMapping(Collection<String> map) {
+    public static String CollectionToMapping(Iterable<String> map) {
         return Joiner.on(';').join(map);
     }
 
