@@ -55,7 +55,7 @@ public class HBaseDomainList extends AbstractDomainList {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Get get = new Get(Bytes.toBytes(domain));
+            Get get = new Get(Bytes.toBytes(domain.toLowerCase()));
             Result result = table.get(get);
             if (!result.isEmpty()) {
                 return true;
@@ -110,7 +110,7 @@ public class HBaseDomainList extends AbstractDomainList {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Delete delete = new Delete(Bytes.toBytes(domain));
+            Delete delete = new Delete(Bytes.toBytes(domain.toLowerCase()));
             table.delete(delete);
             table.flushCommits();
         } catch (IOException e) {
