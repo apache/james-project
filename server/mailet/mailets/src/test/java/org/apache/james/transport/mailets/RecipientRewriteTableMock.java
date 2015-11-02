@@ -31,9 +31,9 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
 
     public static class Mapping {
         public final String address;
-        public final List<String> target;
+        public final Mappings target;
 
-        public Mapping(String address, List<String> target) {
+        public Mapping(String address, Mappings target) {
             this.address = address;
             this.target = target;
         }
@@ -44,7 +44,7 @@ public class RecipientRewriteTableMock implements org.apache.james.rrt.api.Recip
         }
 
         public Mapping to(String... target) {
-            return new Mapping(address, Arrays.asList(target));
+            return new Mapping(address, MappingsImpl.fromCollection(Arrays.asList(target)));
         }
     }
 
