@@ -166,6 +166,7 @@
         <spring-osgi-extender.version>1.2.1</spring-osgi-extender.version>
         <org.osgi.core.version>5.0.0</org.osgi.core.version>
         <guava.version>16.0</guava.version>
+        <cucumber.version>1.2.3</cucumber.version>
 
         <!-- karaf dependencies -->
         <exam.version>2.6.0</exam.version>
@@ -1235,6 +1236,21 @@
                 <version>${hadoop.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>info.cukes</groupId>
+                <artifactId>cucumber-java</artifactId>
+                <version>${cucumber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>info.cukes</groupId>
+                <artifactId>cucumber-junit</artifactId>
+                <version>${cucumber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>info.cukes</groupId>
+                <artifactId>cucumber-picocontainer</artifactId>
+                <version>${cucumber.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
