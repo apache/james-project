@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.util.List;
 
+import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 
@@ -59,6 +60,11 @@ public class RewriteTablesStepdefs {
         rewriteTable.addErrorMapping(user, domain, error);
     }
 
+    @Given("store \"([^\"]*)\" address mapping as wildcard for domain \"([^\"]*)\"")
+    public void storeAddressMappingAsWildcardAtDomain(String address, String domain) throws Throwable {
+        storeAddressMappingForUserAtDomain(address, RecipientRewriteTable.WILDCARD, domain);
+    }
+
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a regexp mapping \"([^\"]*)\"")
     public void userAtDomainRemovesRegexpMapping(String user, String domain, String regexp) throws Throwable {
         rewriteTable.removeRegexMapping(user, domain, regexp);
@@ -72,6 +78,11 @@ public class RewriteTablesStepdefs {
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a error mapping \"([^\"]*)\"")
     public void userAtDomainRemovesErrorMapping(String user, String domain, String error) throws Throwable {
         rewriteTable.removeErrorMapping(user, domain, error);
+    }
+
+    @When("wildcard address mapping \"([^\"]*)\" at domain \"([^\"]*)\" is removed")
+    public void removeWildcardAddressMappingAtDomain(String address, String domain) throws Throwable {
+        userAtDomainRemovesAddressMapping(RecipientRewriteTable.WILDCARD, domain, address);
     }
 
     @Then("mappings should be empty")
