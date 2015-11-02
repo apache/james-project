@@ -18,17 +18,16 @@
  ****************************************************************/
 package org.apache.james.rrt.file;
 
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 
-@Ignore("addMappingInternal not implemented")
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = { "classpath:cucumber/" },
-        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.file" }
+        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.file" },
+        tags = { "@readonly" }
     )
 public class RewriteTablesTest {
 }
