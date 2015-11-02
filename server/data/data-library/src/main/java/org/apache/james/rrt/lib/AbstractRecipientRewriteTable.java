@@ -18,9 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -122,10 +119,11 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         if (mappingLimit == 0)
             throw new ErrorMappingException("554 Too many mappings to process");
 
-        String targetString = mapAddress(user, domain);
+        Mappings targetMappings = mapAddress(user, domain);
 
         // Only non-null mappings are translated
-        if (targetString != null) {
+        if (targetMappings != null) {
+            String targetString = targetMappings.serialize();
             MappingsImpl.Builder mappings = MappingsImpl.builder();
             if (targetString.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
                 throw new ErrorMappingException(targetString.substring(RecipientRewriteTable.ERROR_PREFIX.length()));
@@ -440,34 +438,24 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      *            the domain
      * @return the mappings
      */
-    private String mapAddress(String user, String domain) throws RecipientRewriteTableException {
+    private Mappings mapAddress(String user, String domain) throws RecipientRewriteTableException {
 
         String mappings = mapAddressInternal(user, domain);
 
-        return sortMappings(mappings);
+        if (mappings != null) {
+            return sortMappings(MappingsImpl.fromRawString(mappings));
+        } else {
+            return null;
+        }
     }
 
-    @VisibleForTesting static String sortMappings(String mappings) {
-        // check if we need to sort
-        // TODO: Maybe we should just return the aliasdomain mapping
-        if (mappings != null && mappings.contains(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
-            Mappings mapCol = MappingsImpl.fromRawString(mappings);
-            Iterator<String> mapIt = mapCol.asStrings().iterator();
-
-            List<String> col = new ArrayList<String>(mapCol.size());
-
-            int i = 0;
-            while (mapIt.hasNext()) {
-                String mapping = mapIt.next();
-
-                if (mapping.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
-                    col.add(i, mapping);
-                    i++;
-                } else {
-                    col.add(mapping);
-                }
-            }
-            return MappingsImpl.fromCollection(col).serialize();
+    @VisibleForTesting static Mappings sortMappings(Mappings mappings) {
+        if (mappings.contains(Mapping.Type.Domain)) {
+            return
+                    MappingsImpl.builder()
+                        .addAll(mappings.select(Mapping.Type.Domain))
+                        .addAll(mappings.exclude(Mapping.Type.Domain))
+                        .build();
         } else {
             return mappings;
         }

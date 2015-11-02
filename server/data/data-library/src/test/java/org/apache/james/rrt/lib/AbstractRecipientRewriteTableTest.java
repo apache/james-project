@@ -292,21 +292,16 @@ public abstract class AbstractRecipientRewriteTableTest {
         }
 
     }
-    
-    @Test
-    public void sortMappingsShouldReturnNullWhenNull() {
-        assertThat(AbstractRecipientRewriteTable.sortMappings(null)).isNull();
-    }
 
     @Test
     public void sortMappingsShouldReturnEmptyWhenEmpty() {
-        assertThat(AbstractRecipientRewriteTable.sortMappings("")).isEmpty();
+        assertThat(AbstractRecipientRewriteTable.sortMappings(MappingsImpl.empty())).isEmpty();
     }
 
     @Test
     public void sortMappingsShouldReturnSameStringWhenSingleDomainAlias() {
         String singleDomainAlias = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "first";
-        assertThat(AbstractRecipientRewriteTable.sortMappings(singleDomainAlias)).isEqualTo(singleDomainAlias);
+        assertThat(AbstractRecipientRewriteTable.sortMappings(MappingsImpl.fromRawString(singleDomainAlias))).containsExactly(MappingImpl.domain("first"));
     }
      
     @Test
@@ -315,7 +310,7 @@ public abstract class AbstractRecipientRewriteTableTest {
                 .add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + "first")
                 .add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + "second")
                 .build();
-        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings.serialize())).isEqualTo(mappings.serialize());
+        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings)).isEqualTo(mappings);
     }
     
     @Test
@@ -326,11 +321,11 @@ public abstract class AbstractRecipientRewriteTableTest {
                 .add(regexMapping)
                 .add(domainMapping)
                 .build();
-        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings.serialize()))
+        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings))
                 .isEqualTo(MappingsImpl.builder()
                         .add(domainMapping)
                         .add(regexMapping)
-                        .build().serialize());
+                        .build());
     }
 
 
