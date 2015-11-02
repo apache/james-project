@@ -36,20 +36,16 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     private final List<String> domainNames = new ArrayList<String>();
 
-    private boolean managementDisabled = false;
-
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         super.configure(config);
         for (String serverNameConf : config.getStringArray("domainnames.domainname")) {
             try {
-                addDomain(serverNameConf);
+                addToServedDomains(serverNameConf);
             } catch (DomainListException e) {
                 throw new ConfigurationException("Unable to add domain to memory", e);
             }
         }
-
-        managementDisabled = true;
     }
 
     @Override
@@ -59,29 +55,23 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
 
     @Override
     public boolean containsDomain(String domains) throws DomainListException {
-        return domainNames.contains(domains);
+        return domainNames.contains(domains.toLowerCase(Locale.US));
     }
 
     @Override
     public void addDomain(String domain) throws DomainListException {
-        // TODO: Remove later. Temporary fix to get sure no domains can be added
-        // to the XMLDomainList
-        if (managementDisabled)
-            throw new DomainListException("Read-Only DomainList implementation");
-
-        String newDomain = domain.toLowerCase(Locale.US);
-        if (!containsDomain(newDomain)) {
-            domainNames.add(newDomain);
-        }
+        throw new DomainListException("Read-Only DomainList implementation");
     }
 
     @Override
     public void removeDomain(String domain) throws DomainListException {
-        // TODO: Remove later. Temporary fix to get sure no domains can be added
-        // to the XMLDomainList
-        if (managementDisabled)
-            throw new DomainListException("Read-Only DomainList implementation");
+        throw new DomainListException("Read-Only DomainList implementation");
+    }
 
-        domainNames.remove(domain.toLowerCase(Locale.US));
+    private void addToServedDomains(String domain) throws DomainListException {
+        String newDomain = domain.toLowerCase(Locale.US);
+        if (!containsDomain(newDomain)) {
+            domainNames.add(newDomain);
+        }
     }
 }
