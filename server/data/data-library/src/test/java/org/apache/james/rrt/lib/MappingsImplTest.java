@@ -21,8 +21,11 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 
 import org.junit.Test;
+
+import com.google.common.base.Optional;
 
 
 public class MappingsImplTest {
@@ -216,5 +219,38 @@ public class MappingsImplTest {
     public void excludeShouldThrowWhenNull() {
         MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
         assertThat(mappings.exclude((Mapping.Type)null));
+    }
+
+    @Test
+    public void toOptionalShouldBePresentWhenContainingData() {
+        MappingsImpl mappings = MappingsImpl.builder().add("toto").build();
+
+        Optional<Mappings> optional = mappings.toOptional();
+        assertThat(optional).isPresent();
+    }
+
+    @Test
+    public void toOptionalShouldBeAbsentWhenNoData() {
+        MappingsImpl mappings = MappingsImpl.empty();
+
+        Optional<Mappings> optional = mappings.toOptional();
+        assertThat(optional).isAbsent();
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void unionShouldThrowWhenMappingsNull() {
+        MappingsImpl.empty().union(null);
+    }
+
+    @Test
+    public void unionShouldReturnEmptyWhenBothEmpty() {
+        Mappings mappings = MappingsImpl.empty().union(MappingsImpl.empty());
+        assertThat(mappings).isEmpty();
+    }
+
+    @Test
+    public void unionShouldReturnMergedWhenBothContainsData() {
+        Mappings mappings = MappingsImpl.fromRawString("toto").union(MappingsImpl.fromRawString("tata"));
+        assertThat(mappings).containsExactly(MappingImpl.address("toto"),MappingImpl.address("tata"));
     }
 }
