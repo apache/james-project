@@ -86,22 +86,16 @@ public class MappingsImpl implements Mappings {
         
     }
     
-    private final Collection<String> mappings;
+    private final ImmutableList<String> mappings;
 
     private MappingsImpl(Collection<String> mappings) {
-        this.mappings = mappings;
+        this.mappings = ImmutableList.copyOf(mappings);
     }
     
     @Override
     public Iterator<String> iterator() {
         return mappings.iterator();
     }
-
-    @Override
-    public Collection<String> getMappings() {
-        return mappings;
-    }
-    
 
     @Override
     public boolean contains(String mapping) {
