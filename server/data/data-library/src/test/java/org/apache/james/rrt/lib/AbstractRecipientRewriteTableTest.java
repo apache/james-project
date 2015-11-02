@@ -247,8 +247,8 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             assertTrue("Add mapping", addMapping(user1, domain1, user2 + "@" + domain2, ADDRESS_TYPE));
             assertTrue("Add mapping", addMapping(user2, domain2, user3 + "@" + domain3, ADDRESS_TYPE));
-            assertEquals("Recursive mapped", virtualUserTable.getMappings(user1, domain1).asStrings().iterator().next(),
-                    user3 + "@" + domain3);
+            assertEquals("Recursive mapped", virtualUserTable.getMappings(user1, domain1).iterator().next(),
+                    MappingImpl.of(user3 + "@" + domain3));
 
             assertTrue("Add mapping", addMapping(user3, domain3, user1 + "@" + domain1, ADDRESS_TYPE));
             try {
@@ -260,8 +260,8 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             // disable recursive mapping
             virtualUserTable.setRecursiveMapping(false);
-            assertEquals("Not recursive mapped", virtualUserTable.getMappings(user1, domain1).asStrings().iterator().next(),
-                    user2 + "@" + domain2);
+            assertEquals("Not recursive mapped", virtualUserTable.getMappings(user1, domain1).iterator().next(),
+                    MappingImpl.of(user2 + "@" + domain2));
 
         } catch (IllegalArgumentException e) {
             fail("Storing failed");
