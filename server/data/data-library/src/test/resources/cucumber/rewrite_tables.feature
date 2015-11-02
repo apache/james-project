@@ -1,5 +1,6 @@
 Feature: Rewrite Tables tests
 
+  @readonly
   Scenario: rewrite tables should be empty when none defined
     Then mappings should be empty
 
@@ -25,6 +26,7 @@ Feature: Rewrite Tables tests
     When user "test" at domain "localhost" removes a regexp mapping "(.+)@test"
     Then mappings for user "test" at domain "localhost" should contains only "regex:(.*)@localhost"
 
+  @readonly
   Scenario: storing an invalid regexp mapping should not work
     When store an invalid ".*):" regexp mapping for user "test" at domain "localhost"
     Then a "RecipientRewriteTableException" exception should have been thrown
