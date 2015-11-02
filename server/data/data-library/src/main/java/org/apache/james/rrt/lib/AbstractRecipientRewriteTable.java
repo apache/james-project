@@ -132,7 +132,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
             } else {
 
-                for (String target : MappingsImpl.fromRawString(targetString)) {
+                for (String target : MappingsImpl.fromRawString(targetString).asStrings()) {
                     if (target.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
                         try {
                             target = RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain), target);
@@ -452,7 +452,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         // TODO: Maybe we should just return the aliasdomain mapping
         if (mappings != null && mappings.contains(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
             Mappings mapCol = MappingsImpl.fromRawString(mappings);
-            Iterator<String> mapIt = mapCol.iterator();
+            Iterator<String> mapIt = mapCol.asStrings().iterator();
 
             List<String> col = new ArrayList<String>(mapCol.size());
 

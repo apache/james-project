@@ -21,7 +21,7 @@
 package org.apache.james.rrt.lib;
 
 
-public interface Mappings extends Iterable<String> {
+public interface Mappings {
 
     boolean contains(String mapping);
 
@@ -31,4 +31,6 @@ public interface Mappings extends Iterable<String> {
 
     boolean isEmpty();
 
+    Iterable<String> asStrings();
+    
 }

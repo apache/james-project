@@ -119,7 +119,7 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
                 throw new RecipientRewriteTableException("Mapping " + mapping + " already exist!");
             } else {
                 Mappings updateMappings = MappingsImpl.from(map).add(mapping).build();
-                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(updateMappings));
+                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(updateMappings.asStrings()));
             }
         } else {
             store.put(key, mapping);
@@ -133,7 +133,7 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
         if (mappings != null) {
             map = MappingsImpl.fromRawString(mappings);
             if (map.contains(mapping)) {
-                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map.remove(mapping)));
+                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map.remove(mapping).asStrings()));
             }
         }
         throw new RecipientRewriteTableException("Mapping does not exist");

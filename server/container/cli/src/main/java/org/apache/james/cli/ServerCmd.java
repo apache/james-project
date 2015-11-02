@@ -190,7 +190,7 @@ public class ServerCmd {
             break;
         case LISTUSERDOMAINMAPPINGS:
             Mappings userDomainMappings = probe.listUserDomainMappings(arguments[1], arguments[2]);
-            print(userDomainMappings, System.out);
+            print(userDomainMappings.asStrings(), System.out);
             break;
         case ADDADDRESSMAPPING:
             probe.addAddressMapping(arguments[1], arguments[2], arguments[3]);
@@ -311,17 +311,13 @@ public class ServerCmd {
         return String.valueOf(value);
     }
 
-    private void print(Map<String, ? extends Iterable<String>> map, PrintStream out) {
+    private void print(Map<String, Mappings> map, PrintStream out) {
         if (map != null) {
-            for (Entry<String, ? extends Iterable<String>> entry : map.entrySet()) {
-                out.println(entry.getKey() + '=' + collectionToString(entry));
+            for (Entry<String, Mappings> entry : map.entrySet()) {
+                out.println(entry.getKey() + '=' + entry.getValue().asStrings().toString());
             }
             out.println();
         }
-    }
-
-    private String collectionToString(Entry<String, ? extends Iterable<String>> entry) {
-        return Joiner.on(',').join(entry.getValue());
     }
 
     private static void printUsage() {
