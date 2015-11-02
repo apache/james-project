@@ -20,13 +20,17 @@
 
 package org.apache.james.rrt.lib;
 
+import java.io.Serializable;
+
 import org.apache.james.rrt.api.RecipientRewriteTable;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 
-public class MappingImpl implements Mapping {
+public class MappingImpl implements Mapping, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final String ADDRESS_PREFIX = "";
 
