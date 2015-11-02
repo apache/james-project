@@ -88,6 +88,12 @@ public class MappingImpl implements Mapping {
     }
     
     @Override
+    public String getErrorMessage() {
+        Preconditions.checkState(mapping.startsWith(RecipientRewriteTable.ERROR_PREFIX));
+        return mapping.substring(RecipientRewriteTable.ERROR_PREFIX.length());
+    }
+    
+    @Override
     public boolean equals(Object other) {
         if (other instanceof MappingImpl) {
             MappingImpl otherMapping = (MappingImpl) other;

@@ -111,4 +111,20 @@ public class MappingImplTest {
     public void getTypeShouldReturnDomainWhenDomainPrefix() {
         assertThat(MappingImpl.domain("abc").getType()).isEqualTo(Mapping.Type.Domain);
     }
+    
+    @Test(expected=IllegalStateException.class)
+    public void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
+        MappingImpl.domain("toto").getErrorMessage();
+    }
+    
+    @Test
+    public void getErrorMessageShouldReturnMessageWhenErrorWithMessage() {
+        assertThat(MappingImpl.error("toto").getErrorMessage()).isEqualTo("toto");
+    }
+    
+
+    @Test
+    public void getErrorMessageShouldReturnWhenErrorWithoutMessage() {
+        assertThat(MappingImpl.error("").getErrorMessage()).isEqualTo("");
+    }
 }
