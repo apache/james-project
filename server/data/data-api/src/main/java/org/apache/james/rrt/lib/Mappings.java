@@ -30,7 +30,7 @@ public interface Mappings extends Iterable<String> {
 
     int size();
 
-    boolean remove(String mapping);
+    Mappings remove(String mapping);
 
     boolean isEmpty();
 

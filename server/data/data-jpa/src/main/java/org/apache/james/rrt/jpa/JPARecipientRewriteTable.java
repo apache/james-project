@@ -165,8 +165,8 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
-            map.remove(mapping);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(map));
+            Mappings updatedMappings = map.remove(mapping);
+            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings));
         } else {
             doRemoveMapping(fixedUser, fixedDomain, mapping);
         }

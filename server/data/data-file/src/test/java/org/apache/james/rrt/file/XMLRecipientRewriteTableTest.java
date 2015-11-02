@@ -108,13 +108,13 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         removeMappingsFromConfig(user, domain, mappings);
 
         if (type == ERROR_TYPE) {
-            mappings.remove(RecipientRewriteTable.ERROR_PREFIX + mapping);
+            mappings = mappings.remove(RecipientRewriteTable.ERROR_PREFIX + mapping);
         } else if (type == REGEX_TYPE) {
-            mappings.remove(RecipientRewriteTable.REGEX_PREFIX + mapping);
+            mappings = mappings.remove(RecipientRewriteTable.REGEX_PREFIX + mapping);
         } else if (type == ADDRESS_TYPE) {
-            mappings.remove(mapping);
+            mappings = mappings.remove(mapping);
         } else if (type == ALIASDOMAIN_TYPE) {
-            mappings.remove(RecipientRewriteTable.ALIASDOMAIN_PREFIX + mapping);
+            mappings = mappings.remove(RecipientRewriteTable.ALIASDOMAIN_PREFIX + mapping);
         }
 
         if (mappings.size() > 0) {

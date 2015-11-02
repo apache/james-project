@@ -132,8 +132,8 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
         String mappings = (String) store.get(key);
         if (mappings != null) {
             map = MappingsImpl.fromRawString(mappings);
-            if (map.remove(mapping)) {
-                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map));
+            if (map.contains(mapping)) {
+                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map.remove(mapping)));
             }
         }
         throw new RecipientRewriteTableException("Mapping does not exist");

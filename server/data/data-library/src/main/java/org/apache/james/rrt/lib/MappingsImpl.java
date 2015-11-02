@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class MappingsImpl implements Mappings {
@@ -115,8 +114,13 @@ public class MappingsImpl implements Mappings {
     }
 
     @Override
-    public boolean remove(String mapping) {
-        return mappings.remove(mapping);
+    public Mappings remove(String mapping) {
+        if (mappings.contains(mapping)) {
+            ArrayList<String> updatedMappings = Lists.newArrayList(mappings);
+            updatedMappings.remove(mapping);
+            return MappingsImpl.fromCollection(updatedMappings);
+        }
+        return this;
     }
 
     @Override
