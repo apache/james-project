@@ -19,10 +19,11 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.util.List;
 
-import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 
 import cucumber.api.java.en.Given;
@@ -53,6 +54,11 @@ public class RewriteTablesStepdefs {
         rewriteTable.addAddressMapping(user, domain, address);
     }
 
+    @Given("store \"([^\"]*)\" error mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
+    public void storeErrorMappingForUserAtDomain(String error, String user, String domain) throws Throwable {
+        rewriteTable.addErrorMapping(user, domain, error);
+    }
+
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a regexp mapping \"([^\"]*)\"")
     public void userAtDomainRemovesRegexpMapping(String user, String domain, String regexp) throws Throwable {
         rewriteTable.removeRegexMapping(user, domain, regexp);
@@ -61,6 +67,11 @@ public class RewriteTablesStepdefs {
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a address mapping \"([^\"]*)\"")
     public void userAtDomainRemovesAddressMapping(String user, String domain, String address) throws Throwable {
         rewriteTable.removeAddressMapping(user, domain, address);
+    }
+
+    @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a error mapping \"([^\"]*)\"")
+    public void userAtDomainRemovesErrorMapping(String user, String domain, String error) throws Throwable {
+        rewriteTable.removeErrorMapping(user, domain, error);
     }
 
     @Then("mappings should be empty")
@@ -81,5 +92,15 @@ public class RewriteTablesStepdefs {
     @Then("a \"([^\"]*)\" exception should have been thrown")
     public void assertException(String exceptionClass) throws Throwable {
         assertThat(exception.getClass().getSimpleName()).isEqualTo(exceptionClass);
+    }
+
+    @Then("retrieving mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should raise a \"([^\"]*)\" exception with message \"([^\"]*)\"")
+    public void retrievingMappingsForUserAtDomainShouldRaiseAnException(String user, String domain, String exception, String message) throws Exception {
+        try {
+            rewriteTable.getMappings(user, domain);
+            fail(String.format("Expecting an exception '%s' with message '%s' to be thrown", exception, message));
+        } catch (ErrorMappingException e) {
+            assertThat(e).hasMessage(message);
+        }
     }
 }
