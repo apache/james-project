@@ -18,125 +18,161 @@
  ****************************************************************/
 package org.apache.james.domainlist.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Test the implementation of the DomainList.
- */
 public abstract class AbstractDomainListTest {
 
-    // Domains we will play with.
     private final String DOMAIN_1 = "domain1.tld";
     private final String DOMAIN_2 = "domain2.tld";
     private final String DOMAIN_3 = "domain3.tld";
     private final String DOMAIN_4 = "domain4.tld";
     private final String DOMAIN_5 = "domain5.tld";
-    /**
-     * The JPA DomainList service.
-     */
+    private final String DOMAIN_UPPER_5 = "Domain5.tld";
+
     private DomainList domainList;
 
     @Before
     public void setUp() throws Exception {
         domainList = createDomainList();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         deleteAll();
     }
 
-    /**
-     * Add 3 domains and list them.
-     * 
-     * @throws DomainListException
-     */
     @Test
     public void createListDomains() throws DomainListException {
         domainList.addDomain(DOMAIN_3);
         domainList.addDomain(DOMAIN_4);
         domainList.addDomain(DOMAIN_5);
-        assertEquals(3, domainList.getDomains().length);
+        assertThat(domainList.getDomains()).containsOnly(DOMAIN_3, DOMAIN_4, DOMAIN_5);
     }
 
-    /**
-     * Add a domain and check it is present.
-     * 
-     * @throws DomainListException
-     */
     @Test
-    public void testAddContainsDomain() throws DomainListException {
-        domainList.addDomain(DOMAIN_2);
-        domainList.containsDomain(DOMAIN_2);
+    public void domainsShouldBeListedInLowerCase() throws DomainListException {
+        domainList.addDomain(DOMAIN_UPPER_5);
+        assertThat(domainList.getDomains()).containsOnly(DOMAIN_5);
     }
 
-    /**
-     * Add and remove a domain, and check database is empty.
-     * 
-     * @throws DomainListException
-     */
+    @Test
+    public void containShouldReturnTrueWhenThereIsADomain() throws DomainListException {
+        domainList.addDomain(DOMAIN_2);
+        assertThat(domainList.containsDomain(DOMAIN_2)).isTrue();
+    }
+
+    @Test
+    public void containShouldBeCaseSensitive() throws DomainListException {
+        domainList.addDomain(DOMAIN_5);
+        assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isTrue();
+    }
+
+    @Test
+    public void listDomainsShouldReturnNullWhenThereIsNoDomains() throws DomainListException {
+        assertThat(domainList.getDomains()).isNull();
+    }
+
     @Test
     public void testAddRemoveContainsSameDomain() throws DomainListException {
         domainList.addDomain(DOMAIN_1);
         domainList.removeDomain(DOMAIN_1);
-        assertThat(domainList.getDomains(), nullValue());
+        assertThat(domainList.getDomains()).isNull();
     }
 
-    /**
-     * Add two same domains with different cases, and check we've got an exception.
-     * 
-     * @throws DomainListException
-     */
-    @Test
-    public void testUpperCaseSameDomain() throws DomainListException {
-        domainList.addDomain(DOMAIN_1);
-        assertEquals(1, domainList.getDomains().length);
+    @Test(expected = DomainListException.class)
+    public void addShouldBeCaseSensitive() throws DomainListException {
         try {
-            String DOMAIN_1_UPPER_CASE = "Domain1.tld";
-            domainList.addDomain(DOMAIN_1_UPPER_CASE);
-            fail("We should not be able to insert same domains, even with different cases");
-        } catch (DomainListException domainListException) {
-            assertTrue(domainListException.getMessage().contains(DOMAIN_1));
+            domainList.addDomain(DOMAIN_5);
+        } catch (Exception e) {
+            fail(e.getMessage());
         }
+        domainList.addDomain(DOMAIN_UPPER_5);
     }
 
-    /**
-     * Add a domain and remove another domain, and check first domain is still
-     * present.
-     * 
-     * @throws DomainListException
-     */
     @Test
-    public void testAddRemoveContainsDifferentDomain() throws DomainListException {
+    public void deletingADomainShouldNotDeleteOtherDomains() throws DomainListException {
         domainList.addDomain(DOMAIN_1);
-        domainList.removeDomain(DOMAIN_2);
-        assertEquals(1, domainList.getDomains().length);
-        assertEquals(true, domainList.containsDomain(DOMAIN_1));
+        try {
+            domainList.removeDomain(DOMAIN_2);
+        } catch (DomainListException e) {
+
+        }
+        assertThat(domainList.getDomains()).containsOnly(DOMAIN_1);
+    }
+
+    @Test
+    public void containShouldReturnFalseWhenThereIsNoDomain() throws DomainListException {
+        assertThat(domainList.containsDomain(DOMAIN_1)).isFalse();
+    }
+
+    @Test
+    public void ContainsShouldReturnFalseWhenDomainIsRemoved() throws DomainListException {
+        domainList.addDomain(DOMAIN_1);
+        domainList.removeDomain(DOMAIN_1);
+        assertThat(domainList.containsDomain(DOMAIN_1)).isFalse();
+    }
+
+    @Test
+    public void RemoveShouldRemoveDomainsUsingUpperCases() throws DomainListException {
+        domainList.addDomain(DOMAIN_UPPER_5);
+        domainList.removeDomain(DOMAIN_UPPER_5);
+        assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isFalse();
+    }
+
+    @Test
+    public void RemoveShouldRemoveDomainsUsingLowerCases() throws DomainListException {
+        domainList.addDomain(DOMAIN_UPPER_5);
+        domainList.removeDomain(DOMAIN_5);
+        assertThat(domainList.containsDomain(DOMAIN_UPPER_5)).isFalse();
+    }
+
+    @Test(expected = DomainListException.class)
+    public void addDomainShouldThrowIfWeAddTwoTimesTheSameDomain() throws DomainListException {
+        try {
+            domainList.addDomain(DOMAIN_1);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        domainList.addDomain(DOMAIN_1);
+    }
+
+    @Test(expected = DomainListException.class)
+    public void removeDomainShouldThrowIfTheDomainIsAbsent() throws DomainListException {
+        domainList.removeDomain(DOMAIN_1);
     }
 
     /**
      * Delete all possible domains from database.
-     * 
-     * @throws DomainListException
      */
-    private void deleteAll() throws DomainListException {
-        domainList.removeDomain(DOMAIN_1);
-        domainList.removeDomain(DOMAIN_2);
-        domainList.removeDomain(DOMAIN_3);
-        domainList.removeDomain(DOMAIN_4);
-        domainList.removeDomain(DOMAIN_5);
+    private void deleteAll() {
+        deleteWithoutError(DOMAIN_1);
+        deleteWithoutError(DOMAIN_2);
+        deleteWithoutError(DOMAIN_3);
+        deleteWithoutError(DOMAIN_4);
+        deleteWithoutError(DOMAIN_5);
+    }
+
+    private void deleteWithoutError(String domain) {
+        try {
+            domainList.removeDomain(domain);
+        } catch(DomainListException e) {
+
+        }
     }
 
     /**
      * Return a fake DNSServer.
-     * 
-     * @param hostName
-     * @return
      */
     protected DNSService getDNSServer(final String hostName) {
         return new MockDNSService() {

@@ -20,11 +20,13 @@ package org.apache.james.domainlist.hbase;
 
 import java.io.IOException;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.system.hbase.TablePool;
-import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -53,5 +55,12 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
         domainList.setAutoDetect(false);
         domainList.setAutoDetectIP(false);
         return domainList;
+    }
+
+    @Ignore
+    @Test
+    @Override
+    public void removeDomainShouldThrowIfTheDomainIsAbsent() throws DomainListException {
+
     }
 }
