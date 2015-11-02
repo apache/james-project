@@ -33,4 +33,6 @@ public interface Mapping {
 
     Mapping appendDomain(String domain);
 
+    String getErrorMessage();
+
 }
