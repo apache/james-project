@@ -21,14 +21,18 @@ package org.apache.james.rrt.hbase;
 import java.io.IOException;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.domainlist.hbase.def.HDomainList;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
+import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.apache.james.system.hbase.TablePool;
+import org.apache.james.user.hbase.def.HUsersRepository;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
 public class HBaseStepdefs {
@@ -49,6 +53,13 @@ public class HBaseStepdefs {
     @Before
     public void setup() throws Throwable {
         mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+    }
+
+    @After
+    public void tearDown() {
+        cluster.clearTable(new String(HDomainList.TABLE_NAME));
+        cluster.clearTable(new String(HRecipientRewriteTable.TABLE_NAME));
+        cluster.clearTable(new String(HUsersRepository.TABLE_NAME));
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
