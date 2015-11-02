@@ -28,9 +28,12 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
+import org.apache.james.rrt.lib.MappingsImpl.Builder;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
 
 /**
  * Test the XML Virtual User Table implementation.
@@ -59,31 +62,33 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
         Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
 
-        if (mappings == null) {
-            mappings = MappingsImpl.empty();
-        } else {
+        if (mappings != null) {
             removeMappingsFromConfig(user, domain, mappings);
         }
 
+        Builder builder = MappingsImpl.from(Optional.fromNullable(mappings).or(MappingsImpl.empty()));
+        
         if (type == ERROR_TYPE) {
-            mappings.add(RecipientRewriteTable.ERROR_PREFIX + mapping);
+            builder.add(RecipientRewriteTable.ERROR_PREFIX + mapping);
         } else if (type == REGEX_TYPE) {
-            mappings.add(RecipientRewriteTable.REGEX_PREFIX + mapping);
+            builder.add(RecipientRewriteTable.REGEX_PREFIX + mapping);
         } else if (type == ADDRESS_TYPE) {
-            mappings.add(mapping);
+            builder.add(mapping);
         } else if (type == ALIASDOMAIN_TYPE) {
-            mappings.add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + mapping);
+            builder.add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + mapping);
         }
 
-        if (mappings.size() > 0) {
+        Mappings updatedMappings = builder.build();
+        
+        if (!updatedMappings.isEmpty()) {
             defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + RecipientRewriteTableUtil.
-                    CollectionToMapping(mappings));
+                    CollectionToMapping(updatedMappings));
         }
 
         try {
             virtualUserTable.configure(defaultConfiguration);
         } catch (Exception e) {
-            return mappings.size() <= 0;
+            return updatedMappings.size() <= 0;
         }
 
         return true;

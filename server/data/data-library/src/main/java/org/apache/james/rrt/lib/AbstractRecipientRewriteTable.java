@@ -126,7 +126,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         // Only non-null mappings are translated
         if (targetString != null) {
-            Mappings mappings = MappingsImpl.empty();
+            MappingsImpl.Builder mappings = MappingsImpl.builder();
             if (targetString.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
                 throw new ErrorMappingException(targetString.substring(RecipientRewriteTable.ERROR_PREFIX.length()));
 
@@ -189,7 +189,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 }
             }
 
-            return mappings;
+            return mappings.build();
 
         }
 

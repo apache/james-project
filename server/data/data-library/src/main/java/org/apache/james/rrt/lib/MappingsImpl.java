@@ -23,9 +23,9 @@ package org.apache.james.rrt.lib;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.StringTokenizer;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -53,6 +53,40 @@ public class MappingsImpl implements Mappings {
         return new MappingsImpl(mappings);
     }
     
+    public static Builder from(Mappings from) {
+        Builder builder = new Builder();
+        builder.addAll(from);
+        return builder;
+    }
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static class Builder {
+        
+        private final ImmutableList.Builder<String> mappings;
+        
+        private Builder() {
+            mappings = ImmutableList.builder();
+        }
+
+        public Builder add(String mapping) {
+            mappings.add(mapping);
+            return this;
+        }
+
+        public Builder addAll(Mappings mappings) {
+            this.mappings.addAll(mappings);
+            return this;
+        }
+        
+        public Mappings build() {
+            return new MappingsImpl(mappings.build());
+        }
+        
+    }
+    
     private final Collection<String> mappings;
 
     private MappingsImpl(Collection<String> mappings) {
@@ -75,11 +109,6 @@ public class MappingsImpl implements Mappings {
     }
 
     @Override
-    public void add(String mapping) {
-       mappings.add(mapping); 
-    }
-
-    @Override
     public boolean contains(String mapping) {
         return mappings.contains(mapping);
     }
@@ -92,10 +121,6 @@ public class MappingsImpl implements Mappings {
     @Override
     public boolean remove(String mapping) {
         return mappings.remove(mapping);
-    }
-
-    public void addAll(List<String> target) {
-        mappings.addAll(target);
     }
 
     @Override

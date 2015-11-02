@@ -109,18 +109,17 @@ public class MockRecipientRewriteTableManagementImpl implements RecipientRewrite
     }
 
     private void addRawMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        MappingsImpl map;
         String key = user + "@" + domain;
         String mappings = (String) store.get(key);
 
         if (mappings != null) {
-            map = MappingsImpl.fromRawString(mappings);
+            MappingsImpl map = MappingsImpl.fromRawString(mappings);
 
             if (map.contains(mapping)) {
                 throw new RecipientRewriteTableException("Mapping " + mapping + " already exist!");
             } else {
-                map.add(mapping);
-                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(map));
+                Mappings updateMappings = MappingsImpl.from(map).add(mapping).build();
+                store.put(key, RecipientRewriteTableUtil.CollectionToMapping(updateMappings));
             }
         } else {
             store.put(key, mapping);

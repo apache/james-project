@@ -21,6 +21,7 @@ package org.apache.james.smtpserver;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -115,13 +116,12 @@ public class ValidRcptHandlerTest {
             @Override
             public Mappings getMappings(String user, String domain) throws ErrorMappingException,
                     RecipientRewriteTableException {
-                Mappings mappings = MappingsImpl.empty();
                 if (user.equals(USER1)) {
-                    mappings.add("address@localhost");
+                    return MappingsImpl.fromCollection(Arrays.asList("address@localhost"));
                 } else if (user.equals(USER2)) {
                     throw new ErrorMappingException("554 BOUNCE");
                 }
-                return mappings;
+                return MappingsImpl.empty();
             }
 
             @Override

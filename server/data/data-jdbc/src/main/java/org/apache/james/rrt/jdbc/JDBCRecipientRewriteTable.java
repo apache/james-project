@@ -209,8 +209,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         String fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
-            map.add(regex);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(map));
+            Mappings updatedMappings = MappingsImpl.from(map).add(regex).build();
+            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings));
         }
         doAddMapping(fixedUser, fixedDomain, regex);
     }
