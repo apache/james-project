@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.domainlist.cassandra;
 
 import static com.datastax.driver.core.DataType.text;
 
@@ -32,12 +32,12 @@ import org.apache.james.tables.CassandraDomainsTable;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;
 
-public class CassandraDataModule implements CassandraModule {
+public class CassandraDomainListModule implements CassandraModule {
     private final List<CassandraTable> tables;
     private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
-    public CassandraDataModule() {
+    public CassandraDomainListModule() {
         tables = ImmutableList.of(
                 new CassandraTable(CassandraDomainsTable.TABLE_NAME,
                         SchemaBuilder.createTable(CassandraDomainsTable.TABLE_NAME)
