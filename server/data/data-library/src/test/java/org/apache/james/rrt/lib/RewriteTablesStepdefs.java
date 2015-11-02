@@ -48,9 +48,19 @@ public class RewriteTablesStepdefs {
         }
     }
 
+    @Given("store \"([^\"]*)\" address mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
+    public void storeAddressMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
+        rewriteTable.addAddressMapping(user, domain, address);
+    }
+
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a regexp mapping \"([^\"]*)\"")
     public void userAtDomainRemovesRegexpMapping(String user, String domain, String regexp) throws Throwable {
         rewriteTable.removeRegexMapping(user, domain, regexp);
+    }
+
+    @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a address mapping \"([^\"]*)\"")
+    public void userAtDomainRemovesAddressMapping(String user, String domain, String address) throws Throwable {
+        rewriteTable.removeAddressMapping(user, domain, address);
     }
 
     @Then("mappings should be empty")
