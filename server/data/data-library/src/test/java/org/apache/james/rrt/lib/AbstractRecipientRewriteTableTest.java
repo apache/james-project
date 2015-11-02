@@ -320,7 +320,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void sortMappingsShouldReturnSameStringWhenTwoDomainAliases() {
         String firstAliasMapping = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "first";
         String secondAliasMapping = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "second";
-        String mappings = RecipientRewriteTableUtil.CollectionToMapping(Arrays.asList(firstAliasMapping, secondAliasMapping));
+        String mappings = MappingsImpl.fromCollection(Arrays.asList(firstAliasMapping, secondAliasMapping)).serialize();
         assertEquals(mappings, AbstractRecipientRewriteTable.sortMappings(mappings));
     }
     
@@ -328,8 +328,8 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void sortMappingsShouldPutDomainAliasFirstWhenVariousMappings() {
         String regexMapping = RecipientRewriteTable.REGEX_PREFIX + "first";
         String domainMapping = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "second";
-        String inputMappings = RecipientRewriteTableUtil.CollectionToMapping(Arrays.asList(regexMapping, domainMapping));
-        String expectedMappings = RecipientRewriteTableUtil.CollectionToMapping(Arrays.asList(domainMapping, regexMapping));
+        String inputMappings = MappingsImpl.fromCollection(Arrays.asList(regexMapping, domainMapping)).serialize();
+        String expectedMappings = MappingsImpl.fromCollection(Arrays.asList(domainMapping, regexMapping)).serialize();
         assertEquals(expectedMappings, AbstractRecipientRewriteTable.sortMappings(inputMappings));
     }
 

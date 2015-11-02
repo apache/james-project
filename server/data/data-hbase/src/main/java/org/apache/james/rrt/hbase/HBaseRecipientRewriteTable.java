@@ -37,7 +37,6 @@ import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +64,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
+            doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
             doAddMapping(fixedUser, fixedDomain, mapping);
         }
@@ -215,7 +214,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
-            doUpdateMapping(fixedUser, fixedDomain, RecipientRewriteTableUtil.CollectionToMapping(updatedMappings.asStrings()));
+            doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
             doRemoveMapping(fixedUser, fixedDomain, mapping);
         }

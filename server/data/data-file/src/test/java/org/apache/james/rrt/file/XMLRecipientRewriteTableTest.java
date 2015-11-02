@@ -29,7 +29,6 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
 
@@ -81,8 +80,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         Mappings updatedMappings = builder.build();
         
         if (!updatedMappings.isEmpty()) {
-            defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + RecipientRewriteTableUtil.
-                    CollectionToMapping(updatedMappings.asStrings()));
+            defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + updatedMappings.serialize());
         }
 
         try {
@@ -118,8 +116,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         }
 
         if (mappings.size() > 0) {
-            defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + RecipientRewriteTableUtil.
-                    CollectionToMapping(mappings.asStrings()));
+            defaultConfiguration.addProperty("mapping", user + "@" + domain + "=" + mappings.serialize());
         }
 
         try {
@@ -133,7 +130,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     private void removeMappingsFromConfig(String user, String domain, Mappings mappings) {
         List<String> stored = new ArrayList<String>();
         for (String c : defaultConfiguration.getStringArray("mapping")) {
-            String mapping = user + "@" + domain + "=" + RecipientRewriteTableUtil.CollectionToMapping(mappings.asStrings());
+            String mapping = user + "@" + domain + "=" + mappings.serialize();
             if (!c.equalsIgnoreCase(mapping)) {
                 stored.add(c);
             }
