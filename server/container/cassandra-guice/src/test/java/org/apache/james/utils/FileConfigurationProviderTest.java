@@ -30,8 +30,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 public class FileConfigurationProviderTest {
 
     private static final String CONFIG_KEY_1 = "test2";
@@ -40,6 +38,7 @@ public class FileConfigurationProviderTest {
     private static final String CONFIG_KEY_5 = "internal";
     private static final String VALUE_1 = "0";
     private static final String VALUE_2 = "awesome";
+    private static final String VALUE_3 = "james";
     private static final String FAKE_CONFIG_KEY = "fake";
     private static final String ROOT_CONFIG_KEY = "test";
     private static final String CONFIG_SEPARATOR = ".";
@@ -53,6 +52,21 @@ public class FileConfigurationProviderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void emptyArgumentShouldThrow() throws Exception {
+        configurationProvider.getConfiguration("");
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void nullArgumentShouldThrow() throws Exception {
+        configurationProvider.getConfiguration(null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void configSeparatorArgumentShouldThrow() throws Exception {
+        configurationProvider.getConfiguration(CONFIG_SEPARATOR);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
     public void emptyFileNameShouldThrow() throws Exception {
         configurationProvider.getConfiguration(CONFIG_SEPARATOR + ROOT_CONFIG_KEY);
     }
@@ -60,32 +74,35 @@ public class FileConfigurationProviderTest {
     @Test
     public void getConfigurationShouldLoadCorrespondingXMLFile() throws Exception {
         HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
-        assertThat(Lists.newArrayList(hierarchicalConfiguration.getKeys())).containsOnly(CONFIG_KEY_1,
-            CONFIG_KEY_4 + CONFIG_SEPARATOR + CONFIG_KEY_2,
-            CONFIG_KEY_4 + CONFIG_SEPARATOR + CONFIG_KEY_5 + CONFIG_SEPARATOR + CONFIG_KEY_2);
+        assertThat(hierarchicalConfiguration.getKeys()).containsOnly(CONFIG_KEY_1,
+                String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_2),
+                String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_5, CONFIG_KEY_2));
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_1)).isEqualTo(VALUE_1);
     }
 
     @Test
     public void getConfigurationShouldLoadCorrespondingXMLFilePart() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY + CONFIG_SEPARATOR + CONFIG_KEY_4);
-        assertThat(Lists.newArrayList(hierarchicalConfiguration.getKeys())).containsOnly(CONFIG_KEY_2,
-            "internal" + CONFIG_SEPARATOR + CONFIG_KEY_2);
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(
+                String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, CONFIG_KEY_4));
+        assertThat(hierarchicalConfiguration.getKeys()).containsOnly(CONFIG_KEY_2,
+                String.join(CONFIG_SEPARATOR, CONFIG_KEY_5, CONFIG_KEY_2));
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_2)).isEqualTo(VALUE_2);
     }
 
     @Test
     public void getConfigurationShouldLoadCorrespondingXMLFileWhenAPathIsProvidedPart() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY + CONFIG_SEPARATOR + CONFIG_KEY_4 + CONFIG_SEPARATOR + "internal");
-        assertThat(Lists.newArrayList(hierarchicalConfiguration.getKeys())).containsOnly(CONFIG_KEY_2);
-        assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_2)).isEqualTo("james");
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(
+                String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, CONFIG_KEY_4, CONFIG_KEY_5));
+        assertThat(hierarchicalConfiguration.getKeys()).containsOnly(CONFIG_KEY_2);
+        assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_2)).isEqualTo(VALUE_3);
     }
 
     @Test
     public void multiplesSeparatorsShouldBeTolerated() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY + CONFIG_SEPARATOR + CONFIG_SEPARATOR + CONFIG_KEY_4);
-        assertThat(Lists.newArrayList(hierarchicalConfiguration.getKeys())).containsOnly(CONFIG_KEY_2,
-            "internal" + CONFIG_SEPARATOR + CONFIG_KEY_2);
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(
+                ROOT_CONFIG_KEY + CONFIG_SEPARATOR + CONFIG_SEPARATOR + CONFIG_KEY_4);
+        assertThat(hierarchicalConfiguration.getKeys()).containsOnly(CONFIG_KEY_2,
+                String.join(CONFIG_SEPARATOR, CONFIG_KEY_5, CONFIG_KEY_2));
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_2)).isEqualTo(VALUE_2);
     }
 
@@ -96,7 +113,7 @@ public class FileConfigurationProviderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void getConfigurationShouldThrowOnNonExistingXMLFilePart() throws Exception {
-        configurationProvider.getConfiguration(ROOT_CONFIG_KEY + CONFIG_SEPARATOR + FAKE_CONFIG_KEY);
+        configurationProvider.getConfiguration(String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, FAKE_CONFIG_KEY));
     }
 
 }

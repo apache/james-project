@@ -21,7 +21,6 @@ package org.apache.james.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -35,7 +34,9 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.modules.CommonServicesModule;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.google.inject.Singleton;
 
 @Singleton
@@ -44,8 +45,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
     
     private final FileSystem fileSystem;
-
-    private String configurationPrefix;
+    private final String configurationPrefix;
 
     @Inject
     public FileConfigurationProvider(FileSystem fileSystem, @Named(CommonServicesModule.CONFIGURATION_PATH) String configurationPrefix) throws MissingArgumentException {
@@ -55,9 +55,11 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     
     @Override
     public HierarchicalConfiguration getConfiguration(String component) throws ConfigurationException {
-        List<String> configPathParts = Arrays.asList(component.split("\\."));
+        Preconditions.checkNotNull(component);
+        List<String> configPathParts = Splitter.on(".").splitToList(component);
+        Preconditions.checkArgument(!configPathParts.isEmpty());
         HierarchicalConfiguration config = getConfig(retrieveConfigInputStream(configPathParts.get(0)));
-        return selectHierarchicalConfigPart(config, configPathParts.subList(1, configPathParts.size()));
+        return selectHierarchicalConfigPart(config, Iterables.skip(configPathParts, 1));
     }
 
     private InputStream retrieveConfigInputStream(String configurationFileWithoutExtension) throws ConfigurationException {
@@ -77,7 +79,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
         return config;
     }
 
-    private HierarchicalConfiguration selectHierarchicalConfigPart(HierarchicalConfiguration config, List<String> configsPathParts) {
+    private HierarchicalConfiguration selectHierarchicalConfigPart(HierarchicalConfiguration config, Iterable<String> configsPathParts) {
         HierarchicalConfiguration currentConfig = config;
         for (String nextPathPart : configsPathParts) {
             currentConfig = currentConfig.configurationAt(nextPathPart);
