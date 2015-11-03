@@ -41,7 +41,7 @@ public final class CassandraCluster {
     private static final int REPLICATION_FACTOR = 1;
 
     private static final long SLEEP_BEFORE_RETRY = 200;
-    private static final int MAX_RETRY = 200;
+    private static final int MAX_RETRY = 2000;
 
     private final CassandraModule module;
     private Session session;
@@ -54,7 +54,7 @@ public final class CassandraCluster {
     private CassandraCluster(CassandraModule module) throws RuntimeException {
         this.module = module;
         try {
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra();
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra(20000L);
 
             session = new FunctionRunnerWithRetry(MAX_RETRY)
                 .executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
