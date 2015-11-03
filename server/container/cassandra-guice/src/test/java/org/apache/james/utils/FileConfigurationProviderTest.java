@@ -26,7 +26,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ClassPathConfigurationProviderTest {
+public class FileConfigurationProviderTest {
 
     private static final String CONFIG_KEY_1 = "test2";
     private static final String CONFIG_KEY_2 = "property";
@@ -39,11 +39,11 @@ public class ClassPathConfigurationProviderTest {
     private static final String ROOT_CONFIG_KEY = "test";
     private static final String CONFIG_SEPARATOR = ".";
 
-    private ClassPathConfigurationProvider configurationProvider;
+    private FileConfigurationProvider configurationProvider;
 
     @Before
     public void setUp() {
-        configurationProvider = new ClassPathConfigurationProvider();
+        configurationProvider = new FileConfigurationProvider();
     }
 
     @Test(expected = IllegalArgumentException.class)

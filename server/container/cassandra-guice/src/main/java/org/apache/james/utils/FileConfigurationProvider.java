@@ -32,10 +32,11 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
-public class ClassPathConfigurationProvider {
+public class FileConfigurationProvider implements ConfigurationProvider {
 
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
 
+    @Override
     public HierarchicalConfiguration getConfiguration(String component) throws ConfigurationException {
         Preconditions.checkNotNull(component);
         List<String> configPathParts = Splitter.on(".").splitToList(component);
