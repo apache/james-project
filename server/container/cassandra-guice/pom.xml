@@ -168,8 +168,19 @@
             </build>
             <dependencies>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-backends-cassandra</artifactId>
+                    <type>test-jar</type>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-mailbox-cassandra</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>apache-james-mailbox-cassandra</artifactId>
+                    <scope>test</scope>
+                    <type>test-jar</type>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -211,6 +222,11 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-file</artifactId>
                 </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-data-cassandra</artifactId>
+                </dependency>
+                
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-library</artifactId>

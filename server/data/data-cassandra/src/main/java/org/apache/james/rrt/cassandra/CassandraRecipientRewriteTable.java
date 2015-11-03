@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -49,7 +48,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
 
     @Inject
     @Resource
-    public void setSession(@Named("cassandra-session") Session session) {
+    public void setSession(Session session) {
         this.session = session;
     }
 
