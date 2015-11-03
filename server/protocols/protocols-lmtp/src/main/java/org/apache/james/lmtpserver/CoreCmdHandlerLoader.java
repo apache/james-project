@@ -22,6 +22,8 @@ package org.apache.james.lmtpserver;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lmtpserver.hook.MailboxDeliverToRecipientHandler;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
@@ -100,5 +102,15 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
      */
     public List<String> getHandlers() {
         return commands;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
     }
 }

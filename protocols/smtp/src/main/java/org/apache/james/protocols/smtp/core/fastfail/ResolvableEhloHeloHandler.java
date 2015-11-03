@@ -23,6 +23,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -40,6 +42,16 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
 
     public final static String BAD_EHLO_HELO = "BAD_EHLO_HELO";
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * Check if EHLO/HELO is resolvable

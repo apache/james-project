@@ -24,11 +24,11 @@ import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -150,12 +150,12 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     }
 
     /**
-     * Destroy all loaded {@link InitializingLifecycleAwareProtocolHandler}
+     * Destroy all loaded {@link ProtocolHandler}
      */
     @Override
     public void destroy() {
-        LinkedList<InitializingLifecycleAwareProtocolHandler> lHandlers = getHandlers(InitializingLifecycleAwareProtocolHandler.class);
-        for (InitializingLifecycleAwareProtocolHandler handler : lHandlers) {
+        LinkedList<ProtocolHandler> lHandlers = getHandlers(ProtocolHandler.class);
+        for (ProtocolHandler handler : lHandlers) {
             handler.destroy();
         }
     }

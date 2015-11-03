@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.UnknownCommandHandler;
 import org.apache.james.protocols.api.Response;
@@ -44,6 +46,16 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook>{
      * The name of the command handled by the command handler
      */
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList(UnknownCommandHandler.COMMAND_IDENTIFIER));
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()

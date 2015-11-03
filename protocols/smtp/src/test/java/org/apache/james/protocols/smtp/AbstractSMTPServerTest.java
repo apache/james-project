@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.protocols.api.Protocol;
@@ -442,6 +444,16 @@ public abstract class AbstractSMTPServerTest {
     public void testHeloHookPermanentError() throws Exception {
         HeloHook hook = new HeloHook() {
 
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public HookResult doHelo(SMTPSession session, String helo) {
                 return new HookResult(HookReturnCode.DENY);
             }
@@ -481,6 +493,16 @@ public abstract class AbstractSMTPServerTest {
     public void testHeloHookTempraryError() throws Exception {
         HeloHook hook = new HeloHook() {
 
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public HookResult doHelo(SMTPSession session, String helo) {
                 return new HookResult(HookReturnCode.DENYSOFT);
             }
@@ -518,6 +540,16 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testMailHookPermanentError() throws Exception {
         MailHook hook = new MailHook() {
+
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
 
             public HookResult doMail(SMTPSession session, MailAddress sender) {
                 return new HookResult(HookReturnCode.DENY);
@@ -560,6 +592,16 @@ public abstract class AbstractSMTPServerTest {
     public void testMailHookTemporaryError() throws Exception {
         MailHook hook = new MailHook() {
 
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public HookResult doMail(SMTPSession session, MailAddress sender) {
                 return new HookResult(HookReturnCode.DENYSOFT);
             }
@@ -601,6 +643,16 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testRcptHookPermanentError() throws Exception {
         RcptHook hook = new RcptHook() {
+
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
 
             public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
@@ -656,6 +708,16 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testRcptHookTemporaryError() throws Exception {
         RcptHook hook = new RcptHook() {
+
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
 
             public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
@@ -749,6 +811,16 @@ public abstract class AbstractSMTPServerTest {
 
         MessageHook hook = new MessageHook() {
 
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
                 return new HookResult(HookReturnCode.DENY);
             }
@@ -803,7 +875,16 @@ public abstract class AbstractSMTPServerTest {
 
         MessageHook hook = new MessageHook() {
 
-            
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
                 return new HookResult(HookReturnCode.DENYSOFT);
             }
@@ -857,7 +938,16 @@ public abstract class AbstractSMTPServerTest {
     public void testConnectHandlerPermananet() throws Exception {
         ConnectHandler<SMTPSession> connectHandler = new ConnectHandler<SMTPSession>() {
 
-            
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public Response onConnect(SMTPSession session) {
                 return new SMTPResponse("554", "Bye Bye");
             }
@@ -892,7 +982,16 @@ public abstract class AbstractSMTPServerTest {
     public void testConnectHandlerTemporary() throws Exception {
         ConnectHandler<SMTPSession> connectHandler = new ConnectHandler<SMTPSession>() {
 
-            
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             public Response onConnect(SMTPSession session) {
                 return new SMTPResponse("451", "Bye Bye");
             }
@@ -927,8 +1026,17 @@ public abstract class AbstractSMTPServerTest {
         final AtomicBoolean called = new AtomicBoolean(false);
         DisconnectHandler<SMTPSession> handler = new DisconnectHandler<SMTPSession>() {
 
-            
-            public void onDisconnect(SMTPSession session) {  
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
+            public void onDisconnect(SMTPSession session) {
                 called.set(true);
             }
         };

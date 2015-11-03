@@ -31,7 +31,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * This class can be used to reject email with bogus MX which is send from a
  * authorized user or an authorized network.
  */
-public class ValidRcptMX implements InitializingLifecycleAwareProtocolHandler, RcptHook {
+public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
     /**
      * This log is the fall back shared by all instances

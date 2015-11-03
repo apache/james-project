@@ -21,6 +21,8 @@ package org.apache.james.smtpserver;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook;
@@ -32,6 +34,16 @@ public class AuthRequiredToRelayRcptHook extends AbstractAuthRequiredToRelayRcpt
     @Inject
     public void setDomainList(@Named("domainlist") DomainList domains) {
         this.domains = domains;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
     }
 
     /**

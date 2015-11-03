@@ -23,7 +23,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -32,7 +32,7 @@ import org.apache.mailet.Mail;
 /**
  * Adds the header to the message
  */
-public class SetMimeHeaderHandler implements JamesMessageHook, InitializingLifecycleAwareProtocolHandler {
+public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
 
     /**
      * The header name and value that needs to be added

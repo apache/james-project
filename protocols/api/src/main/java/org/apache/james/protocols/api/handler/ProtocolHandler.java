@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.api.handler;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 
 /**
  * Just the base interface for all kind of "protocol" handlers.
@@ -27,5 +29,18 @@ package org.apache.james.protocols.api.handler;
  * 
  */
 public interface ProtocolHandler {
+
+    /**
+     * Init with the given {@link Configuration}
+     *
+     * @param config
+     * @throws ConfigurationException
+     */
+    void init(Configuration config) throws ConfigurationException;
+
+    /**
+     * Destroy object
+     */
+    void destroy();
   
 }

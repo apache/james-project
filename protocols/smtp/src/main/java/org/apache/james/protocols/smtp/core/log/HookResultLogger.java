@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core.log;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.Hook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -31,6 +33,16 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
  *
  */
 public class HookResultLogger implements HookResultHook{
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     public HookResult onHookResult(SMTPSession session, HookResult hResult, long executionTime, Hook hook) {
         boolean match = false;
