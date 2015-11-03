@@ -16,45 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.core.filesystem;
+package org.apache.james.modules.server;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.inject.Inject;
-
+import org.apache.james.core.JamesServerResourceLoader;
+import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 
-public class FileSystemImpl implements FileSystem {
+import com.google.inject.AbstractModule;
 
-    private final JamesDirectoriesProvider directoryProvider;
-    private final ResourceFactory resourceLoader;
-
-    @Inject
-    public FileSystemImpl(JamesDirectoriesProvider directoryProvider) {
-        this.directoryProvider = directoryProvider;
-        this.resourceLoader = new ResourceFactory(directoryProvider);
-    }
+public class FileSystemModule extends AbstractModule {
 
     @Override
-    public File getBasedir() throws FileNotFoundException {
-        return new File(directoryProvider.getRootDirectory());
+    public void configure() {
+        bind(JamesDirectoriesProvider.class).to(JamesServerResourceLoader.class);
+        bind(FileSystem.class).to(FileSystemImpl.class);
     }
 
-    @Override
-    public InputStream getResource(String url) throws IOException {
-        return resourceLoader.getResource(url).getInputStream();
-    }
-
-    @Override
-    public File getFile(String fileURL) throws FileNotFoundException {
-        try {
-            return resourceLoader.getResource(fileURL).getFile();
-        } catch (IOException e) {
-            throw new FileNotFoundException(e.getMessage());
-        }
-    }
 }

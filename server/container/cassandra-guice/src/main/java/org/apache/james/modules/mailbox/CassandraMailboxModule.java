@@ -34,6 +34,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -56,7 +57,8 @@ public class CassandraMailboxModule extends AbstractModule {
 
         bind(SubscriptionManager.class).to(CassandraSubscriptionManager.class);
         bind(new TypeLiteral<MessageMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
-
+        bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
+        
         bind(MailboxPathLocker.class).to(NoMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
 
