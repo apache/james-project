@@ -83,4 +83,6 @@
         <property name="showSql" value="false"/>
     </bean>
 
+    <bean id="jpa-mailbox-id-deserializer" class="org.apache.james.mailbox.jpa.JPAMailboxIdDeserializer"/>
+
 </beans>
