@@ -36,7 +36,6 @@ public class FileConfigurationProviderTest {
 
     private static final String CONFIG_KEY_1 = "test2";
     private static final String CONFIG_KEY_2 = "property";
-    private static final String CONFIG_KEY_3 = "test2";
     private static final String CONFIG_KEY_4 = "james";
     private static final String CONFIG_KEY_5 = "internal";
     private static final String VALUE_1 = "0";
@@ -64,7 +63,7 @@ public class FileConfigurationProviderTest {
         assertThat(Lists.newArrayList(hierarchicalConfiguration.getKeys())).containsOnly(CONFIG_KEY_1,
             CONFIG_KEY_4 + CONFIG_SEPARATOR + CONFIG_KEY_2,
             CONFIG_KEY_4 + CONFIG_SEPARATOR + CONFIG_KEY_5 + CONFIG_SEPARATOR + CONFIG_KEY_2);
-        assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_3)).isEqualTo(VALUE_1);
+        assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_1)).isEqualTo(VALUE_1);
     }
 
     @Test
