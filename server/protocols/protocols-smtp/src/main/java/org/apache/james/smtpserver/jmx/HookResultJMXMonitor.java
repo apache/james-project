@@ -20,15 +20,14 @@ package org.apache.james.smtpserver.jmx;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.Hook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -38,7 +37,7 @@ import org.apache.james.protocols.smtp.hook.HookResultHook;
  * {@link HookResultHook} implementation which will register a
  * {@link HookStatsMBean} under JMX for every Hook it processed
  */
-public class HookResultJMXMonitor implements HookResultHook, ExtensibleHandler, InitializingLifecycleAwareProtocolHandler {
+public class HookResultJMXMonitor implements HookResultHook, ExtensibleHandler, ProtocolHandler {
 
     private final Map<String, HookStats> hookStats = new HashMap<String, HookStats>();
     private String jmxPath;

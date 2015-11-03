@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -38,6 +40,16 @@ import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
  */
 public class StatCmdHandler implements CommandHandler<POP3Session> {
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("STAT"));
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     /**
      * Handler method called upon receipt of a STAT command. Returns the number

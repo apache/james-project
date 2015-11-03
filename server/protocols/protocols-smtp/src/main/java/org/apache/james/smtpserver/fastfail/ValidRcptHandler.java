@@ -19,13 +19,12 @@
 package org.apache.james.smtpserver.fastfail;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler;
@@ -39,7 +38,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 /**
  * Handler which reject invalid recipients
  */
-public class ValidRcptHandler extends AbstractValidRcptHandler implements InitializingLifecycleAwareProtocolHandler {
+public class ValidRcptHandler extends AbstractValidRcptHandler implements ProtocolHandler {
 
     private UsersRepository users;
 
@@ -65,7 +64,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Initia
      *            the users to set
      */
     @Inject
-    public final void setUsersRepository(@Named("usersrepository") UsersRepository users) {
+    public final void setUsersRepository(UsersRepository users) {
         this.users = users;
     }
 
@@ -81,7 +80,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Initia
     }
 
     @Inject
-    public void setDomainList(@Named("domainlist") DomainList domains) {
+    public void setDomainList(DomainList domains) {
         this.domains = domains;
     }
     

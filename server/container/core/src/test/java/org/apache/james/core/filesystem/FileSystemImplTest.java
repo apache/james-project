@@ -26,20 +26,7 @@ public class FileSystemImplTest extends AbstractFileSystemTest {
 
     @Override
     protected FileSystem buildFileSystem(String configurationRootDirectory) {
-        return new FileSystemImpl(new TestDirectoryProvider(configurationRootDirectory));
+        return new FileSystemImpl(new JamesServerResourceLoader(configurationRootDirectory));
     }
     
-    private class TestDirectoryProvider extends JamesServerResourceLoader {
-        private String configurationRootDirectory;
-
-        public TestDirectoryProvider(String configurationRootDirectory) {
-            this.configurationRootDirectory = configurationRootDirectory;
-        }
-
-        @Override
-        public String getRootDirectory() {
-            return configurationRootDirectory;
-        }
-    }
-
 }

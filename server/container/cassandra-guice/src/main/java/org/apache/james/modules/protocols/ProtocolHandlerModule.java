@@ -16,20 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.lib.lifecycle;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.protocols.api.handler.LifecycleAwareProtocolHandler;
+package org.apache.james.modules.protocols;
 
-public interface InitializingLifecycleAwareProtocolHandler extends LifecycleAwareProtocolHandler {
-    
-    /**
-     * Init with the given {@link Configuration}
-     * 
-     * @param config
-     * @throws ConfigurationException
-     */
-    public void init(Configuration config) throws ConfigurationException;
-    
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
+import org.apache.james.utils.GuiceProtocolHandlerLoader;
+
+import com.google.inject.AbstractModule;
+
+public class ProtocolHandlerModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(ProtocolHandlerLoader.class).to(GuiceProtocolHandlerLoader.class);
+    }
+
 }

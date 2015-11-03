@@ -24,9 +24,7 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.user.api.model.User;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 import java.util.ArrayList;
@@ -41,8 +39,7 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
     private UsersRepository usersRepository;
 
     @Inject
-    @Resource(name = "usersrepository")
-    public void setUsersRepository(@Named("usersrepository") UsersRepository usersRepository) {
+    public void setUsersRepository(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
 

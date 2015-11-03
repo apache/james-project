@@ -23,6 +23,8 @@ import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.elasticsearch.common.lang3.tuple.Pair;
 import org.elasticsearch.index.query.QueryBuilder;
+
+import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -36,6 +38,7 @@ public class QueryConverter implements Function<Pair<SearchQuery, String>, Query
 
     private final CriterionConverter criterionConverter;
 
+    @Inject
     public QueryConverter(CriterionConverter criterionConverter) {
         this.criterionConverter = criterionConverter;
     }

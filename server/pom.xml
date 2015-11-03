@@ -58,13 +58,14 @@
         <module>karaf/features</module>
         <module>karaf/integration</module>
 
-        <module>container/util</module>
+        <module>container/cassandra-guice</module>
         <module>container/cli</module>
-        <module>container/spring</module>
         <module>container/core</module>
+        <module>container/filesystem-api</module>
         <module>container/lifecycle-api</module>
         <module>container/mailbox-adapter</module>
-        <module>container/filesystem-api</module>
+        <module>container/spring</module>
+        <module>container/util</module>
 
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-camel</module>
@@ -200,7 +201,11 @@
                 <artifactId>james-server-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-cassandra-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>james-server-queue-api</artifactId>
@@ -524,7 +529,12 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-cassandra</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-cassandra</artifactId>
+                <version>${mailbox.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -535,13 +545,17 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+                <version>${mailbox.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-tika</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -697,6 +711,16 @@
                         <artifactId>activation</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-jsieve-manager-jsieve</artifactId>
+                <version>${jsieve.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-jsieve-manager-mailet</artifactId>
+                <version>${jsieve.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -883,8 +907,6 @@
                 <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
-
-
             <dependency>
                 <groupId>concurrent</groupId>
                 <artifactId>concurrent</artifactId>
@@ -1204,6 +1226,23 @@
                 <version>${pax-swissbox-tinybundles.version}</version>
             </dependency>
 
+            <!-- Guice dependencies -->
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-multibindings</artifactId>
+                <version>4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.onami.lifecycle</groupId>
+                <artifactId>org.apache.onami.lifecycle.jsr250</artifactId>
+                <version>0.2.0-SNAPSHOT</version>
+            </dependency>
+
             <!-- Apache Felix Karaf integration -->
             <dependency>
                 <groupId>org.apache.james.karaf</groupId>
@@ -1254,7 +1293,6 @@
                 <scope>test</scope>
                 <version>${hadoop.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>info.cukes</groupId>
                 <artifactId>cucumber-java</artifactId>
@@ -1275,6 +1313,11 @@
                 <artifactId>cucumber-picocontainer</artifactId>
                 <version>${cucumber.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.jayway.awaitility</groupId>
+                <artifactId>awaitility</artifactId>
+                <version>1.6.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

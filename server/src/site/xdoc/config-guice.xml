@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Guice configuration</title>
+ </properties>
+
+<body>
+
+  <section name="Guice configure Apache James Server">
+
+    <p>Such configuration is only developed for Cassandra backend.</p>
+    <p>You are encouraged to contribute by developing a new backend guice module.
+       Have a look to the <i>james-server-cassandra-guice</i> artifact.
+    </p>
+
+    <p>We provide a sample-configuration folder with needed files to run James. 
+      You can start by copying it and modify these files according to your needs.</p>
+
+    <p>You can/must configure James for the following:</p>
+
+    <table>
+
+      <tr>
+        <th>Config File Sample</th>
+        <th>Config Area</th>
+        <th>Config Comment</th>
+      </tr>
+
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a></td>
+        <td><a href="config-cassandra.html">Cassandra Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/dnsservice-template.xml">dnsservice.xml</a></td>
+        <td><a href="config-dnsservice.html">DNS Service Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/elasticsearch-template.properties">elasticsearch-template.properties</a></td>
+        <td><a href="config-elasticsearch.html">ElasticSearch Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/imapserver-template.xml">imapserver.xml</a></td>
+        <td><a href="config-imap4.html">IMAP4 Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/lmtpserver-template.xml">lmtpserver.xml</a></td>
+        <td><a href="config-smtp-lmtp.html">LMTP Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer.xml</a></td>
+        <td><a href="config-mailetcontainer.html">Mailet Container Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/pop3server-template.xml">pop3server.xml</a></td>
+        <td><a href="config-pop3.html">POP3 Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/smtpserver-template.xml">smtpserver.xml</a></td>
+        <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
+        <td></td>
+      </tr>
+
+    </table>
+
+    <p>See also more specific configurations related to <a href="config-ssl-tls.html">TLS</a>, 
+       <a href="config-sieve.html">Sieve</a> and 
+       <a href="config-antispam.html">Antispam</a>.</p>
+
+  </section>
+
+</body>
+
+</document>

@@ -20,6 +20,8 @@
 
 package org.apache.james.protocols.smtp.core;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.smtp.SMTPResponse;
@@ -57,5 +59,15 @@ public class WelcomeMessageHandler implements ConnectHandler<SMTPSession> {
 
     protected String getServiceType(SMTPSession session) {
         return SERVICE_TYPE;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
     }
 }

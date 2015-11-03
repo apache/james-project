@@ -19,7 +19,6 @@
 package org.apache.james.smtpserver.fastfail;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -29,7 +28,7 @@ import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
 import org.apache.james.jspf.impl.SPF;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -43,7 +42,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, InitializingLifecycleAwareProtocolHandler {
+public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, ProtocolHandler {
 
     /** This log is the fall back shared by all instances */
     private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(SPFHandler.class);
@@ -98,7 +97,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Initial
      *            The DNSService
      */
     @Inject
-    public void setDNSService(@Named("dnsservice") DNSService dnsService) {
+    public void setDNSService(DNSService dnsService) {
         spf = new SPF(dnsService, new SPFLogger());
     }
 

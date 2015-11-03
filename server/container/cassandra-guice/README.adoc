@@ -1,0 +1,45 @@
+= Guice-Cassandra Module How-to
+
+== Building
+
+=== Requirements
+
+ * Java 8 SDK
+ * Docker
+ * Maven
+
+=== Building the artifacts
+
+An usual compilation using maven will produce two artifacts into target directory :
+
+ * james-server-cassandra-guice-${version}.jar
+ * james-server-cassandra-guice-${version}.lib
+
+== Running
+
+=== Requirements
+
+ * Cassandra
+ * ElasticSearch 1.5.2
+
+=== James Launch
+
+To run james, you have to create a directory containing required configuration files.
+
+A sample directory (appropriately named sample-directory) is provided with some
+default value you may need to replace.
+
+You also need to generate a keystore with the following command :
+[source]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+You need to have a Cassandra and an ElasticSearch instance running.
+
+Once everything is set up, you just have to run the jar with :
+
+[source]
+----
+$ java -Dworking.directory=sample-configuration -jar target/james-server-cassandra-guice-${version}.jar
+----

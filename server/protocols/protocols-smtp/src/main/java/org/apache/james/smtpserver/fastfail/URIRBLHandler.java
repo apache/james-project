@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -37,7 +36,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -51,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * Extract domains from message and check against URIRBLServer. For more
  * informations see <a href="http://www.surbl.org">www.surbl.org</a>
  */
-public class URIRBLHandler implements JamesMessageHook, InitializingLifecycleAwareProtocolHandler {
+public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
 
     /** This log is the fall back shared by all instances */
     private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(URIRBLHandler.class);
@@ -88,7 +87,7 @@ public class URIRBLHandler implements JamesMessageHook, InitializingLifecycleAwa
      *            the dnsService to set
      */
     @Inject
-    public final void setDNSService(@Named("dnsservice") DNSService dnsService) {
+    public final void setDNSService(DNSService dnsService) {
         this.dnsService = dnsService;
     }
 

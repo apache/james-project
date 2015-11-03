@@ -23,7 +23,10 @@ import java.io.IOException;
 import java.util.Date;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -56,7 +59,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
     }
 
     @Inject
-    public final void setMailboxManager(MailboxManager mailboxManager) {
+    public final void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }
     
@@ -99,4 +102,13 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
         return result;
     }
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 }

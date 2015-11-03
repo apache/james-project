@@ -48,18 +48,23 @@ import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
+import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.mock.MockMailRepositoryStore;
 import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.mock.MockMailQueue;
 import org.apache.james.queue.api.mock.MockMailQueueFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.smtpserver.netty.SMTPServer;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.mock.MockUsersRepository;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
@@ -219,19 +224,18 @@ public class SMTPServerTest {
 
         chain = new MockProtocolHandlerLoader();
     
-        chain.put("usersrepository", usersRepository);
+        chain.put("usersrepository", UsersRepository.class, usersRepository);
     
         dnsServer = new AlterableDNSServer();
-        chain.put("dnsservice", dnsServer);
+        chain.put("dnsservice", DNSService.class, dnsServer);
     
         store = new MockMailRepositoryStore();
-        chain.put("mailStore", store);
+        chain.put("mailStore", MailRepositoryStore.class, store);
         fileSystem = new MockFileSystem();
     
-        chain.put("fileSystem", fileSystem);
-        chain.put("org.apache.james.smtpserver.protocol.DNSService", dnsService);
+        chain.put("fileSystem", FileSystem.class, fileSystem);
     
-        chain.put("recipientrewritetable", new RecipientRewriteTable() {
+        chain.put("recipientrewritetable", RecipientRewriteTable.class, new RecipientRewriteTable() {
     
             @Override
             public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
@@ -307,11 +311,10 @@ public class SMTPServerTest {
             }
         });
     
-        chain.put("org.apache.james.smtpserver.protocol.DNSService", dnsService);
         queueFactory = new MockMailQueueFactory();
         queue = (MockMailQueue) queueFactory.getQueue(MockMailQueueFactory.SPOOL);
-        chain.put("mailqueuefactory", queueFactory);
-        chain.put("domainlist", new SimpleDomainList() {
+        chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
+        chain.put("domainlist", DomainList.class, new SimpleDomainList() {
     
             @Override
             public boolean containsDomain(String serverName) {
@@ -1337,7 +1340,7 @@ public class SMTPServerTest {
         smtpProtocol.setSender(sender);
 
         smtpProtocol.addRecipient("mail@sample.com");
-        assertEquals("reject", 550, smtpProtocol.getReplyCode());
+        assertEquals("reject", 554, smtpProtocol.getReplyCode());
 
         smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testDNSRBLRejectWorks\r\n");
 

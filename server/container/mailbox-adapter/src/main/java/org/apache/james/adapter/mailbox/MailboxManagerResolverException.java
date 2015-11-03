@@ -20,8 +20,16 @@ package org.apache.james.adapter.mailbox;
 
 public class MailboxManagerResolverException extends RuntimeException {
 
+    public MailboxManagerResolverException() {
+        super();
+    }
+
     public MailboxManagerResolverException(Throwable cause) {
         super(cause);
+    }
+
+    public MailboxManagerResolverException(String message) {
+        super(message);
     }
 
 }

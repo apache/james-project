@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -37,9 +39,11 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
  * Handles QUIT command
  */
 public class QuitCmdHandler implements CommandHandler<POP3Session> {
+
     private static final Collection<String> COMMANDS = Collections.unmodifiableCollection(Arrays.asList("QUIT"));
     private static final Response SIGN_OFF;
     private static final Response SIGN_OFF_NOT_CLEAN;
+
     static {
         POP3Response response = new POP3Response(POP3Response.OK_RESPONSE, "Apache James POP3 Server signing off.");
         response.setEndSession(true);
@@ -49,6 +53,17 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
         response.setEndSession(true);
         SIGN_OFF_NOT_CLEAN = response.immutable();
     }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     /**
      * Handler method called upon receipt of a QUIT command. This method handles
      * cleanup of the POP3Handler state.

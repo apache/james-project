@@ -42,7 +42,6 @@ public class FileMailQueueFactory implements MailQueueFactory, LogEnabled {
     private boolean sync = true;
 
     @Inject
-    @Resource
     public void setFileSystem(FileSystem fs) {
         this.fs = fs;
     }

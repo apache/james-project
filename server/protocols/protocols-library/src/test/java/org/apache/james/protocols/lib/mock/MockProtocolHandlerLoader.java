@@ -25,6 +25,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
             ProtocolHandler obj = create(name);
             injectResources(obj);
             postConstruct(obj);
+            init(obj, config);
             synchronized (this) {
                 loaderRegistry.add(obj);
             }
@@ -35,13 +36,19 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
     }
 
     private final Map<String, Object> servicesByName = new HashMap<String, Object>();
+    private final Map<Class<?>, Object> servicesByType = new HashMap<Class<?>, Object>();
+    
     public Object get(String name) {
-        Object service = servicesByName.get(name);
-        return service;
+        return servicesByName.get(name);
     }
 
-    public void put(String role, Object service) {
-        servicesByName.put(role, service);
+    public Object get(Class<?> type) {
+        return servicesByType.get(type);
+    }
+    
+    public <T, U extends T> void put(String role, Class<T> serviceType, U instance) {
+        servicesByName.put(role, instance);
+        servicesByType.put(serviceType, instance);
     }
 
     private final List<Object> loaderRegistry = new ArrayList<Object>();
@@ -96,6 +103,7 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
         for (Method method : methods) {
             final Inject injectAnnotation = method.getAnnotation(Inject.class);
             if (injectAnnotation != null) {
+                Object service = null;
                 String name = null;
                 Annotation[][] paramAnnotations = method.getParameterAnnotations();
                 if (paramAnnotations.length == 1) {
@@ -105,30 +113,47 @@ public class MockProtocolHandlerLoader implements ProtocolHandlerLoader{
                         }
                     }
                 }
-                if (name == null) {
-                    throw new UnsupportedOperationException("@Inject annotation without @Named specified is not supported by this implementation");
-                } else {
+                if (name != null) {
                     // Name indicates a service
-                    final Object service = getObjectForName(name);
-                    if (service == null) {
-                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource name " + name + ", because no mapping was found");
-                    } else {
-                        try {
-                            Object[] args = { service };
-                            method.invoke(resource, args);
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                        } catch (IllegalArgumentException e) {
-                            throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                        } catch (InvocationTargetException e) {
-                            throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
-                        }
+                    service = get(name);
+                }
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                if (parameterTypes.length == 1) {
+                    service = get(parameterTypes[0]);
+                }
+                if (service != null) {
+                    try {
+                        Object[] args = { service };
+                        method.invoke(resource, args);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
+                    } catch (IllegalArgumentException e) {
+                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
+                    } catch (InvocationTargetException e) {
+                        throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource " + service, e);
                     }
+                } else {
+                    throw new RuntimeException("Injection failed for object " + resource + " on method " + method + " with resource name " + name + ", because no mapping was found");
                 }
             }
         }
     }
 
+    private void init(Object resource, Configuration config) throws IllegalAccessException, InvocationTargetException {
+        Method[] methods = resource.getClass().getMethods();
+        for (Method method : methods) {
+            if (isInit(method)) {
+                Object[] args = { config };
+                method.invoke(resource, args);
+            }
+        }
+    }
+    private boolean isInit(Method method) {
+        return method.getName().equals("init")
+            && method.getParameterTypes().length == 1
+            && method.getParameterTypes()[0].equals(Configuration.class);
+    }
+    
     public Object getObjectForName(String name) {
         return get(name);
     }

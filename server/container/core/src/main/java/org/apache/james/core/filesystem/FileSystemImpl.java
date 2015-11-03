@@ -23,14 +23,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 
+@Singleton
 public class FileSystemImpl implements FileSystem {
 
     private final JamesDirectoriesProvider directoryProvider;
     private final ResourceFactory resourceLoader;
 
+    @Inject
     public FileSystemImpl(JamesDirectoriesProvider directoryProvider) {
         this.directoryProvider = directoryProvider;
         this.resourceLoader = new ResourceFactory(directoryProvider);

@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.sql.DataSource;
 
 import org.apache.commons.configuration.Configuration;
@@ -41,7 +40,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.protocols.lib.lifecycle.InitializingLifecycleAwareProtocolHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler;
@@ -56,7 +55,7 @@ import org.slf4j.LoggerFactory;
 /**
  * GreylistHandler which can be used to activate Greylisting
  */
-public class JDBCGreylistHandler extends AbstractGreylistHandler implements InitializingLifecycleAwareProtocolHandler {
+public class JDBCGreylistHandler extends AbstractGreylistHandler implements ProtocolHandler {
 
     /** This log is the fall back shared by all instances */
     private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(JDBCGreylistHandler.class);
@@ -170,7 +169,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Init
     }
 
     @Inject
-    public final void setDNSService(@Named("dnsservice") DNSService dnsService) {
+    public final void setDNSService(DNSService dnsService) {
         this.dnsService = dnsService;
     }
 

@@ -77,14 +77,17 @@ public final class CassandraCluster {
 
     private Optional<Session> tryInitializeSession() {
         try {
-            Cluster cluster = ClusterFactory.createClusterForSingleServerWithoutPassWord(CLUSTER_IP, CLUSTER_PORT_TEST);
             Cluster clusterWithInitializedKeyspace = ClusterWithKeyspaceCreatedFactory
-                .clusterWithInitializedKeyspace(cluster, KEYSPACE_NAME, REPLICATION_FACTOR);
+                .clusterWithInitializedKeyspace(getCluster(), KEYSPACE_NAME, REPLICATION_FACTOR);
             return Optional.of(new SessionWithInitializedTablesFactory(module).createSession(clusterWithInitializedKeyspace, KEYSPACE_NAME));
         } catch (NoHostAvailableException exception) {
             sleep(SLEEP_BEFORE_RETRY);
             return Optional.empty();
         }
+    }
+
+    public Cluster getCluster() {
+        return ClusterFactory.createClusterForSingleServerWithoutPassWord(CLUSTER_IP, CLUSTER_PORT_TEST);
     }
 
     private void sleep(long sleepMs) {

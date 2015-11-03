@@ -24,6 +24,8 @@ import static junit.framework.Assert.assertEquals;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.MailAddress;
 import org.apache.james.protocols.smtp.MailAddressException;
@@ -36,7 +38,17 @@ public class ValidSenderDomainHandlerTest {
     
     private ValidSenderDomainHandler createHandler() {
         return new ValidSenderDomainHandler() {
-            
+
+            @Override
+            public void init(Configuration config) throws ConfigurationException {
+
+            }
+
+            @Override
+            public void destroy() {
+
+            }
+
             @Override
             protected boolean hasMXRecord(SMTPSession session, String domain) {
                 if (domain.equals("test.james.apache.org")) {

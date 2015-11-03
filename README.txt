@@ -57,30 +57,29 @@ First step, you have to build the Docker image
 $ docker build -t james/project dockerfiles/compilation/java-6
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/destination:/destination -t james/project -s SHA1
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
 
 Where:
 
 - $PWD/.m2:/root/.m2: is the first volume used to share the maven repository, 
 as we don't want to download all dependencies on each build
-- $PWD/dockerfiles/destination:/destination: is the third volume used to get the compiled elements, 
+- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements, 
 as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or trunk if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
-
 
 * Java 8
 First step, you have to build the Docker image
 $ docker build -t james/project dockerfiles/compilation/java-8
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/destination:/destination -t james/project -s SHA1
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
 
 Where:
 
 - $PWD/.m2:/root/.m2: is the first volume used to share the maven repository, 
 as we don't want to download all dependencies on each build
-- $PWD/dockerfiles/destination:/destination: is the third volume used to get the compiled elements, 
+- $PWD/dockerfiles/run/spring/destination:/destination: is the third volume used to get the compiled elements, 
 as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or trunk if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
@@ -92,7 +91,7 @@ This feature is only available for Java 8 / Cassandra mailbox backend yet.
 
 
 * Requirements
-You should have the zip resulting of the build in the ./dockerfiles/destination folder.
+You should have the zip resulting of the build in the ./dockerfiles/run/spring/destination folder.
 
 
 * Howto ?
@@ -104,11 +103,11 @@ $ docker run -d --name=elasticsearch elasticsearch:1.5.2
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
-Copy your TSL keys to destination/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
-$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/destination/conf/keystore
+Copy your TSL keys to destination/run/spring/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
+$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/spring/destination/conf/keystore
 
 Then we need to build james container :
-$ docker build -t james_run dockerfiles
+$ docker build -t james_run dockerfiles/run/spring/
 
 To run this container :
 $ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
@@ -158,6 +157,16 @@ Where :
 - WORKDIR: is the absolute path to your james-parent workdir.
 
 Beware : you will have concurrency issues if multiple containers are running on this single volume.
+
+
+How to run James in Docker using guice container
+================================================
+
+You have to follow above documentation and replace spring by guice in paths.
+
+Once you run the container, you have to use the following command to launch the cli :
+
+$ docker exec james_run java -jar /root/james-cli.jar -h localhost <command>
 
 
 Running deployement Tests
