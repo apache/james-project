@@ -44,18 +44,14 @@ Step 1: Download
 
   * Clone the James git repository
 
-<i>$ git clone git://git.apache.org/james.git</i>
-
-  * Then go to the James folder
-  
-<i>$ cd james</i>
+<i>$ git clone git://git.apache.org/james-project.git</i>
 
 Step 3: Compile
 ###############
 
   * Compile the Guice Cassandra project
   
-<i>$ mvn package -DskipTests</i>
+<i>$ mvn package -DskipTests -am -pl server/container/cassandra-guice</i>
 
 Step 3: Deploy
 ##############
@@ -80,14 +76,14 @@ Copy your TSL keys to ./conf/keystore or generate it using :
 
 <i>$ keytool -genkey -alias james -keyalg RSA -keystore ./conf/keystore</i>
 
-Configure your domain in the ./conf/domainlist.xml file.
+I will have to put the keystore password in the right xml files (imapserver.xml, pop3server.xml, smtpserver.xml)
 
 Step 5: Start
 #############
 
   * Run James
 
-<i>$ java -Dworking.directory=<b>WORKING_PATH</b> -jar container/cassandra-guice/target/james-server-cassandra-guice-beta5-SNAPSHOT.jar</i>
+<i>$ java -Dworking.directory=<b>WORKING_PATH</b> -jar server/container/cassandra-guice/target/james-server-cassandra-guice-beta5-SNAPSHOT.jar</i>
 
 Where :
 - <b>WORKING_PATH</b> is the path where are located your configuration file folder.
@@ -97,13 +93,12 @@ Step 6: Create Domains and Users
 
 Time to add domains and users.
 
-Give enough rights to the James CLI
+<i>$ java -jar server/container/cli/target/james-server-cli-3.0.0-beta5-SNAPSHOT.jar -h 127.0.0.1 -p 9999  adddomain <b>DOMAIN</b></i>
 
-<i>$ chmod 755 app/target/appassembler/bin/james-cli.sh</i>
-
-<i>$ ./app/target/appassembler/bin/james-cli.sh -h 127.0.0.1 -p 9999  adduser <b>USER_MAIL_ADDRESS</b> <b>PASSWORD</b></i>
+<i>$ java -jar server/container/cli/target/james-server-cli-3.0.0-beta5-SNAPSHOT.jar -h 127.0.0.1 -p 9999  adduser <b>USER_MAIL_ADDRESS</b> <b>PASSWORD</b></i>
 
 Where :
+- <b>DOMAIN</b> is the domain you want to handle with this server.
 - <b>USER_MAIL_ADDRESS</b> is the mail address that will be used by this user.
 - <b>PASSWORD</b> is the password that will be used by this user.
 
@@ -140,7 +135,7 @@ Step 8: Manage
 8.1. Manage via james-cli
 
   usage: 
-<i>$ docker exec james-cassandra /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh -h 127.0.0.1 -p 9999</i>
+<i>$ java -jar server/container/cli/target/james-server-cli-3.0.0-beta5-SNAPSHOT.jar -h 127.0.0.1 -p 9999</i>
 
   Available commands:
     adduser &lt;/username&gt; &lt;/password&gt;
