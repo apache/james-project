@@ -48,10 +48,6 @@ public class SendMailHandler implements JamesMessageHook {
         this.queueFactory = queueFactory;
     }
 
-    public void init() {
-
-    }
-
     @Override
     public void init(Configuration config) throws ConfigurationException {
         queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
