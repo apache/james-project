@@ -44,12 +44,10 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
-import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -162,8 +160,6 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private static final Pattern PATTERN = Patterns.compilePatternUncheckedException(PATTERN_STRING);
 
     @Inject
-    @Named("dnsservice")
-    @Resource
     private DNSService dnsServer;
 
     /**
@@ -265,12 +261,12 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
     private boolean isSSLEnable = false;
 
     @Inject
-    public void setDomainList(@Named("domainlist") DomainList domainList) {
+    public void setDomainList(DomainList domainList) {
         this.domainList = domainList;
     }
 
     @Inject
-    public void setMailQueueFactory(@Named("mailqueuefactory") MailQueueFactory queueFactory) {
+    public void setMailQueueFactory(MailQueueFactory queueFactory) {
         this.queueFactory = queueFactory;
     }
 

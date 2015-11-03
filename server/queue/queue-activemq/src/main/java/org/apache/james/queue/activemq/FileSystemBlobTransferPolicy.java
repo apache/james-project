@@ -18,9 +18,7 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.activemq.blob.BlobDownloadStrategy;
 import org.apache.activemq.blob.BlobTransferPolicy;
@@ -39,8 +37,7 @@ public class FileSystemBlobTransferPolicy extends BlobTransferPolicy {
     private FileSystemBlobStrategy strategy;
 
     @Inject
-    @Resource(name = "filesystem")
-    public void setFileSystem(@Named("filesystem") FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 

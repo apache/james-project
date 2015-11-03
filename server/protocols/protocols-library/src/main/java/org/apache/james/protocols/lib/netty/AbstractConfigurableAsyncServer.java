@@ -31,7 +31,6 @@ import java.util.concurrent.Executor;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.net.ssl.KeyManagerFactory;
@@ -117,7 +116,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private MBeanServer mbeanServer;
 
     @Inject
-    public final void setFileSystem(@Named("filesystem") FileSystem filesystem) {
+    public final void setFileSystem(FileSystem filesystem) {
         this.fileSystem = filesystem;
     }
 

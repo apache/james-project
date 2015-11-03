@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.management.NotCompliantMBeanException;
@@ -48,7 +47,6 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
     private Logger log;
 
     @Inject
-    @Resource(name = "mailboxmanager")
     public void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }

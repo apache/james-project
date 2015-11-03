@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -88,7 +87,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
      *            the dnsService to set
      */
     @Inject
-    public final void setDNSService(@Named("dnsservice") DNSService dnsService) {
+    public final void setDNSService(DNSService dnsService) {
         this.dnsService = dnsService;
     }
 

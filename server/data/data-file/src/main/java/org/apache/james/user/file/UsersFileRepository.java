@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
@@ -52,6 +52,7 @@ import org.apache.james.user.lib.AbstractJamesUsersRepository;
  * </p>
  */
 @Deprecated
+@Singleton
 public class UsersFileRepository extends AbstractJamesUsersRepository {
 
     /**
@@ -69,7 +70,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
     private FileSystem fileSystem;
 
     @Inject
-    public void setFileSystem(@Named("filesystem") FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 

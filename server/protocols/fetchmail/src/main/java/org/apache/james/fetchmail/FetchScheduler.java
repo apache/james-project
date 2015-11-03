@@ -70,25 +70,21 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
     private DomainList domainList;
 
     @Inject
-    @Resource
     public void setMailQueueFactory(MailQueueFactory queueFactory) {
         this.queueFactory = queueFactory;
     }
 
     @Inject
-    @Resource
     public void setDNSService(DNSService dns) {
         this.dns = dns;
     }
 
     @Inject
-    @Resource
     public void setUsersRepository(UsersRepository urepos) {
         this.urepos = urepos;
     }
 
     @Inject
-    @Resource
     public void setDomainList(DomainList domainList) {
         this.domainList = domainList;
     }

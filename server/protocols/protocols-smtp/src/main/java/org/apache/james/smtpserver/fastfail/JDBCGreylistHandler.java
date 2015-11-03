@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.sql.DataSource;
 
 import org.apache.commons.configuration.Configuration;
@@ -170,7 +169,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     }
 
     @Inject
-    public final void setDNSService(@Named("dnsservice") DNSService dnsService) {
+    public final void setDNSService(DNSService dnsService) {
         this.dnsService = dnsService;
     }
 

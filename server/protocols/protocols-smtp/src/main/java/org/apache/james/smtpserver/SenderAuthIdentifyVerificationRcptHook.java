@@ -19,7 +19,6 @@
 package org.apache.james.smtpserver;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -42,12 +41,12 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     private UsersRepository users;
 
     @Inject
-    public final void setUsersRepository(@Named("usersrepository") UsersRepository users) {
+    public final void setUsersRepository(UsersRepository users) {
         this.users = users;
     }
 
     @Inject
-    public void setDomainList(@Named("domainlist") DomainList domains) {
+    public void setDomainList(DomainList domains) {
         this.domains = domains;
     }
 

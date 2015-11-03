@@ -19,9 +19,7 @@
 
 package org.apache.james.adapter.mailbox.store;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailbox.store.Authenticator;
@@ -39,8 +37,7 @@ public class UserRepositoryAuthenticator implements Authenticator, LogEnabled {
     private Logger log;
 
     @Inject
-    @Resource(name = "usersrepository")
-    public void setUsersRepository(@Named("usersrepository") UsersRepository repos) {
+    public void setUsersRepository(UsersRepository repos) {
         this.repos = repos;
     }
 
