@@ -30,6 +30,12 @@ public class PropertiesReadTest {
         PropertiesReader propertiesReader = new PropertiesReader("test.properties");
         assertThat(propertiesReader.getProperty("cassandra.ip")).isEqualTo("127.0.0.1");
     }
+    
+    @Test
+    public void getAbsentPropertyShouldReturnNull() throws Exception {
+        PropertiesReader propertiesReader = new PropertiesReader("test.properties");
+        assertThat(propertiesReader.getProperty("cassandra.isslow")).isNull();
+    }
 
     @Test(expected = RuntimeException.class)
     public void buildingAPropertiesReaderOnNonExistingValuesShouldThrow() throws Exception {
