@@ -76,7 +76,7 @@ Copy your TSL keys to ./conf/keystore or generate it using :
 
 <i>$ keytool -genkey -alias james -keyalg RSA -keystore ./conf/keystore</i>
 
-I will have to put the keystore password in the right xml files (imapserver.xml, pop3server.xml, smtpserver.xml)
+You will have to put the keystore password in the right xml files (imapserver.xml, pop3server.xml, smtpserver.xml)
 
 Step 5: Start
 #############
