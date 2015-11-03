@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.CommonServicesModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
@@ -35,7 +36,6 @@ import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.ConfigurationPerformerModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
-import org.apache.james.modules.server.FileSystemModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.modules.server.QuotaModule;
@@ -47,8 +47,9 @@ import com.google.inject.util.Modules;
 public class CassandraJamesServerMain {
 
     public static final Module defaultModule = Modules.combine(
-            new CassandraMailboxModule(),
+            new CommonServicesModule(),
             new ConfigurationPerformerModule(),
+            new CassandraMailboxModule(),
             new CassandraSessionModule(),
             new ElasticSearchMailboxModule(),
             new CassandraUsersRepositoryModule(),
@@ -61,7 +62,6 @@ public class CassandraJamesServerMain {
             new SMTPServerModule(),
             new LMTPServerModule(),
             new ActiveMQQueueModule(),
-            new FileSystemModule(),
             new SieveModule(),
             new MailStoreRepositoryModule(),
             new CamelMailetContainerModule(),
@@ -70,8 +70,8 @@ public class CassandraJamesServerMain {
 
     public static void main(String[] args) throws Exception {
         CassandraJamesServer server = new CassandraJamesServer(Modules.combine(
-            defaultModule,
-            new JMXServerModule()));
+                defaultModule,
+                new JMXServerModule()));
         server.start();
     }
 
