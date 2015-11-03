@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMapper;
@@ -45,6 +46,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraTypesProvider typesProvider;
     private int maxRetry;
 
+    @Inject
     public CassandraMailboxSessionMapperFactory(UidProvider<CassandraId> uidProvider, ModSeqProvider<CassandraId> modSeqProvider, Session session, CassandraTypesProvider typesProvider) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
