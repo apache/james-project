@@ -18,27 +18,36 @@
  ****************************************************************/
 package org.apache.james.user.lib;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Iterator;
-import junit.framework.Assert;
+
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.junit.After;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+
+import junit.framework.Assert;
 
 /**
  * Test basic behaviors of UsersFileRepository
  */
 public abstract class AbstractUsersRepositoryTest {
 
+    private static final String DOMAIN = "domain";
     /**
      * Users repository
      */
-    protected UsersRepository usersRepository;
+    protected AbstractUsersRepository usersRepository;
 
     /**
      * Create the repository to be tested.
@@ -46,14 +55,24 @@ public abstract class AbstractUsersRepositoryTest {
      * @return the user repository
      * @throws Exception
      */
-    protected abstract UsersRepository getUsersRepository() throws Exception;
+    protected abstract AbstractUsersRepository getUsersRepository() throws Exception;
 
+    private String user1;
+    private String user2;
+    private String user3;
+    
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Before
     public void setUp() throws Exception {
         this.usersRepository = getUsersRepository();
+        SimpleDomainList domainList = new SimpleDomainList();
+        domainList.addDomain(DOMAIN);
+        usersRepository.setDomainList(domainList);
+        user1 = login("username");
+        user2 = login("username2");
+        user3 = login("username3");
     }
 
     /**
@@ -64,6 +83,14 @@ public abstract class AbstractUsersRepositoryTest {
         disposeUsersRepository();
     }
 
+    private String login(String login) throws UsersRepositoryException {
+        if (usersRepository.supportVirtualHosting()) {
+            return login + '@' + DOMAIN;
+        } else {
+            return login;
+        }
+    }
+    
     @Test
     public void testUsersRepositoryEmpty() throws UsersRepositoryException {
         assertEquals("users repository not empty", 0, usersRepository.countUsers());
@@ -72,44 +99,44 @@ public abstract class AbstractUsersRepositoryTest {
 
     @Test
     public void testAddUserOnce() throws UsersRepositoryException {
-        usersRepository.addUser("username", "password");
+        usersRepository.addUser(user1, "password");
         try {
-            usersRepository.addUser("username", "password2");
+            usersRepository.addUser(user1, "password2");
             fail("User added twice!");
         } catch (UsersRepositoryException e) {
             // UsersRepositoryException must be thrown by implementation.
         }
         try {
-            usersRepository.addUser("username2", "password2");
-            assertTrue(usersRepository.contains("username2"));
-            usersRepository.addUser("username3", "password3");
-            assertTrue(usersRepository.contains("username3"));
+            usersRepository.addUser(user2, "password2");
+            assertTrue(usersRepository.contains(user2));
+            usersRepository.addUser(user3, "password3");
+            assertTrue(usersRepository.contains(user3));
         } catch (UnsupportedOperationException e) {
         }
     }
 
     @Test
     public void testUserAddedIsFound() throws UsersRepositoryException {
-        usersRepository.addUser("username", "password");
-        User user = usersRepository.getUserByName("username");
+        usersRepository.addUser(user1, "password");
+        User user = usersRepository.getUserByName(user1);
         assertNotNull(user);
-        assertEquals("username does not match", user.getUserName(), "username");
-        assertTrue("user not contained in the repository", usersRepository.contains("username"));
+        assertEquals("username does not match", user.getUserName(), user1);
+        assertTrue("user not contained in the repository", usersRepository.contains(user1));
 
         User u = usersRepository.getUserByName("uSERNAMe");
         assertNull("found the user searching for a different case!", u);
 
         // String realname = usersRepository.getRealName("uSERNAMe");
         // assertNull("name is not null", realname);
-        // assertEquals("name is different", "username", realname);
+        // assertEquals("name is different", user1, realname);
     }
 
     @Test
     public void testUserListing() throws UsersRepositoryException {
         ArrayList<String> keys = new ArrayList<String>(3);
-        keys.add("username1");
-        keys.add("username2");
-        keys.add("username3");
+        keys.add(user1);
+        keys.add(user2);
+        keys.add(user3);
         for (String username : keys) {
             usersRepository.addUser(username, username);
         }
@@ -133,9 +160,9 @@ public abstract class AbstractUsersRepositoryTest {
 
     @Test
     public void testUpperCaseSameUser() throws UsersRepositoryException {
-        usersRepository.addUser("myUsername", "password");
+        usersRepository.addUser(login("myUsername"), "password");
         try {
-            usersRepository.addUser("MyUsername", "password");
+            usersRepository.addUser(login("MyUsername"), "password");
             Assert.fail("We should not be able to insert same users, even with different cases");
         } catch (UsersRepositoryException e) {
             Assert.assertTrue("The exception message must contain the username value but was=" + e.getMessage(), e.
@@ -145,48 +172,47 @@ public abstract class AbstractUsersRepositoryTest {
 
     @Test
     public void testUserPassword() throws UsersRepositoryException {
-        usersRepository.addUser("username", "password");
-        assertEquals("didn't accept the correct password ", usersRepository.test("username", "password"),
+        usersRepository.addUser(user1, "password");
+        assertEquals("didn't accept the correct password ", usersRepository.test(user1, "password"),
                 getPasswordsEnabled());
-        assertFalse("accepted the wrong password #1", usersRepository.test("username", "password2"));
+        assertFalse("accepted the wrong password #1", usersRepository.test(user1, "password2"));
         assertFalse("accepted the wrong password #2", usersRepository.test("username2", "password"));
-        assertFalse("accepted the wrong password #3", usersRepository.test("username", "Password"));
-        assertFalse("accepted the wrong password #4", usersRepository.test("username", "passwords"));
+        assertFalse("accepted the wrong password #3", usersRepository.test(user1, "Password"));
+        assertFalse("accepted the wrong password #4", usersRepository.test(user1, "passwords"));
         assertFalse("accepted the wrong password #5", usersRepository.test("userName", "password"));
     }
 
     @Test
     public void testUserAddRemoveCycle() throws UsersRepositoryException {
-        assertFalse("accepted login when no user existed", usersRepository.test("username", "password"));
+        assertFalse("accepted login when no user existed", usersRepository.test(user1, "password"));
         try {
-            usersRepository.removeUser("username");
+            usersRepository.removeUser(user1);
             // UsersFileRepository accept this call for every argument
             // fail("removing an unknown user didn't fail!");
         } catch (UsersRepositoryException e) {
             // Do nothing, we should come here if test works.
         }
-        usersRepository.addUser("username", "password");
-        assertEquals("didn't accept the correct password", usersRepository.test("username", "password"),
-                getPasswordsEnabled());
-        User user = usersRepository.getUserByName("username");
+        usersRepository.addUser(user1, "password");
+        assertEquals("didn't accept the correct password", getPasswordsEnabled(), usersRepository.test(user1, "password"));
+        User user = usersRepository.getUserByName(user1);
         user.setPassword("newpass");
         try {
             usersRepository.updateUser(user);
-            assertEquals("new password accepted", usersRepository.test("username", "newpass"), getPasswordsEnabled());
-            assertFalse("old password rejected", usersRepository.test("username", "password"));
+            assertEquals("new password accepted", getPasswordsEnabled(), usersRepository.test(user1, "newpass"));
+            assertFalse("old password rejected", usersRepository.test(user1, "password"));
         } catch (UnsupportedOperationException e) {
             // if updating users is not allowed check that this is a repository
             // without password checking
             assertFalse(getPasswordsEnabled());
         }
         try {
-            usersRepository.removeUser("username");
+            usersRepository.removeUser(user1);
         } catch (Exception e) {
             e.printStackTrace();
             fail("removing the user failed!");
         }
-        assertFalse("user not existing", usersRepository.contains("username"));
-        assertFalse("new password rejected", usersRepository.test("username", "newpass"));
+        assertFalse("user not existing", usersRepository.contains(user1));
+        assertFalse("new password rejected", usersRepository.test(user1, "newpass"));
         try {
             usersRepository.updateUser(user);
             fail();

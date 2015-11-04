@@ -19,9 +19,10 @@
 package org.apache.james.user.jpa;
 
 import java.util.HashMap;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.model.JPAUser;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.apache.openjpa.persistence.OpenJPAEntityManager;
 import org.apache.openjpa.persistence.OpenJPAEntityManagerFactory;
@@ -76,7 +77,7 @@ public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Override
-    protected UsersRepository getUsersRepository() throws Exception {
+    protected AbstractUsersRepository getUsersRepository() throws Exception {
         factory = OpenJPAPersistence.getEntityManagerFactory(properties);
         JPAUsersRepository repos = new JPAUsersRepository();
         repos.setLog(LoggerFactory.getLogger("JPA"));

@@ -20,13 +20,13 @@ package org.apache.james.user.hbase;
 
 import java.io.IOException;
 import java.util.Iterator;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.system.hbase.TablePool;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class HBaseUsersRepositoryTest extends AbstractUsersRepositoryTest {
      * @see org.apache.james.user.lib.AbstractUsersRepositoryTest#getUsersRepository()
      */
     @Override
-    protected UsersRepository getUsersRepository() throws Exception {
+    protected AbstractUsersRepository getUsersRepository() throws Exception {
         HBaseUsersRepository userRepository = new HBaseUsersRepository();
         userRepository.setLog(LoggerFactory.getLogger("MockLog"));
         userRepository.configure(new DefaultConfigurationBuilder());

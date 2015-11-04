@@ -19,17 +19,18 @@
 
 package org.apache.james.user.jdbc;
 
+import java.util.Iterator;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.util.Iterator;
 
 /**
  * Test basic behaviors of UsersFileRepository
@@ -43,7 +44,7 @@ public class JamesUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryTes
      * @throws Exception
      */
     @Override
-    protected UsersRepository getUsersRepository() throws Exception {
+    protected AbstractUsersRepository getUsersRepository() throws Exception {
         JamesUsersJdbcRepository res = new JamesUsersJdbcRepository();
         String tableString = "jamesusers";
         configureAbstractJdbcUsersRepository(res, tableString);

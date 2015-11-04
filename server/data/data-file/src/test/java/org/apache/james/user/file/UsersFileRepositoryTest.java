@@ -30,8 +30,8 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
 import org.junit.Before;
@@ -68,7 +68,7 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
      * @throws Exception
      */
     @Override
-    protected UsersRepository getUsersRepository() throws Exception {
+    protected AbstractUsersRepository getUsersRepository() throws Exception {
         FileSystem fs = new FileSystem() {
 
             @Override

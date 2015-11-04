@@ -28,8 +28,8 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -44,7 +44,7 @@ public class DefaultUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryT
      * @throws Exception
      */
     @Override
-    protected UsersRepository getUsersRepository() throws Exception {
+    protected AbstractUsersRepository getUsersRepository() throws Exception {
         DefaultUsersJdbcRepository res = new DefaultUsersJdbcRepository();
         String tableString = "defusers";
         configureAbstractJdbcUsersRepository(res, tableString);

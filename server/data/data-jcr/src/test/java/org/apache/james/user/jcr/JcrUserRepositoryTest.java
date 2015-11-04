@@ -25,7 +25,7 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
 import org.junit.Before;
@@ -40,7 +40,7 @@ public class JcrUserRepositoryTest extends AbstractUsersRepositoryTest {
     private RepositoryImpl repository;
 
     @Override
-    protected UsersRepository getUsersRepository() throws Exception {
+    protected AbstractUsersRepository getUsersRepository() throws Exception {
         JCRUsersRepository repos = new JCRUsersRepository();
         repos.setRepository(repository);
         DefaultConfigurationBuilder config = new DefaultConfigurationBuilder();
