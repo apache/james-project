@@ -54,7 +54,7 @@ public final class CassandraCluster {
     private CassandraCluster(CassandraModule module) throws RuntimeException {
         this.module = module;
         try {
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra();
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra(20000L);
 
             session = new FunctionRunnerWithRetry(MAX_RETRY)
                 .executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
