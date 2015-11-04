@@ -55,6 +55,7 @@ public final class CassandraCluster {
         this.module = module;
         try {
             EmbeddedCassandraServerHelper.startEmbeddedCassandra();
+
             session = new FunctionRunnerWithRetry(MAX_RETRY)
                 .executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
             typesProvider = new CassandraTypesProvider(module, session);
