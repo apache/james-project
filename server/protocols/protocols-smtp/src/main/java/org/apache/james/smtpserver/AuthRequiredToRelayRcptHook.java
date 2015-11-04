@@ -45,6 +45,16 @@ public class AuthRequiredToRelayRcptHook extends AbstractAuthRequiredToRelayRcpt
 
     }
 
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
     /**
      * @see org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook#isLocalDomain(java.lang.String)
      */
