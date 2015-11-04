@@ -36,6 +36,9 @@
 
    <subsection name='2015'>
 
+     <a name="20151026"><h4>Oct 2015 - Guice injection for Cassandra backend</h4></a>
+     <p>Guice injection is now available in a new <a href="https://github.com/apache/james-project/tree/trunk/server/container/cassandra-guice/">Java project</a>. Feel free to try it!</p>
+
      <a name="20150926"><h4>Sep 2015 - Apache James Server 2.3.2.1 released</h4></a>
      <p>This release fixes a security vulnerability - Users are invited to upgrade (read <a href="https://blogs.apache.org/james/entry/apache_james_server_2_3">annouce on the Apache James blog</a>).</p>
 

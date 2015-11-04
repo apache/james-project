@@ -389,6 +389,10 @@
 
       <subsection name="News">
         <ul>
+          <li>Oct/2015 - <ul>
+          <li><a href="newsarchive.html#20151026"><strong>Guice injection for Cassandra backend</strong> Guice injection is now available in a new Java project.</a></li>
+          </ul>
+          </li>
           <li>Sep/2015 - <ul>
           <li><a href="newsarchive.html#20150926"><strong>Apache James Server 2.3.2.1</strong> fixes a security issue - Please upgrade!!!</a></li>
           </ul>
