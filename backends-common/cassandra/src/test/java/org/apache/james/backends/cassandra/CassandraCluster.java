@@ -88,7 +88,7 @@ public final class CassandraCluster {
     }
 
     public Cluster getCluster() {
-        return ClusterFactory.createClusterForSingleServerWithoutPassWord(CLUSTER_IP, CLUSTER_PORT_TEST);
+        return ClusterFactory.createTestingCluster(CLUSTER_IP, CLUSTER_PORT_TEST);
     }
 
     private void sleep(long sleepMs) {
