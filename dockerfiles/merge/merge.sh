@@ -15,9 +15,16 @@ fi
 SHA1=$1
 RESULTING_BRANCH=$2
 
+APACHE_REPO=`git remote show | grep apache || true`
+if [ -z "$APACHE_REPO" ]; then
+    git remote add apache https://github.com/apache/james-project.git
+fi 
+git fetch apache
+git checkout apache/trunk -b trunk
+
 git fetch origin
-git checkout trunk
 git checkout $SHA1 -b SHA1_BRANCH
+
 git checkout trunk
 git checkout -b $RESULTING_BRANCH
 git merge --no-edit SHA1_BRANCH
