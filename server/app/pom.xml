@@ -413,6 +413,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-mailbox-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>apache-james-mailbox-spring</artifactId>
             <scope>runtime</scope>
             <exclusions>

@@ -36,6 +36,7 @@
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
+        <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
     <bean id ="jcr-subscriptionManager" class="org.apache.james.mailbox.jcr.JCRSubscriptionManager">
         <constructor-arg index="0" ref="jcr-sessionMapperFactory"/>
@@ -80,5 +81,7 @@
         <constructor-arg index="1" value="var/store/jackrabbit" />
     </bean>
     <alias name="jvm-locker" alias="jcr-locker"/>
+
+    <bean id="jcr-mailbox-id-deserializer" class="org.apache.james.mailbox.jcr.JCRMailboxIdDeserializer"/>
 
 </beans>

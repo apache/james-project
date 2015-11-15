@@ -34,6 +34,14 @@ import org.apache.james.mailbox.model.UpdatedFlags;
  */
 public interface MailboxListener {
 
+    enum ListenerType {
+        ONCE,
+        EACH_NODE,
+        MAILBOX
+    }
+
+    ListenerType getType();
+
     /**
      * Informs this listener about the given event.
      * 
@@ -165,7 +173,22 @@ public interface MailboxListener {
         public abstract List<Long> getUids();
     }
 
-    public abstract class Expunged extends MessageEvent {
+    public abstract class MetaDataHoldingEvent extends MessageEvent {
+
+        public MetaDataHoldingEvent(MailboxSession session, MailboxPath path) {
+            super(session, path);
+        }
+
+        /**
+         * Return the flags which were set for the afected message
+         *
+         * @return flags
+         */
+        public abstract MessageMetaData getMetaData(long uid);
+
+    }
+
+    public abstract class Expunged extends MetaDataHoldingEvent {
 
         /**
          * 
@@ -204,7 +227,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to added message
      */
-    public abstract class Added extends MessageEvent {
+    public abstract class Added extends MetaDataHoldingEvent {
 
         /**
          * 

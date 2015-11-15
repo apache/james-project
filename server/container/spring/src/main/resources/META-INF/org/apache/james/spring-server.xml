@@ -135,6 +135,11 @@
         <constructor-arg index="1" ref="quotaRootResolver"/>
     </bean>
 
+    <!-- Event system -->
+    <bean class="org.apache.james.container.spring.bean.factorypostprocessor.EventsConfigurationBeanFactoryPostProcessor"/>
+
+    <import resource="classpath:META-INF/spring/event-system.xml"/>
+
     <!-- Mailbox Copier -->
     <bean id="mailboxcopier" class="org.apache.james.mailbox.copier.MailboxCopierImpl"/>
 

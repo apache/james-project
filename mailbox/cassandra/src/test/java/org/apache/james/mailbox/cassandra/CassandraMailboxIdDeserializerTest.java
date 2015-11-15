@@ -17,34 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.cassandra;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Receive a {@link org.apache.james.mailbox.MailboxListener.Event} and delegate it to an other
- * {@link MailboxListener} depending on the registered name
- *
- */
-public class HashMapDelegatingMailboxListener extends AbstractDelegatingMailboxListener{
+import java.util.UUID;
 
-    private Map<MailboxPath, List<MailboxListener>> listeners = new HashMap<MailboxPath, List<MailboxListener>>();
-    private List<MailboxListener> globalListeners = new ArrayList<MailboxListener>();
+public class CassandraMailboxIdDeserializerTest {
 
-    @Override
-    protected Map<MailboxPath, List<MailboxListener>> getListeners() {
-        return listeners;
+    private static final String UUID_STRING = "5530370f-44c6-4647-990e-7768ce5131d4";
+    private static final String MALFORMED_UUID_STRING = "xyz";
+    private static final CassandraId CASSANDRA_ID = CassandraId.of(UUID.fromString(UUID_STRING));
+
+    private CassandraMailboxIdDeserializer mailboxIdDeserializer;
+
+    @Before
+    public void setUp() {
+        mailboxIdDeserializer = new CassandraMailboxIdDeserializer();
     }
 
-    @Override
-    protected List<MailboxListener> getGlobalListeners() {
-        return globalListeners;
+    @Test
+    public void deserializeShouldWork() throws Exception {
+        assertThat(mailboxIdDeserializer.deserialize(UUID_STRING)).isEqualTo(CASSANDRA_ID);
     }
-    
+
+    @Test(expected = MailboxIdDeserialisationException.class)
+    public void deserializeShouldThrowOnMalformedData() throws Exception {
+        mailboxIdDeserializer.deserialize(MALFORMED_UUID_STRING);
+    }
+
 }

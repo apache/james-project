@@ -39,6 +39,7 @@
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
+        <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.jpa.JPASubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
@@ -82,5 +83,7 @@
         <!-- set this to true for debugging purposes -->
         <property name="showSql" value="false"/>
     </bean>
+
+    <bean id="jpa-mailbox-id-deserializer" class="org.apache.james.mailbox.jpa.JPAMailboxIdDeserializer"/>
 
 </beans>

@@ -59,6 +59,11 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
+    public ListenerType getType() {
+        return ListenerType.ONCE;
+    }
+
+    @Override
     public Iterator<Long> search(MailboxSession session, Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
         return searcher.search(mailbox, searchQuery);
     }

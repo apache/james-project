@@ -62,7 +62,7 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.james.mailbox.store.user.model.Subscription#getMailbox()
+     * @see org.apache.james.mailbox.store.user.model.Subscription#getMailboxPath()
      */
     public String getMailbox() {
         return mailbox;
