@@ -216,9 +216,9 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected ChannelBuffer createCumulationDynamicBuffer(ChannelHandlerContext ctx) {
+    protected synchronized ChannelBuffer newCumulationBuffer(ChannelHandlerContext ctx, int minimumCapacity) {
+        @SuppressWarnings("unchecked")
         Map<String, Object> attachment = (Map<String, Object>) ctx.getAttachment();
         int size = (Integer) attachment.get(NEEDED_DATA);
         
@@ -229,7 +229,7 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
             if (size > 0) {
                 return ChannelBuffers.dynamicBuffer(size, ctx.getChannel().getConfig().getBufferFactory());
             }
-            return super.createCumulationDynamicBuffer(ctx);
+            return super.newCumulationBuffer(ctx, minimumCapacity);
         }
     }
 

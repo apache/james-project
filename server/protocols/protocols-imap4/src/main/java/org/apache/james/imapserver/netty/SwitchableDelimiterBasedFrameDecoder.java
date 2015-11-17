@@ -56,9 +56,12 @@ public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDec
 		}
 	}
 
+	
+	
 	@Override
-	protected synchronized ChannelBuffer createCumulationDynamicBuffer(final ChannelHandlerContext ctx) {
-		this.cumulation = super.createCumulationDynamicBuffer(ctx);
-		return this.cumulation;
+	protected synchronized ChannelBuffer newCumulationBuffer(ChannelHandlerContext ctx, int minimumCapacity) {
+	    this.cumulation = super.newCumulationBuffer(ctx, minimumCapacity);
+	    return this.cumulation;
 	}
+	
 }
