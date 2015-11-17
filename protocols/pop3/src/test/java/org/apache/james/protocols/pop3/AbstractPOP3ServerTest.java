@@ -18,11 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.pop3;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,6 +26,7 @@ import java.io.Reader;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
@@ -74,9 +71,8 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertFalse(client.login("invalid", "invalid"));
-           
-            assertTrue(client.logout());
+            assertThat(client.login("invalid", "invalid")).isFalse();
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -102,13 +98,13 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo[] info = client.listMessages();
-            assertEquals(0, info.length);
+            assertThat(info.length).isEqualTo(0);
             
             info = client.listUniqueIdentifiers();
-            assertEquals(0, info.length);
-            assertTrue(client.logout());
+            assertThat(info.length).isEqualTo(0);
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -134,38 +130,38 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo[] info = client.listMessages();
-            assertEquals(2, info.length);
-            assertEquals((int) MESSAGE1.meta.getSize(), info[0].size);
-            assertEquals((int) MESSAGE2.meta.getSize(), info[1].size);
-            assertEquals(1, info[0].number);
-            assertEquals(2, info[1].number);
+            assertThat(info.length).isEqualTo(2);
+            assertThat(info[0].size).isEqualTo((int) MESSAGE1.meta.getSize());
+            assertThat(info[1].size).isEqualTo((int) MESSAGE2.meta.getSize());
+            assertThat(info[0].number).isEqualTo(1);
+            assertThat(info[1].number).isEqualTo(2);
 
             POP3MessageInfo mInfo = client.listMessage(1);
-            assertEquals((int) MESSAGE1.meta.getSize(), mInfo.size);
-            assertEquals(1, mInfo.number);
+            assertThat(mInfo.size).isEqualTo((int) MESSAGE1.meta.getSize());
+            assertThat(mInfo.number).isEqualTo(1);
 
             // try to retrieve message that not exist
             mInfo = client.listMessage(10);
-            assertNull(mInfo);
+            assertThat(mInfo).isNull();
 
             info = client.listUniqueIdentifiers();
-            assertEquals(2, info.length);
-            assertEquals(identifier + "-" + MESSAGE1.meta.getUid(), info[0].identifier);
-            assertEquals(identifier + "-" + MESSAGE2.meta.getUid(), info[1].identifier);
-            assertEquals(1, info[0].number);
-            assertEquals(2, info[1].number);
+            assertThat(info.length).isEqualTo(2);
+            assertThat(info[0].identifier).isEqualTo(identifier + "-" + MESSAGE1.meta.getUid());
+            assertThat(info[1].identifier).isEqualTo(identifier + "-" + MESSAGE2.meta.getUid());
+            assertThat(info[0].number).isEqualTo(1);
+            assertThat(info[1].number).isEqualTo(2);
 
             mInfo = client.listUniqueIdentifier(1);
-            assertEquals(identifier + "-" + MESSAGE1.meta.getUid(), mInfo.identifier);
-            assertEquals(1, mInfo.number);
+            assertThat(mInfo.identifier) .isEqualTo(identifier + "-" + MESSAGE1.meta.getUid());
+            assertThat(mInfo.number).isEqualTo(1);
 
             // try to retrieve message that not exist
             mInfo = client.listUniqueIdentifier(10);
-            assertNull(mInfo);
+            assertThat(mInfo).isNull();;
             
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -191,24 +187,24 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             Reader reader = client.retrieveMessage(1);
-            assertNotNull(reader);
+            assertThat(reader).isNotNull();
             checkMessage(MESSAGE1, reader);
             reader.close();
             
             // does not exist
             reader = client.retrieveMessage(10);
-            assertNull(reader);
+            assertThat(reader).isNull();
             
             
             // delete and check for the message again, should now be deleted
-            assertTrue(client.deleteMessage(1));
+            assertThat(client.deleteMessage(1)).isTrue();
             reader = client.retrieveMessage(1);
-            assertNull(reader);
+            assertThat(reader).isNull();
 
             
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -234,27 +230,27 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             Reader reader = client.retrieveMessageTop(1, 1000);
-            assertNotNull(reader);
+            assertThat(reader).isNotNull();
             checkMessage(MESSAGE1, reader);
             reader.close();
             
             reader = client.retrieveMessageTop(2, 1);
-            assertNotNull(reader);
+            assertThat(reader).isNotNull();
             checkMessage(MESSAGE2, reader,1);
             reader.close();
             
             // does not exist
             reader = client.retrieveMessageTop(10,100);
-            assertNull(reader);
+            assertThat(reader).isNull();
             
             // delete and check for the message again, should now be deleted
-            assertTrue(client.deleteMessage(1));
+            assertThat(client.deleteMessage(1)).isTrue();
             reader = client.retrieveMessageTop(1, 1000);
-            assertNull(reader);
+            assertThat(reader).isNull();
 
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -280,34 +276,34 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo[] info = client.listMessages();
-            assertEquals(2, info.length);
+            assertThat(info.length).isEqualTo(2);
             
-            assertTrue(client.deleteMessage(1));
+            assertThat(client.deleteMessage(1)).isTrue();
             info = client.listMessages();
-            assertEquals(1, info.length);
+            assertThat(info.length).isEqualTo(1);
 
             
-            assertFalse(client.deleteMessage(1));
+            assertThat(client.deleteMessage(1)).isFalse();
             info = client.listMessages();
-            assertEquals(1, info.length);
+            assertThat(info.length).isEqualTo(1);
             
             
-            assertTrue(client.deleteMessage(2));
+            assertThat(client.deleteMessage(2)).isTrue();
             info = client.listMessages();
-            assertEquals(0, info.length);
+            assertThat(info.length).isEqualTo(0);
             
             // logout so the messages get expunged
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
 
             client.connect(address.getAddress().getHostAddress(), address.getPort());
   
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             info = client.listMessages();
-            assertEquals(0, info.length);
+            assertThat(info.length).isEqualTo(0);
 
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -333,9 +329,9 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
-            assertTrue(client.noop());
-            assertTrue(client.logout());
+            assertThat(client.login("valid", "valid")).isTrue();
+            assertThat(client.noop()).isTrue();
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -361,16 +357,16 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
-            assertEquals(1, client.listMessages().length);
-            assertTrue(client.deleteMessage(1));
-            assertEquals(0, client.listMessages().length);
+            assertThat(client.login("valid", "valid")).isTrue();
+            assertThat(client.listMessages().length).isEqualTo(1);
+            assertThat(client.deleteMessage(1)).isTrue();
+            assertThat(client.listMessages().length).isEqualTo(0);
             
             // call RSET. After this the deleted mark should be removed again
-            assertTrue(client.reset());
-            assertEquals(1, client.listMessages().length);
+            assertThat(client.reset()).isTrue();
+            assertThat(client.listMessages().length).isEqualTo(1);
 
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -396,13 +392,12 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             client.connect(address.getAddress().getHostAddress(), address.getPort());
             
-            assertTrue(client.login("valid", "valid"));
+            assertThat(client.login("valid", "valid")).isTrue();
             POP3MessageInfo info = client.status();
-            assertEquals((int)(MESSAGE1.meta.getSize() + MESSAGE2.meta.getSize()), info.size);
-            assertEquals(2, info.number);
-            
-            assertTrue(client.logout());
-           
+            assertThat(info.size).isEqualTo((int)(MESSAGE1.meta.getSize() + MESSAGE2.meta.getSize()));
+            assertThat(info.number).isEqualTo(2);
+            assertThat(client.logout()).isTrue();
+
         } finally {
             if (server != null) {
                 server.unbind();
@@ -426,31 +421,31 @@ public abstract class AbstractPOP3ServerTest {
             POP3Client client =  createClient();
             
             client.connect(address.getAddress().getHostAddress(), address.getPort());
-            assertNull(client.listMessages());
-            assertNull(client.listUniqueIdentifiers());
-            assertFalse(client.deleteMessage(1));
-            assertNull(client.retrieveMessage(1));
-            assertNull(client.retrieveMessageTop(1, 10));
-            assertNull(client.status());
-            assertFalse(client.reset());
+            assertThat(client.listMessages()).isNull();
+            assertThat(client.listUniqueIdentifiers()).isNull();
+            assertThat(client.deleteMessage(1)).isFalse();
+            assertThat(client.retrieveMessage(1)).isNull();
+            assertThat(client.retrieveMessageTop(1, 10)).isNull();
+            assertThat(client.status()).isNull();
+            assertThat(client.reset()).isFalse();
             client.logout();
             
             client.connect(address.getAddress().getHostAddress(), address.getPort());
 
-            assertTrue(client.login("valid", "valid"));
-            assertNotNull(client.listMessages());
-            assertNotNull(client.listUniqueIdentifiers());
+            assertThat(client.login("valid", "valid")).isTrue();
+            assertThat(client.listMessages()).isNotNull();
+            assertThat(client.listUniqueIdentifiers()).isNotNull();
             Reader reader = client.retrieveMessage(1);
-            assertNotNull(reader);
+            assertThat(reader).isNotNull();
             reader.close();
-            assertNotNull(client.status());
+            assertThat(client.status()).isNotNull();
             reader = client.retrieveMessageTop(1, 1);
-            assertNotNull(reader);
+            assertThat(reader).isNotNull();
             reader.close();
-            assertTrue(client.deleteMessage(1));
-            assertTrue(client.reset());
+            assertThat(client.deleteMessage(1)).isTrue();
+            assertThat(client.reset()).isTrue();
 
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
 
         } finally {
             if (server != null) {
@@ -476,16 +471,14 @@ public abstract class AbstractPOP3ServerTest {
             String welcomeMessage = client.getReplyString();
             
             // check for valid syntax that include all info needed for APOP
-            assertTrue(welcomeMessage.trim().matches("\\+OK \\<\\d+\\.\\d+@.+\\> .+"));
+            assertThat(welcomeMessage.trim()).matches(Pattern.compile("\\+OK \\?\\d+\\.\\d+@.+\\> .+"));
             
-            int reply = client.sendCommand("APOP invalid invalid");
-            assertEquals(POP3Reply.ERROR, reply);
+            assertThat(client.sendCommand("APOP invalid invalid")).isEqualTo(POP3Reply.ERROR);
             
             handler.add("valid", new MockMailbox("id"));
-            reply = client.sendCommand("APOP valid valid");
-            assertEquals(POP3Reply.OK, reply);
+            assertThat(client.sendCommand("APOP valid valid")).isEqualTo(POP3Reply.OK);
             
-            assertTrue(client.logout());
+            assertThat(client.logout()).isTrue();
            
         } finally {
             if (server != null) {
@@ -499,9 +492,9 @@ public abstract class AbstractPOP3ServerTest {
         int i = -1;
         String content = message.toString();
         while ((i = reader.read()) != -1) {
-            assertEquals(content.charAt(read++), (char)i);
+            assertThat(i).isEqualTo(content.charAt(read++));
         }
-        assertEquals(content.length(), read);
+        assertThat(read).isEqualTo(content.length());
     }
     
     private void checkMessage(Message message, Reader reader, int lines) throws IOException {
@@ -509,23 +502,23 @@ public abstract class AbstractPOP3ServerTest {
         String headers = message.headers + "\r\n";
         
         while (read < headers.length()) {
-            assertEquals(headers.charAt(read++), reader.read());
+            assertThat(reader.read()).isEqualTo(headers.charAt(read++));
         }
-        assertEquals(headers.length(), read);
+        assertThat(read).isEqualTo(headers.length());
         
         BufferedReader bufReader = new BufferedReader(reader);
         String line = null;
         int linesRead = 0;
         String parts[] = message.body.split("\r\n");
         while ((line = bufReader.readLine()) != null) {
-            assertEquals(parts[linesRead++], line);
+            assertThat(line).isEqualTo(parts[linesRead++]);
             
             if (linesRead == lines) {
                 break;
             }
         }
         
-        assertEquals(lines, linesRead);
+        assertThat(linesRead).isEqualTo(lines);
         
     }
 
