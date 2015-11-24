@@ -32,7 +32,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -56,7 +56,7 @@ public class CassandraACLMapperTest {
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMailboxModule());
+        cassandra = CassandraCluster.create(new CassandraAclModule());
         cassandra.ensureAllTables();
         uidValidity = 10;
         mailbox = new SimpleMailbox<>(new MailboxPath("#private", "benwa@linagora.com", "INBOX"), uidValidity);

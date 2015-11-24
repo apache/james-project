@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.quota;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.QuotaRootImpl;
 import org.junit.After;
@@ -38,7 +38,7 @@ public class CassandraCurrentQuotaManagerTest {
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMailboxModule());
+        cassandra = CassandraCluster.create(new CassandraQuotaModule());
         cassandra.ensureAllTables();
         currentQuotaManager = new CassandraCurrentQuotaManager(cassandra.getConf());
     }
