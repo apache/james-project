@@ -405,6 +405,11 @@
                 <artifactId>protocols-lmtp</artifactId>
                 <version>${protocols.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.james.protocols</groupId>
+                <artifactId>protocols-managesieve</artifactId>
+                <version>${protocols.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -711,21 +716,6 @@
                         <artifactId>activation</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-jsieve-manager-jsieve</artifactId>
-                <version>${jsieve.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-jsieve-manager-mailet</artifactId>
-                <version>${jsieve.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-jsieve-manager-api</artifactId>
-                <version>${jsieve.version}</version>
             </dependency>
             <!-- Declare javamail as provided to be able to easily switch -->
             <!-- to different implementations (Geronimo) -->

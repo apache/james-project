@@ -324,6 +324,10 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-managesieve</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-fetchmail</artifactId>
             <scope>runtime</scope>
