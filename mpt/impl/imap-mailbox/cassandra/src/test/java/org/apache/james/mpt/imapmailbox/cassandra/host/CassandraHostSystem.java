@@ -20,16 +20,23 @@ package org.apache.james.mpt.imapmailbox.cassandra.host;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
-import org.apache.james.mailbox.cassandra.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -51,11 +58,17 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     
     private final CassandraMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
-    private final CassandraModule mailboxModule;
     private CassandraCluster cassandraClusterSingleton;
 
     public CassandraHostSystem() throws Exception {
-        mailboxModule = new CassandraMailboxModule();
+        CassandraModule mailboxModule = new CassandraModuleComposite(
+            new CassandraAclModule(),
+            new CassandraMailboxModule(),
+            new CassandraMessageModule(),
+            new CassandraMailboxCounterModule(),
+            new CassandraUidAndModSeqModule(),
+            new CassandraSubscriptionModule(),
+            new CassandraQuotaModule());
         cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
         userManager = new MockAuthenticator();
         com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();

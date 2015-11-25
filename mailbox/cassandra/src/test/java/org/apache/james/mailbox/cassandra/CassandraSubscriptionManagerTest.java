@@ -24,13 +24,14 @@ import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
+import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
  */
 public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
-    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraMailboxModule());
+    private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraSubscriptionModule());
     
     @Override
     public SubscriptionManager createSubscriptionManager() {

@@ -19,10 +19,17 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.AbstractMailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -36,7 +43,13 @@ import org.slf4j.LoggerFactory;
  */
 public class CassandraMailboxManagerTest extends AbstractMailboxManagerTest {
 
-    private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraMailboxModule());
+    private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
+        new CassandraAclModule(),
+        new CassandraMailboxModule(),
+        new CassandraMessageModule(),
+        new CassandraMailboxCounterModule(),
+        new CassandraUidAndModSeqModule(),
+        new CassandraSubscriptionModule()));
 
     /**
      * Setup the mailboxManager.

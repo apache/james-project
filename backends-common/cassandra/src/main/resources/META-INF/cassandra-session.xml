@@ -39,8 +39,32 @@
         <property name ="location" value="classpath:cassandra.properties"/>
     </bean>
 
+    <bean id="cassandra-mailbox-uid-modseq-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule"
+          lazy-init="true"/>
+
+    <bean id="cassandra-subscription-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule"
+          lazy-init="true"/>
+
     <bean id="cassandra-mailbox-module"
-          class="org.apache.james.mailbox.cassandra.CassandraMailboxModule"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule"
+          lazy-init="true"/>
+
+    <bean id="cassandra-mailbox-counters-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule"
+          lazy-init="true"/>
+
+    <bean id="cassandra-message-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraMessageModule"
+          lazy-init="true"/>
+
+    <bean id="cassandra-mailbox-acl-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraAclModule"
+          lazy-init="true"/>
+
+    <bean id="cassandra-mailbox-quota-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule"
           lazy-init="true"/>
 
     <bean id="cassandra-rrt-module"
@@ -60,7 +84,13 @@
           lazy-init="true">
         <constructor-arg index="0">
             <list>
+                <ref bean="cassandra-mailbox-uid-modseq-module"/>
+                <ref bean="cassandra-subscription-module"/>
                 <ref bean="cassandra-mailbox-module"/>
+                <ref bean="cassandra-message-module"/>
+                <ref bean="cassandra-mailbox-counters-module"/>
+                <ref bean="cassandra-mailbox-acl-module"/>
+                <ref bean="cassandra-mailbox-quota-module"/>
                 <ref bean="cassandra-rrt-module"/>
                 <ref bean="cassandra-usersrepository-module"/>
                 <ref bean="cassandra-domainlist-module"/>
