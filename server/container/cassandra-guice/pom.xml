@@ -218,14 +218,6 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-jsieve-manager-jsieve</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-jsieve-manager-mailet</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
                     <artifactId>apache-mailet-standard</artifactId>
                 </dependency>
                 <dependency>
@@ -336,6 +328,10 @@
                 <dependency>
                     <groupId>org.apache.james.protocols</groupId>
                     <artifactId>protocols-imap</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james.protocols</groupId>
+                    <artifactId>protocols-managesieve</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
