@@ -38,6 +38,7 @@ import java.util.List;
 public class FakeMailContext implements MailetContext {
     
     HashMap<String, Object> attributes = new HashMap<String, Object>();
+    private MimeMessage sentMessage;
 
     public void bounce(Mail mail, String message) throws MessagingException {
         // trivial implementation
@@ -79,7 +80,7 @@ public class FakeMailContext implements MailetContext {
     }
 
     public boolean isLocalServer(String serverName) {
-        return false;  // trivial implementation
+        return serverName.equals("localhost");  // trivial implementation
     }
 
     /**
@@ -112,8 +113,8 @@ public class FakeMailContext implements MailetContext {
         // trivial implementation
     }
 
-    public void sendMail(MimeMessage msg) throws MessagingException {
-        throw new UnsupportedOperationException("MOCKed method");
+    public void sendMail(MimeMessage mimemessage) throws MessagingException {
+        sentMessage = mimemessage;
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
@@ -158,5 +159,9 @@ public class FakeMailContext implements MailetContext {
 
     public List<String> dnsLookup(String name, RecordType type) throws TemporaryLookupException, LookupException {
         return null;   // trivial implementation
+    }
+
+    public MimeMessage getSentMessage() {
+        return sentMessage;
     }
 }

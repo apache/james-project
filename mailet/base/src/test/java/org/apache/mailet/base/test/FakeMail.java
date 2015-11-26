@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
@@ -112,6 +113,13 @@ public class FakeMail implements Mail {
 
     public void setMessage(MimeMessage message) {
         this.msg = message;
+        try {
+            if (message != null && message.getSender() != null) {
+                this.sender = new MailAddress((InternetAddress) message.getSender());
+            }
+        } catch (MessagingException e) {
+            throw new RuntimeException("Exception caught", e);
+        }
     }
 
     public void setState(String state) {

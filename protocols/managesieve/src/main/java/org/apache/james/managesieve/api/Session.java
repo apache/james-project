@@ -20,31 +20,10 @@
 
 package org.apache.james.managesieve.api;
 
-/**
- * <code>Session</code>
- */
 public interface Session {
-    
-    public interface UserListener
-    {
-        abstract public void notifyChange(String user);
-    }
-    
-    abstract public String getUser();
-    
-    abstract public void addUserListener(UserListener listener);
-    
-    abstract public void removeUserListener(UserListener listener);
-    
-    public interface AuthenticationListener
-    {
-        abstract public void notifyChange(boolean isAuthenticated);
-    }
-    
-    abstract public boolean isAuthenticated();
-    
-    abstract public void addAuthenticationListener(AuthenticationListener listener);
-    
-    abstract public void removeAuthenticationListener(AuthenticationListener listener);
+
+    boolean isAuthenticated();
+
+    String getUser();
 
 }
