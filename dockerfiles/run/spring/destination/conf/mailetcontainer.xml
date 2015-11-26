@@ -153,7 +153,7 @@
             <mailet match="All" class="SetMailAttribute">
                 <org.apache.james.SMTPAuthUser>true</org.apache.james.SMTPAuthUser>
             </mailet>
-            <mailet match="All" class="org.apache.james.managesieve.mailet.ManageSieveMailet">
+            <mailet match="All" class="org.apache.james.transport.mailets.managesieve.ManageSieveMailet">
                 <helpURL>file:/root/james-server-app-3.0.0-beta5-SNAPSHOT/conf/managesieve.help.txt</helpURL>
             </mailet>
             <mailet match="All" class="Null"/>
