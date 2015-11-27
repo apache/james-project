@@ -65,7 +65,7 @@ public class CoreProcessorTestCase {
         sieveParser = mock(SieveParser.class);
         sieveRepository = mock(SieveRepository.class);
         UsersRepository usersRepository = mock(UsersRepository.class);
-        core = new CoreProcessor(session, sieveRepository, usersRepository, sieveParser);
+        core = new CoreProcessor(sieveRepository, usersRepository, sieveParser);
         when(usersRepository.contains(USER)).thenAnswer(new Answer<Boolean>() {
             public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return true;
@@ -81,7 +81,7 @@ public class CoreProcessorTestCase {
                 return Lists.newArrayList("a", "b", "c");
             }
         });
-        assertThat(core.capability()).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
+        assertThat(core.capability(session)).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
             .containsKey(Capabilities.GETACTIVE);
@@ -96,7 +96,7 @@ public class CoreProcessorTestCase {
             }
         });
         session.setUser(USER);
-        assertThat(core.capability()).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
+        assertThat(core.capability(session)).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
             .containsEntry(Capabilities.OWNER, USER)
@@ -106,7 +106,8 @@ public class CoreProcessorTestCase {
     @Test(expected = AuthenticationRequiredException.class)
     public final void testCheckScriptUnauthorised() throws AuthenticationRequiredException, SyntaxException {
         session.setAuthentication(false);
-        core.checkScript("warning");
+        session.setUser(USER);
+        core.checkScript(session, "warning");
     }
 
     @Test
@@ -118,7 +119,7 @@ public class CoreProcessorTestCase {
                 return Lists.newArrayList("warning1", "warning2");
             }
         });
-        assertThat(core.checkScript(CONTENT)).containsOnly("warning1", "warning2");
+        assertThat(core.checkScript(session, CONTENT)).containsOnly("warning1", "warning2");
     }
 
     @Test(expected = SyntaxException.class)
@@ -126,13 +127,14 @@ public class CoreProcessorTestCase {
         doThrow(new SyntaxException("Syntax exception")).when(sieveParser).parse(CONTENT);
         session.setAuthentication(true);
         session.setUser(USER);
-        core.checkScript(CONTENT);
+        core.checkScript(session, CONTENT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testDeleteScriptUnauthorised() throws Exception {
         session.setAuthentication(false);
-        core.deleteScript(SCRIPT);
+        session.setUser(USER);
+        core.deleteScript(session, SCRIPT);
     }
 
     @Test(expected = ScriptNotFoundException.class)
@@ -140,7 +142,7 @@ public class CoreProcessorTestCase {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).deleteScript(USER, SCRIPT);
         session.setAuthentication(true);
         session.setUser(USER);
-        core.deleteScript(SCRIPT);
+        core.deleteScript(session, SCRIPT);
     }
 
 
@@ -149,7 +151,7 @@ public class CoreProcessorTestCase {
         session.setAuthentication(true);
         session.setUser(USER);
         sieveRepository.putScript(USER, SCRIPT, CONTENT);
-        core.deleteScript(SCRIPT);
+        core.deleteScript(session, SCRIPT);
         verify(sieveRepository).deleteScript(USER, SCRIPT);
     }
 
@@ -158,13 +160,14 @@ public class CoreProcessorTestCase {
         doThrow(new IsActiveException()).when(sieveRepository).deleteScript(USER, SCRIPT);
         session.setAuthentication(true);
         session.setUser(USER);
-        core.deleteScript(SCRIPT);
+        core.deleteScript(session, SCRIPT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testGetUnauthorisedScript() throws Exception {
         session.setAuthentication(false);
-        core.getScript(SCRIPT);
+        session.setUser(USER);
+        core.getScript(session, SCRIPT);
     }
 
     @Test(expected = ScriptNotFoundException.class)
@@ -172,7 +175,7 @@ public class CoreProcessorTestCase {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getScript(USER, SCRIPT);
         session.setAuthentication(true);
         session.setUser(USER);
-        core.getScript(SCRIPT);
+        core.getScript(session, SCRIPT);
     }
 
     @Test
@@ -184,27 +187,29 @@ public class CoreProcessorTestCase {
                 return CONTENT;
             }
         });
-        assertThat(core.getScript(SCRIPT)).isEqualTo(CONTENT);
+        assertThat(core.getScript(session, SCRIPT)).isEqualTo(CONTENT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testHaveSpaceUnauthorised() throws Exception {
         session.setAuthentication(false);
-        core.haveSpace(SCRIPT, Long.MAX_VALUE);
+        session.setUser(USER);
+        core.haveSpace(session, SCRIPT, Long.MAX_VALUE);
     }
 
     @Test
     public final void testHaveSpace() throws Exception {
         session.setAuthentication(true);
         session.setUser(USER);
-        core.haveSpace(SCRIPT, Long.MAX_VALUE);
+        core.haveSpace(session, SCRIPT, Long.MAX_VALUE);
         verify(sieveRepository).haveSpace(USER, SCRIPT, Long.MAX_VALUE);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testListScriptsUnauthorised() throws Exception {
         session.setAuthentication(false);
-        core.listScripts();
+        session.setUser(USER);
+        core.listScripts(session);
     }
 
     @Test
@@ -218,20 +223,21 @@ public class CoreProcessorTestCase {
             }
         });
         sieveRepository.putScript(USER, SCRIPT, CONTENT);
-        assertThat(core.listScripts()).containsOnly(new ScriptSummary(SCRIPT, false));
+        assertThat(core.listScripts(session)).containsOnly(new ScriptSummary(SCRIPT, false));
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testPutScriptUnauthorised() throws Exception {
         session.setAuthentication(false);
-        core.putScript(SCRIPT, CONTENT);
+        session.setUser(USER);
+        core.putScript(session, SCRIPT, CONTENT);
     }
 
     @Test
     public final void testPutScriptAuthorized() throws Exception {
         session.setAuthentication(true);
         session.setUser(USER);
-        core.putScript(SCRIPT, CONTENT);
+        core.putScript(session, SCRIPT, CONTENT);
         verify(sieveRepository).putScript(USER, SCRIPT, CONTENT);
     }
 
@@ -240,41 +246,44 @@ public class CoreProcessorTestCase {
         doThrow(new SyntaxException("Syntax exception")).when(sieveParser).parse(CONTENT);
         session.setAuthentication(true);
         session.setUser(USER);
-        core.putScript(SCRIPT, CONTENT);
+        core.putScript(session, SCRIPT, CONTENT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testRenameScriptUnauthorized() throws Exception {
         session.setAuthentication(false);
-        core.renameScript(OLDNAME, NEW_NAME);
+        session.setUser(USER);
+        core.renameScript(session, OLDNAME, NEW_NAME);
     }
 
     @Test
     public final void testRenameScript() throws Exception {
         session.setAuthentication(true);
         session.setUser(USER);
-        core.renameScript(OLDNAME, NEW_NAME);
+        core.renameScript(session, OLDNAME, NEW_NAME);
         verify(sieveRepository).renameScript(USER, OLDNAME, NEW_NAME);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testSetActiveUnauthorised() throws Exception {
         session.setAuthentication(false);
-        core.setActive(SCRIPT);
+        session.setUser(USER);
+        core.setActive(session, SCRIPT);
     }
 
     @Test
     public final void testSetActive() throws Exception {
         session.setAuthentication(true);
         session.setUser(USER);
-        core.setActive(SCRIPT);
+        core.setActive(session, SCRIPT);
         verify(sieveRepository).setActive(USER, SCRIPT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testGetUnauthorisedActive() throws Exception {
         session.setAuthentication(false);
-        core.getActive();
+        session.setUser(USER);
+        core.getActive(session);
     }
 
     @Test(expected = ScriptNotFoundException.class)
@@ -282,7 +291,7 @@ public class CoreProcessorTestCase {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getActive(USER);
         session.setAuthentication(true);
         session.setUser(USER);
-        core.getActive();
+        core.getActive(session);
     }
 
     @Test
@@ -295,6 +304,6 @@ public class CoreProcessorTestCase {
                 return CONTENT;
             }
         });
-        assertThat(core.getActive()).isEqualTo(CONTENT);
+        assertThat(core.getActive(session)).isEqualTo(CONTENT);
     }
 }

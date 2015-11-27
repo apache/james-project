@@ -21,12 +21,10 @@
 package org.apache.james.managesieve.api.commands;
 
 /**
- * <code>StartTLS</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.2>RFC 5804 STARTTLS Command</a>
  */
 public interface StartTLS {
     
-    abstract public void startTLS();
+    void startTLS();
 
 }

@@ -21,9 +21,7 @@
 package org.apache.james.managesieve.api.commands;
 
 /**
- * <code>LineCommands</code>
- * 
- * <p>Commands specific to the line oriented protocol defined by RFC 5804
+ * Commands specific to the line oriented protocol defined by RFC 5804
  * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-1.8>RFC 5804 Transport</a>
  */

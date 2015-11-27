@@ -22,14 +22,12 @@ package org.apache.james.managesieve.api.commands;
 
 
 /**
- * <code>Noop</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.13>RFC 5804 NOOP Command</a>
  */
 public interface Noop {
     
-    abstract public void noop();
+    void noop();
     
-    abstract public String noop(String tag);
+    String noop(String tag);
 
 }
