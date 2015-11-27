@@ -29,6 +29,7 @@ import java.util.Scanner;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.transcode.LineToCore;
@@ -36,8 +37,9 @@ import org.apache.james.managesieve.transcode.LineToCoreToLine;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToMessage;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 
 /**
@@ -82,157 +84,113 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class ManageSieveMailet extends GenericMailet implements MessageToCoreToMessage.HelpProvider {
 
-    private class MailSession extends SettableSession {
-
-        public MailSession() {
-            super();
-        }
-
-        /**
-         * @param mail
-         *            the mail to set
-         */
-        public void setMail(Mail mail) {
-            setUser(getUser(mail.getSender()));
-            setAuthentication(null != mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME));
-        }
-
-        protected String getUser(MailAddress addr) {
-            return addr.getLocalPart() + '@' + (null == addr.getDomain() ? "localhost" : addr.getDomain());
-        }
-
-    }
-
     public final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
 
-    private MailSession _session = null;
-
     // Injected
-    private SieveRepository _sieveRepository = null;
-
+    private SieveRepository sieveRepository = null;
     // Injected
-    private SieveParser _sieveParser = null;
+    private SieveParser sieveParser = null;
+    private UsersRepository usersRepository;
+    private MessageToCoreToMessage transcoder = null;
+    private URL helpURL = null;
+    private String help = null;
+    private boolean cache = true;
 
-    private MessageToCoreToMessage _transcoder = null;
-    
-    private URL _helpURL = null;
-    
-    private String _help = null;
-    
-    private boolean _cache = true;
-
-    /**
-     * Creates a new instance of ManageSieveMailet.
-     * 
-     */
-    public ManageSieveMailet() {
-        super();
-    }
-    
-    /**
-     * Creates a new instance of ManageSieveMailet.
-     *
-     * @param sieveRepository
-     * @param sieveParser
-     */
-    public ManageSieveMailet(SieveRepository sieveRepository, SieveParser sieveParser)
-    {
-        this();
-        setSieveRepository(sieveRepository);
-        setSieveParser(sieveParser);
-    }
-     
-    /**
-     * @see GenericMailet#init()
-     */
     @Override
     public void init() throws MessagingException {
         super.init();
         // Validate resources
-        if (null == _sieveParser)
-        {
+        if (null == sieveParser) {
             throw new MessagingException("Missing resource \"sieveparser\"");
         }
-        if (null == _sieveRepository)
-        {
+        if (null == sieveRepository) {
             throw new MessagingException("Missing resource \"sieverepository\"");
         }
         
         setHelpURL(getInitParameter("helpURL"));
-        _cache = getInitParameter("cache", true);
-        _session = new MailSession();
-        _transcoder = new MessageToCoreToMessage(new LineToCoreToLine(new LineToCore(new CoreProcessor(_session,
-                _sieveRepository, _sieveParser))), this);
+        cache = getInitParameter("cache", true);
+        transcoder = new MessageToCoreToMessage(
+            new LineToCoreToLine(
+                new LineToCore(
+                    new CoreProcessor(sieveRepository, usersRepository, sieveParser))),
+            this);
     }
-    
-    protected void setHelpURL(String helpURL) throws MessagingException
-    {
-        try
-        {
-            _helpURL = new URL(helpURL);
-        }
-        catch (MalformedURLException ex)
-        {
-            throw new MessagingException("Invalid helpURL", ex);
-        }
-    } 
 
-    /**
-     * @see GenericMailet#service(Mail)
-     */
     @Override
     public void service(Mail mail) throws MessagingException {
-
         // Sanity checks
-        if (null == mail.getSender()) {
-            getMailetContext().log("ERROR: Sender is null");
+        if (mail.getSender() == null) {
+            getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender is null");
             return;
         }
-
         if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase())) {
-            getMailetContext().log("ERROR: Sender not local");
+            getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender not local");
             return;
         }
 
         // Update the Session for the current mail and execute
-        _session.setMail(mail);
-        getMailetContext().sendMail(_transcoder.execute(mail.getMessage()));
+        SettableSession session = new SettableSession();
+        session.setAuthentication(mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null);
+        session.setUser(mail.getSender().getLocalPart() + '@' + (mail.getSender().getDomain() == null ? "localhost" : mail.getSender().getDomain()));
+        getMailetContext().sendMail(transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         
         // And tidy up
         clearCaches();
     }
-    
-    protected void clearCaches()
-    {
-        if (!_cache)
-        {
-            _help = null;
+
+    @Inject
+    public void setSieveRepository(SieveRepository repository) {
+        sieveRepository = repository;
+    }
+
+    @Inject
+    public void setSieveParser(SieveParser sieveParser) {
+        this.sieveParser = sieveParser;
+    }
+
+    @Inject
+    public void setUsersRepository(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
+    }
+
+    @Override
+    public String getMailetInfo() {
+        return getClass().getName();
+    }
+
+    private void setHelpURL(String helpURL) throws MessagingException {
+        try {
+            this.helpURL = new URL(helpURL);
+        } catch (MalformedURLException ex) {
+            throw new MessagingException("Invalid helpURL", ex);
         }
     }
 
-    public String getHelp() throws MessagingException {
-        if (null == _help)
-        {
-            _help = computeHelp();
+    private void clearCaches() {
+        if (!cache) {
+            help = null;
         }
-        return _help;
     }
-    
-    protected String computeHelp() throws MessagingException
-    {
-        InputStream stream = null;
-        String help = null;
-        try {
-            stream = _helpURL.openStream();
-            help = new Scanner(stream, "UTF-8").useDelimiter("\\A").next();
-        } catch (IOException ex) {
-            throw new MessagingException("Unable to access help URL: " + _helpURL.toExternalForm(), ex);
+
+    @VisibleForTesting
+    public String getHelp() throws MessagingException {
+        if (null == help) {
+            help = computeHelp();
         }
-        finally
-        {
-            if (null != stream)
-            {
+        return help;
+    }
+
+    private String computeHelp() throws MessagingException {
+        InputStream stream = null;
+        try {
+            stream = helpURL.openStream();
+            return new Scanner(stream, "UTF-8").useDelimiter("\\A").next();
+        } catch (IOException ex) {
+            throw new MessagingException("Unable to access help URL: " + helpURL.toExternalForm(), ex);
+        }
+        finally {
+            if (stream != null) {
                 try {
                     stream.close();
                 } catch (IOException ex) {
@@ -240,31 +198,6 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
                 }
             }
         }
-        return help;
-    }
-
-    /**
-     */
-    @Inject
-    public void setSieveRepository(SieveRepository repository) {
-        _sieveRepository = repository;
-    }
-
-    /**
-     * @param sieveParser
-     *            the sieveParser to set
-     */
-    @Inject
-    public void setSieveParser(SieveParser sieveParser) {
-        _sieveParser = sieveParser;
-    }
-
-    /**
-     * @see GenericMailet#getMailetInfo()
-     */
-    @Override
-    public String getMailetInfo() {
-        return getClass().getName();
     }
 
 }

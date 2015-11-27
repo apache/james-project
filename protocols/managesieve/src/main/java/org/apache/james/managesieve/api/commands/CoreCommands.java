@@ -21,9 +21,7 @@
 package org.apache.james.managesieve.api.commands;
 
 /**
- * <code>CoreCommands</code>
- * 
- * <p>Core RFC 5804 Commands common to all transports
+ * Core RFC 5804 Commands common to all transports
  * 
  * @see <a href=http://tools.ietf.org/html/rfc5804#section-2>RFC 5804 Commands</a>
  */

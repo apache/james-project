@@ -20,10 +20,10 @@
 
 package org.apache.james.managesieve.core;
 
+import com.google.common.base.Throwables;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.ManageSieveRuntimeException;
 import org.apache.james.managesieve.api.Session;
-import org.apache.james.managesieve.api.Session.UserListener;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.CoreCommands;
@@ -36,156 +36,96 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * <code>CoreProcessor</code>
- */
 public class CoreProcessor implements CoreCommands {
     
     public static final String IMPLEMENTATION_DESCRIPTION = "Apache ManageSieve v1.0";
     public static final String MANAGE_SIEVE_VERSION = "1.0";
     
-    private SieveRepository _repository = null;
-    private Session _session = null;
-    private SieveParser _parser = null;
+    private final SieveRepository sieveRepository;
+    private final UsersRepository usersRepository;
+    private final SieveParser parser;
 
-    /**
-     * Creates a new instance of CoreProcessor.
-     *
-     */
-    private CoreProcessor() {
-        super();
-    }
-    
-    /**
-     * Creates a new instance of CoreProcessor.
-     *
-     */
-    public CoreProcessor(Session session, SieveRepository repository, SieveParser parser) {
-        this();
-        _session = session;
-        _repository = repository;
-        _parser = parser;
-
-        // Ensure the session user is defined in the repository
-        _session.addUserListener(new UserListener() {
-
-            public void notifyChange(String user) {
-                ensureUser(user);
-            }
-        });
+    public CoreProcessor(SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
+        this.sieveRepository = repository;
+        this.usersRepository = usersRepository;
+        this.parser = parser;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.Capability#capability()
-     */
-    public Map<Capabilities, String> capability() {
+    public Map<Capabilities, String> capability(Session session) {
         Map<Capabilities, String> capabilities = new HashMap<Capabilities, String>();
         capabilities.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilities.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
         StringBuilder builder = new StringBuilder();
-        for (String extension : _parser.getExtensions())
-        {
+        for (String extension : parser.getExtensions()) {
             builder.append(extension).append(' ');
         }
         String extensions = builder.toString().trim();
-        if (!extensions.isEmpty())
-        {
+        if (!extensions.isEmpty()) {
             capabilities.put(Capabilities.SIEVE, extensions);
         }
-        if (isAuthenticated())
-        {
-            capabilities.put(Capabilities.OWNER, getUser());
+        if (session.isAuthenticated()) {
+            capabilities.put(Capabilities.OWNER, session.getUser());
         }
         capabilities.put(Capabilities.GETACTIVE, null);
         return capabilities;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.CheckScript#checkScript(String)
-     */
-    public List<String> checkScript(String content) throws AuthenticationRequiredException,
-            SyntaxException {
-        authenticationCheck();
-        return _parser.parse(content);
+    public List<String> checkScript(Session session, String content) throws AuthenticationRequiredException, SyntaxException {
+        authenticationCheck(session);
+        return parser.parse(content);
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.DeleteScript#deleteScript(String)
-     */
-    public void deleteScript(String name) throws AuthenticationRequiredException,
-            ScriptNotFoundException, IsActiveException {
-        authenticationCheck();
+    public void deleteScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException {
+        authenticationCheck(session);
         try {
-            _repository.deleteScript(getUser(), name);
+            sieveRepository.deleteScript(session.getUser(), name);
         } catch (StorageException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (UserNotFoundException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         }
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.GetScript#getScript(String)
-     */
-    public String getScript(String name) throws AuthenticationRequiredException,
-        ScriptNotFoundException, StorageException {
-        authenticationCheck();
-        String script = null;
+    public String getScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
+        authenticationCheck(session);
         try {
-            script = _repository.getScript(getUser(), name);
+            return sieveRepository.getScript(session.getUser(), name);
         } catch (UserNotFoundException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         }
-        return script;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.HaveSpace#haveSpace(String, long)
-     */
-    public void haveSpace(String name, long size) throws AuthenticationRequiredException,
-            QuotaExceededException {
-        authenticationCheck();
+    public void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException {
+        authenticationCheck(session);
         try {
-            _repository.haveSpace(getUser(), name, size);
+            sieveRepository.haveSpace(session.getUser(), name, size);
         } catch (SieveRepositoryException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         }
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.ListScripts#listScripts()
-     */
-    public List<ScriptSummary> listScripts() throws AuthenticationRequiredException {
-        authenticationCheck();
-        List<ScriptSummary> summaries = null;
+    public List<ScriptSummary> listScripts(Session session) throws AuthenticationRequiredException {
+        authenticationCheck(session);
         try {
-            summaries = _repository.listScripts(getUser());
+            return sieveRepository.listScripts(session.getUser());
         } catch (SieveRepositoryException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         }
-        return summaries;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.PutScript#putScript(String, String)
-     */
-    public List<String> putScript(String name, String content)
-            throws AuthenticationRequiredException, SyntaxException, QuotaExceededException {
-        authenticationCheck();
-        List<String> warnings = _parser.parse(content);
+    public List<String> putScript(Session session, String name, String content) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException {
+        authenticationCheck(session);
+        List<String> warnings = parser.parse(content);
         try {
-            _repository.putScript(getUser(), name, content);
+            sieveRepository.putScript(session.getUser(), name, content);
         } catch (UserNotFoundException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         } catch (StorageException ex) {
             throw new ManageSieveRuntimeException(ex);
@@ -193,82 +133,51 @@ public class CoreProcessor implements CoreCommands {
         return warnings;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.RenameScript#renameScript(String, String)
-     */
-    public void renameScript(String oldName, String newName)
-            throws AuthenticationRequiredException, ScriptNotFoundException,
-            DuplicateException {
-        authenticationCheck();
+    public void renameScript(Session session, String oldName, String newName) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException {
+        authenticationCheck(session);
         try {
-            _repository.renameScript(getUser(), oldName, newName);
+            sieveRepository.renameScript(session.getUser(), oldName, newName);
         } catch (UserNotFoundException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         } catch (StorageException ex) {
             throw new ManageSieveRuntimeException(ex);
         }
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.commands.SetActive#setActive(String)
-     */
-    public void setActive(String name) throws AuthenticationRequiredException,
-            ScriptNotFoundException {
-        authenticationCheck();
+    public void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException {
+        authenticationCheck(session);
         try {
-            _repository.setActive(getUser(), name);
+            sieveRepository.setActive(session.getUser(), name);
         } catch (UserNotFoundException ex) {
-            // Should not happen as the UserListener should ensure the session user is defined in the repository
             throw new ManageSieveRuntimeException(ex);
         } catch (StorageException ex) {
             throw new ManageSieveRuntimeException(ex);
         }
-    }   
-    
-    protected String getUser()
-    {
-        return _session.getUser();
     }
-    
-    protected void ensureUser(String user) {
+
+    public String getActive(Session session) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
+        authenticationCheck(session);
         try {
-            if (!_repository.hasUser(user)) {
-                _repository.addUser(user);
-            }
-        } catch (SieveRepositoryException ex) {
+            return sieveRepository.getActive(session.getUser());
+        } catch (UserNotFoundException ex) {
             throw new ManageSieveRuntimeException(ex);
         }
     }
     
-    protected void authenticationCheck() throws AuthenticationRequiredException
-    {
-        if (!isAuthenticated())
-        {
+    protected void authenticationCheck(Session session) throws AuthenticationRequiredException {
+        ensureUser(session);
+        if (!session.isAuthenticated()) {
             throw new AuthenticationRequiredException();
         }
     }
 
-    protected boolean isAuthenticated()
-    {
-        return _session.isAuthenticated();
-    }
-
-    /**
-     * @see org.apache.james.managesieve.api.commands.GetActive#getActive()
-     */
-    public String getActive() throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
-        authenticationCheck();
-        
-        String script = null;
+    private void ensureUser(Session session) {
         try {
-            script = _repository.getActive(getUser());
-        } catch (UserNotFoundException ex) {
-            // Should not happen as the UserListener should ensure the session
-            // user is defined in the repository
-            throw new ManageSieveRuntimeException(ex);
+            if (session.getUser() == null || !usersRepository.contains(session.getUser())) {
+                throw new RuntimeException("User " + session.getUser() + " not found");
+            }
+        } catch (UsersRepositoryException e) {
+            Throwables.propagate(e);
         }
-        return script;
     }
-
 }

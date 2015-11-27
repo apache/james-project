@@ -24,15 +24,11 @@ import org.apache.james.managesieve.api.AuthenticationException;
 
 
 /**
- * <code>Authenticate</code>
- * 
  * @see <a href=http://tools.ietf.org/html/rfc5804#section-2.1>RFC 5804 AUTHENTICATE Command</a>
- * 
  */
 public interface Authenticate {
     
-    abstract public void authenticate(String mechanism) throws AuthenticationException;
+    void authenticate(String mechanism) throws AuthenticationException;
     
-    abstract public void authenticate(String mechanism, String initialData) throws AuthenticationException;
-
+    void authenticate(String mechanism, String initialData) throws AuthenticationException;
 }

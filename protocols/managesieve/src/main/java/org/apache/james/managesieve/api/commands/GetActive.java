@@ -21,6 +21,7 @@
 package org.apache.james.managesieve.api.commands;
 
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 
@@ -32,6 +33,6 @@ import org.apache.james.sieverepository.api.exception.StorageException;
  */
 public interface GetActive {
     
-    abstract public String getActive() throws AuthenticationRequiredException, ScriptNotFoundException, StorageException;
+    String getActive(Session session) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException;
 
 }

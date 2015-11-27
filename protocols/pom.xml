@@ -63,6 +63,7 @@
         <slf4j.version>1.6.3</slf4j.version>
         <james-server-data-api.version>3.0.0-beta5-SNAPSHOT</james-server-data-api.version>
         <jsieve.version>0.6-SNAPSHOT</jsieve.version>
+        <mockito-core.version>1.9.0</mockito-core.version>
     </properties>
 
     <dependencyManagement>
@@ -237,6 +238,16 @@
                 <groupId>org.apache.geronimo.javamail</groupId>
                 <artifactId>geronimo-javamail_1.4_mail</artifactId>
                 <version>${geronimo-javamail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>1.7.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
