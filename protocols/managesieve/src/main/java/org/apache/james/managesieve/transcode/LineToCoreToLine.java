@@ -22,6 +22,7 @@ package org.apache.james.managesieve.transcode;
 
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -36,50 +37,53 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * <code>LineToCoreToLine</code>
+ * Calls the parser (that handles interactions with the processor)
+ * and format the outputs into an answer.
+ *
+ * You can use this as a base for implementing a manageSieve server.
+ *
+ * Note : you still need to identify the given commands.
  */
 public class LineToCoreToLine {
     
-    private LineToCore _lineToCore = null;
-
-    /**
-     * Creates a new instance of LineToCoreToLine.
-     *
-     */
-    private LineToCoreToLine() {
-        super();
-    }
+    private final LineToCore lineToCore;
     
     public LineToCoreToLine(LineToCore lineToCore) {
-        this();
-        _lineToCore = lineToCore;
+        this.lineToCore = lineToCore;
     }    
 
-    public String capability(String args) {       
-        Set<Entry<Capabilities, String>> entries = null;
+    public String capability(Session session, String args) {
         try {
-            entries =_lineToCore.capability(args).entrySet(); 
+            Set<Entry<Capabilities, String>> entries = lineToCore.capability(session, args).entrySet();
+            StringBuilder builder = new StringBuilder();
+            for (Entry<Capabilities, String> entry : entries) {
+                builder.append(entry.getKey().toString())
+                    .append(' ')
+                    .append(entry.getValue() == null ? "" : entry.getValue())
+                    .append("\r\n");
+            }
+            builder.append("OK");
+            return builder.toString();
         } catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         }
-        
-        StringBuilder builder = new StringBuilder();
-        for (Entry<Capabilities, String> entry : entries)
-        {
-            builder
-                .append(entry.getKey().toString())
-                .append(' ')
-                .append(null == entry.getValue() ? "" : entry.getValue())
-                .append("\r\n");
-        }
-        builder.append("OK");
-        return builder.toString();
     }
 
-    public String checkScript(String args) {
-        List<String> warnings = null;
+    public String checkScript(Session session, String args) {
         try {
-            warnings = _lineToCore.checkScript(args);
+            List<String> warnings = lineToCore.checkScript(session, args);
+            StringBuilder builder = new StringBuilder();
+            if (!warnings.isEmpty()) {
+                builder.append("OK (WARNINGS)");
+                for (String warning : warnings) {
+                    builder.append(" \"")
+                        .append(warning)
+                        .append('"');
+                }
+            } else {
+                builder.append("OK");
+            }
+            return builder.toString();
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ArgumentException ex) {
@@ -87,25 +91,11 @@ public class LineToCoreToLine {
         } catch (SyntaxException ex) {
             return "NO \"Syntax Error: " + ex.getMessage() + "\"";
         }
-
-        StringBuilder builder = new StringBuilder();
-        if (!warnings.isEmpty()) {
-            builder.append("OK (WARNINGS)");
-            for (String warning : warnings) {
-                builder
-                .append(" \"")
-                .append(warning)
-                .append('"');
-            }
-        } else {
-            builder.append("OK");
-        }
-        return builder.toString();
     }
 
-    public String deleteScript(String args) {
+    public String deleteScript(Session session, String args) {
         try {
-            _lineToCore.deleteScript(args);
+            lineToCore.deleteScript(session, args);
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ScriptNotFoundException ex) {
@@ -118,10 +108,9 @@ public class LineToCoreToLine {
         return "OK";
     }
 
-    public String getScript(String args) {
-        String content = null;
+    public String getScript(Session session, String args) {
         try {
-            content = _lineToCore.getScript(args);
+            return lineToCore.getScript(session, args) + "\r\n" + "OK";
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ScriptNotFoundException ex) {
@@ -131,16 +120,12 @@ public class LineToCoreToLine {
         } catch (StorageException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         }
-        StringBuilder builder = new StringBuilder(content);
-        builder
-            .append("\r\n")
-            .append("OK");
-        return builder.toString();
+
     }
 
-    public String haveSpace(String args) {
+    public String haveSpace(Session session, String args) {
         try {
-            _lineToCore.haveSpace(args);
+            lineToCore.haveSpace(session, args);
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (QuotaExceededException ex) {
@@ -151,39 +136,45 @@ public class LineToCoreToLine {
         return "OK";
     }
 
-    public String listScripts(String args) {
-        List<ScriptSummary> summaries = null;
+    public String listScripts(Session session, String args) {
         try {
-            summaries = _lineToCore.listScripts(args);
+            List<ScriptSummary> summaries = lineToCore.listScripts(session, args);
+            StringBuilder builder = new StringBuilder();
+            for (ScriptSummary summary : summaries) {
+                builder.append('"')
+                    .append(summary.getName())
+                    .append('"');
+                if (summary.isActive()) {
+                    builder.append(' ')
+                        .append("ACTIVE");
+                }
+                builder.append("\r\n");
+            }
+            builder.append("OK");
+            return builder.toString();
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         }
-        StringBuilder builder = new StringBuilder();
-        for (ScriptSummary summary : summaries)
-        {
-            builder
-                .append('"')
-                .append(summary.getName())
-                .append('"');
-            if (summary.isActive())
-            {
-                builder
-                    .append(' ')
-                    .append("ACTIVE");
-            }
-            builder
-                .append("\r\n");
-        }
-        builder.append("OK");
-        return builder.toString();
     }
 
-    public String putScript(String args) {
-        List<String> warnings = null;
+    public String putScript(Session session, String args) {
         try {
-            warnings = _lineToCore.putScript(args);
+            List<String> warnings = lineToCore.putScript(session, args);
+            StringBuilder builder = new StringBuilder();
+            if (!warnings.isEmpty()) {
+                builder.append("OK (WARNINGS)");
+                for (String warning : warnings) {
+                    builder
+                        .append(" \"")
+                        .append(warning)
+                        .append('"');
+                }
+            } else {
+                builder.append("OK");
+            }
+            return builder.toString();
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (SyntaxException ex) {
@@ -193,24 +184,12 @@ public class LineToCoreToLine {
         } catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         }
-        StringBuilder builder = new StringBuilder();
-        if (!warnings.isEmpty()) {
-            builder.append("OK (WARNINGS)");
-            for (String warning : warnings) {
-                builder
-                    .append(" \"")
-                    .append(warning)
-                    .append('"');
-            }
-        } else {
-            builder.append("OK");
-        }
-        return builder.toString();
+
     }
 
-    public String renameScript(String args) {
+    public String renameScript(Session session, String args) {
         try {
-            _lineToCore.renameScript(args);
+            lineToCore.renameScript(session, args);
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ScriptNotFoundException ex) {
@@ -220,12 +199,12 @@ public class LineToCoreToLine {
         } catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         }
-    return "OK";
+        return "OK";
     }
 
-    public String setActive(String args) {
+    public String setActive(Session session, String args) {
         try {
-            _lineToCore.setActive(args);
+            lineToCore.setActive(session, args);
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ScriptNotFoundException ex) {
@@ -236,10 +215,9 @@ public class LineToCoreToLine {
         return "OK";
     }
     
-    public String getActive(String args) {
-        String content = null;
+    public String getActive(Session session, String args) {
         try {
-            content = _lineToCore.getActive(args);
+            return lineToCore.getActive(session, args) + "\r\n" + "OK";
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (ScriptNotFoundException ex) {
@@ -249,11 +227,6 @@ public class LineToCoreToLine {
         } catch (StorageException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         }
-        StringBuilder builder = new StringBuilder(content);
-        builder
-            .append("\r\n")
-            .append("OK");
-        return builder.toString();
     }
 
 }

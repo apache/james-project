@@ -29,6 +29,7 @@ import java.util.Scanner;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.transcode.LineToCore;
@@ -38,7 +39,7 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToMessage;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 
 /**
@@ -83,26 +84,8 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class ManageSieveMailet extends GenericMailet implements MessageToCoreToMessage.HelpProvider {
 
-    private class MailSession extends SettableSession {
-
-        public MailSession() {
-            super();
-        }
-
-        public void setMail(Mail mail) {
-            setUser(getUser(mail.getSender()));
-            setAuthentication(null != mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME));
-        }
-
-        protected String getUser(MailAddress addr) {
-            return addr.getLocalPart() + '@' + (null == addr.getDomain() ? "localhost" : addr.getDomain());
-        }
-
-    }
-
     public final static String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
 
-    private MailSession session = null;
     // Injected
     private SieveRepository sieveRepository = null;
     // Injected
@@ -126,11 +109,10 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         
         setHelpURL(getInitParameter("helpURL"));
         cache = getInitParameter("cache", true);
-        session = new MailSession();
         transcoder = new MessageToCoreToMessage(
             new LineToCoreToLine(
                 new LineToCore(
-                    new CoreProcessor(session, sieveRepository, usersRepository, sieveParser))),
+                    new CoreProcessor(sieveRepository, usersRepository, sieveParser))),
             this);
     }
 
@@ -138,18 +120,19 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     public void service(Mail mail) throws MessagingException {
         // Sanity checks
         if (mail.getSender() == null) {
-            getMailetContext().log("ERROR: Sender is null");
+            getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender is null");
             return;
         }
-
         if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase())) {
-            getMailetContext().log("ERROR: Sender not local");
+            getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender not local");
             return;
         }
 
         // Update the Session for the current mail and execute
-        session.setMail(mail);
-        getMailetContext().sendMail(transcoder.execute(mail.getMessage()));
+        SettableSession session = new SettableSession();
+        session.setAuthentication(mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null);
+        session.setUser(mail.getSender().getLocalPart() + '@' + (mail.getSender().getDomain() == null ? "localhost" : mail.getSender().getDomain()));
+        getMailetContext().sendMail(transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         
         // And tidy up
@@ -176,7 +159,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         return getClass().getName();
     }
 
-    protected void setHelpURL(String helpURL) throws MessagingException {
+    private void setHelpURL(String helpURL) throws MessagingException {
         try {
             this.helpURL = new URL(helpURL);
         } catch (MalformedURLException ex) {
@@ -184,12 +167,13 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         }
     }
 
-    protected void clearCaches() {
+    private void clearCaches() {
         if (!cache) {
             help = null;
         }
     }
 
+    @VisibleForTesting
     public String getHelp() throws MessagingException {
         if (null == help) {
             help = computeHelp();
@@ -197,7 +181,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         return help;
     }
 
-    protected String computeHelp() throws MessagingException {
+    private String computeHelp() throws MessagingException {
         InputStream stream = null;
         try {
             stream = helpURL.openStream();
