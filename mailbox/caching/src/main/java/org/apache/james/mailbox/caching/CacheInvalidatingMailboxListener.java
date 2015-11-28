@@ -31,6 +31,11 @@ public class CacheInvalidatingMailboxListener<Id extends MailboxId> implements M
     }
 
     @Override
+    public ListenerType getType() {
+        return ListenerType.EACH_NODE;
+    }
+
+    @Override
     public void event(Event event) {
         // TODO this needs for sure to be smarter
         try {

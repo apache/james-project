@@ -349,7 +349,12 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
         super(factory);
         this.writer = writer;
     }
-    
+
+    @Override
+    public ListenerType getType() {
+        return ListenerType.EACH_NODE;
+    }
+
     /**
      * Set the max count of results which will get returned from a query. The default is {@link #DEFAULT_MAX_QUERY_RESULTS}
      * 
