@@ -39,9 +39,11 @@ public class EventsConfigurationBeanFactoryPostProcessor implements BeanFactoryP
             String serialization = config.getString("serialization", "json");
             String publisher = config.getString("publisher", "kafka");
             String registration = config.getString("registration", "cassandra");
+            String delivery = config.getString("delivery", "synchronous");
             String delegatingListenerAlias = getDelegatingListenerAlias(type);
             String serializationAlias = getSerializationAlias(serialization);
             String registrationAlias = getRegistrationAlias(registration);
+            String deliveryAlias = null;
             String publisherAlias = null;
             String consumerAlias = null;
 
@@ -50,12 +52,20 @@ public class EventsConfigurationBeanFactoryPostProcessor implements BeanFactoryP
                 consumerAlias = "kafka-consumer";
             }
 
+            if (delivery.equals("synchronous")) {
+                deliveryAlias = "synchronous-event-delivery";
+            } else if (delivery.equals("asynchronous")) {
+                deliveryAlias = "asynchronous-event-delivery";
+            }
+
             detectInvalidValue(delegatingListenerAlias, "Delegating listener type " + type + " not supported!");
+            detectInvalidValue(deliveryAlias, "Event delivery " + delivery + " not supported");
             beanFactory.registerAlias(delegatingListenerAlias, "delegating-listener");
+            beanFactory.registerAlias(deliveryAlias, "event-delivery");
             if (!delegatingListenerAlias.equals("default")) {
                 detectInvalidValue(serializationAlias, "Serialization system type " + serialization + " not supported!");
-                beanFactory.registerAlias(serializationAlias, "event-serializer");
                 detectInvalidValue(publisherAlias, "Publisher system type " + publisher + " not supported!");
+                beanFactory.registerAlias(serializationAlias, "event-serializer");
                 beanFactory.registerAlias(publisherAlias, "publisher");
                 beanFactory.registerAlias(consumerAlias, "consumer");
                 if (delegatingListenerAlias.equals("registered")) {

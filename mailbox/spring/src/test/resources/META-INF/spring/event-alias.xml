@@ -23,5 +23,6 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <alias name="default-delegating-listener" alias="delegating-listener"/>
+    <alias name="synchronous-event-delivery" alias="event-delivery"/>
 
 </beans>
