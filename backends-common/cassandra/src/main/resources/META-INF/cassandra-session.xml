@@ -67,6 +67,10 @@
           class="org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule"
           lazy-init="true"/>
 
+    <bean id="cassandra-mailbox-registration-module"
+          class="org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule"
+          lazy-init="true"/>
+
     <bean id="cassandra-rrt-module"
           class="org.apache.james.rrt.cassandra.CassandraRRTModule"
           lazy-init="true"/>
@@ -86,6 +90,7 @@
             <list>
                 <ref bean="cassandra-mailbox-uid-modseq-module"/>
                 <ref bean="cassandra-subscription-module"/>
+                <ref bean="cassandra-mailbox-registration-module"/>
                 <ref bean="cassandra-mailbox-module"/>
                 <ref bean="cassandra-message-module"/>
                 <ref bean="cassandra-mailbox-counters-module"/>
