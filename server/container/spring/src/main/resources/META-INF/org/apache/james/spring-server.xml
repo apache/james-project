@@ -247,12 +247,13 @@
                 -->
                 <entry key="org.apache.james:type=container,name=logprovider" value-ref="logprovider"/>
                 <entry key="org.apache.james:type=component,name=quotamanagerbean" value-ref="quotamanagermanagement"/>
+                <entry key="org.apache.james:type=component,name=reindexerbean" value-ref="reindexermanagement"/>
             </map>
         </property>
         <property name="assembler">
             <bean class="org.springframework.jmx.export.assembler.InterfaceBasedMBeanInfoAssembler">
                 <property name="managedInterfaces"
-                          value="org.apache.james.fetchmail.FetchSchedulerMBean,org.apache.james.domainlist.api.DomainListManagementMBean,org.apache.james.dnsservice.api.DNSServiceMBean,org.apache.james.rrt.api.RecipientRewriteTableManagementMBean,org.apache.james.user.api.UsersRepositoryManagementMBean,org.apache.james.adapter.mailbox.MailboxManagerManagementMBean,org.apache.james.adapter.mailbox.MailboxCopierManagementMBean,org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean,org.apache.james.container.spring.lifecycle.LogProviderManagementMBean,org.apache.james.adapter.mailbox.QuotaManagementMBean"/>
+                          value="org.apache.james.fetchmail.FetchSchedulerMBean,org.apache.james.domainlist.api.DomainListManagementMBean,org.apache.james.dnsservice.api.DNSServiceMBean,org.apache.james.rrt.api.RecipientRewriteTableManagementMBean,org.apache.james.user.api.UsersRepositoryManagementMBean,org.apache.james.adapter.mailbox.MailboxManagerManagementMBean,org.apache.james.adapter.mailbox.MailboxCopierManagementMBean,org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean,org.apache.james.container.spring.lifecycle.LogProviderManagementMBean,org.apache.james.adapter.mailbox.QuotaManagementMBean,org.apache.james.adapter.mailbox.ReIndexerManagementMBean"/>
             </bean>
         </property>
     </bean>
@@ -266,6 +267,9 @@
         <property name="maxQuotaManager" ref="maxQuotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaManager" ref="quotaManager"/>
+    </bean>
+    <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement">
+        <constructor-arg index="0" ref="reindexer"/>
     </bean>
     <!--
         <bean id="james23importermanagement" class="org.apache.james.container.spring.tool.James23ImporterManagement" />
