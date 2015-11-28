@@ -17,53 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.util;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.james.mailbox.store.event;
 
 import org.apache.james.mailbox.MailboxListener;
 
-public class EventCollector implements MailboxListener {
+public class MixedEventDelivery implements EventDelivery {
 
-    private final List<Event> events = new ArrayList<Event>();
+    private final AsynchronousEventDelivery asynchronousEventDelivery;
+    private final SynchronousEventDelivery synchronousEventDelivery;
 
-    private ListenerType listenerType;
-
-    public EventCollector(ListenerType listenerType) {
-        this.listenerType = listenerType;
-    }
-
-    public EventCollector() {
-        this(ListenerType.EACH_NODE);
+    public MixedEventDelivery(AsynchronousEventDelivery asynchronousEventDelivery,
+                              SynchronousEventDelivery synchronousEventDelivery) {
+        this.asynchronousEventDelivery = asynchronousEventDelivery;
+        this.synchronousEventDelivery = synchronousEventDelivery;
     }
 
     @Override
-    public ListenerType getType() {
-        return listenerType;
+    public void deliver(MailboxListener mailboxListener, MailboxListener.Event event) {
+        if (mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
+            synchronousEventDelivery.deliver(mailboxListener, event);
+        } else {
+            asynchronousEventDelivery.deliver(mailboxListener, event);
+        }
     }
 
-    @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    public List<Event> getEvents() {
-        return events;
-    }
-
-    public void event(Event event) {
-        events.add(event);
-    }
-
-    public void mailboxDeleted() {
-    }
-
-    public void mailboxRenamed(String origName, String newName) {
-    }
-
-    public boolean isClosed() {
-        return false;
+    public void stop() {
+        asynchronousEventDelivery.stop();
     }
 
 }

@@ -72,6 +72,11 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
     }
 
     @Override
+    public ExecutionMode getExecutionMode() {
+        return ExecutionMode.SYNCHRONOUS;
+    }
+
+    @Override
     public void addListener(MailboxPath mailboxPath, MailboxListener listener, MailboxSession session) throws MailboxException {
         mailboxListenerRegistry.addListener(mailboxPath, listener);
     }

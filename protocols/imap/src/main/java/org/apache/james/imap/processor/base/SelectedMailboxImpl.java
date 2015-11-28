@@ -107,6 +107,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
         return ListenerType.MAILBOX;
     }
 
+    @Override
+    public ExecutionMode getExecutionMode() {
+        return ExecutionMode.SYNCHRONOUS;
+    }
+
     private void init() throws MailboxException {
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         

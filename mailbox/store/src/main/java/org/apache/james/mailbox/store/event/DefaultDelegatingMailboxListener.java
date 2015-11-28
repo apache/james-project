@@ -42,6 +42,11 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         return ListenerType.EACH_NODE;
     }
 
+    @Override
+    public ExecutionMode getExecutionMode() {
+        return ExecutionMode.SYNCHRONOUS;
+    }
+
     public DefaultDelegatingMailboxListener() {
         this(new SynchronousEventDelivery());
     }

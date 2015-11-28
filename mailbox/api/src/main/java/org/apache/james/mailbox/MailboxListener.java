@@ -40,7 +40,14 @@ public interface MailboxListener {
         MAILBOX
     }
 
+    enum ExecutionMode {
+        SYNCHRONOUS,
+        ASYNCHRONOUS
+    }
+
     ListenerType getType();
+
+    ExecutionMode getExecutionMode();
 
     /**
      * Informs this listener about the given event.

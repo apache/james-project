@@ -49,8 +49,12 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
     public ListeningMessageSearchIndex(MessageMapperFactory<Id> factory) {
         this.factory = factory;
     }
-    
-    
+
+    @Override
+    public ExecutionMode getExecutionMode() {
+        return ExecutionMode.ASYNCHRONOUS;
+    }
+
     /**
      * Return the {@link MessageMapperFactory}
      * 

@@ -43,19 +43,13 @@ public class EventsConfigurationBeanFactoryPostProcessor implements BeanFactoryP
             String delegatingListenerAlias = getDelegatingListenerAlias(type);
             String serializationAlias = getSerializationAlias(serialization);
             String registrationAlias = getRegistrationAlias(registration);
-            String deliveryAlias = null;
+            String deliveryAlias = getDeliveryString(delivery);
             String publisherAlias = null;
             String consumerAlias = null;
 
             if (publisher.equals("kafka")) {
                 publisherAlias = "kafka-publisher";
                 consumerAlias = "kafka-consumer";
-            }
-
-            if (delivery.equals("synchronous")) {
-                deliveryAlias = "synchronous-event-delivery";
-            } else if (delivery.equals("asynchronous")) {
-                deliveryAlias = "asynchronous-event-delivery";
             }
 
             detectInvalidValue(delegatingListenerAlias, "Delegating listener type " + type + " not supported!");
@@ -108,6 +102,17 @@ public class EventsConfigurationBeanFactoryPostProcessor implements BeanFactoryP
             return "broadcast-delegating-listener";
         } else if (type.equals("registered")) {
             return "registered-delegating-listener";
+        }
+        return null;
+    }
+
+    public String getDeliveryString(String delivery) {
+        if (delivery.equals("synchronous")) {
+            return  "synchronous-event-delivery";
+        } else if (delivery.equals("asynchronous")) {
+            return  "asynchronous-event-delivery";
+        } else if (delivery.equals("mixed")) {
+            return  "mixed-event-delivery";
         }
         return null;
     }

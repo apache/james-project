@@ -32,6 +32,7 @@
 
      If yes set this to synchronous
      If no set this to asynchronous
+     If you want to use default supported behaviour exposed by listeners set this to mixed
      -->
     <delivery>synchronous</delivery>
 

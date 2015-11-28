@@ -77,4 +77,9 @@
         <constructor-arg index="0" ref="${event.delivery.thread.count}"/>
     </bean>
 
+    <bean id="mixed-event-delivery" class="org.apache.james.mailbox.store.event.MixedEventDelivery" lazy-init="true">
+        <constructor-arg index="0" ref="asynchronous-event-delivery"/>
+        <constructor-arg index="1" ref="synchronous-event-delivery"/>
+    </bean>
+
 </beans>

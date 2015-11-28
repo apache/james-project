@@ -50,6 +50,11 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
     }
 
     @Override
+    public ExecutionMode getExecutionMode() {
+        return ExecutionMode.ASYNCHRONOUS;
+    }
+
+    @Override
     public void event(Event event) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(event.getMailboxPath());

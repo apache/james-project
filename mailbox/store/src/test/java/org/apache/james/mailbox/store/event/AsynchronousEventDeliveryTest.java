@@ -30,42 +30,8 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 public class AsynchronousEventDeliveryTest {
-
-    public class WaitMailboxListener implements MailboxListener {
-
-        private final AtomicLong invocationCount;
-
-        public WaitMailboxListener() {
-            invocationCount = new AtomicLong(0);
-        }
-
-        public AtomicLong getInvocationCount() {
-            return invocationCount;
-        }
-
-        @Override
-        public ListenerType getType() {
-            return ListenerType.MAILBOX;
-        }
-
-        @Override
-        public void event(Event event) {
-            try {
-                Thread.sleep(100);
-                invocationCount.incrementAndGet();
-            } catch (InterruptedException e) {
-                LOGGER.info("interrupted", e);
-            }
-        }
-    }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AsynchronousEventDeliveryTest.class);
 
     private MailboxListener mailboxListener;
     private AsynchronousEventDelivery asynchronousEventDelivery;

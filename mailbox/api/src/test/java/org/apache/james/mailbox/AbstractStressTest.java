@@ -65,6 +65,11 @@ public abstract class AbstractStressTest {
             }
 
             @Override
+            public ExecutionMode getExecutionMode() {
+                return ExecutionMode.SYNCHRONOUS;
+            }
+
+            @Override
             public void event(Event event) {
                 long u = ((Added) event).getUids().get(0);
                 uList.add(u);
