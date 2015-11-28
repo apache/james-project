@@ -550,6 +550,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-kafka</artifactId>
+                <version>${mailbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-api</artifactId>
                 <version>${mailbox.version}</version>
             </dependency>
