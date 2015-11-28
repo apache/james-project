@@ -23,8 +23,10 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.event.EventDelivery;
 import org.apache.james.mailbox.store.event.EventSerializer;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
+import org.apache.james.mailbox.store.event.SynchronousEventDelivery;
 import org.apache.james.mailbox.store.publisher.MessageConsumer;
 import org.apache.james.mailbox.store.publisher.Publisher;
 import org.apache.james.mailbox.store.publisher.Topic;
@@ -41,17 +43,27 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
     private final Publisher publisher;
     private final EventSerializer eventSerializer;
     private final Topic globalTopic;
+    private final EventDelivery eventDelivery;
 
     public BroadcastDelegatingMailboxListener(Publisher publisher,
                                               MessageConsumer messageConsumer,
                                               EventSerializer eventSerializer,
+                                              EventDelivery eventDelivery,
                                               String globalTopic) throws Exception {
         this.mailboxListenerRegistry = new MailboxListenerRegistry();
         this.publisher = publisher;
         this.eventSerializer = eventSerializer;
         this.globalTopic = new Topic(globalTopic);
+        this.eventDelivery = eventDelivery;
         messageConsumer.setMessageReceiver(this);
         messageConsumer.init(this.globalTopic);
+    }
+
+    public BroadcastDelegatingMailboxListener(Publisher publisher,
+                                              MessageConsumer messageConsumer,
+                                              EventSerializer eventSerializer,
+                                              String globalTopic) throws Exception {
+        this(publisher, messageConsumer, eventSerializer, new SynchronousEventDelivery(), globalTopic);
     }
 
     @Override
@@ -108,29 +120,16 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
             mailboxListenerRegistry.handleRename(renamed.getMailboxPath(), renamed.getNewPath());
         }
         for (MailboxListener listener : listenerSnapshot) {
-            deliverEvent(event, listener);
+            eventDelivery.deliver(listener, event);
         }
     }
 
     private void deliverEventToGlobalListeners(Event event, ListenerType type) {
         for (MailboxListener mailboxListener : mailboxListenerRegistry.getGlobalListeners()) {
             if (mailboxListener.getType() == type) {
-                deliverEvent(event, mailboxListener);
+                eventDelivery.deliver(mailboxListener, event);
             }
         }
     }
 
-    private void deliverEvent(Event event, MailboxListener listener) {
-        try {
-            listener.event(event);
-        } catch(Throwable throwable) {
-            event.getSession()
-                .getLog()
-                .error("Error while processing listener "
-                        + listener.getClass().getCanonicalName()
-                        + " for "
-                        + event.getClass().getCanonicalName(),
-                    throwable);
-        }
-    }
 }

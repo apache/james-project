@@ -34,7 +34,8 @@ import org.apache.james.mailbox.model.MailboxPath;
  */
 public class DefaultDelegatingMailboxListener implements DelegatingMailboxListener {
 
-    private MailboxListenerRegistry registry;
+    private final MailboxListenerRegistry registry;
+    private final EventDelivery eventDelivery;
 
     @Override
     public ListenerType getType() {
@@ -42,7 +43,12 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     public DefaultDelegatingMailboxListener() {
+        this(new SynchronousEventDelivery());
+    }
+
+    public DefaultDelegatingMailboxListener(EventDelivery eventDelivery) {
         this.registry = new MailboxListenerRegistry();
+        this.eventDelivery = eventDelivery;
     }
 
     @Override
@@ -86,27 +92,13 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     protected void deliverEventToMailboxListeners(Event event, Collection<MailboxListener> listenerSnapshot) {
         for (MailboxListener listener : listenerSnapshot) {
-            deliverEvent(event, listener);
+            eventDelivery.deliver(listener, event);
         }
     }
 
     protected void deliverEventToGlobalListeners(Event event) {
         for (MailboxListener mailboxListener : registry.getGlobalListeners()) {
-            deliverEvent(event, mailboxListener);
-        }
-    }
-
-    private void deliverEvent(Event event, MailboxListener listener) {
-        try {
-            listener.event(event);
-        } catch(Throwable throwable) {
-            event.getSession()
-                .getLog()
-                .error("Error while processing listener "
-                    + listener.getClass().getCanonicalName()
-                    + " for "
-                    + event.getClass().getCanonicalName(),
-                    throwable);
+            eventDelivery.deliver(mailboxListener, event);
         }
     }
 
