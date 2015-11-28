@@ -80,4 +80,6 @@
         <constructor-arg index="0" ref="cassandra-session"/>
     </bean>
 
+    <bean id="cassandra-mailbox-id-deserializer" class="org.apache.james.mailbox.cassandra.CassandraMailboxIdDeserializer"/>
+
 </beans>

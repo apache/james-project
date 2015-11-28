@@ -81,4 +81,6 @@
     </bean>
     <alias name="jvm-locker" alias="jcr-locker"/>
 
+    <bean id="jcr-mailbox-id-deserializer" class="org.apache.james.mailbox.jcr.JCRMailboxIdDeserializer"/>
+
 </beans>
