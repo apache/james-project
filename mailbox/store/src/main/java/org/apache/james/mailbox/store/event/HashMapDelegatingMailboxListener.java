@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.store.event;
 
 import java.util.ArrayList;
 import java.util.HashMap;

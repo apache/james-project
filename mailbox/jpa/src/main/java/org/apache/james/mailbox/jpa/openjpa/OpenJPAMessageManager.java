@@ -35,7 +35,7 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMessage;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.Message;
