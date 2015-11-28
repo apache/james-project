@@ -19,37 +19,9 @@
 
 package org.apache.james.mailbox.store.event;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.MailboxListenerSupport;
 
-/**
- * Receive a {@link org.apache.james.mailbox.MailboxListener.Event} and delegate it to an other
- * {@link MailboxListener} depending on the registered name
- *
- */
-public class HashMapDelegatingMailboxListener extends AbstractDelegatingMailboxListener{
+public interface DelegatingMailboxListener extends MailboxListenerSupport, MailboxListener{
 
-    private Map<MailboxPath, List<MailboxListener>> listeners = new HashMap<MailboxPath, List<MailboxListener>>();
-    private List<MailboxListener> globalListeners = new ArrayList<MailboxListener>();
-
-    @Override
-    public ListenerType getType() {
-        return ListenerType.EACH_NODE;
-    }
-
-    @Override
-    protected Map<MailboxPath, List<MailboxListener>> getListeners() {
-        return listeners;
-    }
-
-    @Override
-    protected List<MailboxListener> getGlobalListeners() {
-        return globalListeners;
-    }
-    
 }
