@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.indexer.events;
 
+import com.google.common.base.Objects;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class MessageDeletedEvent implements ImpactingMessageEvent {
@@ -44,5 +45,17 @@ public class MessageDeletedEvent implements ImpactingMessageEvent {
     @Override
     public ImpactingEventType getType() {
         return ImpactingEventType.Deletion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageDeletedEvent that = (MessageDeletedEvent) o;
+        return Objects.equal(uid, that.uid) && Objects.equal(mailboxPath, that.mailboxPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(uid, mailboxPath);
     }
 }

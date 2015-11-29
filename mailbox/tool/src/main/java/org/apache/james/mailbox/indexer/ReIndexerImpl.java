@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.indexer;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -80,18 +81,16 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
 
     public void reIndex() throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing", LOGGER);
+        LOGGER.info("Starting a full reindex");
         List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
         GlobalRegistration globalRegistration = new GlobalRegistration();
         mailboxManager.addGlobalListener(globalRegistration, mailboxSession);
         try {
-            for (MailboxPath mailboxPath : mailboxPaths) {
-                if (globalRegistration.pathNeedsIndexing(mailboxPath)) {
-                    reIndex(mailboxPath, mailboxSession);
-                }
-            }
+            handleFullReindexingIterations(mailboxPaths, globalRegistration);
         } finally {
             mailboxManager.removeGlobalListener(globalRegistration, mailboxSession);
         }
+        LOGGER.info("Full reindex finished");
     }
 
     private void reIndex(MailboxPath path, MailboxSession mailboxSession) throws MailboxException {
@@ -101,7 +100,7 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
         messageSearchIndex.delete(mailboxSession, mailbox, MessageRange.all());
         mailboxManager.addListener(path, mailboxRegistration, mailboxSession);
         try {
-            handleIterations(mailboxSession,
+            handleMailboxIndexingIterations(mailboxSession,
                 mailboxRegistration,
                 mailbox,
                 mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
@@ -115,7 +114,20 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
         }
     }
 
-    private void handleIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox<Id> mailbox, Iterator<Message<Id>> iterator) throws MailboxException {
+    private void handleFullReindexingIterations(List<MailboxPath> mailboxPaths, GlobalRegistration globalRegistration) throws MailboxException {
+        for (MailboxPath mailboxPath : mailboxPaths) {
+            Optional<MailboxPath> pathToIndex = globalRegistration.getPathToIndex(mailboxPath);
+            if (pathToIndex.isPresent()) {
+                try {
+                    reIndex(pathToIndex.get());
+                } catch(Throwable e) {
+                    LOGGER.error("Error while proceeding to full reindexing on {}", pathToIndex.get(), e);
+                }
+            }
+        }
+    }
+
+    private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox<Id> mailbox, Iterator<Message<Id>> iterator) throws MailboxException {
         while (iterator.hasNext()) {
             Message<Id> message = iterator.next();
             ImpactingMessageEvent impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));

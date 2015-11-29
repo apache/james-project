@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.indexer.events;
 
+import com.google.common.base.Objects;
 import org.apache.james.mailbox.model.MailboxPath;
 
 import javax.mail.Flags;
@@ -52,5 +53,19 @@ public class FlagsMessageEvent implements ImpactingMessageEvent {
 
     public Flags getFlags() {
         return flags;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        FlagsMessageEvent that = (FlagsMessageEvent) o;
+        return Objects.equal(uid, that.uid) &&
+            Objects.equal(mailboxPath, that.mailboxPath) &&
+            Objects.equal(flags, that.flags);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(uid, mailboxPath, flags);
     }
 }
