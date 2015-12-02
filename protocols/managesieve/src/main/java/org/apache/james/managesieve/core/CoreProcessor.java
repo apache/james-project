@@ -21,6 +21,7 @@
 package org.apache.james.managesieve.core;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.ManageSieveRuntimeException;
 import org.apache.james.managesieve.api.Session;
@@ -51,29 +52,20 @@ public class CoreProcessor implements CoreCommands {
     private final SieveRepository sieveRepository;
     private final UsersRepository usersRepository;
     private final SieveParser parser;
+    private final Map<Capabilities, String> capabilitiesBase;
 
     public CoreProcessor(SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
         this.sieveRepository = repository;
         this.usersRepository = usersRepository;
         this.parser = parser;
+        this.capabilitiesBase = precomputeCapabilitiesBase(parser);
     }
 
     public Map<Capabilities, String> capability(Session session) {
-        Map<Capabilities, String> capabilities = new HashMap<Capabilities, String>();
-        capabilities.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
-        capabilities.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
-        StringBuilder builder = new StringBuilder();
-        for (String extension : parser.getExtensions()) {
-            builder.append(extension).append(' ');
-        }
-        String extensions = builder.toString().trim();
-        if (!extensions.isEmpty()) {
-            capabilities.put(Capabilities.SIEVE, extensions);
-        }
+        Map<Capabilities, String> capabilities = Maps.newHashMap(capabilitiesBase);
         if (session.isAuthenticated()) {
             capabilities.put(Capabilities.OWNER, session.getUser());
         }
-        capabilities.put(Capabilities.GETACTIVE, null);
         return capabilities;
     }
 
@@ -179,5 +171,25 @@ public class CoreProcessor implements CoreCommands {
         } catch (UsersRepositoryException e) {
             Throwables.propagate(e);
         }
+    }
+
+    private String buildExtensions(SieveParser parser) {
+        StringBuilder builder = new StringBuilder();
+        for (String extension : parser.getExtensions()) {
+            builder.append(extension).append(' ');
+        }
+        return builder.toString().trim();
+    }
+
+    private Map<Capabilities, String> precomputeCapabilitiesBase(SieveParser parser) {
+        String extensions = buildExtensions(parser);
+        Map<Capabilities, String> capabilitiesBase = new HashMap<Capabilities, String>();
+        capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
+        capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
+        if (!extensions.isEmpty()) {
+            capabilitiesBase.put(Capabilities.SIEVE, extensions);
+        }
+        capabilitiesBase.put(Capabilities.GETACTIVE, null);
+        return capabilitiesBase;
     }
 }
