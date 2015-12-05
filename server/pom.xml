@@ -87,6 +87,7 @@
         <module>data/data-file</module>
         <module>data/data-ldap</module>
         <module>data/data-hbase</module>
+        <module>data/data-memory</module>
 
         <module>protocols/fetchmail</module>
         <module>protocols/protocols-imap4</module>
