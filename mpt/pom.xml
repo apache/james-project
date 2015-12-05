@@ -45,6 +45,7 @@
         <module>all</module>
         <module>core</module>
         <module>impl/imap-mailbox</module>
+        <module>impl/managesieve</module>
         <module>mavenplugin</module>
     </modules>
 
@@ -114,6 +115,7 @@
         <javax.mail.groupId>javax.mail</javax.mail.groupId>
         <javax.mail.artifactId>mail</javax.mail.artifactId>
         <backends.version>1.8.3-SNAPSHOT</backends.version>
+        <james.version>3.0.0-beta5-SNAPSHOT</james.version>
     </properties>
 
 
