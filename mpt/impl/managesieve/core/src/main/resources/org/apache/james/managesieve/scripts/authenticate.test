@@ -17,25 +17,21 @@
 # under the License.                                           #
 ################################################################
 
-C: GETSCRIPT any
-S: NO
+C: AUTHENTICATE
+S: NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command
 
-C: UNAUTHENTICATE arg
-S: NO UNAUTHENTICATE do not take arguments
+C: AUTHENTICATE UNKNOWN
+S: NO Unknown SASL mechanism UNKNOWN
 
-C: UNAUTHENTICATE
-S: NO UNAUTHENTICATE command must be issued in authenticated state
+C: AUTHENTICATE "PLAIN"
+S: \+ ""
+C: GETSCRIPT toto.sieve
+S: NO ManageSieve syntax is incorrect : You must supply a password for the authentication mechanism. Formal syntax : <NULL>username<NULL>password
+
+C:  tin password
+S: NO authentication failed
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
 S: OK authentication successfull
-
-C: GETSCRIPT any
-S: NO \(NONEXISTENT\) "There is no script by that name"
-
-C: UNAUTHENTICATE
-S: OK
-
-C: GETSCRIPT any
-S: NO

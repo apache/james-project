@@ -22,10 +22,12 @@ package org.apache.james.managesieve.transcode;
 
 import com.google.common.base.Strings;
 import org.apache.james.managesieve.api.ArgumentException;
+import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SyntaxException;
+import org.apache.james.managesieve.api.UnknownSaslMechanism;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
@@ -74,6 +76,14 @@ public class LineToCore{
 
     public void logout() throws SessionTerminatedException {
         core.logout();
+    }
+
+    public String chooseMechanism(Session session, String mechanism) throws AuthenticationException, UnknownSaslMechanism, SyntaxException {
+        return core.chooseMechanism(session, mechanism);
+    }
+
+    public String authenticate(Session session, String suppliedData) throws AuthenticationException, SyntaxException {
+        return core.authenticate(session, suppliedData);
     }
     
     public void deleteScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException, ArgumentException {

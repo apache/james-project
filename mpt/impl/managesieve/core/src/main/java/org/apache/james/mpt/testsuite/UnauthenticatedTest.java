@@ -21,6 +21,7 @@ package org.apache.james.mpt.testsuite;
 
 import com.google.inject.Inject;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Locale;
@@ -32,6 +33,11 @@ public class UnauthenticatedTest extends ManageSieveMPTTest {
 
     public UnauthenticatedTest() throws Exception {
         super(hostSystem);
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
     }
 
     @Test

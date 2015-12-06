@@ -27,8 +27,10 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.Lists;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
+import org.apache.james.managesieve.api.commands.Authenticate;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -58,13 +60,14 @@ public class CoreProcessorTestCase {
     private SieveRepository sieveRepository;
 
     private CoreProcessor core;
+    private UsersRepository usersRepository;
 
     @Before
     public void setUp() throws Exception {
         session = new SettableSession();
         sieveParser = mock(SieveParser.class);
         sieveRepository = mock(SieveRepository.class);
-        UsersRepository usersRepository = mock(UsersRepository.class);
+        usersRepository = mock(UsersRepository.class);
         core = new CoreProcessor(sieveRepository, usersRepository, sieveParser);
         when(usersRepository.contains(USER)).thenAnswer(new Answer<Boolean>() {
             public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -75,44 +78,48 @@ public class CoreProcessorTestCase {
 
     @Test
     public final void testCapabilityUnauthenticated() {
-        session.setAuthentication(false);
+        session.setState(Session.State.AUTHENTICATED);
         when(sieveParser.getExtensions()).thenAnswer(new Answer<List<String>>() {
             public List<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return Lists.newArrayList("a", "b", "c");
             }
         });
+        core = new CoreProcessor(sieveRepository, usersRepository, sieveParser);
         assertThat(core.capability(session)).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
+            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString())
             .containsKey(Capabilities.GETACTIVE);
     }
 
     @Test
     public final void testCapabilityAuthenticated() {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         when(sieveParser.getExtensions()).thenAnswer(new Answer<List<String>>() {
             public List<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return Lists.newArrayList("a", "b", "c");
             }
         });
+        core = new CoreProcessor(sieveRepository, usersRepository, sieveParser);
         session.setUser(USER);
         assertThat(core.capability(session)).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
             .containsEntry(Capabilities.OWNER, USER)
+            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString())
             .containsKey(Capabilities.GETACTIVE);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testCheckScriptUnauthorised() throws AuthenticationRequiredException, SyntaxException {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.checkScript(session, "warning");
     }
 
     @Test
     public final void testCheckScript() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         when(sieveParser.parse(CONTENT)).thenAnswer(new Answer<List<String>>() {
             public List<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -125,14 +132,14 @@ public class CoreProcessorTestCase {
     @Test(expected = SyntaxException.class)
     public final void testCheckScriptSyntaxException() throws Exception {
         doThrow(new SyntaxException("Syntax exception")).when(sieveParser).parse(CONTENT);
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.checkScript(session, CONTENT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testDeleteScriptUnauthorised() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.deleteScript(session, SCRIPT);
     }
@@ -140,7 +147,7 @@ public class CoreProcessorTestCase {
     @Test(expected = ScriptNotFoundException.class)
     public final void testDeleteScriptNonExistent() throws Exception {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).deleteScript(USER, SCRIPT);
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.deleteScript(session, SCRIPT);
     }
@@ -148,7 +155,7 @@ public class CoreProcessorTestCase {
 
     @Test
     public final void testDeleteScriptExistent() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         sieveRepository.putScript(USER, SCRIPT, CONTENT);
         core.deleteScript(session, SCRIPT);
@@ -158,14 +165,14 @@ public class CoreProcessorTestCase {
     @Test(expected = IsActiveException.class)
     public final void testDeleteScriptActive() throws Exception {
         doThrow(new IsActiveException()).when(sieveRepository).deleteScript(USER, SCRIPT);
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.deleteScript(session, SCRIPT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testGetUnauthorisedScript() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.getScript(session, SCRIPT);
     }
@@ -173,14 +180,14 @@ public class CoreProcessorTestCase {
     @Test(expected = ScriptNotFoundException.class)
     public final void testGetNonExistentScript() throws Exception {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getScript(USER, SCRIPT);
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.getScript(session, SCRIPT);
     }
 
     @Test
     public final void testGetScript() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         when(sieveRepository.getScript(USER, SCRIPT)).thenAnswer(new Answer<String>() {
             public String answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -192,14 +199,14 @@ public class CoreProcessorTestCase {
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testHaveSpaceUnauthorised() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.haveSpace(session, SCRIPT, Long.MAX_VALUE);
     }
 
     @Test
     public final void testHaveSpace() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.haveSpace(session, SCRIPT, Long.MAX_VALUE);
         verify(sieveRepository).haveSpace(USER, SCRIPT, Long.MAX_VALUE);
@@ -207,14 +214,14 @@ public class CoreProcessorTestCase {
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testListScriptsUnauthorised() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.listScripts(session);
     }
 
     @Test
     public final void testListScripts() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         when(sieveRepository.listScripts(USER)).thenAnswer(new Answer<List<ScriptSummary>>() {
             @Override
@@ -228,14 +235,14 @@ public class CoreProcessorTestCase {
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testPutScriptUnauthorised() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.putScript(session, SCRIPT, CONTENT);
     }
 
     @Test
     public final void testPutScriptAuthorized() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.putScript(session, SCRIPT, CONTENT);
         verify(sieveRepository).putScript(USER, SCRIPT, CONTENT);
@@ -244,21 +251,21 @@ public class CoreProcessorTestCase {
     @Test(expected = SyntaxException.class)
     public final void testPutScriptSyntaxException() throws Exception {
         doThrow(new SyntaxException("Syntax exception")).when(sieveParser).parse(CONTENT);
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.putScript(session, SCRIPT, CONTENT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testRenameScriptUnauthorized() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.renameScript(session, OLDNAME, NEW_NAME);
     }
 
     @Test
     public final void testRenameScript() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.renameScript(session, OLDNAME, NEW_NAME);
         verify(sieveRepository).renameScript(USER, OLDNAME, NEW_NAME);
@@ -266,14 +273,14 @@ public class CoreProcessorTestCase {
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testSetActiveUnauthorised() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.setActive(session, SCRIPT);
     }
 
     @Test
     public final void testSetActive() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.setActive(session, SCRIPT);
         verify(sieveRepository).setActive(USER, SCRIPT);
@@ -281,7 +288,7 @@ public class CoreProcessorTestCase {
 
     @Test(expected = AuthenticationRequiredException.class)
     public final void testGetUnauthorisedActive() throws Exception {
-        session.setAuthentication(false);
+        session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(USER);
         core.getActive(session);
     }
@@ -289,14 +296,14 @@ public class CoreProcessorTestCase {
     @Test(expected = ScriptNotFoundException.class)
     public final void testGetNonExistentActive() throws Exception {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getActive(USER);
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         core.getActive(session);
     }
 
     @Test
     public final void testGetActive() throws Exception {
-        session.setAuthentication(true);
+        session.setState(Session.State.AUTHENTICATED);
         session.setUser(USER);
         sieveRepository.setActive(USER, SCRIPT);
         when(sieveRepository.getActive(USER)).thenAnswer(new Answer<String>() {

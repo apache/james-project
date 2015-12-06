@@ -21,16 +21,16 @@
 package org.apache.james.managesieve.util;
 
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.commands.Authenticate;
 
 public class SettableSession implements Session {
 
     private String user;
-    private boolean isAuthenticated;
-    private boolean isTerminated;
+    private State state;
+    private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
 
     public SettableSession() {
-        this.isAuthenticated = false;
-        this.isTerminated = false;
+        this.state = State.UNAUTHENTICATED;
     }
 
     public String getUser() {
@@ -38,12 +38,7 @@ public class SettableSession implements Session {
     }
 
     public boolean isAuthenticated() {
-        return isAuthenticated;
-    }
-
-    public void setAuthentication(boolean isAuthenticated) {
-        this.isAuthenticated = isAuthenticated;
-
+        return state == State.AUTHENTICATED;
     }
 
     public void setUser(String user) {
@@ -51,12 +46,20 @@ public class SettableSession implements Session {
     }
 
     @Override
-    public boolean isTerminated() {
-        return isTerminated;
+    public State getState() {
+        return state;
     }
 
     @Override
-    public void markSessionAsTerminated() {
-        isTerminated = true;
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public Authenticate.SupportedMechanism getChoosedAuthenticationMechanism() {
+        return choosedAuthenticationMechanism;
+    }
+
+    public void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism) {
+        this.choosedAuthenticationMechanism = choosedAuthenticationMechanism;
     }
 }

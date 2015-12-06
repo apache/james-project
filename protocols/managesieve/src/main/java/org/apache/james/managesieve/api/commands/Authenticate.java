@@ -21,14 +21,30 @@
 package org.apache.james.managesieve.api.commands;
 
 import org.apache.james.managesieve.api.AuthenticationException;
+import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.SyntaxException;
+import org.apache.james.managesieve.api.UnknownSaslMechanism;
 
 
 /**
  * @see <a href=http://tools.ietf.org/html/rfc5804#section-2.1>RFC 5804 AUTHENTICATE Command</a>
  */
 public interface Authenticate {
+
+    enum SupportedMechanism {
+        PLAIN;
+
+        public static SupportedMechanism retrieveMechanism(String serializedData) throws UnknownSaslMechanism {
+            for (SupportedMechanism supportedMechanism : SupportedMechanism.values()) {
+                if (supportedMechanism.toString().equalsIgnoreCase(serializedData)) {
+                    return supportedMechanism;
+                }
+            }
+            throw new UnknownSaslMechanism(serializedData);
+        }
+    }
     
-    void authenticate(String mechanism) throws AuthenticationException;
+    String chooseMechanism(Session session, String mechanism) throws AuthenticationException, UnknownSaslMechanism, SyntaxException;
     
-    void authenticate(String mechanism, String initialData) throws AuthenticationException;
+    String authenticate(Session session, String suppliedData) throws AuthenticationException, SyntaxException;
 }

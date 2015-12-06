@@ -18,14 +18,17 @@
  *
  */
 
-package org.apache.james.managesieve.api.commands;
+package org.apache.james.managesieve.api;
 
-/**
- * Core RFC 5804 Commands common to all transports
- * 
- * @see <a href=http://tools.ietf.org/html/rfc5804#section-2>RFC 5804 Commands</a>
- */
-public interface CoreCommands extends Capability, CheckScript, DeleteScript, GetScript, HaveSpace,
-        ListScripts, PutScript, RenameScript, SetActive, GetActive, Noop, Unauthenticate, Logout, Authenticate {
+public interface AuthenticationProcessor {
+
+    String initialServerResponse(Session session);
+
+    /**
+     * @return Null if authentication failed, the authenticated username if authentication is successfull
+     * @throws SyntaxException
+     * @throws AuthenticationException
+     */
+    String isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException;
 
 }

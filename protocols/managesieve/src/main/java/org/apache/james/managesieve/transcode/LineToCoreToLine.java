@@ -21,10 +21,12 @@
 package org.apache.james.managesieve.transcode;
 
 import org.apache.james.managesieve.api.ArgumentException;
+import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SyntaxException;
+import org.apache.james.managesieve.api.UnknownSaslMechanism;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
@@ -80,6 +82,28 @@ public class LineToCoreToLine {
 
     public void logout() throws SessionTerminatedException {
         lineToCore.logout();
+    }
+
+    public String chooseMechanism(Session session, String mechanism) {
+        try {
+            return lineToCore.chooseMechanism(session, mechanism);
+        } catch (AuthenticationException e) {
+            return "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage();
+        } catch (UnknownSaslMechanism unknownSaslMechanism) {
+            return "NO " + unknownSaslMechanism.getMessage();
+        } catch (SyntaxException e) {
+            return "NO ManageSieve syntax is incorrect : " + e.getMessage();
+        }
+    }
+
+    public String authenticate(Session session, String suppliedData) {
+        try {
+            return lineToCore.authenticate(session, suppliedData);
+        } catch (AuthenticationException e) {
+            return "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage();
+        } catch (SyntaxException e) {
+            return "NO ManageSieve syntax is incorrect : " + e.getMessage();
+        }
     }
 
     public String checkScript(Session session, String args) {
