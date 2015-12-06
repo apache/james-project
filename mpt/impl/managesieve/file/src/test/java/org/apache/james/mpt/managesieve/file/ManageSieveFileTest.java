@@ -27,6 +27,7 @@ import org.apache.james.mpt.testsuite.HaveSpaceTest;
 import org.apache.james.mpt.testsuite.LogoutTest;
 import org.apache.james.mpt.testsuite.NoopTest;
 import org.apache.james.mpt.testsuite.PutScriptTest;
+import org.apache.james.mpt.testsuite.RenameScriptTest;
 import org.apache.james.mpt.testsuite.SetActiveTest;
 import org.apache.james.mpt.testsuite.StartTlsTest;
 import org.apache.james.mpt.testsuite.UnauthenticatedTest;
@@ -48,7 +49,8 @@ import org.junit.runners.Suite;
     PutScriptTest.class,
     SetActiveTest.class,
     GetScriptTest.class,
-    DeleteScriptTest.class
+    DeleteScriptTest.class,
+    RenameScriptTest.class
 })
 public class ManageSieveFileTest {
 }

@@ -194,7 +194,7 @@ public class LineToCore{
         if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
-        core.renameScript(session, oldName, newName);
+        core.renameScript(session, ParserUtils.unquote(oldName), ParserUtils.unquote(newName));
     }
 
     public void setActive(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException, UserNotFoundException, StorageException {
