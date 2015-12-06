@@ -111,13 +111,9 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException {
+    public void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException, UserNotFoundException, StorageException {
         authenticationCheck(session);
-        try {
-            sieveRepository.haveSpace(session.getUser(), name, size);
-        } catch (SieveRepositoryException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        }
+        sieveRepository.haveSpace(session.getUser(), name, size);
     }
 
     @Override

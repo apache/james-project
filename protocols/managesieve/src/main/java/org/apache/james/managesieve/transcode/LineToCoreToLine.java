@@ -34,6 +34,7 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
+import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
 import java.util.List;
 import java.util.Map.Entry;
@@ -175,6 +176,10 @@ public class LineToCoreToLine {
             return "NO (QUOTA/MAXSIZE) \"Quota exceeded\"";
         } catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
+        } catch (UserNotFoundException e) {
+            return "NO user not found : " + session.getUser();
+        } catch (StorageException e) {
+            return "NO storage exception : " + e.getMessage();
         }
         return "OK";
     }

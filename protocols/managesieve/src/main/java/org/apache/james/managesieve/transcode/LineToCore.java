@@ -37,6 +37,7 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
+import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
 import java.util.InputMismatchException;
 import java.util.List;
@@ -118,7 +119,7 @@ public class LineToCore{
         return core.checkScript(session, args);
     }
 
-    public void haveSpace(Session session, String args) throws AuthenticationRequiredException, QuotaExceededException, ArgumentException {
+    public void haveSpace(Session session, String args) throws AuthenticationRequiredException, QuotaExceededException, ArgumentException, UserNotFoundException, StorageException {
         String scriptName = ParserUtils.getScriptName(args);
         if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");
