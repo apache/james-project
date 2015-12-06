@@ -58,7 +58,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer {
     final static String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
     final static String EXECUTION_HANDLER = "executionHandler";
 
-
     private int maxLineLength;
     private ManageSieveProcessor manageSieveProcessor;
 
@@ -79,7 +78,16 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer {
 
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
-        return new ManageSieveChannelUpstreamHandler(manageSieveProcessor, getEncryption().getContext(), getEnabledCipherSuites(), LOGGER);
+        return new ManageSieveChannelUpstreamHandler(manageSieveProcessor,
+            getEncryption() == null ? null : getEncryption().getContext(),
+            getEnabledCipherSuites(),
+            isSSL(),
+            LOGGER);
+    }
+
+    private boolean isSSL() {
+        return getEncryption() != null
+            && !getEncryption().isStartTLS();
     }
 
     @Override

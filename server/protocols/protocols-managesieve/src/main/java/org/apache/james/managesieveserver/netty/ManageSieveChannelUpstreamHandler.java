@@ -51,13 +51,16 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     private final ManageSieveProcessor manageSieveProcessor;
     private final SSLContext sslContext;
     private final String[] enabledCipherSuites;
+    private final boolean sslServer;
 
-    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, SSLContext sslContext, String[] enabledCipherSuites, Logger logger) {
+    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, SSLContext sslContext,
+                                             String[] enabledCipherSuites, boolean sslServer, Logger logger) {
         this.logger = logger;
         this.attributes = new ChannelLocal<Session>();
         this.manageSieveProcessor = manageSieveProcessor;
         this.sslContext = sslContext;
         this.enabledCipherSuites = enabledCipherSuites;
+        this.sslServer = sslServer;
     }
 
     @Override
@@ -66,12 +69,17 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
         Session manageSieveSession = attributes.get(ctx.getChannel());
         String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
         ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write(responseString);
+        if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
+            turnSSLon(ctx.getChannel());
+            manageSieveSession.setSslEnabled(true);
+            manageSieveSession.setState(Session.State.UNAUTHENTICATED);
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        getLogger(ctx.getChannel()).warn("Error while processing imap request: " + e.getCause().getClass().getName() + " - " + e.getCause().getMessage());
-        getLogger(ctx.getChannel()).debug("Error while processing imap request", e.getCause());
+        getLogger(ctx.getChannel()).warn("Error while processing ManageSieve request: " + e.getCause().getClass().getName() + " - " + e.getCause().getMessage());
+        getLogger(ctx.getChannel()).debug("Error while processing ManageSieve request", e.getCause());
 
         if (e.getCause() instanceof TooLongFrameException) {
             // Max line length exceeded
@@ -79,8 +87,6 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
             ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("NO Maximum command line length exceeded");
         } else if (e.getCause() instanceof SessionTerminatedException) {
             ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("OK channel is closing");
-            logout(ctx);
-        } else {
             logout(ctx);
         }
     }
@@ -97,7 +103,14 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        attributes.set(ctx.getChannel(), new SettableSession());
+        InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
+        getLogger(ctx.getChannel()).info("Connection established from " + address.getAddress().getHostAddress());
+
+        Session session = new SettableSession();
+        if (sslServer) {
+            session.setSslEnabled(true);
+        }
+        attributes.set(ctx.getChannel(), session);
         ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
         super.channelBound(ctx, e);
     }
@@ -106,6 +119,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         InetSocketAddress address = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
         getLogger(ctx.getChannel()).info("Connection closed for " + address.getAddress().getHostAddress());
+
         attributes.remove(ctx.getChannel());
         super.channelClosed(ctx, e);
     }
@@ -115,15 +129,15 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     }
 
     private void turnSSLon(Channel channel) {
-        channel.setReadable(false);
-
-        SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
-        filter.getEngine().setUseClientMode(false);
-        if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
-            filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);
+        if (sslContext != null) {
+            channel.setReadable(false);
+            SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
+            filter.getEngine().setUseClientMode(false);
+            if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
+                filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);
+            }
+            channel.getPipeline().addFirst(SSL_HANDLER, filter);
+            channel.setReadable(true);
         }
-        channel.getPipeline().addFirst(SSL_HANDLER, filter);
-
-        channel.setReadable(true);
     }
 }

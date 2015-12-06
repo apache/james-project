@@ -41,7 +41,7 @@ public class StartTlsTest extends ManageSieveMPTTest {
     }
 
     @Test
-    public void noopShouldWork() throws Exception {
+    public void startTlsShouldWork() throws Exception {
         scriptTest("starttls", Locale.US);
     }
 }

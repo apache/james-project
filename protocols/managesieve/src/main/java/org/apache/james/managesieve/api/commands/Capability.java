@@ -41,8 +41,7 @@ public interface Capability {
         LANGUAGE,
         OWNER,
         VERSION,
-        UNAUTHENTICATE,
-        GETACTIVE
+        UNAUTHENTICATE
     }
 
 }
