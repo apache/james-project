@@ -21,6 +21,7 @@ package org.apache.james.mpt.managesieve.file;
 
 import org.apache.james.mpt.testsuite.AuthenticateTest;
 import org.apache.james.mpt.testsuite.CapabilityTest;
+import org.apache.james.mpt.testsuite.DeleteScriptTest;
 import org.apache.james.mpt.testsuite.GetScriptTest;
 import org.apache.james.mpt.testsuite.HaveSpaceTest;
 import org.apache.james.mpt.testsuite.LogoutTest;
@@ -46,7 +47,8 @@ import org.junit.runners.Suite;
     HaveSpaceTest.class,
     PutScriptTest.class,
     SetActiveTest.class,
-    GetScriptTest.class
+    GetScriptTest.class,
+    DeleteScriptTest.class
 })
 public class ManageSieveFileTest {
 }
