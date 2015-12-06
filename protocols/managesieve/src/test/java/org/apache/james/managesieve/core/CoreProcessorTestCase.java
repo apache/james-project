@@ -88,8 +88,7 @@ public class CoreProcessorTestCase {
         assertThat(core.capability(session)).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
-            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString())
-            .containsKey(Capabilities.GETACTIVE);
+            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString());
     }
 
     @Test
@@ -106,8 +105,7 @@ public class CoreProcessorTestCase {
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
             .containsEntry(Capabilities.OWNER, USER)
-            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString())
-            .containsKey(Capabilities.GETACTIVE);
+            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString());
     }
 
     @Test(expected = AuthenticationRequiredException.class)

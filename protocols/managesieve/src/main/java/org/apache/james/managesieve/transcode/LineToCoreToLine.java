@@ -60,10 +60,16 @@ public class LineToCoreToLine {
             Set<Entry<Capabilities, String>> entries = lineToCore.capability(session, args).entrySet();
             StringBuilder builder = new StringBuilder();
             for (Entry<Capabilities, String> entry : entries) {
-                builder.append(entry.getKey().toString())
-                    .append(' ')
-                    .append(entry.getValue() == null ? "" : entry.getValue())
-                    .append("\r\n");
+                builder.append('\"')
+                    .append(entry.getKey().toString())
+                    .append('\"');
+                if (entry.getValue() != null) {
+                    builder.append(' ')
+                        .append('\"')
+                        .append(entry.getValue() == null ? "" : entry.getValue())
+                        .append('\"');
+                }
+                builder.append("\r\n");
             }
             builder.append("OK");
             return builder.toString();
