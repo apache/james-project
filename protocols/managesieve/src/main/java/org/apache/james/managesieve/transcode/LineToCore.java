@@ -197,7 +197,7 @@ public class LineToCore{
         core.renameScript(session, oldName, newName);
     }
 
-    public void setActive(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException {
+    public void setActive(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException, UserNotFoundException, StorageException {
         String scriptName = ParserUtils.getScriptName(args);
         if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");

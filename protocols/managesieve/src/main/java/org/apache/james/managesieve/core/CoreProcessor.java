@@ -153,15 +153,9 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException {
+    public void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, UserNotFoundException, StorageException {
         authenticationCheck(session);
-        try {
-            sieveRepository.setActive(session.getUser(), name);
-        } catch (UserNotFoundException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        } catch (StorageException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        }
+        sieveRepository.setActive(session.getUser(), name);
     }
 
     @Override
