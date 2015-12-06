@@ -47,12 +47,10 @@ public class SettableSession implements Session {
         this.user = user;
     }
 
-    @Override
     public State getState() {
         return state;
     }
 
-    @Override
     public void setState(State state) {
         this.state = state;
     }

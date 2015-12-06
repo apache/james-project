@@ -20,6 +20,8 @@
 
 package org.apache.james.managesieve.transcode;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationException;
@@ -40,6 +42,7 @@ import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
 import java.util.InputMismatchException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -150,16 +153,30 @@ public class LineToCore{
     }
 
     public List<String> putScript(Session session, String args) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException, ArgumentException {
-        String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty()) {
-            throw new ArgumentException("Missing argument: script name");
+        System.out.println("args" + args + "<-");
+        Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
+        Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
+
+        String scriptName;
+        if (! arguments.hasNext()) {
+             throw new ArgumentException("Missing argument: script name");
+        } else {
+            scriptName = ParserUtils.unquote(arguments.next());
+            if (Strings.isNullOrEmpty(scriptName)) {
+                throw new ArgumentException("Missing argument: script name");
+            }
         }
-        Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (!scanner.hasNext()) {
-            throw new ArgumentException("Missing argument: script content");
+        if (! arguments.hasNext()) {
+            throw new ArgumentException("Missing argument: script size");
+        } else {
+            ParserUtils.getSize(arguments.next());
         }
-        String content = scanner.next();
-        return core.putScript(session, ParserUtils.unquote(scriptName), content);
+        if (arguments.hasNext()) {
+            throw new ArgumentException("Extra arguments not supported");
+        } else {
+            String content = Joiner.on("\r\n").join(firstLine);
+            return core.putScript(session, ParserUtils.unquote(scriptName), content);
+        }
     }
 
     public void renameScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException, ArgumentException {
