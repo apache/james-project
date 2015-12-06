@@ -20,7 +20,7 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
+import org.apache.james.managesieve.api.Session;
 
 
 /**
@@ -28,6 +28,6 @@ import org.apache.james.managesieve.api.AuthenticationRequiredException;
  */
 public interface Unauthenticate {
    
-    void unauthenticate() throws AuthenticationRequiredException;
+    String unauthenticate(Session session);
 
 }
