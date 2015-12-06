@@ -75,7 +75,7 @@ public class ManageSieveProcessor {
         if (request.contains(" ")) {
             return request.substring(firstWordEndIndex);
         } else {
-            return  "";
+            return "";
         }
     }
 
@@ -99,7 +99,7 @@ public class ManageSieveProcessor {
         } else if (command.equals(LOGOUT)) {
             return "NO LOGOUT command not yet implemented";
         } else if (command.equals(NOOP)) {
-            return "NO NOOP command not yet implemented\r\n";
+            return lineToCoreToLine.noop(arguments);
         } else if (command.equals(PUTSCRIPT)) {
             return lineToCoreToLine.putScript(session, arguments);
         } else if (command.equals(RENAMESCRIPT)) {

@@ -69,6 +69,10 @@ public class LineToCoreToLine {
         }
     }
 
+    public String noop(String args) {
+        return lineToCore.noop(args);
+    }
+
     public String checkScript(Session session, String args) {
         try {
             List<String> warnings = lineToCore.checkScript(session, args);
