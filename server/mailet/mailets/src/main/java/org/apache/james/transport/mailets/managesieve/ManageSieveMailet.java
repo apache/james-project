@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.transcode.LineToCore;
@@ -130,7 +131,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
         // Update the Session for the current mail and execute
         SettableSession session = new SettableSession();
-        session.setAuthentication(mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null);
+        if (mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null) {
+            session.setState(Session.State.AUTHENTICATED);
+        } else {
+            session.setState(Session.State.UNAUTHENTICATED);
+        }
         session.setUser(mail.getSender().getLocalPart() + '@' + (mail.getSender().getDomain() == null ? "localhost" : mail.getSender().getDomain()));
         getMailetContext().sendMail(transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);

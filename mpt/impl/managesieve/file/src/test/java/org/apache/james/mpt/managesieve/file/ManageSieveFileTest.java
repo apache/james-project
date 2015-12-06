@@ -25,6 +25,7 @@ import org.apache.james.mpt.testsuite.CheckScriptTest;
 import org.apache.james.mpt.testsuite.DeleteScriptTest;
 import org.apache.james.mpt.testsuite.GetScriptTest;
 import org.apache.james.mpt.testsuite.HaveSpaceTest;
+import org.apache.james.mpt.testsuite.ListScriptsTest;
 import org.apache.james.mpt.testsuite.LogoutTest;
 import org.apache.james.mpt.testsuite.NoopTest;
 import org.apache.james.mpt.testsuite.PutScriptTest;
@@ -52,7 +53,8 @@ import org.junit.runners.Suite;
     GetScriptTest.class,
     DeleteScriptTest.class,
     RenameScriptTest.class,
-    CheckScriptTest.class
+    CheckScriptTest.class,
+    ListScriptsTest.class
 })
 public class ManageSieveFileTest {
 }
