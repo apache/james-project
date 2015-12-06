@@ -22,6 +22,7 @@ package org.apache.james.managesieve.transcode;
 
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
 public class ManageSieveProcessor {
@@ -79,7 +80,7 @@ public class ManageSieveProcessor {
         }
     }
 
-    private String matchCommandWithImplementation(Session session, String arguments, String command) {
+    private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
         if (command.equals(AUTHENTICATE)) {
             return "NO AUTHENTICATE command not yet implemented";
         } else if (command.equals(CAPABILITY)) {
@@ -97,7 +98,7 @@ public class ManageSieveProcessor {
         } else if (command.equals(LISTSCRIPTS)) {
             return lineToCoreToLine.listScripts(session, arguments);
         } else if (command.equals(LOGOUT)) {
-            return "NO LOGOUT command not yet implemented";
+            lineToCoreToLine.logout();
         } else if (command.equals(NOOP)) {
             return lineToCoreToLine.noop(arguments);
         } else if (command.equals(PUTSCRIPT)) {
@@ -110,9 +111,8 @@ public class ManageSieveProcessor {
             return "NO STARTTLS command not yet implemented";
         } else if (command.equals(UNAUTHENTICATE)) {
             return lineToCoreToLine.unauthenticate(session, arguments);
-        } else {
-            return "NO unknown " + command + " command";
         }
+        return "NO unknown " + command + " command";
     }
 
 }

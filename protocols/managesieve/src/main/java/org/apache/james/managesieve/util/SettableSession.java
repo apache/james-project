@@ -26,9 +26,11 @@ public class SettableSession implements Session {
 
     private String user;
     private boolean isAuthenticated;
+    private boolean isTerminated;
 
     public SettableSession() {
         this.isAuthenticated = false;
+        this.isTerminated = false;
     }
 
     public String getUser() {
@@ -48,4 +50,13 @@ public class SettableSession implements Session {
         this.user = user;
     }
 
+    @Override
+    public boolean isTerminated() {
+        return isTerminated;
+    }
+
+    @Override
+    public void markSessionAsTerminated() {
+        isTerminated = true;
+    }
 }

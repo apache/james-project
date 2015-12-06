@@ -20,16 +20,21 @@
 package org.apache.james.mpt.host;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
 
 public class ManageSieveSession implements Session {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveSession.class);
 
     private ByteBufferOutputStream out;
     private ByteBufferInputStream in;
@@ -47,10 +52,16 @@ public class ManageSieveSession implements Session {
     @Override
     public String readLine() throws Exception {
         if (!isReadLast) {
+            String response;
             StringWriter stringWriter = new StringWriter();
             IOUtils.copy(in, stringWriter);
             String request = stringWriter.toString();
-            String response = manageSieveProcessor.handleRequest(settableSession, request);
+            try {
+                response = manageSieveProcessor.handleRequest(settableSession, request);
+            } catch (SessionTerminatedException e) {
+                LOGGER.info("Session is terminated");
+                response = "OK channel is closing\r\n";
+            }
             out.write(response);
             isReadLast = true;
         }

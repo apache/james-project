@@ -18,15 +18,7 @@
  *
  */
 
-package org.apache.james.managesieve.api.commands;
+package org.apache.james.managesieve.api;
 
-import org.apache.james.managesieve.api.SessionTerminatedException;
-
-/**
- *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.3>RFC 5804 LOGOUT Command</a>
- */
-public interface Logout {
-    
-    void logout() throws SessionTerminatedException;
-
+public class SessionTerminatedException extends ManageSieveException {
 }

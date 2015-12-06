@@ -20,6 +20,7 @@
 package org.apache.james.managesieveserver.netty;
 
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.protocols.api.logger.ProtocolLoggerAdapter;
@@ -66,18 +67,23 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
         if (e.getCause() instanceof TooLongFrameException) {
             // Max line length exceeded
-            //
             // See also JAMES-1190
             ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("NO Maximum command line length exceeded");
+        } else if (e.getCause() instanceof SessionTerminatedException) {
+            ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write("OK channel is closing");
+            logout(ctx);
         } else {
-            // logout on error not sure if that is the best way to handle it
-            attributes.remove(ctx.getChannel());
+            logout(ctx);
+        }
+    }
 
-            // Make sure we close the channel after all the buffers were flushed out
-            Channel channel = ctx.getChannel();
-            if (channel.isConnected()) {
-                channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-            }
+    private void logout(ChannelHandlerContext ctx) {
+        // logout on error not sure if that is the best way to handle it
+        attributes.remove(ctx.getChannel());
+        // Make sure we close the channel after all the buffers were flushed out
+        Channel channel = ctx.getChannel();
+        if (channel.isConnected()) {
+            channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 

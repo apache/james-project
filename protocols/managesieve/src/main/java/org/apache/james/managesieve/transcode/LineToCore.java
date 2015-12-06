@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.managesieve.api.commands.CoreCommands;
@@ -69,6 +70,10 @@ public class LineToCore{
         } else {
             return "NO UNAUTHENTICATE do not take arguments";
         }
+    }
+
+    public void logout() throws SessionTerminatedException {
+        core.logout();
     }
     
     public void deleteScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException, ArgumentException {
