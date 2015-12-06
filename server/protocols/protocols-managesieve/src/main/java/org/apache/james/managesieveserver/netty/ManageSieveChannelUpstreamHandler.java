@@ -36,20 +36,28 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.frame.TooLongFrameException;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
+import javax.net.ssl.SSLContext;
 import java.net.InetSocketAddress;
 
 public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
+    final static String SSL_HANDLER = "sslHandler";
+
     private final Logger logger;
     private final ChannelLocal<Session> attributes;
     private final ManageSieveProcessor manageSieveProcessor;
+    private final SSLContext sslContext;
+    private final String[] enabledCipherSuites;
 
-    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, Logger logger) {
+    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, SSLContext sslContext, String[] enabledCipherSuites, Logger logger) {
         this.logger = logger;
         this.attributes = new ChannelLocal<Session>();
         this.manageSieveProcessor = manageSieveProcessor;
+        this.sslContext = sslContext;
+        this.enabledCipherSuites = enabledCipherSuites;
     }
 
     @Override
@@ -104,5 +112,18 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
 
     private Logger getLogger(Channel channel) {
         return new Slf4jLoggerAdapter(new ProtocolSessionLogger("" + channel.getId(), new ProtocolLoggerAdapter(logger)));
+    }
+
+    private void turnSSLon(Channel channel) {
+        channel.setReadable(false);
+
+        SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
+        filter.getEngine().setUseClientMode(false);
+        if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
+            filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);
+        }
+        channel.getPipeline().addFirst(SSL_HANDLER, filter);
+
+        channel.setReadable(true);
     }
 }

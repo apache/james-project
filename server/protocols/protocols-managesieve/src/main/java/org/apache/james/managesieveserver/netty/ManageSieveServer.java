@@ -79,7 +79,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer {
 
     @Override
     protected ChannelUpstreamHandler createCoreHandler() {
-        return new ManageSieveChannelUpstreamHandler(manageSieveProcessor, LOGGER);
+        return new ManageSieveChannelUpstreamHandler(manageSieveProcessor, getEncryption().getContext(), getEnabledCipherSuites(), LOGGER);
     }
 
     @Override

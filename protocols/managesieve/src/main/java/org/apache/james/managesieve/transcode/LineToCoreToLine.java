@@ -266,4 +266,8 @@ public class LineToCoreToLine {
         }
     }
 
+    public String startTLS(Session session) {
+        return lineToCore.startTLS(session);
+    }
+
 }

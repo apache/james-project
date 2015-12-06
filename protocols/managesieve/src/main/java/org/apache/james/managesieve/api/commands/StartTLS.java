@@ -20,11 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
+import org.apache.james.managesieve.api.Session;
+
 /**
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.2>RFC 5804 STARTTLS Command</a>
  */
 public interface StartTLS {
     
-    void startTLS();
+    String startTLS(Session session);
 
 }

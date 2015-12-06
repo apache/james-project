@@ -198,6 +198,10 @@ public class LineToCore{
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
         return core.getActive(session);
-    }  
+    }
+
+    public String startTLS(Session session) {
+        return core.startTLS(session);
+    }
 
 }

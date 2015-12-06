@@ -28,7 +28,8 @@ public interface Session {
         UNAUTHENTICATED,
         AUTHENTICATION_IN_PROGRESS,
         AUTHENTICATED,
-        TERMINATED
+        TERMINATED,
+        SSL_NEGOCIATION
     }
 
     boolean isAuthenticated();
@@ -44,5 +45,9 @@ public interface Session {
     Authenticate.SupportedMechanism getChoosedAuthenticationMechanism();
 
     void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism);
+
+    void setSslEnabled(boolean sslEnabled);
+
+    boolean isSslEnabled();
 
 }
