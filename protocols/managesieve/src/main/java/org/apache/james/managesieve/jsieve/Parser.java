@@ -32,29 +32,13 @@ import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.ParseException;
 
-/**
- * <code>Parser</code>
- */
 public class Parser implements SieveParser {
     
     private static final List<String> EMPTY_WARNINGS = new ArrayList<String>(0);
     
-    private SieveFactory _sieveFactory = null;
+    private SieveFactory sieveFactory = null;
 
-    /**
-     * Creates a new instance of Parser.
-     *
-     */
-    public Parser() {
-        super();
-    }
-    
-    /**
-     * Creates a new instance of Parser.
-     *
-     */
     public Parser(ConfigurationManager manager) {
-        this();
         setConfigurationManager(manager);
     }
     
@@ -65,22 +49,16 @@ public class Parser implements SieveParser {
      */
     @Resource(name = "jsieveconfigurationmanager")
     public void setConfigurationManager(ConfigurationManager manager) {
-        _sieveFactory = manager.build();
+        sieveFactory = manager.build();
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.SieveParser#getExtensions()
-     */
     public List<String> getExtensions() {
-        return _sieveFactory.getExtensions();
+        return sieveFactory.getExtensions();
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.SieveParser#parse(java.lang.String)
-     */
     public List<String> parse(String content) throws SyntaxException {
         try {
-            _sieveFactory.parse(new ByteArrayInputStream(content.getBytes()));
+            sieveFactory.parse(new ByteArrayInputStream(content.getBytes()));
         } catch (ParseException ex) {
             throw new SyntaxException(ex);
         }
