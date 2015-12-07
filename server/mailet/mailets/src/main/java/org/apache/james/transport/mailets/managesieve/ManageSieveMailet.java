@@ -33,8 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
-import org.apache.james.managesieve.transcode.LineToCore;
-import org.apache.james.managesieve.transcode.LineToCoreToLine;
+import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -112,9 +111,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         setHelpURL(getInitParameter("helpURL"));
         cache = getInitParameter("cache", true);
         transcoder = new MessageToCoreToMessage(new ManageSieveProcessor(
-            new LineToCoreToLine(
-                new LineToCore(
-                    new CoreProcessor(sieveRepository, usersRepository, sieveParser)))),
+                new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, sieveParser))),
             this);
     }
 

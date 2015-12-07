@@ -22,11 +22,9 @@ package org.apache.james.managesieve.api.commands;
 
 import org.apache.james.managesieve.api.Session;
 
-import java.util.Map;
-
 public interface Capability {
 
-    Map<Capabilities, String> capability(Session session);
+    String capability(Session session);
 
     /**
      *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.4>RFC 5804 CAPABILITY Command</a>

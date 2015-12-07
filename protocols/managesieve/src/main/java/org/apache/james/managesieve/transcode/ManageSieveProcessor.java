@@ -43,10 +43,10 @@ public class ManageSieveProcessor {
     public static final String STARTTLS = "STARTTLS";
     public static final String UNAUTHENTICATE = "UNAUTHENTICATE";
 
-    private final LineToCoreToLine lineToCoreToLine;
+    private final ArgumentParser argumentParser;
 
-    public ManageSieveProcessor(LineToCoreToLine lineToCoreToLine) {
-        this.lineToCoreToLine = lineToCoreToLine;
+    public ManageSieveProcessor(ArgumentParser argumentParser) {
+        this.argumentParser = argumentParser;
     }
 
     public String handleRequest(Session session, String request) throws ManageSieveException, SieveRepositoryException {
@@ -82,38 +82,38 @@ public class ManageSieveProcessor {
 
     private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
         if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
-            return lineToCoreToLine.authenticate(session, arguments);
+            return argumentParser.authenticate(session, arguments);
         }
         if (command.equals(AUTHENTICATE)) {
-            return lineToCoreToLine.chooseMechanism(session, arguments);
+            return argumentParser.chooseMechanism(session, arguments);
         } else if (command.equals(CAPABILITY)) {
-            return lineToCoreToLine.capability(session, arguments);
+            return argumentParser.capability(session, arguments);
         } else if (command.equals(CHECKSCRIPT)) {
-            return lineToCoreToLine.checkScript(session, arguments);
+            return argumentParser.checkScript(session, arguments);
         } else if (command.equals(DELETESCRIPT)) {
-            return lineToCoreToLine.deleteScript(session, arguments);
+            return argumentParser.deleteScript(session, arguments);
         } else if (command.equals(GETACTIVE)) {
-            return lineToCoreToLine.getActive(session, arguments);
+            return argumentParser.getActive(session, arguments);
         } else if (command.equals(GETSCRIPT)) {
-            return lineToCoreToLine.getScript(session, arguments);
+            return argumentParser.getScript(session, arguments);
         } else if (command.equals(HAVESPACE)) {
-            return lineToCoreToLine.haveSpace(session, arguments);
+            return argumentParser.haveSpace(session, arguments);
         } else if (command.equals(LISTSCRIPTS)) {
-            return lineToCoreToLine.listScripts(session, arguments);
+            return argumentParser.listScripts(session, arguments);
         } else if (command.equals(LOGOUT)) {
-            lineToCoreToLine.logout();
+            argumentParser.logout();
         } else if (command.equals(NOOP)) {
-            return lineToCoreToLine.noop(arguments);
+            return argumentParser.noop(arguments);
         } else if (command.equals(PUTSCRIPT)) {
-            return lineToCoreToLine.putScript(session, arguments);
+            return argumentParser.putScript(session, arguments);
         } else if (command.equals(RENAMESCRIPT)) {
-            return lineToCoreToLine.renameScript(session, arguments);
+            return argumentParser.renameScript(session, arguments);
         } else if (command.equals(SETACTIVE)) {
-            return lineToCoreToLine.setActive(session, arguments);
+            return argumentParser.setActive(session, arguments);
         } else if (command.equals(STARTTLS)) {
-            return lineToCoreToLine.startTLS(session);
+            return argumentParser.startTLS(session);
         } else if (command.equals(UNAUTHENTICATE)) {
-            return lineToCoreToLine.unauthenticate(session, arguments);
+            return argumentParser.unauthenticate(session, arguments);
         }
         return "NO unknown " + command + " command";
     }

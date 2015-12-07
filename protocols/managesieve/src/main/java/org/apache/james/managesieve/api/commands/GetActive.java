@@ -33,6 +33,6 @@ import org.apache.james.sieverepository.api.exception.StorageException;
  */
 public interface GetActive {
     
-    String getActive(Session session) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException;
+    String getActive(Session session);
 
 }
