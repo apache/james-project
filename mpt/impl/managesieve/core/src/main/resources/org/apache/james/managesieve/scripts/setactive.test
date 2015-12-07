@@ -42,4 +42,5 @@ S: OK
 C: SETACTIVE "mysievescript"
 S: OK
 
-
+C: SETACTIVe
+S: NO "Missing argument: script name"

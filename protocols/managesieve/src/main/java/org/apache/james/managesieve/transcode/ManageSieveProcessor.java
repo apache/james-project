@@ -84,33 +84,33 @@ public class ManageSieveProcessor {
         if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
             return argumentParser.authenticate(session, arguments);
         }
-        if (command.equals(AUTHENTICATE)) {
+        if (command.equalsIgnoreCase(AUTHENTICATE)) {
             return argumentParser.chooseMechanism(session, arguments);
-        } else if (command.equals(CAPABILITY)) {
+        } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);
-        } else if (command.equals(CHECKSCRIPT)) {
+        } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {
             return argumentParser.checkScript(session, arguments);
-        } else if (command.equals(DELETESCRIPT)) {
+        } else if (command.equalsIgnoreCase(DELETESCRIPT)) {
             return argumentParser.deleteScript(session, arguments);
-        } else if (command.equals(GETSCRIPT)) {
+        } else if (command.equalsIgnoreCase(GETSCRIPT)) {
             return argumentParser.getScript(session, arguments);
-        } else if (command.equals(HAVESPACE)) {
+        } else if (command.equalsIgnoreCase(HAVESPACE)) {
             return argumentParser.haveSpace(session, arguments);
-        } else if (command.equals(LISTSCRIPTS)) {
+        } else if (command.equalsIgnoreCase(LISTSCRIPTS)) {
             return argumentParser.listScripts(session, arguments);
-        } else if (command.equals(LOGOUT)) {
+        } else if (command.equalsIgnoreCase(LOGOUT)) {
             argumentParser.logout();
-        } else if (command.equals(NOOP)) {
+        } else if (command.equalsIgnoreCase(NOOP)) {
             return argumentParser.noop(arguments);
-        } else if (command.equals(PUTSCRIPT)) {
+        } else if (command.equalsIgnoreCase(PUTSCRIPT)) {
             return argumentParser.putScript(session, arguments);
-        } else if (command.equals(RENAMESCRIPT)) {
+        } else if (command.equalsIgnoreCase(RENAMESCRIPT)) {
             return argumentParser.renameScript(session, arguments);
-        } else if (command.equals(SETACTIVE)) {
+        } else if (command.equalsIgnoreCase(SETACTIVE)) {
             return argumentParser.setActive(session, arguments);
-        } else if (command.equals(STARTTLS)) {
+        } else if (command.equalsIgnoreCase(STARTTLS)) {
             return argumentParser.startTLS(session);
-        } else if (command.equals(UNAUTHENTICATE)) {
+        } else if (command.equalsIgnoreCase(UNAUTHENTICATE)) {
             return argumentParser.unauthenticate(session, arguments);
         }
         return "NO unknown " + command + " command";
