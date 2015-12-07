@@ -44,7 +44,11 @@ public class ArgumentParser {
     public ArgumentParser(CoreCommands core) {
         this.core = core;
     }
-    
+
+    public String getAdvertisedCapabilities() {
+        return core.getAdvertisedCapabilities();
+    }
+
     public String capability(Session session, String args) {
         if (!args.trim().isEmpty()) {
             return "NO \"Too many arguments: " + args + "\"";

@@ -118,4 +118,8 @@ public class ManageSieveProcessor {
         return "NO unknown " + command + " command";
     }
 
+    public String getAdvertisedCapabilities() {
+        return argumentParser.getAdvertisedCapabilities();
+    }
+
 }

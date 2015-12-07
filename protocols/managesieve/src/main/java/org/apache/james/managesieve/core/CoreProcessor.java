@@ -28,16 +28,16 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.managesieve.api.ManageSieveRuntimeException;
+import org.apache.james.managesieve.api.CapabilityAdvertiser;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.UnknownSaslMechanism;
+import org.apache.james.managesieve.api.commands.Capability;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -76,13 +76,22 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
+    public String getAdvertisedCapabilities() {
+        return convertCapabilityMapToString(capabilitiesBase) + "\r\n";
+    }
+
+    @Override
     public String capability(Session session) {
+        return convertCapabilityMapToString(computeCapabilityMap(session)) + "\r\nOK";
+    }
+
+    private String convertCapabilityMapToString(Map<Capabilities, String> capabilitiesStringMap) {
         return Joiner.on("\r\n").join(
-            Iterables.transform(computeCapabilityMap(session).entrySet(), new Function<Map.Entry<Capabilities,String>, String>() {
+            Iterables.transform(capabilitiesStringMap.entrySet(), new Function<Map.Entry<Capabilities,String>, String>() {
                 public String apply(Map.Entry<Capabilities, String> capabilitiesStringEntry) {
                     return computeCapabilityEntryString(capabilitiesStringEntry);
                 }
-            })) + "\r\nOK";
+            }));
     }
 
     private Map<Capabilities, String> computeCapabilityMap(Session session) {
