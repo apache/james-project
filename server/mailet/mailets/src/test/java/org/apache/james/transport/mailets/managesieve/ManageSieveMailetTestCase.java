@@ -69,19 +69,14 @@ public class ManageSieveMailetTestCase {
     private ManageSieveMailet mailet;
     private SieveRepository sieveRepository;
     private SieveParser sieveParser;
+    private UsersRepository usersRepository;
 
     @Before
     public void setUp() throws Exception {
-        mailet = new ManageSieveMailet();
         sieveRepository = mock(SieveRepository.class);
         sieveParser = mock(SieveParser.class);
-        UsersRepository usersRepository = mock(UsersRepository.class);
-        mailet.setSieveParser(sieveParser);
-        mailet.setSieveRepository(sieveRepository);
-        mailet.setUsersRepository(usersRepository);
-        FakeMailetConfig config = new FakeMailetConfig("ManageSieve mailet", new FakeMailContext());
-        config.setProperty("helpURL", "file:./src/test/resources/help.txt");
-        mailet.init(config);
+        usersRepository = mock(UsersRepository.class);
+        initializeMailet();
         when(usersRepository.contains(USER)).thenAnswer(new Answer<Boolean>() {
             public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return true;
@@ -99,11 +94,13 @@ public class ManageSieveMailetTestCase {
                 return Lists.newArrayList("a", "b", "c");
             }
         });
+        initializeMailet();
         mailet.service(mail);
-        ensureResponseContains("Re: CAPABILITY", message.getSender(), "SIEVE a b c",
-            "GETACTIVE ",
-            "IMPLEMENTATION Apache ManageSieve v1.0",
-            "VERSION 1.0",
+        ensureResponseContains("Re: CAPABILITY", message.getSender(), "\"SIEVE\" \"a b c\"",
+            "\"IMPLEMENTATION\" \"Apache ManageSieve v1.0\"",
+            "\"VERSION\" \"1.0\"",
+            "\"STARTTLS\"",
+            "\"SASL\" \"PLAIN\"",
             "OK");
     }
 
@@ -117,13 +114,15 @@ public class ManageSieveMailetTestCase {
                 return Lists.newArrayList("a", "b", "c");
             }
         });
+        initializeMailet();
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, "test");
         mailet.service(mail);
-        ensureResponseContains("Re: CAPABILITY", message.getSender(), "SIEVE a b c",
-            "GETACTIVE ",
-            "IMPLEMENTATION Apache ManageSieve v1.0",
-            "OWNER test@localhost",
-            "VERSION 1.0",
+        ensureResponseContains("Re: CAPABILITY", message.getSender(), "\"SIEVE\" \"a b c\"",
+            "\"IMPLEMENTATION\" \"Apache ManageSieve v1.0\"",
+            "\"OWNER\" \"test@localhost\"",
+            "\"VERSION\" \"1.0\"",
+            "\"STARTTLS\"",
+            "\"SASL\" \"PLAIN\"",
             "OK");
     }
 
@@ -139,12 +138,12 @@ public class ManageSieveMailetTestCase {
     }
 
     @Test
-    public final void testPutScriptUnauthorised() throws Exception {
+    public final void testPutScriptinvalidLiteral() throws Exception {
         MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "NO");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "NO \"Missing argument: script size\"");
     }
 
     @Test
@@ -154,32 +153,41 @@ public class ManageSieveMailetTestCase {
                 return Lists.newArrayList("warning1", "warning2");
             }
         });
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", USER, SIEVE_LOCALHOST);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {100+}", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "OK (WARNINGS) \"warning1\" \"warning2\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" {100+}", message.getSender(), "OK (WARNINGS) \"warning1\" \"warning2\"");
     }
 
     @Test
-    public final void testPutScriptExtraArgs() throws Exception {
+    public final void testPutScriptInvalidLiteral() throws Exception {
         MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" extra", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" extra", message.getSender(), "NO \"Too many arguments: extra\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" extra", message.getSender(), "NO \"extra is an invalid size literal : it should be at least 4 char looking like {_+}\"");
+    }
+
+    @Test
+    public final void testPutScriptExtraArgs() throws Exception {
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+} extra", USER, SIEVE_LOCALHOST);
+        Mail mail = new FakeMail();
+        mail.setMessage(message);
+        mailet.service(mail);
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+} extra", message.getSender(), "NO \"Extra arguments not supported\"");
     }
 
     @Test
     public final void testPutScriptSyntaxError() throws Exception {
         doThrow(new SyntaxException("error message")).when(sieveParser).parse(SYNTAX_EXCEPTION);
-        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", USER, SIEVE_LOCALHOST);
+        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+}", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "NO \"Syntax Error: error message\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+}", message.getSender(), "NO \"Syntax Error: error message\"");
     }
 
     @Test
@@ -188,7 +196,7 @@ public class ManageSieveMailetTestCase {
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "NO \"Missing argument: script content\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "NO \"Missing argument: script size\"");
     }
 
     @Test
@@ -221,7 +229,7 @@ public class ManageSieveMailetTestCase {
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
         mailet.service(mail);
-        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "OK", SCRIPT_CONTENT);
+        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", message.getSender(), "{13}\r\n" + SCRIPT_CONTENT + "\r\nOK");
     }
 
     @Test
@@ -259,11 +267,11 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testCheckScriptUnauthorised() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT", USER, SIEVE_LOCALHOST);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT {10+}", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
-        ensureResponse("Re: CHECKSCRIPT", message.getSender(), "NO");
+        ensureResponse("Re: CHECKSCRIPT {10+}", message.getSender(), "NO");
     }
 
     @Test
@@ -273,43 +281,53 @@ public class ManageSieveMailetTestCase {
                 return Lists.newArrayList("warning1", "warning2");
             }
         });
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT", USER, SIEVE_LOCALHOST);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT {100+}", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         mailet.service(mail);
-        ensureResponse("Re: CHECKSCRIPT", message.getSender(), "OK (WARNINGS) \"warning1\" \"warning2\"");
+        ensureResponse("Re: CHECKSCRIPT {100+}", message.getSender(), "OK (WARNINGS) \"warning1\" \"warning2\"");
     }
 
     @Test
     public final void testCheckScriptExtraArgs() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT extra", USER, SIEVE_LOCALHOST);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT {10+} extra", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         mailet.service(mail);
-        ensureResponse("Re: CHECKSCRIPT extra", message.getSender(), "NO \"Too many arguments: extra\"");
+        ensureResponse("Re: CHECKSCRIPT {10+} extra", message.getSender(), "NO \"Extra arguments not supported\"");
     }
 
     @Test
     public final void testCheckScriptSyntaxError() throws Exception {
         doThrow(new SyntaxException("error message")).when(sieveParser).parse(SYNTAX_EXCEPTION);
-        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "CHECKSCRIPT", USER, SIEVE_LOCALHOST);
+        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "CHECKSCRIPT {10+}", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         mailet.service(mail);
-        ensureResponse("Re: CHECKSCRIPT", message.getSender(), "NO \"Syntax Error: error message\"");
+        ensureResponse("Re: CHECKSCRIPT {10+}", message.getSender(), "NO \"Syntax Error: error message\"");
     }
 
     @Test
-    public final void testCheckScriptNoScript() throws Exception {
+    public final void testCheckScriptNoSize() throws Exception {
         MimeMessage message = prepareMimeMessage("CHECKSCRIPT", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
         mailet.service(mail);
-        ensureResponse("Re: CHECKSCRIPT", message.getSender(), "NO \"Script part not found in this message\"");
+        ensureResponse("Re: CHECKSCRIPT", message.getSender(), "NO \" is an invalid size literal : it should be at least 4 char looking like {_+}\"");
+    }
+
+    @Test
+    public final void testCheckScriptNoScript() throws Exception {
+        MimeMessage message = prepareMimeMessage("CHECKSCRIPT {10+}", USER, SIEVE_LOCALHOST);
+        Mail mail = new FakeMail();
+        mail.setMessage(message);
+        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
+        mailet.service(mail);
+        ensureResponse("Re: CHECKSCRIPT {10+}", message.getSender(), "NO \"Missing argument: script content\"");
     }
 
     @Test
@@ -548,7 +566,7 @@ public class ManageSieveMailetTestCase {
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
         mailet.service(mail);
-        ensureResponse("Re: GETACTIVE", message.getSender(), "OK", SCRIPT_CONTENT);
+        ensureResponse("Re: GETACTIVE", message.getSender(), SCRIPT_CONTENT + "\r\n" + "OK");
     }
 
     @Test
@@ -569,6 +587,16 @@ public class ManageSieveMailetTestCase {
         mail.setMessage(message);
         mailet.service(mail);
         ensureResponse("Re: GETACTIVE", message.getSender(), "NO");
+    }
+
+    private void initializeMailet() throws MessagingException {
+        mailet = new ManageSieveMailet();
+        mailet.setSieveParser(sieveParser);
+        mailet.setSieveRepository(sieveRepository);
+        mailet.setUsersRepository(usersRepository);
+        FakeMailetConfig config = new FakeMailetConfig("ManageSieve mailet", new FakeMailContext());
+        config.setProperty("helpURL", "file:./src/test/resources/help.txt");
+        mailet.init(config);
     }
 
     private MimeMessage prepareMimeMessage(String subject, String sender, String recipient) throws MessagingException {
