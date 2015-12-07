@@ -31,13 +31,11 @@ import com.google.common.collect.Maps;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.managesieve.api.CapabilityAdvertiser;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.UnknownSaslMechanism;
-import org.apache.james.managesieve.api.commands.Capability;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -265,22 +263,6 @@ public class CoreProcessor implements CoreCommands {
             return "NO : Storage exception : " + e.getMessage();
         }
         return "OK";
-    }
-
-    @Override
-    public String getActive(Session session) {
-        try {
-            authenticationCheck(session);
-            return sieveRepository.getActive(session.getUser()) + "\r\nOK";
-        } catch (AuthenticationRequiredException ex) {
-            return "NO";
-        } catch (ScriptNotFoundException ex) {
-            return "NO (NONEXISTENT) \"" + ex.getMessage() + "\"";
-        } catch (StorageException ex) {
-            return "NO \"" + ex.getMessage() + "\"";
-        } catch (UserNotFoundException e) {
-            return "NO : User not found";
-        }
     }
 
     @Override

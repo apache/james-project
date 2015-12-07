@@ -545,50 +545,6 @@ public class ManageSieveMailetTestCase {
         ensureResponse("Re: SETACTIVE", message.getSender(), "NO \"Missing argument: script name\"");
     }
 
-    @Test
-    public final void testGetActiveUnauthorized() throws Exception {
-        MimeMessage message = prepareMimeMessage("GETACTIVE", USER, SIEVE_LOCALHOST);
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
-        mailet.service(mail);
-        ensureResponse("Re: GETACTIVE", message.getSender(), "NO");
-    }
-
-    @Test
-    public final void testGetActive() throws Exception {
-        when(sieveRepository.getActive(USER)).thenAnswer(new Answer<String>() {
-            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return SCRIPT_CONTENT;
-            }
-        });
-        MimeMessage message = prepareMimeMessage("GETACTIVE", USER, SIEVE_LOCALHOST);
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
-        mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
-        mailet.service(mail);
-        ensureResponse("Re: GETACTIVE", message.getSender(), SCRIPT_CONTENT + "\r\n" + "OK");
-    }
-
-    @Test
-    public final void testGetActiveExtraArgs() throws Exception {
-        MimeMessage message = prepareMimeMessage("GETACTIVE extra", USER, SIEVE_LOCALHOST);
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
-        message.setSubject("GETACTIVE extra");
-        message.saveChanges();
-        mailet.service(mail);
-        ensureResponse("Re: GETACTIVE extra", message.getSender(), "NO \"Too many arguments: extra\"");
-    }
-
-    @Test
-    public final void testGetActiveDesactivated() throws Exception {
-        MimeMessage message = prepareMimeMessage("GETACTIVE", USER, SIEVE_LOCALHOST);
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
-        mailet.service(mail);
-        ensureResponse("Re: GETACTIVE", message.getSender(), "NO");
-    }
-
     private void initializeMailet() throws MessagingException {
         mailet = new ManageSieveMailet();
         mailet.setSieveParser(sieveParser);

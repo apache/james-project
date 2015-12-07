@@ -92,8 +92,6 @@ public class ManageSieveProcessor {
             return argumentParser.checkScript(session, arguments);
         } else if (command.equals(DELETESCRIPT)) {
             return argumentParser.deleteScript(session, arguments);
-        } else if (command.equals(GETACTIVE)) {
-            return argumentParser.getActive(session, arguments);
         } else if (command.equals(GETSCRIPT)) {
             return argumentParser.getScript(session, arguments);
         } else if (command.equals(HAVESPACE)) {
