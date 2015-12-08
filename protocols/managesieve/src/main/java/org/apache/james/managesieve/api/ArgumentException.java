@@ -20,44 +20,20 @@
 
 package org.apache.james.managesieve.api;
 
-/**
- * <code>ArgumentException</code>
- */
 public class ArgumentException extends ManageSieveException {
 
     private static final long serialVersionUID = -7407426714052613820L;
 
-    /**
-     * Creates a new instance of ArgumentException.
-     *
-     */
-    public ArgumentException() {
-    }
+    public ArgumentException() {}
 
-    /**
-     * Creates a new instance of ArgumentException.
-     *
-     * @param message
-     * @param cause
-     */
     public ArgumentException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    /**
-     * Creates a new instance of ArgumentException.
-     *
-     * @param message
-     */
     public ArgumentException(String message) {
         super(message);
     }
 
-    /**
-     * Creates a new instance of ArgumentException.
-     *
-     * @param cause
-     */
     public ArgumentException(Throwable cause) {
         super(cause);
     }

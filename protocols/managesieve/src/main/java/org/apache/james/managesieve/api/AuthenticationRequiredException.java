@@ -20,7 +20,4 @@
 
 package org.apache.james.managesieve.api;
 
-public class AuthenticationRequiredException extends ManageSieveException
-{
-    private static final long serialVersionUID = 4992598322874189613L;  
-}
+public class AuthenticationRequiredException extends ManageSieveException {}
