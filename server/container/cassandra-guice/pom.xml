@@ -323,6 +323,10 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
+                    <artifactId>james-server-protocols-managesieve</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-protocols-pop3</artifactId>
                 </dependency>
                 <dependency>

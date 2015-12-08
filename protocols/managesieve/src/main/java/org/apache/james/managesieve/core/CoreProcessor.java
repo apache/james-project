@@ -49,6 +49,7 @@ import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.apache.james.user.api.UsersRepository;
 
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +69,7 @@ public class CoreProcessor implements CoreCommands {
     private final Map<Capabilities, String> capabilitiesBase;
     private final Map<SupportedMechanism, AuthenticationProcessor> authenticationProcessorMap;
 
+    @Inject
     public CoreProcessor(SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
         this.sieveRepository = repository;
         this.parser = parser;

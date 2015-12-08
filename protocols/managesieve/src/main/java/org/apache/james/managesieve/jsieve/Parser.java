@@ -36,7 +36,11 @@ public class Parser implements SieveParser {
     
     private static final List<String> EMPTY_WARNINGS = new ArrayList<String>(0);
     
-    private SieveFactory sieveFactory = null;
+    private SieveFactory sieveFactory;
+
+    public Parser() throws Exception {
+        setConfigurationManager(new ConfigurationManager());
+    }
 
     public Parser(ConfigurationManager manager) {
         setConfigurationManager(manager);

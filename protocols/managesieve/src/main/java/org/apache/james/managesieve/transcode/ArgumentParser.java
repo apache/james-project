@@ -29,6 +29,7 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
 
+import javax.inject.Inject;
 import java.util.Iterator;
 
 /**
@@ -38,6 +39,7 @@ public class ArgumentParser {
     
     private final CoreCommands core;
 
+    @Inject
     public ArgumentParser(CoreCommands core) {
         this.core = core;
     }

@@ -44,7 +44,7 @@ import javax.net.ssl.SSLEngine;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
-public class ManageSieveServer extends AbstractConfigurableAsyncServer {
+public class ManageSieveServer extends AbstractConfigurableAsyncServer implements ManageSieveServerMBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveServer.class);
 

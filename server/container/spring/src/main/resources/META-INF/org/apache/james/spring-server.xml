@@ -104,6 +104,10 @@
     <!-- IMAP4 Server -->
     <import resource="classpath:META-INF/spring/imapserver-context.xml"/>
 
+    <!-- IMAP4 Server -->
+    <import resource="classpath:META-INF/spring/managesieveserver-context.xml"/>
+
+
     <!--
     ===========================================================================
        Indexer

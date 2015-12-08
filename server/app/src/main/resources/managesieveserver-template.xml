@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one   
+  or more contributor license agreements.  See the NOTICE file 
+  distributed with this work for additional information        
+  regarding copyright ownership.  The ASF licenses this file   
+  to you under the Apache License, Version 2.0 (the            
+  "License"); you may not use this file except in compliance   
+  with the License.  You may obtain a copy of the License at   
+                                                               
+    http://www.apache.org/licenses/LICENSE-2.0                 
+                                                               
+  Unless required by applicable law or agreed to in writing,   
+  software distributed under the License is distributed on an  
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       
+  KIND, either express or implied.  See the License for the    
+  specific language governing permissions and limitations      
+  under the License.                                           
+ -->
+ 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+ 
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
+<managesieveservers>
+
+   <managesieveserver enabled="false">
+
+     <jmxName>managesieveserver</jmxName>
+
+     <!-- Configure this to bind to a specific inetaddress -->
+     <!-- Please NOTE: you should add this IP also to your RemoteAddrNotInNetwork -->
+     <!-- in order to avoid relay check for locallly generated bounces -->
+     <!-- 
+            Port 4190 is the well-known/IANA registered port for ManageSieve.
+            -->
+     <bind>0.0.0.0:4190</bind>
+
+     <connectionBacklog>200</connectionBacklog>
+
+     <!-- Set to true to support STARTTLS or TLS for the Socket.
+           To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
+      -->
+     <tls socketTLS="false" startTLS="false">
+       <!-- To create a new keystore execute:
+        keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+         -->
+       <keystore>file://conf/keystore</keystore>
+       <secret>yoursecret</secret>
+       <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+       <!-- The algorithm is optional and only needs to be specified when using something other
+        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime. -->
+       <algorithm>SunX509</algorithm>
+     </tls>
+         
+        <!-- connection timeout in secconds -->
+        <connectiontimeout>360</connectiontimeout>
+
+        <!-- Set the maximum simultaneous incoming connections for this service -->
+        <connectionLimit>0</connectionLimit>
+         
+        <!-- Set the maximum simultaneous incoming connections per IP for this service -->
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+
+        <!--  Uncomment this if you want to verify sender addresses, ensuring that -->
+        <!--  the sender address matches the user who has authenticated. -->
+        <!--  This prevents a user of your mail server from acting as someone else -->
+        <!--  If unspecified, default value is true -->
+        <!--
+        <verifyIdentity>true</verifyIdentity>
+         -->
+
+        <!--  This sets the maximum allowed message size (in kilobytes) for this -->
+        <!--  ManageSieve service. If unspecified, the value defaults to 0, which means no limit. -->
+        <maxmessagesize>0</maxmessagesize>
+         
+        <!--  This sets wether to enforce the use of HELO/EHLO salutation before a -->
+        <!--  MAIL command is accepted. If unspecified, the value defaults to true -->
+        <!-- 
+        <heloEhloEnforcement>true</heloEhloEnforcement>
+         -->
+         
+        <!-- WARNING: This is Non-RFC compliant (default value: true) -->
+        <!-- See: http://wiki.apache.org/james/StandardsComplianceStatement -->
+        <!-- TODO: CHANGE TO OFFICIAL URL LATER -->
+        <addressBracketsEnforcement>true</addressBracketsEnforcement>
+  
+   </managesieveserver>
+
+</managesieveservers>
+
+
