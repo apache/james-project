@@ -28,34 +28,29 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ProtocolResponseTest {
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenMethodIsNull() {
-        new ProtocolResponse(null, null, null);
+        new ProtocolResponse(null, new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected=IllegalArgumentException.class)
     public void newInstanceShouldThrowWhenMethodIsEmpty() {
-        new ProtocolResponse("", null, null);
+        new ProtocolResponse("", new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenResultsIsNull() {
-        new ProtocolResponse("method", null, null);
+        new ProtocolResponse("method", null, ClientId.of("id"));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenClientIdIsNull() {
         new ProtocolResponse("method", new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
     }
 
-    @Test(expected=IllegalStateException.class)
-    public void newInstanceShouldThrowWhenClientIdIsEmpty() {
-        new ProtocolResponse("method", new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), "");
-    }
-
     @Test
     public void asProtocolSpecificationShouldReturnAnArrayWithThreeElements() {
-        Object[] asProtocolSpecification = new ProtocolResponse("method", new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), "#1")
+        Object[] asProtocolSpecification = new ProtocolResponse("method", new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
                 .asProtocolSpecification();
 
         assertThat(asProtocolSpecification).hasSize(3);

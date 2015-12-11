@@ -88,6 +88,6 @@ public class ProtocolRequestTest {
 
         assertThat(request.getMethod()).isEqualTo("getAccounts");
         assertThat(request.getParameters()).isNotNull();
-        assertThat(request.getClientId()).isEqualTo("#1");
+        assertThat(request.getClientId()).isEqualTo(ClientId.of("#1"));
     }
 }

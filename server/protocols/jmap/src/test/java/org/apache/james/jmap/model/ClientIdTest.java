@@ -18,38 +18,28 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Preconditions;
+import static org.assertj.core.api.Assertions.*;
 
-public class ProtocolResponse {
+import org.junit.Test;
 
-    private final String method;
-    private final ObjectNode results;
-    private final ClientId clientId;
+public class ClientIdTest {
 
-    public ProtocolResponse(String method, ObjectNode results, ClientId clientId) {
-        Preconditions.checkNotNull(method, "method is mandatory");
-        Preconditions.checkNotNull(results, "results is mandatory");
-        Preconditions.checkNotNull(clientId,  "clientId is mandatory");
-        Preconditions.checkArgument(!method.isEmpty(), "method is mandatory");
-        this.method = method;
-        this.results = results;
-        this.clientId = clientId;
+    @Test
+    public void nullInputShouldThrow() {
+        assertThatThrownBy(() -> ClientId.of(null)).isInstanceOf(NullPointerException.class);
     }
-
-    public String getMethod() {
-        return method;
+    
+    @Test
+    public void emptyInputShouldThrow() {
+        assertThatThrownBy(() -> ClientId.of("")).isInstanceOf(IllegalArgumentException.class);
     }
+    
 
-    public ObjectNode getResults() {
-        return results;
+    @Test
+    public void validInputShouldCreateClientId() {
+        ClientId testee = ClientId.of("valid");
+        assertThat(testee).isNotNull();
+        assertThat(testee.getId()).isEqualTo("valid");
     }
-
-    public ClientId getClientId() {
-        return clientId;
-    }
-
-    public Object[] asProtocolSpecification() {
-        return new Object[] { getMethod(), getResults(), getClientId() };
-    }
+    
 }

@@ -18,38 +18,41 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 
-public class ProtocolResponse {
+public class ClientId {
 
-    private final String method;
-    private final ObjectNode results;
-    private final ClientId clientId;
-
-    public ProtocolResponse(String method, ObjectNode results, ClientId clientId) {
-        Preconditions.checkNotNull(method, "method is mandatory");
-        Preconditions.checkNotNull(results, "results is mandatory");
-        Preconditions.checkNotNull(clientId,  "clientId is mandatory");
-        Preconditions.checkArgument(!method.isEmpty(), "method is mandatory");
-        this.method = method;
-        this.results = results;
-        this.clientId = clientId;
+    public static ClientId of(String clientId) {
+        return new ClientId(clientId);
     }
+    
+    private final String id;
 
-    public String getMethod() {
-        return method;
+    private ClientId(String id) {
+        Preconditions.checkNotNull(id);
+        Preconditions.checkArgument(!id.isEmpty());
+        this.id = id;
     }
-
-    public ObjectNode getResults() {
-        return results;
+    
+    @JsonValue
+    public String getId() {
+        return id;
     }
-
-    public ClientId getClientId() {
-        return clientId;
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ClientId) {
+            ClientId other = (ClientId) obj;
+            return Objects.equals(this.id, other.id);
+        }
+        return false;
     }
-
-    public Object[] asProtocolSpecification() {
-        return new Object[] { getMethod(), getResults(), getClientId() };
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

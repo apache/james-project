@@ -29,14 +29,14 @@ public class ProtocolRequest {
         Preconditions.checkState(json[0].isTextual(), "first element should be a String");
         Preconditions.checkState(json[1].isObject(), "second element should be a Json");
         Preconditions.checkState(json[2].isTextual(), "third element should be a String");
-        return new ProtocolRequest(json[0].textValue(), (ObjectNode) json[1], json[2].textValue());
+        return new ProtocolRequest(json[0].textValue(), (ObjectNode) json[1], ClientId.of(json[2].textValue()));
     }
 
     private final String method;
     private final ObjectNode parameters;
-    private final String clientId;
+    private final ClientId clientId;
 
-    protected ProtocolRequest(String method, ObjectNode parameters, String clientId) {
+    protected ProtocolRequest(String method, ObjectNode parameters, ClientId clientId) {
         this.method = method;
         this.parameters = parameters;
         this.clientId = clientId;
@@ -50,7 +50,7 @@ public class ProtocolRequest {
         return parameters;
     }
 
-    public String getClientId() {
+    public ClientId getClientId() {
         return clientId;
     }
 }
