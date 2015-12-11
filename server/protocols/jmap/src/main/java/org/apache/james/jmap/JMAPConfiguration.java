@@ -16,39 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap;
 
-package org.apache.james.jmap.crypto;
+public class JMAPConfiguration {
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+    public final String keystore;
+    public final String secret;
 
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.JMAPConfiguration;
-
-public class JamesSignatureHandlerProvider {
-
-    public JamesSignatureHandler provide() throws Exception {
-        FileSystem fileSystem = new FileSystem() {
-            @Override
-            public InputStream getResource(String url) throws IOException {
-                return ClassLoader.getSystemResourceAsStream("keystore");
-            }
-
-            @Override
-            public File getFile(String fileURL) throws FileNotFoundException {
-                return null;
-            }
-
-            @Override
-            public File getBasedir() throws FileNotFoundException {
-                return null;
-            }
-        };
-        JamesSignatureHandler signatureHandler = new JamesSignatureHandler(fileSystem, new JMAPConfiguration("keystore", "james72laBalle"));
-        signatureHandler.init();
-        return signatureHandler;
+    public JMAPConfiguration(String keystore, String secret) {
+        this.keystore = keystore;
+        this.secret = secret;
     }
 
+    public String getKeystore() {
+        return keystore;
+    }
+
+    public String getSecret() {
+        return secret;
+    }
 }

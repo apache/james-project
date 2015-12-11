@@ -19,9 +19,16 @@
 
 package org.apache.james.modules;
 
+import java.io.FileNotFoundException;
+
+import javax.inject.Singleton;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 public class TestJMAPServerModule extends AbstractModule{
@@ -29,5 +36,11 @@ public class TestJMAPServerModule extends AbstractModule{
     @Override
     protected void configure() {
         bindConstant().annotatedWith(Names.named(JMAPServer.DEFAULT_JMAP_PORT)).to(1080);
+    }
+
+    @Provides
+    @Singleton
+    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
+        return new JMAPConfiguration("keystore", "james72laBalle");
     }
 }

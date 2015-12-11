@@ -51,7 +51,6 @@ public class JMAPServerModule extends AbstractModule {
 
         @Override
         public void initModule() throws Exception {
-            signatureHandler.configure(null);
             signatureHandler.init();
             server.configure(null);
         }

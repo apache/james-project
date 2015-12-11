@@ -33,10 +33,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.jmap.JMAPConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 @Singleton
-public class JamesSignatureHandler implements SignatureHandler, Configurable {
+public class JamesSignatureHandler implements SignatureHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesSignatureHandler.class);
 
@@ -54,28 +52,25 @@ public class JamesSignatureHandler implements SignatureHandler, Configurable {
     public static final String JKS = "JKS";
     
     private final FileSystem fileSystem;
-    private String secret;
-    private String keystoreURL;
+    private final JMAPConfiguration jmapConfiguration;
+
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    @Inject
-    @VisibleForTesting JamesSignatureHandler(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
-    }
 
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
-        keystoreURL = configuration.getString("tls.keystoreURL", "file://conf/keystoreURL");
-        secret = configuration.getString("tls.secret", "");
+    @Inject
+    @VisibleForTesting JamesSignatureHandler(FileSystem fileSystem, JMAPConfiguration jmapConfiguration) {
+        this.fileSystem = fileSystem;
+        this.jmapConfiguration = jmapConfiguration;
     }
 
     @Override
     public void init() throws Exception {
         KeyStore keystore = KeyStore.getInstance(JKS);
-        InputStream fis = fileSystem.getResource(keystoreURL);
-        keystore.load(fis, secret.toCharArray());
+        InputStream fis = fileSystem.getResource(jmapConfiguration.getKeystore());
+        keystore.load(fis, jmapConfiguration.getSecret().toCharArray());
         publicKey = keystore.getCertificate(ALIAS).getPublicKey();
-        Key key = keystore.getKey(ALIAS, secret.toCharArray());
+        Key key = keystore.getKey(ALIAS, jmapConfiguration.getSecret().toCharArray());
         if (! (key instanceof PrivateKey)) {
             throw new Exception("Provided key is not a PrivateKey");
         }
