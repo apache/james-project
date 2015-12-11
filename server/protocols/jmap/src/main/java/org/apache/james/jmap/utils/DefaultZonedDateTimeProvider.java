@@ -25,7 +25,7 @@ import java.time.ZonedDateTime;
 public class DefaultZonedDateTimeProvider implements ZonedDateTimeProvider {
 
     @Override
-    public ZonedDateTime provide() {
+    public ZonedDateTime get() {
         return ZonedDateTime.now(ZoneOffset.UTC);
     }
 }

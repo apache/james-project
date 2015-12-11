@@ -18,11 +18,12 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.james.jmap.exceptions.MalformedContinuationTokenException;
 
-@JsonDeserialize(builder=AccessTokenRequest.Builder.class)
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+
+@JsonDeserialize(builder = AccessTokenRequest.Builder.class)
 public class AccessTokenRequest {
 
     public static final String UNIQUE_JSON_PATH = "/token";

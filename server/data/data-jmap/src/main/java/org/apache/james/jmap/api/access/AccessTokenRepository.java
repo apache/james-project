@@ -24,6 +24,8 @@ import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 public interface AccessTokenRepository {
 
+    String TOKEN_EXPIRATION_IN_MS = "tokenExpirationInMs";
+    
     void addToken(String username, AccessToken accessToken) throws AccessTokenAlreadyStored;
 
     void removeToken(AccessToken accessToken);

@@ -32,7 +32,7 @@ public class MemoryAccessTokenRepositoryTest {
 
     private static final AccessToken TOKEN = AccessToken.generate();
     private static final String USERNAME = "username";
-    private static final int TTL_IN_MS = 100;
+    private static final long TTL_IN_MS = 100;
 
     private MemoryAccessTokenRepository accessTokenRepository;
 

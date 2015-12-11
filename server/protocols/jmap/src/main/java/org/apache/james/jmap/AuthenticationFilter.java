@@ -21,6 +21,7 @@ package org.apache.james.jmap;
 import java.io.IOException;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -37,6 +38,7 @@ public class AuthenticationFilter implements Filter {
     
     private AccessTokenManager accessTokenManager;
 
+    @Inject
     public AuthenticationFilter(AccessTokenManager accessTokenManager) {
         this.accessTokenManager = accessTokenManager;
     }

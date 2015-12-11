@@ -21,8 +21,8 @@ package org.apache.james.jmap.utils;
 
 import java.time.ZonedDateTime;
 
-public interface ZonedDateTimeProvider {
+import javax.inject.Provider;
 
-    ZonedDateTime provide();
+public interface ZonedDateTimeProvider extends Provider<ZonedDateTime> {
 
 }

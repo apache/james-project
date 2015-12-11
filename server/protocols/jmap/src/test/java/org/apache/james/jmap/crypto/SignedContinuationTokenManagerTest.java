@@ -19,19 +19,18 @@
 
 package org.apache.james.jmap.crypto;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.james.jmap.api.ContinuationTokenManager.ContinuationTokenStatus;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class SignedContinuationTokenManagerTest {
 
@@ -56,7 +55,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void isValidShouldRecognizeValidTokens() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         assertThat(
             toKenManager.isValid(
                 toKenManager.generateToken("user")))
@@ -65,7 +64,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void isValidShouldRecognizeTokenWhereUsernameIsModified() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
         ContinuationToken pirateContinuationToken = new ContinuationToken("pirate",
             continuationToken.getExpirationDate(),
@@ -75,7 +74,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void isValidShouldRecognizeTokenWhereExpirationDateIsModified() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
         ContinuationToken pirateContinuationToken = new ContinuationToken(continuationToken.getUsername(),
             continuationToken.getExpirationDate().plusHours(1),
@@ -85,7 +84,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void isValidShouldRecognizeTokenWhereSignatureIsModified() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
         ContinuationToken pirateContinuationToken = new ContinuationToken(continuationToken.getUsername(),
             continuationToken.getExpirationDate(),
@@ -95,15 +94,15 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void isValidShouldReturnFalseWhenTokenIsOutdated() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE.plusHours(1));
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE.plusHours(1));
         assertThat(toKenManager.isValid(continuationToken)).isFalse();
     }
 
     @Test
     public void isValidShouldReturnFalseOnNonValidSignatures() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken pirateContinuationToken = new ContinuationToken("user", DATE.plusMinutes(15), "fake");
         assertThat(toKenManager.isValid(pirateContinuationToken)).isFalse();
     }
@@ -115,7 +114,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void getValidityShouldRecognizeValidTokens() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         assertThat(
             toKenManager.getValidity(
                 toKenManager.generateToken("user")))
@@ -124,7 +123,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void getValidityShouldRecognizeTokenWhereUsernameIsModified() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
         ContinuationToken pirateContinuationToken = new ContinuationToken("pirate",
             continuationToken.getExpirationDate(),
@@ -134,7 +133,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void getValidityhouldRecognizeTokenWhereExpirationDateIsModified() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
         ContinuationToken pirateContinuationToken = new ContinuationToken(continuationToken.getUsername(),
             continuationToken.getExpirationDate().plusHours(1),
@@ -144,7 +143,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void getValidityShouldRecognizeTokenWhereSignatureIsModified() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
         ContinuationToken pirateContinuationToken = new ContinuationToken(continuationToken.getUsername(),
             continuationToken.getExpirationDate(),
@@ -154,15 +153,15 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void getValidityShouldReturnFalseWhenTokenIsOutdated() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken continuationToken = toKenManager.generateToken("user");
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE.plusHours(1));
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE.plusHours(1));
         assertThat(toKenManager.getValidity(continuationToken)).isEqualTo(ContinuationTokenStatus.EXPIRED);
     }
 
     @Test
     public void getValidityShouldReturnFalseOnNonValidSignatures() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken pirateContinuationToken = new ContinuationToken("user", DATE.plusMinutes(15), "fake");
         assertThat(toKenManager.getValidity(pirateContinuationToken)).isEqualTo(ContinuationTokenStatus.INVALID);
     }
@@ -174,7 +173,7 @@ public class SignedContinuationTokenManagerTest {
 
     @Test
     public void generateTokenShouldHaveTheRightOutPut() throws Exception {
-        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        when(zonedDateTimeProvider.get()).thenAnswer(invocationOnMock -> DATE);
         assertThat(toKenManager.generateToken("user").serialize())
             .isEqualTo("user_2011-12-03T10:30:30+01:00_eOvOqTmV3dPrhIkbuQSj2sno3YJMxWl6J1sH1JhwYcaNgMX9twm98/WSF9uyDkvJgvBxFokDr53AbxQ3DsJysB2dAzCC0tUM4u8ZMvl/hQrFXhVCdpVMyHRvixKCxnHsVXAr9g3WMn2vbIVq5i3HPgA6/p9FB1+N4WA06B8ueoCrdxT2w1ITEm8p+QZvje3n1F344SgrqgIYqvt0yUvzxnB24f3ccjAKidlBj4wZkcXgUTMbZ7MdnCbDGbp10+tgJqxiv1S0rXZMeJLJ+vBt5TyqEhsJUmUQ84qctlB4yR5FS+ncbAOyZAxs2dWsHqiQjedb3IR77N7CASzqO2mmVw==");
     }

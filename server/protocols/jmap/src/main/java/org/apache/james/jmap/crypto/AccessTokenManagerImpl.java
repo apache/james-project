@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.crypto;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
@@ -26,10 +29,12 @@ import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
 
+@Singleton
 public class AccessTokenManagerImpl implements AccessTokenManager {
 
     private final AccessTokenRepository accessTokenRepository;
 
+    @Inject
     public AccessTokenManagerImpl(AccessTokenRepository accessTokenRepository) {
         this.accessTokenRepository = accessTokenRepository;
     }

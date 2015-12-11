@@ -20,6 +20,8 @@
 package org.apache.james.jmap.crypto;
 
 public interface SignatureHandler {
+    
+    void init() throws Exception;
 
     String sign(String source);
 

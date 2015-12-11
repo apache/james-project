@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -38,7 +38,6 @@ import javax.servlet.Filter;
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.jmap.api.AccessTokenManager;
-import org.apache.james.jmap.api.ContinuationTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.crypto.JamesSignatureHandlerProvider;
@@ -65,9 +64,9 @@ public class JMAPAuthenticationTest {
     private JettyHttpServer server;
 
     private UsersRepository mockedUsersRepository;
-    private ContinuationTokenManager continuationTokenManager;
     private ZonedDateTimeProvider mockedZonedDateTimeProvider;
     private AccessTokenManager accessTokenManager;
+    private SignedContinuationTokenManager continuationTokenManager;
 
     @Before
     public void setup() throws Exception {
@@ -96,7 +95,7 @@ public class JMAPAuthenticationTest {
         RestAssured.port = server.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
     }
-
+    
     @After
     public void teardown() throws Exception {
         server.stop();
@@ -180,7 +179,7 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnJsonResponse() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         given()
@@ -196,7 +195,7 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void methodShouldContainPasswordWhenValidResquest() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         given()
@@ -212,7 +211,7 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnContinuationTokenWhenValidResquest() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         given()
@@ -228,7 +227,7 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnAuthenticationFailedWhenBadPassword() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
@@ -249,7 +248,7 @@ public class JMAPAuthenticationTest {
         
         when(mockedUsersRepository.test("user@domain.tld", "password"))
             .thenReturn(true);
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         given()
@@ -264,14 +263,14 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnRestartAuthenticationWhenContinuationTokenIsExpired() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
         
         when(mockedUsersRepository.test("user@domain.tld", "password"))
             .thenReturn(true);
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(afterExpirationDate);
 
         given()
@@ -286,7 +285,7 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnAuthenticationFailedWhenUsersRepositoryException() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
@@ -306,14 +305,14 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnCreatedWhenGoodPassword() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
 
         when(mockedUsersRepository.test("user@domain.tld", "password"))
             .thenReturn(true);
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
 
         given()
@@ -328,14 +327,14 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustSendJsonContainingAccessTokenWhenGoodPassword() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
 
         when(mockedUsersRepository.test("user@domain.tld", "password"))
             .thenReturn(true);
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
 
         given()
@@ -381,14 +380,14 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void getMustReturnEndpointsWhenCorrectAuthentication() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
     
         when(mockedUsersRepository.test("user@domain.tld", "password"))
             .thenReturn(true);
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
     
         String accessToken = fromGoodAccessTokenRequest(continuationToken);
@@ -443,14 +442,14 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void deleteMustInvalidAuthorizationOnCorrectAuthorization() throws Exception {
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         String continuationToken = fromGoodContinuationTokenRequest();
     
         when(mockedUsersRepository.test("user@domain.tld", "password"))
             .thenReturn(true);
-        when(mockedZonedDateTimeProvider.provide())
+        when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
     
         String accessToken = fromGoodAccessTokenRequest(continuationToken);

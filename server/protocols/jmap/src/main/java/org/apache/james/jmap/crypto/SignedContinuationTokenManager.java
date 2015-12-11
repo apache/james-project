@@ -22,17 +22,22 @@ package org.apache.james.jmap.crypto;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.jmap.api.ContinuationTokenManager;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
 
+@Singleton
 public class SignedContinuationTokenManager implements ContinuationTokenManager {
 
     private final SignatureHandler signatureHandler;
     private final ZonedDateTimeProvider zonedDateTimeProvider;
 
+    @Inject
     public SignedContinuationTokenManager(SignatureHandler signatureHandler, ZonedDateTimeProvider zonedDateTimeProvider) {
         this.signatureHandler = signatureHandler;
         this.zonedDateTimeProvider = zonedDateTimeProvider;
@@ -41,7 +46,7 @@ public class SignedContinuationTokenManager implements ContinuationTokenManager 
     @Override
     public ContinuationToken generateToken(String username) {
         Preconditions.checkNotNull(username);
-        ZonedDateTime expirationTime = zonedDateTimeProvider.provide().plusMinutes(15);
+        ZonedDateTime expirationTime = zonedDateTimeProvider.get().plusMinutes(15);
         return new ContinuationToken(username,
             expirationTime,
             signatureHandler.sign(username + ContinuationToken.SEPARATOR + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationTime)));
@@ -70,6 +75,6 @@ public class SignedContinuationTokenManager implements ContinuationTokenManager 
     }
 
     private boolean isExpired(ContinuationToken token) {
-        return token.getExpirationDate().isBefore(zonedDateTimeProvider.provide());
+        return token.getExpirationDate().isBefore(zonedDateTimeProvider.get());
     }
 }

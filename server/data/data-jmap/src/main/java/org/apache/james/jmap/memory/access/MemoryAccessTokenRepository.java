@@ -22,6 +22,7 @@ package org.apache.james.jmap.memory.access;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.collections4.map.PassiveExpiringMap;
@@ -38,7 +39,7 @@ public class MemoryAccessTokenRepository implements AccessTokenRepository {
     private final PassiveExpiringMap<AccessToken, String> tokensExpirationDates;
 
     @Inject
-    public MemoryAccessTokenRepository(long durationInMilliseconds) {
+    public MemoryAccessTokenRepository(@Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
         tokensExpirationDates = new PassiveExpiringMap<>(durationInMilliseconds);
     }
 

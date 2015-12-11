@@ -38,7 +38,7 @@ public class AccessTokenManagerImplTest {
         accessTokenRepository = new MemoryAccessTokenRepository(100);
         accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
     }
-    
+
     @Test(expected=NullPointerException.class)
     public void grantShouldThrowOnNullUsername() throws Exception {
         accessTokenManager.grantAccessToken(null);

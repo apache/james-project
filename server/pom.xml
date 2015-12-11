@@ -538,6 +538,11 @@
                 <type>test-jar</type>
             </dependency>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-jmap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.james.protocols</groupId>
                 <artifactId>protocols-smtp</artifactId>
                 <version>${protocols.version}</version>
