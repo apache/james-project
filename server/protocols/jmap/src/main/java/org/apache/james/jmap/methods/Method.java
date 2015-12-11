@@ -19,12 +19,14 @@
 
 package org.apache.james.jmap.methods;
 
-import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
+import org.apache.james.mailbox.MailboxSession;
 
 public interface Method {
 
     String methodName();
 
-    JmapResponse process(AuthenticatedProtocolRequest request);
+    Class<? extends JmapRequest> requestType();
+    
+    JmapResponse process(JmapRequest request, MailboxSession mailboxSession, JmapResponse.Builder responseBuilder);
 
 }

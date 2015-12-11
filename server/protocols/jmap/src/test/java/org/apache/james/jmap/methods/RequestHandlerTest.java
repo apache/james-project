@@ -19,9 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.mockito.Mockito.mock;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +29,7 @@ import org.apache.james.jmap.methods.JmapResponse.Builder;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.mailbox.MailboxSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class RequestHandlerTest {
@@ -83,11 +84,8 @@ public class RequestHandlerTest {
 
     public static class TestMethod implements Method {
 
-        private final JmapRequestParser jmapRequestParser;
-
         @Inject
-        @VisibleForTesting TestMethod(JmapRequestParser jmapRequestParser, JmapResponseWriter jmapResponseWriter) {
-            this.jmapRequestParser = jmapRequestParser;
+        @VisibleForTesting TestMethod() {
         }
 
         @Override
@@ -96,30 +94,31 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public JmapResponse process(AuthenticatedProtocolRequest request) {
-            Builder response = JmapResponse.forRequest(request);
-            try {
-                TestJmapRequest typedRequest = jmapRequestParser.extractJmapRequest(request, TestJmapRequest.class);
-                return response
-                            .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
-                            .build();
-            } catch (IOException e) {
-                return response.error().build();
-            }
+        public Class<? extends JmapRequest> requestType() {
+            return TestJmapRequest.class;
+        }
+
+        @Override
+        public JmapResponse process(JmapRequest request, MailboxSession mailboxSession, Builder responseBuilder) {
+            Preconditions.checkArgument(request instanceof TestJmapRequest);
+            TestJmapRequest typedRequest = (TestJmapRequest) request;
+            return responseBuilder
+                        .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
+                        .build();
         }
     }
 
     private RequestHandler testee;
     private JmapRequestParser jmapRequestParser;
     private JmapResponseWriter jmapResponseWriter;
-    private HttpServletRequest fakeHttpServletRequest;
+    private HttpServletRequest mockHttpServletRequest;
 
     @Before
     public void setup() {
         jmapRequestParser = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
         jmapResponseWriter = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
-        fakeHttpServletRequest = null;
-        testee = new RequestHandler(ImmutableSet.of(new TestMethod(jmapRequestParser, jmapResponseWriter)), jmapResponseWriter);
+        mockHttpServletRequest = mock(HttpServletRequest.class);
+        testee = new RequestHandler(ImmutableSet.of(new TestMethod()), jmapRequestParser, jmapResponseWriter);
     }
 
 
@@ -129,16 +128,17 @@ public class RequestHandlerTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        RequestHandler requestHandler = new RequestHandler(ImmutableSet.of(), jmapResponseWriter);
-        requestHandler.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), fakeHttpServletRequest));
+        RequestHandler requestHandler = new RequestHandler(ImmutableSet.of(), jmapRequestParser, jmapResponseWriter);
+        requestHandler.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest));
     }
 
     @Test(expected=IllegalStateException.class)
     public void requestHandlerShouldThrowWhenAMethodIsRecordedTwice() {
         new RequestHandler(
                 ImmutableSet.of(
-                        new TestMethod(jmapRequestParser, jmapResponseWriter),
-                        new TestMethod(jmapRequestParser, jmapResponseWriter)),
+                        new TestMethod(),
+                        new TestMethod()),
+                jmapRequestParser, 
                 jmapResponseWriter);
     }
 
@@ -148,6 +148,7 @@ public class RequestHandlerTest {
                 ImmutableSet.of(
                         new NamedMethod("name"),
                         new NamedMethod("name")),
+                jmapRequestParser, 
                 jmapResponseWriter);
     }
 
@@ -157,6 +158,7 @@ public class RequestHandlerTest {
                 ImmutableSet.of(
                         new NamedMethod("name"), 
                         new NamedMethod("name2")),
+                jmapRequestParser, 
                 jmapResponseWriter);
     }
 
@@ -175,7 +177,12 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public JmapResponse process(AuthenticatedProtocolRequest request) {
+        public Class<? extends JmapRequest> requestType() {
+            return null;
+        }
+        
+        @Override
+        public JmapResponse process(JmapRequest request, MailboxSession mailboxSession, Builder responseBuilder) {
             return null;
         }
     }
@@ -190,7 +197,7 @@ public class RequestHandlerTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        ProtocolResponse response = testee.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), fakeHttpServletRequest));
+        ProtocolResponse response = testee.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest));
 
         assertThat(response.getResults().findValue("id").asText()).isEqualTo("testId");
         assertThat(response.getResults().findValue("name").asText()).isEqualTo("testName");

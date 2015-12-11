@@ -19,18 +19,13 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.jmap.methods.JmapResponse.Builder;
-import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.Mailbox;
-import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.jmap.model.Role;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -44,45 +39,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     
     private static final boolean DONT_RESET_RECENT = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethod.class);
 
-    private final JmapRequestParser jmapRequestParser;
-    private final JmapResponseWriter jmapResponseWriter;
     private final MailboxManager mailboxManager; 
     private final MailboxMapperFactory<Id> mailboxMapperFactory;
 
     @Inject
-    @VisibleForTesting public GetMailboxesMethod(JmapRequestParser jmapRequestParser, JmapResponseWriter jmapResponseWriter, 
-            MailboxManager mailboxManager, MailboxMapperFactory<Id> mailboxMapperFactory) {
-
-        this.jmapRequestParser = jmapRequestParser;
-        this.jmapResponseWriter = jmapResponseWriter;
+    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxMapperFactory<Id> mailboxMapperFactory) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
     }
 
+    @Override
     public String methodName() {
         return "getMailboxes";
     }
 
-    public JmapResponse process(AuthenticatedProtocolRequest request) {
-        Builder responseBuilder = JmapResponse.forRequest(request);
+    @Override
+    public Class<? extends JmapRequest> requestType() {
+        return GetMailboxesRequest.class;
+    }
+    
+    public JmapResponse process(JmapRequest request, MailboxSession mailboxSession, JmapResponse.Builder responseBuilder) {
+        Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         try {
-            jmapRequestParser.extractJmapRequest(request, GetMailboxesRequest.class);
-        } catch (IOException e) {
-            if (e.getCause() instanceof NotImplementedException) {
-                return responseBuilder.error("Not yet implemented").build();
-            } else {
-                return responseBuilder.error("invalidArguments").build();
-            }
-        }
-        
-        try {
-            MailboxSession mailboxSession = request.getMailboxSession();
             responseBuilder.response(getMailboxesResponse(mailboxSession));
             return responseBuilder.build();
         } catch (MailboxException e) {

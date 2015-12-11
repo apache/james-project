@@ -67,7 +67,7 @@ public class GetMailboxesRequest implements JmapRequest {
             }
             return this;
         }
-
+        
         public GetMailboxesRequest build() {
             return new GetMailboxesRequest(Optional.ofNullable(accountId), ids.build(), properties.build());
         }

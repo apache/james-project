@@ -68,5 +68,6 @@ public class JmapRequestParserImplTest {
 
         @SuppressWarnings("unused")
         public String parameter;
+    
     }
 }

@@ -85,8 +85,8 @@ public class GetMailboxesMethodTest {
         JmapRequestParser jmapRequestParser = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
         JmapResponseWriter jmapResponseWriter = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
 
-        GetMailboxesMethod<TestId> getMailboxMethod = new GetMailboxesMethod<>(jmapRequestParser, jmapResponseWriter, mockedMailboxManager, mockedMailboxMapperFactory);
-        requestHandler = new RequestHandler(ImmutableSet.of(getMailboxMethod), jmapResponseWriter);
+        GetMailboxesMethod<TestId> getMailboxMethod = new GetMailboxesMethod<>(mockedMailboxManager, mockedMailboxMapperFactory);
+        requestHandler = new RequestHandler(ImmutableSet.of(getMailboxMethod), jmapRequestParser, jmapResponseWriter);
         JMAPServlet jmapServlet = new JMAPServlet(requestHandler);
 
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(mockedAccessTokenManager, mockedMailboxManager);
