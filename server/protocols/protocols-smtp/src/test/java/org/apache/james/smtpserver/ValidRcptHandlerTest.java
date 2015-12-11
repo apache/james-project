@@ -38,7 +38,7 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.lib.mock.MockUsersRepository;
+import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,7 +55,7 @@ public class ValidRcptHandlerTest {
     @Before
     public void setUp() throws Exception {
 
-        users = new MockUsersRepository();
+        users = new InMemoryUsersRepository();
         users.addUser(VALID_USER, "xxx");
         
         handler = new ValidRcptHandler();

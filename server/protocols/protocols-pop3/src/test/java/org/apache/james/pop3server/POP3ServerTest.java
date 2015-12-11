@@ -58,7 +58,7 @@ import org.apache.james.protocols.lib.PortUtil;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.user.lib.mock.MockUsersRepository;
+import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -70,7 +70,7 @@ public class POP3ServerTest {
 
     private final int pop3Port = PortUtil.getNonPrivilegedPort();
     private POP3TestConfiguration pop3Configuration;
-    private final MockUsersRepository usersRepository = new MockUsersRepository();
+    private final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
     private POP3Client pop3Client = null;
     protected MockFileSystem fileSystem;
     protected MockProtocolHandlerLoader protocolHandlerChain;

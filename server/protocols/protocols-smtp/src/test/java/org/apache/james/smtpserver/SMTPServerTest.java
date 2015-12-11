@@ -65,7 +65,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.lib.mock.MockUsersRepository;
+import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -168,7 +168,7 @@ public class SMTPServerTest {
     protected final int smtpListenerPort;
     
     protected SMTPTestConfiguration smtpConfiguration;
-    protected final MockUsersRepository usersRepository = new MockUsersRepository();
+    protected final InMemoryUsersRepository usersRepository = new InMemoryUsersRepository();
     protected AlterableDNSServer dnsServer;
     protected MockMailRepositoryStore store;
     protected MockFileSystem fileSystem;

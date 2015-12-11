@@ -20,7 +20,7 @@ package org.apache.james.user.lib;
 
 import java.util.Arrays;
 import java.util.List;
-import org.apache.james.user.lib.mock.MockUsersRepository;
+import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,12 +30,12 @@ import org.junit.Test;
  */
 public class UsersRepositoryManagementTest {
 
-    private MockUsersRepository m_mockUsersRepository;
+    private InMemoryUsersRepository m_mockUsersRepository;
     private UsersRepositoryManagement m_userManagement;
 
     @Before
     public void setUp() throws Exception {
-        m_mockUsersRepository = new MockUsersRepository();
+        m_mockUsersRepository = new InMemoryUsersRepository();
 
         m_userManagement = new UsersRepositoryManagement();
         m_userManagement.setUsersRepository(m_mockUsersRepository);
