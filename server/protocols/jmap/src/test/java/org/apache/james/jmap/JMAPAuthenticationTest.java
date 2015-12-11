@@ -47,7 +47,7 @@ import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,20 +64,21 @@ public class JMAPAuthenticationTest {
 
     private JettyHttpServer server;
 
-    private UsersRepository mockedUsersRepository;
+    private UsersRepository usersRepository;
     private ZonedDateTimeProvider mockedZonedDateTimeProvider;
     private AccessTokenManager accessTokenManager;
     private SignedContinuationTokenManager continuationTokenManager;
+    private UserCredentials userCredentials;
 
     @Before
     public void setup() throws Exception {
-        mockedUsersRepository = mock(UsersRepository.class);
+        usersRepository = new InMemoryUsersRepository();
         mockedZonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
         MailboxManager mockedMailboxManager = mock(MailboxManager.class);
         accessTokenManager = new AccessTokenManagerImpl(new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS)));
         continuationTokenManager = new SignedContinuationTokenManager(new JamesSignatureHandlerProvider().provide(), mockedZonedDateTimeProvider);
         
-        AuthenticationServlet authenticationServlet = new AuthenticationServlet(mockedUsersRepository, continuationTokenManager, accessTokenManager);
+        AuthenticationServlet authenticationServlet = new AuthenticationServlet(usersRepository, continuationTokenManager, accessTokenManager);
 
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(accessTokenManager, mockedMailboxManager);
         Filter getAuthenticationFilter = new BypassOnPostFilter(authenticationFilter);
@@ -95,13 +96,19 @@ public class JMAPAuthenticationTest {
         server.start();
         RestAssured.port = server.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+
+        userCredentials = UserCredentials.builder()
+            .username("user")
+            .password("password")
+            .build();
+        usersRepository.addUser(userCredentials.getUsername(), userCredentials.getPassword());
     }
-    
+
     @After
     public void teardown() throws Exception {
         server.stop();
     }
-    
+
     @Test
     public void mustReturnMalformedRequestWhenContentTypeIsMissing() {
         given()
@@ -186,7 +193,7 @@ public class JMAPAuthenticationTest {
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+            .body("{\"username\": \"" + userCredentials.getUsername() + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
         .when()
             .post("/authentication")
         .then()
@@ -202,12 +209,12 @@ public class JMAPAuthenticationTest {
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+            .body("{\"username\": \"" + userCredentials.getUsername() + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
         .when()
             .post("/authentication")
         .then()
             .statusCode(200)
-            .body("methods", hasItem("password"));
+            .body("methods", hasItem(userCredentials.getPassword()));
     }
 
     @Test
@@ -218,7 +225,7 @@ public class JMAPAuthenticationTest {
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+            .body("{\"username\": \"" + userCredentials.getUsername() + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
         .when()
             .post("/authentication")
         .then()
@@ -245,17 +252,15 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnAuthenticationFailedWhenContinuationTokenIsRejectedByTheContinuationTokenManager() throws Exception {
-        ContinuationToken badContinuationToken = new ContinuationToken("user@domain.tld", newDate, "badSignature");
+        ContinuationToken badContinuationToken = new ContinuationToken(userCredentials.getUsername(), newDate, "badSignature");
         
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenReturn(true);
         when(mockedZonedDateTimeProvider.get())
             .thenReturn(oldDate);
 
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + badContinuationToken.serialize() + "\", \"method\": \"password\", \"password\": \"password\"}")
+            .body("{\"token\": \"" + badContinuationToken.serialize() + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
         .when()
             .post("/authentication")
         .then()
@@ -269,15 +274,13 @@ public class JMAPAuthenticationTest {
 
         String continuationToken = fromGoodContinuationTokenRequest();
         
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenReturn(true);
         when(mockedZonedDateTimeProvider.get())
             .thenReturn(afterExpirationDate);
 
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
         .when()
             .post("/authentication")
         .then()
@@ -291,13 +294,12 @@ public class JMAPAuthenticationTest {
 
         String continuationToken = fromGoodContinuationTokenRequest();
 
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenThrow(new UsersRepositoryException("test"));
+        usersRepository.removeUser(userCredentials.getUsername());
 
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
         .when()
             .post("/authentication")
         .then()
@@ -311,15 +313,13 @@ public class JMAPAuthenticationTest {
 
         String continuationToken = fromGoodContinuationTokenRequest();
 
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenReturn(true);
         when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
 
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
         .when()
             .post("/authentication")
         .then()
@@ -333,15 +333,13 @@ public class JMAPAuthenticationTest {
 
         String continuationToken = fromGoodContinuationTokenRequest();
 
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenReturn(true);
         when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
 
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
         .when()
             .post("/authentication")
         .then()
@@ -386,8 +384,6 @@ public class JMAPAuthenticationTest {
 
         String continuationToken = fromGoodContinuationTokenRequest();
     
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenReturn(true);
         when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
     
@@ -448,8 +444,6 @@ public class JMAPAuthenticationTest {
 
         String continuationToken = fromGoodContinuationTokenRequest();
     
-        when(mockedUsersRepository.test("user@domain.tld", "password"))
-            .thenReturn(true);
         when(mockedZonedDateTimeProvider.get())
             .thenReturn(newDate);
     
@@ -469,7 +463,7 @@ public class JMAPAuthenticationTest {
         return with()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+            .body("{\"username\": \"" + userCredentials.getUsername() + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
         .post("/authentication")
             .body()
             .path("continuationToken")
@@ -480,7 +474,7 @@ public class JMAPAuthenticationTest {
         return with()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
         .post("/authentication")
             .path("accessToken")
             .toString();
