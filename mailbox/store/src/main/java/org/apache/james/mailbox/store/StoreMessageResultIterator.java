@@ -150,8 +150,9 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
 
     @Override
     public MessageResult next() {
-        if (next == null || !next.hasNext())
+        if (!hasNext()) {
           throw new NoSuchElementException();
+        }
         
         final Message<Id> message = next.next();
         MessageResult result;
