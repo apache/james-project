@@ -20,12 +20,16 @@
 package org.apache.james.http.jetty;
 
 import java.io.Closeable;
+import java.util.EnumSet;
 import java.util.function.BiConsumer;
 
+import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -34,7 +38,6 @@ import com.google.common.collect.Maps;
 
 public class JettyHttpServer implements Closeable {
     
-    @SuppressWarnings("resource")
     public static JettyHttpServer create(Configuration configuration) {
         return new JettyHttpServer(configuration);
     }
@@ -59,7 +62,9 @@ public class JettyHttpServer implements Closeable {
     private ServletHandler buildServletHandler(Configuration configuration) {
         ServletHandler servletHandler = new ServletHandler();
         BiConsumer<String, ServletHolder> addServletMapping = (path, servletHolder) -> servletHandler.addServletWithMapping(servletHolder, path);
+        BiConsumer<String, FilterHolder> addFilterMapping = (path, filterHolder) -> servletHandler.addFilterWithMapping(filterHolder, path, EnumSet.of(DispatcherType.REQUEST));
         Maps.transformEntries(configuration.getMappings(), this::toServletHolder).forEach(addServletMapping);
+        Maps.transformEntries(configuration.getFilters(), this::toFilterHolder).forEach(addFilterMapping);
         return servletHandler;
     }
 
@@ -70,6 +75,14 @@ public class JettyHttpServer implements Closeable {
             return new ServletHolder((Servlet) value);
         }
         return new ServletHolder((Class<? extends Servlet>)value);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private FilterHolder toFilterHolder(String path, Object value) {
+        if (value instanceof Filter) {
+            return new FilterHolder((Filter)value);
+        }
+        return new FilterHolder((Class<? extends Filter>)value);
     }
     
     public JettyHttpServer start() throws Exception {

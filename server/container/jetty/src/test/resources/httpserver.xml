@@ -20,5 +20,11 @@
                 <servlet>org.apache.james.http.jetty.Ok200</servlet>
             </mapping>
         </mappings>
+        <filters>
+            <mapping>
+                <path>/*</path>
+                <filter>org.apache.james.http.jetty.SpyFilter</filter>
+            </mapping>
+        </filters>
     </httpserver>
 </httpservers>

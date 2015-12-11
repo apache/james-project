@@ -21,6 +21,7 @@ package org.apache.james.http.jetty;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -55,6 +56,11 @@ public class JettyHttpServerFactory {
             Class<? extends Servlet> servletClass = findServlet(classname);
             builder.serve(mapping.getString("path")).with(servletClass);
         }
+        for (HierarchicalConfiguration mapping: serverConfig.configurationsAt("filters.mapping")) {
+            String classname = mapping.getString("filter");
+            Class<? extends Filter> filterClass = findFilter(classname);
+            builder.filter(mapping.getString("path")).with(filterClass);
+        }
         return builder.build();
     }
 
@@ -64,6 +70,15 @@ public class JettyHttpServerFactory {
             return (Class<? extends Servlet>) ClassLoader.getSystemClassLoader().loadClass(classname);
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(String.format("'%s' servlet cannot be found", classname), e);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Class<? extends Filter> findFilter(String classname) {
+        try {
+            return (Class<? extends Filter>) ClassLoader.getSystemClassLoader().loadClass(classname);
+        } catch (ClassNotFoundException e) {
+            throw new ConfigurationException(String.format("'%s' filter cannot be found", classname), e);
         }
     }
 }

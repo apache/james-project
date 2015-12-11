@@ -1,0 +1,11 @@
+<httpservers>
+    <httpserver>
+        <port fixed="5000"/>
+        <filters>
+            <mapping>
+                <path>/foo</path>
+                <filter></filter>
+            </mapping>
+        </filters>
+    </httpserver>
+</httpservers>

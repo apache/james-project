@@ -56,6 +56,8 @@ public class JettyHttpServerFactoryTest {
                         .randomPort()
                         .serve("/foo")
                         .with(Ok200.class)
+                        .filter("/*")
+                        .with(SpyFilter.class)
                     .build());
     }
 
@@ -86,5 +88,16 @@ public class JettyHttpServerFactoryTest {
             .containsOnly(ImmutableMap.of());
     }
 
+    @Test
+    public void shouldThrowOnEmptyFilterName() throws Exception {
+        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("emptyfiltername.xml"));
+        assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
+    }
+
+    @Test
+    public void shouldThrowOnUnavailableFilterName() throws Exception {
+        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("unavailablefiltername.xml"));
+        assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
+    }
     
 }

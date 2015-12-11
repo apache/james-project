@@ -21,6 +21,7 @@ package org.apache.james.http.jetty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.junit.Test;
@@ -37,6 +38,7 @@ public class ConfigurationTest {
     @Test
     public void shouldAllowWorkingDefinition() {
         Bad400 bad400 = new Bad400();
+        SpyFilter spyFilter = new SpyFilter();
         Configuration testee = Configuration
                 .builder()
                 .port(2000)
@@ -44,12 +46,20 @@ public class ConfigurationTest {
                 .with(Ok200.class)
                 .serve("/def")
                 .with(bad400)
+                .filter("/123")
+                .with(CoolFilter.class)
+                .filter("/456")
+                .with(spyFilter)
                 .build();
         assertThat(testee.getPort()).isPresent().contains(2000);
         assertThat(testee.getMappings())
             .hasSize(2)
             .containsEntry("/abc", Ok200.class)
             .containsEntry("/def", bad400);
+        assertThat(testee.getFilters())
+            .hasSize(2)
+            .containsEntry("/123", CoolFilter.class)
+            .containsEntry("/456", spyFilter);
     }
 
     @Test
@@ -81,18 +91,18 @@ public class ConfigurationTest {
     }
     
     @Test
-    public void shouldNotAllowNullMappingUrl() {
+    public void shouldNotAllowNullServletMappingUrl() {
         assertThatThrownBy(() -> Configuration.builder().serve(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void shouldNotAllowEmptyMappingUrl() {
+    public void shouldNotAllowEmptyServletMappingUrl() {
         assertThatThrownBy(() -> Configuration.builder().serve("")).isInstanceOf(IllegalArgumentException.class);
     }
 
 
     @Test
-    public void shouldNotAllowWhitespaceOnlyMappingUrl() {
+    public void shouldNotAllowWhitespaceOnlyServletMappingUrl() {
         assertThatThrownBy(() -> Configuration.builder().serve("    ")).isInstanceOf(IllegalArgumentException.class);
     }
     
@@ -105,5 +115,33 @@ public class ConfigurationTest {
     @Test
     public void shouldNotAllowNullServletClassname() {
         assertThatThrownBy(() -> Configuration.builder().serve("/").with((Class<? extends Servlet>)null)).isInstanceOf(NullPointerException.class);
+    }
+    
+
+    @Test
+    public void shouldNotAllowNullFilterMappingUrl() {
+        assertThatThrownBy(() -> Configuration.builder().filter(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void shouldNotAllowEmptyFilterMappingUrl() {
+        assertThatThrownBy(() -> Configuration.builder().filter("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+
+    @Test
+    public void shouldNotAllowWhitespaceOnlyFilterMappingUrl() {
+        assertThatThrownBy(() -> Configuration.builder().filter("    ")).isInstanceOf(IllegalArgumentException.class);
+    }
+    
+
+    @Test
+    public void shouldNotAllowNullFilter() {
+        assertThatThrownBy(() -> Configuration.builder().filter("/").with((Filter)null)).isInstanceOf(NullPointerException.class);
+    }
+    
+    @Test
+    public void shouldNotAllowNullFilterClassname() {
+        assertThatThrownBy(() -> Configuration.builder().filter("/").with((Class<? extends Filter>)null)).isInstanceOf(NullPointerException.class);
     }
 }

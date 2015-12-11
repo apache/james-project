@@ -21,6 +21,7 @@ package org.apache.james.http.jetty;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import com.google.common.base.Preconditions;
@@ -42,6 +43,7 @@ public class Configuration {
         private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, 65535);
 
         private ImmutableMap.Builder<String, Object> mappings;
+        private ImmutableMap.Builder<String, Object> filters;
         private Optional<Integer> port;
         
         public class ServletBinder {
@@ -64,8 +66,29 @@ public class Configuration {
             }
         }
         
+        public class FilterBinder {
+            private String filterUrl;
+
+            private FilterBinder(String filterUrl) {
+                this.filterUrl = filterUrl;
+            }
+            
+            public Configuration.Builder with(Filter filter) {
+                Preconditions.checkNotNull(filter);
+                filters.put(filterUrl, filter);
+                return Builder.this;
+            }
+
+            public Configuration.Builder with(Class<? extends Filter> filterClass) {
+                Preconditions.checkNotNull(filterClass);
+                filters.put(filterUrl, filterClass);
+                return Builder.this;
+            }
+        }
+        
         private Builder() {
             mappings = ImmutableMap.builder();
+            filters = ImmutableMap.builder();
             port = Optional.empty();
         }
         
@@ -73,6 +96,12 @@ public class Configuration {
             Preconditions.checkNotNull(mappingUrl);
             Preconditions.checkArgument(!mappingUrl.trim().isEmpty());
             return new ServletBinder(mappingUrl);
+        }
+        
+        public FilterBinder filter(String mappingUrl) {
+            Preconditions.checkNotNull(mappingUrl);
+            Preconditions.checkArgument(!mappingUrl.trim().isEmpty());
+            return new FilterBinder(mappingUrl);
         }
 
         public Builder port(int port) {
@@ -87,21 +116,28 @@ public class Configuration {
         }
         
         public Configuration build() {
-            return new Configuration(mappings.build(), port);
+            return new Configuration(mappings.build(), filters.build(), port);
         }
     }
 
     private final ImmutableMap<String, Object> mappings;
+    private final ImmutableMap<String, Object> filters;
     private final Optional<Integer> port;
 
-    private Configuration(ImmutableMap<String, Object> mappings, Optional<Integer> port) {
+    private Configuration(ImmutableMap<String, Object> mappings, ImmutableMap<String, Object> filters, Optional<Integer> port) {
         this.mappings = mappings;
+        this.filters = filters;
         this.port = port;
     }
     
     public ImmutableMap<String, Object> getMappings() {
         return mappings;
     }
+
+    public ImmutableMap<String, Object> getFilters() {
+        return filters;
+    }
+
     
     public Optional<Integer> getPort() {
         return port;
@@ -117,6 +153,7 @@ public class Configuration {
         if (that instanceof Configuration) {
             Configuration other = (Configuration) that;
             return Objects.equals(mappings, other.mappings)
+                    && Objects.equals(filters, other.filters)
                     && Objects.equals(port, other.port);
         }
         return false;
@@ -126,7 +163,9 @@ public class Configuration {
     public String toString() {
         return com.google.common.base.Objects.toStringHelper(getClass())
                 .add("mappings", mappings)
+                .add("filters", filters)
                 .add("port", port)
                 .toString();
     }
+
 }
