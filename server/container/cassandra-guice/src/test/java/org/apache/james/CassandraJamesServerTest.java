@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james;
 
+import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
+import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -31,6 +34,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,10 +42,13 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.base.Charsets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.http.ContentType;
 
 public class CassandraJamesServerTest {
 
@@ -50,6 +57,7 @@ public class CassandraJamesServerTest {
     private static final int POP3_PORT = 1110;
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
+    private static final int JMAP_PORT = 1080;
     public static final int BUFFER_SIZE = 1000;
 
     private CassandraJamesServer server;
@@ -65,6 +73,7 @@ public class CassandraJamesServerTest {
         server = new CassandraJamesServer(Modules.override(CassandraJamesServerMain.defaultModule)
                 .with(new TestElasticSearchModule(embeddedElasticSearch),
                         new TestFilesystemModule(temporaryFolder.newFolder()),
+                        new TestJMAPServerModule(),
                         new AbstractModule() {
                     
                     @Override
@@ -82,6 +91,9 @@ public class CassandraJamesServerTest {
         socketChannel = SocketChannel.open();
 
         server.start();
+
+        RestAssured.port = JMAP_PORT;
+        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
     }
 
     @After
@@ -119,11 +131,22 @@ public class CassandraJamesServerTest {
         assertThat(getServerConnectionResponse(socketChannel)).contains("LMTP Server (JAMES Protocols Server) ready");
     }
 
+    @Test
+    public void connectJMAPServerShouldRespondBadRequest() throws Exception {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"badAttributeName\": \"value\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
     private String getServerConnectionResponse(SocketChannel socketChannel) throws IOException {
         ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
         socketChannel.read(byteBuffer);
         byte[] bytes = byteBuffer.array();
         return new String(bytes, Charset.forName("UTF-8"));
     }
-
 }

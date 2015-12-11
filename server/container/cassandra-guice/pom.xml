@@ -369,6 +369,12 @@
                     <artifactId>awaitility</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>com.jayway.restassured</groupId>
+                    <artifactId>rest-assured</artifactId>
+                    <version>2.5.0</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>commons-daemon</groupId>
                     <artifactId>commons-daemon</artifactId>
                 </dependency>
