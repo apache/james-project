@@ -20,6 +20,7 @@
 package org.apache.james.http.jetty;
 
 import static com.jayway.restassured.RestAssured.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
@@ -33,6 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.io.Closeables;
 import com.jayway.restassured.RestAssured;
 
 public class JettyHttpServerTest {
@@ -53,19 +55,28 @@ public class JettyHttpServerTest {
     }
     
     private JettyHttpServer testee;
+    private Configuration.Builder configurationBuilder;
     
     @Before
     public void setup() {
+        configurationBuilder = Configuration.builder().randomPort();
     }
     
     @After
     public void teardown() throws Exception {
-        testee.stop();
+        Closeables.close(testee, false);
     }
     
     @Test
+    public void shouldStartOnRandomPort() throws Exception {
+        try (JettyHttpServer first = JettyHttpServer.start(configurationBuilder.build());
+             JettyHttpServer second = JettyHttpServer.start(configurationBuilder.build())) {
+            assertThat(first.getPort()).isNotEqualTo(second.getPort());
+        }
+    }
+    @Test
     public void shouldReturn404WhenNoServletConfigured() throws Exception {
-        testee = JettyHttpServer.start(Configuration.defaultConfiguration());
+        testee = JettyHttpServer.start(configurationBuilder.build());
         RestAssured.port = testee.getPort();
         when()
             .get("/")
@@ -78,8 +89,7 @@ public class JettyHttpServerTest {
     public void shouldLetConfiguredServletHandleIncomingRequestWhenServletConfigured() throws Exception {
         ServletMethod getHandler = (req, resp) -> resp.getWriter().append("served").close();
         
-        testee = JettyHttpServer.start(Configuration
-                                        .builder()
+        testee = JettyHttpServer.start(configurationBuilder
                                         .serve("/")
                                         .with(get(getHandler)).build());
         
@@ -98,8 +108,7 @@ public class JettyHttpServerTest {
         ServletMethod fooGetHandler = (req, resp) -> resp.getWriter().append("served").close();
         ServletMethod barGetMethod = (req, resp) -> resp.sendError(400, "should not be called");
         
-        testee = JettyHttpServer.start(Configuration
-                                        .builder()
+        testee = JettyHttpServer.start(configurationBuilder
                                         .serve("/foo")
                                         .with(get(fooGetHandler))
                                         .serve("/bar")

@@ -19,13 +19,18 @@
 
 package org.apache.james.http.jetty;
 
+import java.io.Closeable;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-public class JettyHttpServer {
+import com.google.common.base.Throwables;
+
+public class JettyHttpServer implements Closeable {
     
+    @SuppressWarnings("resource")
     public static JettyHttpServer start(Configuration configuration) throws Exception {
         return new JettyHttpServer(configuration).start();
     }
@@ -58,6 +63,16 @@ public class JettyHttpServer {
 
     public int getPort() {
         return serverConnector.getLocalPort();
+    }
+
+    
+    @Override
+    public void close() {
+        try {
+            stop();
+        } catch (Exception e) {
+            Throwables.propagate(e);
+        }
     }
     
 }
