@@ -229,6 +229,7 @@
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
+                    <version>${assertj3}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
