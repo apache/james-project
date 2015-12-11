@@ -21,24 +21,30 @@ package org.apache.james.http.jetty;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 public class JettyHttpServer {
-
-    public static class Configuration {
-        
-    }
     
     public static JettyHttpServer start(Configuration configuration) throws Exception {
-        return new JettyHttpServer().start();
+        return new JettyHttpServer(configuration).start();
     }
 
     private Server server;
     private ServerConnector serverConnector;
 
-    private JettyHttpServer() {
+    private JettyHttpServer(Configuration configuration) {
         server = new Server();
         serverConnector = new ServerConnector(server);
         server.addConnector(serverConnector);
+        ServletHandler servletHandler = buildServletHandler(configuration);
+        server.setHandler(servletHandler);
+    }
+
+    private ServletHandler buildServletHandler(Configuration configuration) {
+        ServletHandler servletHandler = new ServletHandler();
+        configuration.getMappings().forEach((path, servlet) -> servletHandler.addServletWithMapping(new ServletHolder(servlet), path));
+        return servletHandler;
     }
     
     private JettyHttpServer start() throws Exception {
@@ -46,7 +52,8 @@ public class JettyHttpServer {
         return this;
     }
     
-    public void stop() {
+    public void stop() throws Exception {
+        server.stop();
     }
 
     public int getPort() {
