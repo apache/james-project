@@ -17,33 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.methods.cassandra;
 
-import java.util.Set;
+import org.apache.james.jmap.JmapServer;
+import org.apache.james.jmap.cassandra.CassandraJmapServer;
+import org.apache.james.jmap.methods.GetMessagesMethodTest;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.junit.rules.TemporaryFolder;
 
-import javax.inject.Inject;
-
-import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.james.jmap.model.ProtocolResponse;
-
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-public class JmapResponseWriterImpl implements JmapResponseWriter {
-
-    private final ObjectMapper objectMapper;
-
-    @Inject
-    public JmapResponseWriterImpl(Set<Module> jacksonModules) {
-        this.objectMapper = new ObjectMapper().registerModules(jacksonModules)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    }
+public class CassandraGetMessagesMethodTest extends GetMessagesMethodTest {
 
     @Override
-    public ProtocolResponse formatMethodResponse(JmapResponse jmapResponse) {
-        return new ProtocolResponse(
-                jmapResponse.getMethod(), 
-                objectMapper.valueToTree(jmapResponse.getResponse()), 
-                jmapResponse.getClientId());
+    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch) {
+        return new CassandraJmapServer(temporaryFolder, embeddedElasticSearch);
     }
 }

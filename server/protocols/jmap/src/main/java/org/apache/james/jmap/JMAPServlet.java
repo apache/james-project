@@ -67,6 +67,7 @@ public class JMAPServlet extends HttpServlet {
                 .map(ProtocolResponse::asProtocolSpecification)
                 .collect(Collectors.toList());
 
+            resp.setContentType(JSON_CONTENT_TYPE);
             objectMapper.writeValue(resp.getOutputStream(), responses);
         } catch (IOException e) {
             resp.setStatus(SC_BAD_REQUEST);

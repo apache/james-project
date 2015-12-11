@@ -69,6 +69,8 @@ public class RequestHandler {
                             return responseBuilder.error("Not yet implemented").build();
                         }
                         return responseBuilder.error("invalidArguments").build();
+                    } catch (NotImplementedException e) {
+                        return responseBuilder.error("Not yet implemented").build();
                     }
                 };
         

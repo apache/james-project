@@ -25,6 +25,7 @@ import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.javatuples.Triplet;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -33,6 +34,7 @@ public class MessageId {
 
     private static final String SEPARATOR = "-";
 
+    @JsonCreator
     public static MessageId of(String id) {
         Triplet<String, String, String> parts = Triplet.fromIterable(Splitter.on(SEPARATOR).split(id));
         return new MessageId(parts.getValue0(), parts.getValue1(), Long.valueOf(parts.getValue2()));

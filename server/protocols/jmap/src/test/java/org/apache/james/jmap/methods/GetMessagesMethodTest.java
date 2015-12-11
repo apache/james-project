@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
@@ -118,6 +119,14 @@ public class GetMessagesMethodTest {
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         MailboxSession mailboxSession = null;
         assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), mailboxSession)).isInstanceOf(NullPointerException.class);
+    }
+    
+
+    @Test
+    public void processShouldThrowWhenRequestHasAccountId() {
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        assertThatThrownBy(() -> testee.process(
+                GetMessagesRequest.builder().accountId("abc").build(), mock(MailboxSession.class))).isInstanceOf(NotImplementedException.class);
     }
     
     @Test

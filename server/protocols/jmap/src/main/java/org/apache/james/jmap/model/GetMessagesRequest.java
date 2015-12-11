@@ -23,14 +23,18 @@ import java.util.Optional;
 
 import org.apache.james.jmap.methods.JmapRequest;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
 
+@JsonDeserialize(builder = GetMessagesRequest.Builder.class)
 public class GetMessagesRequest implements JmapRequest {
 
     public static Builder builder() {
         return new Builder();
     }
     
+    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         
         private Optional<String> accountId;

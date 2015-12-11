@@ -28,6 +28,7 @@ import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
@@ -82,6 +83,7 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetMessagesRequest);
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
+        getMessagesRequest.getAccountId().ifPresent(GetMessagesMethod::notImplemented);
         
         Function<MessageId, Stream<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>>> loadMessages = loadMessage(mailboxSession);
         Function<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
@@ -93,9 +95,14 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
 //            .map(filterFields)
             .collect(Collectors.toList());
 
-        return new GetMessagesResponse(result);
+        return GetMessagesResponse.builder().messages(result).expectedMessageIds(getMessagesRequest.getIds()).build();
     }
 
+    private static void notImplemented(String input) {
+        throw new NotImplementedException();
+    }
+
+    
     private Function<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>, Message> toJmapMessage(MailboxSession mailboxSession) {
         return (value) -> {
             org.apache.james.mailbox.store.mail.model.Message<Id> messageResult = value.getValue0();
@@ -108,6 +115,7 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
                                     Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, 
                                          MailboxPath>>> 
                 loadMessage(MailboxSession mailboxSession) {
+
         return Throwing
                 .function((MessageId messageId) -> {
                      MailboxPath mailboxPath = messageId.getMailboxPath(mailboxSession);

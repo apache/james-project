@@ -19,8 +19,10 @@
 
 package org.apache.james.jmap;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.james.jmap.methods.GetMailboxesMethod;
 import org.apache.james.jmap.methods.GetMessageListMethod;
+import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapRequestParser;
 import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
@@ -42,6 +44,7 @@ public class MethodsModule extends AbstractModule {
     protected void configure() {
         Multibinder<Module> jacksonModules = Multibinder.newSetBinder(binder(), Module.class);
         jacksonModules.addBinding().to(Jdk8Module.class);
+        jacksonModules.addBinding().to(JavaTimeModule.class);
         bind(JmapRequestParser.class).to(JmapRequestParserImpl.class).in(Singleton.class);
         bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class).in(Singleton.class);
 
@@ -50,6 +53,7 @@ public class MethodsModule extends AbstractModule {
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(new TypeLiteral<GetMailboxesMethod<CassandraId>>(){});
         methods.addBinding().to(new TypeLiteral<GetMessageListMethod<CassandraId>>(){});
+        methods.addBinding().to(new TypeLiteral<GetMessagesMethod<CassandraId>>(){});
     }
 
 }

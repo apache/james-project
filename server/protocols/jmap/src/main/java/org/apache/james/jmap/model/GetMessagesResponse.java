@@ -19,19 +19,75 @@
 package org.apache.james.jmap.model;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.james.jmap.methods.Method;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
+@JsonDeserialize(builder = GetMessagesResponse.Builder.class)
 public class GetMessagesResponse implements Method.Response {
 
-    private final List<Message> messages;
-
-    public GetMessagesResponse(List<Message> messages) {
-        this.messages = messages;
+    public static Builder builder() {
+        return new Builder();
     }
     
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class Builder {
+        private ImmutableList<Message> messages;
+        private List<MessageId> expectedMessageIds;
+
+        private Builder() {
+            this.messages = ImmutableList.of();
+        }
+
+        public Builder messages(List<Message> messages) {
+            this.messages = ImmutableList.copyOf(messages);
+            return this;
+        }
+
+        public Builder expectedMessageIds(List<MessageId> expectedMessageIds) {
+            this.expectedMessageIds = ImmutableList.copyOf(expectedMessageIds);
+            return this;
+        }
+        
+        public GetMessagesResponse build() {
+            Preconditions.checkState(messages != null);
+            return new GetMessagesResponse(messages, messagesNotFound());
+        }
+        
+
+        private List<MessageId> messagesNotFound() {
+            Set<MessageId> foundMessageIds = messages.stream().map(Message::getId).collect(Collectors.toSet());
+            return ImmutableList.copyOf(expectedMessageIds.stream()
+                .filter(id -> !foundMessageIds.contains(id))
+                .collect(Collectors.toList()));
+        }
+    }
+    
+    
+    
+    private final List<Message> messages;
+    private final List<MessageId> messagesNotFound;
+
+    private GetMessagesResponse(List<Message> messages, List<MessageId> messagesNotFound) {
+        this.messages = messages;
+        this.messagesNotFound = messagesNotFound;
+    }
+
+    @JsonSerialize
     public List<Message> list() {
         return messages;
+    }
+    
+    @JsonSerialize
+    public List<MessageId> notFound() {
+        return messagesNotFound;
     }
 
 }
