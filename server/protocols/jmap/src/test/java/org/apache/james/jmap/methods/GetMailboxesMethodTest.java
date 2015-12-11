@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap;
+package org.apache.james.jmap.methods;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
@@ -31,6 +31,8 @@ import java.util.UUID;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
+import org.apache.james.jmap.AuthenticationFilter;
+import org.apache.james.jmap.JMAPServlet;
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.methods.GetMailboxesMethod;

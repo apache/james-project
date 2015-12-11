@@ -41,7 +41,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 
 public class JMAPServlet extends HttpServlet {
 
@@ -52,7 +51,7 @@ public class JMAPServlet extends HttpServlet {
     private final RequestHandler requestHandler;
 
     @Inject
-    @VisibleForTesting JMAPServlet(RequestHandler requestHandler) {
+    public JMAPServlet(RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
         this.objectMapper = new ObjectMapper();
     }
