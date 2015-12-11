@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -67,17 +68,18 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
     public GetMessageListResponse process(JmapRequest request, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
         try {
-            return getMessageListResponse(mailboxSession);
+            return getMessageListResponse((GetMessageListRequest) request, mailboxSession);
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private GetMessageListResponse getMessageListResponse(MailboxSession mailboxSession) throws MailboxException {
+    private GetMessageListResponse getMessageListResponse(GetMessageListRequest jmapRequest, MailboxSession mailboxSession) throws MailboxException {
         GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
 
         mailboxManager.list(mailboxSession)
             .stream()
+            .filter(mailboxPath -> isMailboxRequested(jmapRequest, mailboxPath))
             .map(mailboxPath -> getMailbox(mailboxPath, mailboxSession))
             .map(messageManager -> getMessageIds(messageManager.get(), mailboxSession))
             .flatMap(List::stream)
@@ -85,6 +87,22 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
             .forEach(builder::messageId);
 
         return builder.build();
+    }
+
+    private boolean isMailboxRequested(GetMessageListRequest jmapRequest, MailboxPath mailboxPath) {
+        if (jmapRequest.getFilter().isPresent()) {
+            return jmapRequest.getFilter()
+                .filter(FilterCondition.class::isInstance)
+                .map(FilterCondition.class::cast)
+                .map(FilterCondition::getInMailboxes)
+                .filter(list -> isMailboxInList(mailboxPath, list))
+                .isPresent();
+        }
+        return true;
+    }
+
+    private boolean isMailboxInList(MailboxPath mailboxPath, List<String> inMailboxes) {
+        return inMailboxes.contains(mailboxPath.getName());
     }
 
     private Optional<MessageManager> getMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) {
