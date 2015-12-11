@@ -53,8 +53,8 @@ public class ContinuationTokenResponse {
 
         private Builder() {}
 
-        public Builder continuationToken(String continuationToken) {
-            this.continuationToken = continuationToken;
+        public Builder continuationToken(ContinuationToken continuationToken) {
+            this.continuationToken = continuationToken.serialize();
             return this;
         }
 

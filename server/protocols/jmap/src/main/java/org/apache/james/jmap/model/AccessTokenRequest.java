@@ -20,6 +20,9 @@ package org.apache.james.jmap.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.james.jmap.exceptions.MalformedContinuationTokenException;
+
+import java.time.DateTimeException;
 
 @JsonDeserialize(builder=AccessTokenRequest.Builder.class)
 public class AccessTokenRequest {
@@ -33,14 +36,14 @@ public class AccessTokenRequest {
     @JsonPOJOBuilder(withPrefix="")
     public static class Builder {
 
-        private String token;
+        private ContinuationToken token;
         private String method;
         private String password;
 
         private Builder() {}
 
-        public Builder token(String token) {
-            this.token = token;
+        public Builder token(String token) throws MalformedContinuationTokenException, DateTimeException {
+            this.token = ContinuationToken.fromString(token);
             return this;
         }
 
@@ -59,17 +62,17 @@ public class AccessTokenRequest {
         }
     }
 
-    private final String token;
+    private final ContinuationToken token;
     private final String method;
     private final String password;
 
-    private AccessTokenRequest(String token, String method, String password) {
+    private AccessTokenRequest(ContinuationToken token, String method, String password) {
         this.token = token;
         this.method = method;
         this.password = password;
     }
 
-    public String getToken() {
+    public ContinuationToken getToken() {
         return token;
     }
 
