@@ -45,7 +45,7 @@ public class RequestHandler {
         this.jmapRequestParser = jmapRequestParser;
         this.jmapResponseWriter = jmapResponseWriter;
         this.methods = methods.stream()
-                .collect(Collectors.toMap(Method::methodName, method -> method));
+                .collect(Collectors.toMap(Method::methodName, Function.identity()));
     }
 
     public ProtocolResponse handle(AuthenticatedProtocolRequest request) {
