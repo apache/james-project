@@ -19,24 +19,71 @@
 
 package org.apache.james.jmap.model;
 
+import java.time.DateTimeException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+
+import org.apache.james.jmap.exceptions.MalformedContinuationTokenException;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.apache.james.jmap.exceptions.MalformedContinuationTokenException;
-
-import java.time.DateTimeException;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 
 public class ContinuationToken {
 
     public static final String SEPARATOR = "_";
+
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static class Builder {
+        private String username;
+        private ZonedDateTime expirationDate;
+        private String signature;
+
+        private Builder() {}
+        
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public Builder expirationDate(ZonedDateTime expirationDate) {
+            this.expirationDate = expirationDate;
+            return this;
+        }
+
+        public Builder signature(String signature) {
+            this.signature = signature;
+            return this;
+        }
+
+        public ContinuationToken build() {
+            return new ContinuationToken(username, expirationDate, signature);
+        }
+    }
+    
+    public static ContinuationToken fromString(String serializedToken) throws MalformedContinuationTokenException {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(serializedToken), "Serialized continuation token should not be null or empty");
+        LinkedList<String> tokenParts = Lists.newLinkedList(Splitter.on(SEPARATOR).split(serializedToken));
+        try {
+            return ContinuationToken.builder()
+                    .signature(tokenParts.removeLast())
+                    .expirationDate(ZonedDateTime.parse(tokenParts.removeLast(), DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                    .username(Joiner.on(SEPARATOR).join(tokenParts))
+                    .build();
+        } catch (NoSuchElementException | IllegalArgumentException e) {
+            throw new MalformedContinuationTokenException("Token " + serializedToken + " does not have enough parts", e);
+        } catch(DateTimeException e) {
+            throw new MalformedContinuationTokenException("Token " + serializedToken + " as an incorrect date", e);
+        }
+    }
 
     private final String username;
     private final ZonedDateTime expirationDate;
@@ -44,35 +91,12 @@ public class ContinuationToken {
 
     public ContinuationToken(String username, ZonedDateTime expirationDate, String signature) {
         Preconditions.checkNotNull(username);
+        Preconditions.checkArgument(! username.isEmpty());
         Preconditions.checkNotNull(expirationDate);
         Preconditions.checkNotNull(signature);
         this.username = username;
         this.expirationDate = expirationDate;
         this.signature = signature;
-    }
-
-    public static ContinuationToken fromString(String serializedToken) throws MalformedContinuationTokenException {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(serializedToken), "Serialized continuation token should not be null or empty");
-        ImmutableList<String> tokenParts = ImmutableList.copyOf(Splitter.on(SEPARATOR).split(serializedToken));
-        if (tokenParts.size() < 3) {
-            throw new MalformedContinuationTokenException("Token " + serializedToken + " does not have enough parts");
-        }
-        Iterator<String> tokenPartsReversedIterator = tokenParts.reverse().iterator();
-        String signature = tokenPartsReversedIterator.next();
-        String expirationDateString = tokenPartsReversedIterator.next();
-        String username = retrieveUsername(tokenPartsReversedIterator);
-        try {
-            return new ContinuationToken(username,
-                ZonedDateTime.parse(expirationDateString, DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                signature);
-        } catch(DateTimeException e) {
-            throw new MalformedContinuationTokenException("Token " + serializedToken + " as an incorrect date", e);
-        }
-    }
-
-    private static String retrieveUsername(Iterator<String> reversedIteratorOnUsernameParts) {
-        List<String> usernamePart = ImmutableList.copyOf(Lists.newArrayList(reversedIteratorOnUsernameParts)).reverse();
-        return Joiner.on(SEPARATOR).join(usernamePart);
     }
 
     public String getUsername() {
