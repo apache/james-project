@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.model;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -253,5 +254,35 @@ public class Mailbox {
 
     public long getUnreadThreads() {
         return unreadThreads;
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+        if (obj instanceof Mailbox) {
+            Mailbox other = (Mailbox) obj;
+            return Objects.equals(this.id, other.id)
+                && Objects.equals(this.name, other.name)
+                && Objects.equals(this.parentId, other.parentId)
+                && Objects.equals(this.role, other.role)
+                && Objects.equals(this.sortOrder, other.sortOrder)
+                && Objects.equals(this.mustBeOnlyMailbox, other.mustBeOnlyMailbox)
+                && Objects.equals(this.mayReadItems, other.mayReadItems)
+                && Objects.equals(this.mayAddItems, other.mayAddItems)
+                && Objects.equals(this.mayRemoveItems, other.mayRemoveItems)
+                && Objects.equals(this.mayCreateChild, other.mayCreateChild)
+                && Objects.equals(this.mayRename, other.mayRename)
+                && Objects.equals(this.mayDelete, other.mayDelete)
+                && Objects.equals(this.totalMessages, other.totalMessages)
+                && Objects.equals(this.unreadMessages, other.unreadMessages)
+                && Objects.equals(this.totalThreads, other.totalThreads)
+                && Objects.equals(this.unreadThreads, other.unreadThreads);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, 
+                mayRemoveItems, mayCreateChild, mayRename, mayDelete, totalMessages, unreadMessages, totalThreads, unreadThreads);
     }
 }
