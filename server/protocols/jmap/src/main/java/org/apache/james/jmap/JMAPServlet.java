@@ -46,22 +46,22 @@ public class JMAPServlet extends HttpServlet {
     public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String JSON_CONTENT_TYPE_UTF8 = "application/json; charset=UTF-8";
 
-    private final RequestHandler requestHandler;
     private final ObjectMapper objectMapper;
+    private final RequestHandler requestHandler;
 
     @Inject
     @VisibleForTesting JMAPServlet(RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
         this.objectMapper = new ObjectMapper();
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         try {
             List<Object[]> responses = 
                 requestAsJsonStream(req)
                 .map(ProtocolRequest::deserialize)
-                .map(requestHandler::process)
+                .map(requestHandler::handle)
                 .map(protocolResponse -> protocolResponse.asProtocolSpecification())
                 .collect(Collectors.toList());
 
@@ -75,5 +75,4 @@ public class JMAPServlet extends HttpServlet {
         return Arrays.stream(
                 objectMapper.readValue(req.getInputStream(), JsonNode[][].class));
     }
-
 }

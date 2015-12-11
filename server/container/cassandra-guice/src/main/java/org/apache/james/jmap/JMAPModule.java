@@ -20,17 +20,14 @@ package org.apache.james.jmap;
 
 import java.io.FileNotFoundException;
 
-import javax.inject.Singleton;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.RequestHandler;
-import org.apache.james.jmap.model.ProtocolRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 public class JMAPModule extends AbstractModule {
@@ -40,16 +37,8 @@ public class JMAPModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new JMAPCommonModule());
-        bind(AuthenticationFilter.class);
-        bind(RequestHandler.class).toInstance(new RequestHandler() {
-
-            @Override
-            public ProtocolResponse process(ProtocolRequest request) {
-                // TODO Auto-generated method stub
-                return null;
-            }
-            
-        });
+        install(new MethodsModule());
+        bind(RequestHandler.class).in(Singleton.class);
 
         bindConstant().annotatedWith(Names.named(JMAPServer.DEFAULT_JMAP_PORT)).to(DEFAULT_PORT);
     }

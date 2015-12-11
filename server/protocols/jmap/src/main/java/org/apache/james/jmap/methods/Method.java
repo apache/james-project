@@ -19,29 +19,13 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 
-public class RequestHandler {
+public interface Method {
 
-    private final Map<String, Method> methods;
+    String methodName();
 
-    @Inject
-    public RequestHandler(Set<Method> methods) {
-        this.methods = methods.stream()
-                .collect(Collectors.toMap(Method::methodName, method -> method));
-    }
+    ProtocolResponse process(ProtocolRequest request);
 
-    public ProtocolResponse handle(ProtocolRequest request) {
-        return Optional.ofNullable(methods.get(request.getMethod()))
-            .map(method -> method.process(request))
-            .orElseThrow(() -> new IllegalStateException("unknown method"));
-    }
 }

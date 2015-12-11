@@ -19,29 +19,15 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
+import java.io.IOException;
 
 import org.apache.james.jmap.model.ProtocolRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
 
-public class RequestHandler {
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
-    private final Map<String, Method> methods;
+public interface JmapRequestParser {
 
-    @Inject
-    public RequestHandler(Set<Method> methods) {
-        this.methods = methods.stream()
-                .collect(Collectors.toMap(Method::methodName, method -> method));
-    }
-
-    public ProtocolResponse handle(ProtocolRequest request) {
-        return Optional.ofNullable(methods.get(request.getMethod()))
-            .map(method -> method.process(request))
-            .orElseThrow(() -> new IllegalStateException("unknown method"));
-    }
+    <T extends JmapRequest> T extractJmapRequest(ProtocolRequest request, Class<T> requestClass) 
+            throws IOException, JsonParseException, JsonMappingException;
 }

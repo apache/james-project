@@ -19,29 +19,33 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Map;
-import java.util.Optional;
+import java.io.IOException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.ProtocolRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
 
-public class RequestHandler {
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-    private final Map<String, Method> methods;
+public class JmapRequestParserImpl implements JmapRequestParser {
+
+    private final ObjectMapper objectMapper;
 
     @Inject
-    public RequestHandler(Set<Method> methods) {
-        this.methods = methods.stream()
-                .collect(Collectors.toMap(Method::methodName, method -> method));
+    public JmapRequestParserImpl(Set<Module> jacksonModules) {
+        this.objectMapper = new ObjectMapper()
+                .registerModules(jacksonModules)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);;
     }
 
-    public ProtocolResponse handle(ProtocolRequest request) {
-        return Optional.ofNullable(methods.get(request.getMethod()))
-            .map(method -> method.process(request))
-            .orElseThrow(() -> new IllegalStateException("unknown method"));
+    @Override
+    public <T extends JmapRequest> T extractJmapRequest(ProtocolRequest request, Class<T> requestClass) 
+            throws IOException, JsonParseException, JsonMappingException {
+        return objectMapper.readValue(request.getParameters().toString(), requestClass);
     }
 }

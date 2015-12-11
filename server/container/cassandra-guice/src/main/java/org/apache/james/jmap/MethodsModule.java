@@ -17,31 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.apache.james.jmap.methods.JmapRequestParser;
+import org.apache.james.jmap.methods.JmapRequestParserImpl;
+import org.apache.james.jmap.methods.JmapResponseWriter;
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.jmap.methods.Method;
 
-import javax.inject.Inject;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
-import org.apache.james.jmap.model.ProtocolRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
+public class MethodsModule extends AbstractModule {
 
-public class RequestHandler {
+    @Override
+    protected void configure() {
+        Multibinder<Module> jacksonModules = Multibinder.newSetBinder(binder(), Module.class);
+        jacksonModules.addBinding().to(Jdk8Module.class);
+        bind(JmapRequestParser.class).to(JmapRequestParserImpl.class).in(Singleton.class);
+        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class).in(Singleton.class);
 
-    private final Map<String, Method> methods;
-
-    @Inject
-    public RequestHandler(Set<Method> methods) {
-        this.methods = methods.stream()
-                .collect(Collectors.toMap(Method::methodName, method -> method));
+        Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
     }
 
-    public ProtocolResponse handle(ProtocolRequest request) {
-        return Optional.ofNullable(methods.get(request.getMethod()))
-            .map(method -> method.process(request))
-            .orElseThrow(() -> new IllegalStateException("unknown method"));
-    }
 }

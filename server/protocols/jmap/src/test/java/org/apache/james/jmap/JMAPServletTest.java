@@ -58,7 +58,6 @@ public class JMAPServletTest {
                 .randomPort()
                 .build());
 
-
         server.start();
 
         RestAssured.port = server.getPort();
@@ -90,7 +89,7 @@ public class JMAPServletTest {
         ObjectNode json = new ObjectNode(new JsonNodeFactory(false));
         json.put("type", "invalidArgument");
 
-        when(requestHandler.process(any()))
+        when(requestHandler.handle(any()))
             .thenReturn(new ProtocolResponse("error", json, "#0"));
 
         given()
@@ -114,7 +113,7 @@ public class JMAPServletTest {
         list.put("name", "roger@barcamp");
         arrayNode.add(list);
 
-        when(requestHandler.process(any()))
+        when(requestHandler.handle(any()))
             .thenReturn(new ProtocolResponse("accounts", json, "#0"));
 
         given()
