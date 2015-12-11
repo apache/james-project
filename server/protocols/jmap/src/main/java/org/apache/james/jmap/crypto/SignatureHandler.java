@@ -21,8 +21,8 @@ package org.apache.james.jmap.crypto;
 
 public interface SignatureHandler {
 
-    String sign(String source) throws Exception;
+    String sign(String source);
 
-    boolean verify(String source, String signature) throws Exception;
+    boolean verify(String source, String signature);
 
 }

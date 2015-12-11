@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.security.SignatureException;
-
 public class JamesSignatureHandlerTest {
 
     public static final String SIGNATURE = "NeIFNei4p6vn085wCEw0pbEwJ+Oak5yEIRLZsDcRVzT9rWWOcLvDFUA3S6awi/bxPiFxqJFreVz6xqzehnUI4tUBupk3sIsqeXShhFWBpaV+m58mC41lT/A0RJa3GgCvg6kmweCRf3tOo0+gvwOQJdwCL2B21GjDCKqBHaiK+OHcsSjrQW0xuew5z84EAz3ErdH4MMNjITksxK5FG/cGQ9V6LQgwcPk0RrprVC4eY7FFHw/sQNlJpZKsSFLnn5igPQkQtjiQ4ay1/xoB7FU7aJLakxRhYOnTKgper/Ur7UWOZJaE+4EjcLwCFLF9GaCILwp9W+mf/f7j92PVEU50Vg==";
@@ -49,9 +47,9 @@ public class JamesSignatureHandlerTest {
         assertThat(signatureHandler.verify(SOURCE, signatureHandler.sign(FAKE_SIGNATURE))).isFalse();
     }
 
-    @Test(expected = SignatureException.class)
-    public void incorrectLengthSignatureShouldThrow() throws Exception {
-        signatureHandler.verify(SOURCE, "signature");
+    @Test
+    public void incorrectLengthSignatureShouldReturnFalse() throws Exception {
+        assertThat(signatureHandler.verify(SOURCE, "signature")).isFalse();
     }
 
     @Test(expected = NullPointerException.class)

@@ -19,20 +19,16 @@
 
 package org.apache.james.jmap.crypto;
 
-import com.google.common.base.Preconditions;
-import org.apache.james.jmap.api.ContinuationTokenManager;
-import org.apache.james.jmap.model.ContinuationToken;
-import org.apache.james.jmap.utils.ZonedDateTimeProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.security.SignatureException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class SignedContinuationTokenManager implements ContinuationTokenManager {
+import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.model.ContinuationToken;
+import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SignedContinuationTokenManager.class);
+import com.google.common.base.Preconditions;
+
+public class SignedContinuationTokenManager implements ContinuationTokenManager {
 
     private final SignatureHandler signatureHandler;
     private final ZonedDateTimeProvider zonedDateTimeProvider;
@@ -43,7 +39,7 @@ public class SignedContinuationTokenManager implements ContinuationTokenManager 
     }
 
     @Override
-    public ContinuationToken generateToken(String username) throws Exception {
+    public ContinuationToken generateToken(String username) {
         Preconditions.checkNotNull(username);
         ZonedDateTime expirationTime = zonedDateTimeProvider.provide().plusMinutes(15);
         return new ContinuationToken(username,
@@ -52,25 +48,28 @@ public class SignedContinuationTokenManager implements ContinuationTokenManager 
     }
 
     @Override
-    public boolean isValid(ContinuationToken token) throws Exception {
+    public ContinuationTokenStatus getValidity(ContinuationToken token) {
         Preconditions.checkNotNull(token);
-        try {
-            return ! isTokenOutdated(token)
-                && isCorrectlySigned(token);
-        } catch (SignatureException e) {
-            LOGGER.warn("Attempt to use a malformed signature for user " + token.getUsername(), e);
-            return false;
+        if (! isCorrectlySigned(token)) {
+            return ContinuationTokenStatus.INVALID;
         }
+        if (isExpired(token)) {
+            return ContinuationTokenStatus.EXPIRED;
+        }
+        return ContinuationTokenStatus.OK;
+    }
+    
+    @Override
+    public boolean isValid(ContinuationToken token) {
+        Preconditions.checkNotNull(token);
+        return ContinuationTokenStatus.OK.equals(getValidity(token));
     }
 
-    private boolean isCorrectlySigned(ContinuationToken token) throws Exception {
-        return signatureHandler.verify(token.getUsername()
-            + ContinuationToken.SEPARATOR
-            + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(token.getExpirationDate()),
-            token.getSignature());
+    private boolean isCorrectlySigned(ContinuationToken token) {
+        return signatureHandler.verify(token.getContent(), token.getSignature());
     }
 
-    private boolean isTokenOutdated(ContinuationToken token) {
+    private boolean isExpired(ContinuationToken token) {
         return token.getExpirationDate().isBefore(zonedDateTimeProvider.provide());
     }
 }

@@ -22,9 +22,16 @@ package org.apache.james.jmap.api;
 import org.apache.james.jmap.model.ContinuationToken;
 
 public interface ContinuationTokenManager {
+    public static enum ContinuationTokenStatus {
+        OK,
+        INVALID,
+        EXPIRED
+    }
 
-    ContinuationToken generateToken(String username) throws Exception;
+    ContinuationToken generateToken(String username);
+    
+    ContinuationTokenStatus getValidity(ContinuationToken token);
 
-    boolean isValid(ContinuationToken token) throws Exception;
+    boolean isValid(ContinuationToken token);
 
 }

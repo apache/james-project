@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.jmap.api.ContinuationTokenManager.ContinuationTokenStatus;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 import org.junit.Before;
@@ -46,6 +47,11 @@ public class SignedContinuationTokenManagerTest {
         JamesSignatureHandler signatureHandler = new JamesSignatureHandlerProvider().provide();
         zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
         toKenManager = new SignedContinuationTokenManager(signatureHandler, zonedDateTimeProvider);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void isValidShouldThrowWhenTokenIsNull() throws Exception {
+        toKenManager.isValid(null);
     }
 
     @Test
@@ -95,21 +101,75 @@ public class SignedContinuationTokenManagerTest {
         assertThat(toKenManager.isValid(continuationToken)).isFalse();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void generateTokenShouldThrowWhenUsernameIsNull() throws Exception {
-        toKenManager.generateToken(null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void isValidShouldThrowWhenTokenIsNull() throws Exception {
-        toKenManager.isValid(null);
-    }
-
     @Test
     public void isValidShouldReturnFalseOnNonValidSignatures() throws Exception {
         when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
         ContinuationToken pirateContinuationToken = new ContinuationToken("user", DATE.plusMinutes(15), "fake");
         assertThat(toKenManager.isValid(pirateContinuationToken)).isFalse();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void getValidityShouldThrowWhenTokenIsNull() throws Exception {
+        toKenManager.getValidity(null);
+    }
+
+    @Test
+    public void getValidityShouldRecognizeValidTokens() throws Exception {
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        assertThat(
+            toKenManager.getValidity(
+                toKenManager.generateToken("user")))
+            .isEqualTo(ContinuationTokenStatus.OK);
+    }
+
+    @Test
+    public void getValidityShouldRecognizeTokenWhereUsernameIsModified() throws Exception {
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        ContinuationToken continuationToken = toKenManager.generateToken("user");
+        ContinuationToken pirateContinuationToken = new ContinuationToken("pirate",
+            continuationToken.getExpirationDate(),
+            continuationToken.getSignature());
+        assertThat(toKenManager.getValidity(pirateContinuationToken)).isEqualTo(ContinuationTokenStatus.INVALID);
+    }
+
+    @Test
+    public void getValidityhouldRecognizeTokenWhereExpirationDateIsModified() throws Exception {
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        ContinuationToken continuationToken = toKenManager.generateToken("user");
+        ContinuationToken pirateContinuationToken = new ContinuationToken(continuationToken.getUsername(),
+            continuationToken.getExpirationDate().plusHours(1),
+            continuationToken.getSignature());
+        assertThat(toKenManager.getValidity(pirateContinuationToken)).isEqualTo(ContinuationTokenStatus.INVALID);
+    }
+
+    @Test
+    public void getValidityShouldRecognizeTokenWhereSignatureIsModified() throws Exception {
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        ContinuationToken continuationToken = toKenManager.generateToken("user");
+        ContinuationToken pirateContinuationToken = new ContinuationToken(continuationToken.getUsername(),
+            continuationToken.getExpirationDate(),
+            FAKE_SIGNATURE);
+        assertThat(toKenManager.getValidity(pirateContinuationToken)).isEqualTo(ContinuationTokenStatus.INVALID);
+    }
+
+    @Test
+    public void getValidityShouldReturnFalseWhenTokenIsOutdated() throws Exception {
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        ContinuationToken continuationToken = toKenManager.generateToken("user");
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE.plusHours(1));
+        assertThat(toKenManager.getValidity(continuationToken)).isEqualTo(ContinuationTokenStatus.EXPIRED);
+    }
+
+    @Test
+    public void getValidityShouldReturnFalseOnNonValidSignatures() throws Exception {
+        when(zonedDateTimeProvider.provide()).thenAnswer(invocationOnMock -> DATE);
+        ContinuationToken pirateContinuationToken = new ContinuationToken("user", DATE.plusMinutes(15), "fake");
+        assertThat(toKenManager.getValidity(pirateContinuationToken)).isEqualTo(ContinuationTokenStatus.INVALID);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void generateTokenShouldThrowWhenUsernameIsNull() throws Exception {
+        toKenManager.generateToken(null);
     }
 
     @Test

@@ -112,11 +112,15 @@ public class ContinuationToken {
     }
 
     public String serialize() {
-        return username
-            + SEPARATOR
-            + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationDate)
+        return getContent()
             + SEPARATOR
             + signature;
+    }
+    
+    public String getContent() {
+        return username
+            + SEPARATOR
+            + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationDate);
     }
 
     @Override

@@ -44,6 +44,7 @@ import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.crypto.JamesSignatureHandlerProvider;
 import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
+import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -244,6 +245,25 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void mustReturnAuthenticationFailedWhenContinuationTokenIsRejectedByTheContinuationTokenManager() throws Exception {
+        ContinuationToken badContinuationToken = new ContinuationToken("user@domain.tld", newDate, "badSignature");
+        
+        when(mockedUsersRepository.test("user@domain.tld", "password"))
+            .thenReturn(true);
+        when(mockedZonedDateTimeProvider.provide())
+            .thenReturn(oldDate);
+
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"token\": \"" + badContinuationToken.serialize() + "\", \"method\": \"password\", \"password\": \"password\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(401);
+    }
+
+    @Test
+    public void mustReturnRestartAuthenticationWhenContinuationTokenIsExpired() throws Exception {
         when(mockedZonedDateTimeProvider.provide())
             .thenReturn(oldDate);
 
@@ -261,7 +281,7 @@ public class JMAPAuthenticationTest {
         .when()
             .post("/authentication")
         .then()
-            .statusCode(401);
+            .statusCode(403);
     }
 
     @Test

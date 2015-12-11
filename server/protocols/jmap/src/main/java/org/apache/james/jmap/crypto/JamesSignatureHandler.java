@@ -20,21 +20,29 @@
 package org.apache.james.jmap.crypto;
 
 import java.io.InputStream;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.SignatureException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 public class JamesSignatureHandler implements SignatureHandler, Configurable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesSignatureHandler.class);
 
     public static final String ALIAS = "james";
     public static final String ALGORITHM = "SHA1withRSA";
@@ -68,21 +76,32 @@ public class JamesSignatureHandler implements SignatureHandler, Configurable {
     }
 
     @Override
-    public String sign(String source) throws Exception {
+    public String sign(String source) {
         Preconditions.checkNotNull(source);
-        Signature javaSignature = Signature.getInstance(ALGORITHM);
-        javaSignature.initSign(privateKey);
-        javaSignature.update(source.getBytes());
-        return new Base64().encodeAsString(javaSignature.sign());
+        try {
+            Signature javaSignature = Signature.getInstance(ALGORITHM);
+            javaSignature.initSign(privateKey);
+            javaSignature.update(source.getBytes());
+            return new Base64().encodeAsString(javaSignature.sign());
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
-    public boolean verify(String source, String signature) throws Exception {
+    public boolean verify(String source, String signature) {
         Preconditions.checkNotNull(source);
         Preconditions.checkNotNull(signature);
-        Signature javaSignature = Signature.getInstance(ALGORITHM);
-        javaSignature.initVerify(publicKey);
-        javaSignature.update(source.getBytes());
-        return javaSignature.verify(new Base64().decode(signature));
+        try {
+            Signature javaSignature = Signature.getInstance(ALGORITHM);
+            javaSignature.initVerify(publicKey);
+            javaSignature.update(source.getBytes());
+            return javaSignature.verify(new Base64().decode(signature));
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw Throwables.propagate(e);
+        } catch (SignatureException e) {
+            LOGGER.warn("Attempt to use a malformed signature '"+ signature + "' for source '" + source + "'", e);
+            return false;
+        }
     }
 }
