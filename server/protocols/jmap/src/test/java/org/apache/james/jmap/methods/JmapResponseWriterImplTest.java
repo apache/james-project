@@ -82,7 +82,7 @@ public class JmapResponseWriterImplTest {
                 .response(responseClass)
                 .build());
 
-        assertThat(response.getMethod()).isEqualTo(expectedMethod);
+        assertThat(response.getMethod()).isEqualTo(Method.name(expectedMethod));
         assertThat(response.getResults().findValue("id").asText()).isEqualTo(expectedId);
         assertThat(response.getClientId()).isEqualTo(ClientId.of(expectedClientId));
     }

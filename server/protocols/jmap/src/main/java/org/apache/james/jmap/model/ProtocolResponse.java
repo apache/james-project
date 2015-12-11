@@ -18,26 +18,27 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import org.apache.james.jmap.methods.Method;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
 public class ProtocolResponse {
 
-    private final String method;
+    private final Method.Name method;
     private final ObjectNode results;
     private final ClientId clientId;
 
-    public ProtocolResponse(String method, ObjectNode results, ClientId clientId) {
-        Preconditions.checkNotNull(method, "method is mandatory");
+    public ProtocolResponse(Method.Name name, ObjectNode results, ClientId clientId) {
+        Preconditions.checkNotNull(name, "method is mandatory");
         Preconditions.checkNotNull(results, "results is mandatory");
         Preconditions.checkNotNull(clientId,  "clientId is mandatory");
-        Preconditions.checkArgument(!method.isEmpty(), "method is mandatory");
-        this.method = method;
+        this.method = name;
         this.results = results;
         this.clientId = clientId;
     }
 
-    public String getMethod() {
+    public Method.Name getMethod() {
         return method;
     }
 

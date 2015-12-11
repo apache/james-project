@@ -36,15 +36,15 @@ public class JmapResponse {
     
     public static class Builder {
         
-        private String method;
+        private Method.Name method;
         private ClientId id;
         private Object response;
 
         private Builder() {
         }
 
-        public Builder method(String method) {
-            this.method = method;
+        public Builder method(Method.Name name) {
+            this.method = name;
             return this;
         }
         
@@ -88,19 +88,19 @@ public class JmapResponse {
     }
     
     @VisibleForTesting static final String DEFAULT_ERROR_MESSAGE = "Error while processing";
-    @VisibleForTesting static final String ERROR_METHOD = "error";
+    @VisibleForTesting static final Method.Name ERROR_METHOD = Method.name("error");
 
-    private final String method;
+    private final Method.Name method;
     private final ClientId clientId;
     private final Object response;
     
-    private JmapResponse(String method, ClientId clientId, Object response) {
+    private JmapResponse(Method.Name method, ClientId clientId, Object response) {
         this.method = method;
         this.clientId = clientId;
         this.response = response;
     }
 
-    public String getMethod() {
+    public Method.Name getMethod() {
         return method;
     }
     

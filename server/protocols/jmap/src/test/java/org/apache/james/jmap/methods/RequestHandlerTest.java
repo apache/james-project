@@ -84,13 +84,15 @@ public class RequestHandlerTest {
 
     public static class TestMethod implements Method {
 
+        private static final Method.Name METHOD_NAME = Method.name("testMethod");
+        
         @Inject
         @VisibleForTesting TestMethod() {
         }
 
         @Override
-        public String methodName() {
-            return "testMethod";
+        public Name methodName() {
+            return METHOD_NAME;
         }
 
         @Override
@@ -146,8 +148,8 @@ public class RequestHandlerTest {
     public void requestHandlerShouldThrowWhenTwoMethodsWithSameName() {
         new RequestHandler(
                 ImmutableSet.of(
-                        new NamedMethod("name"),
-                        new NamedMethod("name")),
+                        new NamedMethod(Method.name("name")),
+                        new NamedMethod(Method.name("name"))),
                 jmapRequestParser, 
                 jmapResponseWriter);
     }
@@ -156,23 +158,23 @@ public class RequestHandlerTest {
     public void requestHandlerMayBeCreatedWhenTwoMethodsWithDifferentName() {
         new RequestHandler(
                 ImmutableSet.of(
-                        new NamedMethod("name"), 
-                        new NamedMethod("name2")),
+                        new NamedMethod(Method.name("name")), 
+                        new NamedMethod(Method.name("name2"))),
                 jmapRequestParser, 
                 jmapResponseWriter);
     }
 
     private class NamedMethod implements Method {
 
-        private final String methodName;
+        private final Name methodName;
 
-        public NamedMethod(String methodName) {
+        public NamedMethod(Method.Name methodName) {
             this.methodName = methodName;
             
         }
 
         @Override
-        public String methodName() {
+        public Name methodName() {
             return methodName;
         }
 

@@ -19,11 +19,57 @@
 
 package org.apache.james.jmap.methods;
 
+import static com.google.common.base.Objects.toStringHelper;
+
+import java.util.Objects;
+
 import org.apache.james.mailbox.MailboxSession;
+
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
 
 public interface Method {
 
-    String methodName();
+    public static Name name(String name) {
+        return new Name(name);
+    }
+    
+    public class Name {
+
+        private final String name;
+        
+        private Name(String name) {
+            Preconditions.checkNotNull(name);
+            Preconditions.checkArgument(!name.isEmpty());
+            this.name = name;
+        }
+
+        @JsonValue
+        public String getName() {
+            return name;
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Name) {
+                Name other = (Name) obj;
+                return Objects.equals(name, other.name);
+            }
+            return false;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+        
+        @Override
+        public String toString() {
+            return toStringHelper(this).add("name", name).toString();
+        }
+    }
+    
+    Name methodName();
 
     Class<? extends JmapRequest> requestType();
     

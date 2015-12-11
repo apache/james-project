@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.jmap.methods.Method;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -35,22 +36,22 @@ public class ProtocolResponseTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void newInstanceShouldThrowWhenMethodIsEmpty() {
-        new ProtocolResponse("", new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
+        new ProtocolResponse(Method.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
     @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenResultsIsNull() {
-        new ProtocolResponse("method", null, ClientId.of("id"));
+        new ProtocolResponse(Method.name("method"), null, ClientId.of("id"));
     }
 
     @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenClientIdIsNull() {
-        new ProtocolResponse("method", new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
+        new ProtocolResponse(Method.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
     }
 
     @Test
     public void asProtocolSpecificationShouldReturnAnArrayWithThreeElements() {
-        Object[] asProtocolSpecification = new ProtocolResponse("method", new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
+        Object[] asProtocolSpecification = new ProtocolResponse(Method.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
                 .asProtocolSpecification();
 
         assertThat(asProtocolSpecification).hasSize(3);

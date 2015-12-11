@@ -38,7 +38,7 @@ public class RequestHandler {
 
     private final JmapRequestParser jmapRequestParser;
     private final JmapResponseWriter jmapResponseWriter;
-    private final Map<String, Method> methods;
+    private final Map<Method.Name, Method> methods;
 
     @Inject
     public RequestHandler(Set<Method> methods, JmapRequestParser jmapRequestParser, JmapResponseWriter jmapResponseWriter) {

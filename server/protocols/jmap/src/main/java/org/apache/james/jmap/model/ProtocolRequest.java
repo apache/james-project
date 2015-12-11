@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import org.apache.james.jmap.methods.Method;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
@@ -29,20 +31,20 @@ public class ProtocolRequest {
         Preconditions.checkState(json[0].isTextual(), "first element should be a String");
         Preconditions.checkState(json[1].isObject(), "second element should be a Json");
         Preconditions.checkState(json[2].isTextual(), "third element should be a String");
-        return new ProtocolRequest(json[0].textValue(), (ObjectNode) json[1], ClientId.of(json[2].textValue()));
+        return new ProtocolRequest(Method.name(json[0].textValue()), (ObjectNode) json[1], ClientId.of(json[2].textValue()));
     }
 
-    private final String method;
+    private final Method.Name method;
     private final ObjectNode parameters;
     private final ClientId clientId;
 
-    protected ProtocolRequest(String method, ObjectNode parameters, ClientId clientId) {
+    protected ProtocolRequest(Method.Name method, ObjectNode parameters, ClientId clientId) {
         this.method = method;
         this.parameters = parameters;
         this.clientId = clientId;
     }
 
-    public String getMethod() {
+    public Method.Name getMethod() {
         return method;
     }
 

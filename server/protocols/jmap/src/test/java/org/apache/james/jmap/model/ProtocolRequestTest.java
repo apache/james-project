@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
+import org.apache.james.jmap.methods.Method;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -86,7 +87,7 @@ public class ProtocolRequestTest {
 
         ProtocolRequest request = ProtocolRequest.deserialize(nodes);
 
-        assertThat(request.getMethod()).isEqualTo("getAccounts");
+        assertThat(request.getMethod()).isEqualTo(Method.name("getAccounts"));
         assertThat(request.getParameters()).isNotNull();
         assertThat(request.getClientId()).isEqualTo(ClientId.of("#1"));
     }
