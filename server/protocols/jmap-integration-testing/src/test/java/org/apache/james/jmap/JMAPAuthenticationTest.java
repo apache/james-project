@@ -22,90 +22,69 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.isA;
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.Matchers.*;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import javax.servlet.Filter;
-
-import org.apache.james.http.jetty.Configuration;
-import org.apache.james.http.jetty.JettyHttpServer;
-import org.apache.james.jmap.api.AccessTokenManager;
-import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
-import org.apache.james.jmap.crypto.JamesSignatureHandlerProvider;
-import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
-import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
+import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.model.ContinuationToken;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.lib.mock.InMemoryUsersRepository;
-import org.junit.After;
+import org.apache.james.jmap.utils.ZonedDateTimeProvider;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
-public class JMAPAuthenticationTest {
+public abstract class JMAPAuthenticationTest {
 
     private static final ZonedDateTime oldDate = ZonedDateTime.parse("2011-12-03T10:15:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime newDate = ZonedDateTime.parse("2011-12-03T10:16:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime afterExpirationDate = ZonedDateTime.parse("2011-12-03T10:30:31+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-    private JettyHttpServer server;
+    
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
+    private FixedDateZonedDateTimeProvider zonedDateTimeProvider = new FixedDateZonedDateTimeProvider();
+    private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra, zonedDateTimeProvider);
 
-    private UsersRepository usersRepository;
-    private FixedDateZonedDateTimeProvider zonedDateTimeProvider;
-    private AccessTokenManager accessTokenManager;
-    private SignedContinuationTokenManager continuationTokenManager;
+
+    
+    protected abstract JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra, ZonedDateTimeProvider zonedDateTimeProvider);
+
+    @Rule
+    public RuleChain chain = RuleChain
+        .outerRule(temporaryFolder)
+        .around(embeddedElasticSearch)
+        .around(jmapServer);
+    
     private UserCredentials userCredentials;
 
     @Before
     public void setup() throws Exception {
-        usersRepository = new InMemoryUsersRepository();
-        zonedDateTimeProvider = new FixedDateZonedDateTimeProvider();
-        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
-        accessTokenManager = new AccessTokenManagerImpl(new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS)));
-        continuationTokenManager = new SignedContinuationTokenManager(new JamesSignatureHandlerProvider().provide(), zonedDateTimeProvider);
-        
-        AuthenticationServlet authenticationServlet = new AuthenticationServlet(usersRepository, continuationTokenManager, accessTokenManager);
-
-        AuthenticationFilter authenticationFilter = new AuthenticationFilter(accessTokenManager, mockedMailboxManager);
-        Filter getAuthenticationFilter = new BypassOnPostFilter(authenticationFilter);
-        
-        server = JettyHttpServer.create(
-                Configuration.builder()
-                .filter("/*")
-                .with(getAuthenticationFilter)
-                .serve("/*")
-                .with(authenticationServlet)
-                .randomPort()
-                .build());
-
-        
-        server.start();
-        RestAssured.port = server.getPort();
+        RestAssured.port = jmapServer.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
 
+        
         userCredentials = UserCredentials.builder()
-            .username("user")
-            .password("password")
-            .build();
-        usersRepository.addUser(userCredentials.getUsername(), userCredentials.getPassword());
-        zonedDateTimeProvider.setFixedDateTime(oldDate);
-    }
+                .username("user@domain.tld")
+                .password("password")
+                .build();
 
-    @After
-    public void teardown() throws Exception {
-        server.stop();
+        
+        String domain = "domain.tld";
+        jmapServer.serverProbe().addDomain(domain);
+        jmapServer.serverProbe().addUser(userCredentials.getUsername(), userCredentials.getPassword());
+        
+        zonedDateTimeProvider.setFixedDateTime(oldDate);
     }
 
     @Test
@@ -270,12 +249,10 @@ public class JMAPAuthenticationTest {
     public void mustReturnAuthenticationFailedWhenUsersRepositoryException() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();
 
-        usersRepository.removeUser(userCredentials.getUsername());
-
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + userCredentials.getPassword() + "\"}")
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + "wrong password" + "\"}")
         .when()
             .post("/authentication")
         .then()
@@ -298,7 +275,7 @@ public class JMAPAuthenticationTest {
     }
 
     @Test
-    public void mustSendJsonContainingAccessTokenWhenGoodPassword() throws Exception {
+    public void mustSendJsonContainingAccessTokenAndEndpointsWhenGoodPassword() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();
         zonedDateTimeProvider.setFixedDateTime(newDate);
 
@@ -309,7 +286,11 @@ public class JMAPAuthenticationTest {
         .when()
             .post("/authentication")
         .then()
-            .body("accessToken", isA(String.class));
+            .body("accessToken", isA(String.class))
+            .body("api", equalTo("/jmap"))
+            .body("eventSource", both(isA(String.class)).and(notNullValue()))
+            .body("upload", both(isA(String.class)).and(notNullValue()))
+            .body("download", both(isA(String.class)).and(notNullValue()));
     }
     
     @Test
@@ -333,14 +314,19 @@ public class JMAPAuthenticationTest {
 
     @Test
     public void getMustReturnEndpointsWhenValidAuthorizationHeader() throws Exception {
-        AccessToken token = accessTokenManager.grantAccessToken("username");
+        String continuationToken = fromGoodContinuationTokenRequest();
+        String token = fromGoodAccessTokenRequest(continuationToken);
+
         given()
-            .header("Authorization", token.serialize())
+            .header("Authorization", token)
         .when()
             .get("/authentication")
         .then()
             .statusCode(200)
-            .body("api", isA(String.class));
+            .body("api", equalTo("/jmap"))
+            .body("eventSource", both(isA(String.class)).and(notNullValue()))
+            .body("upload", both(isA(String.class)).and(notNullValue()))
+            .body("download", both(isA(String.class)).and(notNullValue()));
     }
 
     @Test
@@ -380,22 +366,14 @@ public class JMAPAuthenticationTest {
     
     @Test
     public void deleteMustReturnOKNoContentOnValidAuthorizationToken() throws Exception {
-        AccessToken token = accessTokenManager.grantAccessToken("username");
+        String continuationToken = fromGoodContinuationTokenRequest();
+        String token = fromGoodAccessTokenRequest(continuationToken);
         given()
-            .header("Authorization", token.serialize())
+            .header("Authorization", token)
         .when()
             .delete("/authentication")
         .then()
             .statusCode(204);
-    }
-
-    @Test
-    public void deleteMustInvalidTokenOnValidAuthorizationToken() throws Exception {
-        AccessToken token = accessTokenManager.grantAccessToken("username");
-        with()
-            .header("Authorization", token.serialize())
-            .delete("/authentication");
-        assertThat(accessTokenManager.isValid(token)).isFalse();
     }
 
     @Test

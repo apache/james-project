@@ -181,7 +181,10 @@ public class AuthenticationServlet extends HttpServlet {
         AccessTokenResponse response = AccessTokenResponse
             .builder()
             .accessToken(accessTokenManager.grantAccessToken(username))
-            // TODO Send API endpoints
+            .api("/jmap")
+            .eventSource("/notImplemented")
+            .upload("/notImplemented")
+            .download("/notImplemented")
             .build();
         mapper.writeValue(resp.getOutputStream(), response);
     }
@@ -191,8 +194,10 @@ public class AuthenticationServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
         EndPointsResponse response = EndPointsResponse
             .builder()
-            .api("/api")
-            // TODO Send other API endpoints
+            .api("/jmap")
+            .eventSource("/notImplemented")
+            .upload("/notImplemented")
+            .download("/notImplemented")
             .build();
         mapper.writeValue(resp.getOutputStream(), response);
     }
