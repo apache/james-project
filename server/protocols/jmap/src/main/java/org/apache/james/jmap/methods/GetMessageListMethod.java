@@ -96,6 +96,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
             .map(mailboxPath -> getMessages(mailboxPath, mailboxSession))
             .flatMap(List::stream)
             .sorted(comparatorFor(jmapRequest))
+            .skip(jmapRequest.getPosition())
             .map(Message::getUid)
             .map(String::valueOf)
             .forEach(builder::messageId);
