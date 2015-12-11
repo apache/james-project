@@ -18,13 +18,17 @@
  ****************************************************************/
 package org.apache.james.http.jetty;
 
+import java.util.Optional;
+
 import javax.servlet.Servlet;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Range;
 
 public class Configuration {
 
-    public static Configuration empty() {
+    public static Configuration defaultConfiguration() {
         return builder().build();
     }
 
@@ -34,7 +38,10 @@ public class Configuration {
     
     public static class Builder {
         
+        private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, 65535);
+
         private ImmutableMap.Builder<String, Servlet> mappings;
+        private Optional<Integer> port;
         
         public class ServletBinder {
             private String mappingUrl;
@@ -52,24 +59,44 @@ public class Configuration {
         
         private Builder() {
             mappings = ImmutableMap.builder();
+            port = Optional.empty();
         }
         
         public ServletBinder serve(String mappingUrl) {
+            Preconditions.checkNotNull(mappingUrl);
+            Preconditions.checkArgument(!mappingUrl.trim().isEmpty());
             return new ServletBinder(mappingUrl);
         }
 
+        public Builder port(int port) {
+            Preconditions.checkArgument(VALID_PORT_RANGE.contains(port));
+            this.port = Optional.of(port);
+            return this;
+        }
+        
+        public Builder randomPort() {
+            this.port = Optional.empty();
+            return this;
+        }
+        
         public Configuration build() {
-            return new Configuration(mappings.build());
+            return new Configuration(mappings.build(), port);
         }
     }
 
     private final ImmutableMap<String, Servlet> mappings;
+    private final Optional<Integer> port;
 
-    public Configuration(ImmutableMap<String, Servlet> mappings) {
+    private Configuration(ImmutableMap<String, Servlet> mappings, Optional<Integer> port) {
         this.mappings = mappings;
+        this.port = port;
     }
     
     public ImmutableMap<String, Servlet> getMappings() {
         return mappings;
+    }
+    
+    public Optional<Integer> getPort() {
+        return port;
     }
 }

@@ -65,7 +65,7 @@ public class JettyHttpServerTest {
     
     @Test
     public void shouldReturn404WhenNoServletConfigured() throws Exception {
-        testee = JettyHttpServer.start(Configuration.empty());
+        testee = JettyHttpServer.start(Configuration.defaultConfiguration());
         RestAssured.port = testee.getPort();
         when()
             .get("/")
