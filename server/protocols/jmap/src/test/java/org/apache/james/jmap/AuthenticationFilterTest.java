@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
@@ -33,7 +34,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.NotAnUUIDException;
+import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
+import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.junit.Before;
@@ -44,27 +48,31 @@ public class AuthenticationFilterTest {
 
     private HttpServletRequest mockedRequest;
     private HttpServletResponse mockedResponse;
-    private AccessTokenManager mockedAccessTokenManager;
-    private AuthenticationFilter tested;
+    private AccessTokenManager accessTokenManager;
+    private AccessTokenRepository accessTokenRepository;
+    private AuthenticationFilter testee;
     private FilterChain filterChain;
-    
+
     @Before
     public void setup() throws Exception {
         mockedRequest = mock(HttpServletRequest.class);
         mockedResponse = mock(HttpServletResponse.class);
-        mockedAccessTokenManager = mock(AccessTokenManager.class);
+
+        accessTokenRepository = new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS));
+        accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
         MailboxManager mockedMailboxManager = mock(MailboxManager.class);
-        tested = new AuthenticationFilter(mockedAccessTokenManager, mockedMailboxManager);
+
+        testee = new AuthenticationFilter(accessTokenManager, mockedMailboxManager);
         filterChain = mock(FilterChain.class);
     }
-    
+
     @Test
     public void filterShouldReturnUnauthorizedOnNullAuthorizationHeader() throws Exception {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(null);
-        
-        tested.doFilter(mockedRequest, mockedResponse, filterChain);
-        
+
+        testee.doFilter(mockedRequest, mockedResponse, filterChain);
+
         verify(mockedResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
     
@@ -72,11 +80,9 @@ public class AuthenticationFilterTest {
     public void filterShouldReturnUnauthorizedOnInvalidAuthorizationHeader() throws Exception {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
-        when(mockedAccessTokenManager.isValid(AccessToken.fromString(TOKEN)))
-            .thenReturn(false);
-        
-        tested.doFilter(mockedRequest, mockedResponse, filterChain);
-        
+
+        testee.doFilter(mockedRequest, mockedResponse, filterChain);
+
         verify(mockedResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
@@ -85,23 +91,22 @@ public class AuthenticationFilterTest {
         AccessToken token = AccessToken.fromString(TOKEN);
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
-        when(mockedAccessTokenManager.isValid(token))
-            .thenReturn(true);
-        when(mockedAccessTokenManager.getUsernameFromToken(token)).thenReturn("user@domain.tld");
-        
-        tested.doFilter(mockedRequest, mockedResponse, filterChain);
-        
+
+        accessTokenRepository.addToken("user@domain.tld", token);
+
+        testee.doFilter(mockedRequest, mockedResponse, filterChain);
+
         verify(filterChain).doFilter(any(ServletRequest.class), eq(mockedResponse));
     }
 
     @Test(expected=BadCredentialsException.class)
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsEmpty() throws Exception {
-        tested.createMailboxSession(Optional.empty());
+        testee.createMailboxSession(Optional.empty());
     }
 
     @Test(expected=NotAnUUIDException.class)
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() throws Exception {
-        tested.createMailboxSession(Optional.of("bad"));
+        testee.createMailboxSession(Optional.of("bad"));
     }
 
     @Test
@@ -109,7 +114,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn("bad");
 
-        tested.doFilter(mockedRequest, mockedResponse, filterChain);
+        testee.doFilter(mockedRequest, mockedResponse, filterChain);
         
         verify(mockedResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
