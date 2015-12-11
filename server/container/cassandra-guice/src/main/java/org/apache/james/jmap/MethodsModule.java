@@ -20,6 +20,7 @@
 package org.apache.james.jmap;
 
 import org.apache.james.jmap.methods.GetMailboxesMethod;
+import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.jmap.methods.JmapRequestParser;
 import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
@@ -45,6 +46,7 @@ public class MethodsModule extends AbstractModule {
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(new TypeLiteral<GetMailboxesMethod<CassandraId>>(){});
+        methods.addBinding().to(new TypeLiteral<GetMessageListMethod<CassandraId>>(){});
     }
 
 }
