@@ -21,7 +21,7 @@ package org.apache.james.jmap.api.access.exceptions;
 
 import org.apache.james.jmap.api.access.AccessToken;
 
-public class AccessTokenAlreadyStored extends Exception {
+public class AccessTokenAlreadyStored extends RuntimeException {
 
     public AccessTokenAlreadyStored(AccessToken token) {
         super(token.serialize() + " is already stored");

@@ -17,40 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.access;
+package org.apache.james.jmap.crypto;
 
-import java.util.Objects;
-import java.util.UUID;
+import org.apache.james.jmap.api.AccessTokenManager;
+import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
-public class AccessToken {
+import com.google.common.base.Preconditions;
 
-    public static AccessToken fromString(String tokenString) {
-        return new AccessToken(UUID.fromString(tokenString));
-    }
+public class AccessTokenManagerImpl implements AccessTokenManager {
 
-    private final UUID token;
+    private final AccessTokenRepository accessTokenRepository;
 
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
-    
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
-    }
-
-    public String serialize() {
-        return token.toString();
+    public AccessTokenManagerImpl(AccessTokenRepository accessTokenRepository) {
+        this.accessTokenRepository = accessTokenRepository;
     }
 
     @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
+    public AccessToken grantAccessToken(String username) {
+        Preconditions.checkNotNull(username);
+        AccessToken accessToken = AccessToken.generate();
+        accessTokenRepository.addToken(username, accessToken);
+        return accessToken;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(token);
+    public String getUsernameFromToken(AccessToken token) throws InvalidAccessToken {
+        return accessTokenRepository.getUsernameFromToken(token);
     }
+
 }

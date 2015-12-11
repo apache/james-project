@@ -20,13 +20,14 @@
 package org.apache.james.jmap.api.access;
 
 import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
+import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 public interface AccessTokenRepository {
 
-    void addToken(AccessToken accessToken) throws AccessTokenAlreadyStored;
+    void addToken(String username, AccessToken accessToken) throws AccessTokenAlreadyStored;
 
     void removeToken(AccessToken accessToken);
 
-    boolean verifyToken(AccessToken accessToken);
+    String getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
 
 }

@@ -17,40 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.access;
+package org.apache.james.jmap.api.access.exceptions;
 
-import java.util.Objects;
-import java.util.UUID;
+import org.apache.james.jmap.api.access.AccessToken;
 
-public class AccessToken {
+public class InvalidAccessToken extends RuntimeException {
 
-    public static AccessToken fromString(String tokenString) {
-        return new AccessToken(UUID.fromString(tokenString));
-    }
-
-    private final UUID token;
-
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
-    
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
-    }
-
-    public String serialize() {
-        return token.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(token);
+    public InvalidAccessToken(AccessToken token) {
+        super(token.serialize() + " is missing");
     }
 }

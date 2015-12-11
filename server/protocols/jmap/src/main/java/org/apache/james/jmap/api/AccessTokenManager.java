@@ -17,40 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.access;
+package org.apache.james.jmap.api;
 
-import java.util.Objects;
-import java.util.UUID;
+import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
-public class AccessToken {
+public interface AccessTokenManager {
 
-    public static AccessToken fromString(String tokenString) {
-        return new AccessToken(UUID.fromString(tokenString));
-    }
+    AccessToken grantAccessToken(String username);
 
-    private final UUID token;
+    String getUsernameFromToken(AccessToken token) throws InvalidAccessToken;
 
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
-    
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
-    }
-
-    public String serialize() {
-        return token.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(token);
-    }
 }

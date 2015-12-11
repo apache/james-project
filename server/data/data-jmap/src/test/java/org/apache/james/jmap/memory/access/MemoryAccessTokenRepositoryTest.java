@@ -24,12 +24,14 @@ import static org.assertj.core.api.Assertions.fail;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
+import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 import org.junit.Before;
 import org.junit.Test;
 
 public class MemoryAccessTokenRepositoryTest {
 
-    private static final AccessToken TOKEN = AccessToken.fromString("TOKEN");
+    private static final AccessToken TOKEN = AccessToken.generate();
+    private static final String USERNAME = "username";
     private static final int TTL_IN_MS = 100;
 
     private MemoryAccessTokenRepository accessTokenRepository;
@@ -41,42 +43,52 @@ public class MemoryAccessTokenRepositoryTest {
 
     @Test
     public void validTokenMustWork() throws Exception {
-        accessTokenRepository.addToken(TOKEN);
-        assertThat(accessTokenRepository.verifyToken(TOKEN)).isTrue();
+        accessTokenRepository.addToken(USERNAME, TOKEN);
+        assertThat(accessTokenRepository.getUsernameFromToken(TOKEN)).isEqualTo(USERNAME);
     }
 
-    @Test
+    @Test(expected=InvalidAccessToken.class)
     public void nonStoredTokensMustBeInvalid() throws Exception {
-        assertThat(accessTokenRepository.verifyToken(TOKEN)).isFalse();
+        accessTokenRepository.getUsernameFromToken(TOKEN);
     }
 
-    @Test
+    @Test(expected=InvalidAccessToken.class)
     public void removedTokensMustBeInvalid() throws Exception {
-        accessTokenRepository.addToken(TOKEN);
+        accessTokenRepository.addToken(USERNAME, TOKEN);
         accessTokenRepository.removeToken(TOKEN);
-        assertThat(accessTokenRepository.verifyToken(TOKEN)).isFalse();
+        accessTokenRepository.getUsernameFromToken(TOKEN);
     }
 
     @Test(expected = AccessTokenAlreadyStored.class)
     public void addTokenMustThrowWhenTokenIsAlreadyStored() throws Exception {
         try {
-            accessTokenRepository.addToken(TOKEN);
+            accessTokenRepository.addToken(USERNAME, TOKEN);
         } catch(Exception e) {
             fail("Exception caught", e);
         }
-        accessTokenRepository.addToken(TOKEN);
+        accessTokenRepository.addToken(USERNAME, TOKEN);
     }
 
-    @Test
+    @Test(expected=InvalidAccessToken.class)
     public void outDatedTokenMustBeInvalid() throws Exception {
-        accessTokenRepository.addToken(TOKEN);
+        accessTokenRepository.addToken(USERNAME, TOKEN);
         Thread.sleep(200);
-        assertThat(accessTokenRepository.verifyToken(TOKEN)).isFalse();
+        accessTokenRepository.getUsernameFromToken(TOKEN);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void addTokenMustThrowWhenUsernameIsNull() throws Exception {
+        accessTokenRepository.addToken(null, TOKEN);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addTokenMustThrowWhenUsernameIsEmpty() throws Exception {
+        accessTokenRepository.addToken("", TOKEN);
     }
 
     @Test(expected = NullPointerException.class)
     public void addTokenMustThrowWhenTokenIsNull() throws Exception {
-        accessTokenRepository.addToken(null);
+        accessTokenRepository.addToken(USERNAME, null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -85,8 +97,8 @@ public class MemoryAccessTokenRepositoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void verifyTokenTokenMustThrowWhenTokenIsNull() throws Exception {
-        accessTokenRepository.verifyToken(null);
+    public void getUsernameFromTokenMustThrowWhenTokenIsNull() throws Exception {
+        accessTokenRepository.getUsernameFromToken(null);
     }
 
 }

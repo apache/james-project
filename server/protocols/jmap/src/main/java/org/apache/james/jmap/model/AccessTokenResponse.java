@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import org.apache.james.jmap.api.access.AccessToken;
+
 public class AccessTokenResponse {
 
     public static Builder builder() {
@@ -25,7 +27,7 @@ public class AccessTokenResponse {
     }
 
     public static class Builder {
-        private String accessToken;
+        private AccessToken accessToken;
         private String api;
         private String eventSource;
         private String upload;
@@ -33,7 +35,7 @@ public class AccessTokenResponse {
 
         private Builder() {}
 
-        public Builder accessToken(String accessToken) {
+        public Builder accessToken(AccessToken accessToken) {
             this.accessToken = accessToken;
             return this;
         }
@@ -63,13 +65,13 @@ public class AccessTokenResponse {
         }
     }
 
-    private final String accessToken;
+    private final AccessToken accessToken;
     private final String api;
     private final String eventSource;
     private final String upload;
     private final String download;
 
-    private AccessTokenResponse(String accessToken, String api, String eventSource, String upload, String download) {
+    private AccessTokenResponse(AccessToken accessToken, String api, String eventSource, String upload, String download) {
         this.accessToken = accessToken;
         this.api = api;
         this.eventSource = eventSource;
@@ -78,7 +80,7 @@ public class AccessTokenResponse {
     }
 
     public String getAccessToken() {
-        return accessToken;
+        return accessToken.serialize();
     }
 
     public String getApi() {
