@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.utils;
+package org.apache.james.util.streams;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,3 +45,4 @@ public class Collectors {
                 ImmutableMap.Builder::build);
     }
 }
+

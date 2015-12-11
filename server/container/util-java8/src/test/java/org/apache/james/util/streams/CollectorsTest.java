@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.utils;
+package org.apache.james.util.streams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -87,3 +87,4 @@ public class CollectorsTest {
     }
     
 }
+

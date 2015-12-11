@@ -23,12 +23,13 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.util.streams.Collectors;
+
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableMap;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.utils.Collectors;
 
 public class CassandraTypesProvider {
     private final ImmutableMap<String, UserType> userTypes;

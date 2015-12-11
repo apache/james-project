@@ -17,18 +17,22 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-backends-common</artifactId>
+        <artifactId>james-server</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>1.8.3-SNAPSHOT</version>
+        <version>3.0.0-beta5-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>apache-james-backends-cassandra</artifactId>
-    <name>Apache James Cassandra backend</name>
+    <groupId>org.apache.james</groupId>
+    <artifactId>james-server-util-java8</artifactId>
+    <packaging>bundle</packaging>
+
+    <name>Apache James :: Server :: Common Utilities :: Java 8</name>
 
     <profiles>
         <profile>
@@ -127,55 +131,23 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-util-java8</artifactId>
-                    <version>3.0.0-beta5-SNAPSHOT</version>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
                 </dependency>
-		        <dependency>
-		            <groupId>com.datastax.cassandra</groupId>
-		            <artifactId>cassandra-driver-core</artifactId>
-		            <version>2.1.8</version>
-		        </dependency>
-		        <dependency>
-		            <groupId>com.google.guava</groupId>
-		            <artifactId>guava</artifactId>
-		        </dependency>
-			<dependency>
-			    <groupId>commons-lang</groupId>
-			    <artifactId>commons-lang</artifactId>
-			    <version>2.6</version>
-			</dependency>
-            <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-            </dependency>
-		        <dependency>
-		            <groupId>org.assertj</groupId>
-		            <artifactId>assertj-core</artifactId>
-		            <scope>test</scope>
-		        </dependency>
-		        <dependency>
-		            <groupId>org.cassandraunit</groupId>
-		            <artifactId>cassandra-unit</artifactId>
-		            <version>2.1.9.2</version>
-		            <scope>test</scope>
-		        </dependency>
-		    </dependencies>
+                <dependency>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.assertj</groupId>
+                    <artifactId>assertj-core</artifactId>
+                    <version>3.2.0</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>fully.qualified.MainClass</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-compiler-plugin</artifactId>
@@ -209,5 +181,13 @@
         </profile>
     </profiles>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

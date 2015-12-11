@@ -40,6 +40,11 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-util-java8</artifactId>
+                <version>3.0.0-beta5-SNAPSHOT</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>16.0</version>

@@ -22,12 +22,13 @@ package org.apache.james.backends.cassandra.init;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.utils.Collectors;
+import org.apache.james.util.streams.Collectors;
+
+import com.google.common.collect.ImmutableList;
 
 public class CassandraModuleComposite implements CassandraModule {
 
