@@ -31,20 +31,20 @@ public class ProtocolRequest {
         Preconditions.checkState(json[0].isTextual(), "first element should be a String");
         Preconditions.checkState(json[1].isObject(), "second element should be a Json");
         Preconditions.checkState(json[2].isTextual(), "third element should be a String");
-        return new ProtocolRequest(Method.name(json[0].textValue()), (ObjectNode) json[1], ClientId.of(json[2].textValue()));
+        return new ProtocolRequest(Method.Request.name(json[0].textValue()), (ObjectNode) json[1], ClientId.of(json[2].textValue()));
     }
 
-    private final Method.Name method;
+    private final Method.Request.Name method;
     private final ObjectNode parameters;
     private final ClientId clientId;
 
-    protected ProtocolRequest(Method.Name method, ObjectNode parameters, ClientId clientId) {
+    protected ProtocolRequest(Method.Request.Name method, ObjectNode parameters, ClientId clientId) {
         this.method = method;
         this.parameters = parameters;
         this.clientId = clientId;
     }
 
-    public Method.Name getMethod() {
+    public Method.Request.Name getMethodName() {
         return method;
     }
 

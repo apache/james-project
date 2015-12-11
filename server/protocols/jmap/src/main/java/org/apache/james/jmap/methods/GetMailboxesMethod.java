@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.methods.Method.Response.Name;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.Mailbox;
@@ -46,7 +47,8 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     
     private static final boolean DONT_RESET_RECENT = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethod.class);
-    private static final Method.Name METHOD_NAME = Method.name("getMailboxes");
+    private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMailboxes");
+    private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("mailboxes");
     
     private final MailboxManager mailboxManager; 
     private final MailboxMapperFactory<Id> mailboxMapperFactory;
@@ -58,10 +60,15 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     }
 
     @Override
-    public Name methodName() {
+    public Method.Request.Name requestHandled() {
         return METHOD_NAME;
     }
 
+    @Override
+    public Method.Response.Name responseName() {
+        return RESPONSE_NAME;
+    }
+    
     @Override
     public Class<? extends JmapRequest> requestType() {
         return GetMailboxesRequest.class;

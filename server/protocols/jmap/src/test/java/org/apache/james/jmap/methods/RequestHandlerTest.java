@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.jmap.methods.Method.Response.Name;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
@@ -83,17 +84,20 @@ public class RequestHandlerTest {
 
     public static class TestMethod implements Method {
 
-        private static final Method.Name METHOD_NAME = Method.name("testMethod");
-        
         @Inject
         @VisibleForTesting TestMethod() {
         }
 
         @Override
-        public Name methodName() {
-            return METHOD_NAME;
+        public Method.Request.Name requestHandled() {
+            return Method.Request.name("getTestMethod");
         }
 
+        @Override
+        public Method.Response.Name responseName() {
+            return Method.Response.name("testMethod");
+        }
+        
         @Override
         public Class<? extends JmapRequest> requestType() {
             return TestJmapRequest.class;
@@ -145,8 +149,8 @@ public class RequestHandlerTest {
     public void requestHandlerShouldThrowWhenTwoMethodsWithSameName() {
         new RequestHandler(
                 ImmutableSet.of(
-                        new NamedMethod(Method.name("name")),
-                        new NamedMethod(Method.name("name"))),
+                        new NamedMethod(Method.Request.name("name")),
+                        new NamedMethod(Method.Request.name("name"))),
                 jmapRequestParser, 
                 jmapResponseWriter);
     }
@@ -155,24 +159,29 @@ public class RequestHandlerTest {
     public void requestHandlerMayBeCreatedWhenTwoMethodsWithDifferentName() {
         new RequestHandler(
                 ImmutableSet.of(
-                        new NamedMethod(Method.name("name")), 
-                        new NamedMethod(Method.name("name2"))),
+                        new NamedMethod(Method.Request.name("name")), 
+                        new NamedMethod(Method.Request.name("name2"))),
                 jmapRequestParser, 
                 jmapResponseWriter);
     }
 
     private class NamedMethod implements Method {
 
-        private final Name methodName;
+        private final Method.Request.Name methodName;
 
-        public NamedMethod(Method.Name methodName) {
+        public NamedMethod(Method.Request.Name methodName) {
             this.methodName = methodName;
             
         }
 
         @Override
-        public Name methodName() {
+        public Method.Request.Name requestHandled() {
             return methodName;
+        }
+        
+        @Override
+        public Name responseName() {
+            return null;
         }
 
         @Override
@@ -192,7 +201,7 @@ public class RequestHandlerTest {
         parameters.put("id", "testId");
         parameters.put("name", "testName");
         
-        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("testMethod"),
+        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getTestMethod"),
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 

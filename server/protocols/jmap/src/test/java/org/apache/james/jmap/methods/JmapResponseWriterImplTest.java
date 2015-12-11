@@ -38,37 +38,37 @@ public class JmapResponseWriterImplTest {
     @Ignore
     @Test(expected=IllegalStateException.class)
     public void formatMethodResponseShouldWorkWhenNullJmapResponse() {
-        String expectedMethod = "unknwonMethod";
+        String expectedMethod = "nwonMethod";
         String expectedClientId = "#1";
         String expectedId = "myId";
 
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", expectedId);
-        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethod),
+        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
         ProtocolRequest request = ProtocolRequest.deserialize(nodes);
         ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(JmapResponse
-                .forRequest(request)
+                .builder()
+                .clientId(request.getClientId())
                 .response(null)
                 .build());
 
-        assertThat(response.getMethod()).isEqualTo(expectedMethod);
+        assertThat(response.getResponseName()).isEqualTo(expectedMethod);
         assertThat(response.getResults().findValue("id").asText()).isEqualTo(expectedId);
         assertThat(response.getClientId()).isEqualTo(expectedClientId);
     }
 
     @Test
     public void formatMethodResponseShouldWork() {
-        String expectedMethod = "unknwonMethod";
         String expectedClientId = "#1";
         String expectedId = "myId";
 
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", expectedId);
-        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethod),
+        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
@@ -78,11 +78,13 @@ public class JmapResponseWriterImplTest {
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
         ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(
                 JmapResponse
-                .forRequest(ProtocolRequest.deserialize(nodes))
+                .builder()
+                .responseName(Method.Response.name("unknownMethod"))
+                .clientId(ProtocolRequest.deserialize(nodes).getClientId())
                 .response(responseClass)
                 .build());
 
-        assertThat(response.getMethod()).isEqualTo(Method.name(expectedMethod));
+        assertThat(response.getResponseName()).isEqualTo(Method.Response.name("unknownMethod"));
         assertThat(response.getResults().findValue("id").asText()).isEqualTo(expectedId);
         assertThat(response.getClientId()).isEqualTo(ClientId.of(expectedClientId));
     }
@@ -107,11 +109,12 @@ public class JmapResponseWriterImplTest {
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
         ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(
                 JmapResponse
-                    .forRequest(ProtocolRequest.deserialize(nodes))
+                    .builder()
+                    .clientId(ProtocolRequest.deserialize(nodes).getClientId())
                     .error()
                     .build());
 
-        assertThat(response.getMethod()).isEqualTo(JmapResponse.ERROR_METHOD);
+        assertThat(response.getResponseName()).isEqualToComparingFieldByField(JmapResponse.ERROR_METHOD);
         assertThat(response.getResults().findValue("type").asText()).isEqualTo(JmapResponse.DEFAULT_ERROR_MESSAGE);
         assertThat(response.getClientId()).isEqualTo(ClientId.of(expectedClientId));
     }

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.james.jmap.methods.Method.Response.Name;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
@@ -59,7 +60,8 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
     public static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethod.class);
-    private static final Method.Name METHOD_NAME = Method.name("getMessageList");
+    private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessageList");
+    private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messageList");
     private static final int NO_LIMIT = -1;
 
     private final MailboxManager mailboxManager;
@@ -76,10 +78,15 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
     }
 
     @Override
-    public Name methodName() {
+    public Method.Request.Name requestHandled() {
         return METHOD_NAME;
     }
 
+    @Override
+    public Method.Response.Name responseName() {
+        return RESPONSE_NAME;
+    }
+    
     @Override
     public Class<? extends JmapRequest> requestType() {
         return GetMessageListRequest.class;

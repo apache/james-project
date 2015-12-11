@@ -32,7 +32,7 @@ public class AuthenticatedProtocolRequest extends ProtocolRequest {
     private final HttpServletRequest httpServletRequest;
 
     private AuthenticatedProtocolRequest(ProtocolRequest request, HttpServletRequest httpServletRequest) {
-        super(request.getMethod(), request.getParameters(), request.getClientId());
+        super(request.getMethodName(), request.getParameters(), request.getClientId());
         this.httpServletRequest = httpServletRequest;
         
     }

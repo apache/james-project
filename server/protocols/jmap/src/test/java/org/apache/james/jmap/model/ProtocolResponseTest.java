@@ -36,22 +36,22 @@ public class ProtocolResponseTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void newInstanceShouldThrowWhenMethodIsEmpty() {
-        new ProtocolResponse(Method.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
+        new ProtocolResponse(Method.Response.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
     @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenResultsIsNull() {
-        new ProtocolResponse(Method.name("method"), null, ClientId.of("id"));
+        new ProtocolResponse(Method.Response.name("method"), null, ClientId.of("id"));
     }
 
     @Test(expected=NullPointerException.class)
     public void newInstanceShouldThrowWhenClientIdIsNull() {
-        new ProtocolResponse(Method.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
+        new ProtocolResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
     }
 
     @Test
     public void asProtocolSpecificationShouldReturnAnArrayWithThreeElements() {
-        Object[] asProtocolSpecification = new ProtocolResponse(Method.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
+        Object[] asProtocolSpecification = new ProtocolResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
                 .asProtocolSpecification();
 
         assertThat(asProtocolSpecification).hasSize(3);

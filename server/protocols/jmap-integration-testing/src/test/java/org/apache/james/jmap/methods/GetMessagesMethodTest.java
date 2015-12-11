@@ -150,7 +150,7 @@ public abstract class GetMessagesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"getMessages\","))
+            .content(startsWith("[[\"messages\","))
             .extract()
             .asString();
         
@@ -169,7 +169,7 @@ public abstract class GetMessagesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"getMessages\","))
+            .content(startsWith("[[\"messages\","))
             .extract()
             .asString();
         
@@ -194,7 +194,7 @@ public abstract class GetMessagesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"getMessages\","))
+            .content(startsWith("[[\"messages\","))
             .extract()
             .asString();
 

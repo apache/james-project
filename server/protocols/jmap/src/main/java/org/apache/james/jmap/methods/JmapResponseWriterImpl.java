@@ -42,7 +42,7 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     @Override
     public ProtocolResponse formatMethodResponse(JmapResponse jmapResponse) {
         return new ProtocolResponse(
-                jmapResponse.getMethod(), 
+                jmapResponse.getResponseName(), 
                 objectMapper.valueToTree(jmapResponse.getResponse()), 
                 jmapResponse.getClientId());
     }

@@ -29,6 +29,7 @@ import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.methods.Method.Response.Name;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
@@ -54,7 +55,8 @@ import com.google.common.collect.ImmutableMap;
 
 public class GetMessagesMethod<Id extends MailboxId> implements Method {
 
-    private static final Method.Name METHOD_NAME = Method.name("getMessages");
+    private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
+    private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MessageMapperFactory<Id> messageMapperFactory;
     private final MailboxMapperFactory<Id> mailboxMapperFactory;
     
@@ -68,8 +70,13 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
     }
     
     @Override
-    public Method.Name methodName() {
+    public Method.Request.Name requestHandled() {
         return METHOD_NAME;
+    }
+    
+    @Override
+    public Method.Response.Name responseName() {
+        return RESPONSE_NAME;
     }
     
     @Override

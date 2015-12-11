@@ -87,7 +87,7 @@ public class ProtocolRequestTest {
 
         ProtocolRequest request = ProtocolRequest.deserialize(nodes);
 
-        assertThat(request.getMethod()).isEqualTo(Method.name("getAccounts"));
+        assertThat(request.getMethodName()).isEqualTo(Method.Request.name("getAccounts"));
         assertThat(request.getParameters()).isNotNull();
         assertThat(request.getClientId()).isEqualTo(ClientId.of("#1"));
     }

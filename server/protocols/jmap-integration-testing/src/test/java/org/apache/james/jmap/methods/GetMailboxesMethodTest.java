@@ -150,7 +150,7 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"getMailboxes\",{\"accountId\":null,\"state\":null,\"list\":[],\"notFound\":null},\"#0\"]]"));
+            .content(equalTo("[[\"mailboxes\",{\"accountId\":null,\"state\":null,\"list\":[],\"notFound\":null},\"#0\"]]"));
     }
 
     @Test
@@ -170,7 +170,7 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"getMailboxes\",{\"accountId\":null,\"state\":null,\"list\":[{\"id\":\""), 
+            .content(startsWith("[[\"mailboxes\",{\"accountId\":null,\"state\":null,\"list\":[{\"id\":\""), 
                     endsWith("\",\"name\":\"name\",\"parentId\":null,\"role\":null,\"sortOrder\":0,\"mustBeOnlyMailbox\":false,\"mayReadItems\":false,\"mayAddItems\":false,\"mayRemoveItems\":false,\"mayCreateChild\":false,\"mayRename\":false,\"mayDelete\":false,\"totalMessages\":0,\"unreadMessages\":1,\"totalThreads\":0,\"unreadThreads\":0}],\"notFound\":null},\"#0\"]]"));
     }
 }

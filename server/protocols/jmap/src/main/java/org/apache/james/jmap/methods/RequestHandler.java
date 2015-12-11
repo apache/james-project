@@ -38,19 +38,19 @@ public class RequestHandler {
 
     private final JmapRequestParser jmapRequestParser;
     private final JmapResponseWriter jmapResponseWriter;
-    private final Map<Method.Name, Method> methods;
+    private final Map<Method.Request.Name, Method> methods;
 
     @Inject
     public RequestHandler(Set<Method> methods, JmapRequestParser jmapRequestParser, JmapResponseWriter jmapResponseWriter) {
         this.jmapRequestParser = jmapRequestParser;
         this.jmapResponseWriter = jmapResponseWriter;
         this.methods = methods.stream()
-                .collect(Collectors.toMap(Method::methodName, Function.identity()));
+                .collect(Collectors.toMap(Method::requestHandled, Function.identity()));
     }
 
     public ProtocolResponse handle(AuthenticatedProtocolRequest request) {
-        Builder responseBuilder = JmapResponse.forRequest(request);
-        return Optional.ofNullable(methods.get(request.getMethod()))
+        Builder responseBuilder = JmapResponse.builder().clientId(request.getClientId());
+        return Optional.ofNullable(methods.get(request.getMethodName()))
                         .map(extractAndProcess(request, responseBuilder))
                         .map(jmapResponseWriter::formatMethodResponse)
                         .orElseThrow(() -> new IllegalStateException("unknown method"));
@@ -63,6 +63,7 @@ public class RequestHandler {
                         JmapRequest jmapRequest = jmapRequestParser.extractJmapRequest(request, method.requestType());
                         return responseBuilder
                                 .response(method.process(jmapRequest, mailboxSession))
+                                .responseName(method.responseName())
                                 .build();
                     } catch (IOException e) {
                         if (e.getCause() instanceof NotImplementedException) {

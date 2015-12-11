@@ -30,21 +30,17 @@ public class JmapResponse {
         return new Builder();
     }
     
-    public static Builder forRequest(ProtocolRequest request) {
-        return builder().clientId(request.getClientId()).method(request.getMethod());
-    }
-    
     public static class Builder {
         
-        private Method.Name method;
+        private Method.Response.Name responseName;
         private ClientId id;
         private Object response;
 
         private Builder() {
         }
 
-        public Builder method(Method.Name name) {
-            this.method = name;
+        public Builder responseName(Method.Response.Name name) {
+            this.responseName = name;
             return this;
         }
         
@@ -64,13 +60,13 @@ public class JmapResponse {
 
         public Builder error(String message) {
             this.response = new ErrorResponse(message);
-            this.method = ERROR_METHOD;
+            this.responseName = ERROR_METHOD;
             return this;
         }
 
         
         public JmapResponse build() {
-            return new JmapResponse(method, id, response);
+            return new JmapResponse(responseName, id, response);
         }
     }
 
@@ -88,19 +84,20 @@ public class JmapResponse {
     }
     
     @VisibleForTesting static final String DEFAULT_ERROR_MESSAGE = "Error while processing";
-    @VisibleForTesting static final Method.Name ERROR_METHOD = Method.name("error");
+    public static final Method.Response.Name ERROR_METHOD = Method.Response.name("error");
 
-    private final Method.Name method;
+    
+    private final Method.Response.Name method;
     private final ClientId clientId;
     private final Object response;
     
-    private JmapResponse(Method.Name method, ClientId clientId, Object response) {
+    private JmapResponse(Method.Response.Name method, ClientId clientId, Object response) {
         this.method = method;
         this.clientId = clientId;
         this.response = response;
     }
 
-    public Method.Name getMethod() {
+    public Method.Response.Name getResponseName() {
         return method;
     }
     
