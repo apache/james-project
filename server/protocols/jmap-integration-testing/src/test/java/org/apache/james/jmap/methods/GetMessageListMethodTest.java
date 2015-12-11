@@ -65,6 +65,7 @@ public abstract class GetMessageListMethodTest {
         .around(jmapServer);
 
     private AccessToken accessToken;
+    private String username;
 
     @Before
     public void setup() throws Exception {
@@ -72,11 +73,11 @@ public abstract class GetMessageListMethodTest {
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
 
         String domain = "domain.tld";
-        String username = "username@" + domain;
+        this.username = "username@" + domain;
         String password = "password";
         jmapServer.serverProbe().addDomain(domain);
         jmapServer.serverProbe().addUser(username, password);
-        accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+        this.accessToken = JmapAuthentication.authenticateJamesUser(username, password);
     }
 
     @Test
@@ -95,12 +96,11 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldReturnAllMessagesWhenSingleMailboxNoParameters() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "name");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "name"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "name"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -115,20 +115,20 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\",\"username@domain.tld-mailbox-2\"]},"
                     + "\"#0\"]]"));
     }
 
     @Ignore("ISSUE-53")
     @Test
     public void getMessageListShouldReturnAllMessagesWhenMultipleMailboxesAndNoParameters() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox2");
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox2"), 
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox2"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -149,10 +149,9 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldFilterMessagesWhenInMailboxesFilterMatches() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -165,20 +164,29 @@ public abstract class GetMessageListMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"messageList\","
-                    + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\"]},"
-                    + "\"#0\"]]"));
+            .content(startsWith(""
+                    + "["
+                    +  "[\"messageList\","
+                    +   "{\"accountId\":null,"
+                    +    "\"filter\":null,"
+                    +    "\"sort\":[],"
+                    +    "\"collapseThreads\":false,"
+                    +    "\"state\":null,"
+                    +    "\"canCalculateUpdates\":false,"
+                    +    "\"position\":0,"
+                    +    "\"total\":0,"
+                    +    "\"threadIds\":[],"
+                    +    "\"messageIds\":[\"username@domain.tld-mailbox-1\"]},"
+                    +  "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldFilterMessagesWhenMultipleInMailboxesFilterMatches() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox2");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
         embeddedElasticSearch.awaitForElasticSearch();
 
         given()
@@ -192,16 +200,16 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldFilterMessagesWhenInMailboxesFilterDoesntMatches() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -222,13 +230,12 @@ public abstract class GetMessageListMethodTest {
 
     @Test
     public void getMessageListShouldSortMessagesWhenSortedByDateDefault() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -243,19 +250,19 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\",\"username@domain.tld-mailbox-2\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldSortMessagesWhenSortedByDateAsc() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -270,19 +277,19 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"2\",\"1\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-2\",\"username@domain.tld-mailbox-1\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldSortMessagesWhenSortedByDateDesc() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -297,19 +304,19 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\",\"username@domain.tld-mailbox-2\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldReturnAllMessagesWhenPositionIsNotGiven() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -324,19 +331,19 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\",\"username@domain.tld-mailbox-2\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldReturnSkipMessagesWhenPositionIsGiven() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -351,19 +358,19 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"2\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-2\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldReturnAllMessagesWhenLimitIsNotGiven() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -378,19 +385,19 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\",\"username@domain.tld-mailbox-2\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldReturnLimitMessagesWhenLimitGiven() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -405,23 +412,23 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\"]},"
                     + "\"#0\"]]"));
     }
 
     @Test
     public void getMessageListShouldReturnLimitMessagesWithDefaultValueWhenLimitIsNotGiven() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         LocalDate date = LocalDate.now();
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
-        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test4\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
@@ -436,7 +443,8 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .content(startsWith("[[\"messageList\","
                     + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
-                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\",\"3\"]},"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],"
+                    + "\"messageIds\":[\"username@domain.tld-mailbox-1\",\"username@domain.tld-mailbox-2\",\"username@domain.tld-mailbox-3\"]},"
                     + "\"#0\"]]"));
     }
 }
