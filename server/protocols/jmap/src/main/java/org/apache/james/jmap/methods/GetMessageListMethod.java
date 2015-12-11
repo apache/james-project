@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
@@ -54,17 +55,24 @@ import com.google.common.collect.ImmutableList;
 
 public class GetMessageListMethod<Id extends MailboxId> implements Method {
 
+    public static final String MAXIMUM_LIMIT = "maximumLimit";
+    public static final int DEFAULT_MAXIMUM_LIMIT = 256;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethod.class);
     private static final Method.Name METHOD_NAME = Method.name("getMessageList");
     private static final int NO_LIMIT = -1;
 
     private final MailboxManager mailboxManager;
     private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final int maximumLimit;
 
     @Inject
-    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory) {
+    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory,
+            @Named(MAXIMUM_LIMIT) int maximumLimit) {
+
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+        this.maximumLimit = maximumLimit;
     }
 
     @Override
@@ -97,11 +105,16 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
             .flatMap(List::stream)
             .sorted(comparatorFor(jmapRequest))
             .skip(jmapRequest.getPosition())
+            .limit(limit(jmapRequest.getLimit()))
             .map(Message::getUid)
             .map(String::valueOf)
             .forEach(builder::messageId);
 
         return builder.build();
+    }
+
+    private long limit(Optional<Integer> limit) {
+        return limit.orElse(maximumLimit);
     }
 
     private Comparator<Message<Id>> comparatorFor(GetMessageListRequest jmapRequest) {

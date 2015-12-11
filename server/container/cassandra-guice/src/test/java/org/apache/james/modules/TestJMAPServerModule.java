@@ -27,15 +27,24 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.PortConfiguration;
+import org.apache.james.jmap.methods.GetMessageListMethod;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.name.Names;
 
 public class TestJMAPServerModule extends AbstractModule{
+
+    private final int maximumLimit;
+
+    public TestJMAPServerModule(int maximumLimit) {
+        this.maximumLimit = maximumLimit;
+    }
 
     @Override
     protected void configure() {
         bind(PortConfiguration.class).to(RandomPortConfiguration.class).in(Singleton.class);
+        bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
     }
 
     @Provides

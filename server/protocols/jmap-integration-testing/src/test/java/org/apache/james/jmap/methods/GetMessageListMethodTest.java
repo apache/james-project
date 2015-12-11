@@ -358,4 +358,89 @@ public abstract class GetMessageListMethodTest {
                     +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"2\"]},"
                     + "\"#0\"]]"));
     }
+
+    @Test
+    public void getMessageListShouldReturnAllMessagesWhenLimitIsNotGiven() throws Exception {
+        String user = "user";
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+
+        LocalDate date = LocalDate.now();
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(startsWith("[[\"getMessageList\","
+                    + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\"]},"
+                    + "\"#0\"]]"));
+    }
+
+    @Test
+    public void getMessageListShouldReturnLimitMessagesWhenLimitGiven() throws Exception {
+        String user = "user";
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+
+        LocalDate date = LocalDate.now();
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"limit\":1}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(startsWith("[[\"getMessageList\","
+                    + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\"]},"
+                    + "\"#0\"]]"));
+    }
+
+    @Test
+    public void getMessageListShouldReturnLimitMessagesWithDefaultValueWhenLimitIsNotGiven() throws Exception {
+        String user = "user";
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "mailbox");
+
+        LocalDate date = LocalDate.now();
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(date.plusDays(1).toEpochDay()), false, new Flags());
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
+        jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "mailbox"), 
+                new ByteArrayInputStream("Subject: test4\r\n\r\ntestmail".getBytes()), new Date(date.toEpochDay()), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(startsWith("[[\"getMessageList\","
+                    + "{\"accountId\":null,\"filter\":null,\"sort\":[],\"collapseThreads\":false,\"state\":null,"
+                    +   "\"canCalculateUpdates\":false,\"position\":0,\"total\":0,\"threadIds\":[],\"messageIds\":[\"1\",\"2\",\"3\"]},"
+                    + "\"#0\"]]"));
+    }
 }

@@ -31,6 +31,7 @@ import java.nio.charset.Charset;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
@@ -83,7 +84,7 @@ public class CassandraJamesServerTest {
         return Modules.override(CassandraJamesServerMain.defaultModule)
                 .with(new TestElasticSearchModule(embeddedElasticSearch),
                         new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(),
+                        new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
                         new AbstractModule() {
                     
                     @Override

@@ -42,6 +42,8 @@ import com.google.inject.util.Modules;
 
 public class CassandraJmapServer implements JmapServer {
 
+    private static final int LIMIT_TO_3_MESSAGES = 3;
+
     private CassandraJamesServer server;
     private CassandraCluster cassandra;
 
@@ -55,7 +57,7 @@ public class CassandraJmapServer implements JmapServer {
         return Modules.override(CassandraJamesServerMain.defaultModule)
                 .with(new TestElasticSearchModule(embeddedElasticSearch),
                         new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(),
+                        new TestJMAPServerModule(LIMIT_TO_3_MESSAGES),
                         new AbstractModule() {
 
                     @Override
