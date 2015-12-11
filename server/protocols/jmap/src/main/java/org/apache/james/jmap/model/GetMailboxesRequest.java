@@ -18,11 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = GetMailboxesRequest.Builder.class)
 public class GetMailboxesRequest implements JmapRequest {
@@ -35,10 +39,12 @@ public class GetMailboxesRequest implements JmapRequest {
     public static class Builder {
 
         private String accountId;
-        private String[] ids;
-        private String[] properties;
+        private ImmutableList.Builder<String> ids;
+        private ImmutableList.Builder<String> properties;
 
         private Builder() {
+            ids = ImmutableList.builder();
+            properties = ImmutableList.builder();
         }
 
         public Builder accountId(String accountId) {
@@ -48,14 +54,14 @@ public class GetMailboxesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder ids(String[] ids) {
+        public Builder ids(List<String> ids) {
             if (ids != null) {
                 throw new NotImplementedException();
             }
             return this;
         }
 
-        public Builder properties(String[] properties) {
+        public Builder properties(List<String> properties) {
             if (properties != null) {
                 throw new NotImplementedException();
             }
@@ -63,29 +69,29 @@ public class GetMailboxesRequest implements JmapRequest {
         }
 
         public GetMailboxesRequest build() {
-            return new GetMailboxesRequest(accountId, ids, properties);
+            return new GetMailboxesRequest(Optional.ofNullable(accountId), ids.build(), properties.build());
         }
     }
 
-    private final String accountId;
-    private final String[] ids;
-    private final String[] properties;
+    private final Optional<String> accountId;
+    private final List<String> ids;
+    private final List<String> properties;
 
-    private GetMailboxesRequest(String accountId, String[] ids, String[] properties) {
+    private GetMailboxesRequest(Optional<String> accountId, List<String> ids, List<String> properties) {
         this.accountId = accountId;
         this.ids = ids;
         this.properties = properties;
     }
 
-    public String getAccountId() {
+    public Optional<String> getAccountId() {
         return accountId;
     }
 
-    public String[] getIds() {
+    public List<String> getIds() {
         return ids;
     }
 
-    public String[] getProperties() {
+    public List<String> getProperties() {
         return properties;
     }
 }

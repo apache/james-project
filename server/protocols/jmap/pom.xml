@@ -155,6 +155,10 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-store</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>james-server-core</artifactId>
                 </dependency>
                 <dependency>
@@ -210,6 +214,12 @@
                     <artifactId>javax.servlet-api</artifactId>
                     <version>3.0.1</version>
                     <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-store</artifactId>
+                    <scope>test</scope>
+                    <type>test-jar</type>
                 </dependency>
                 <dependency>
                     <groupId>junit</groupId>

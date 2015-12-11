@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.model.ProtocolRequest;
+import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 
 public class RequestHandler {
@@ -39,7 +39,7 @@ public class RequestHandler {
                 .collect(Collectors.toMap(Method::methodName, method -> method));
     }
 
-    public ProtocolResponse handle(ProtocolRequest request) {
+    public ProtocolResponse handle(AuthenticatedProtocolRequest request) {
         return Optional.ofNullable(methods.get(request.getMethod()))
             .map(method -> method.process(request))
             .orElseThrow(() -> new IllegalStateException("unknown method"));

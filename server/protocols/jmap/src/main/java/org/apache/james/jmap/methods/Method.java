@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.methods;
 
-import org.apache.james.jmap.model.ProtocolRequest;
+import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 
 public interface Method {
 
     String methodName();
 
-    ProtocolResponse process(ProtocolRequest request);
+    ProtocolResponse process(AuthenticatedProtocolRequest request);
 
 }

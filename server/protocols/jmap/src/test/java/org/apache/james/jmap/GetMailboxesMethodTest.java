@@ -23,6 +23,7 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,33 +39,58 @@ import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.RequestHandler;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.MailboxMetaData;
+import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
-public class JMAPGetMailboxesTest {
+public class GetMailboxesMethodTest {
 
     private RequestHandler requestHandler;
     private JettyHttpServer server;
     private UUID accessToken;
+    private MailboxManager mockedMailboxManager;
+    private MailboxMapperFactory<TestId> mockedMailboxMapperFactory;
+    private MailboxSession mockedMailboxSession;
     
+    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
-        AccessTokenManager mockedAccessTokenManager = mock(AccessTokenManager.class);
-        JmapRequestParser jmapRequestParser = new JmapRequestParserImpl();
-        JmapResponseWriter jmapResponseWriter = new JmapResponseWriterImpl();
+        String username = "username@domain.tld";
 
-        requestHandler = new RequestHandler(ImmutableSet.of(new GetMailboxesMethod(jmapRequestParser, jmapResponseWriter)));
+        AccessTokenManager mockedAccessTokenManager = mock(AccessTokenManager.class);
+        mockedMailboxMapperFactory = mock(MailboxMapperFactory.class);
+        mockedMailboxManager = mock(MailboxManager.class);
+        mockedMailboxSession = mock(MailboxSession.class);
+
+        JmapRequestParser jmapRequestParser = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriter jmapResponseWriter = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+
+        requestHandler = new RequestHandler(ImmutableSet.of(new GetMailboxesMethod<>(jmapRequestParser, jmapResponseWriter, mockedMailboxManager, mockedMailboxMapperFactory)));
         JMAPServlet jmapServlet = new JMAPServlet(requestHandler);
 
-        AuthenticationFilter authenticationFilter = new AuthenticationFilter(mockedAccessTokenManager);
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(mockedAccessTokenManager, mockedMailboxManager);
         
+        when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class))).thenReturn(mockedMailboxSession);
         when(mockedAccessTokenManager.isValid(any(AccessToken.class))).thenReturn(true);
+        when(mockedAccessTokenManager.getUsernameFromToken(any(AccessToken.class))).thenReturn(username);
         
         accessToken = UUID.randomUUID();
         
@@ -143,5 +169,57 @@ public class JMAPGetMailboxesTest {
         .then()
             .statusCode(200)
             .content(equalTo("[[\"error\",{\"type\":\"invalidArguments\"},\"#0\"]]"));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() throws Exception {
+        when(mockedMailboxManager.list(any()))
+            .thenReturn(ImmutableList.<MailboxPath>of());
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken)
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(equalTo("[[\"getMailboxes\",{\"accountId\":null,\"state\":null,\"list\":[],\"notFound\":null},\"#0\"]]"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void getMailboxesShouldReturnMailboxesWhenAvailable() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
+        when(mockedMailboxManager.list(eq(mockedMailboxSession)))
+            .thenReturn(ImmutableList.<MailboxPath>of(mailboxPath));
+
+        MessageManager mockedMessageManager = mock(MessageManager.class);
+        when(mockedMailboxManager.getMailbox(eq(mailboxPath), eq(mockedMailboxSession)))
+            .thenReturn(mockedMessageManager);
+
+        MailboxMetaData mailboxMetaData = new MailboxMetaData(ImmutableList.of(), null, 123L, 5L, 10L, 3L, 2L, 1L, false, false, null);
+        when(mockedMessageManager.getMetaData(eq(false), eq(mockedMailboxSession), eq(FetchGroup.UNSEEN_COUNT)))
+            .thenReturn(mailboxMetaData);
+
+        MailboxMapper<TestId> mockedMailboxMapper = mock(MailboxMapper.class);
+        when(mockedMailboxMapperFactory.getMailboxMapper(eq(mockedMailboxSession)))
+            .thenReturn(mockedMailboxMapper);
+
+        SimpleMailbox<TestId> simpleMailbox = new SimpleMailbox<TestId>(mailboxPath, 5L);
+        simpleMailbox.setMailboxId(TestId.of(23432L));
+        when(mockedMailboxMapper.findMailboxByPath(mailboxPath))
+            .thenReturn(simpleMailbox);
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken)
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(equalTo("[[\"getMailboxes\",{\"accountId\":null,\"state\":null,\"list\":[{\"id\":\"23432\",\"name\":\"name\",\"parentId\":null,\"role\":null,\"sortOrder\":0,\"mustBeOnlyMailbox\":false,\"mayReadItems\":false,\"mayAddItems\":false,\"mayRemoveItems\":false,\"mayCreateChild\":false,\"mayRename\":false,\"mayDelete\":false,\"totalMessages\":0,\"unreadMessages\":2,\"totalThreads\":0,\"unreadThreads\":0}],\"notFound\":null},\"#0\"]]"));
     }
 }

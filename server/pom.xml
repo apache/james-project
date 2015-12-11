@@ -694,6 +694,22 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
+                <artifactId>apache-james-mailbox-store</artifactId>
+                <version>${mailbox.version}</version>
+                <type>test-jar</type>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-collections</groupId>
+                        <artifactId>commons-collections</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
                 <artifactId>james-server-protocols-smtp</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
