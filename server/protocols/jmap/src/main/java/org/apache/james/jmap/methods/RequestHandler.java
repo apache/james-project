@@ -61,7 +61,9 @@ public class RequestHandler {
         return (Method method) -> {
                     try {
                         JmapRequest jmapRequest = jmapRequestParser.extractJmapRequest(request, method.requestType());
-                        return method.process(jmapRequest, mailboxSession, responseBuilder);
+                        return responseBuilder
+                                .response(method.process(jmapRequest, mailboxSession))
+                                .build();
                     } catch (IOException e) {
                         if (e.getCause() instanceof NotImplementedException) {
                             return responseBuilder.error("Not yet implemented").build();

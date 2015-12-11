@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 
 public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     
@@ -66,13 +67,13 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
         return GetMailboxesRequest.class;
     }
     
-    public JmapResponse process(JmapRequest request, MailboxSession mailboxSession, JmapResponse.Builder responseBuilder) {
+    @Override
+    public GetMailboxesResponse process(JmapRequest request, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         try {
-            responseBuilder.response(getMailboxesResponse(mailboxSession));
-            return responseBuilder.build();
+            return getMailboxesResponse(mailboxSession);
         } catch (MailboxException e) {
-            return responseBuilder.error().build();
+            throw Throwables.propagate(e);
         }
     }
 

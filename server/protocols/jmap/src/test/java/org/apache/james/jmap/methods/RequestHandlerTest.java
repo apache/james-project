@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.james.jmap.methods.JmapResponse.Builder;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
@@ -57,7 +56,7 @@ public class RequestHandlerTest {
         }
     }
 
-    public static class TestJmapResponse {
+    public static class TestJmapResponse implements Method.Response {
 
         private final String id;
         private final String name;
@@ -101,12 +100,10 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public JmapResponse process(JmapRequest request, MailboxSession mailboxSession, Builder responseBuilder) {
+        public TestJmapResponse process(JmapRequest request, MailboxSession mailboxSession) {
             Preconditions.checkArgument(request instanceof TestJmapRequest);
             TestJmapRequest typedRequest = (TestJmapRequest) request;
-            return responseBuilder
-                        .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
-                        .build();
+            return new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works");
         }
     }
 
@@ -184,7 +181,7 @@ public class RequestHandlerTest {
         }
         
         @Override
-        public JmapResponse process(JmapRequest request, MailboxSession mailboxSession, Builder responseBuilder) {
+        public Method.Response process(JmapRequest request, MailboxSession mailboxSession) {
             return null;
         }
     }

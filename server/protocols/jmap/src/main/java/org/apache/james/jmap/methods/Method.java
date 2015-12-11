@@ -30,6 +30,8 @@ import com.google.common.base.Preconditions;
 
 public interface Method {
 
+    interface Response {};
+    
     public static Name name(String name) {
         return new Name(name);
     }
@@ -73,6 +75,6 @@ public interface Method {
 
     Class<? extends JmapRequest> requestType();
     
-    JmapResponse process(JmapRequest request, MailboxSession mailboxSession, JmapResponse.Builder responseBuilder);
+    Response process(JmapRequest request, MailboxSession mailboxSession);
 
 }
