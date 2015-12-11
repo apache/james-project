@@ -19,24 +19,34 @@
 
 package org.apache.james.jmap.methods;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
+import org.apache.james.jmap.utils.SortToComparatorConvertor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.store.mail.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -46,12 +56,15 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethod.class);
     private static final Method.Name METHOD_NAME = Method.name("getMessageList");
+    private static final int NO_LIMIT = -1;
 
     private final MailboxManager mailboxManager;
+    private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
 
     @Inject
-    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager) {
+    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory) {
         this.mailboxManager = mailboxManager;
+        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
     @Override
@@ -80,13 +93,18 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         mailboxManager.list(mailboxSession)
             .stream()
             .filter(mailboxPath -> isMailboxRequested(jmapRequest, mailboxPath))
-            .map(mailboxPath -> getMailbox(mailboxPath, mailboxSession))
-            .map(messageManager -> getMessageIds(messageManager.get(), mailboxSession))
+            .map(mailboxPath -> getMessages(mailboxPath, mailboxSession))
             .flatMap(List::stream)
+            .sorted(comparatorFor(jmapRequest))
+            .map(Message::getUid)
             .map(String::valueOf)
             .forEach(builder::messageId);
 
         return builder.build();
+    }
+
+    private Comparator<Message<Id>> comparatorFor(GetMessageListRequest jmapRequest) {
+        return SortToComparatorConvertor.comparatorFor(jmapRequest.getSort());
     }
 
     private boolean isMailboxRequested(GetMessageListRequest jmapRequest, MailboxPath mailboxPath) {
@@ -105,7 +123,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         return inMailboxes.contains(mailboxPath.getName());
     }
 
-    private Optional<MessageManager> getMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    private Optional<MessageManager> getMessageManager(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
             return Optional.of(mailboxManager.getMailbox(mailboxPath, mailboxSession));
         } catch (MailboxException e) {
@@ -114,14 +132,45 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private List<Long> getMessageIds(MessageManager messageManager, MailboxSession mailboxSession) {
+    private List<Message<Id>> getMessages(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.all());
         try {
-            return ImmutableList.copyOf(messageManager.search(searchQuery, mailboxSession));
+            MessageMapper<Id> messageMapper = mailboxSessionMapperFactory.getMessageMapper(mailboxSession);
+            Optional<MessageManager> messageManager = getMessageManager(mailboxPath, mailboxSession);
+            return ImmutableList.copyOf(messageManager.get().search(searchQuery, mailboxSession))
+                    .stream()
+                    .map(Throwing.function(messageId -> getMessage(mailboxPath, mailboxSession, messageMapper, messageId)))
+                    .collect(Collectors.toList());
         } catch (MailboxException e) {
             LOGGER.warn("Error when searching messages for query :" + searchQuery, e);
             return ImmutableList.of();
+        }
+    }
+
+    private Message<Id> getMessage(MailboxPath mailboxPath, MailboxSession mailboxSession, MessageMapper<Id> messageMapper, long messageId) throws MailboxException {
+        try {
+            return ImmutableList.copyOf(messageMapper.findInMailbox(
+                        getMailbox(mailboxPath, mailboxSession).get(), 
+                        MessageRange.one(messageId),
+                        FetchType.Metadata,
+                        NO_LIMIT))
+                    .stream()
+                    .findFirst()
+                    .get();
+        } catch (MailboxException e) {
+            LOGGER.warn("Error retrieveing message :" + messageId, e);
+            throw e;
+        }
+    }
+
+    private Optional<Mailbox<Id>> getMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+        try {
+            return Optional.of(mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
+                    .findMailboxByPath(mailboxPath));
+        } catch (MailboxException e) {
+            LOGGER.warn("Error retrieveing mailboxId :" + mailboxPath, e);
+            return Optional.empty();
         }
     }
 }
