@@ -50,7 +50,7 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MailProcessor.class).to(CamelCompositeProcessor.class);
+        bind(MailProcessor.class).to(CamelCompositeProcessor.class).in(Singleton.class);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);

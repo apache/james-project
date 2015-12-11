@@ -19,9 +19,9 @@
 
 package org.apache.james.modules.server;
 
-import com.google.common.base.Throwables;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.annotation.PreDestroy;
+import javax.jms.ConnectionFactory;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.blob.BlobTransferPolicy;
@@ -30,10 +30,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.queue.activemq.FileSystemBlobTransferPolicy;
 
-import javax.annotation.PreDestroy;
-import javax.jms.ConnectionFactory;
+import com.google.common.base.Throwables;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class EmbeddedActiveMQ {
@@ -41,13 +43,13 @@ public class EmbeddedActiveMQ {
     private ActiveMQConnectionFactory activeMQConnectionFactory;
     private BrokerService brokerService;
 
-    @Inject private EmbeddedActiveMQ() {
+    @Inject private EmbeddedActiveMQ(FileSystem fileSystem) {
         try {
             launchEmbeddedBroker();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
-        activeMQConnectionFactory = createActiveMQConnectionFactory(createBlobTransferPolicy());
+        activeMQConnectionFactory = createActiveMQConnectionFactory(createBlobTransferPolicy(fileSystem));
     }
 
     public ConnectionFactory getConnectionFactory() {
@@ -73,9 +75,10 @@ public class EmbeddedActiveMQ {
         return prefetchPolicy;
     }
 
-    private BlobTransferPolicy createBlobTransferPolicy() {
-        BlobTransferPolicy blobTransferPolicy = new FileSystemBlobTransferPolicy();
+    private BlobTransferPolicy createBlobTransferPolicy(FileSystem fileSystem) {
+        FileSystemBlobTransferPolicy blobTransferPolicy = new FileSystemBlobTransferPolicy();
         blobTransferPolicy.setDefaultUploadUrl("file://var/store/activemq/blob-transfer");
+        blobTransferPolicy.setFileSystem(fileSystem);
         return blobTransferPolicy;
     }
 

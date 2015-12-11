@@ -46,8 +46,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     protected void configure() {
         bind(new TypeLiteral<MessageSearchIndex<CassandraId>>(){}).to(new TypeLiteral<ElasticSearchListeningMessageSearchIndex<CassandraId>>() {});
         bind(TextExtractor.class).to(TikaTextExtractor.class);
-        bind(new TypeLiteral<MessageSearchIndex<CassandraId>>() {})
-            .to(new TypeLiteral<ElasticSearchListeningMessageSearchIndex<CassandraId>>() {});
     }
 
     @Provides
