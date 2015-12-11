@@ -19,6 +19,8 @@
 package org.apache.james.jmap;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
+import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
@@ -26,6 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
@@ -37,13 +40,20 @@ public class JMAPAuthenticationTest {
     public void setup() throws Exception {
         server = JettyHttpServer.create(
                 Configuration.builder()
-                    .serve("/*")
-                    .with(AuthenticationServlet.class)
-                    .randomPort()
-                    .build());
+                .serve("/*")
+                .with(AuthenticationServlet.class)
+                .randomPort()
+                .build());
 
         server.start();
         RestAssured.port = server.getPort();
+        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+    }
+
+
+    @After
+    public void teardown() throws Exception {
+        server.stop();
     }
 
     @Test
@@ -56,9 +66,57 @@ public class JMAPAuthenticationTest {
             .statusCode(400);
     }
 
-    @After
-    public void teardown() throws Exception {
-        server.stop();
+    @Test
+    public void mustReturnMalformedRequestWhenContentTypeIsMissing() {
+        given()
+            .accept(ContentType.JSON)
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void mustReturnMalformedRequestWhenContentTypeIsNotJson() {
+        given()
+            .contentType(ContentType.XML)
+            .accept(ContentType.JSON)
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void mustReturnMalformedRequestWhenAcceptIsMissing() {
+        given()
+            .contentType(ContentType.JSON)
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void mustReturnMalformedRequestWhenAcceptIsNotJson() {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.XML)
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void mustReturnMalformedRequestWhenCharsetIsNotUTF8() {
+        given()
+            .contentType("application/json; charset=ISO-8859-1")
+            .accept(ContentType.JSON)
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
     }
 
 }

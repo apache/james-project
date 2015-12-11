@@ -26,12 +26,28 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class AuthenticationServlet extends HttpServlet {
+
+    public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String JSON_CONTENT_TYPE_UTF8 = "application/json; charset=UTF-8";
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (!req.getContentType().equals(JSON_CONTENT_TYPE_UTF8)) {
+        if (!checkJsonContentType(req)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
         }
+        if (!checkAcceptJsonOnly(req)) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+    }
+
+    private boolean checkJsonContentType(HttpServletRequest req) {
+        return req.getContentType().equals(JSON_CONTENT_TYPE_UTF8);
+    }
+
+    private boolean checkAcceptJsonOnly(HttpServletRequest req) {
+        String accept = req.getHeader("Accept");
+        return accept != null && accept.contains(JSON_CONTENT_TYPE);
     }
 }
