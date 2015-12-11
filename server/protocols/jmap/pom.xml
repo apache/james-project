@@ -185,6 +185,10 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>javax.inject</groupId>
                     <artifactId>javax.inject</artifactId>
                 </dependency>
