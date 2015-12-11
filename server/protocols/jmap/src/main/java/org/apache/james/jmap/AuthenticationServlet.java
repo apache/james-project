@@ -19,7 +19,6 @@
 package org.apache.james.jmap;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -27,10 +26,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.exceptions.BadRequestException;
+import org.apache.james.jmap.exceptions.InternalErrorException;
 import org.apache.james.jmap.json.MultipleObjectMapperBuilder;
 import org.apache.james.jmap.model.AccessTokenRequest;
 import org.apache.james.jmap.model.AccessTokenResponse;
-import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.model.ContinuationTokenRequest;
 import org.apache.james.jmap.model.ContinuationTokenResponse;
 import org.apache.james.user.api.UsersRepository;
@@ -50,16 +51,19 @@ public class AuthenticationServlet extends HttpServlet {
 
     private final ObjectMapper mapper;
     private final UsersRepository usersRepository;
+    private final ContinuationTokenManager continuationTokenManager;
 
     @Inject
-    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository) {
+    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository, ContinuationTokenManager continuationTokenManager) {
         this.usersRepository = usersRepository;
+        this.continuationTokenManager = continuationTokenManager;
         this.mapper = new MultipleObjectMapperBuilder()
             .registerClass(ContinuationTokenRequest.UNIQUE_JSON_PATH, ContinuationTokenRequest.class)
             .registerClass(AccessTokenRequest.UNIQUE_JSON_PATH, AccessTokenRequest.class)
             .build();
     }
     
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
@@ -76,6 +80,9 @@ public class AuthenticationServlet extends HttpServlet {
         } catch (BadRequestException e) {
             LOG.warn("Invalid authentication request received.", e);
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        } catch (InternalErrorException e) {
+            LOG.error("Internal error", e);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -104,23 +111,37 @@ public class AuthenticationServlet extends HttpServlet {
 
     private void handleContinuationTokenRequest(ContinuationTokenRequest request, HttpServletResponse resp) throws IOException {
         resp.setContentType(JSON_CONTENT_TYPE_UTF8);
-
-        ContinuationTokenResponse continuationTokenResponse = ContinuationTokenResponse
+        try {
+            ContinuationTokenResponse continuationTokenResponse = ContinuationTokenResponse
                 .builder()
-                // TODO Answer a real token
-                .continuationToken(new ContinuationToken("fake", ZonedDateTime.now(), "fake"))
+                .continuationToken(continuationTokenManager.generateToken(request.getUsername()))
                 .methods(ContinuationTokenResponse.AuthenticationMethod.PASSWORD)
                 .build();
-
-        mapper.writeValue(resp.getOutputStream(), continuationTokenResponse);
+            mapper.writeValue(resp.getOutputStream(), continuationTokenResponse);
+        } catch (Exception e) {
+            throw new InternalErrorException("Error while responding to continuation token");
+        }
     }
 
     private void handleAccessTokenRequest(AccessTokenRequest request, HttpServletResponse resp) throws IOException {
-        // TODO get username from continuationToken
-        String username = "username";
+        try {
+            if (!continuationTokenManager.isValid(request.getToken())) {
+                LOG.warn("Use of an invalid ContinuationToken : " + request.getToken().serialize());
+                returnUnauthorizedResponse(resp);
+            } else {
+                manageAuthenticationResponse(request, resp);
+            }
+        } catch(Exception e) {
+            throw new InternalErrorException("Internal error while managing access token request", e);
+        }
+    }
+
+    private void manageAuthenticationResponse(AccessTokenRequest request, HttpServletResponse resp) throws IOException {
+        String username = request.getToken().getUsername();
         if (authenticate(request, username)) {
             returnAccessTokenResponse(resp);
         } else {
+            LOG.info("Authentication failure for " + username);
             returnUnauthorizedResponse(resp);
         }
     }
@@ -150,6 +171,5 @@ public class AuthenticationServlet extends HttpServlet {
     private void returnUnauthorizedResponse(HttpServletResponse resp) throws IOException {
         resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
-
 
 }

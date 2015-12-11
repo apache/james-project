@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap;
+package org.apache.james.jmap.exceptions;
 
-public class BadRequestException extends RuntimeException {
+public class InternalErrorException extends RuntimeException {
 
-    public BadRequestException(String message) {
+    public InternalErrorException(String message) {
         super(message);
     }
 
-    public BadRequestException(String message, Throwable cause) {
+    public InternalErrorException(String message, Throwable cause) {
         super(message, cause);
     }
 }
