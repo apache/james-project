@@ -40,10 +40,14 @@ public class JettyHttpServer implements Closeable {
 
     private JettyHttpServer(Configuration configuration) {
         server = new Server();
+        server.addConnector(buildServerConnector(configuration));
+        server.setHandler(buildServletHandler(configuration));
+    }
+
+    private ServerConnector buildServerConnector(Configuration configuration) {
         serverConnector = new ServerConnector(server);
-        server.addConnector(serverConnector);
-        ServletHandler servletHandler = buildServletHandler(configuration);
-        server.setHandler(servletHandler);
+        configuration.getPort().ifPresent(serverConnector::setPort);
+        return serverConnector;
     }
 
     private ServletHandler buildServletHandler(Configuration configuration) {

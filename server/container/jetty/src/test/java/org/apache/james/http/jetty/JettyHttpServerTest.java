@@ -23,6 +23,7 @@ import static com.jayway.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.Random;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -74,6 +75,21 @@ public class JettyHttpServerTest {
             assertThat(first.getPort()).isNotEqualTo(second.getPort());
         }
     }
+    
+    @Test
+    public void shouldStartOnConfiguredPort() throws Exception {
+        int port = generateValidUnprivilegedPort();
+        testee = JettyHttpServer.start(configurationBuilder.port(port).build());
+        assertThat(testee.getPort()).isEqualTo(port);
+    }
+    
+
+    private int generateValidUnprivilegedPort() {
+        int portBound = 65535;
+        int privilegedPortBound = 1024;
+        return new Random().nextInt(portBound - privilegedPortBound) + privilegedPortBound;
+    }
+    
     @Test
     public void shouldReturn404WhenNoServletConfigured() throws Exception {
         testee = JettyHttpServer.start(configurationBuilder.build());
