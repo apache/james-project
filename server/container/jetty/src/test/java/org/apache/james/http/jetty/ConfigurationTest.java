@@ -21,6 +21,8 @@ package org.apache.james.http.jetty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import javax.servlet.Servlet;
+
 import org.junit.Test;
 
 public class ConfigurationTest {
@@ -97,6 +99,11 @@ public class ConfigurationTest {
 
     @Test
     public void shouldNotAllowNullServlet() {
-        assertThatThrownBy(() -> Configuration.builder().serve("/").with(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Configuration.builder().serve("/").with((Servlet)null)).isInstanceOf(NullPointerException.class);
+    }
+    
+    @Test
+    public void shouldNotAllowNullServletClassname() {
+        assertThatThrownBy(() -> Configuration.builder().serve("/").with((Class<? extends Servlet>)null)).isInstanceOf(NullPointerException.class);
     }
 }

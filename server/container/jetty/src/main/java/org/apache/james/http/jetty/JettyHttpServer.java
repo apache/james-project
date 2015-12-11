@@ -20,6 +20,9 @@
 package org.apache.james.http.jetty;
 
 import java.io.Closeable;
+import java.util.function.BiConsumer;
+
+import javax.servlet.Servlet;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -27,36 +30,49 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 
 public class JettyHttpServer implements Closeable {
     
     @SuppressWarnings("resource")
-    public static JettyHttpServer start(Configuration configuration) throws Exception {
-        return new JettyHttpServer(configuration).start();
+    public static JettyHttpServer create(Configuration configuration) {
+        return new JettyHttpServer(configuration);
     }
 
     private Server server;
     private ServerConnector serverConnector;
+    private final Configuration configuration;
 
     private JettyHttpServer(Configuration configuration) {
-        server = new Server();
-        server.addConnector(buildServerConnector(configuration));
-        server.setHandler(buildServletHandler(configuration));
+        this.configuration = configuration;
+        this.server = new Server();
+        this.server.addConnector(buildServerConnector(configuration));
+        this.server.setHandler(buildServletHandler(configuration));
     }
 
     private ServerConnector buildServerConnector(Configuration configuration) {
-        serverConnector = new ServerConnector(server);
+        this.serverConnector = new ServerConnector(server);
         configuration.getPort().ifPresent(serverConnector::setPort);
         return serverConnector;
     }
 
     private ServletHandler buildServletHandler(Configuration configuration) {
         ServletHandler servletHandler = new ServletHandler();
-        configuration.getMappings().forEach((path, servlet) -> servletHandler.addServletWithMapping(new ServletHolder(servlet), path));
+        BiConsumer<String, ServletHolder> addServletMapping = (path, servletHolder) -> servletHandler.addServletWithMapping(servletHolder, path);
+        Maps.transformEntries(configuration.getMappings(), this::toServletHolder).forEach(addServletMapping);
         return servletHandler;
     }
+
     
-    private JettyHttpServer start() throws Exception {
+    @SuppressWarnings("unchecked")
+    private ServletHolder toServletHolder(String path, Object value) {
+        if (value instanceof Servlet) {
+            return new ServletHolder((Servlet) value);
+        }
+        return new ServletHolder((Class<? extends Servlet>)value);
+    }
+    
+    public JettyHttpServer start() throws Exception {
         server.start();
         return this;
     }
@@ -69,6 +85,9 @@ public class JettyHttpServer implements Closeable {
         return serverConnector.getLocalPort();
     }
 
+    public Configuration getConfiguration() {
+        return configuration;
+    }
     
     @Override
     public void close() {

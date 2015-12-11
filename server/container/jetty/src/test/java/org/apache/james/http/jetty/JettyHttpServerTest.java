@@ -70,8 +70,8 @@ public class JettyHttpServerTest {
     
     @Test
     public void shouldStartOnRandomPort() throws Exception {
-        try (JettyHttpServer first = JettyHttpServer.start(configurationBuilder.build());
-             JettyHttpServer second = JettyHttpServer.start(configurationBuilder.build())) {
+        try (JettyHttpServer first = JettyHttpServer.create(configurationBuilder.build()).start();
+             JettyHttpServer second = JettyHttpServer.create(configurationBuilder.build()).start()) {
             assertThat(first.getPort()).isNotEqualTo(second.getPort());
         }
     }
@@ -79,7 +79,7 @@ public class JettyHttpServerTest {
     @Test
     public void shouldStartOnConfiguredPort() throws Exception {
         int port = generateValidUnprivilegedPort();
-        testee = JettyHttpServer.start(configurationBuilder.port(port).build());
+        testee = JettyHttpServer.create(configurationBuilder.port(port).build()).start();
         assertThat(testee.getPort()).isEqualTo(port);
     }
     
@@ -92,7 +92,7 @@ public class JettyHttpServerTest {
     
     @Test
     public void shouldReturn404WhenNoServletConfigured() throws Exception {
-        testee = JettyHttpServer.start(configurationBuilder.build());
+        testee = JettyHttpServer.create(configurationBuilder.build()).start();
         RestAssured.port = testee.getPort();
         when()
             .get("/")
@@ -105,9 +105,10 @@ public class JettyHttpServerTest {
     public void shouldLetConfiguredServletHandleIncomingRequestWhenServletConfigured() throws Exception {
         ServletMethod getHandler = (req, resp) -> resp.getWriter().append("served").close();
         
-        testee = JettyHttpServer.start(configurationBuilder
+        testee = JettyHttpServer.create(configurationBuilder
                                         .serve("/")
-                                        .with(get(getHandler)).build());
+                                        .with(get(getHandler)).build())
+                                .start();
         
         RestAssured.port = testee.getPort();
         
@@ -124,12 +125,13 @@ public class JettyHttpServerTest {
         ServletMethod fooGetHandler = (req, resp) -> resp.getWriter().append("served").close();
         ServletMethod barGetMethod = (req, resp) -> resp.sendError(400, "should not be called");
         
-        testee = JettyHttpServer.start(configurationBuilder
+        testee = JettyHttpServer.create(configurationBuilder
                                         .serve("/foo")
                                         .with(get(fooGetHandler))
                                         .serve("/bar")
                                         .with(get(barGetMethod))
-                                        .build());
+                                        .build())
+                                .start();
         
         RestAssured.port = testee.getPort();
         
@@ -139,6 +141,25 @@ public class JettyHttpServerTest {
             .assertThat()
                 .statusCode(200)
                 .body(Matchers.equalTo("served"));
+    }
+    
+    @Test
+    public void shouldLetConfiguredServletHandleIncomingRequestWhenServletConfiguredByName() throws Exception {
+        
+        testee = JettyHttpServer.create(configurationBuilder
+                                        .serve("/foo")
+                                        .with(Ok200.class)
+                                        .build())
+                                .start();
+        
+        RestAssured.port = testee.getPort();
+        
+        when()
+            .get("/foo")
+        .then()
+            .assertThat()
+                .statusCode(200)
+                .body(Matchers.equalTo("Ok"));
     }
     
 }

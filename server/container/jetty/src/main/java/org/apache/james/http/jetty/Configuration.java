@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.http.jetty;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.servlet.Servlet;
@@ -40,7 +41,7 @@ public class Configuration {
         
         private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, 65535);
 
-        private ImmutableMap.Builder<String, Servlet> mappings;
+        private ImmutableMap.Builder<String, Object> mappings;
         private Optional<Integer> port;
         
         public class ServletBinder {
@@ -53,6 +54,12 @@ public class Configuration {
             public Configuration.Builder with(Servlet servlet) {
                 Preconditions.checkNotNull(servlet);
                 mappings.put(mappingUrl, servlet);
+                return Builder.this;
+            }
+
+            public Configuration.Builder with(Class<? extends Servlet> servletClass) {
+                Preconditions.checkNotNull(servletClass);
+                mappings.put(mappingUrl, servletClass);
                 return Builder.this;
             }
         }
@@ -84,19 +91,42 @@ public class Configuration {
         }
     }
 
-    private final ImmutableMap<String, Servlet> mappings;
+    private final ImmutableMap<String, Object> mappings;
     private final Optional<Integer> port;
 
-    private Configuration(ImmutableMap<String, Servlet> mappings, Optional<Integer> port) {
+    private Configuration(ImmutableMap<String, Object> mappings, Optional<Integer> port) {
         this.mappings = mappings;
         this.port = port;
     }
     
-    public ImmutableMap<String, Servlet> getMappings() {
+    public ImmutableMap<String, Object> getMappings() {
         return mappings;
     }
     
     public Optional<Integer> getPort() {
         return port;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(mappings, port);
+    }
+    
+    @Override
+    public boolean equals(Object that) {
+        if (that instanceof Configuration) {
+            Configuration other = (Configuration) that;
+            return Objects.equals(mappings, other.mappings)
+                    && Objects.equals(port, other.port);
+        }
+        return false;
+    }
+    
+    @Override
+    public String toString() {
+        return com.google.common.base.Objects.toStringHelper(getClass())
+                .add("mappings", mappings)
+                .add("port", port)
+                .toString();
     }
 }

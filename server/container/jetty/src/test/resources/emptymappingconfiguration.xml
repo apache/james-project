@@ -1,0 +1,5 @@
+<httpservers>
+    <httpserver>
+        <port fixed="5000"/>
+    </httpserver>
+</httpservers>
