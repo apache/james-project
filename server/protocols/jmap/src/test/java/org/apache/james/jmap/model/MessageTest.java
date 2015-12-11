@@ -52,82 +52,77 @@ public class MessageTest {
     }
 
     @Test(expected=IllegalStateException.class)
-    public void buildShouldThrowWhenIdIsEmpty() {
-        Message.builder().id("").build();
-    }
-
-    @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenBlobIdIsNull() {
-        Message.builder().id("id").build();
+        Message.builder().id(MessageId.of("user-box-1")).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenBlobIdIsEmpty() {
-        Message.builder().id("id").blobId("").build();
+        Message.builder().id(MessageId.of("user-box-1")).blobId("").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenThreadIdIsNull() {
-        Message.builder().id("id").blobId("blobId").build();
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenThreadIdIsEmpty() {
-        Message.builder().id("id").blobId("blobId").threadId("").build();
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenMailboxIdsIsNull() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").build();
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenHeadersIsNull() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).build();
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsNull() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of()).build();
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of()).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsEmpty() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
             .subject("").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenSizeIsNull() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
             .subject("subject").build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenDateIsNull() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
             .subject("subject").size(123).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsNull() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
             .subject("subject").size(123).date(ZonedDateTime.now()).build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsEmpty() {
-        Message.builder().id("id").blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
+        Message.builder().id(MessageId.of("user-box-1")).blobId("blobId").threadId("threadId").mailboxIds(ImmutableList.of()).headers(ImmutableMap.of())
             .subject("subject").size(123).date(ZonedDateTime.now()).preview("").build();
     }
 
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
         ZonedDateTime currentDate = ZonedDateTime.now();
-        Message expected = new Message("id", "blobId", "threadId", ImmutableList.of("mailboxId"), Optional.empty(), false, false, false, false, false, ImmutableMap.of("key", "value"), Optional.empty(),
+        Message expected = new Message(MessageId.of("user-box-1"), "blobId", "threadId", ImmutableList.of("mailboxId"), Optional.empty(), false, false, false, false, false, ImmutableMap.of("key", "value"), Optional.empty(),
                 ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), "subject", currentDate, 123, "preview", Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableMap.of());
         Message tested = Message.builder()
-                .id("id")
+                .id(MessageId.of("user-box-1"))
                 .blobId("blobId")
                 .threadId("threadId")
                 .mailboxIds(ImmutableList.of("mailboxId"))
@@ -151,7 +146,7 @@ public class MessageTest {
                 .build();
         ImmutableMap<String, SubMessage> attachedMessages = ImmutableMap.of("differentBlobId", simpleMessage);
         Message.builder()
-            .id("id")
+            .id(MessageId.of("user-box-1"))
             .blobId("blobId")
             .threadId("threadId")
             .mailboxIds(ImmutableList.of("mailboxId"))
@@ -182,7 +177,7 @@ public class MessageTest {
                 .build();
         ImmutableMap<String, SubMessage> attachedMessages = ImmutableMap.of("blobId", simpleMessage);
         Message expected = new Message(
-                "id",
+                MessageId.of("user-box-1"),
                 "blobId",
                 "threadId",
                 ImmutableList.of("mailboxId"),
@@ -207,7 +202,7 @@ public class MessageTest {
                 attachments,
                 attachedMessages);
         Message tested = Message.builder()
-            .id("id")
+            .id(MessageId.of("user-box-1"))
             .blobId("blobId")
             .threadId("threadId")
             .mailboxIds(ImmutableList.of("mailboxId"))
@@ -247,9 +242,9 @@ public class MessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail);
+        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user-box-" + x));
         Message expected = Message.builder()
-                .id("0")
+                .id(MessageId.of("user-box-0"))
                 .blobId("0")
                 .threadId("0")
                 .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
@@ -278,9 +273,9 @@ public class MessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail);
+        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user-box-" + x));
         Message expected = Message.builder()
-                .id("0")
+                .id(MessageId.of("user-box-0"))
                 .blobId("0")
                 .threadId("0")
                 .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
@@ -333,9 +328,9 @@ public class MessageTest {
                 .put("in-reply-to", "<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .put("other-header", "other header value")
                 .build();
-        Message testee = Message.fromMailboxMessage(testMail);
+        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user-box-" + x));
         Message expected = Message.builder()
-                .id("0")
+                .id(MessageId.of("user-box-0"))
                 .blobId("0")
                 .threadId("0")
                 .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
@@ -369,9 +364,9 @@ public class MessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail);
+        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user-box-" + x));
         Message expected = Message.builder()
-                .id("0")
+                .id(MessageId.of("user-box-0"))
                 .blobId("0")
                 .threadId("0")
                 .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
@@ -429,9 +424,9 @@ public class MessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail);
+        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user-box-" + x));
         Message expected = Message.builder()
-                .id("0")
+                .id(MessageId.of("user-box-0"))
                 .blobId("0")
                 .threadId("0")
                 .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
@@ -457,6 +452,6 @@ public class MessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message.fromMailboxMessage(testMail);
+        Message.fromMailboxMessage(testMail, x -> MessageId.of("user-box-" + x));
     }
 }

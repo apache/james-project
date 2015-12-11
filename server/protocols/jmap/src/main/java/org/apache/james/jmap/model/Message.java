@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -53,13 +54,14 @@ public class Message {
         return new Builder();
     }
 
-    public static Message fromMailboxMessage(org.apache.james.mailbox.store.mail.model.Message<? extends MailboxId> mailboxMessage) {
+    public static Message fromMailboxMessage(org.apache.james.mailbox.store.mail.model.Message<? extends MailboxId> mailboxMessage,
+            Function<Long, MessageId> uidToMessageId) {
         IndexableMessage im = IndexableMessage.from(mailboxMessage, new DefaultTextExtractor(), UTC_ZONE_ID);
         if (im.getHasAttachment()) {
             throw new NotImplementedException();
         }
         return builder()
-                .id(String.valueOf(im.getId()))
+                .id(uidToMessageId.apply(im.getId()))
                 .blobId(String.valueOf(im.getId()))
                 .threadId(String.valueOf(im.getId()))
                 .mailboxIds(ImmutableList.of(im.getMailboxId()))
@@ -149,7 +151,7 @@ public class Message {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private String id;
+        private MessageId id;
         private String blobId;
         private String threadId;
         private ImmutableList<String> mailboxIds;
@@ -183,7 +185,7 @@ public class Message {
             attachedMessages = ImmutableMap.builder();
         }
 
-        public Builder id(String id) {
+        public Builder id(MessageId id) {
             this.id = id;
             return this;
         }
@@ -304,7 +306,7 @@ public class Message {
         }
 
         public Message build() {
-            Preconditions.checkState(!Strings.isNullOrEmpty(id), "'id' is mandatory");
+            Preconditions.checkState(id != null, "'id' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(blobId), "'blobId' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(threadId), "'threadId' is mandatory");
             Preconditions.checkState(mailboxIds != null, "'mailboxIds' is mandatory");
@@ -328,7 +330,7 @@ public class Message {
                 .allMatch(attachedMessages::containsKey);
     }
 
-    private final String id;
+    private final MessageId id;
     private final String blobId;
     private final String threadId;
     private final ImmutableList<String> mailboxIds;
@@ -353,7 +355,7 @@ public class Message {
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<String, SubMessage> attachedMessages;
 
-    @VisibleForTesting Message(String id, String blobId, String threadId, ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
+    @VisibleForTesting Message(MessageId id, String blobId, String threadId, ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
             ImmutableList<Emailer> to, ImmutableList<Emailer> cc, ImmutableList<Emailer> bcc, ImmutableList<Emailer> replyTo, String subject, ZonedDateTime date, long size, String preview, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
             ImmutableMap<String, SubMessage> attachedMessages) {
         this.id = id;
@@ -382,7 +384,7 @@ public class Message {
         this.attachedMessages = attachedMessages;
     }
 
-    public String getId() {
+    public MessageId getId() {
         return id;
     }
 
@@ -477,4 +479,5 @@ public class Message {
     public ImmutableMap<String, SubMessage> getAttachedMessages() {
         return attachedMessages;
     }
+
 }
