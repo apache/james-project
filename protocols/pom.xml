@@ -59,7 +59,6 @@
         <jmock.version>2.5.1</jmock.version>
         <jutf7.version>1.0.0</jutf7.version>
         <junit.version>4.10</junit.version>
-        <geronimo-javamail.version>1.8.3</geronimo-javamail.version>
         <slf4j.version>1.6.3</slf4j.version>
         <james-server-data-api.version>3.0.0-beta5-SNAPSHOT</james-server-data-api.version>
         <jsieve.version>0.6-SNAPSHOT</jsieve.version>
@@ -247,9 +246,9 @@
                 <version>${mailbox.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.geronimo.javamail</groupId>
-                <artifactId>geronimo-javamail_1.4_mail</artifactId>
-                <version>${geronimo-javamail.version}</version>
+                <groupId>javax.mail</groupId>
+                <artifactId>mail</artifactId>
+                <version>1.4.4</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

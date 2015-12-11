@@ -35,7 +35,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.commons.net.smtp.SMTPSClient;
-import org.apache.geronimo.javamail.transport.smtp.SMTPTransport;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
@@ -48,6 +47,8 @@ import org.apache.james.protocols.api.utils.MockLogger;
 import org.apache.james.protocols.api.utils.TestUtils;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.junit.Test;
+
+import com.sun.mail.smtp.SMTPTransport;
 
 public abstract class AbstractStartTlsSMTPServerTest {
     

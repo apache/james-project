@@ -170,18 +170,6 @@ public class MimeMessageTest {
                 + "second part =E8=E8\r\n"
                 + "------=_Part_0_XXXXXXXXXXX.XXXXXXXXXXX\r\n"
                 + "Subject: test3\r\n"
-                // javamail 1.4.3 NOTES:
-                // this headers don't get added by version 1.4.3
-                //which should be the right behavior anyway
-                //+"Content-Transfer-Encoding: 7bit\r\n"
-                //+"Content-Type: text/plain; charset=us-ascii\r\n"
-                
-                // geronimo javamail 1.4.3 NOTES:
-                // this headers are effectively added by geronimo javamail 1.4 version 1.8.3
-                // which is the right behavior anyway
-                +"Content-Transfer-Encoding: 7bit\r\n"
-                +"Content-Type: text/plain; charset=us-ascii\r\n"
-
                 + "\r\n"
                 + "third part\r\n"
                 + "------=_Part_0_XXXXXXXXXXX.XXXXXXXXXXX--\r\n";

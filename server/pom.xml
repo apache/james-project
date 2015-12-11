@@ -127,10 +127,10 @@
         <hadoop.version>1.1.1</hadoop.version>
         <hbase.version>0.94.27</hbase.version>
         <javax.inject.version>1</javax.inject.version>
-        <javax.mail.groupId>org.apache.geronimo.javamail</javax.mail.groupId>
-        <javax.mail.artifactId>geronimo-javamail_1.4_mail</javax.mail.artifactId>
-        <javax.activation.groupId>org.apache.geronimo.specs</javax.activation.groupId>
-        <javax.activation.artifactId>geronimo-activation_1.1_spec</javax.activation.artifactId>
+        <javax.mail.groupId>javax.mail</javax.mail.groupId>
+        <javax.mail.artifactId>javax.mail-api</javax.mail.artifactId>
+        <javax.activation.groupId>javax.activation</javax.activation.groupId>
+        <javax.activation.artifactId>activation</javax.activation.artifactId>
         <jackrabbit.version>2.5.2</jackrabbit.version>
         <jsieve.version>0.6-SNAPSHOT</jsieve.version>
         <mailbox.version>0.6-SNAPSHOT</mailbox.version>
@@ -140,7 +140,7 @@
         <geronimo-jms-spec.version>1.1.1</geronimo-jms-spec.version>
         <h2.version>1.3.170</h2.version>
         <apache-jspf-resolver.version>1.0.1-SNAPSHOT</apache-jspf-resolver.version>
-        <javamail.version>1.4.4</javamail.version>
+        <javamail.version>1.5.4</javamail.version>
         <javax-activation.version>1.1.1</javax-activation.version>
         <geronimo-activation-spec.version>1.1</geronimo-activation-spec.version>
         <geronimo-javamail.version>1.8.3</geronimo-javamail.version>
@@ -794,11 +794,9 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- Declare javamail as provided to be able to easily switch -->
-            <!-- to different implementations (Geronimo) -->
             <dependency>
-                <groupId>javax.mail</groupId>
-                <artifactId>mail</artifactId>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>javax.mail</artifactId>
                 <version>${javamail.version}</version>
                 <exclusions>
                     <exclusion>
@@ -821,11 +819,6 @@
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-activation_1.1_spec</artifactId>
                 <version>${geronimo-activation-spec.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.geronimo.javamail</groupId>
-                <artifactId>geronimo-javamail_1.4_mail</artifactId>
-                <version>${geronimo-javamail.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-daemon</groupId>
@@ -1486,15 +1479,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>oracle-javamail</id>
-            <properties>
-                <javax.activation.groupId>javax.activation</javax.activation.groupId>
-                <javax.activation.artifactId>activation</javax.activation.artifactId>
-                <javax.mail.groupId>javax.mail</javax.mail.groupId>
-                <javax.mail.artifactId>mail</javax.mail.artifactId>
-            </properties>
-        </profile>
         <profile>
             <!-- run live tests, ie. ones that do not run stably enough in
             a CI environment (for example, karaf integration tests accessing external network

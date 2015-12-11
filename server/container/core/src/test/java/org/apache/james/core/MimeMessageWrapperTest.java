@@ -313,7 +313,6 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         assertEquals(body.length(), mw.getSize());
     }
     
-    @Ignore("will be fixed on next commit")
     @Test
     public void jiraJames1593() throws MessagingException, IOException {
         Properties noProperties = new Properties();

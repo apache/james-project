@@ -116,7 +116,6 @@
         <xml-apis.version>1.3.04</xml-apis.version>
         <geronimo-annotation-spec.version>1.1.1</geronimo-annotation-spec.version>
         <geronimo-activation-spec.version>1.1</geronimo-activation-spec.version>
-        <geronimo-javamail-mail.version>1.8.3</geronimo-javamail-mail.version>
         <apache-mailet.version>2.5.1-SNAPSHOT</apache-mailet.version>
         <slf4j.version>1.7.7</slf4j.version>
         <junit.version>4.11</junit.version>
@@ -268,11 +267,6 @@
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-activation_1.1_spec</artifactId>
                 <version>${geronimo-activation-spec.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.geronimo.javamail</groupId>
-                <artifactId>geronimo-javamail_1.4_mail</artifactId>
-                <version>${geronimo-javamail-mail.version}</version>
             </dependency>
             <!--
                 END Mail
@@ -667,17 +661,6 @@
                     </exclusions>
                 </dependency>
             </dependencies>
-        </profile>
-        <profile>
-            <id>geronimo</id>
-            <properties>
-                <javax.mail.groupId>org.apache.geronimo.javamail</javax.mail.groupId>
-                <javax.mail.artifactId>geronimo-javamail_1.4_mail</javax.mail.artifactId>
-                <javax.activation.groupId>org.apache.geronimo.specs</javax.activation.groupId>
-                <javax.activation.artifactId>geronimo-activation_1.1_spec</javax.activation.artifactId>
-                <version.javax.mail>1.6</version.javax.mail>
-                <version.activation>1.0.2</version.activation>
-            </properties>
         </profile>
     </profiles>
 </project>

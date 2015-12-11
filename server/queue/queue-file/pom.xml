@@ -55,6 +55,10 @@
           <groupId>javax.inject</groupId>
           <artifactId>javax.inject</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>

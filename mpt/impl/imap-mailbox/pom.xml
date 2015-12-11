@@ -110,17 +110,6 @@
 
     <profiles>
         <profile>
-            <id>geronimo</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <javax.mail.groupId>org.apache.geronimo.javamail</javax.mail.groupId>
-                <javax.mail.artifactId>geronimo-javamail_1.4_mail</javax.mail.artifactId>
-                <javax.mail.version>1.6</javax.mail.version>
-            </properties>
-        </profile>
-        <profile>
             <id>cassandra</id>
             <build>
                 <plugins>
