@@ -16,45 +16,44 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap;
 
-package org.apache.james.jmap.crypto;
+import java.io.IOException;
 
-import org.apache.james.jmap.api.AccessTokenManager;
-import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
+import javax.inject.Inject;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
-import com.google.common.base.Preconditions;
-
-public class AccessTokenManagerImpl implements AccessTokenManager {
-
-    private final AccessTokenRepository accessTokenRepository;
-
-    public AccessTokenManagerImpl(AccessTokenRepository accessTokenRepository) {
-        this.accessTokenRepository = accessTokenRepository;
-    }
-
-    @Override
-    public AccessToken grantAccessToken(String username) {
-        Preconditions.checkNotNull(username);
-        AccessToken accessToken = AccessToken.generate();
-        accessTokenRepository.addToken(username, accessToken);
-        return accessToken;
-    }
-
-    @Override
-    public String getUsernameFromToken(AccessToken token) throws InvalidAccessToken {
-        return accessTokenRepository.getUsernameFromToken(token);
-    }
+public class BypassOnPostFilter implements Filter {
     
+    private Filter nestedFilter;
+
+    @Inject
+    public BypassOnPostFilter(AuthenticationFilter nestedFilter) {
+        this.nestedFilter = nestedFilter;
+    }
+
     @Override
-    public boolean isValid(AccessToken token) throws InvalidAccessToken {
-        try {
-            getUsernameFromToken(token);
-            return true;
-        } catch (InvalidAccessToken e) {
-            return false;
+    public void init(FilterConfig filterConfig) throws ServletException {
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest)request;
+        if ("POST".equals(httpRequest.getMethod())) {
+            chain.doFilter(request, response);
+        } else {
+            nestedFilter.doFilter(httpRequest, response, chain);
         }
+    }
+
+    @Override
+    public void destroy() {
     }
 
 }

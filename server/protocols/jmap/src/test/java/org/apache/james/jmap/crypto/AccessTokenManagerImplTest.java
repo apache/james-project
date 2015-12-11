@@ -55,6 +55,11 @@ public class AccessTokenManagerImplTest {
         assertThat(accessTokenRepository.getUsernameFromToken(token)).isEqualTo("username");
     }
     
+    @Test(expected=NullPointerException.class)
+    public void getUsernameShouldThrowWhenNullToken() throws Exception {
+        accessTokenManager.getUsernameFromToken(null);
+    }
+
     @Test(expected=InvalidAccessToken.class)
     public void getUsernameShouldThrowWhenUnknownToken() throws Exception {
         accessTokenManager.getUsernameFromToken(AccessToken.generate());
@@ -71,5 +76,26 @@ public class AccessTokenManagerImplTest {
         AccessToken token = accessTokenManager.grantAccessToken("username");
         assertThat(accessTokenManager.getUsernameFromToken(token)).isEqualTo("username");
     }
-
+    
+    @Test(expected=NullPointerException.class)
+    public void isValidShouldThrowOnNullToken() throws Exception {
+        accessTokenManager.isValid(null);
+    }
+    
+    @Test
+    public void isValidShouldReturnFalseOnUnknownToken() throws Exception {
+        assertThat(accessTokenManager.isValid(AccessToken.generate())).isFalse();
+    }
+    
+    @Test
+    public void isValidShouldReturnFalseWhenOtherToken() throws Exception {
+        accessTokenManager.grantAccessToken("username");
+        assertThat(accessTokenManager.isValid(AccessToken.generate())).isFalse();
+    }
+    
+    @Test
+    public void isValidShouldReturnTrueWhenValidToken() throws Exception {
+        AccessToken accessToken = accessTokenManager.grantAccessToken("username");
+        assertThat(accessTokenManager.isValid(accessToken)).isTrue();
+    }
 }

@@ -35,6 +35,7 @@ import org.apache.james.jmap.model.AccessTokenRequest;
 import org.apache.james.jmap.model.AccessTokenResponse;
 import org.apache.james.jmap.model.ContinuationTokenRequest;
 import org.apache.james.jmap.model.ContinuationTokenResponse;
+import org.apache.james.jmap.model.EndPointsResponse;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
@@ -86,6 +87,11 @@ public class AuthenticationServlet extends HttpServlet {
             LOG.error("Internal error", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+    
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        returnEndPointsResponse(resp);
     }
 
     private Object deserialize(HttpServletRequest req) throws BadRequestException {
@@ -165,6 +171,17 @@ public class AuthenticationServlet extends HttpServlet {
             .builder()
             .accessToken(accessTokenManager.grantAccessToken(username))
             // TODO Send API endpoints
+            .build();
+        mapper.writeValue(resp.getOutputStream(), response);
+    }
+
+    private void returnEndPointsResponse(HttpServletResponse resp) throws IOException {
+        resp.setContentType(JSON_CONTENT_TYPE_UTF8);
+        resp.setStatus(HttpServletResponse.SC_OK);
+        EndPointsResponse response = EndPointsResponse
+            .builder()
+            .api("/api")
+            // TODO Send other API endpoints
             .build();
         mapper.writeValue(resp.getOutputStream(), response);
     }

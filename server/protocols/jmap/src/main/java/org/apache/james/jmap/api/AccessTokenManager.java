@@ -27,5 +27,7 @@ public interface AccessTokenManager {
     AccessToken grantAccessToken(String username);
 
     String getUsernameFromToken(AccessToken token) throws InvalidAccessToken;
+    
+    boolean isValid(AccessToken token);
 
 }
