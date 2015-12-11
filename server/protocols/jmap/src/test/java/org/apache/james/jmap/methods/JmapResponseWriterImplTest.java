@@ -105,10 +105,14 @@ public class JmapResponseWriterImplTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
-        ProtocolResponse response = jmapResponseWriterImpl.formatErrorResponse(ProtocolRequest.deserialize(nodes));
+        ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(
+                JmapResponse
+                    .forRequest(ProtocolRequest.deserialize(nodes))
+                    .error()
+                    .build());
 
-        assertThat(response.getMethod()).isEqualTo(JmapResponseWriterImpl.ERROR_METHOD);
-        assertThat(response.getResults().findValue("type").asText()).isEqualTo(JmapResponseWriterImpl.DEFAULT_ERROR_MESSAGE);
+        assertThat(response.getMethod()).isEqualTo(JmapResponse.ERROR_METHOD);
+        assertThat(response.getResults().findValue("type").asText()).isEqualTo(JmapResponse.DEFAULT_ERROR_MESSAGE);
         assertThat(response.getClientId()).isEqualTo(ClientId.of(expectedClientId));
     }
 }

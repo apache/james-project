@@ -19,14 +19,10 @@
 
 package org.apache.james.jmap.methods;
 
-import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 
 public interface JmapResponseWriter {
 
     ProtocolResponse formatMethodResponse(JmapResponse jmapResponse);
 
-    ProtocolResponse formatErrorResponse(ProtocolRequest request);
-
-    ProtocolResponse formatErrorResponse(ProtocolRequest request, String error);
 }

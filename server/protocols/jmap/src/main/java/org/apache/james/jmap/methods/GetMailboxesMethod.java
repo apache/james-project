@@ -69,24 +69,24 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
         return "getMailboxes";
     }
 
-    public ProtocolResponse process(AuthenticatedProtocolRequest request) {
+    public JmapResponse process(AuthenticatedProtocolRequest request) {
         Builder responseBuilder = JmapResponse.forRequest(request);
         try {
             jmapRequestParser.extractJmapRequest(request, GetMailboxesRequest.class);
         } catch (IOException e) {
             if (e.getCause() instanceof NotImplementedException) {
-                return jmapResponseWriter.formatErrorResponse(request, "Not yet implemented");
+                return responseBuilder.error("Not yet implemented").build();
             } else {
-                return jmapResponseWriter.formatErrorResponse(request, "invalidArguments");
+                return responseBuilder.error("invalidArguments").build();
             }
         }
         
         try {
             MailboxSession mailboxSession = request.getMailboxSession();
             responseBuilder.response(getMailboxesResponse(mailboxSession));
-            return jmapResponseWriter.formatMethodResponse(responseBuilder.build());
+            return responseBuilder.build();
         } catch (MailboxException e) {
-            return jmapResponseWriter.formatErrorResponse(request);
+            return responseBuilder.error().build();
         }
     }
 

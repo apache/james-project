@@ -32,16 +32,20 @@ import org.apache.james.jmap.model.ProtocolResponse;
 public class RequestHandler {
 
     private final Map<String, Method> methods;
+    private final JmapResponseWriter jmapResponseWriter;
 
     @Inject
-    public RequestHandler(Set<Method> methods) {
+    public RequestHandler(Set<Method> methods, JmapResponseWriter jmapResponseWriter) {
+        this.jmapResponseWriter = jmapResponseWriter;
         this.methods = methods.stream()
                 .collect(Collectors.toMap(Method::methodName, method -> method));
     }
 
     public ProtocolResponse handle(AuthenticatedProtocolRequest request) {
         return Optional.ofNullable(methods.get(request.getMethod()))
-            .map(method -> method.process(request))
-            .orElseThrow(() -> new IllegalStateException("unknown method"));
+                .map(method -> method.process(request))
+                .map(jmapResponseWriter::formatMethodResponse)
+                .orElseThrow(() -> new IllegalStateException("unknown method"));
     }
+    
 }

@@ -26,6 +26,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.jmap.methods.JmapResponse.Builder;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
@@ -83,12 +84,10 @@ public class RequestHandlerTest {
     public static class TestMethod implements Method {
 
         private final JmapRequestParser jmapRequestParser;
-        private final JmapResponseWriter jmapResponseWriter;
 
         @Inject
         @VisibleForTesting TestMethod(JmapRequestParser jmapRequestParser, JmapResponseWriter jmapResponseWriter) {
             this.jmapRequestParser = jmapRequestParser;
-            this.jmapResponseWriter = jmapResponseWriter;
         }
 
         @Override
@@ -97,16 +96,15 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public ProtocolResponse process(AuthenticatedProtocolRequest request) {
+        public JmapResponse process(AuthenticatedProtocolRequest request) {
+            Builder response = JmapResponse.forRequest(request);
             try {
                 TestJmapRequest typedRequest = jmapRequestParser.extractJmapRequest(request, TestJmapRequest.class);
-                return jmapResponseWriter.formatMethodResponse(
-                            JmapResponse
-                                .forRequest(request)
-                                .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
-                                .build());
+                return response
+                            .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
+                            .build();
             } catch (IOException e) {
-                return jmapResponseWriter.formatErrorResponse(request);
+                return response.error().build();
             }
         }
     }
@@ -121,7 +119,7 @@ public class RequestHandlerTest {
         jmapRequestParser = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
         jmapResponseWriter = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
         fakeHttpServletRequest = null;
-        testee = new RequestHandler(ImmutableSet.of(new TestMethod(jmapRequestParser, jmapResponseWriter)));
+        testee = new RequestHandler(ImmutableSet.of(new TestMethod(jmapRequestParser, jmapResponseWriter)), jmapResponseWriter);
     }
 
 
@@ -131,23 +129,35 @@ public class RequestHandlerTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        RequestHandler requestHandler = new RequestHandler(ImmutableSet.of());
+        RequestHandler requestHandler = new RequestHandler(ImmutableSet.of(), jmapResponseWriter);
         requestHandler.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), fakeHttpServletRequest));
     }
 
     @Test(expected=IllegalStateException.class)
     public void requestHandlerShouldThrowWhenAMethodIsRecordedTwice() {
-        new RequestHandler(ImmutableSet.of(new TestMethod(jmapRequestParser, jmapResponseWriter), new TestMethod(jmapRequestParser, jmapResponseWriter)));
+        new RequestHandler(
+                ImmutableSet.of(
+                        new TestMethod(jmapRequestParser, jmapResponseWriter),
+                        new TestMethod(jmapRequestParser, jmapResponseWriter)),
+                jmapResponseWriter);
     }
 
     @Test(expected=IllegalStateException.class)
     public void requestHandlerShouldThrowWhenTwoMethodsWithSameName() {
-        new RequestHandler(ImmutableSet.of(new NamedMethod("name"), new NamedMethod("name")));
+        new RequestHandler(
+                ImmutableSet.of(
+                        new NamedMethod("name"),
+                        new NamedMethod("name")),
+                jmapResponseWriter);
     }
 
     @Test
     public void requestHandlerMayBeCreatedWhenTwoMethodsWithDifferentName() {
-        new RequestHandler(ImmutableSet.of(new NamedMethod("name"), new NamedMethod("name2")));
+        new RequestHandler(
+                ImmutableSet.of(
+                        new NamedMethod("name"), 
+                        new NamedMethod("name2")),
+                jmapResponseWriter);
     }
 
     private class NamedMethod implements Method {
@@ -165,7 +175,7 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public ProtocolResponse process(AuthenticatedProtocolRequest request) {
+        public JmapResponse process(AuthenticatedProtocolRequest request) {
             return null;
         }
     }

@@ -22,6 +22,8 @@ package org.apache.james.jmap.methods;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.ProtocolRequest;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class JmapResponse {
 
     public static Builder builder() {
@@ -55,12 +57,39 @@ public class JmapResponse {
             this.response = response;
             return this;
         }
+
+        public Builder error() {
+            return error(DEFAULT_ERROR_MESSAGE);
+        }
+
+        public Builder error(String message) {
+            this.response = new ErrorResponse(message);
+            this.method = ERROR_METHOD;
+            return this;
+        }
+
         
         public JmapResponse build() {
             return new JmapResponse(method, id, response);
         }
     }
+
+    public static class ErrorResponse {
+        
+        private final String type;
+
+        public ErrorResponse(String type) {
+            this.type = type;
+        }
+        
+        public String getType() {
+            return type;
+        }
+    }
     
+    @VisibleForTesting static final String DEFAULT_ERROR_MESSAGE = "Error while processing";
+    @VisibleForTesting static final String ERROR_METHOD = "error";
+
     private final String method;
     private final ClientId clientId;
     private final Object response;
