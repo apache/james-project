@@ -21,6 +21,8 @@ package org.apache.james.jmap;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.isA;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
@@ -118,5 +120,44 @@ public class JMAPAuthenticationTest {
         .then()
             .statusCode(400);
     }
+
+    @Test
+    public void mustReturnMalformedRequestWhenBodyIsEmpty() {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void mustReturnJsonResponse() {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON);
+    }
+
+    @Test
+    public void getContinuationTokenWhenValidResquest() {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(200)
+            .body("continuationToken", isA(String.class))
+            .body("methods", hasItem("password"));
+    }
+
 
 }

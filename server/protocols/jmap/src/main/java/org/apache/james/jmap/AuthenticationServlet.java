@@ -25,10 +25,21 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.jmap.model.ContinuationTokenRequest;
+import org.apache.james.jmap.model.ContinuationTokenResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class AuthenticationServlet extends HttpServlet {
 
     public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String JSON_CONTENT_TYPE_UTF8 = "application/json; charset=UTF-8";
+
+    private static final Logger LOG = LoggerFactory.getLogger(AuthenticationServlet.class);
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -40,6 +51,27 @@ public class AuthenticationServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
+
+        ContinuationTokenRequest continuationTokenRequest;
+        try {
+            continuationTokenRequest = mapper.readValue(req.getReader(), ContinuationTokenRequest.class);
+        } catch (Exception e) {
+            LOG.warn("Invalid authentication request received.", e);
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        resp.setContentType(JSON_CONTENT_TYPE_UTF8);
+
+        ContinuationTokenResponse continuationTokenResponse = ContinuationTokenResponse
+                .builder()
+                // TODO Answer a real token
+                .continuationToken("token")
+                .methods(ContinuationTokenResponse.AuthenticationMethod.PASSWORD)
+                .build();
+
+        mapper.writeValue(resp.getOutputStream(), continuationTokenResponse);
+
     }
 
     private boolean checkJsonContentType(HttpServletRequest req) {
