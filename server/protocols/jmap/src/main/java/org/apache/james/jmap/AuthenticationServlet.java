@@ -20,6 +20,7 @@ package org.apache.james.jmap;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -27,12 +28,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.json.MultipleObjectMapperBuilder;
 import org.apache.james.jmap.model.AccessTokenRequest;
+import org.apache.james.jmap.model.AccessTokenResponse;
 import org.apache.james.jmap.model.ContinuationTokenRequest;
 import org.apache.james.jmap.model.ContinuationTokenResponse;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 
 public class AuthenticationServlet extends HttpServlet {
 
@@ -41,47 +46,59 @@ public class AuthenticationServlet extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticationServlet.class);
 
-    private ObjectMapper mapper = new MultipleObjectMapperBuilder()
+    private final ObjectMapper mapper;
+    private final UsersRepository usersRepository;
+
+    @Inject
+    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
+        this.mapper = new MultipleObjectMapperBuilder()
             .registerClass(ContinuationTokenRequest.UNIQUE_JSON_PATH, ContinuationTokenRequest.class)
             .registerClass(AccessTokenRequest.UNIQUE_JSON_PATH, AccessTokenRequest.class)
             .build();
-
+    }
+    
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (!checkJsonContentType(req)) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-        if (!checkAcceptJsonOnly(req)) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+        try {
+            assertJsonContentType(req);
+            assertAcceptJsonOnly(req);
 
+            Object request = deserialize(req);
+
+            if (request instanceof ContinuationTokenRequest) {
+                handleContinuationTokenRequest((ContinuationTokenRequest)request, resp);
+            } else if (request instanceof AccessTokenRequest) {
+                handleAccessTokenRequest((AccessTokenRequest)request, resp);
+            }
+        } catch (BadRequestException e) {
+            LOG.warn("Invalid authentication request received.", e);
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
+
+    private Object deserialize(HttpServletRequest req) throws BadRequestException {
         Object request;
         try {
             request = mapper.readValue(req.getReader(), Object.class);
-        } catch (Exception e) {
-            LOG.warn("Invalid authentication request received.", e);
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
+        } catch (IOException e) {
+            throw new BadRequestException("Request can't be deserialized", e);
         }
+        return request;
+    }
 
-        if (request instanceof ContinuationTokenRequest) {
-            handleContinuationTokenRequest((ContinuationTokenRequest)request, resp);
-        } else if (request instanceof AccessTokenRequest) {
-            handleAccessTokenRequest((AccessTokenRequest)request, resp);
+    private void assertJsonContentType(HttpServletRequest req) {
+        if (! req.getContentType().equals(JSON_CONTENT_TYPE_UTF8)) {
+            throw new BadRequestException("Request ContentType header must be set to: " + JSON_CONTENT_TYPE_UTF8);
         }
     }
 
-    private boolean checkJsonContentType(HttpServletRequest req) {
-        return req.getContentType().equals(JSON_CONTENT_TYPE_UTF8);
-    }
-
-    private boolean checkAcceptJsonOnly(HttpServletRequest req) {
+    private void assertAcceptJsonOnly(HttpServletRequest req) {
         String accept = req.getHeader("Accept");
-        return accept != null && accept.contains(JSON_CONTENT_TYPE);
+        if (accept == null || ! accept.contains(JSON_CONTENT_TYPE)) {
+            throw new BadRequestException("Request Accept header must be set to JSON content type");
+        }
     }
-
 
     private void handleContinuationTokenRequest(ContinuationTokenRequest request, HttpServletResponse resp) throws IOException {
         resp.setContentType(JSON_CONTENT_TYPE_UTF8);
@@ -97,6 +114,38 @@ public class AuthenticationServlet extends HttpServlet {
     }
 
     private void handleAccessTokenRequest(AccessTokenRequest request, HttpServletResponse resp) throws IOException {
+        // TODO get username from continuationToken
+        String username = "username";
+        if (authenticate(request, username)) {
+            returnAccessTokenResponse(resp);
+        } else {
+            returnUnauthorizedResponse(resp);
+        }
+    }
+
+    private boolean authenticate(AccessTokenRequest request, String username) {
+        boolean authenticated = false;
+        try {
+            authenticated = usersRepository.test(username, request.getPassword());
+        } catch (UsersRepositoryException e) {
+            LOG.error("Error while trying to validate authentication for user '{}'", username, e);
+        }
+        return authenticated;
+    }
+
+    private void returnAccessTokenResponse(HttpServletResponse resp) throws IOException {
+        resp.setContentType(JSON_CONTENT_TYPE_UTF8);
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        AccessTokenResponse response = AccessTokenResponse
+                .builder()
+                // TODO Answer a real token
+                .accessToken("token")
+                // TODO Send API endpoints
+                .build();
+        mapper.writeValue(resp.getOutputStream(), response);
+    }
+
+    private void returnUnauthorizedResponse(HttpServletResponse resp) throws IOException {
         resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 

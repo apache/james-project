@@ -24,9 +24,13 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,13 +42,17 @@ import com.jayway.restassured.http.ContentType;
 public class JMAPAuthenticationTest {
 
     private JettyHttpServer server;
-
+    private UsersRepository mockedUsersRepository;
+    
     @Before
     public void setup() throws Exception {
+        mockedUsersRepository = mock(UsersRepository.class);
+        AuthenticationServlet authenticationServlet = new AuthenticationServlet(mockedUsersRepository);
+        
         server = JettyHttpServer.create(
                 Configuration.builder()
                 .serve("/*")
-                .with(AuthenticationServlet.class)
+                .with(authenticationServlet)
                 .randomPort()
                 .build());
 
@@ -52,7 +60,6 @@ public class JMAPAuthenticationTest {
         RestAssured.port = server.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
     }
-
 
     @After
     public void teardown() throws Exception {
@@ -207,5 +214,79 @@ public class JMAPAuthenticationTest {
             .statusCode(401);
     }
 
+    @Test
+    public void mustReturnAuthenticationFailedWhenUsersRepositoryException() throws Exception {
+        String continuationToken =
+                with()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+                .post("/authentication")
+                    .body()
+                .path("continuationToken")
+                .toString();
 
+        when(mockedUsersRepository.test("username", "password"))
+            .thenThrow(new UsersRepositoryException("test"));
+
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(401);
+    }
+
+    @Test
+    public void mustReturnCreatedWhenGoodPassword() throws Exception {
+        String continuationToken =
+                with()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+                .post("/authentication")
+                    .body()
+                .path("continuationToken")
+                .toString();
+
+        when(mockedUsersRepository.test("username", "password"))
+            .thenReturn(true);
+
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(201);
+    }
+
+    @Test
+    public void mustSendJsonContainingAccessTokenWhenGoodPassword() throws Exception {
+        String continuationToken =
+                with()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+                .post("/authentication")
+                    .body()
+                .path("continuationToken")
+                .toString();
+
+        when(mockedUsersRepository.test("username", "password"))
+            .thenReturn(true);
+
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .contentType(ContentType.JSON)
+            .body("accessToken", isA(String.class));
+    }
 }
