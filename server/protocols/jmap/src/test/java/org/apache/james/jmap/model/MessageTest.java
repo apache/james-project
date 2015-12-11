@@ -20,15 +20,32 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Optional;
 
+import javax.mail.Flags;
+import javax.mail.Flags.Flag;
+import javax.mail.util.SharedByteArrayInputStream;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MessageTest {
+    private static final TestId MAILBOX_ID = TestId.of(18L);
+    private static final long MOD_SEQ = 42L;
+    private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
+    private static final ZonedDateTime ZONED_DATE = ZonedDateTime.of(2015, 07, 14, 12, 30, 42, 0, UTC_ZONE_ID);
+    private static final Date INTERNAL_DATE = Date.from(ZONED_DATE.toInstant());
+
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenIdIsNull() {
         Message.builder().build();
@@ -216,5 +233,230 @@ public class MessageTest {
             .attachedMessages(attachedMessages)
             .build();
         assertThat(tested).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
+        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+                INTERNAL_DATE,
+                0,
+                0,
+                new SharedByteArrayInputStream("".getBytes()),
+                new Flags(Flag.SEEN),
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+        
+        Message testee = Message.fromMailboxMessage(testMail);
+        Message expected = Message.builder()
+                .id("0")
+                .blobId("0")
+                .threadId("0")
+                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
+                .headers(ImmutableMap.of())
+                .subject("(No subject)")
+                .size(0)
+                .date(ZONED_DATE)
+                .preview("(Empty)")
+                .build();
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void flagsShouldBeSetIntoMessage() throws Exception {
+        Flags flags = new Flags();
+        flags.add(Flag.ANSWERED);
+        flags.add(Flag.FLAGGED);
+        flags.add(Flag.DRAFT);
+        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+                INTERNAL_DATE,
+                0,
+                0,
+                new SharedByteArrayInputStream("".getBytes()),
+                flags,
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+        
+        Message testee = Message.fromMailboxMessage(testMail);
+        Message expected = Message.builder()
+                .id("0")
+                .blobId("0")
+                .threadId("0")
+                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
+                .isUnread(true)
+                .isFlagged(true)
+                .isAnswered(true)
+                .isDraft(true)
+                .headers(ImmutableMap.of())
+                .subject("(No subject)")
+                .size(0)
+                .date(ZONED_DATE)
+                .preview("(Empty)")
+                .build();
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void headersShouldBeSetIntoMessage() throws Exception {
+        String headers = "From: user <user@domain>\n"
+                + "Subject: test subject\n"
+                + "To: user1 <user1@domain>, user2 <user2@domain>\n"
+                + "Cc: usercc <usercc@domain>\n"
+                + "Bcc: userbcc <userbcc@domain>\n"
+                + "Reply-To: \"user to reply to\" <user.reply.to@domain>\n"
+                + "In-Reply-To: <SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>\n"
+                + "Other-header: other header value";
+        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+                INTERNAL_DATE,
+                headers.length(),
+                headers.length(),
+                new SharedByteArrayInputStream(headers.getBytes()),
+                new Flags(Flag.SEEN),
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+
+        Emailer user = Emailer.builder().name("user").email("user@domain").build();
+        Emailer user1 = Emailer.builder().name("user1").email("user1@domain").build();
+        Emailer user2 = Emailer.builder().name("user2").email("user2@domain").build();
+        Emailer usercc = Emailer.builder().name("usercc").email("usercc@domain").build();
+        Emailer userbcc = Emailer.builder().name("userbcc").email("userbcc@domain").build();
+        Emailer userRT = Emailer.builder().name("user to reply to").email("user.reply.to@domain").build();
+        ImmutableMap<String, String> headersMap = ImmutableMap.<String, String>builder()
+                .put("cc", "usercc <usercc@domain>")
+                .put("bcc", "userbcc <userbcc@domain>")
+                .put("subject", "test subject")
+                .put("from", "user <user@domain>")
+                .put("to", "user1 <user1@domain>, user2 <user2@domain>")
+                .put("reply-to", "\"user to reply to\" <user.reply.to@domain>")
+                .put("in-reply-to", "<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
+                .put("other-header", "other header value")
+                .build();
+        Message testee = Message.fromMailboxMessage(testMail);
+        Message expected = Message.builder()
+                .id("0")
+                .blobId("0")
+                .threadId("0")
+                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
+                .inReplyToMessageId("<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
+                .headers(headersMap)
+                .from(user)
+                .to(ImmutableList.of(user1, user2))
+                .cc(ImmutableList.of(usercc))
+                .bcc(ImmutableList.of(userbcc))
+                .replyTo(ImmutableList.of(userRT))
+                .subject("test subject")
+                .date(ZONED_DATE)
+                .size(headers.length())
+                .preview("(Empty)")
+                .build();
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void textBodyShouldBeSetIntoMessage() throws Exception {
+        String headers = "Subject: test subject\n";
+        String body = "Mail body";
+        String mail = headers + "\n" + body;
+        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+                INTERNAL_DATE,
+                mail.length(),
+                headers.length(),
+                new SharedByteArrayInputStream(mail.getBytes()),
+                new Flags(Flag.SEEN),
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+        
+        Message testee = Message.fromMailboxMessage(testMail);
+        Message expected = Message.builder()
+                .id("0")
+                .blobId("0")
+                .threadId("0")
+                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
+                .headers(ImmutableMap.of("subject", "test subject"))
+                .subject("test subject")
+                .size(mail.length())
+                .date(ZONED_DATE)
+                .preview("Mail body")
+                .textBody("Mail body")
+                .build();
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+    
+    @Test
+    public void bodyWith256LengthShouldNotBeTruncated() {
+        String body256 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "00000000001111111111222222222233333333334444444444555555";
+        assertThat(body256.length()).isEqualTo(256);
+        assertThat(Message.computePreview(body256)).isEqualTo(body256);
+    }
+    
+    @Test
+    public void bodyWith257LengthShouldBeTruncated() {
+        String body257 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "000000000011111111112222222222333333333344444444445555555";
+        String expected = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "00000000001111111111222222222233333333334444444444555...";
+        assertThat(body257.length()).isEqualTo(257);
+        assertThat(expected.length()).isEqualTo(256);
+        assertThat(Message.computePreview(body257)).isEqualTo(expected);
+    }
+
+    @Test
+    public void previewShouldBeLimitedTo256Length() throws Exception {
+        String headers = "Subject: test subject\n";
+        String body300 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999";
+        String expectedPreview = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999" 
+                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999" 
+                + "00000000001111111111222222222233333333334444444444555...";
+        assertThat(body300.length()).isEqualTo(300);
+        assertThat(expectedPreview.length()).isEqualTo(256);
+        String mail = headers + "\n" + body300;
+        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+                INTERNAL_DATE,
+                mail.length(),
+                headers.length(),
+                new SharedByteArrayInputStream(mail.getBytes()),
+                new Flags(Flag.SEEN),
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+        
+        Message testee = Message.fromMailboxMessage(testMail);
+        Message expected = Message.builder()
+                .id("0")
+                .blobId("0")
+                .threadId("0")
+                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
+                .headers(ImmutableMap.of("subject", "test subject"))
+                .subject("test subject")
+                .size(mail.length())
+                .date(ZONED_DATE)
+                .preview(expectedPreview)
+                .textBody(body300)
+                .build();
+        assertThat(testee).isEqualToComparingFieldByField(expected);
+    }
+    
+    @Test(expected=NotImplementedException.class)
+    public void attachmentsShouldNotBeHandledForNow() throws Exception {
+        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+                INTERNAL_DATE,
+                0,
+                0,
+                new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))),
+                new Flags(Flag.SEEN),
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+        
+        Message.fromMailboxMessage(testMail);
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.model;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -69,5 +71,28 @@ public class Emailer {
 
     public String getEmail() {
         return email;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Emailer) {
+            Emailer otherEMailer = (Emailer) o;
+            return Objects.equals(name, otherEMailer.name)
+                && Objects.equals(email, otherEMailer.email);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, email);
+    }
+
+    @Override
+    public String toString() {
+        return com.google.common.base.Objects.toStringHelper(this)
+            .add("name", name)
+            .add("email", email)
+            .toString();
     }
 }
