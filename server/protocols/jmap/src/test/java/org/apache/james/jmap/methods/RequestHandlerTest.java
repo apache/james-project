@@ -55,7 +55,7 @@ public class RequestHandlerTest {
         }
     }
 
-    public static class TestJmapResponse implements JmapResponse {
+    public static class TestJmapResponse {
 
         private final String id;
         private final String name;
@@ -100,8 +100,11 @@ public class RequestHandlerTest {
         public ProtocolResponse process(AuthenticatedProtocolRequest request) {
             try {
                 TestJmapRequest typedRequest = jmapRequestParser.extractJmapRequest(request, TestJmapRequest.class);
-                return jmapResponseWriter.formatMethodResponse(request, 
-                        new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"));
+                return jmapResponseWriter.formatMethodResponse(
+                            JmapResponse
+                                .forRequest(request)
+                                .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
+                                .build());
             } catch (IOException e) {
                 return jmapResponseWriter.formatErrorResponse(request);
             }

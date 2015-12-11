@@ -24,7 +24,7 @@ import org.apache.james.jmap.model.ProtocolResponse;
 
 public interface JmapResponseWriter {
 
-    ProtocolResponse formatMethodResponse(ProtocolRequest request, JmapResponse jmapResponse);
+    ProtocolResponse formatMethodResponse(JmapResponse jmapResponse);
 
     ProtocolResponse formatErrorResponse(ProtocolRequest request);
 

@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.methods.JmapResponse.Builder;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
@@ -69,6 +70,7 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     }
 
     public ProtocolResponse process(AuthenticatedProtocolRequest request) {
+        Builder responseBuilder = JmapResponse.forRequest(request);
         try {
             jmapRequestParser.extractJmapRequest(request, GetMailboxesRequest.class);
         } catch (IOException e) {
@@ -81,8 +83,8 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
         
         try {
             MailboxSession mailboxSession = request.getMailboxSession();
-            GetMailboxesResponse mailboxesResponse = getMailboxesResponse(mailboxSession);
-            return jmapResponseWriter.formatMethodResponse(request, mailboxesResponse);
+            responseBuilder.response(getMailboxesResponse(mailboxSession));
+            return jmapResponseWriter.formatMethodResponse(responseBuilder.build());
         } catch (MailboxException e) {
             return jmapResponseWriter.formatErrorResponse(request);
         }

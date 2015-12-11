@@ -45,9 +45,11 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     }
 
     @Override
-    public ProtocolResponse formatMethodResponse(ProtocolRequest request, JmapResponse jmapResponse) {
-        ObjectNode objectNode = objectMapper.valueToTree(jmapResponse);
-        return new ProtocolResponse(request.getMethod(), objectNode, request.getClientId());
+    public ProtocolResponse formatMethodResponse(JmapResponse jmapResponse) {
+        return new ProtocolResponse(
+                jmapResponse.getMethod(), 
+                objectMapper.valueToTree(jmapResponse.getResponse()), 
+                jmapResponse.getClientId());
     }
 
     @Override

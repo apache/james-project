@@ -19,6 +19,67 @@
 
 package org.apache.james.jmap.methods;
 
-public interface JmapResponse {
+import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.ProtocolRequest;
 
+public class JmapResponse {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static Builder forRequest(ProtocolRequest request) {
+        return builder().clientId(request.getClientId()).method(request.getMethod());
+    }
+    
+    public static class Builder {
+        
+        private String method;
+        private ClientId id;
+        private Object response;
+
+        private Builder() {
+        }
+
+        public Builder method(String method) {
+            this.method = method;
+            return this;
+        }
+        
+        public Builder clientId(ClientId id) {
+            this.id = id;
+            return this;
+        }
+        
+        public Builder response(Object response) {
+            this.response = response;
+            return this;
+        }
+        
+        public JmapResponse build() {
+            return new JmapResponse(method, id, response);
+        }
+    }
+    
+    private final String method;
+    private final ClientId clientId;
+    private final Object response;
+    
+    private JmapResponse(String method, ClientId clientId, Object response) {
+        this.method = method;
+        this.clientId = clientId;
+        this.response = response;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+    
+    public Object getResponse() {
+        return response;
+    }
+    
+    public ClientId getClientId() {
+        return clientId;
+    }
 }

@@ -49,7 +49,11 @@ public class JmapResponseWriterImplTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
-        ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(ProtocolRequest.deserialize(nodes), null);
+        ProtocolRequest request = ProtocolRequest.deserialize(nodes);
+        ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(JmapResponse
+                .forRequest(request)
+                .response(null)
+                .build());
 
         assertThat(response.getMethod()).isEqualTo(expectedMethod);
         assertThat(response.getResults().findValue("id").asText()).isEqualTo(expectedId);
@@ -72,14 +76,18 @@ public class JmapResponseWriterImplTest {
         responseClass.id = expectedId;
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
-        ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(ProtocolRequest.deserialize(nodes), responseClass);
+        ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(
+                JmapResponse
+                .forRequest(ProtocolRequest.deserialize(nodes))
+                .response(responseClass)
+                .build());
 
         assertThat(response.getMethod()).isEqualTo(expectedMethod);
         assertThat(response.getResults().findValue("id").asText()).isEqualTo(expectedId);
         assertThat(response.getClientId()).isEqualTo(ClientId.of(expectedClientId));
     }
 
-    private static class ResponseClass implements JmapResponse {
+    private static class ResponseClass {
 
         @SuppressWarnings("unused")
         public String id;

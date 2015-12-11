@@ -22,11 +22,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.jmap.methods.JmapResponse;
 
 import com.google.common.collect.ImmutableList;
 
-public class GetMailboxesResponse implements JmapResponse {
+public class GetMailboxesResponse {
 
     public static Builder builder() {
         return new Builder();
