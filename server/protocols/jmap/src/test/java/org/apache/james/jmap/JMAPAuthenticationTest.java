@@ -19,6 +19,7 @@
 package org.apache.james.jmap;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.hasItem;
@@ -145,8 +146,21 @@ public class JMAPAuthenticationTest {
             .contentType(ContentType.JSON);
     }
 
+
     @Test
-    public void getContinuationTokenWhenValidResquest() {
+    public void mustReturnMalformedRequestWhenBodyIsNotAcceptable() {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"badAttributeName\": \"value\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(400);
+    }
+
+    @Test
+    public void methodShouldContainPasswordWhenValidResquest() {
         given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -155,8 +169,42 @@ public class JMAPAuthenticationTest {
             .post("/authentication")
         .then()
             .statusCode(200)
-            .body("continuationToken", isA(String.class))
             .body("methods", hasItem("password"));
+    }
+
+    @Test
+    public void mustReturnContinuationTokenWhenValidResquest() {
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(200)
+            .body("continuationToken", isA(String.class));
+    }
+
+    @Test
+    public void mustReturnAuthenticationFailedWhenBadPassword() {
+        String continuationToken =
+                with()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("{\"username\": \"user@domain.tld\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
+                .post("/authentication")
+                    .body()
+                    .path("continuationToken")
+                .toString();
+
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"badpassword\"}")
+        .when()
+            .post("/authentication")
+        .then()
+            .statusCode(401);
     }
 
 

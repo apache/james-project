@@ -21,10 +21,10 @@ package org.apache.james.jmap.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
-@JsonDeserialize(builder=ContinuationTokenRequest.Builder.class)
-public class ContinuationTokenRequest {
+@JsonDeserialize(builder=AccessTokenRequest.Builder.class)
+public class AccessTokenRequest {
 
-    public static final String UNIQUE_JSON_PATH = "/username";
+    public static final String UNIQUE_JSON_PATH = "/token";
 
     public static Builder builder() {
         return new Builder();
@@ -33,63 +33,51 @@ public class ContinuationTokenRequest {
     @JsonPOJOBuilder(withPrefix="")
     public static class Builder {
 
-        private String username;
-        private String clientName;
-        private String clientVersion;
-        private String deviceName;
+        private String token;
+        private String method;
+        private String password;
 
         private Builder() {}
 
-        public Builder username(String username) {
-            this.username = username;
+        public Builder token(String token) {
+            this.token = token;
             return this;
         }
 
-        public Builder clientName(String clientName) {
-            this.clientName = clientName;
+        public Builder method(String method) {
+            this.method = method;
             return this;
         }
 
-        public Builder clientVersion(String clientVersion) {
-            this.clientVersion = clientVersion;
+        public Builder password(String password) {
+            this.password = password;
             return this;
         }
 
-        public Builder deviceName(String deviceName) {
-            this.deviceName = deviceName;
-            return this;
-        }
-
-        public ContinuationTokenRequest build() {
-            return new ContinuationTokenRequest(username, clientName, clientVersion, deviceName);
+        public AccessTokenRequest build() {
+            return new AccessTokenRequest(token, method, password);
         }
     }
 
-    private final String username;
-    private final String clientName;
-    private final String clientVersion;
-    private final String deviceName;
+    private final String token;
+    private final String method;
+    private final String password;
 
-    private ContinuationTokenRequest(String username, String clientName, String clientVersion, String deviceName) {
-        this.username = username;
-        this.clientName = clientName;
-        this.clientVersion = clientVersion;
-        this.deviceName = deviceName;
+    private AccessTokenRequest(String token, String method, String password) {
+        this.token = token;
+        this.method = method;
+        this.password = password;
     }
 
-    public String getUsername() {
-        return username;
+    public String getToken() {
+        return token;
     }
 
-    public String getClientName() {
-        return clientName;
+    public String getMethod() {
+        return method;
     }
 
-    public String getClientVersion() {
-        return clientVersion;
-    }
-
-    public String getDeviceName() {
-        return deviceName;
+    public String getPassword() {
+        return password;
     }
 }
