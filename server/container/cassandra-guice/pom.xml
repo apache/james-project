@@ -161,16 +161,30 @@
                     <plugin>
                       <groupId>org.apache.maven.plugins</groupId>
                       <artifactId>maven-jar-plugin</artifactId>
-                      <configuration>
-                        <archive>
-                          <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>${project.build.finalName}.lib/</classpathPrefix>
-                            <mainClass>org.apache.james.CassandraJamesServerMain</mainClass>
-                            <useUniqueVersions>false</useUniqueVersions>
-                          </manifest>
-                        </archive>
-                      </configuration>
+                      <executions>
+                          <execution>
+                              <id>default-jar</id>
+                              <goals>
+                                  <goal>jar</goal>
+                              </goals>
+                              <configuration>
+                                  <archive>
+                                      <manifest>
+                                          <addClasspath>true</addClasspath>
+                                          <classpathPrefix>${project.build.finalName}.lib/</classpathPrefix>
+                                          <mainClass>org.apache.james.CassandraJamesServerMain</mainClass>
+                                          <useUniqueVersions>false</useUniqueVersions>
+                                      </manifest>
+                                  </archive>
+                              </configuration>
+                          </execution>
+                          <execution>
+                              <id>test-jar</id>
+                              <goals>
+                                  <goal>test-jar</goal>
+                              </goals>
+                          </execution>
+                      </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -298,6 +312,12 @@
                     <artifactId>james-server-protocols-library</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-protocols-library</artifactId>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-protocols-lmtp</artifactId>
                 </dependency>
@@ -340,17 +360,14 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
-                    <version>2.3.3</version>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.datatype</groupId>
                     <artifactId>jackson-datatype-guava</artifactId>
-                    <version>2.3.3</version>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.datatype</groupId>
                     <artifactId>jackson-datatype-jdk8</artifactId>
-                    <version>2.4.3</version>
                 </dependency>
                 <dependency>
                     <groupId>com.google.guava</groupId>
@@ -411,7 +428,7 @@
                 <dependency>
                     <groupId>org.cassandraunit</groupId>
                     <artifactId>cassandra-unit</artifactId>
-                    <version>2.0.2.2</version>
+                    <version>${cassandra-unit.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

@@ -109,7 +109,7 @@ public class Configuration {
             this.port = Optional.of(port);
             return this;
         }
-        
+
         public Builder randomPort() {
             this.port = Optional.empty();
             return this;

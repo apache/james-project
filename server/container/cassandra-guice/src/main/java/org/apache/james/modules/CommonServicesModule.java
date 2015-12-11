@@ -31,6 +31,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.FileConfigurationProvider;
+import org.apache.james.utils.GuiceServerProbe;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -43,6 +44,7 @@ public class CommonServicesModule extends AbstractModule {
     protected void configure() {
         bind(FileSystem.class).to(FileSystemImpl.class);
         bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
+        bind(GuiceServerProbe.class).in(Singleton.class);
     }
 
     @Provides @Singleton @Named(CONFIGURATION_PATH)

@@ -17,38 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.jmap;
 
-import java.io.FileNotFoundException;
-import java.util.Optional;
+import org.apache.james.utils.ExtendedServerProbe;
+import org.junit.rules.TestRule;
 
-import javax.inject.Singleton;
+public interface JmapServer extends TestRule {
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.PortConfiguration;
+    void clean();
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+    int getPort();
 
-public class TestJMAPServerModule extends AbstractModule{
-
-    @Override
-    protected void configure() {
-        bind(PortConfiguration.class).to(RandomPortConfiguration.class).in(Singleton.class);
-    }
-
-    @Provides
-    @Singleton
-    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
-        return new JMAPConfiguration("keystore", "james72laBalle");
-    }
-    
-    private static class RandomPortConfiguration implements PortConfiguration {
-
-        @Override
-        public Optional<Integer> getPort() {
-            return Optional.empty();
-        }
-    }
+    ExtendedServerProbe serverProbe();
 }

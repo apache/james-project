@@ -17,38 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.utils;
 
-import java.io.FileNotFoundException;
-import java.util.Optional;
+import java.io.InputStream;
+import java.util.Date;
 
-import javax.inject.Singleton;
+import javax.mail.Flags;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.PortConfiguration;
+import org.apache.james.cli.probe.ServerProbe;
+import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+public interface ExtendedServerProbe extends ServerProbe {
 
-public class TestJMAPServerModule extends AbstractModule{
-
-    @Override
-    protected void configure() {
-        bind(PortConfiguration.class).to(RandomPortConfiguration.class).in(Singleton.class);
-    }
-
-    @Provides
-    @Singleton
-    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
-        return new JMAPConfiguration("keystore", "james72laBalle");
-    }
-    
-    private static class RandomPortConfiguration implements PortConfiguration {
-
-        @Override
-        public Optional<Integer> getPort() {
-            return Optional.empty();
-        }
-    }
+    void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
+            throws BadCredentialsException, MailboxException;
 }

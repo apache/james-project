@@ -44,6 +44,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
 import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
@@ -57,7 +58,6 @@ public class CassandraJamesServerTest {
     private static final int POP3_PORT = 1110;
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
-    private static final int JMAP_PORT = 1080;
     public static final int BUFFER_SIZE = 1000;
 
     private CassandraJamesServer server;
@@ -70,9 +70,19 @@ public class CassandraJamesServerTest {
 
     @Before
     public void setup() throws Exception {
-        server = new CassandraJamesServer(Modules.override(CassandraJamesServerMain.defaultModule)
+        server = new CassandraJamesServer(createModule());
+        socketChannel = SocketChannel.open();
+
+        server.start();
+
+        RestAssured.port = server.getJmapPort();
+        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+    }
+
+    private Module createModule() {
+        return Modules.override(CassandraJamesServerMain.defaultModule)
                 .with(new TestElasticSearchModule(embeddedElasticSearch),
-                        new TestFilesystemModule(temporaryFolder.newFolder()),
+                        new TestFilesystemModule(temporaryFolder),
                         new TestJMAPServerModule(),
                         new AbstractModule() {
                     
@@ -87,13 +97,7 @@ public class CassandraJamesServerTest {
                         return cassandra.getConf();
                     }
 
-                }));
-        socketChannel = SocketChannel.open();
-
-        server.start();
-
-        RestAssured.port = JMAP_PORT;
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+                });
     }
 
     @After

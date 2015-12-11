@@ -204,12 +204,10 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
-                    <version>2.6.3</version>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.datatype</groupId>
                     <artifactId>jackson-datatype-jdk8</artifactId>
-                    <version>2.6.3</version>
                 </dependency>
                 <dependency>
                     <groupId>com.github.fge</groupId>
@@ -219,7 +217,6 @@
                 <dependency>
                     <groupId>com.jayway.restassured</groupId>
                     <artifactId>rest-assured</artifactId>
-                    <version>2.5.0</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -262,13 +259,11 @@
                 <dependency>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-server</artifactId>
-                    <version>9.3.2.v20150730</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-servlet</artifactId>
-                    <version>9.3.2.v20150730</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

@@ -21,12 +21,12 @@ package org.apache.james.jmap;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.http.jetty.Configuration;
+import org.apache.james.http.jetty.Configuration.Builder;
 import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.lifecycle.api.Configurable;
 
@@ -36,23 +36,32 @@ import com.google.common.base.Throwables;
 @Singleton
 public class JMAPServer implements Configurable {
 
-    public static final String DEFAULT_JMAP_PORT = "defaultJMAPPort";
-    
     private final JettyHttpServer server;
 
     @Inject
-    private JMAPServer(@Named(DEFAULT_JMAP_PORT) int port, 
+    private JMAPServer(PortConfiguration portConfiguration, 
             AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet,
             AuthenticationFilter authenticationFilter) {
 
-        server = JettyHttpServer.create(Configuration.builder()
-                .port(port)
+        server = JettyHttpServer.create(
+                configurationBuilderFor(portConfiguration)
                 .serve("/authentication").with(authenticationServlet)
                 .filter("/authentication").with(new BypassOnPostFilter(authenticationFilter))
                 .serve("/jmap").with(jmapServlet)
                 .filter("/jmap").with(authenticationFilter)
                 .build());
     }
+
+    private Builder configurationBuilderFor(PortConfiguration portConfiguration) {
+        Builder builder = Configuration.builder();
+        if (portConfiguration.getPort().isPresent()) {
+            builder.port(portConfiguration.getPort().get());
+        } else {
+            builder.randomPort();
+        }
+        return builder;
+    }
+
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         try {

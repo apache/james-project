@@ -28,11 +28,8 @@ import org.apache.james.jmap.methods.RequestHandler;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 public class JMAPModule extends AbstractModule {
-
-    private static final int DEFAULT_PORT = 80;
 
     @Override
     protected void configure() {
@@ -40,7 +37,7 @@ public class JMAPModule extends AbstractModule {
         install(new MethodsModule());
         bind(RequestHandler.class).in(Singleton.class);
 
-        bindConstant().annotatedWith(Names.named(JMAPServer.DEFAULT_JMAP_PORT)).to(DEFAULT_PORT);
+        bind(PortConfiguration.class).to(DefaultPortConfiguration.class).in(Singleton.class);
     }
 
     @Provides

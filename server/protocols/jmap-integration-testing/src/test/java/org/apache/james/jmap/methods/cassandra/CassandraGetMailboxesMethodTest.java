@@ -17,38 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.jmap.methods.cassandra;
 
-import java.io.FileNotFoundException;
-import java.util.Optional;
+import org.apache.james.jmap.JmapServer;
+import org.apache.james.jmap.cassandra.CassandraJmapServer;
+import org.apache.james.jmap.methods.GetMailboxesMethodTest;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.junit.rules.TemporaryFolder;
 
-import javax.inject.Singleton;
-
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.PortConfiguration;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-
-public class TestJMAPServerModule extends AbstractModule{
+public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {
 
     @Override
-    protected void configure() {
-        bind(PortConfiguration.class).to(RandomPortConfiguration.class).in(Singleton.class);
-    }
-
-    @Provides
-    @Singleton
-    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
-        return new JMAPConfiguration("keystore", "james72laBalle");
-    }
-    
-    private static class RandomPortConfiguration implements PortConfiguration {
-
-        @Override
-        public Optional<Integer> getPort() {
-            return Optional.empty();
-        }
+    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch) {
+        return new CassandraJmapServer(temporaryFolder, embeddedElasticSearch);
     }
 }

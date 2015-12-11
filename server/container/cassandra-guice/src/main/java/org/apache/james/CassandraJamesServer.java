@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james;
 
+import org.apache.james.jmap.JMAPServer;
 import org.apache.james.utils.ConfigurationsPerformer;
+import org.apache.james.utils.ExtendedServerProbe;
+import org.apache.james.utils.GuiceServerProbe;
 import org.apache.onami.lifecycle.jsr250.PreDestroyModule;
 
 import com.google.inject.Guice;
@@ -30,6 +33,8 @@ public class CassandraJamesServer {
 
     private final Module serverModule;
     private final PreDestroyModule preDestroyModule;
+    private GuiceServerProbe serverProbe;
+    private int jmapPort;
 
     public CassandraJamesServer(Module serverModule) {
         this.serverModule = serverModule;
@@ -39,10 +44,19 @@ public class CassandraJamesServer {
     public void start() throws Exception {
         Injector injector = Guice.createInjector(Modules.combine(serverModule, preDestroyModule));
         injector.getInstance(ConfigurationsPerformer.class).initModules();
+        serverProbe = injector.getInstance(GuiceServerProbe.class);
+        jmapPort = injector.getInstance(JMAPServer.class).getPort();
     }
 
     public void stop() {
         preDestroyModule.getStager().stage();
     }
 
+    public ExtendedServerProbe serverProbe() {
+        return serverProbe;
+    }
+
+    public int getJmapPort() {
+        return jmapPort;
+    }
 }
