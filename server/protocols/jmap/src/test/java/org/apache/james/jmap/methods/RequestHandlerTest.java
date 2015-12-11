@@ -124,8 +124,8 @@ public class RequestHandlerTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        RequestHandler requestHandlerImpl = new RequestHandler(ImmutableSet.of());
-        requestHandlerImpl.handle(ProtocolRequest.deserialize(nodes));
+        RequestHandler requestHandler = new RequestHandler(ImmutableSet.of());
+        requestHandler.handle(ProtocolRequest.deserialize(nodes));
     }
 
     @Test(expected=IllegalStateException.class)

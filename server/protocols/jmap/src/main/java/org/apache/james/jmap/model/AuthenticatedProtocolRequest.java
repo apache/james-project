@@ -16,47 +16,28 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.model;
 
-package org.apache.james.jmap.api.access;
+import javax.servlet.http.HttpServletRequest;
 
-import java.util.Objects;
-import java.util.UUID;
+import org.apache.james.jmap.AuthenticationFilter;
+import org.apache.james.mailbox.MailboxSession;
 
-import org.apache.james.jmap.api.access.exceptions.NotAnUUIDException;
-
-public class AccessToken {
-
-    public static AccessToken fromString(String tokenString) throws NotAnUUIDException {
-        try {
-            return new AccessToken(UUID.fromString(tokenString));
-        } catch (IllegalArgumentException e) {
-            throw new NotAnUUIDException(e);
-        }
-    }
-
-    private final UUID token;
-
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
+public class AuthenticatedProtocolRequest extends ProtocolRequest {
     
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
+    public static AuthenticatedProtocolRequest decorate(ProtocolRequest request, HttpServletRequest httpServletRequest) {
+        return new AuthenticatedProtocolRequest(request, httpServletRequest);
     }
 
-    public String serialize() {
-        return token.toString();
+    private final HttpServletRequest httpServletRequest;
+
+    private AuthenticatedProtocolRequest(ProtocolRequest request, HttpServletRequest httpServletRequest) {
+        super(request.getMethod(), request.getParameters(), request.getClientId());
+        this.httpServletRequest = httpServletRequest;
+        
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(token);
+    public MailboxSession getMailboxSession() {
+        return (MailboxSession) httpServletRequest.getAttribute(AuthenticationFilter.MAILBOX_SESSION);
     }
 }

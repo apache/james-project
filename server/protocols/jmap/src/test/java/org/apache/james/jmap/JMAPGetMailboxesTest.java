@@ -22,20 +22,22 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.UUID;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.jmap.api.AccessTokenManager;
-import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.methods.GetMailboxesMethod;
 import org.apache.james.jmap.methods.JmapRequestParser;
 import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.RequestHandler;
-import org.apache.james.jmap.utils.ZonedDateTimeProvider;
-import org.apache.james.user.api.UsersRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,30 +49,29 @@ import com.jayway.restassured.http.ContentType;
 
 public class JMAPGetMailboxesTest {
 
-    private UsersRepository mockedUsersRepository;
     private RequestHandler requestHandler;
     private JettyHttpServer server;
-    private TestClient client;
-    private ZonedDateTimeProvider mockedZonedDateTimeProvider;
+    private UUID accessToken;
     
     @Before
     public void setup() throws Exception {
-        mockedZonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
-        mockedUsersRepository = mock(UsersRepository.class);
         AccessTokenManager mockedAccessTokenManager = mock(AccessTokenManager.class);
-        ContinuationTokenManager mockedContinuationTokenManager = mock(ContinuationTokenManager.class);
         JmapRequestParser jmapRequestParser = new JmapRequestParserImpl();
         JmapResponseWriter jmapResponseWriter = new JmapResponseWriterImpl();
 
         requestHandler = new RequestHandler(ImmutableSet.of(new GetMailboxesMethod(jmapRequestParser, jmapResponseWriter)));
         JMAPServlet jmapServlet = new JMAPServlet(requestHandler);
 
-        AuthenticationServlet authenticationServlet = new AuthenticationServlet(mockedUsersRepository, mockedContinuationTokenManager, mockedAccessTokenManager);
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(mockedAccessTokenManager);
+        
+        when(mockedAccessTokenManager.isValid(any(AccessToken.class))).thenReturn(true);
+        
+        accessToken = UUID.randomUUID();
         
         server = JettyHttpServer.create(
                 Configuration.builder()
-                .serve("/authentication")
-                .with(authenticationServlet)
+                .filter("/jmap")
+                .with(authenticationFilter)
                 .serve("/jmap")
                 .with(jmapServlet)
                 .randomPort()
@@ -80,7 +81,6 @@ public class JMAPGetMailboxesTest {
 
         RestAssured.port = server.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-        client = new TestClient(mockedUsersRepository, mockedZonedDateTimeProvider);
     }
 
     @After
@@ -90,7 +90,6 @@ public class JMAPGetMailboxesTest {
     
     @Test
     public void getMailboxesShouldErrorNotSupportedWhenRequestContainsNonNullAccountId() throws Exception {
-        String accessToken = client.authenticate();
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -106,7 +105,6 @@ public class JMAPGetMailboxesTest {
     
     @Test
     public void getMailboxesShouldErrorNotSupportedWhenRequestContainsNonNullIds() throws Exception {
-        String accessToken = client.authenticate();
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -121,7 +119,6 @@ public class JMAPGetMailboxesTest {
     
     @Test
     public void getMailboxesShouldErrorNotSupportedWhenRequestContainsNonNullProperties() throws Exception {
-        String accessToken = client.authenticate();
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -136,7 +133,6 @@ public class JMAPGetMailboxesTest {
     
     @Test
     public void getMailboxesShouldErrorInvalidArgumentsWhenRequestIsInvalid() throws Exception {
-        String accessToken = client.authenticate();
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)

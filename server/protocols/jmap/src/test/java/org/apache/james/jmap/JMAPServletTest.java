@@ -63,8 +63,7 @@ public class JMAPServletTest {
         RestAssured.port = server.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
     }
-    
-    
+
     @After
     public void teardown() throws Exception {
         server.stop();

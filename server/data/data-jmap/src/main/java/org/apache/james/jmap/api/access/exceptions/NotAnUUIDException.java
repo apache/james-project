@@ -17,46 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.access;
+package org.apache.james.jmap.api.access.exceptions;
 
-import java.util.Objects;
-import java.util.UUID;
+public class NotAnUUIDException extends RuntimeException {
 
-import org.apache.james.jmap.api.access.exceptions.NotAnUUIDException;
-
-public class AccessToken {
-
-    public static AccessToken fromString(String tokenString) throws NotAnUUIDException {
-        try {
-            return new AccessToken(UUID.fromString(tokenString));
-        } catch (IllegalArgumentException e) {
-            throw new NotAnUUIDException(e);
-        }
+    public NotAnUUIDException(Exception e) {
+        super(e);
     }
 
-    private final UUID token;
-
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
-    
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
-    }
-
-    public String serialize() {
-        return token.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(token);
-    }
 }

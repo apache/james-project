@@ -45,6 +45,7 @@ import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.After;
@@ -72,13 +73,13 @@ public class JMAPAuthenticationTest {
     public void setup() throws Exception {
         mockedUsersRepository = mock(UsersRepository.class);
         mockedZonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
+        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
         accessTokenManager = new AccessTokenManagerImpl(new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS)));
         continuationTokenManager = new SignedContinuationTokenManager(new JamesSignatureHandlerProvider().provide(), mockedZonedDateTimeProvider);
         
         AuthenticationServlet authenticationServlet = new AuthenticationServlet(mockedUsersRepository, continuationTokenManager, accessTokenManager);
 
-
-        AuthenticationFilter authenticationFilter = new AuthenticationFilter(accessTokenManager);
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(accessTokenManager, mockedMailboxManager);
         Filter getAuthenticationFilter = new BypassOnPostFilter(authenticationFilter);
         
         server = JettyHttpServer.create(

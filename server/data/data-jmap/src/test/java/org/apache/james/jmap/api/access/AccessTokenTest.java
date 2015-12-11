@@ -19,44 +19,23 @@
 
 package org.apache.james.jmap.api.access;
 
-import java.util.Objects;
-import java.util.UUID;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.api.access.exceptions.NotAnUUIDException;
+import org.junit.Test;
 
-public class AccessToken {
+public class AccessTokenTest {
 
-    public static AccessToken fromString(String tokenString) throws NotAnUUIDException {
-        try {
-            return new AccessToken(UUID.fromString(tokenString));
-        } catch (IllegalArgumentException e) {
-            throw new NotAnUUIDException(e);
-        }
+    @Test(expected=NotAnUUIDException.class)
+    public void fromStringShouldThrowWhenNotAnUUID() throws NotAnUUIDException {
+        AccessToken.fromString("bad");
     }
 
-    private final UUID token;
+    @Test
+    public void fromStringShouldWork() throws NotAnUUIDException {
+        String expectedToken = "dab315ad-a59a-4107-8d00-0fef9a0745b8";
 
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
-    
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
-    }
-
-    public String serialize() {
-        return token.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(token);
+        AccessToken accessToken = AccessToken.fromString(expectedToken);
+        assertThat(accessToken.serialize()).isEqualTo(expectedToken);
     }
 }

@@ -36,7 +36,7 @@ public class ProtocolRequest {
     private final ObjectNode parameters;
     private final String clientId;
 
-    private ProtocolRequest(String method, ObjectNode parameters, String clientId) {
+    protected ProtocolRequest(String method, ObjectNode parameters, String clientId) {
         this.method = method;
         this.parameters = parameters;
         this.clientId = clientId;
