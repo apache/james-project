@@ -86,6 +86,13 @@ public class HeaderCollectionTest {
     }
 
     @Test
+    public void displayNamesShouldBeRetreivedOnReplyTo() {
+        HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Reply-To", "Christophe Hamerling <chamerling@linagora.com>")).build();
+        assertThat(headerCollection.getReplyToAddressSet())
+            .containsOnly(new EMailer("Christophe Hamerling", "chamerling@linagora.com"));
+    }
+
+    @Test
     public void displayNamesShouldBeRetreivedOnBcc() {
         HeaderCollection headerCollection = HeaderCollection.builder().add(new FieldImpl("Bcc", "Christophe Hamerling <chamerling@linagora.com>")).build();
         assertThat(headerCollection.getBccAddressSet())

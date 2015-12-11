@@ -67,6 +67,7 @@ public class IndexableMessage {
         this.subjects = headerCollection.getSubjectSet();
         this.from = headerCollection.getFromAddressSet();
         this.to = headerCollection.getToAddressSet();
+        this.replyTo = headerCollection.getReplyToAddressSet();
         this.cc = headerCollection.getCcAddressSet();
         this.bcc = headerCollection.getBccAddressSet();
         this.sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
@@ -118,6 +119,7 @@ public class IndexableMessage {
     private Set<EMailer> to;
     private Set<EMailer> cc;
     private Set<EMailer> bcc;
+    private Set<EMailer> replyTo;
     private Set<String> subjects;
     private String sentDate;
     private List<Property> properties;
@@ -222,6 +224,11 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.BCC)
     public Set<EMailer> getBcc() {
         return bcc;
+    }
+
+    @JsonProperty(JsonMessageConstants.REPLY_TO)
+    public Set<EMailer> getReplyTo() {
+        return replyTo;
     }
 
     @JsonProperty(JsonMessageConstants.SENT_DATE)

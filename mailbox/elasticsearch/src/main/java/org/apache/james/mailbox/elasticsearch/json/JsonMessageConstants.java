@@ -35,6 +35,7 @@ public interface JsonMessageConstants {
     String TO = "to";
     String CC = "cc";
     String BCC = "bcc";
+    String REPLY_TO = "replyTo";
     String SUBJECT = "subject";
     String DATE = "date";
     String SIZE = "size";

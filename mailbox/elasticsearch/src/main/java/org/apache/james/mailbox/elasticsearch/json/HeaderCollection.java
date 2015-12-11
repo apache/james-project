@@ -61,6 +61,7 @@ public class HeaderCollection {
         private final Set<EMailer> fromAddressSet;
         private final Set<EMailer> ccAddressSet;
         private final Set<EMailer> bccAddressSet;
+        private final Set<EMailer> replyToAddressSet;
         private final Set<String> subjectSet;
         private final Multimap<String, String> headers;
         private Optional<ZonedDateTime> sentDate;
@@ -70,6 +71,7 @@ public class HeaderCollection {
             fromAddressSet = new HashSet<>();
             ccAddressSet = new HashSet<>();
             bccAddressSet = new HashSet<>();
+            replyToAddressSet = new HashSet<>();
             subjectSet = new HashSet<>();
             headers = ArrayListMultimap.create();
             sentDate = Optional.empty();
@@ -90,6 +92,7 @@ public class HeaderCollection {
                 ImmutableSet.copyOf(fromAddressSet),
                 ImmutableSet.copyOf(ccAddressSet),
                 ImmutableSet.copyOf(bccAddressSet),
+                ImmutableSet.copyOf(replyToAddressSet),
                 ImmutableSet.copyOf(subjectSet),
                 ImmutableMultimap.copyOf(headers),
                 sentDate);
@@ -101,6 +104,7 @@ public class HeaderCollection {
                 case FROM:
                 case CC:
                 case BCC:
+                case REPLY_TO:
                     manageAddressField(headerName, headerValue);
                     break;
                 case SUBJECT:
@@ -140,6 +144,8 @@ public class HeaderCollection {
                     return ccAddressSet;
                 case BCC:
                     return bccAddressSet;
+                case REPLY_TO:
+                    return replyToAddressSet;
             }
             throw new RuntimeException(headerName + " is not a address header name");
         }
@@ -172,6 +178,7 @@ public class HeaderCollection {
     public static final String FROM = "from";
     public static final String CC = "cc";
     public static final String BCC = "bcc";
+    public static final String REPLY_TO = "reply-to";
     public static final String SUBJECT = "subject";
     public static final String DATE = "date";
 
@@ -185,17 +192,19 @@ public class HeaderCollection {
     private final ImmutableSet<EMailer> fromAddressSet;
     private final ImmutableSet<EMailer> ccAddressSet;
     private final ImmutableSet<EMailer> bccAddressSet;
+    private final ImmutableSet<EMailer> replyToAddressSet;
     private final ImmutableSet<String> subjectSet;
     private final ImmutableMultimap<String, String> headers;
     private Optional<ZonedDateTime> sentDate;
 
     private HeaderCollection(ImmutableSet<EMailer> toAddressSet, ImmutableSet<EMailer> fromAddressSet,
-        ImmutableSet<EMailer> ccAddressSet, ImmutableSet<EMailer> bccAddressSet, ImmutableSet<String> subjectSet,
+        ImmutableSet<EMailer> ccAddressSet, ImmutableSet<EMailer> bccAddressSet, ImmutableSet<EMailer> replyToAddressSet, ImmutableSet<String> subjectSet,
         ImmutableMultimap<String, String> headers, Optional<ZonedDateTime> sentDate) {
         this.toAddressSet = toAddressSet;
         this.fromAddressSet = fromAddressSet;
         this.ccAddressSet = ccAddressSet;
         this.bccAddressSet = bccAddressSet;
+        this.replyToAddressSet = replyToAddressSet;
         this.subjectSet = subjectSet;
         this.headers = headers;
         this.sentDate = sentDate;
@@ -215,6 +224,10 @@ public class HeaderCollection {
 
     public Set<EMailer> getBccAddressSet() {
         return bccAddressSet;
+    }
+
+    public Set<EMailer> getReplyToAddressSet() {
+        return replyToAddressSet;
     }
 
     public Set<String> getSubjectSet() {

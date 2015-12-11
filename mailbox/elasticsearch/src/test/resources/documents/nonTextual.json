@@ -56,6 +56,7 @@
   ],
   "cc":[],
   "bcc":[],
+  "replyTo":[],
   "subject":["Test message"],
   "sentDate":"2015-06-18T12:43:26+0200",
   "properties":[

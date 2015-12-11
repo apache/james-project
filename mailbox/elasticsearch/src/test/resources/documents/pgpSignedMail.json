@@ -139,6 +139,7 @@
   ],
   "cc": [],
   "bcc": [],
+  "replyTo": [{"name":"debian-security@lists.debian.org","address":"debian-security@lists.debian.org"}],
   "subject": [
 	"[SECURITY] [DSA 3278-1] libapache-mod-jk security update"
   ],

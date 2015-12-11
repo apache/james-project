@@ -132,6 +132,7 @@
  ],
  "cc": [],
  "bcc": [],
+ "replyTo": [{"name":"General Discussion about Arch Linux","address":"arch-general@archlinux.org"}],
  "subject": [
   "[arch-general] Inkscape fails to open svg files"
  ],
