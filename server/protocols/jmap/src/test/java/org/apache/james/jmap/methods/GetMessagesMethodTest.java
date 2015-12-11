@@ -29,7 +29,9 @@ import java.util.Locale;
 
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
+import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.model.Property;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -40,6 +42,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -120,11 +123,13 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldFetchMessages() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        ByteArrayInputStream messageContent = new ByteArrayInputStream("my message".getBytes(Charsets.UTF_8));
         Date now = new Date();
-        long message1Uid = inbox.appendMessage(messageContent, now, session, false, null);
-        long message2Uid = inbox.appendMessage(messageContent, now, session, false, null);
-        long message3Uid = inbox.appendMessage(messageContent, now, session, false, null);
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message2Uid = inbox.appendMessage(message2Content, now, session, false, null);
+        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message3Uid = inbox.appendMessage(message3Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid),
@@ -135,7 +140,71 @@ public class GetMessagesMethodTest {
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         GetMessagesResponse result = testee.process(request, session);
         
-        assertThat(result.list()).extracting(message -> message.getId().getUid()).containsOnly(message1Uid, message2Uid, message3Uid);
+        assertThat(result.list())
+            .extracting(message -> message.getId().getUid(), Message::getSubject)
+            .containsOnly(
+                    Tuple.tuple(message1Uid, "message 1 subject"), 
+                    Tuple.tuple(message2Uid, "message 2 subject"),
+                    Tuple.tuple(message3Uid, "(No subject)"));
+    }
+
+    @Test
+    public void processShouldReturnOnlyMessageIdsOnEmptyPropertyList() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .properties(new Property[0])
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        GetMessagesResponse result = testee.process(request, session);
+        
+        assertThat(result.list())
+            .extracting(message -> message.getId().getUid(), Message::getSubject)
+            .containsOnly(Tuple.tuple(message1Uid, "message 1 subject")); 
+    }
+
+    @Test
+    public void processShouldReturnIdWhenNotInPropertyList() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .properties(Property.subject)
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        GetMessagesResponse result = testee.process(request, session);
+        
+        assertThat(result.list())
+            .extracting(message -> message.getId().getUid(), Message::getSubject)
+            .containsOnly(Tuple.tuple(message1Uid, "message 1 subject")); 
     }
     
+    @Test
+    public void processShouldReturnAllFieldsWhenUndefinedPropertyList() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        GetMessagesResponse result = testee.process(request, session);
+        
+        assertThat(result.list())
+            .extracting(message -> message.getId().getUid(), Message::getSubject)
+            .containsOnly(Tuple.tuple(message1Uid, "message 1 subject")); 
+    }
+
 }

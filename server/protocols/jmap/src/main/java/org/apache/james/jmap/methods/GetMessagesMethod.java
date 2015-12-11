@@ -31,7 +31,9 @@ import javax.inject.Inject;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.Message.Builder;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.model.Property;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -43,8 +45,11 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingBiFunction;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class GetMessagesMethod<Id extends MailboxId> implements Method {
 
@@ -79,11 +84,13 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         
         Function<MessageId, Stream<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>>> loadMessages = loadMessage(mailboxSession);
-        Function<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>, Message> toJmapMessage = toJmapMessage(mailboxSession);
+        Function<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
+        Function<Message, Message> filterFields = new JmapMessageFactory(getMessagesRequest);
         
         List<Message> result = getMessagesRequest.getIds().stream()
             .flatMap(loadMessages)
-            .map(toJmapMessage)
+            .map(convertToJmapMessage)
+//            .map(filterFields)
             .collect(Collectors.toList());
 
         return new GetMessagesResponse(result);
@@ -101,7 +108,6 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
                                     Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, 
                                          MailboxPath>>> 
                 loadMessage(MailboxSession mailboxSession) {
-        
         return Throwing
                 .function((MessageId messageId) -> {
                      MailboxPath mailboxPath = messageId.getMailboxPath(mailboxSession);
@@ -123,4 +129,33 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         return targetStream.map(x -> Pair.with(x, mailboxPath));
     }
 
+    private static class JmapMessageFactory implements Function<Message, Message> {
+        
+        public ImmutableMap<Property, ThrowingBiFunction<Message, Message.Builder, Message.Builder>> fieldCopiers = 
+                ImmutableMap.of(
+                        Property.id, (message, builder) -> builder.id(message.getId()),
+                        Property.subject, (message, builder) -> builder.subject(message.getSubject())
+                        );
+        
+        private final ImmutableList<Property> selectedProperties;
+        
+        public JmapMessageFactory(GetMessagesRequest messagesRequest) {
+            this.selectedProperties = messagesRequest.getProperties().orElse(Property.all());
+        }
+
+        @Override
+        public Message apply(Message input) {
+            Message.Builder builder = Message.builder();
+            
+            selectCopiers().forEach(f -> f.apply(input, builder));
+            
+            return builder.build();
+        }
+
+        private Stream<ThrowingBiFunction<Message, Builder, Builder>> selectCopiers() {
+            return Stream.concat(selectedProperties.stream(), Stream.of(Property.id))
+                .filter(fieldCopiers::containsKey)
+                .map(fieldCopiers::get);
+        }   
+    }
 }

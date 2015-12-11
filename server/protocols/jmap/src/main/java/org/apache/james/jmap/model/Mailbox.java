@@ -285,4 +285,5 @@ public class Mailbox {
         return Objects.hash(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, 
                 mayRemoveItems, mayCreateChild, mayRename, mayDelete, totalMessages, unreadMessages, totalThreads, unreadThreads);
     }
+    
 }

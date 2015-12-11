@@ -37,7 +37,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     
     private static final int INITIAL_SIZE = 128;
     private final Map<InMemoryId, Mailbox<InMemoryId>> mailboxesById;
-    private final static AtomicLong IDS = new AtomicLong();
+    private final AtomicLong mailboxIdGenerator = new AtomicLong();
 
     public InMemoryMailboxMapper() {
         mailboxesById = new ConcurrentHashMap<InMemoryId, Mailbox<InMemoryId>>(INITIAL_SIZE);
@@ -99,7 +99,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     public void save(Mailbox<InMemoryId> mailbox) throws MailboxException {
         InMemoryId id = mailbox.getMailboxId();
         if (id == null) {
-            id = InMemoryId.of(IDS.incrementAndGet());
+            id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
             ((SimpleMailbox<InMemoryId>) mailbox).setMailboxId(id);
         }
         mailboxesById.put(id, mailbox);
