@@ -98,4 +98,28 @@ public class AccessTokenManagerImplTest {
         AccessToken accessToken = accessTokenManager.grantAccessToken("username");
         assertThat(accessTokenManager.isValid(accessToken)).isTrue();
     }
+    
+    @Test(expected=NullPointerException.class)
+    public void revokeShouldThrowWhenNullToken() throws Exception {
+        accessTokenManager.revoke(null);
+    }
+    
+    @Test
+    public void revokeShouldNoopOnUnknownToken() throws Exception {
+        accessTokenManager.revoke(AccessToken.generate());
+    }
+    
+    @Test
+    public void revokeShouldNoopOnRevokingTwice() throws Exception {
+        AccessToken token = AccessToken.generate();
+        accessTokenManager.revoke(token);
+        accessTokenManager.revoke(token);
+    }
+    
+    @Test
+    public void revokeShouldInvalidExistingToken() throws Exception {
+        AccessToken token = accessTokenManager.grantAccessToken("username");
+        accessTokenManager.revoke(token);
+        assertThat(accessTokenManager.isValid(token)).isFalse();
+    }
 }

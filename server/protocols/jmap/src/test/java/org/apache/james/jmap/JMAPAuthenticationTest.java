@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.when;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.Filter;
 
@@ -70,10 +72,12 @@ public class JMAPAuthenticationTest {
     public void setup() throws Exception {
         mockedUsersRepository = mock(UsersRepository.class);
         mockedZonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
-        accessTokenManager = new AccessTokenManagerImpl(new MemoryAccessTokenRepository(100));
+        accessTokenManager = new AccessTokenManagerImpl(new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS)));
         continuationTokenManager = new SignedContinuationTokenManager(new JamesSignatureHandlerProvider().provide(), mockedZonedDateTimeProvider);
         
         AuthenticationServlet authenticationServlet = new AuthenticationServlet(mockedUsersRepository, continuationTokenManager, accessTokenManager);
+
+
         AuthenticationFilter authenticationFilter = new AuthenticationFilter(accessTokenManager);
         Filter getAuthenticationFilter = new BypassOnPostFilter(authenticationFilter);
         
@@ -367,13 +371,7 @@ public class JMAPAuthenticationTest {
         when(mockedZonedDateTimeProvider.provide())
             .thenReturn(newDate);
     
-        String accessToken = with()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
-        .post("/authentication")
-            .path("accessToken")
-            .toString();
+        String accessToken = fromGoodAccessTokenRequest(continuationToken);
     
         given()
             .header("Authorization", accessToken)
@@ -382,6 +380,69 @@ public class JMAPAuthenticationTest {
         .then()
             .statusCode(200)
             .body("api", isA(String.class));
+    }
+    
+    @Test
+    public void deleteMustReturnUnauthenticatedWithoutAuthorizationHeader() throws Exception {
+        given()
+        .when()
+            .delete("/authentication")
+        .then()
+            .statusCode(401);
+    }
+
+    @Test
+    public void deleteMustReturnUnauthenticatedWithoutAValidAuthroizationHeader() throws Exception {
+        given()
+            .header("Authorization", UUID.randomUUID())
+        .when()
+            .delete("/authentication")
+        .then()
+            .statusCode(401);
+    }
+    
+    @Test
+    public void deleteMustReturnOKNoContentOnValidAuthorizationToken() throws Exception {
+        AccessToken token = accessTokenManager.grantAccessToken("username");
+        given()
+            .header("Authorization", token.serialize())
+        .when()
+            .delete("/authentication")
+        .then()
+            .statusCode(204);
+    }
+
+    @Test
+    public void deleteMustInvalidTokenOnValidAuthorizationToken() throws Exception {
+        AccessToken token = accessTokenManager.grantAccessToken("username");
+        with()
+            .header("Authorization", token.serialize())
+            .delete("/authentication");
+        assertThat(accessTokenManager.isValid(token)).isFalse();
+    }
+
+    @Test
+    public void deleteMustInvalidAuthorizationOnCorrectAuthorization() throws Exception {
+        when(mockedZonedDateTimeProvider.provide())
+            .thenReturn(oldDate);
+
+        String continuationToken = fromGoodContinuationTokenRequest();
+    
+        when(mockedUsersRepository.test("user@domain.tld", "password"))
+            .thenReturn(true);
+        when(mockedZonedDateTimeProvider.provide())
+            .thenReturn(newDate);
+    
+        String accessToken = fromGoodAccessTokenRequest(continuationToken);
+        
+        goodDeleteAccessTokenRequest(accessToken);
+    
+        given()
+            .header("Authorization", accessToken)
+        .when()
+            .get("/authentication")
+        .then()
+            .statusCode(401);
     }
 
     private String fromGoodContinuationTokenRequest() {
@@ -395,4 +456,19 @@ public class JMAPAuthenticationTest {
             .toString();
     }
 
+    private String fromGoodAccessTokenRequest(String continuationToken) {
+        return with()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"password\"}")
+        .post("/authentication")
+            .path("accessToken")
+            .toString();
+    }
+
+    private void goodDeleteAccessTokenRequest(String accessToken) {
+        with()
+            .header("Authorization", accessToken)
+            .delete("/authentication");
+    }
 }

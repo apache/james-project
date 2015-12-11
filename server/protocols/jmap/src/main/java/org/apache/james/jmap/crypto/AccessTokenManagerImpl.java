@@ -57,4 +57,9 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
         }
     }
 
+    @Override
+    public void revoke(AccessToken token) {
+        accessTokenRepository.removeToken(token);
+    }
+
 }

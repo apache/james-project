@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.exceptions.BadRequestException;
 import org.apache.james.jmap.exceptions.InternalErrorException;
 import org.apache.james.jmap.json.MultipleObjectMapperBuilder;
@@ -92,6 +93,12 @@ public class AuthenticationServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         returnEndPointsResponse(resp);
+    }
+    
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        accessTokenManager.revoke(AccessToken.fromString(req.getHeader("Authorization")));
+        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     private Object deserialize(HttpServletRequest req) throws BadRequestException {
