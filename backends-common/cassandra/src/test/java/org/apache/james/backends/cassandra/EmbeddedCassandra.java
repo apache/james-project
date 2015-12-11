@@ -16,20 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.backends.cassandra;
 
-package org.apache.james.jmap.methods.cassandra;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
-import org.apache.james.jmap.JmapServer;
-import org.apache.james.jmap.cassandra.CassandraJmapServer;
-import org.apache.james.jmap.methods.GetMessagesMethodTest;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.junit.rules.TemporaryFolder;
+import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.thrift.transport.TTransportException;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 
-public class CassandraGetMessagesMethodTest extends GetMessagesMethodTest {
+import com.google.common.base.Throwables;
 
-    @Override
-    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
-        return new CassandraJmapServer(CassandraJmapServer.defaultOverrideModule(temporaryFolder, embeddedElasticSearch, cassandra));
+public class EmbeddedCassandra {
+
+
+    public static EmbeddedCassandra createStartServer() {
+        return new EmbeddedCassandra();
     }
+
+    private EmbeddedCassandra() {
+        try {
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra(TimeUnit.SECONDS.toMillis(20));
+        } catch (ConfigurationException | TTransportException | IOException | InterruptedException e) {
+            Throwables.propagate(e);
+        }
+    }
+    
 }

@@ -20,6 +20,9 @@ package org.apache.james.backends.cassandra;
 
 import java.util.Optional;
 
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -27,7 +30,6 @@ import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
-import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -48,18 +50,16 @@ public final class CassandraCluster {
     private CassandraTypesProvider typesProvider;
 
     public static CassandraCluster create(CassandraModule module) throws RuntimeException {
-        return new CassandraCluster(module);
+        return new CassandraCluster(module, EmbeddedCassandra.createStartServer());
     }
 
-    private CassandraCluster(CassandraModule module) throws RuntimeException {
+    @Inject
+    private CassandraCluster(CassandraModule module, EmbeddedCassandra embeddedCassandra) throws RuntimeException {
         this.module = module;
         try {
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra(20000L);
-
-            session = new FunctionRunnerWithRetry(MAX_RETRY)
-                .executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
+            session = new FunctionRunnerWithRetry(MAX_RETRY).executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
             typesProvider = new CassandraTypesProvider(module, session);
-        } catch(Exception exception) {
+        } catch (Exception exception) {
             Throwables.propagate(exception);
         }
     }
@@ -72,6 +72,7 @@ public final class CassandraCluster {
         new CassandraTableManager(module, session).ensureAllTables();
     }
 
+    @PreDestroy
     public void clearAllTables() {
         new CassandraTableManager(module, session).clearAllTables();
     }

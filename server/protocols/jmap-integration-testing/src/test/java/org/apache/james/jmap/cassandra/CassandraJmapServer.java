@@ -24,7 +24,7 @@ import javax.inject.Singleton;
 import org.apache.james.CassandraJamesServer;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapServer;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
@@ -45,34 +45,33 @@ public class CassandraJmapServer implements JmapServer {
     private static final int LIMIT_TO_3_MESSAGES = 3;
 
     private CassandraJamesServer server;
-    private CassandraCluster cassandra;
 
     private final Module module;
 
-    public CassandraJmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch) {
-        this.module = createServerModule(temporaryFolder, embeddedElasticSearch);
+    public static Module defaultOverrideModule(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
+        return Modules.combine(new TestElasticSearchModule(embeddedElasticSearch),
+                new TestFilesystemModule(temporaryFolder),
+                new TestJMAPServerModule(LIMIT_TO_3_MESSAGES),
+                new AbstractModule() {
+
+            @Override
+            protected void configure() {
+                bind(EmbeddedCassandra.class).toInstance(cassandra);
+            }
+
+            @Provides
+            @Singleton
+            com.datastax.driver.core.Session provideSession(CassandraCluster initializedCassandra) {
+                return initializedCassandra.getConf();
+            }
+        });
     }
 
-    private Module createServerModule(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch) {
-        return Modules.override(CassandraJamesServerMain.defaultModule)
-                .with(new TestElasticSearchModule(embeddedElasticSearch),
-                        new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(LIMIT_TO_3_MESSAGES),
-                        new AbstractModule() {
-
-                    @Override
-                    protected void configure() {
-                    }
-
-                    @Provides
-                    @Singleton
-                    com.datastax.driver.core.Session provideSession(CassandraModule cassandraModule) {
-                        cassandra = CassandraCluster.create(cassandraModule);
-                        return cassandra.getConf();
-                    }
-                });
+    
+    public CassandraJmapServer(Module overrideModule) {
+        this.module = Modules.override(CassandraJamesServerMain.defaultModule).with(overrideModule);
     }
-
+    
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
@@ -96,11 +95,6 @@ public class CassandraJmapServer implements JmapServer {
 
     private void after() {
         server.stop();
-    }
-
-    @Override
-    public void clean() {
-        cassandra.clearAllTables();
     }
 
     @Override

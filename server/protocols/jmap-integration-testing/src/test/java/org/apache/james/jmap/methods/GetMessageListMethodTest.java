@@ -31,13 +31,13 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
+import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.JmapServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -53,9 +53,10 @@ public abstract class GetMessageListMethodTest {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch);
+    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
+    private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra);
 
-    protected abstract JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch);
+    protected abstract JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra);
 
     @Rule
     public RuleChain chain = RuleChain
@@ -76,11 +77,6 @@ public abstract class GetMessageListMethodTest {
         jmapServer.serverProbe().addDomain(domain);
         jmapServer.serverProbe().addUser(username, password);
         accessToken = JmapAuthentication.authenticateJamesUser(username, password);
-    }
-
-    @After
-    public void tearDown() {
-        jmapServer.clean();
     }
 
     @Test

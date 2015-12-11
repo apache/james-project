@@ -24,9 +24,8 @@ import org.junit.rules.TestRule;
 
 public interface JmapServer extends TestRule {
 
-    void clean();
-
     int getPort();
 
     ExtendedServerProbe serverProbe();
+
 }

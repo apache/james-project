@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.cassandra;
 
+import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapServer;
 import org.apache.james.jmap.cassandra.CassandraJmapServer;
 import org.apache.james.jmap.methods.GetMailboxesMethodTest;
@@ -28,7 +29,7 @@ import org.junit.rules.TemporaryFolder;
 public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {
 
     @Override
-    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch) {
-        return new CassandraJmapServer(temporaryFolder, embeddedElasticSearch);
+    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
+        return new CassandraJmapServer(CassandraJmapServer.defaultOverrideModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }
 }
