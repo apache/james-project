@@ -20,17 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.sieverepository.api.exception.DuplicateException;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.managesieve.api.Session;
 
 /**
- * <code>RenameScript</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.11>RFC 5804 RENAMESCRIPT Command</a>
  */
 public interface RenameScript {
    
-    abstract public void renameScript(String oldName, String newName) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException;
+    String renameScript(Session session, String oldName, String newName);
 
 }

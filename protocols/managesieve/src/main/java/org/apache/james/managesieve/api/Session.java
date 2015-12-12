@@ -20,31 +20,34 @@
 
 package org.apache.james.managesieve.api;
 
-/**
- * <code>Session</code>
- */
+import org.apache.james.managesieve.api.commands.Authenticate;
+
 public interface Session {
-    
-    public interface UserListener
-    {
-        abstract public void notifyChange(String user);
+
+    enum State {
+        UNAUTHENTICATED,
+        AUTHENTICATION_IN_PROGRESS,
+        AUTHENTICATED,
+        TERMINATED,
+        SSL_NEGOCIATION
     }
-    
-    abstract public String getUser();
-    
-    abstract public void addUserListener(UserListener listener);
-    
-    abstract public void removeUserListener(UserListener listener);
-    
-    public interface AuthenticationListener
-    {
-        abstract public void notifyChange(boolean isAuthenticated);
-    }
-    
-    abstract public boolean isAuthenticated();
-    
-    abstract public void addAuthenticationListener(AuthenticationListener listener);
-    
-    abstract public void removeAuthenticationListener(AuthenticationListener listener);
+
+    boolean isAuthenticated();
+
+    String getUser();
+
+    void setUser(String user);
+
+    State getState();
+
+    void setState(State state);
+
+    Authenticate.SupportedMechanism getChoosedAuthenticationMechanism();
+
+    void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism);
+
+    void setSslEnabled(boolean sslEnabled);
+
+    boolean isSslEnabled();
 
 }

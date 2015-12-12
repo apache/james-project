@@ -20,17 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.StorageException;
+import org.apache.james.managesieve.api.Session;
 
 /**
- * <code>GetScript</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.9>RFC 5804 GETSCRIPT Command</a>
  */
 public interface GetScript {
     
-    abstract public String getScript(String name) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException;
+    String getScript(Session session, String name);
 
 }

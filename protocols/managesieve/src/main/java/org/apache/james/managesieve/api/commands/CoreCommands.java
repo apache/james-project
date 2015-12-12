@@ -20,14 +20,15 @@
 
 package org.apache.james.managesieve.api.commands;
 
+import org.apache.james.managesieve.api.CapabilityAdvertiser;
+
 /**
- * <code>CoreCommands</code>
- * 
- * <p>Core RFC 5804 Commands common to all transports
+ * Core RFC 5804 Commands common to all transports
  * 
  * @see <a href=http://tools.ietf.org/html/rfc5804#section-2>RFC 5804 Commands</a>
  */
 public interface CoreCommands extends Capability, CheckScript, DeleteScript, GetScript, HaveSpace,
-        ListScripts, PutScript, RenameScript, SetActive, GetActive {
+        ListScripts, PutScript, RenameScript, SetActive, Noop, Unauthenticate, Logout, Authenticate, StartTLS,
+        CapabilityAdvertiser {
 
 }

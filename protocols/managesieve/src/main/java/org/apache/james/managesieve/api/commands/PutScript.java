@@ -20,19 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import java.util.List;
-
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.managesieve.api.SyntaxException;
-import org.apache.james.sieverepository.api.exception.QuotaExceededException;
+import org.apache.james.managesieve.api.Session;
 
 /**
- * <code>PutScript</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.6>RFC 5804 PUTSCRIPT Command</a>
  */
 public interface PutScript {
     
-    abstract public List<String> putScript(String name, String content) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException;
+    String putScript(Session session, String name, String content);
 
 }

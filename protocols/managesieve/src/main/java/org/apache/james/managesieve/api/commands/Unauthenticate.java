@@ -20,16 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
-
+import org.apache.james.managesieve.api.Session;
 
 /**
- * <code>Unauthenticate</code>
- * 
- *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.14.1>RFC 5804 UNAUTHENTICATE Command</a>
+ * @see <a href=http://tools.ietf.org/html/rfc5804#section-2.14.1>RFC 5804 UNAUTHENTICATE Command</a>
  */
 public interface Unauthenticate {
    
-    abstract public void unauthenticate() throws AuthenticationRequiredException;
+    String unauthenticate(Session session);
 
 }

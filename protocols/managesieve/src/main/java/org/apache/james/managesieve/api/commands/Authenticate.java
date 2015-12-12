@@ -20,19 +20,29 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationException;
+import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.UnknownSaslMechanism;
 
 
 /**
- * <code>Authenticate</code>
- * 
  * @see <a href=http://tools.ietf.org/html/rfc5804#section-2.1>RFC 5804 AUTHENTICATE Command</a>
- * 
  */
 public interface Authenticate {
-    
-    abstract public void authenticate(String mechanism) throws AuthenticationException;
-    
-    abstract public void authenticate(String mechanism, String initialData) throws AuthenticationException;
 
+    enum SupportedMechanism {
+        PLAIN;
+
+        public static SupportedMechanism retrieveMechanism(String serializedData) throws UnknownSaslMechanism {
+            for (SupportedMechanism supportedMechanism : SupportedMechanism.values()) {
+                if (supportedMechanism.toString().equalsIgnoreCase(serializedData)) {
+                    return supportedMechanism;
+                }
+            }
+            throw new UnknownSaslMechanism(serializedData);
+        }
+    }
+    
+    String chooseMechanism(Session session, String mechanism);
+    
+    String authenticate(Session session, String suppliedData);
 }

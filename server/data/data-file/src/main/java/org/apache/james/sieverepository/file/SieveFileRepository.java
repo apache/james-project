@@ -330,7 +330,7 @@ public class SieveFileRepository implements SieveRepository {
     protected File getUserDirectory(String user) throws UserNotFoundException, StorageException {
         File file = getUserDirectoryFile(user);
         if (!file.exists()) {
-            throw new UserNotFoundException("User: " + user);
+            ensureUser(user);
         }
         return file;
     }
@@ -390,47 +390,12 @@ public class SieveFileRepository implements SieveRepository {
         return file;
     }
 
-
-    @Override
-    public boolean hasUser(final String user) throws StorageException {
-        boolean userExists = true;
-        try {
-            getUserDirectory(user);
-        } catch (UserNotFoundException ex) {
-            userExists = false;
-        }
-        return userExists;
-    }
-
-    @Override
-    public void addUser(final String user) throws DuplicateUserException, StorageException {
+    public void ensureUser(final String user) throws StorageException {
         synchronized (lock) {
-            boolean userExists = true;
             try {
-                getUserDirectory(user);
-            } catch (UserNotFoundException ex) {
-                userExists = false;
-            }
-            if (userExists) {
-                throw new DuplicateUserException("User: " + user);
-            }
-            File dir = getUserDirectoryFile(user);
-            try {
-                FileUtils.forceMkdir(dir);
-            } catch (IOException ex) {
-                throw new StorageException(ex);
-            }
-        }
-    }
-
-    @Override
-    public void removeUser(final String user) throws UserNotFoundException, StorageException {
-        synchronized (lock) {
-            File dir = getUserDirectory(user);
-            try {
-                FileUtils.forceDelete(dir);
-            } catch (IOException ex) {
-                throw new StorageException(ex);
+                FileUtils.forceMkdir(getUserDirectoryFile(user));
+            } catch (IOException e) {
+                throw new StorageException("Error while creating directory for " + user, e);
             }
         }
     }

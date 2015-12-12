@@ -20,14 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
+import org.apache.james.managesieve.api.SessionTerminatedException;
 
 /**
- * <code>Logout</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.3>RFC 5804 LOGOUT Command</a>
  */
 public interface Logout {
     
-    abstract public void logout();
+    void logout() throws SessionTerminatedException;
 
 }

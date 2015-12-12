@@ -20,42 +20,20 @@
 
 package org.apache.james.managesieve.api;
 
-public class SyntaxException extends ManageSieveException
-{
-    private static final long serialVersionUID = 2336683565743503262L;
-    
-    /**
-     * Creates a new instance of SyntaxException.
-     *
-     */
+public class SyntaxException extends ManageSieveException {
+
     public SyntaxException() {
         super();
     }
 
-    /**
-     * Creates a new instance of SyntaxException.
-     *
-     * @param message
-     * @param cause
-     */
     public SyntaxException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    /**
-     * Creates a new instance of SyntaxException.
-     *
-     * @param message
-     */
     public SyntaxException(String message) {
         super(message);
     }
 
-    /**
-     * Creates a new instance of SyntaxException.
-     *
-     * @param cause
-     */
     public SyntaxException(Throwable cause) {
         super(cause);
     }

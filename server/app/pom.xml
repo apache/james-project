@@ -314,6 +314,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>james-server-protocols-managesieve</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>james-server-protocols-pop3</artifactId>
             <scope>runtime</scope>
             <exclusions>

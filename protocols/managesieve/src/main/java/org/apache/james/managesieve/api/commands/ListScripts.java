@@ -20,18 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import java.util.List;
-
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.sieverepository.api.ScriptSummary;
+import org.apache.james.managesieve.api.Session;
 
 /**
- * <code>ListScripts</code>
- * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.7>RFC 5804 LISTSCRIPTS Command</a>
  */
 public interface ListScripts {
        
-    abstract public List<ScriptSummary> listScripts() throws AuthenticationRequiredException;
+    String listScripts(Session session);
 
 }

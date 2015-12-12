@@ -20,77 +20,54 @@
 
 package org.apache.james.managesieve.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.commands.Authenticate;
 
-/**
- * <code>SettableSession</code>
- */
 public class SettableSession implements Session {
 
-    String _user = null;
-    boolean _isAuthenticated = false;
-    List<UserListener> _userListeners = new ArrayList<UserListener>();
-    List<AuthenticationListener> _authenticationListeners = new ArrayList<AuthenticationListener>(); 
-    
-    /**
-     * @see org.apache.james.managesieve.api.Session#addAuthenticationListener(org.apache.james.managesieve.api.Session.AuthenticationListener)
-     */
-    public void addAuthenticationListener(AuthenticationListener listener) {
-        _authenticationListeners.add(listener);
+    private String user;
+    private State state;
+    private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
+    private boolean sslEnabled;
+
+    public SettableSession() {
+        this.state = State.UNAUTHENTICATED;
+        this.sslEnabled = false;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.Session#addUserListener(org.apache.james.managesieve.api.Session.UserListener)
-     */
-    public void addUserListener(UserListener listener) {
-        _userListeners.add(listener);            
-    }
-
-    /**
-     * @see org.apache.james.managesieve.api.Session#getUser()
-     */
     public String getUser() {
-        return _user;
+        return user;
     }
 
-    /**
-     * @see org.apache.james.managesieve.api.Session#isAuthenticated()
-     */
     public boolean isAuthenticated() {
-        return _isAuthenticated;
-    }
-
-    /**
-     * @see org.apache.james.managesieve.api.Session#removeAuthenticationListener(org.apache.james.managesieve.api.Session.AuthenticationListener)
-     */
-    public void removeAuthenticationListener(AuthenticationListener listener) {
-        _authenticationListeners.remove(listener);
-    }
-
-    /**
-     * @see org.apache.james.managesieve.api.Session#removeUserListener(org.apache.james.managesieve.api.Session.UserListener)
-     */
-    public void removeUserListener(UserListener listener) {
-        _userListeners.remove(listener);       
-    }
-    
-    public void setAuthentication(boolean isAuthenticated) {
-        _isAuthenticated = isAuthenticated;
-        for(AuthenticationListener listener : _authenticationListeners)
-        {                  
-            listener.notifyChange(isAuthenticated);
-        }                
+        return state == State.AUTHENTICATED;
     }
 
     public void setUser(String user) {
-        _user = user;
-        for(UserListener listener : _userListeners)
-        {                  
-            listener.notifyChange(user);
-        }
+        this.user = user;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public Authenticate.SupportedMechanism getChoosedAuthenticationMechanism() {
+        return choosedAuthenticationMechanism;
+    }
+
+    public void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism) {
+        this.choosedAuthenticationMechanism = choosedAuthenticationMechanism;
+    }
+
+    public void setSslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
+    }
+
+    public boolean isSslEnabled() {
+        return sslEnabled;
+    }
 }
