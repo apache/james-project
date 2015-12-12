@@ -29,6 +29,7 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
+import java.io.InputStream;
 import java.util.List;
 
 
@@ -56,11 +57,11 @@ public interface SieveRepository {
     
     List<ScriptSummary> listScripts(String user) throws UserNotFoundException, StorageException;
     
-    String getActive(String user) throws UserNotFoundException, ScriptNotFoundException, StorageException;
+    InputStream getActive(String user) throws UserNotFoundException, ScriptNotFoundException, StorageException;
     
     void setActive(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
     
-    String getScript(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
+    InputStream getScript(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
     
     void deleteScript(String user, String name) throws UserNotFoundException, ScriptNotFoundException, IsActiveException, StorageException;
     

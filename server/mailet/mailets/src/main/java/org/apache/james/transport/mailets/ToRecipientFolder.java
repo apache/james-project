@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
@@ -54,10 +55,8 @@ import org.apache.mailet.base.GenericMailet;
 public class ToRecipientFolder extends GenericMailet {
 
     private MailboxManager mailboxManager;
-
+    private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
-
-    private FileSystem fileSystem;
 
     @Inject
     public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
@@ -65,13 +64,13 @@ public class ToRecipientFolder extends GenericMailet {
     }
 
     @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public void setSetUsersRepository(SieveRepository setUsersRepository) {
+        this.sieveRepository = setUsersRepository;
     }
 
     @Inject
-    public void setFileSystem(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
+    public void setUsersRepository(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
     }
 
     private SieveMailet sieveMailet;  // Mailet that actually stores the message
@@ -94,10 +93,7 @@ public class ToRecipientFolder extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         super.init();
-        sieveMailet = new SieveMailet();
-        sieveMailet.setUsersRepository(usersRepository);
-        sieveMailet.setMailboxManager(mailboxManager);
-        sieveMailet.setFileSystem(fileSystem);
+        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, "INBOX");
         sieveMailet.init(new MailetConfig() {
             /*
              * @see org.apache.mailet.MailetConfig#getInitParameter(java.lang.String)
@@ -139,7 +135,6 @@ public class ToRecipientFolder extends GenericMailet {
         });
         // Override the default value of "quiet"
         sieveMailet.setQuiet(getInitParameter("quiet", true));
-        sieveMailet.setFolder(getInitParameter("folder", "INBOX"));
     }
 
     /* (non-Javadoc)

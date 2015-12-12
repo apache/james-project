@@ -37,9 +37,11 @@ import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import javax.inject.Inject;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -136,7 +138,7 @@ public class SieveFileRepository implements SieveRepository {
      * Creates a new instance of SieveFileRepository.
      */
     public SieveFileRepository() {
-        super();
+
     }
 
     /**
@@ -145,7 +147,6 @@ public class SieveFileRepository implements SieveRepository {
      * @param fileSystem
      */
     public SieveFileRepository(FileSystem fileSystem) {
-        this();
         setFileSystem(fileSystem);
     }
 
@@ -171,11 +172,11 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public String getScript(final String user, final String name) throws UserNotFoundException,
+    public InputStream getScript(final String user, final String name) throws UserNotFoundException,
             ScriptNotFoundException, StorageException {
-        String script;
+        InputStream script;
         try {
-            script = toString(getScriptFile(user, name), UTF_8);
+            script = new FileInputStream(getScriptFile(user, name));
         } catch (FileNotFoundException ex) {
             throw new ScriptNotFoundException(ex);
         }
@@ -282,11 +283,11 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public String getActive(final String user) throws UserNotFoundException,
+    public InputStream getActive(final String user) throws UserNotFoundException,
             ScriptNotFoundException, StorageException {
-        String script;
+        InputStream script;
         try {
-            script = toString(getActiveFile(user), UTF_8);
+            script = new FileInputStream(getActiveFile(user));
         } catch (FileNotFoundException ex) {
             throw new ScriptNotFoundException(ex);
         }
