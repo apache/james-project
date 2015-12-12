@@ -47,6 +47,14 @@
                     <!-- no alias needed -->
                     <value></value>
                 </entry>
+                <!-- Sieve Repository-->
+                <entry>
+                    <key>
+                        <value>sieverepository</value>
+                    </key>
+                    <!-- no alias needed -->
+                    <value></value>
+                </entry>
                 <!-- Recipient Rewrite Table-->
                 <entry>
                     <key>
@@ -122,10 +130,6 @@
 
     <!--<bean id="filesystem" class="org.apache.james.container.spring.filesystem.FileSystemImpl" autowire="byName"/>-->
     <bean id="filesystem" class="org.apache.james.container.spring.filesystem.ResourceLoaderFileSystem"/>
-
-    <bean id="sieverepository" class="org.apache.james.sieverepository.file.SieveFileRepository">
-        <constructor-arg index="0" ref="filesystem"/>
-    </bean>
 
     <bean id="sieveparser" class="org.apache.james.managesieve.jsieve.Parser">
         <property name="configurationManager" ref="configurationmanager"/>
