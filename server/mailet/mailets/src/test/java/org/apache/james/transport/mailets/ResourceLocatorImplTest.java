@@ -19,41 +19,39 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
-import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
-import org.apache.jsieve.mailet.ResourceLocator;
+import org.junit.Before;
+import org.junit.Test;
 
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-public class ResourceLocatorImpl implements ResourceLocator {
+public class ResourceLocatorImplTest {
 
-    private final boolean virtualHosting;
-    private final SieveRepository sieveRepository;
+    private SieveRepository sieveRepository;
+    private ResourceLocatorImpl resourceLocator;
 
-    public ResourceLocatorImpl(boolean virtualHosting, SieveRepository sieveRepository) {
-        this.virtualHosting = virtualHosting;
-        this.sieveRepository = sieveRepository;
+    @Before
+    public void setUp() {
+        sieveRepository = mock(SieveRepository.class);
+        resourceLocator = new ResourceLocatorImpl(true, sieveRepository);
     }
 
-    public InputStream get(String uri) throws SieveRepositoryException {
-        System.out.println(uri);
-        // Use the complete email address for finding the sieve file
-        uri = uri.substring(2);
+    @Test(expected = ScriptNotFoundException.class)
+    public void resourceLocatorImplShouldPropagateScriptNotFound() throws Exception {
+        when(sieveRepository.getActive("receiver@localhost")).thenThrow(new ScriptNotFoundException());
+        resourceLocator.get("//receiver@localhost/sieve");
+    }
 
-        String username;
-        if (virtualHosting) {
-            username = uri.substring(0, uri.indexOf("/"));
-        } else {
-            username = uri.substring(0, uri.indexOf("@"));
-        }
-
-        return sieveRepository.getActive(username);
+    @Test
+    public void resourceLocatorImplShouldWork() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream(new byte[0]);
+        when(sieveRepository.getActive("receiver@localhost")).thenReturn(inputStream);
+        assertThat(resourceLocator.get("//receiver@localhost/sieve")).isEqualTo(inputStream);
     }
 }
