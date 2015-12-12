@@ -20,6 +20,7 @@
 
 package org.apache.james.managesieve.core;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
@@ -265,7 +266,7 @@ public class CoreProcessorTestCase {
         session.setAuthentication(true);
         session.setUser("test");
         core.putScript("script", "content");
-        assertEquals("content", repository.getScript("test", "script"));
+        assertEquals("content", IOUtils.toString(repository.getScript("test", "script")));
 
         // Syntax
         success = false;
@@ -297,7 +298,7 @@ public class CoreProcessorTestCase {
         session.setUser("test");
         repository.putScript("test", "oldName", "content");
         core.renameScript("oldName", "newName");
-        assertEquals("content", repository.getScript("test", "oldName"));
+        assertEquals("content", IOUtils.toString(repository.getScript("test", "oldName")));
     }
 
     @Test
@@ -318,7 +319,7 @@ public class CoreProcessorTestCase {
         session.setUser("test");
         repository.putScript("test", "script", "content");
         core.setActive("script");
-        assertEquals("content", repository.getActive("test"));
+        assertEquals("content", IOUtils.toString(repository.getActive("test")));
     }
 
     @Test

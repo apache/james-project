@@ -20,6 +20,7 @@
 
 package org.apache.james.transport.mailets.managesieve;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.mock.MockSieveParser;
 import org.apache.james.managesieve.mock.MockSieveRepository;
 import org.apache.james.sieverepository.api.exception.DuplicateUserException;
@@ -213,7 +214,7 @@ public class ManageSieveMailetTestCase {
             BodyPart part = content.getBodyPart(0);
             String response = (String) part.getContent();
             assertEquals(response, "OK (WARNINGS) \"warning1\" \"warning2\"");
-            assertEquals(scriptContent, _repository.getScript(message.getSender().toString(), scriptName));
+            assertEquals(scriptContent, IOUtils.toString(_repository.getScript(message.getSender().toString(), scriptName)));
         }
 
         // Extra arguments
@@ -259,7 +260,7 @@ public class ManageSieveMailetTestCase {
             BodyPart part = content.getBodyPart(0);
             String response = (String) part.getContent();
             assertTrue(response.startsWith("NO \"Syntax Error: "));
-            assertEquals(scriptContent, _repository.getScript(message.getSender().toString(), scriptName));
+            assertEquals(scriptContent, IOUtils.toString(_repository.getScript(message.getSender().toString(), scriptName)));
         }
 
         // No script

@@ -20,6 +20,7 @@
 
 package org.apache.james.managesieve.core;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.ManageSieveRuntimeException;
 import org.apache.james.managesieve.api.Session;
@@ -37,6 +38,7 @@ import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,11 +138,14 @@ public class CoreProcessor implements CoreCommands {
     public String getScript(String name) throws AuthenticationRequiredException,
         ScriptNotFoundException, StorageException {
         authenticationCheck();
-        String script = null;
+        String script;
         try {
-            script = _repository.getScript(getUser(), name);
+            script = IOUtils.toString(_repository.getScript(getUser(), name), "UTF-8");
         } catch (UserNotFoundException ex) {
             // Should not happen as the UserListener should ensure the session user is defined in the repository
+            throw new ManageSieveRuntimeException(ex);
+        } catch (IOException ex) {
+            // Unable to read script InputStream
             throw new ManageSieveRuntimeException(ex);
         }
         return script;
@@ -165,7 +170,7 @@ public class CoreProcessor implements CoreCommands {
      */
     public List<ScriptSummary> listScripts() throws AuthenticationRequiredException {
         authenticationCheck();
-        List<ScriptSummary> summaries = null;
+        List<ScriptSummary> summaries;
         try {
             summaries = _repository.listScripts(getUser());
         } catch (SieveRepositoryException ex) {
@@ -260,12 +265,15 @@ public class CoreProcessor implements CoreCommands {
     public String getActive() throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
         authenticationCheck();
         
-        String script = null;
+        String script;
         try {
-            script = _repository.getActive(getUser());
+            script = IOUtils.toString(_repository.getActive(getUser()), "UTF-8");
         } catch (UserNotFoundException ex) {
             // Should not happen as the UserListener should ensure the session
             // user is defined in the repository
+            throw new ManageSieveRuntimeException(ex);
+        } catch (IOException ex) {
+            // Unable to read script InputStream
             throw new ManageSieveRuntimeException(ex);
         }
         return script;
