@@ -86,7 +86,6 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         return Optional.fromNullable(userByName.get(name))
             .transform(new Function<User, Boolean>() {
                 public Boolean apply(User user) {
-                    System.out.println(user);
                     return user.verifyPassword(password);
                 }
             }).or(false);
