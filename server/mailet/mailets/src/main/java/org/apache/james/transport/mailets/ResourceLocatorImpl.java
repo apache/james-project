@@ -43,7 +43,6 @@ public class ResourceLocatorImpl implements ResourceLocator {
     }
 
     public InputStream get(String uri) throws SieveRepositoryException {
-        System.out.println(uri);
         // Use the complete email address for finding the sieve file
         uri = uri.substring(2);
 

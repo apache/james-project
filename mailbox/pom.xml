@@ -239,6 +239,12 @@
                 <artifactId>apache-mime4j-dom</artifactId>
                 <version>${apache-mime4j.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-mime4j-james-utils</artifactId>
+                <version>${apache-mime4j.version}</version>
+            </dependency>
             <!-- Declare javamail as provided to be able to easily switch -->
             <!-- to different implementations (Geronimo) -->
             <dependency>
