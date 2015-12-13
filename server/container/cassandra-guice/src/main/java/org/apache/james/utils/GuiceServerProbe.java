@@ -37,7 +37,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -47,6 +46,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,13 +63,16 @@ public class GuiceServerProbe implements ExtendedServerProbe {
     private final MailboxMapperFactory<CassandraId> mailboxMapperFactory;
     private final DomainList domainList;
     private final UsersRepository usersRepository;
+    private final SieveRepository sieveRepository;
 
     @Inject
-    private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory<CassandraId> mailboxMapperFactory, DomainList domainList, UsersRepository usersRepository) {
+    private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory<CassandraId> mailboxMapperFactory,
+                             DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.domainList = domainList;
         this.usersRepository = usersRepository;
+        this.sieveRepository = sieveRepository;
     }
 
     @Override
@@ -292,7 +295,7 @@ public class GuiceServerProbe implements ExtendedServerProbe {
 
     @Override
     public void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
-            throws BadCredentialsException, MailboxException {
+            throws MailboxException {
         
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOGGER);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
@@ -309,4 +312,33 @@ public class GuiceServerProbe implements ExtendedServerProbe {
         throw new NotImplementedException();
     }
 
+    @Override
+    public long getSieveQuota() throws Exception {
+        return sieveRepository.getQuota();
+    }
+
+    @Override
+    public void setSieveQuota(long quota) throws Exception {
+        sieveRepository.setQuota(quota);
+    }
+
+    @Override
+    public void removeSieveQuota() throws Exception {
+        sieveRepository.removeQuota();
+    }
+
+    @Override
+    public long getSieveQuota(String user) throws Exception {
+        return sieveRepository.getQuota(user);
+    }
+
+    @Override
+    public void setSieveQuota(String user, long quota) throws Exception {
+        sieveRepository.setQuota(user, quota);
+    }
+
+    @Override
+    public void removeSieveQuota(String user) throws Exception {
+        sieveRepository.removeQuota(user);
+    }
 }

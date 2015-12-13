@@ -53,7 +53,13 @@ public enum CmdType {
     GETDEFAULTMAXSTORAGEQUOTA("getdefaultmaxstoragequota"),
     GETDEFAULTMAXMESSAGECOUNTQUOTA("getdefaultmaxmessagecountquota"),
     REINDEXMAILBOX("reindexmailbox", "namespace", "user", "name"),
-    REINDEXALL("reindexall");
+    REINDEXALL("reindexall"),
+    GETSIEVEQUOTA("getsievequota"),
+    SETSIEVEQUOTA("setsievequota", "quota"),
+    REMOVESIEVEQUOTA("removesievequota"),
+    GETSIEVEUSERQUOTA("getsieveuserquota", "username"),
+    SETSIEVEUSERQUOTA("setsieveuserquota", "username", "quota"),
+    REMOVESIEVEUSERQUOTA("removesieveuserquota", "username");
 
     private final String command;
     private final String[] arguments;

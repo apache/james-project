@@ -198,6 +198,36 @@ public class CmdTypeTest {
         assertThat(CmdType.lookup("reindexmailbox")).isEqualTo(CmdType.REINDEXMAILBOX);
     }
 
+    @Test
+    public void lookupGetSieveQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("getsievequota")).isEqualTo(CmdType.GETSIEVEQUOTA);
+    }
+
+    @Test
+    public void lookupGetSieveUserQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("getsieveuserquota")).isEqualTo(CmdType.GETSIEVEUSERQUOTA);
+    }
+
+    @Test
+    public void lookupSetSieveQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("setsievequota")).isEqualTo(CmdType.SETSIEVEQUOTA);
+    }
+
+    @Test
+    public void lookupSetSieveUserQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("setsieveuserquota")).isEqualTo(CmdType.SETSIEVEUSERQUOTA);
+    }
+
+    @Test
+    public void lookupRemoveSieveQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("removesievequota")).isEqualTo(CmdType.REMOVESIEVEQUOTA);
+    }
+
+    @Test
+    public void lookupRemoveSieveUserQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("removesieveuserquota")).isEqualTo(CmdType.REMOVESIEVEUSERQUOTA);
+    }
+
     @Test 
     public void lookupEmptyStringShouldReturnNull() {
         assertThat(CmdType.lookup("")).isNull();

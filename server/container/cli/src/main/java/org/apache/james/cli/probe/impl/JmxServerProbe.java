@@ -40,6 +40,7 @@ import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
 
 public class JmxServerProbe implements ServerProbe {
@@ -50,6 +51,7 @@ public class JmxServerProbe implements ServerProbe {
     private final static String USERSREPOSITORY_OBJECT_NAME = "org.apache.james:type=component,name=usersrepository";
     private final static String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
     private final static String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
+    private final static String SIEVEMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=sievemanagerbean";
     private final static String QUOTAMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=quotamanagerbean";
     private final static String REINDEXER_OBJECT_NAME = "org.apache.james:type=component,name=reindexerbean";
 
@@ -62,6 +64,7 @@ public class JmxServerProbe implements ServerProbe {
     private MailboxManagerManagementMBean mailboxManagerManagement;
     private QuotaManagementMBean quotaManagement;
     private ReIndexerManagementMBean reIndexerManagement;
+    private SieveRepositoryManagementMBean sieveRepositoryManagement;
 
     private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
     private static final int defaultPort = 9999;
@@ -125,6 +128,9 @@ public class JmxServerProbe implements ServerProbe {
             name = new ObjectName(REINDEXER_OBJECT_NAME);
             reIndexerManagement = MBeanServerInvocationHandler.newProxyInstance(
                 mbeanServerConn, name, ReIndexerManagementMBean.class, true);
+            name = new ObjectName(SIEVEMANAGER_OBJECT_NAME);
+            sieveRepositoryManagement = MBeanServerInvocationHandler.newProxyInstance(
+                mbeanServerConn, name, SieveRepositoryManagementMBean.class, true);
         } catch (MalformedObjectNameException e) {
             throw new RuntimeException("Invalid ObjectName? Please report this as a bug.", e);
         }
@@ -293,5 +299,35 @@ public class JmxServerProbe implements ServerProbe {
     @Override
     public void reIndexAll() throws Exception {
         reIndexerManagement.reIndex();
+    }
+
+    @Override
+    public long getSieveQuota() throws Exception {
+        return sieveRepositoryManagement.getQuota();
+    }
+
+    @Override
+    public void setSieveQuota(long quota) throws Exception {
+        sieveRepositoryManagement.setQuota(quota);
+    }
+
+    @Override
+    public void removeSieveQuota() throws Exception {
+        sieveRepositoryManagement.removeQuota();
+    }
+
+    @Override
+    public long getSieveQuota(String user) throws Exception {
+        return sieveRepositoryManagement.getQuota(user);
+    }
+
+    @Override
+    public void setSieveQuota(String user, long quota) throws Exception {
+        sieveRepositoryManagement.setQuota(user, quota);
+    }
+
+    @Override
+    public void removeSieveQuota(String user) throws Exception {
+        sieveRepositoryManagement.removeQuota(user);
     }
 }

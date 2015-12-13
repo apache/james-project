@@ -509,6 +509,87 @@ public class ServerCmdTest {
         control.verify();
     }
 
+    @Test
+    public void setSieveQuotaCommandShouldWork() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "2K"};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        serverProbe.setSieveQuota(2048);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
+    @Test
+    public void setSieveUserQuotaCommandShouldWork() throws Exception {
+        String user = "btellier@apache.org";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "1K"};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        serverProbe.setSieveQuota(user, 1024);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
+    @Test
+    public void getSieveQuotaCommandShouldWork() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        expect(serverProbe.getSieveQuota()).andReturn(18L);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
+    @Test
+    public void getSieveUserQuotaCommandShouldWork() throws Exception {
+        String user = "btellier@apache.org";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        expect(serverProbe.getSieveQuota(user)).andReturn(18L);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
+    @Test
+    public void removeSieveQuotaCommandShouldWork() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        serverProbe.removeSieveQuota();
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
+    @Test
+    public void removeSieveUserQuotaCommandShouldWork() throws Exception {
+        String user = "btellier@apache.org";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        serverProbe.removeSieveQuota(user);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
     @Test(expected = InvalidArgumentNumberException.class)
     public void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand()};
@@ -1031,6 +1112,87 @@ public class ServerCmdTest {
         String namespace = "#private";
         String name = "INBOX.test";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXMAILBOX.getCommand(), namespace, user, name, ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void removeSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand(), ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void removeSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user, ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void getSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand(), ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void setSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "64K", ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void getSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user, ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void setSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "64K", ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         control.replay();
