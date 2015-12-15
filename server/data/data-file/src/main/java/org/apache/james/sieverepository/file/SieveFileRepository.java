@@ -138,7 +138,7 @@ public class SieveFileRepository implements SieveRepository {
      * Creates a new instance of SieveFileRepository.
      */
     public SieveFileRepository() {
-        super();
+
     }
 
     /**
@@ -147,7 +147,6 @@ public class SieveFileRepository implements SieveRepository {
      * @param fileSystem
      */
     public SieveFileRepository(FileSystem fileSystem) {
-        this();
         setFileSystem(fileSystem);
     }
 
