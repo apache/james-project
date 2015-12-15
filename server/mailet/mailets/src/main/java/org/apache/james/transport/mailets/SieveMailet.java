@@ -18,14 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import java.util.Date;
-
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 import org.apache.james.core.MimeMessageInputStream;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -33,6 +26,7 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.util.MailetContextLog;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -42,49 +36,31 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.util.Date;
+
 /**
  * Contains resource bindings.
  */
 public class SieveMailet extends SieveMailboxMailet implements Poster {
-    private UsersRepository usersRepos;
-    private MailboxManager mailboxManager;
-    private FileSystem fileSystem;
-    private String folder;
+    private final UsersRepository usersRepos;
+    private final MailboxManager mailboxManager;
+    private final SieveRepository sieveRepository;
+    private final String folder;
 
-    @Inject
-    public void setUsersRepository(UsersRepository usersRepos) {
+    public SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, SieveRepository sieveRepository, String folder) {
         this.usersRepos = usersRepos;
-    }
-
-    @Inject
-    public void setMailboxManager(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-    }
-
-    @Inject
-    public void setFileSystem(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
-    }
-
-    public void setFolder(String folder) {
+        this.sieveRepository = sieveRepository;
         this.folder = folder;
     }
 
-    public SieveMailet() {
-        super();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.jsieve.mailet.SieveMailboxMailet#init(org.apache.mailet.
-     * MailetConfig)
-     */
     @Override
     public void init(MailetConfig config) throws MessagingException {
         // ATM Fixed implementation
         try {
-            setLocator(new ResourceLocatorImpl(usersRepos.supportVirtualHosting(), fileSystem));
+            setLocator(new ResourceLocatorImpl(usersRepos.supportVirtualHosting(), sieveRepository));
         } catch (UsersRepositoryException e) {
             throw new MessagingException("Unable to access UsersRepository", e);
         }
