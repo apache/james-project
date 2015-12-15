@@ -20,6 +20,7 @@
 
 package org.apache.james.managesieve.mock;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
@@ -31,6 +32,8 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -156,7 +159,7 @@ public class MockSieveRepository implements SieveRepository {
     /**
      * @see SieveRepository#getActive(String)
      */
-    public String getActive(String user) throws UserNotFoundException, ScriptNotFoundException {
+    public InputStream getActive(String user) throws UserNotFoundException, ScriptNotFoundException, StorageException {
         if (!_repository.containsKey(user))
         {
             throw new UserNotFoundException(user);
@@ -175,7 +178,12 @@ public class MockSieveRepository implements SieveRepository {
         {
             throw new ScriptNotFoundException();
         }
-        return content;
+        try {
+            return IOUtils.toInputStream(content, "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException();
+        }
+
     }
 
     /**
@@ -197,8 +205,8 @@ public class MockSieveRepository implements SieveRepository {
     /**
      * @see SieveRepository#getScript(String, String)
      */
-    public String getScript(String user, String name) throws UserNotFoundException,
-            ScriptNotFoundException {
+    public InputStream getScript(String user, String name) throws UserNotFoundException,
+            ScriptNotFoundException, StorageException {
         if (!_repository.containsKey(user))
         {
             throw new UserNotFoundException(user);
@@ -208,7 +216,11 @@ public class MockSieveRepository implements SieveRepository {
         {
             throw new ScriptNotFoundException(name);
         }
-        return script.getContent();
+        try {
+            return IOUtils.toInputStream(script.getContent(), "UTF-8");
+        } catch (IOException e) {
+            throw new StorageException();
+        }
     }
 
     /**
@@ -316,7 +328,7 @@ public class MockSieveRepository implements SieveRepository {
             ScriptNotFoundException, StorageException {
 
         // Turn off currently active script, if any
-        Entry<String, SieveScript> oldActive = null;
+        Entry<String, SieveScript> oldActive;
         oldActive = getActiveEntry(user);
         if (null != oldActive) {
             oldActive.getValue().setActive(false);

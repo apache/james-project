@@ -20,6 +20,7 @@ package org.apache.james.sieverepository.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
@@ -32,15 +33,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public abstract class AbstractSieveRepositoryTest {
 
     private static final String USER = "test";
     private static final String SCRIPT_NAME = "script";
-    private static final String SCRIPT_CONTENT = "01234567";
+    private static final String SCRIPT_CONTENT = "\u0048\u0065\u006C\u006C\u006F World"; // test utf-8
     private static final String OTHER_SCRIPT_NAME = "other_script";
-    private static final String OTHER_SCRIPT_CONTENT = "abcdef";
+    private static final String OTHER_SCRIPT_CONTENT = "Other script content";
     private static final long DEFAULT_QUOTA = Long.MAX_VALUE - 1L;
     private static final long USER_QUOTA = Long.MAX_VALUE / 2;
+    private static final String UTF8_ENCODING = "UTF-8";
 
     private SieveRepository sieveRepository;
 
@@ -69,7 +74,7 @@ public abstract class AbstractSieveRepositoryTest {
     public void getScriptShouldReturnCorrectContent() throws Exception {
         sieveRepository.addUser(USER);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        assertThat(sieveRepository.getScript(USER, SCRIPT_NAME)).isEqualTo(SCRIPT_CONTENT);
+        assertThat(getScriptContent(sieveRepository.getScript(USER, SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test(expected = UserNotFoundException.class)
@@ -225,7 +230,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.addUser(USER);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
-        assertThat(sieveRepository.getActive(USER)).isEqualTo(SCRIPT_CONTENT);
+        assertThat(getScriptContent(sieveRepository.getActive(USER))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test
@@ -235,7 +240,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.setActive(USER, SCRIPT_NAME);
         sieveRepository.putScript(USER, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
         sieveRepository.setActive(USER, OTHER_SCRIPT_NAME);
-        assertThat(sieveRepository.getActive(USER)).isEqualTo(OTHER_SCRIPT_CONTENT);
+        assertThat(getScriptContent(sieveRepository.getActive(USER))).isEqualTo(OTHER_SCRIPT_CONTENT);
     }
 
     @Test(expected = ScriptNotFoundException.class)
@@ -305,7 +310,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.addUser(USER);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.renameScript(USER, SCRIPT_NAME, OTHER_SCRIPT_NAME);
-        assertThat(sieveRepository.getScript(USER, OTHER_SCRIPT_NAME)).isEqualTo(SCRIPT_CONTENT);
+        assertThat(getScriptContent(sieveRepository.getScript(USER, OTHER_SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test
@@ -314,7 +319,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
         sieveRepository.renameScript(USER, SCRIPT_NAME, OTHER_SCRIPT_NAME);
-        assertThat(sieveRepository.getActive(USER)).isEqualTo(SCRIPT_CONTENT);
+        assertThat(getScriptContent(sieveRepository.getActive(USER))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test(expected = DuplicateException.class)
@@ -422,6 +427,10 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.addUser(USER);
         sieveRepository.setQuota(USER, DEFAULT_QUOTA);
         assertThat(sieveRepository.getQuota(USER)).isEqualTo(DEFAULT_QUOTA);
+    }
+
+    protected String getScriptContent(InputStream inputStream) throws IOException {
+        return IOUtils.toString(inputStream, UTF8_ENCODING);
     }
 
     protected abstract SieveRepository createSieveRepository() throws Exception;
