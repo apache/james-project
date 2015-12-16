@@ -23,11 +23,10 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.methods.Method.Response.Name;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
-import org.apache.james.jmap.model.Mailbox;
-import org.apache.james.jmap.model.Role;
+import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;

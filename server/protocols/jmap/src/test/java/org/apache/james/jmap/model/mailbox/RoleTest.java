@@ -16,38 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model;
+package org.apache.james.jmap.model.mailbox;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.jmap.model.mailbox.Role;
+import org.junit.Test;
 
 import java.util.Locale;
 import java.util.Optional;
 
-public enum Role {
+public class RoleTest {
 
-    INBOX("inbox"),
-    ARCHIVE("archive"),
-    DRAFTS("drafts"),
-    OUTBOX("outbox"),
-    SENT("sent"),
-    TRASH("trash"),
-    SPAM("spam"),
-    TEMPLATES("templates");
-
-    private String name;
-
-    Role(String name) {
-        this.name = name;
+    @Test
+    public void fromShouldReturnInbox() {
+        assertThat(Role.from("inbox")).isEqualTo(Optional.of(Role.INBOX));
     }
 
-    public static Optional<Role> from(String name) {
-        for (Role role : values()) {
-            if (role.serialize().equals(name.toLowerCase(Locale.ENGLISH))) {
-                return Optional.of(role);
-            }
+    @Test
+    public void fromShouldReturnEmptyWhenUnknownValue() {
+        assertThat(Role.from("jjjj")).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void fromShouldReturnInboxWhenContainsUppercaseValue() {
+        assertThat(Role.from("InBox")).isEqualTo(Optional.of(Role.INBOX));
+    }
+
+    @Test
+    public void fromShouldReturnInboxWhenContainsUppercaseValueInTurkish() {
+        Locale previousLocale = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr"));
+        try {
+            assertThat(Role.from("InBox")).isEqualTo(Optional.of(Role.INBOX));
+        } finally {
+            Locale.setDefault(previousLocale);
         }
-        return Optional.empty();
     }
 
-    public String serialize() {
-        return name;
-    }
 }

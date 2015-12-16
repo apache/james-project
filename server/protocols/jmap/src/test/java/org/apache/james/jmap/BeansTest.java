@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap;
 
-import org.apache.james.jmap.model.Mailbox;
+import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;

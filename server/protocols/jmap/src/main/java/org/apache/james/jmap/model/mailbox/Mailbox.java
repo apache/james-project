@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model;
+package org.apache.james.jmap.model.mailbox;
 
 import java.util.Objects;
 import java.util.Optional;
