@@ -127,7 +127,7 @@ public class KarafLiveTestSupport {
                 Object[] services = tracker.getServices();
                 if (services == null || services.length < expectedCount) {
                     final int actualCount = (services == null) ? 0 : services.length;
-                    if (stopwatch.elapsedMillis() > timeoutInMilliseconds) {
+                    if (stopwatch.elapsed(TimeUnit.MILLISECONDS) > timeoutInMilliseconds) {
                         fail(String.format("Expected to find %d services of type %s. Found only %d in %d milliseconds",
                                 expectedCount, clazz.getCanonicalName(), actualCount, timeoutInMilliseconds));
                     }
