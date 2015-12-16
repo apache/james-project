@@ -285,5 +285,13 @@ public class Mailbox {
         return Objects.hash(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, 
                 mayRemoveItems, mayCreateChild, mayRename, mayDelete, totalMessages, unreadMessages, totalThreads, unreadThreads);
     }
-    
+
+    @Override
+    public String toString() {
+        return com.google.common.base.Objects.toStringHelper(getClass())
+                .add("id", id)
+                .add("name", name)
+                .add("sortOrder", sortOrder)
+                .toString();
+    }
 }

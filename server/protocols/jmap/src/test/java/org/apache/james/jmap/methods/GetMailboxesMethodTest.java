@@ -39,6 +39,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -85,13 +86,85 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        Mailbox expectedMailbox = Mailbox.builder()
-                .id("1")
-                .name(mailboxPath.getName())
-                .unreadMessages(2)
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getId, Mailbox::getName, Mailbox::getUnreadMessages)
+                .containsOnly(Tuple.tuple("1", mailboxPath.getName(), 2L));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnInboxWithSortOrder10() throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        MailboxPath mailboxPath = new MailboxPath("#private", USERNAME, "INBOX");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
         GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList()).containsOnly(expectedMailbox);
+        assertThat(getMailboxesResponse.getList())
+                .hasSize(1)
+                .extracting(Mailbox::getSortOrder)
+                .containsOnly(10);
     }
+
+    @Test
+    public void getMailboxesShouldReturnSortOrder1000OnUnknownFolder() throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        MailboxPath mailboxPath = new MailboxPath("#private", USERNAME, "unknown");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getSortOrder)
+                .containsOnly(1000);
+    }
+
+    @Test
+    public void getMailboxesShouldReturnInboxWithSortOrder10OnDifferenceCase() throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        MailboxPath mailboxPath = new MailboxPath("#private", USERNAME, "InBoX");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getSortOrder)
+                .containsOnly(10);
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMailboxesWithSortOrder() throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "INBOX"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "ARCHIVE"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "DRAFTS"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "OUTBOX"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "SENT"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "TRASH"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "SPAM"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "TEMPLATES"), mailboxSession);
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getName, Mailbox::getSortOrder)
+                .containsExactly(
+                        Tuple.tuple("INBOX", 10),
+                        Tuple.tuple("ARCHIVE", 20),
+                        Tuple.tuple("DRAFTS", 30),
+                        Tuple.tuple("OUTBOX", 40),
+                        Tuple.tuple("SENT", 50),
+                        Tuple.tuple("TRASH", 60),
+                        Tuple.tuple("SPAM", 70),
+                        Tuple.tuple("TEMPLATES", 80));
+    }
+
 }
