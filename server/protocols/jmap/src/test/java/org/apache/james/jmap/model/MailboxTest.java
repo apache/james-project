@@ -93,7 +93,7 @@ public class MailboxTest {
             .id("id")
             .name("name")
             .parentId("parentId")
-            .role(Role.DRAFTS)
+            .role(Optional.of(Role.DRAFTS))
             .sortOrder(123)
             .mustBeOnlyMailbox(true)
             .mayReadItems(true)

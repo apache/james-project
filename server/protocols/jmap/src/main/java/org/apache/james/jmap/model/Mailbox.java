@@ -43,7 +43,7 @@ public class Mailbox {
         private String id;
         private String name;
         private String parentId;
-        private Role role;
+        private Optional<Role> role;
         private int sortOrder;
         private boolean mustBeOnlyMailbox;
         private boolean mayReadItems;
@@ -77,7 +77,7 @@ public class Mailbox {
             return this;
         }
 
-        public Builder role(Role role) {
+        public Builder role(Optional<Role> role) {
             this.role = role;
             return this;
         }
@@ -148,7 +148,7 @@ public class Mailbox {
             Preconditions.checkState(sortOrder >= 0, "'sortOrder' must be positive");
             Preconditions.checkState(sortOrder < MAX_SORT_ORDER, "'sortOrder' must be lesser than " + MAX_SORT_ORDER);
 
-            return new Mailbox(id, name, Optional.ofNullable(parentId), Optional.ofNullable(role), sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
+            return new Mailbox(id, name, Optional.ofNullable(parentId), role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
                     totalMessages, unreadMessages, totalThreads, unreadThreads);
         }
     }
