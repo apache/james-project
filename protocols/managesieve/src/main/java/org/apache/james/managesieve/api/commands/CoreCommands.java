@@ -28,7 +28,7 @@ import org.apache.james.managesieve.api.CapabilityAdvertiser;
  * @see <a href=http://tools.ietf.org/html/rfc5804#section-2>RFC 5804 Commands</a>
  */
 public interface CoreCommands extends Capability, CheckScript, DeleteScript, GetScript, HaveSpace,
-        ListScripts, PutScript, RenameScript, SetActive, GetActive, Noop, Unauthenticate, Logout, Authenticate, StartTLS,
+        ListScripts, PutScript, RenameScript, SetActive, Noop, Unauthenticate, Logout, Authenticate, StartTLS,
         CapabilityAdvertiser {
 
 }

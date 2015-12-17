@@ -270,24 +270,6 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String getActive(Session session) {
-        try {
-            authenticationCheck(session);
-            return IOUtils.toString(sieveRepository.getActive(session.getUser())) + "\r\nOK";
-        } catch (AuthenticationRequiredException ex) {
-            return "NO";
-        } catch (ScriptNotFoundException ex) {
-            return "NO (NONEXISTENT) \"" + ex.getMessage() + "\"";
-        } catch (StorageException ex) {
-            return "NO \"" + ex.getMessage() + "\"";
-        } catch (UserNotFoundException e) {
-            return "NO : User not found";
-        } catch (IOException e) {
-            return "NO \"" + e.getMessage() + "\"";
-        }
-    }
-
-    @Override
     public String noop(String tag) {
         if(Strings.isNullOrEmpty(tag)) {
             return "OK \"NOOP completed\"";
