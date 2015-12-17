@@ -303,6 +303,7 @@ public class CoreProcessor implements CoreCommands {
         capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
         capabilitiesBase.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
+        capabilitiesBase.put(Capabilities.STARTTLS, null);
         if (!extensions.isEmpty()) {
             capabilitiesBase.put(Capabilities.SIEVE, extensions);
         }

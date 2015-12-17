@@ -21,6 +21,9 @@ package org.apache.james.managesieveserver.netty;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.managesieve.core.CoreProcessor;
+import org.apache.james.managesieve.jsieve.Parser;
+import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
@@ -34,23 +37,12 @@ import java.util.List;
 
 public class ManageSieveServerFactory extends AbstractServerFactory {
 
-    private SieveRepository sieveRepository;
-    private UsersRepository usersRepository;
     private FileSystem fileSystem;
     private ManageSieveProcessor manageSieveProcessor;
 
-    public ManageSieveServerFactory() {
-        this.manageSieveProcessor = new ManageSieveProcessor();
-    }
-
     @Inject
-    public void setSieveRepository(SieveRepository sieveRepository) {
-        this.sieveRepository = sieveRepository;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public void setManageSieveProcessor(ManageSieveProcessor manageSieveProcessor) {
+        this.manageSieveProcessor = manageSieveProcessor;
     }
 
     @Inject

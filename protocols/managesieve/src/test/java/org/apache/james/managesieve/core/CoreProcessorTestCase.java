@@ -103,7 +103,8 @@ public class CoreProcessorTestCase {
             .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
             .containsEntry(Capabilities.SIEVE, "a b c")
             .containsEntry(Capabilities.OWNER, USER)
-            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString());
+            .containsEntry(Capabilities.SASL, Authenticate.SupportedMechanism.PLAIN.toString())
+            .containsKey(Capabilities.STARTTLS);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
