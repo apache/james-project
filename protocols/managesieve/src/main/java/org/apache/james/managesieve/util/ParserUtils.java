@@ -22,12 +22,7 @@ package org.apache.james.managesieve.util;
 
 import org.apache.james.managesieve.api.ArgumentException;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class ParserUtils {
-
-    private static final Pattern SCRIPT_NAME_REGEX = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
 
     public static long getSize(String args) throws ArgumentException {
         if (args != null && args.length() > 3
@@ -41,19 +36,6 @@ public class ParserUtils {
             }
         }
         throw new ArgumentException(args + " is an invalid size literal : it should be at least 4 char looking like {_+}");
-    }
-
-    public static String getScriptName(String args) {
-        Matcher regexMatcher = SCRIPT_NAME_REGEX.matcher(args);
-        regexMatcher.find();
-        String name = null;
-        try {
-        name = regexMatcher.group();
-        } catch(IllegalStateException ex)
-        {
-            // no op
-        }
-        return name;
     }
 
     public static String unquote(String quoted) {

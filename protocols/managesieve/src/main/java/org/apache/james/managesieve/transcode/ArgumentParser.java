@@ -29,10 +29,7 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
 
-import java.util.InputMismatchException;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 /**
  * Parses the user input and calls the underlying command processor
@@ -81,28 +78,27 @@ public class ArgumentParser {
     }
     
     public String deleteScript(Session session, String args) {
-        String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty()) {
+        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
+        if (!argumentIterator.hasNext()) {
             return "NO \"Missing argument: script name\"";
         }
-        
-        Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext()) {
-            return "NO \"Too many arguments: " + scanner.next() + "\"";
+        String scriptName = ParserUtils.unquote(argumentIterator.next());
+        if (argumentIterator.hasNext()) {
+            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
         }
-        return core.deleteScript(session, ParserUtils.unquote(scriptName));
+        return core.deleteScript(session, scriptName);
     }    
     
     public String getScript(Session session, String args) {
-        String scriptName = ParserUtils.getScriptName(args);
-        if (scriptName == null || scriptName.isEmpty()) {
+        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
+        if (!argumentIterator.hasNext()) {
             return "NO \"Missing argument: script name\"";
         }
-        Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext()) {
-            return "NO \"Too many arguments: " + scanner.next() + "\"";
+        String scriptName = ParserUtils.unquote(argumentIterator.next());
+        if (argumentIterator.hasNext()) {
+            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
         }
-        return core.getScript(session, ParserUtils.unquote(scriptName));
+        return core.getScript(session, scriptName);
     }     
     
     public String checkScript(Session session, String args) {
@@ -130,24 +126,24 @@ public class ArgumentParser {
     }
 
     public String haveSpace(Session session, String args) {
-        String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty()) {
+        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args.trim()).iterator();
+        if (!argumentIterator.hasNext()) {
             return "NO \"Missing argument: script name\"";
         }
-        Scanner scanner = new Scanner(args.substring(scriptName.length()).trim());
+        String scriptName = ParserUtils.unquote(argumentIterator.next());
         long size;
-        try {
-            size = scanner.nextLong();
-        } catch (InputMismatchException ex) {
-            return "NO \"Invalid argument: script size\"";
-        } catch (NoSuchElementException ex) {
+        if (!argumentIterator.hasNext()) {
             return "NO \"Missing argument: script size\"";
         }
-        scanner.useDelimiter("\\A");
-        if (scanner.hasNext()) {
-            return "NO \"Too many arguments: " + scanner.next().trim() + "\"";
+        try {
+            size = Long.parseLong(argumentIterator.next());
+        } catch (NumberFormatException e) {
+            return "NO \"Invalid argument: script size\"";
         }
-        return core.haveSpace(session, ParserUtils.unquote(scriptName), size);
+        if (argumentIterator.hasNext()) {
+            return "NO \"Too many arguments: " + argumentIterator.next().trim() + "\"";
+        }
+        return core.haveSpace(session, scriptName, size);
     }
 
     public String listScripts(Session session, String args) {
@@ -188,41 +184,31 @@ public class ArgumentParser {
     }
 
     public String renameScript(Session session, String args) {
-        String oldName = ParserUtils.getScriptName(args);
-        if (null == oldName || oldName.isEmpty()) {
-           return "NO \"Missing argument: old script name\"";
+        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
+        if (!argumentIterator.hasNext()) {
+            return "NO \"Missing argument: old script name\"";
         }
-        
-        String newName = ParserUtils.getScriptName(args.substring(oldName.length()));
-        if (null == newName || newName.isEmpty()) {
+        String oldName = ParserUtils.unquote(argumentIterator.next());
+        if (!argumentIterator.hasNext()) {
             return "NO \"Missing argument: new script name\"";
-        } 
-        
-        Scanner scanner = new Scanner(args.substring(oldName.length() + 1 + newName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext()) {
-            return "NO \"Too many arguments: " + scanner.next() + "\"";
         }
-        return core.renameScript(session, ParserUtils.unquote(oldName), ParserUtils.unquote(newName));
+        String newName = ParserUtils.unquote(argumentIterator.next());
+        if (argumentIterator.hasNext()) {
+            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
+        }
+        return core.renameScript(session, oldName, newName);
     }
 
     public String setActive(Session session, String args) {
-        String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty()) {
+        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
+        if (!argumentIterator.hasNext()) {
             return "NO \"Missing argument: script name\"";
         }
-        Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext()) {
-            return "NO \"Too many arguments: " + scanner.next() + "\"";
+        String scriptName = ParserUtils.unquote(argumentIterator.next());
+        if (argumentIterator.hasNext()) {
+            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
         }
-        return core.setActive(session, ParserUtils.unquote(scriptName));
-    } 
-    
-    public String getActive(Session session, String args) {
-        Scanner scanner = new Scanner(args.trim()).useDelimiter("\\A");
-        if (scanner.hasNext()) {
-            return "NO \"Too many arguments: " + scanner.next() + "\"";
-        }
-        return core.getActive(session);
+        return core.setActive(session, scriptName);
     }
 
     public String startTLS(Session session) {
