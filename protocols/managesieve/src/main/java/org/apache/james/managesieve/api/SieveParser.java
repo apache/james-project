@@ -23,13 +23,10 @@ package org.apache.james.managesieve.api;
 import java.util.List;
 
 
-/**
- * <code>SieveParser</code>
- */
 public interface SieveParser {
     
-    abstract List<String> parse(String content) throws SyntaxException;
+    List<String> parse(String content) throws SyntaxException;
     
-    abstract List<String> getExtensions();
+    List<String> getExtensions();
 
 }

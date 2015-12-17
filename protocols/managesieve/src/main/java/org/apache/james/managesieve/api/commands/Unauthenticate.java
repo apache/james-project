@@ -24,12 +24,10 @@ import org.apache.james.managesieve.api.AuthenticationRequiredException;
 
 
 /**
- * <code>Unauthenticate</code>
- * 
- *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.14.1>RFC 5804 UNAUTHENTICATE Command</a>
+ * @see <a href=http://tools.ietf.org/html/rfc5804#section-2.14.1>RFC 5804 UNAUTHENTICATE Command</a>
  */
 public interface Unauthenticate {
    
-    abstract public void unauthenticate() throws AuthenticationRequiredException;
+    void unauthenticate() throws AuthenticationRequiredException;
 
 }

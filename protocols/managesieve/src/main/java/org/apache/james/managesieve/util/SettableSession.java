@@ -24,25 +24,28 @@ import org.apache.james.managesieve.api.Session;
 
 public class SettableSession implements Session {
 
-    String _user = null;
-    boolean _isAuthenticated = false;
+    private String user;
+    private boolean isAuthenticated;
+
+    public SettableSession() {
+        this.isAuthenticated = false;
+    }
 
     public String getUser() {
-        return _user;
+        return user;
     }
 
     public boolean isAuthenticated() {
-        return _isAuthenticated;
+        return isAuthenticated;
     }
 
-
     public void setAuthentication(boolean isAuthenticated) {
-        _isAuthenticated = isAuthenticated;
+        this.isAuthenticated = isAuthenticated;
 
     }
 
     public void setUser(String user) {
-        _user = user;
+        this.user = user;
     }
 
 }

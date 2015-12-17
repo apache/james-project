@@ -34,18 +34,20 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.transcode.LineToCoreToLine;
 import org.apache.james.managesieve.util.ParserUtils;
 
-/**
- * <code>MessageToCoreToMessage</code>
- */
 public class MessageToCoreToMessage {
     
     public interface HelpProvider {
-        abstract public String getHelp() throws MessagingException;
-    }   
-    
+        String getHelp() throws MessagingException;
+    }
+
+    private interface Executable {
+        MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException;
+    }
+
     protected static String getScript(MimeMessage message) throws IOException, MessagingException {
         String result = null;
         if (message.getContentType().startsWith("multipart/")) {
@@ -59,10 +61,9 @@ public class MessageToCoreToMessage {
                 MimeBodyPart part = (MimeBodyPart) parts.getBodyPart(i);
                 found = part.isMimeType("application/sieve");
                 if (!found) {
-                    String fileName = null == part.getFileName() ? null : part.getFileName()
-                            .toLowerCase();
-                    found = null != fileName
-                            && (fileName.endsWith(".siv") || fileName.endsWith(".sieve"));
+                    String fileName = null == part.getFileName() ? null : part.getFileName().toLowerCase();
+                    found = fileName != null &&
+                        (fileName.endsWith(".siv") || fileName.endsWith(".sieve"));
                 }
                 if (found) {
                     Object content = part.getContent();
@@ -77,29 +78,27 @@ public class MessageToCoreToMessage {
                             result = scanner.next();
                         }
                     } finally {
-                        if (null != scanner) {
+                        if (scanner != null) {
                             scanner.close();
                         }
                     }
                 }
             }
         }
-        if (null == result)
-        {
+        if (null == result) {
             throw new MessagingException("Script part not found in this message");
         }
         return result;
     }
 
-    protected static MimeBodyPart toPart(String name, String content) throws MessagingException,
-            IOException {
+    protected static MimeBodyPart toPart(String name, String content) throws MessagingException, IOException {
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
-                new DataHandler(
-                        new ByteArrayDataSource(
-                                content,
-                                "application/sieve; charset=UTF-8")
-                          ));
+            new DataHandler(
+                new ByteArrayDataSource(
+                    content,
+                    "application/sieve; charset=UTF-8")
+            ));
         scriptPart.setDisposition(MimeBodyPart.ATTACHMENT);
         scriptPart.setFileName(name);
         return scriptPart;
@@ -111,44 +110,30 @@ public class MessageToCoreToMessage {
         part.setDisposition(MimeBodyPart.INLINE);
         return part;
     }
-    
-    private interface Executable {
-        public MimeMultipart execute(String operands, MimeMessage message)
-                throws MessagingException;
-    }
 
-    private Map<String, Executable> _commands = null;
+    private final Map<String, Executable> commands;
+    private final LineToCoreToLine adapter;
+    private final HelpProvider helpProvider;
     
-    private LineToCoreToLine _adapter = null;
-    
-    private HelpProvider _helpProvider = null;
-    
-    private MessageToCoreToMessage()
-    {
-        super();
-        _commands = computeCommands();
+    public MessageToCoreToMessage(LineToCoreToLine adapter, HelpProvider helpProvider) {
+        this.commands = computeCommands();
+        this.adapter = adapter;
+        this.helpProvider = helpProvider;
     }
     
-    public MessageToCoreToMessage(LineToCoreToLine adapter, HelpProvider helpProvider)
-    {
-        this();
-        _adapter = adapter;
-        _helpProvider = helpProvider;
-    }
-    
-    public MimeMessage execute(MimeMessage message) throws MessagingException {
+    public MimeMessage execute(Session session, MimeMessage message) throws MessagingException {
         // Extract the command and operands from the subject
         String subject = null == message.getSubject() ? "" : message.getSubject();
         String[] args = subject.split(" ", 2);
         // If there are no arguments, reply with help
         String command = 0 == args.length ? "HELP" : args[0].toUpperCase();
-        Executable executable = null;
+        Executable executable;
         // If the command isn't supported, reply with help
-        if (null == (executable = _commands.get(command))) {
-            executable = _commands.get("HELP");
+        if (null == (executable = commands.get(command))) {
+            executable = commands.get("HELP");
         }
         // Execute the resultant command...
-        MimeMultipart content = executable.execute(args.length > 1 ? args[1] : "", message);
+        MimeMultipart content = executable.execute(session, args.length > 1 ? args[1] : "", message);
         // ...and wrap it in a MimeMessage
         MimeMessage reply = (MimeMessage) message.reply(false);
         reply.setContent(content);
@@ -165,110 +150,91 @@ public class MessageToCoreToMessage {
     protected Map<String, Executable> computeCommands() {
         Map<String, Executable> commands = new HashMap<String, Executable>();
         commands.put("HELP", new Executable() {
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return help(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return help();
             }
         });
         commands.put("CAPABILITY", new Executable() {
-
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return capability(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return capability(session, operands);
             }
         });
         commands.put("CHECKSCRIPT", new Executable() {
-
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return checkScript(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return checkScript(session, operands, message);
             }
         });
         commands.put("DELETESCRIPT", new Executable() {
-
-            public MimeMultipart execute(String operands, MimeMessage message)
+            public MimeMultipart execute(Session session, String operands, MimeMessage message)
                     throws MessagingException {
-                return deleteScript(operands, message);
+                return deleteScript(session, operands);
             }
         });
         commands.put("GETSCRIPT", new Executable() {
-
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return getScript(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return getScript(session, operands);
             }
         });
         commands.put("HAVESPACE", new Executable() {
-
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return haveSpace(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return haveSpace(session, operands);
             }
         });
         commands.put("LISTSCRIPTS", new Executable() {
-
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return listScripts(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return listScripts(session, operands);
             }
         });
         commands.put("PUTSCRIPT", new Executable() {
 
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return putScript(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return putScript(session, operands, message);
             }
         });
         commands.put("RENAMESCRIPT", new Executable() {
 
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return renameScript(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return renameScript(session, operands);
             }
         });
         commands.put("SETACTIVE", new Executable() {
 
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return setActive(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return setActive(session, operands);
             }
         });
         commands.put("GETACTIVE", new Executable() {
 
-            public MimeMultipart execute(String operands, MimeMessage message)
-                    throws MessagingException {
-                return getActive(operands, message);
+            public MimeMultipart execute(Session session, String operands, MimeMessage message) throws MessagingException {
+                return getActive(session, operands);
             }
         });
 
         return commands;
     }
 
-    protected MimeMultipart help(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart help() throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_helpProvider.getHelp()));
+        multipart.addBodyPart(toPart(helpProvider.getHelp()));
         return multipart;
     }
 
-    protected MimeMultipart capability(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart capability(Session session, String operands) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_adapter.capability(operands)));
+        multipart.addBodyPart(toPart(adapter.capability(session, operands)));
         return multipart;
     }
 
-    protected MimeMultipart checkScript(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart checkScript(Session session, String operands, MimeMessage message) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        String result = null;
+        String result;
         Scanner scanner = new Scanner(operands).useDelimiter("\\A");
         if (scanner.hasNext()) {
             result = "NO \"Too many arguments: " + scanner.next() + "\"";
         } else {
             try {
                 String content = getScript(message);
-                result = _adapter.checkScript(content);
+                result = adapter.checkScript(session, content);
             } catch (MessagingException ex) {
                 result = "NO \"" + ex.getMessage() + "\"";
             } catch (IOException ex) {
@@ -279,19 +245,17 @@ public class MessageToCoreToMessage {
         return multipart;
     }
 
-    protected MimeMultipart deleteScript(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart deleteScript(Session session, String operands) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_adapter.deleteScript(operands)));
+        multipart.addBodyPart(toPart(adapter.deleteScript(session, operands)));
         return multipart;
     }
 
-    protected MimeMultipart getScript(String operands, MimeMessage message)
-                throws MessagingException {
-        String result = _adapter.getScript(operands);
+    protected MimeMultipart getScript(Session session, String operands) throws MessagingException {
+        String result = adapter.getScript(session, operands);
         // Everything but the last line is the script
         // The last line is the response
-        String response = null;
+        String response;
         String script = null;
         int endOfScript = result.lastIndexOf("\r\n");
         if (endOfScript > 0) {
@@ -314,24 +278,21 @@ public class MessageToCoreToMessage {
         return multipart;
     }
 
-    protected MimeMultipart haveSpace(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart haveSpace(Session session, String operands) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_adapter.haveSpace(operands)));
+        multipart.addBodyPart(toPart(adapter.haveSpace(session, operands)));
         return multipart;
     }
 
-    protected MimeMultipart listScripts(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart listScripts(Session session, String operands) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_adapter.listScripts(operands)));
+        multipart.addBodyPart(toPart(adapter.listScripts(session, operands)));
         return multipart;
     }
 
-    protected MimeMultipart putScript(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart putScript(Session session, String operands, MimeMessage message) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        String result = null;
+        String result;
         String scriptName = ParserUtils.getScriptName(operands);
         if (null == scriptName || scriptName.isEmpty()) {
             result = "NO \"Missing argument: script name\"";
@@ -355,34 +316,31 @@ public class MessageToCoreToMessage {
                             .append(' ')
                             .append(content);
                 }
-                result = _adapter.putScript(builder.toString().trim());
+                result = adapter.putScript(session, builder.toString().trim());
             }
         }
         multipart.addBodyPart(toPart(result));
         return multipart;
     }
 
-    protected MimeMultipart renameScript(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart renameScript(Session session, String operands) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_adapter.renameScript(operands)));
+        multipart.addBodyPart(toPart(adapter.renameScript(session, operands)));
         return multipart;
     }
 
-    protected MimeMultipart setActive(String operands, MimeMessage message)
-                throws MessagingException {
+    protected MimeMultipart setActive(Session session, String operands) throws MessagingException {
         MimeMultipart multipart = new MimeMultipart();
-        multipart.addBodyPart(toPart(_adapter.setActive(operands)));
+        multipart.addBodyPart(toPart(adapter.setActive(session, operands)));
         return multipart;
     }
 
-    protected MimeMultipart getActive(String operands, MimeMessage message)
-            throws MessagingException {
-        String result = _adapter.getActive(operands);
-        _adapter.getActive(operands);
+    protected MimeMultipart getActive(Session session, String operands) throws MessagingException {
+        String result = adapter.getActive(session, operands);
+        adapter.getActive(session, operands);
         // Everything but the last line is the script
         // The last line is the response
-        String response = null;
+        String response;
         String script = null;
         int endOfScript = result.lastIndexOf("\r\n");
         if (endOfScript > 0) {

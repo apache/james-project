@@ -52,18 +52,15 @@ public class CoreProcessor implements CoreCommands {
     
     private final SieveRepository sieveRepository;
     private final UsersRepository usersRepository;
-    private final Session session;
     private final SieveParser parser;
 
-    public CoreProcessor(Session session, SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
-        this.session = session;
+    public CoreProcessor(SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
         this.sieveRepository = repository;
         this.usersRepository = usersRepository;
         this.parser = parser;
-        ensureUser();
     }
 
-    public Map<Capabilities, String> capability() {
+    public Map<Capabilities, String> capability(Session session) {
         Map<Capabilities, String> capabilities = new HashMap<Capabilities, String>();
         capabilities.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilities.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
@@ -75,22 +72,22 @@ public class CoreProcessor implements CoreCommands {
         if (!extensions.isEmpty()) {
             capabilities.put(Capabilities.SIEVE, extensions);
         }
-        if (isAuthenticated()) {
-            capabilities.put(Capabilities.OWNER, getUser());
+        if (session.isAuthenticated()) {
+            capabilities.put(Capabilities.OWNER, session.getUser());
         }
         capabilities.put(Capabilities.GETACTIVE, null);
         return capabilities;
     }
 
-    public List<String> checkScript(String content) throws AuthenticationRequiredException, SyntaxException {
-        authenticationCheck();
+    public List<String> checkScript(Session session, String content) throws AuthenticationRequiredException, SyntaxException {
+        authenticationCheck(session);
         return parser.parse(content);
     }
 
-    public void deleteScript(String name) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException {
-        authenticationCheck();
+    public void deleteScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException {
+        authenticationCheck(session);
         try {
-            sieveRepository.deleteScript(getUser(), name);
+            sieveRepository.deleteScript(session.getUser(), name);
         } catch (StorageException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (UserNotFoundException ex) {
@@ -98,10 +95,10 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
-    public String getScript(String name) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
-        authenticationCheck();
+    public String getScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
+        authenticationCheck(session);
         try {
-            return IOUtils.toString(sieveRepository.getScript(getUser(), name));
+            return IOUtils.toString(sieveRepository.getScript(session.getUser(), name));
         } catch (UserNotFoundException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (IOException ex) {
@@ -110,29 +107,29 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
-    public void haveSpace(String name, long size) throws AuthenticationRequiredException, QuotaExceededException {
-        authenticationCheck();
+    public void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException {
+        authenticationCheck(session);
         try {
-            sieveRepository.haveSpace(getUser(), name, size);
+            sieveRepository.haveSpace(session.getUser(), name, size);
         } catch (SieveRepositoryException ex) {
             throw new ManageSieveRuntimeException(ex);
         }
     }
 
-    public List<ScriptSummary> listScripts() throws AuthenticationRequiredException {
-        authenticationCheck();
+    public List<ScriptSummary> listScripts(Session session) throws AuthenticationRequiredException {
+        authenticationCheck(session);
         try {
-            return sieveRepository.listScripts(getUser());
+            return sieveRepository.listScripts(session.getUser());
         } catch (SieveRepositoryException ex) {
             throw new ManageSieveRuntimeException(ex);
         }
     }
 
-    public List<String> putScript(String name, String content) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException {
-        authenticationCheck();
+    public List<String> putScript(Session session, String name, String content) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException {
+        authenticationCheck(session);
         List<String> warnings = parser.parse(content);
         try {
-            sieveRepository.putScript(getUser(), name, content);
+            sieveRepository.putScript(session.getUser(), name, content);
         } catch (UserNotFoundException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (StorageException ex) {
@@ -141,10 +138,10 @@ public class CoreProcessor implements CoreCommands {
         return warnings;
     }
 
-    public void renameScript(String oldName, String newName) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException {
-        authenticationCheck();
+    public void renameScript(Session session, String oldName, String newName) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException {
+        authenticationCheck(session);
         try {
-            sieveRepository.renameScript(getUser(), oldName, newName);
+            sieveRepository.renameScript(session.getUser(), oldName, newName);
         } catch (UserNotFoundException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (StorageException ex) {
@@ -152,10 +149,10 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
-    public void setActive(String name) throws AuthenticationRequiredException, ScriptNotFoundException {
-        authenticationCheck();
+    public void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException {
+        authenticationCheck(session);
         try {
-            sieveRepository.setActive(getUser(), name);
+            sieveRepository.setActive(session.getUser(), name);
         } catch (UserNotFoundException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (StorageException ex) {
@@ -163,10 +160,10 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
-    public String getActive() throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
-        authenticationCheck();
+    public String getActive(Session session) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
+        authenticationCheck(session);
         try {
-            return IOUtils.toString(sieveRepository.getActive(getUser()));
+            return IOUtils.toString(sieveRepository.getActive(session.getUser()));
         } catch (UserNotFoundException ex) {
             throw new ManageSieveRuntimeException(ex);
         } catch (IOException e) {
@@ -174,28 +171,21 @@ public class CoreProcessor implements CoreCommands {
         }
     }
     
-    protected String getUser() {
-        return session.getUser();
+    protected void authenticationCheck(Session session) throws AuthenticationRequiredException {
+        ensureUser(session);
+        if (!session.isAuthenticated()) {
+            throw new AuthenticationRequiredException();
+        }
     }
 
-    private void ensureUser() {
+    private void ensureUser(Session session) {
         try {
-            if (usersRepository.contains(session.getUser())) {
+            if (session.getUser() == null || !usersRepository.contains(session.getUser())) {
                 throw new RuntimeException("User " + session.getUser() + " not found");
             }
         } catch (UsersRepositoryException e) {
             Throwables.propagate(e);
         }
     }
-    
-    protected void authenticationCheck() throws AuthenticationRequiredException {
-        if (!isAuthenticated()) {
-            throw new AuthenticationRequiredException();
 
-        }
-    }
-
-    protected boolean isAuthenticated() {
-        return session.isAuthenticated();
-    }
 }

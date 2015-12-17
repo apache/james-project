@@ -20,21 +20,18 @@
 
 package org.apache.james.managesieve.api.commands;
 
+import org.apache.james.managesieve.api.Session;
+
 import java.util.Map;
 
-/**
- * <code>Capability</code>
- */
 public interface Capability {
 
-    abstract public Map<Capabilities, String> capability();
+    Map<Capabilities, String> capability(Session session);
 
     /**
-     * <code>Capabilities</code>
-     * 
      *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.4>RFC 5804 CAPABILITY Command</a>
      */
-    public enum Capabilities {
+    enum Capabilities {
         IMPLEMENTATION,
         SASL,
         SIEVE,

@@ -22,6 +22,7 @@ package org.apache.james.managesieve.transcode;
 
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.managesieve.api.commands.CoreCommands;
@@ -40,88 +41,63 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
- * <code>LineToCore</code>
+ * Parses the user input and calls the underlying command processor
  */
 public class LineToCore{
     
-    private CoreCommands _core = null;
+    private final CoreCommands core;
 
-    /**
-     * Creates a new instance of LineToCore.
-     *
-     */
-    private LineToCore() {
-        super();
-    }
-    
-    /**
-     * Creates a new instance of LineToCore.
-     *
-     * @param core
-     */
     public LineToCore(CoreCommands core) {
-        this();
-        _core = core;
+        this.core = core;
     }
     
-    public Map<Capabilities, String> capability(String args) throws ArgumentException
-    {
-        if (!args.trim().isEmpty())
-        {
+    public Map<Capabilities, String> capability(Session session, String args) throws ArgumentException {
+        if (!args.trim().isEmpty()) {
             throw new ArgumentException("Too many arguments: " + args);
         }
-        return _core.capability();
+        return core.capability(session);
     }
     
-    public void deleteScript(String args) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException, ArgumentException
-    {       
+    public void deleteScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException, ArgumentException {
         String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty())
-        {
+        if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");
         }
         
         Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext())
-        {
+        if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
-        _core.deleteScript(ParserUtils.unquote(scriptName));
+        core.deleteScript(session, ParserUtils.unquote(scriptName));
     }    
     
-    public String getScript(String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException, StorageException {
+    public String getScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException, StorageException {
         String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty())
-        {
+        if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");
         }
         Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext())
-        {
+        if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
-        return _core.getScript(ParserUtils.unquote(scriptName));
+        return core.getScript(session, ParserUtils.unquote(scriptName));
     }     
     
-    public List<String> checkScript(String args) throws ArgumentException, AuthenticationRequiredException, SyntaxException
-    {
-        if (args.trim().isEmpty())
-        {
+    public List<String> checkScript(Session session, String args) throws ArgumentException, AuthenticationRequiredException, SyntaxException {
+        if (args.trim().isEmpty()) {
             throw new ArgumentException("Missing argument: script content");
         }
-        return _core.checkScript(args);
+        return core.checkScript(session, args);
     }
 
-    public void haveSpace(String args) throws AuthenticationRequiredException,
-            QuotaExceededException, ArgumentException {
+    public void haveSpace(Session session, String args) throws AuthenticationRequiredException, QuotaExceededException, ArgumentException {
         String scriptName = ParserUtils.getScriptName(args);
         if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");
         }
 
         Scanner scanner = new Scanner(args.substring(scriptName.length()).trim());
-        long size = 0;
-
+        long size;
         try {
             size = scanner.nextLong();
         } catch (InputMismatchException ex) {
@@ -134,79 +110,66 @@ public class LineToCore{
         if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next().trim());
         }
-        _core.haveSpace(ParserUtils.unquote(scriptName), size);
+        core.haveSpace(session, ParserUtils.unquote(scriptName), size);
     }
 
-    public List<ScriptSummary> listScripts(String args) throws AuthenticationRequiredException, ArgumentException {
-        if (!args.trim().isEmpty())
-        {
+    public List<ScriptSummary> listScripts(Session session, String args) throws AuthenticationRequiredException, ArgumentException {
+        if (!args.trim().isEmpty()) {
             throw new ArgumentException("Too many arguments: " + args);
         }
-        return _core.listScripts();
+        return core.listScripts(session);
     }
 
-    public List<String> putScript(String args)
-            throws AuthenticationRequiredException, SyntaxException, QuotaExceededException, ArgumentException {
+    public List<String> putScript(Session session, String args) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException, ArgumentException {
         String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty())
-        {
+        if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");
         }
         Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (!scanner.hasNext())
-        {
+        if (!scanner.hasNext()) {
             throw new ArgumentException("Missing argument: script content");
         }
         String content = scanner.next();
-        return _core.putScript(ParserUtils.unquote(scriptName), content);
+        return core.putScript(session, ParserUtils.unquote(scriptName), content);
     }
 
-    public void renameScript(String args)
-            throws AuthenticationRequiredException, ScriptNotFoundException,
-            DuplicateException, ArgumentException {
+    public void renameScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException, ArgumentException {
         String oldName = ParserUtils.getScriptName(args);
-        if (null == oldName || oldName.isEmpty())
-        {
+        if (null == oldName || oldName.isEmpty()) {
             throw new ArgumentException("Missing argument: old script name");
         }
         
         String newName = ParserUtils.getScriptName(args.substring(oldName.length()));
-        if (null == newName || newName.isEmpty())
-        {
+        if (null == newName || newName.isEmpty()) {
             throw new ArgumentException("Missing argument: new script name");
         } 
         
         Scanner scanner = new Scanner(args.substring(oldName.length() + 1 + newName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext())
-        {
+        if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
-        _core.renameScript(oldName, newName);    
+        core.renameScript(session, oldName, newName);
     }
 
-    public void setActive(String args) throws AuthenticationRequiredException,
-            ScriptNotFoundException, ArgumentException {
+    public void setActive(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException {
         String scriptName = ParserUtils.getScriptName(args);
-        if (null == scriptName || scriptName.isEmpty())
-        {
+        if (null == scriptName || scriptName.isEmpty()) {
             throw new ArgumentException("Missing argument: script name");
         }
         
         Scanner scanner = new Scanner(args.substring(scriptName.length()).trim()).useDelimiter("\\A");
-        if (scanner.hasNext())
-        {
+        if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
-        _core.setActive(ParserUtils.unquote(scriptName));
+        core.setActive(session, ParserUtils.unquote(scriptName));
     } 
     
-    public String getActive(String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException, StorageException {
+    public String getActive(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, ArgumentException, StorageException {
         Scanner scanner = new Scanner(args.trim()).useDelimiter("\\A");
-        if (scanner.hasNext())
-        {
+        if (scanner.hasNext()) {
             throw new ArgumentException("Too many arguments: " + scanner.next());
         }
-        return _core.getActive();
+        return core.getActive(session);
     }  
 
 }

@@ -141,7 +141,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testPutScriptUnauthorised() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
@@ -155,7 +155,7 @@ public class ManageSieveMailetTestCase {
                 return Lists.newArrayList("warning1", "warning2");
             }
         });
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
@@ -165,7 +165,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testPutScriptExtraArgs() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" extra", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" extra", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
@@ -175,7 +175,7 @@ public class ManageSieveMailetTestCase {
     @Test
     public final void testPutScriptSyntaxError() throws Exception {
         doThrow(new SyntaxException("error message")).when(sieveParser).parse(SYNTAX_EXCEPTION);
-        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "PUTSCRIPT \"" + SCRIPT_NAME + "\"", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
@@ -260,7 +260,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testCheckScriptUnauthorised() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mailet.service(mail);
@@ -274,7 +274,7 @@ public class ManageSieveMailetTestCase {
                 return Lists.newArrayList("warning1", "warning2");
             }
         });
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
@@ -284,7 +284,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testCheckScriptExtraArgs() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT extra", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT extra", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
@@ -295,7 +295,7 @@ public class ManageSieveMailetTestCase {
     @Test
     public final void testCheckScriptSyntaxError() throws Exception {
         doThrow(new SyntaxException("error message")).when(sieveParser).parse(SYNTAX_EXCEPTION);
-        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "CHECKSCRIPT", SIEVE_LOCALHOST, USER);
+        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "CHECKSCRIPT", USER, SIEVE_LOCALHOST);
         Mail mail = new FakeMail();
         mail.setMessage(message);
         mail.setAttribute(ManageSieveMailet.SMTP_AUTH_USER_ATTRIBUTE_NAME, message.getSender().toString());
