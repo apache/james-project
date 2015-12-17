@@ -113,6 +113,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
         attributes.set(ctx.getChannel(), session);
         ctx.setAttachment(new ChannelManageSieveResponseWriter(ctx.getChannel()));
         super.channelBound(ctx, e);
+        ((ChannelManageSieveResponseWriter)ctx.getAttachment()).write(manageSieveProcessor.getAdvertisedCapabilities());
     }
 
     @Override

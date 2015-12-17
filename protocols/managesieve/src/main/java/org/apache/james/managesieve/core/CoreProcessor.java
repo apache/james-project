@@ -76,13 +76,22 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
+    public String getAdvertisedCapabilities() {
+        return convertCapabilityMapToString(capabilitiesBase) + "\r\n";
+    }
+
+    @Override
     public String capability(Session session) {
+        return convertCapabilityMapToString(computeCapabilityMap(session)) + "\r\nOK";
+    }
+
+    private String convertCapabilityMapToString(Map<Capabilities, String> capabilitiesStringMap) {
         return Joiner.on("\r\n").join(
-            Iterables.transform(computeCapabilityMap(session).entrySet(), new Function<Map.Entry<Capabilities,String>, String>() {
+            Iterables.transform(capabilitiesStringMap.entrySet(), new Function<Map.Entry<Capabilities,String>, String>() {
                 public String apply(Map.Entry<Capabilities, String> capabilitiesStringEntry) {
                     return computeCapabilityEntryString(capabilitiesStringEntry);
                 }
-            })) + "\r\nOK";
+            }));
     }
 
     private Map<Capabilities, String> computeCapabilityMap(Session session) {
