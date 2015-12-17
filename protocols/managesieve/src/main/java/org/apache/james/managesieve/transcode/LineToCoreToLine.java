@@ -135,13 +135,12 @@ public class LineToCoreToLine {
         } catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
         } catch (SyntaxException ex) {
-            return "NO \"Syntax Error: " + ex.getMessage() + "\"";
+            return Joiner.on("\r\n").join(Splitter.on('\n').split("NO \"Syntax Error: " + ex.getMessage() + "\""));
         }
     }
 
     public String deleteScript(Session session, String args) {
         try {
-            System.out.println("Yoloooooooo");
             lineToCore.deleteScript(session, args);
         } catch (AuthenticationRequiredException ex) {
             return "NO";

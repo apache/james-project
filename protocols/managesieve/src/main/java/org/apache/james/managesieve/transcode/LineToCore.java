@@ -116,10 +116,24 @@ public class LineToCore{
     }     
     
     public List<String> checkScript(Session session, String args) throws ArgumentException, AuthenticationRequiredException, SyntaxException {
-        if (args.trim().isEmpty()) {
-            throw new ArgumentException("Missing argument: script content");
+        Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
+        Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
+
+
+        if (! arguments.hasNext()) {
+            throw new ArgumentException("Missing argument: script size");
+        } else {
+            ParserUtils.getSize(arguments.next());
         }
-        return core.checkScript(session, args);
+        if (arguments.hasNext()) {
+            throw new ArgumentException("Extra arguments not supported");
+        } else {
+            String content = Joiner.on("\r\n").join(firstLine);
+            if (Strings.isNullOrEmpty(content)) {
+                throw new ArgumentException("Missing argument: script content");
+            }
+            return core.checkScript(session, content);
+        }
     }
 
     public void haveSpace(Session session, String args) throws AuthenticationRequiredException, QuotaExceededException, ArgumentException, UserNotFoundException, StorageException {
@@ -153,7 +167,6 @@ public class LineToCore{
     }
 
     public List<String> putScript(Session session, String args) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException, ArgumentException {
-        System.out.println("args" + args + "<-");
         Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
         Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
 

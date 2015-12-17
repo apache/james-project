@@ -20,10 +20,8 @@
 
 package org.apache.james.managesieve.util;
 
-import com.google.common.base.Splitter;
 import org.apache.james.managesieve.api.ArgumentException;
 
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,12 +30,10 @@ public class ParserUtils {
     private static final Pattern SCRIPT_NAME_REGEX = Pattern.compile("[^\\s\"']+|\"[^\"]*\"|'[^']*'");
 
     public static long getSize(String args) throws ArgumentException {
-        System.out.println("<<<" + args + ">>>>");
-        if (args.length() > 3
+        if (args != null && args.length() > 3
             && args.charAt(0) == '{'
             && args.charAt(args.length() - 1) == '}'
             && args.charAt(args.length() - 2) == '+' ) {
-            System.out.println("yolooo");
             try {
                 return Long.parseLong(args.substring(1, args.length() - 2));
             } catch (NumberFormatException e) {
@@ -62,10 +58,12 @@ public class ParserUtils {
 
     public static String unquote(String quoted) {
         String result = quoted;
-        if (quoted.startsWith("\"") && quoted.endsWith("\"")) {
-            result = quoted.substring(1, quoted.length() - 1);
-        } else if (quoted.startsWith("'") && quoted.endsWith("'")) {
-            result = quoted.substring(1, quoted.length() - 1);
+        if (quoted != null) {
+            if (quoted.startsWith("\"") && quoted.endsWith("\"")) {
+                result = quoted.substring(1, quoted.length() - 1);
+            } else if (quoted.startsWith("'") && quoted.endsWith("'")) {
+                result = quoted.substring(1, quoted.length() - 1);
+            }
         }
         return result;
     }
