@@ -29,6 +29,7 @@ import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
+import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
@@ -62,6 +63,7 @@ public class CassandraJamesServerMain {
             new POP3ServerModule(),
             new SMTPServerModule(),
             new LMTPServerModule(),
+            new ManageSieveServerModule(),
             new ActiveMQQueueModule(),
             new SieveModule(),
             new MailStoreRepositoryModule(),

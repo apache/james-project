@@ -21,6 +21,7 @@ package org.apache.james.managesieveserver.netty;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
 import org.apache.james.managesieve.transcode.ArgumentParser;
@@ -31,6 +32,7 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.slf4j.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +41,34 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
 
     private FileSystem fileSystem;
     private ManageSieveProcessor manageSieveProcessor;
-
-    @Inject
-    public void setManageSieveProcessor(ManageSieveProcessor manageSieveProcessor) {
-        this.manageSieveProcessor = manageSieveProcessor;
-    }
+    private SieveRepository sieveRepository;
+    private UsersRepository usersRepository;
+    private Parser sieveParser;
 
     @Inject
     public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
+    }
+
+    @Inject
+    public void setSieveRepository(SieveRepository sieveRepository) {
+        this.sieveRepository = sieveRepository;
+    }
+
+    @Inject
+    public void setUsersRepository(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
+    }
+
+    @Inject
+    public void setParser(Parser sieveParser) {
+        this.sieveParser = sieveParser;
+    }
+
+    @PostConstruct
+    public void init() throws Exception {
+        manageSieveProcessor = new ManageSieveProcessor(new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, sieveParser)));
+        super.init();
     }
 
     @Override

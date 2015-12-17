@@ -25,6 +25,8 @@ import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
+import javax.inject.Inject;
+
 public class ManageSieveProcessor {
 
     public static final String AUTHENTICATE = "AUTHENTICATE";
@@ -45,6 +47,7 @@ public class ManageSieveProcessor {
 
     private final ArgumentParser argumentParser;
 
+    @Inject
     public ManageSieveProcessor(ArgumentParser argumentParser) {
         this.argumentParser = argumentParser;
     }
