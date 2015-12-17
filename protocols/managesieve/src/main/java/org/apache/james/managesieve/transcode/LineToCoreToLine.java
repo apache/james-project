@@ -141,6 +141,7 @@ public class LineToCoreToLine {
 
     public String deleteScript(Session session, String args) {
         try {
+            System.out.println("Yoloooooooo");
             lineToCore.deleteScript(session, args);
         } catch (AuthenticationRequiredException ex) {
             return "NO";
@@ -149,6 +150,7 @@ public class LineToCoreToLine {
         } catch (IsActiveException ex) {
             return "NO (ACTIVE) \"You may not delete an active script\"";
         } catch (ArgumentException ex) {
+            ex.printStackTrace();
             return "NO \"" + ex.getMessage() + "\"";
         }
         return "OK";
