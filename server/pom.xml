@@ -94,6 +94,7 @@
         <module>protocols/jmap-integration-testing</module>
         <module>protocols/protocols-library</module>
         <module>protocols/protocols-lmtp</module>
+        <module>protocols/protocols-managesieve</module>
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
 
