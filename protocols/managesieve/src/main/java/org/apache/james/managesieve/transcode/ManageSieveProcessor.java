@@ -73,7 +73,7 @@ public class ManageSieveProcessor {
 
     private String parseArguments(String request, int firstWordEndIndex) {
         if (request.contains(" ")) {
-            return request.substring(firstWordEndIndex);
+            return request.substring(firstWordEndIndex).trim();
         } else {
             return "";
         }
@@ -109,7 +109,7 @@ public class ManageSieveProcessor {
         } else if (command.equals(STARTTLS)) {
             return "NO STARTTLS command not yet implemented";
         } else if (command.equals(UNAUTHENTICATE)) {
-            return "NO UNAUTHENTICATE command not yet handled";
+            return lineToCoreToLine.unauthenticate(session, arguments);
         } else {
             return "NO unknown " + command + " command";
         }

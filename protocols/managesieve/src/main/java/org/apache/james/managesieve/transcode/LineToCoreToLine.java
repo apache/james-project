@@ -73,6 +73,10 @@ public class LineToCoreToLine {
         return lineToCore.noop(args);
     }
 
+    public String unauthenticate(Session session, String args) {
+        return lineToCore.unauthenticate(session, args);
+    }
+
     public String checkScript(Session session, String args) {
         try {
             List<String> warnings = lineToCore.checkScript(session, args);

@@ -26,4 +26,8 @@ public interface Session {
 
     String getUser();
 
+    void setAuthentication(boolean isAuthenticated);
+
+    void setUser(String user);
+
 }

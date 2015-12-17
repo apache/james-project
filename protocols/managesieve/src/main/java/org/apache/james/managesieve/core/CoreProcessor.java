@@ -64,6 +64,7 @@ public class CoreProcessor implements CoreCommands {
         this.capabilitiesBase = precomputeCapabilitiesBase(parser);
     }
 
+    @Override
     public Map<Capabilities, String> capability(Session session) {
         Map<Capabilities, String> capabilities = Maps.newHashMap(capabilitiesBase);
         if (session.isAuthenticated()) {
@@ -72,11 +73,13 @@ public class CoreProcessor implements CoreCommands {
         return capabilities;
     }
 
+    @Override
     public List<String> checkScript(Session session, String content) throws AuthenticationRequiredException, SyntaxException {
         authenticationCheck(session);
         return parser.parse(content);
     }
 
+    @Override
     public void deleteScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException {
         authenticationCheck(session);
         try {
@@ -88,6 +91,7 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
+    @Override
     public String getScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
         authenticationCheck(session);
         try {
@@ -100,6 +104,7 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
+    @Override
     public void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException {
         authenticationCheck(session);
         try {
@@ -109,6 +114,7 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
+    @Override
     public List<ScriptSummary> listScripts(Session session) throws AuthenticationRequiredException {
         authenticationCheck(session);
         try {
@@ -118,6 +124,7 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
+    @Override
     public List<String> putScript(Session session, String name, String content) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException {
         authenticationCheck(session);
         List<String> warnings = parser.parse(content);
@@ -131,6 +138,7 @@ public class CoreProcessor implements CoreCommands {
         return warnings;
     }
 
+    @Override
     public void renameScript(Session session, String oldName, String newName) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException {
         authenticationCheck(session);
         try {
@@ -142,6 +150,7 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
+    @Override
     public void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException {
         authenticationCheck(session);
         try {
@@ -153,6 +162,7 @@ public class CoreProcessor implements CoreCommands {
         }
     }
 
+    @Override
     public String getActive(Session session) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
         authenticationCheck(session);
         try {
@@ -163,7 +173,25 @@ public class CoreProcessor implements CoreCommands {
             throw new ManageSieveRuntimeException(e);
         }
     }
-    
+
+    @Override
+    public String noop(String tag) {
+        if(Strings.isNullOrEmpty(tag)) {
+            return "OK \"NOOP completed\"";
+        }
+        return "OK " + taggify(tag) + " \"DONE\"";
+    }
+
+    @Override
+    public String unauthenticate(Session session) {
+        if (session.isAuthenticated()) {
+            session.setAuthentication(false);
+            return "OK";
+        } else {
+            return "NO UNAUTHENTICATE command must be issued in authenticated state";
+        }
+    }
+
     protected void authenticationCheck(Session session) throws AuthenticationRequiredException {
         ensureUser(session);
         if (!session.isAuthenticated()) {
@@ -190,14 +218,6 @@ public class CoreProcessor implements CoreCommands {
             }
         }
         return builder.toString().trim();
-    }
-
-    @Override
-    public String noop(String tag) {
-        if(Strings.isNullOrEmpty(tag)) {
-            return "OK \"NOOP completed\"";
-        }
-        return "OK " + taggify(tag) + " \"DONE\"";
     }
 
     private String taggify(String tag) {

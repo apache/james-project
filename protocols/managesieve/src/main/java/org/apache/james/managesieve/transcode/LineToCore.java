@@ -20,6 +20,7 @@
 
 package org.apache.james.managesieve.transcode;
 
+import com.google.common.base.Strings;
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
@@ -60,6 +61,14 @@ public class LineToCore{
 
     public String noop(String args) {
         return core.noop(args);
+    }
+
+    public String unauthenticate(Session session, String args) {
+        if (Strings.isNullOrEmpty(args)) {
+            return core.unauthenticate(session);
+        } else {
+            return "NO UNAUTHENTICATE do not take arguments";
+        }
     }
     
     public void deleteScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException, ArgumentException {
