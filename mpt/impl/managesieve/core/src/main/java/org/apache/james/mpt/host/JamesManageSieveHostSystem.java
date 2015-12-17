@@ -21,8 +21,7 @@ package org.apache.james.mpt.host;
 
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
-import org.apache.james.managesieve.transcode.LineToCore;
-import org.apache.james.managesieve.transcode.LineToCoreToLine;
+import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.Session;
@@ -39,7 +38,7 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
     public JamesManageSieveHostSystem(UsersRepository usersRepository, SieveRepository sieveRepository) throws Exception {
         this.usersRepository = usersRepository;
         this.sieveRepository = sieveRepository;
-        this.processor = new ManageSieveProcessor(new LineToCoreToLine(new LineToCore(new CoreProcessor(sieveRepository, usersRepository, new Parser(new ConfigurationManager())))));
+        this.processor = new ManageSieveProcessor(new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, new Parser(new ConfigurationManager()))));
     }
 
     @Override

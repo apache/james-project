@@ -31,6 +31,6 @@ import org.apache.james.sieverepository.api.exception.UserNotFoundException;
  */
 public interface SetActive {
     
-    void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, UserNotFoundException, StorageException;
+    String setActive(Session session, String name);
 
 }

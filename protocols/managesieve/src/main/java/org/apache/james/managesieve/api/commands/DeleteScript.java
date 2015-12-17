@@ -20,16 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
-import org.apache.james.sieverepository.api.exception.IsActiveException;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 
 /**
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.10>RFC 5804 DELETESCRIPT Command</a>
  */
 public interface DeleteScript {
     
-    void deleteScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException;
+    String deleteScript(Session session, String name);
 
 }

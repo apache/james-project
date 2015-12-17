@@ -20,17 +20,13 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import java.util.List;
-
-import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
-import org.apache.james.managesieve.api.SyntaxException;
 
 /**
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.12>RFC 5804 CHECKSCRIPT Command</a>
  */
 public interface CheckScript {
     
-    List<String> checkScript(Session session, String content) throws AuthenticationRequiredException, SyntaxException;
+    String checkScript(Session session, String content);
 
 }

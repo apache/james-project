@@ -22,15 +22,16 @@ package org.apache.james.managesieve.core;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
-import org.apache.james.managesieve.api.ManageSieveRuntimeException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SieveParser;
@@ -43,7 +44,6 @@ import org.apache.james.sieverepository.api.exception.DuplicateException;
 import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.apache.james.user.api.UsersRepository;
@@ -76,7 +76,16 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public Map<Capabilities, String> capability(Session session) {
+    public String capability(Session session) {
+        return Joiner.on("\r\n").join(
+            Iterables.transform(computeCapabilityMap(session).entrySet(), new Function<Map.Entry<Capabilities,String>, String>() {
+                public String apply(Map.Entry<Capabilities, String> capabilitiesStringEntry) {
+                    return computeCapabilityEntryString(capabilitiesStringEntry);
+                }
+            })) + "\r\nOK";
+    }
+
+    private Map<Capabilities, String> computeCapabilityMap(Session session) {
         Map<Capabilities, String> capabilities = Maps.newHashMap(capabilitiesBase);
         if (session.isAuthenticated()) {
             capabilities.put(Capabilities.OWNER, session.getUser());
@@ -84,96 +93,188 @@ public class CoreProcessor implements CoreCommands {
         return capabilities;
     }
 
-    @Override
-    public List<String> checkScript(Session session, String content) throws AuthenticationRequiredException, SyntaxException {
-        authenticationCheck(session);
-        return parser.parse(content);
+    private String computeCapabilityEntryString(Map.Entry<Capabilities, String> entry) {
+        return "\"" + entry.getKey().toString() + "\"" +
+            ( entry.getValue() == null ? "" : " \"" + entry.getValue() + "\"" );
     }
 
     @Override
-    public void deleteScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException {
-        authenticationCheck(session);
+    public String checkScript(Session session, String content) {
         try {
+            authenticationCheck(session);
+            return manageWarnings(parser.parse(content));
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (SyntaxException ex) {
+            return sanitizeString("NO \"Syntax Error: " + ex.getMessage() + "\"");
+        }
+    }
+
+    private String manageWarnings(List<String> warnings) {
+        if (!warnings.isEmpty()) {
+            return "OK (WARNINGS) " + Joiner.on(' ').join(Iterables.transform(warnings, new Function<String, String>() {
+                public String apply(String s) {
+                    return '\"' + s + '"';
+                }
+            }));
+        } else {
+            return "OK";
+        }
+    }
+
+    private String sanitizeString(String message) {
+        return Joiner.on("\r\n").join(Splitter.on('\n').split(message));
+    }
+
+    @Override
+    public String deleteScript(Session session, String name) {
+        try {
+            authenticationCheck(session);
             sieveRepository.deleteScript(session.getUser(), name);
-        } catch (StorageException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        } catch (UserNotFoundException ex) {
-            throw new ManageSieveRuntimeException(ex);
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (ScriptNotFoundException ex) {
+            return "NO (NONEXISTENT) \"There is no script by that name\"";
+        } catch (IsActiveException ex) {
+            return "NO (ACTIVE) \"You may not delete an active script\"";
+        }  catch (UserNotFoundException e) {
+            return "NO : Invalid user " + session.getUser();
+        } catch (StorageException e) {
+            return "NO : Storage Exception : " + e.getMessage();
         }
+        return "OK";
     }
 
     @Override
-    public String getScript(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
-        authenticationCheck(session);
+    public String getScript(Session session, String name) {
         try {
+            authenticationCheck(session);
             String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), name));
-            sieveRepository.getScript(session.getUser(), name);
-            return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent;
-        } catch (UserNotFoundException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        } catch (IOException ex) {
-            // Unable to read script InputStream
-            throw new ManageSieveRuntimeException(ex);
-        }
-    }
-
-    @Override
-    public void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException, UserNotFoundException, StorageException {
-        authenticationCheck(session);
-        sieveRepository.haveSpace(session.getUser(), name, size);
-    }
-
-    @Override
-    public List<ScriptSummary> listScripts(Session session) throws AuthenticationRequiredException {
-        authenticationCheck(session);
-        try {
-            return sieveRepository.listScripts(session.getUser());
-        } catch (SieveRepositoryException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        }
-    }
-
-    @Override
-    public List<String> putScript(Session session, String name, String content) throws AuthenticationRequiredException, SyntaxException, QuotaExceededException {
-        authenticationCheck(session);
-        List<String> warnings = parser.parse(content);
-        try {
-            sieveRepository.putScript(session.getUser(), name, content);
-        } catch (UserNotFoundException ex) {
-            throw new ManageSieveRuntimeException(ex);
+            return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (ScriptNotFoundException ex) {
+            return "NO (NONEXISTENT) \"There is no script by that name\"";
         } catch (StorageException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        }
-        return warnings;
-    }
-
-    @Override
-    public void renameScript(Session session, String oldName, String newName) throws AuthenticationRequiredException, ScriptNotFoundException, DuplicateException {
-        authenticationCheck(session);
-        try {
-            sieveRepository.renameScript(session.getUser(), oldName, newName);
-        } catch (UserNotFoundException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        } catch (StorageException ex) {
-            throw new ManageSieveRuntimeException(ex);
-        }
-    }
-
-    @Override
-    public void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, UserNotFoundException, StorageException {
-        authenticationCheck(session);
-        sieveRepository.setActive(session.getUser(), name);
-    }
-
-    @Override
-    public String getActive(Session session) throws AuthenticationRequiredException, ScriptNotFoundException, StorageException {
-        authenticationCheck(session);
-        try {
-            return IOUtils.toString(sieveRepository.getActive(session.getUser()));
-        } catch (UserNotFoundException ex) {
-            throw new ManageSieveRuntimeException(ex);
+            return "NO \"" + ex.getMessage() + "\"";
+        } catch (UserNotFoundException e) {
+            return "NO : Invalid user " + session.getUser();
         } catch (IOException e) {
-            throw new ManageSieveRuntimeException(e);
+            return "NO \"" + e.getMessage() + "\"";
+        }
+    }
+
+    @Override
+    public String haveSpace(Session session, String name, long size) {
+        try {
+            authenticationCheck(session);
+            sieveRepository.haveSpace(session.getUser(), name, size);
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (QuotaExceededException ex) {
+            return "NO (QUOTA/MAXSIZE) \"Quota exceeded\"";
+        } catch (UserNotFoundException e) {
+            return "NO user not found : " + session.getUser();
+        } catch (StorageException e) {
+            return "NO storage exception : " + e.getMessage();
+        }
+        return "OK";
+    }
+
+    @Override
+    public String listScripts(Session session) {
+        try {
+            authenticationCheck(session);
+            String list = Joiner.on("\r\n").join(
+                Iterables.transform(sieveRepository.listScripts(session.getUser()), new Function<ScriptSummary, String>() {
+                    public String apply(ScriptSummary scriptSummary) {
+                        return '"' + scriptSummary.getName() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "");
+                    }
+                }));
+            if (Strings.isNullOrEmpty(list)) {
+                return "OK";
+            } else {
+                return list + "\r\nOK";
+            }
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (UserNotFoundException e) {
+            return "NO user not found : " + session.getUser();
+        } catch (StorageException e) {
+            return "NO storage exception : " + e.getMessage();
+        }
+    }
+
+    @Override
+    public String putScript(Session session, String name, String content) {
+        try {
+            authenticationCheck(session);
+            sieveRepository.putScript(session.getUser(), name, content);
+            return manageWarnings(parser.parse(content));
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (SyntaxException ex) {
+            return Joiner.on("\r\n").join(Splitter.on('\n').split("NO \"Syntax Error: " + ex.getMessage() + "\""));
+        } catch (QuotaExceededException ex) {
+            return "NO (QUOTA/MAXSIZE) \"Quota exceeded\"";
+        } catch (UserNotFoundException e) {
+            return "NO user not found : " + session.getUser();
+        } catch (StorageException e) {
+            return "NO storage exception : " + e.getMessage();
+        }
+    }
+
+    @Override
+    public String renameScript(Session session, String oldName, String newName) {
+        try {
+            authenticationCheck(session);
+            sieveRepository.renameScript(session.getUser(), oldName, newName);
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (ScriptNotFoundException ex) {
+            return "NO (NONEXISTENT) \"There is no script by that name\"";
+        }  catch (DuplicateException ex) {
+            return "NO (ALREADYEXISTS) \"A script with that name already exists\"";
+        } catch (UserNotFoundException e) {
+            return "NO user not found : " + session.getUser();
+        } catch (StorageException e) {
+            return "NO storage exception : " + e.getMessage();
+        }
+        return "OK";
+    }
+
+    @Override
+    public String setActive(Session session, String name) {
+        try {
+            authenticationCheck(session);
+            sieveRepository.setActive(session.getUser(), name);
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (ScriptNotFoundException ex) {
+            return "NO (NONEXISTENT) \"There is no script by that name\"";
+        } catch (UserNotFoundException e) {
+            return "NO : User not found";
+        } catch (StorageException e) {
+            return "NO : Storage exception : " + e.getMessage();
+        }
+        return "OK";
+    }
+
+    @Override
+    public String getActive(Session session) {
+        try {
+            authenticationCheck(session);
+            return IOUtils.toString(sieveRepository.getActive(session.getUser())) + "\r\nOK";
+        } catch (AuthenticationRequiredException ex) {
+            return "NO";
+        } catch (ScriptNotFoundException ex) {
+            return "NO (NONEXISTENT) \"" + ex.getMessage() + "\"";
+        } catch (StorageException ex) {
+            return "NO \"" + ex.getMessage() + "\"";
+        } catch (UserNotFoundException e) {
+            return "NO : User not found";
+        } catch (IOException e) {
+            return "NO \"" + e.getMessage() + "\"";
         }
     }
 
@@ -186,32 +287,42 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String chooseMechanism(Session session, String mechanism) throws AuthenticationException, UnknownSaslMechanism, SyntaxException {
-        if (Strings.isNullOrEmpty(mechanism)) {
-            throw new SyntaxException("You must specify a SASL mechanism as an argument of AUTHENTICATE command");
-        }
-        String unquotedMechanism = unquotaIfNeeded(mechanism);
-        SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
+    public String chooseMechanism(Session session, String mechanism) {
+        try {
+            if (Strings.isNullOrEmpty(mechanism)) {
+                return "NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command";
+            }
+            String unquotedMechanism = unquotaIfNeeded(mechanism);
+            SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
 
-        session.setChoosedAuthenticationMechanism(supportedMechanism);
-        session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
-        AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(supportedMechanism);
-        return authenticationProcessor.initialServerResponse(session);
+            session.setChoosedAuthenticationMechanism(supportedMechanism);
+            session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
+            AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(supportedMechanism);
+            return authenticationProcessor.initialServerResponse(session);
+        } catch (UnknownSaslMechanism unknownSaslMechanism) {
+            return "NO " + unknownSaslMechanism.getMessage();
+        }
     }
 
     @Override
-    public String authenticate(Session session, String suppliedData) throws AuthenticationException, SyntaxException {
-        SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
-        AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
-        String authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, suppliedData);
-        if (authenticatedUsername != null) {
-            session.setUser(authenticatedUsername);
-            session.setState(Session.State.AUTHENTICATED);
-            return "OK authentication successfull";
-        } else {
-            session.setState(Session.State.UNAUTHENTICATED);
-            session.setUser(null);
-            return "NO authentication failed";
+    public String authenticate(Session session, String suppliedData) {
+        try {
+            SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
+            AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
+            String authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, suppliedData);
+            if (authenticatedUsername != null) {
+                session.setUser(authenticatedUsername);
+                session.setState(Session.State.AUTHENTICATED);
+                return "OK authentication successfull";
+            } else {
+                session.setState(Session.State.UNAUTHENTICATED);
+                session.setUser(null);
+                return "NO authentication failed";
+            }
+        } catch (AuthenticationException e) {
+            return "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage();
+        } catch (SyntaxException e) {
+            return "NO ManageSieve syntax is incorrect : " + e.getMessage();
         }
     }
 

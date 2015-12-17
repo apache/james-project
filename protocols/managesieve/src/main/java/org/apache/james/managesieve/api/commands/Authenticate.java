@@ -20,9 +20,7 @@
 
 package org.apache.james.managesieve.api.commands;
 
-import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.Session;
-import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.UnknownSaslMechanism;
 
 
@@ -44,7 +42,7 @@ public interface Authenticate {
         }
     }
     
-    String chooseMechanism(Session session, String mechanism) throws AuthenticationException, UnknownSaslMechanism, SyntaxException;
+    String chooseMechanism(Session session, String mechanism);
     
-    String authenticate(Session session, String suppliedData) throws AuthenticationException, SyntaxException;
+    String authenticate(Session session, String suppliedData);
 }
