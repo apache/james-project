@@ -183,8 +183,10 @@ public class CoreProcessor implements CoreCommands {
 
     private String buildExtensions(SieveParser parser) {
         StringBuilder builder = new StringBuilder();
-        for (String extension : parser.getExtensions()) {
-            builder.append(extension).append(' ');
+        if (parser.getExtensions() != null) {
+            for (String extension : parser.getExtensions()) {
+                builder.append(extension).append(' ');
+            }
         }
         return builder.toString().trim();
     }

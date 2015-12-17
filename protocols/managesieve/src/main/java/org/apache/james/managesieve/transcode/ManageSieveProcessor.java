@@ -22,12 +22,7 @@ package org.apache.james.managesieve.transcode;
 
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
-import org.apache.james.managesieve.api.SieveParser;
-import org.apache.james.managesieve.core.CoreProcessor;
-import org.apache.james.managesieve.jsieve.Parser;
-import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
-import org.apache.james.user.api.UsersRepository;
 
 public class ManageSieveProcessor {
 
@@ -55,8 +50,36 @@ public class ManageSieveProcessor {
 
     public String handleRequest(Session session, String request) throws ManageSieveException, SieveRepositoryException {
         int firstWordEndIndex = request.indexOf(' ');
-        String command = request.substring(0, firstWordEndIndex);
-        String arguments = request.substring(firstWordEndIndex);
+        String arguments = parseArguments(request, firstWordEndIndex);
+        String command = parseCommand(request, firstWordEndIndex);
+        return matchCommandWithImplementation(session, arguments, command) + "\r\n";
+    }
+
+    private String parseCommand(String request, int firstWordEndIndex) {
+        String command;
+        if (request.contains(" ")) {
+            command = request.substring(0, firstWordEndIndex);
+        } else {
+            command = request;
+        }
+        if (command.endsWith("\n")) {
+            command = command.substring(0, command.length()-1);
+        }
+        if (command.endsWith("\r")) {
+            command = command.substring(0, command.length()-1);
+        }
+        return command;
+    }
+
+    private String parseArguments(String request, int firstWordEndIndex) {
+        if (request.contains(" ")) {
+            return request.substring(firstWordEndIndex);
+        } else {
+            return  "";
+        }
+    }
+
+    private String matchCommandWithImplementation(Session session, String arguments, String command) {
         if (command.equals(AUTHENTICATE)) {
             return "NO AUTHENTICATE command not yet implemented";
         } else if (command.equals(CAPABILITY)) {
@@ -76,7 +99,7 @@ public class ManageSieveProcessor {
         } else if (command.equals(LOGOUT)) {
             return "NO LOGOUT command not yet implemented";
         } else if (command.equals(NOOP)) {
-            return "NO NOOP command not yet implemented";
+            return "NO NOOP command not yet implemented\r\n";
         } else if (command.equals(PUTSCRIPT)) {
             return lineToCoreToLine.putScript(session, arguments);
         } else if (command.equals(RENAMESCRIPT)) {

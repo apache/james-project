@@ -12,6 +12,8 @@
 
     <artifactId>james-server-protocols-managesieve</artifactId>
 
+    <name>Apache James :: Server :: ManageSieve</name>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.james</groupId>
