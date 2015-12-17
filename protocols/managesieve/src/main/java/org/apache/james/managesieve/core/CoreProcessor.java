@@ -239,6 +239,19 @@ public class CoreProcessor implements CoreCommands {
         throw new SessionTerminatedException();
     }
 
+    @Override
+    public String startTLS(Session session) {
+        if (session.getState() == Session.State.UNAUTHENTICATED) {
+            if (session.isSslEnabled()) {
+                return "NO You can't enable two time SSL encryption";
+            }
+            session.setState(Session.State.SSL_NEGOCIATION);
+            return "OK";
+        } else {
+            return "NO command STARTTLS is issued in the wrong state. It must be issued as you are unauthenticated";
+        }
+    }
+
     protected void authenticationCheck(Session session) throws AuthenticationRequiredException {
         if (!session.isAuthenticated()) {
             throw new AuthenticationRequiredException();

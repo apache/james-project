@@ -111,7 +111,7 @@ public class ManageSieveProcessor {
         } else if (command.equals(SETACTIVE)) {
             return lineToCoreToLine.setActive(session, arguments);
         } else if (command.equals(STARTTLS)) {
-            return "NO STARTTLS command not yet implemented";
+            return lineToCoreToLine.startTLS(session);
         } else if (command.equals(UNAUTHENTICATE)) {
             return lineToCoreToLine.unauthenticate(session, arguments);
         }

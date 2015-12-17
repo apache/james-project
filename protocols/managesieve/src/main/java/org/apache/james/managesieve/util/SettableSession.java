@@ -28,9 +28,11 @@ public class SettableSession implements Session {
     private String user;
     private State state;
     private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
+    private boolean sslEnabled;
 
     public SettableSession() {
         this.state = State.UNAUTHENTICATED;
+        this.sslEnabled = false;
     }
 
     public String getUser() {
@@ -61,5 +63,13 @@ public class SettableSession implements Session {
 
     public void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism) {
         this.choosedAuthenticationMechanism = choosedAuthenticationMechanism;
+    }
+
+    public void setSslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
+    }
+
+    public boolean isSslEnabled() {
+        return sslEnabled;
     }
 }

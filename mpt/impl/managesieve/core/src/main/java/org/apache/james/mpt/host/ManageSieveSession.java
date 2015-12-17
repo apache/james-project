@@ -65,6 +65,10 @@ public class ManageSieveSession implements Session {
             out.write(response);
             isReadLast = true;
         }
+        if (settableSession.getState() == org.apache.james.managesieve.api.Session.State.SSL_NEGOCIATION) {
+            settableSession.setState(org.apache.james.managesieve.api.Session.State.UNAUTHENTICATED);
+            settableSession.setSslEnabled(true);
+        }
         return out.nextLine();
     }
 
