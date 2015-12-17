@@ -306,7 +306,6 @@ public class CoreProcessor implements CoreCommands {
         if (!extensions.isEmpty()) {
             capabilitiesBase.put(Capabilities.SIEVE, extensions);
         }
-        capabilitiesBase.put(Capabilities.GETACTIVE, null);
         return capabilitiesBase;
     }
 
