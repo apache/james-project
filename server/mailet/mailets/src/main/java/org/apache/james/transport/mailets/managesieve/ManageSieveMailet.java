@@ -30,15 +30,19 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.transcode.LineToCore;
 import org.apache.james.managesieve.transcode.LineToCoreToLine;
+import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToMessage;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 
@@ -109,10 +113,10 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         
         setHelpURL(getInitParameter("helpURL"));
         cache = getInitParameter("cache", true);
-        transcoder = new MessageToCoreToMessage(
+        transcoder = new MessageToCoreToMessage(new ManageSieveProcessor(
             new LineToCoreToLine(
                 new LineToCore(
-                    new CoreProcessor(sieveRepository, usersRepository, sieveParser))),
+                    new CoreProcessor(sieveRepository, usersRepository, sieveParser)))),
             this);
     }
 
@@ -130,9 +134,13 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
         // Update the Session for the current mail and execute
         SettableSession session = new SettableSession();
-        session.setAuthentication(mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null);
+        if (mail.getAttribute(SMTP_AUTH_USER_ATTRIBUTE_NAME) != null) {
+            session.setState(Session.State.AUTHENTICATED);
+        } else {
+            session.setState(Session.State.UNAUTHENTICATED);
+        }
         session.setUser(mail.getSender().getLocalPart() + '@' + (mail.getSender().getDomain() == null ? "localhost" : mail.getSender().getDomain()));
-        getMailetContext().sendMail(transcoder.execute(session, mail.getMessage()));
+        getMailetContext().sendMail(mail.getRecipients().iterator().next(), Lists.newArrayList(mail.getSender()),transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         
         // And tidy up
