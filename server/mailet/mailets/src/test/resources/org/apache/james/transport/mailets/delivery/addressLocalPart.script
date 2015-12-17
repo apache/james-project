@@ -19,8 +19,8 @@
 
 require "fileinto";
 
-if address :is :localpart "from" "source@domain.com" {
+if address :is :localpart "Cc" "source" {
     fileinto "INBOX.select";
+} else {
+     fileinto "INBOX.not.selected";
 }
-
-keep;

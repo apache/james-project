@@ -20,8 +20,8 @@
 require "fileinto";
 require "envelope";
 
-if envelope :is :all "from" "source@domain.com" {
+if envelope :all "from" "sender@any.com" {
     fileinto "INBOX.select";
+} else {
+    fileinto "INBOX.not.selected";
 }
-
-keep;

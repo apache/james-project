@@ -19,8 +19,8 @@
 
 require "fileinto";
 
-if alloff (true, true) {
+if allof (true, true) {
     fileinto "INBOX.select";
+} else {
+     fileinto "INBOX.not.selected";
 }
-
-keep;

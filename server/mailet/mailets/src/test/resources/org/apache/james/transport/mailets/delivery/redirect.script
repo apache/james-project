@@ -17,4 +17,4 @@
 # under the License.                                           #
 ################################################################
 
-redirect "benwa@apache.org";
+redirect "redirect@apache.org";

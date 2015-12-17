@@ -19,8 +19,8 @@
 
 require "fileinto";
 
-if address :is :domain "from" "source@domain.com" {
+if address :is :domain "Cc" "domain.com" {
     fileinto "INBOX.select";
+} else {
+    fileinto "INBOX.not.selected";
 }
-
-keep;

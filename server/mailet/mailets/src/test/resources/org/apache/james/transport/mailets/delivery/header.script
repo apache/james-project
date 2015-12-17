@@ -19,8 +19,8 @@
 
 require "fileinto";
 
-if header :is :contains ["Subject"] ["JAMES-1620"] {
+if header :contains ["Subject"] ["JAMES-1620"] {
     fileinto "INBOX.select";
+} else {
+     fileinto "INBOX.not.selected";
 }
-
-keep;

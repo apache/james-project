@@ -21,6 +21,6 @@ require "fileinto";
 
 if address :is :all "Resend-To" "source@domain.com" {
     fileinto "INBOX.select";
+} else {
+    fileinto "INBOX.not.selected";
 }
-
-keep;

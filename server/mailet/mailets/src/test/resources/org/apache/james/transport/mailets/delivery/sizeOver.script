@@ -19,8 +19,8 @@
 
 require "fileinto";
 
-if size :over 1000 {
+if size :over 500 {
     fileinto "INBOX.select";
+} else {
+     fileinto "INBOX.not.selected";
 }
-
-keep;

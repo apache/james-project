@@ -171,4 +171,8 @@ public class FakeMail implements Mail {
     public void setRemoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
     }
+
+    public void setSender(MailAddress sender) {
+        this.sender = sender;
+    }
 }

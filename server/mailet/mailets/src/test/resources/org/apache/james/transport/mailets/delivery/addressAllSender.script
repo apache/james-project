@@ -20,7 +20,7 @@
 require "fileinto";
 
 if address :is :all "Sender" "source@domain.com" {
-    fileinto "INBOX.select";
+     fileinto "INBOX.select";
+} else {
+     fileinto "INBOX.not.selected";
 }
-
-keep;

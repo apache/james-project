@@ -18,9 +18,10 @@
 ################################################################
 
 require "fileinto";
+require "envelope";
 
-if anyof (true, false) {
+if envelope :is :all "from" "sender@other.com" {
     fileinto "INBOX.select";
 } else {
-     fileinto "INBOX.not.selected";
+    fileinto "INBOX.not.selected";
 }

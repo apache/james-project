@@ -21,6 +21,6 @@ require "fileinto";
 
 if not true {
     fileinto "INBOX.select";
+} else {
+     fileinto "INBOX.not.selected";
 }
-
-keep;

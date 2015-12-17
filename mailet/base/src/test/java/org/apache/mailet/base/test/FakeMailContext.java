@@ -30,15 +30,69 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 public class FakeMailContext implements MailetContext {
+
+    public static class SentMail {
+
+        private MailAddress sender;
+        private Collection<MailAddress> recipients;
+        private MimeMessage msg;
+
+        public SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) {
+            this.sender = sender;
+            this.recipients = recipients;
+            this.msg = msg;
+        }
+
+        public MailAddress getSender() {
+            return sender;
+        }
+
+        public Collection<MailAddress> getRecipients() {
+            return recipients;
+        }
+
+        public MimeMessage getMsg() {
+            return msg;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SentMail sentMail = (SentMail) o;
+
+            if (sender != null ? !sender.equals(sentMail.sender) : sentMail.sender != null) return false;
+            return !(recipients != null ? !recipients.equals(sentMail.recipients) : sentMail.recipients != null);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = sender != null ? sender.hashCode() : 0;
+            result = 31 * result + (recipients != null ? recipients.hashCode() : 0);
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "SentMail{" +
+                "recipients=" + recipients +
+                ", sender=" + sender +
+                '}';
+        }
+    }
     
     HashMap<String, Object> attributes = new HashMap<String, Object>();
-    private MimeMessage sentMessage;
+
+    List<SentMail> sentMails = new ArrayList<SentMail>();
 
     public void bounce(Mail mail, String message) throws MessagingException {
         // trivial implementation
@@ -114,19 +168,19 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void sendMail(MimeMessage mimemessage) throws MessagingException {
-        sentMessage = mimemessage;
+        sentMails.add(new SentMail(null, new ArrayList<MailAddress>(), mimemessage));
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
-        throw new UnsupportedOperationException("MOCKed method");
+        sentMails.add(new SentMail(sender, recipients, msg));
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, String state) throws MessagingException {
-        throw new UnsupportedOperationException("MOCKed method");
+        sentMails.add(new SentMail(sender, recipients, msg));
     }
 
     public void sendMail(Mail mail) throws MessagingException {
-        throw new UnsupportedOperationException("MOCKed method");
+        sentMails.add(new SentMail(mail.getSender(), mail.getRecipients(), mail.getMessage()));
     }
 
     public void setAttribute(String name, Serializable object) {
@@ -161,7 +215,7 @@ public class FakeMailContext implements MailetContext {
         return null;   // trivial implementation
     }
 
-    public MimeMessage getSentMessage() {
-        return sentMessage;
+    public List<SentMail> getSentMails() {
+        return sentMails;
     }
 }

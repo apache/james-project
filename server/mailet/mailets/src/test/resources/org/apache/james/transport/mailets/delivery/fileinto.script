@@ -19,4 +19,4 @@
 
 require "fileinto";
 
-fileinto "INBOX.any"
+fileinto "INBOX.any";
