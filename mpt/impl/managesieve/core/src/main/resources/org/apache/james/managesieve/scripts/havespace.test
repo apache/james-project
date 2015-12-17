@@ -17,28 +17,22 @@
 # under the License.                                           #
 ################################################################
 
-C: CAPABILITY
-SUB {
-S: "SASL" "PLAIN"
-S: "SIEVE" "log reject fileinto i;ascii-numeric envelope body"
-S: "STARTTLS"
-S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
-S: "VERSION" "1.0"
-}
-S: OK
+C: HAVESPACE
+S: NO "Missing argument: script name"
+
+C: HAVESPACE "scriptname"
+S: NO "Missing argument: script size"
+
+C: HAVESPACE "scriptname" 49
+S: NO
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
 C:  user password
 S: OK authentication successfull
 
-C: CAPABILITY
-SUB {
-S: "OWNER" "user"
-S: "SASL" "PLAIN"
-S: "SIEVE" "log reject fileinto i;ascii-numeric envelope body"
-S: "STARTTLS"
-S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
-S: "VERSION" "1.0"
-}
+C: HAVESPACE "scriptname" 49
 S: OK
+
+C: HAVESPACE "scriptname" 51
+S: NO \(QUOTA/MAXSIZE\) "Quota exceeded"

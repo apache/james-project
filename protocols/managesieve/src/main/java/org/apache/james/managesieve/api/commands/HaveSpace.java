@@ -23,12 +23,14 @@ package org.apache.james.managesieve.api.commands;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
+import org.apache.james.sieverepository.api.exception.StorageException;
+import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
 /**
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.5>RFC 5804 HAVESPACE Command</a>
  */
 public interface HaveSpace {
     
-    void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException;
+    void haveSpace(Session session, String name, long size) throws AuthenticationRequiredException, QuotaExceededException, UserNotFoundException, StorageException;
 
 }

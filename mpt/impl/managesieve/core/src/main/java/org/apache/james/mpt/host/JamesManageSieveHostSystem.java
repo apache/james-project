@@ -49,6 +49,11 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
     }
 
     @Override
+    public void setMaxQuota(String user, long value) throws Exception {
+        sieveRepository.setQuota(user, value);
+    }
+
+    @Override
     public Session newSession(Continuation continuation) throws Exception {
         return new ManageSieveSession(processor, continuation);
     }

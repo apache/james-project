@@ -17,12 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.host;
+package org.apache.james.mpt.testsuite;
 
-import org.apache.james.mpt.api.HostSystem;
+import com.google.inject.Inject;
+import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.junit.Before;
+import org.junit.Test;
 
-public interface ManageSieveHostSystem extends HostSystem {
+import java.util.Locale;
 
-    void setMaxQuota(String user, long value) throws Exception;
+public class HaveSpaceTest extends ManageSieveMPTTest {
+
+    @Inject
+    private static ManageSieveHostSystem hostSystem;
+
+    public HaveSpaceTest() throws Exception {
+        super(hostSystem);
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        hostSystem.setMaxQuota(USER, 50);
+    }
+
+    @Test
+    public void haveSpaceShouldWork() throws Exception {
+        scriptTest("havespace", Locale.US);
+    }
 
 }
