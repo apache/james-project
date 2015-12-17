@@ -26,8 +26,6 @@ package org.apache.james.managesieve.api.commands;
  */
 public interface Noop {
     
-    void noop();
-    
     String noop(String tag);
 
 }

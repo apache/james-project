@@ -20,6 +20,7 @@
 
 package org.apache.james.managesieve.core;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
@@ -189,6 +190,34 @@ public class CoreProcessor implements CoreCommands {
             }
         }
         return builder.toString().trim();
+    }
+
+    @Override
+    public String noop(String tag) {
+        if(Strings.isNullOrEmpty(tag)) {
+            return "OK \"NOOP completed\"";
+        }
+        return "OK " + taggify(tag) + " \"DONE\"";
+    }
+
+    private String taggify(String tag) {
+        String sanitizedTag = unquotaIfNeeded(tag.trim());
+        return "(TAG {" + sanitizedTag.length() + "}\r\n" + sanitizedTag + ")";
+    }
+
+    private String unquotaIfNeeded(String tag) {
+        int startIndex = 0;
+        int stopIndex = tag.length();
+        if (tag.endsWith("\r\n")) {
+            stopIndex -= 2;
+        }
+        if (tag.charAt(0) == '\"') {
+            startIndex = 1;
+        }
+        if (tag.charAt(tag.length() - 1) == '\"') {
+            stopIndex--;
+        }
+        return tag.substring(startIndex, stopIndex);
     }
 
     private Map<Capabilities, String> precomputeCapabilitiesBase(SieveParser parser) {

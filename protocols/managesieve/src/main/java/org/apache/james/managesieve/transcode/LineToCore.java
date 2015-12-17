@@ -57,6 +57,10 @@ public class LineToCore{
         }
         return core.capability(session);
     }
+
+    public String noop(String args) {
+        return core.noop(args);
+    }
     
     public void deleteScript(Session session, String args) throws AuthenticationRequiredException, ScriptNotFoundException, IsActiveException, ArgumentException {
         String scriptName = ParserUtils.getScriptName(args);

@@ -18,4 +18,8 @@
 ################################################################
 
 C: NOOP
-S: NO NOOP command not yet implemented
+S: OK "NOOP completed"
+
+C: NOOP "STARTTLS-SYNC-42"
+S: OK \(TAG \{16\}
+S: STARTTLS-SYNC-42\) "DONE"
