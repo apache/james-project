@@ -26,7 +26,7 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 
 /**
- * <code>GetScript</code> is an extension to the commands defined by RFC 5804. It provides a means
+ * <code>GetActive</code> is an extension to the commands defined by RFC 5804. It provides a means
  * of retrieving a user's currently active script in a single call. The alternative using RFC 5804
  * mandated commands is to call ListScripts, parse the result to identify the active script and 
  * call GetScript to retrieve it. 

@@ -49,7 +49,7 @@ public class CoreProcessor implements CoreCommands {
     
     public static final String IMPLEMENTATION_DESCRIPTION = "Apache ManageSieve v1.0";
     public static final String MANAGE_SIEVE_VERSION = "1.0";
-    
+
     private final SieveRepository sieveRepository;
     private final UsersRepository usersRepository;
     private final SieveParser parser;
