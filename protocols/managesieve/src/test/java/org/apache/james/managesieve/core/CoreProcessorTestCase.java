@@ -191,7 +191,7 @@ public class CoreProcessorTestCase {
                 return CONTENT;
             }
         });
-        assertThat(core.getScript(session, SCRIPT)).isEqualTo(CONTENT);
+        assertThat(core.getScript(session, SCRIPT)).isEqualTo("{"+CONTENT.length()+"}\r\n" + CONTENT);
     }
 
     @Test(expected = AuthenticationRequiredException.class)
