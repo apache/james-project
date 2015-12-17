@@ -81,8 +81,11 @@ public class ManageSieveProcessor {
     }
 
     private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
+        if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
+            return lineToCoreToLine.authenticate(session, arguments);
+        }
         if (command.equals(AUTHENTICATE)) {
-            return "NO AUTHENTICATE command not yet implemented";
+            return lineToCoreToLine.chooseMechanism(session, arguments);
         } else if (command.equals(CAPABILITY)) {
             return lineToCoreToLine.capability(session, arguments);
         } else if (command.equals(CHECKSCRIPT)) {

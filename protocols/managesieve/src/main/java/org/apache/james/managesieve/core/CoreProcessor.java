@@ -20,16 +20,22 @@
 
 package org.apache.james.managesieve.core;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.managesieve.api.AuthenticationException;
+import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.ManageSieveRuntimeException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
+import org.apache.james.managesieve.api.UnknownSaslMechanism;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -44,6 +50,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,12 +64,15 @@ public class CoreProcessor implements CoreCommands {
     private final UsersRepository usersRepository;
     private final SieveParser parser;
     private final Map<Capabilities, String> capabilitiesBase;
+    private final Map<SupportedMechanism, AuthenticationProcessor> authenticationProcessorMap;
 
     public CoreProcessor(SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
         this.sieveRepository = repository;
         this.usersRepository = usersRepository;
         this.parser = parser;
-        this.capabilitiesBase = precomputeCapabilitiesBase(parser);
+        this.capabilitiesBase = precomputedCapabilitiesBase(parser);
+        this.authenticationProcessorMap = new HashMap<SupportedMechanism, AuthenticationProcessor>();
+        this.authenticationProcessorMap.put(SupportedMechanism.PLAIN, new PlainAuthenticationProcessor(usersRepository));
     }
 
     @Override
@@ -184,9 +194,40 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
+    public String chooseMechanism(Session session, String mechanism) throws AuthenticationException, UnknownSaslMechanism, SyntaxException {
+        if (Strings.isNullOrEmpty(mechanism)) {
+            throw new SyntaxException("You must specify a SASL mechanism as an argument of AUTHENTICATE command");
+        }
+        String unquotedMechanism = unquotaIfNeeded(mechanism);
+        SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
+
+        session.setChoosedAuthenticationMechanism(supportedMechanism);
+        session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
+        AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(supportedMechanism);
+        return authenticationProcessor.initialServerResponse(session);
+    }
+
+    @Override
+    public String authenticate(Session session, String suppliedData) throws AuthenticationException, SyntaxException {
+        SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
+        AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
+        String authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, suppliedData);
+        if (authenticatedUsername != null) {
+            session.setUser(authenticatedUsername);
+            session.setState(Session.State.AUTHENTICATED);
+            return "OK authentication successfull";
+        } else {
+            session.setState(Session.State.UNAUTHENTICATED);
+            session.setUser(null);
+            return "NO authentication failed";
+        }
+    }
+
+    @Override
     public String unauthenticate(Session session) {
         if (session.isAuthenticated()) {
-            session.setAuthentication(false);
+            session.setState(Session.State.UNAUTHENTICATED);
+            session.setUser(null);
             return "OK";
         } else {
             return "NO UNAUTHENTICATE command must be issued in authenticated state";
@@ -199,10 +240,10 @@ public class CoreProcessor implements CoreCommands {
     }
 
     protected void authenticationCheck(Session session) throws AuthenticationRequiredException {
-        ensureUser(session);
         if (!session.isAuthenticated()) {
             throw new AuthenticationRequiredException();
         }
+        ensureUser(session);
     }
 
     private void ensureUser(Session session) {
@@ -217,13 +258,7 @@ public class CoreProcessor implements CoreCommands {
 
 
     private String buildExtensions(SieveParser parser) {
-        StringBuilder builder = new StringBuilder();
-        if (parser.getExtensions() != null) {
-            for (String extension : parser.getExtensions()) {
-                builder.append(extension).append(' ');
-            }
-        }
-        return builder.toString().trim();
+        return Joiner.on(' ').join(parser.getExtensions()).trim();
     }
 
     private String taggify(String tag) {
@@ -232,6 +267,9 @@ public class CoreProcessor implements CoreCommands {
     }
 
     private String unquotaIfNeeded(String tag) {
+        if (Strings.isNullOrEmpty(tag)) {
+            return "";
+        }
         int startIndex = 0;
         int stopIndex = tag.length();
         if (tag.endsWith("\r\n")) {
@@ -246,15 +284,27 @@ public class CoreProcessor implements CoreCommands {
         return tag.substring(startIndex, stopIndex);
     }
 
-    private Map<Capabilities, String> precomputeCapabilitiesBase(SieveParser parser) {
+    private Map<Capabilities, String> precomputedCapabilitiesBase(SieveParser parser) {
         String extensions = buildExtensions(parser);
         Map<Capabilities, String> capabilitiesBase = new HashMap<Capabilities, String>();
         capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
+        capabilitiesBase.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
         if (!extensions.isEmpty()) {
             capabilitiesBase.put(Capabilities.SIEVE, extensions);
         }
         capabilitiesBase.put(Capabilities.GETACTIVE, null);
         return capabilitiesBase;
+    }
+
+    private String constructSaslSupportedAuthenticationMechanisms() {
+        return Joiner.on(' ')
+            .join(Lists.transform(
+                Arrays.asList(SupportedMechanism.values()),
+                new Function<SupportedMechanism, String>() {
+                    public String apply(SupportedMechanism supportedMechanism) {
+                        return supportedMechanism.toString();
+                    }
+                }));
     }
 }

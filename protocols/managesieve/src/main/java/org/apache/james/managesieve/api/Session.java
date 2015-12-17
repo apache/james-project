@@ -20,18 +20,29 @@
 
 package org.apache.james.managesieve.api;
 
+import org.apache.james.managesieve.api.commands.Authenticate;
+
 public interface Session {
+
+    enum State {
+        UNAUTHENTICATED,
+        AUTHENTICATION_IN_PROGRESS,
+        AUTHENTICATED,
+        TERMINATED
+    }
 
     boolean isAuthenticated();
 
-    boolean isTerminated();
-
     String getUser();
-
-    void setAuthentication(boolean isAuthenticated);
 
     void setUser(String user);
 
-    void markSessionAsTerminated();
+    State getState();
+
+    void setState(State state);
+
+    Authenticate.SupportedMechanism getChoosedAuthenticationMechanism();
+
+    void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism);
 
 }
