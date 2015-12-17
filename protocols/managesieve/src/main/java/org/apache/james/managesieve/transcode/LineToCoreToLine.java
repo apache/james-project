@@ -20,6 +20,8 @@
 
 package org.apache.james.managesieve.transcode;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
@@ -226,7 +228,7 @@ public class LineToCoreToLine {
         } catch (AuthenticationRequiredException ex) {
             return "NO";
         } catch (SyntaxException ex) {
-            return "NO \"Syntax Error: " + ex.getMessage() + "\"";
+            return Joiner.on("\r\n").join(Splitter.on('\n').split("NO \"Syntax Error: " + ex.getMessage() + "\""));
         } catch (QuotaExceededException ex) {
             return "NO (QUOTA/MAXSIZE) \"Quota exceeded\"";
         } catch (ArgumentException ex) {
