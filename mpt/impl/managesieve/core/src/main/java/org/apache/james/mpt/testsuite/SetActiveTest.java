@@ -17,34 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.managesieve.file;
+package org.apache.james.mpt.testsuite;
 
-import org.apache.james.mpt.testsuite.AuthenticateTest;
-import org.apache.james.mpt.testsuite.CapabilityTest;
-import org.apache.james.mpt.testsuite.HaveSpaceTest;
-import org.apache.james.mpt.testsuite.LogoutTest;
-import org.apache.james.mpt.testsuite.NoopTest;
-import org.apache.james.mpt.testsuite.PutScriptTest;
-import org.apache.james.mpt.testsuite.SetActiveTest;
-import org.apache.james.mpt.testsuite.StartTlsTest;
-import org.apache.james.mpt.testsuite.UnauthenticatedTest;
-import org.apache.onami.test.OnamiSuite;
-import org.apache.onami.test.annotation.GuiceModules;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import com.google.inject.Inject;
+import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.junit.Before;
+import org.junit.Test;
 
-@GuiceModules({ FileModule.class })
-@RunWith(OnamiSuite.class)
-@Suite.SuiteClasses({
-    NoopTest.class,
-    UnauthenticatedTest.class,
-    LogoutTest.class,
-    AuthenticateTest.class,
-    StartTlsTest.class,
-    CapabilityTest.class,
-    HaveSpaceTest.class,
-    PutScriptTest.class,
-    SetActiveTest.class
-})
-public class ManageSieveFileTest {
+import java.util.Locale;
+
+public class SetActiveTest extends ManageSieveMPTTest {
+
+    @Inject
+    private static ManageSieveHostSystem hostSystem;
+
+    public SetActiveTest() throws Exception {
+        super(hostSystem);
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @Test
+    public void setActiveShouldWork() throws Exception {
+        scriptTest("setactive", Locale.US);
+    }
 }

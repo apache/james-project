@@ -261,6 +261,10 @@ public class LineToCoreToLine {
             return "NO (NONEXISTENT) \"There is no script by that name\"";
         }  catch (ArgumentException ex) {
             return "NO \"" + ex.getMessage() + "\"";
+        } catch (UserNotFoundException e) {
+            return "NO : User not found";
+        } catch (StorageException e) {
+            return "NO : Storage exception : " + e.getMessage();
         }
         return "OK";
     }

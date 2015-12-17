@@ -23,12 +23,14 @@ package org.apache.james.managesieve.api.commands;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.sieverepository.api.exception.StorageException;
+import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 
 /**
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-2.8>RFC 5804 SETACTIVE Command</a>
  */
 public interface SetActive {
     
-    void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException;
+    void setActive(Session session, String name) throws AuthenticationRequiredException, ScriptNotFoundException, UserNotFoundException, StorageException;
 
 }
