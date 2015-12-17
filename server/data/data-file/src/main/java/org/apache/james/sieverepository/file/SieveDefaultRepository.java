@@ -109,21 +109,6 @@ public class SieveDefaultRepository implements SieveRepository {
     }
 
     @Override
-    public boolean hasUser(String user) throws StorageException {
-        throw new StorageException("This implementation is deprecated and does not support user related operation. Please consider using a SieveFileRepository.");
-    }
-
-    @Override
-    public void addUser(String user) throws DuplicateUserException, StorageException {
-        throw new StorageException("This implementation is deprecated and does not support user related operation. Please consider using a SieveFileRepository.");
-    }
-
-    @Override
-    public void removeUser(String user) throws UserNotFoundException, StorageException {
-        throw new StorageException("This implementation is deprecated and does not support user related operation. Please consider using a SieveFileRepository.");
-    }
-
-    @Override
     public boolean hasQuota() throws StorageException {
         throw apologizeForQuotas();
     }

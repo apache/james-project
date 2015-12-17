@@ -20,346 +20,279 @@
 
 package org.apache.james.managesieve.core;
 
-import org.apache.commons.io.IOUtils;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.google.common.collect.Lists;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
+import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
-import org.apache.james.managesieve.mock.MockSession;
-import org.apache.james.managesieve.mock.MockSieveParser;
-import org.apache.james.managesieve.mock.MockSieveRepository;
-import org.apache.james.sieverepository.api.exception.IsActiveException;
-import org.apache.james.sieverepository.api.exception.QuotaExceededException;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.ScriptSummary;
-import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.api.exception.IsActiveException;
+import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.apache.james.user.api.UsersRepository;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-/**
- * <code>CoreProcessorTestCase</code>
- */
 public class CoreProcessorTestCase {
 
-    private MockSession session;
-    private MockSieveParser parser;
-    private MockSieveRepository repository;
+    public static final String USER = "test";
+    public static final String SCRIPT = "script";
+    public static final String CONTENT = "content";
+    public static final String OLDNAME = "oldname";
+    public static final String NEW_NAME = "newName";
+    private SettableSession session;
+    private SieveParser sieveParser;
+    private SieveRepository sieveRepository;
+
     private CoreProcessor core;
 
     @Before
     public void setUp() throws Exception {
-        session = new MockSession();
-        parser = new MockSieveParser();
-        repository = new MockSieveRepository();
-        core = new CoreProcessor(session, repository, parser);
+        session = new SettableSession();
+        sieveParser = mock(SieveParser.class);
+        sieveRepository = mock(SieveRepository.class);
+        UsersRepository usersRepository = mock(UsersRepository.class);
+        core = new CoreProcessor(session, sieveRepository, usersRepository, sieveParser);
+        when(usersRepository.contains(USER)).thenAnswer(new Answer<Boolean>() {
+            public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return true;
+            }
+        });
     }
 
     @Test
-    public final void testCapability() {
-        // Unauthenticated
+    public final void testCapabilityUnauthenticated() {
         session.setAuthentication(false);
-        parser.setExtensions(Arrays.asList("a", "b", "c"));
-        Map<Capabilities, String> capabilities = core.capability();
-        assertEquals(CoreProcessor.IMPLEMENTATION_DESCRIPTION, capabilities.get(Capabilities.IMPLEMENTATION));
-        assertEquals(CoreProcessor.MANAGE_SIEVE_VERSION, capabilities.get(Capabilities.VERSION));
-        assertEquals("a b c", capabilities.get(Capabilities.SIEVE));
-        assertFalse(capabilities.containsKey(Capabilities.OWNER));
-        assertTrue(capabilities.containsKey(Capabilities.GETACTIVE));
-
-        // Authenticated
-        session.setAuthentication(true);
-        parser.setExtensions(Arrays.asList("a", "b", "c"));
-        session.setUser("test");
-        capabilities = core.capability();
-        assertEquals(CoreProcessor.IMPLEMENTATION_DESCRIPTION, capabilities.get(Capabilities.IMPLEMENTATION));
-        assertEquals(CoreProcessor.MANAGE_SIEVE_VERSION, capabilities.get(Capabilities.VERSION));
-        assertEquals("a b c", capabilities.get(Capabilities.SIEVE));
-        assertEquals("test", capabilities.get(Capabilities.OWNER));
-        assertTrue(capabilities.containsKey(Capabilities.GETACTIVE));
+        when(sieveParser.getExtensions()).thenAnswer(new Answer<List<String>>() {
+            public List<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return Lists.newArrayList("a", "b", "c");
+            }
+        });
+        assertThat(core.capability()).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
+            .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
+            .containsEntry(Capabilities.SIEVE, "a b c")
+            .containsKey(Capabilities.GETACTIVE);
     }
 
     @Test
-    public final void testCheckScript() throws AuthenticationRequiredException, SyntaxException {
-        // Unauthorised
-        boolean success = false;
+    public final void testCapabilityAuthenticated() {
+        session.setAuthentication(true);
+        when(sieveParser.getExtensions()).thenAnswer(new Answer<List<String>>() {
+            public List<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return Lists.newArrayList("a", "b", "c");
+            }
+        });
+        session.setUser(USER);
+        assertThat(core.capability()).containsEntry(Capabilities.IMPLEMENTATION, CoreProcessor.IMPLEMENTATION_DESCRIPTION)
+            .containsEntry(Capabilities.VERSION, CoreProcessor.MANAGE_SIEVE_VERSION)
+            .containsEntry(Capabilities.SIEVE, "a b c")
+            .containsEntry(Capabilities.OWNER, USER)
+            .containsKey(Capabilities.GETACTIVE);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testCheckScriptUnauthorised() throws AuthenticationRequiredException, SyntaxException {
         session.setAuthentication(false);
-        try {
-            core.checkScript("warning");
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised
-        session.setAuthentication(true);
-        session.setUser("test");
-        List<String> warnings = core.checkScript("warning");
-        assertEquals(2, warnings.size());
-        assertEquals("warning1", warnings.get(0));
-        assertEquals("warning2", warnings.get(1));
-
-        // Syntax
-        success = false;
-        session.setAuthentication(true);
-        session.setUser("test");
-        try {
-            core.checkScript("SyntaxException");
-        } catch (SyntaxException ex) {
-            success = true;
-        }
-        assertTrue("Expected SyntaxException", success);
+        core.checkScript("warning");
     }
 
     @Test
-    public final void testDeleteScript() throws Exception {
-        // Unauthorised
-        boolean success = false;
+    public final void testCheckScript() throws Exception {
+        session.setAuthentication(true);
+        session.setUser(USER);
+        when(sieveParser.parse(CONTENT)).thenAnswer(new Answer<List<String>>() {
+            public List<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return Lists.newArrayList("warning1", "warning2");
+            }
+        });
+        assertThat(core.checkScript(CONTENT)).containsOnly("warning1", "warning2");
+    }
+
+    @Test(expected = SyntaxException.class)
+    public final void testCheckScriptSyntaxException() throws Exception {
+        doThrow(new SyntaxException("Syntax exception")).when(sieveParser).parse(CONTENT);
+        session.setAuthentication(true);
+        session.setUser(USER);
+        core.checkScript(CONTENT);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testDeleteScriptUnauthorised() throws Exception {
         session.setAuthentication(false);
-        try {
-            core.deleteScript("script");
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
+        core.deleteScript(SCRIPT);
+    }
 
-        // Authorised - non-existent script
-        success = false;
+    @Test(expected = ScriptNotFoundException.class)
+    public final void testDeleteScriptNonExistent() throws Exception {
+        doThrow(new ScriptNotFoundException()).when(sieveRepository).deleteScript(USER, SCRIPT);
         session.setAuthentication(true);
-        session.setUser("test");
-        try {
-            core.deleteScript("script");
-        } catch (ScriptNotFoundException ex) {
-            success = true;
-        }
-        assertTrue("Expected ScriptNotFoundException", success);
+        session.setUser(USER);
+        core.deleteScript(SCRIPT);
+    }
 
-        // Authorised - existent script
-        session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "script", "content");
-        core.deleteScript("script");
-        success = false;
-        try {
-            repository.getScript("test", "script");
-        } catch (ScriptNotFoundException ex) {
-            success = true;
-        }
-        assertTrue("Expected ScriptNotFoundException", success);
 
-        // Authorised - active script
-        success = false;
+    @Test
+    public final void testDeleteScriptExistent() throws Exception {
         session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "script", "content");
-        repository.setActive("test", "script");
-        try {
-            core.deleteScript("script");
-        } catch (IsActiveException ex) {
-            success = true;
-        }
-        assertTrue("Expected IsActiveException", success);
+        session.setUser(USER);
+        sieveRepository.putScript(USER, SCRIPT, CONTENT);
+        core.deleteScript(SCRIPT);
+        verify(sieveRepository).deleteScript(USER, SCRIPT);
+    }
+
+    @Test(expected = IsActiveException.class)
+    public final void testDeleteScriptActive() throws Exception {
+        doThrow(new IsActiveException()).when(sieveRepository).deleteScript(USER, SCRIPT);
+        session.setAuthentication(true);
+        session.setUser(USER);
+        core.deleteScript(SCRIPT);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testGetUnauthorisedScript() throws Exception {
+        session.setAuthentication(false);
+        core.getScript(SCRIPT);
+    }
+
+    @Test(expected = ScriptNotFoundException.class)
+    public final void testGetNonExistentScript() throws Exception {
+        doThrow(new ScriptNotFoundException()).when(sieveRepository).getScript(USER, SCRIPT);
+        session.setAuthentication(true);
+        session.setUser(USER);
+        core.getScript(SCRIPT);
     }
 
     @Test
-    public final void testGetScript() throws ScriptNotFoundException, AuthenticationRequiredException, UserNotFoundException, StorageException, QuotaExceededException {
-        // Unauthorised
-        boolean success = false;
+    public final void testGetScript() throws Exception {
+        session.setAuthentication(true);
+        session.setUser(USER);
+        when(sieveRepository.getScript(USER, SCRIPT)).thenAnswer(new Answer<String>() {
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return CONTENT;
+            }
+        });
+        assertThat(core.getScript(SCRIPT)).isEqualTo(CONTENT);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testHaveSpaceUnauthorised() throws Exception {
         session.setAuthentication(false);
-        try {
-            core.getScript("script");
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised - non-existent script
-        success = false;
-        session.setAuthentication(true);
-        session.setUser("test");
-        try {
-            core.getScript("script");
-            System.out.println("yop yop");
-        } catch (ScriptNotFoundException ex) {
-            success = true;
-            ex.printStackTrace();
-        } catch (Exception e) {
-            System.out.println("Euh ... ");
-            e.printStackTrace();
-            System.out.println("Yolo");
-        }
-        assertTrue("Expected ScriptNotFoundException", success);
-
-        // Authorised - existent script
-        session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "script", "content");
-        core.getScript("script");
+        core.haveSpace(SCRIPT, Long.MAX_VALUE);
     }
 
     @Test
     public final void testHaveSpace() throws Exception {
-        // Unauthorised
-        boolean success = false;
-        session.setAuthentication(false);
-        try {
-            core.haveSpace("script", Long.MAX_VALUE);
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised - existent script
         session.setAuthentication(true);
-        session.setUser("test");
-        core.haveSpace("script", Long.MAX_VALUE);
+        session.setUser(USER);
+        core.haveSpace(SCRIPT, Long.MAX_VALUE);
+        verify(sieveRepository).haveSpace(USER, SCRIPT, Long.MAX_VALUE);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testListScriptsUnauthorised() throws Exception {
+        session.setAuthentication(false);
+        core.listScripts();
     }
 
     @Test
     public final void testListScripts() throws Exception {
-        // Unauthorised
-        boolean success = false;
+        session.setAuthentication(true);
+        session.setUser(USER);
+        when(sieveRepository.listScripts(USER)).thenAnswer(new Answer<List<ScriptSummary>>() {
+            @Override
+            public List<ScriptSummary> answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return Lists.newArrayList(new ScriptSummary(SCRIPT, false));
+            }
+        });
+        sieveRepository.putScript(USER, SCRIPT, CONTENT);
+        assertThat(core.listScripts()).containsOnly(new ScriptSummary(SCRIPT, false));
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testPutScriptUnauthorised() throws Exception {
         session.setAuthentication(false);
-        try {
-            core.listScripts();
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised - non-existent script
-        success = false;
-        session.setAuthentication(true);
-        session.setUser("test");
-        List<ScriptSummary> summaries = core.listScripts();
-        assertTrue(summaries.isEmpty());
-
-        // Authorised - existent script
-        session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "script", "content");
-        summaries = core.listScripts();
-        assertEquals(1, summaries.size());
+        core.putScript(SCRIPT, CONTENT);
     }
 
     @Test
-    public final void testPutScript() throws Exception {
-        // Unauthorised
-        boolean success = false;
+    public final void testPutScriptAuthorized() throws Exception {
+        session.setAuthentication(true);
+        session.setUser(USER);
+        core.putScript(SCRIPT, CONTENT);
+        verify(sieveRepository).putScript(USER, SCRIPT, CONTENT);
+    }
+
+    @Test(expected = SyntaxException.class)
+    public final void testPutScriptSyntaxException() throws Exception {
+        doThrow(new SyntaxException("Syntax exception")).when(sieveParser).parse(CONTENT);
+        session.setAuthentication(true);
+        session.setUser(USER);
+        core.putScript(SCRIPT, CONTENT);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testRenameScriptUnauthorized() throws Exception {
         session.setAuthentication(false);
-        try {
-            core.putScript("script", "content");
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised
-        success = false;
-        session.setAuthentication(true);
-        session.setUser("test");
-        core.putScript("script", "content");
-        assertEquals("content", IOUtils.toString(repository.getScript("test", "script")));
-
-        // Syntax
-        success = false;
-        session.setAuthentication(true);
-        session.setUser("test");
-        try {
-            core.putScript("script", "SyntaxException");
-        } catch (SyntaxException ex) {
-            success = true;
-        }
-        assertTrue("Expected SyntaxException", success);
+        core.renameScript(OLDNAME, NEW_NAME);
     }
 
     @Test
     public final void testRenameScript() throws Exception {
-        // Unauthorised
-        boolean success = false;
-        session.setAuthentication(false);
-        try {
-            core.renameScript("oldName", "newName");
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised
-        success = false;
         session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "oldName", "content");
-        core.renameScript("oldName", "newName");
-        assertEquals("content", IOUtils.toString(repository.getScript("test", "oldName")));
+        session.setUser(USER);
+        core.renameScript(OLDNAME, NEW_NAME);
+        verify(sieveRepository).renameScript(USER, OLDNAME, NEW_NAME);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testSetActiveUnauthorised() throws Exception {
+        session.setAuthentication(false);
+        core.setActive(SCRIPT);
     }
 
     @Test
     public final void testSetActive() throws Exception {
-        // Unauthorised
-        boolean success = false;
-        session.setAuthentication(false);
-        try {
-            core.setActive("script");
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised
-        success = false;
         session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "script", "content");
-        core.setActive("script");
-        assertEquals("content", IOUtils.toString(repository.getActive("test")));
+        session.setUser(USER);
+        core.setActive(SCRIPT);
+        verify(sieveRepository).setActive(USER, SCRIPT);
+    }
+
+    @Test(expected = AuthenticationRequiredException.class)
+    public final void testGetUnauthorisedActive() throws Exception {
+        session.setAuthentication(false);
+        core.getActive();
+    }
+
+    @Test(expected = ScriptNotFoundException.class)
+    public final void testGetNonExistentActive() throws Exception {
+        doThrow(new ScriptNotFoundException()).when(sieveRepository).getActive(USER);
+        session.setAuthentication(true);
+        session.setUser(USER);
+        core.getActive();
     }
 
     @Test
     public final void testGetActive() throws Exception {
-        // Unauthorised
-        boolean success = false;
-        session.setAuthentication(false);
-        try {
-            core.getActive();
-        } catch (AuthenticationRequiredException ex) {
-            success = true;
-        }
-        assertTrue("Expected AuthenticationRequiredException", success);
-
-        // Authorised - non-existent script
-        success = false;
         session.setAuthentication(true);
-        session.setUser("test");
-        try {
-            core.getActive();
-        } catch (ScriptNotFoundException ex) {
-            success = true;
-        }
-        assertTrue("Expected ScriptNotFoundException", success);
-
-        // Authorised - existent script, inactive
-        session.setAuthentication(true);
-        session.setUser("test");
-        repository.putScript("test", "script", "content");
-        try {
-            core.getActive();
-        } catch (ScriptNotFoundException ex) {
-            success = true;
-        }
-        assertTrue("Expected ScriptNotFoundException", success);
-
-        // Authorised - existent script, active
-        session.setAuthentication(true);
-        session.setUser("test");
-        repository.setActive("test", "script");
-        core.getActive();
+        session.setUser(USER);
+        sieveRepository.setActive(USER, SCRIPT);
+        when(sieveRepository.getActive(USER)).thenAnswer(new Answer<String>() {
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return CONTENT;
+            }
+        });
+        assertThat(core.getActive()).isEqualTo(CONTENT);
     }
 }

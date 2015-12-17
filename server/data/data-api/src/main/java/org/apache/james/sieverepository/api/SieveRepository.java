@@ -66,12 +66,6 @@ public interface SieveRepository {
     void deleteScript(String user, String name) throws UserNotFoundException, ScriptNotFoundException, IsActiveException, StorageException;
     
     void renameScript(String user, String oldName, String newName) throws UserNotFoundException, ScriptNotFoundException, DuplicateException, StorageException;
-    
-    boolean hasUser(String user) throws StorageException;
-    
-    void addUser(String user) throws DuplicateUserException, StorageException;
-    
-    void removeUser(String user) throws UserNotFoundException, StorageException;
 
     boolean hasQuota() throws StorageException;
     
