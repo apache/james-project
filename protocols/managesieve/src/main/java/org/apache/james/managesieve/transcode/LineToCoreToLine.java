@@ -23,6 +23,7 @@ package org.apache.james.managesieve.transcode;
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.commands.Capability.Capabilities;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -75,6 +76,10 @@ public class LineToCoreToLine {
 
     public String unauthenticate(Session session, String args) {
         return lineToCore.unauthenticate(session, args);
+    }
+
+    public void logout() throws SessionTerminatedException {
+        lineToCore.logout();
     }
 
     public String checkScript(Session session, String args) {

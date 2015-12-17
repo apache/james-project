@@ -17,22 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.managesieve.file;
+package org.apache.james.mpt.testsuite;
 
-import org.apache.james.mpt.testsuite.LogoutTest;
-import org.apache.james.mpt.testsuite.NoopTest;
-import org.apache.james.mpt.testsuite.UnauthenticatedTest;
-import org.apache.onami.test.OnamiSuite;
-import org.apache.onami.test.annotation.GuiceModules;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import com.google.inject.Inject;
+import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.junit.Test;
 
-@GuiceModules({ FileModule.class })
-@RunWith(OnamiSuite.class)
-@Suite.SuiteClasses({
-    NoopTest.class,
-    UnauthenticatedTest.class,
-    LogoutTest.class
-})
-public class ManageSieveFileTest {
+import java.util.Locale;
+
+public class LogoutTest extends ManageSieveMPTTest {
+
+    @Inject
+    private static ManageSieveHostSystem hostSystem;
+
+    public LogoutTest() throws Exception {
+        super(hostSystem);
+    }
+
+    @Test
+    public void logoutShouldWork() throws Exception {
+        scriptTest("logout", Locale.US);
+    }
 }

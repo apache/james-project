@@ -24,10 +24,14 @@ public interface Session {
 
     boolean isAuthenticated();
 
+    boolean isTerminated();
+
     String getUser();
 
     void setAuthentication(boolean isAuthenticated);
 
     void setUser(String user);
+
+    void markSessionAsTerminated();
 
 }
