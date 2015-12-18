@@ -30,9 +30,9 @@ import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
@@ -98,11 +98,13 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     private Optional<Mailbox> mailboxFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
             Optional<Role> role = Role.from(mailboxPath.getName());
+            MessageManager.MetaData mailboxMetaData = getMailboxMetaData(mailboxPath, mailboxSession);
             return Optional.ofNullable(Mailbox.builder()
                     .id(getMailboxId(mailboxPath, mailboxSession))
                     .name(mailboxPath.getName())
                     .role(role)
-                    .unreadMessages(unreadMessages(mailboxPath, mailboxSession))
+                    .unreadMessages(mailboxMetaData.getUnseenCount())
+                    .totalMessages(mailboxMetaData.getMessageCount())
                     .sortOrder(SortOrder.getSortOrder(role))
                     .build());
         } catch (MailboxException e) {
@@ -111,17 +113,16 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private String getMailboxId(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException, MailboxNotFoundException {
+    private String getMailboxId(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         return mailboxMapperFactory.getMailboxMapper(mailboxSession)
                 .findMailboxByPath(mailboxPath)
                 .getMailboxId()
                 .serialize();
     }
 
-    private long unreadMessages(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+    private MessageManager.MetaData getMailboxMetaData(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         return mailboxManager.getMailbox(mailboxPath, mailboxSession)
-                .getMetaData(DONT_RESET_RECENT, mailboxSession, FetchGroup.UNSEEN_COUNT)
-                .getUnseenCount();
+                .getMetaData(DONT_RESET_RECENT, mailboxSession, FetchGroup.UNSEEN_COUNT);
     }
 
 }
