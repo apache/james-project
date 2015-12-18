@@ -196,6 +196,12 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>org.assertj</groupId>
+                    <artifactId>assertj-core</artifactId>
+                    <version>${assertj-3.version}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>org.cassandraunit</groupId>
                     <artifactId>cassandra-unit</artifactId>
                     <version>${cassandra-unit.version}</version>
