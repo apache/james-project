@@ -172,7 +172,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .content(startsWith("[[\"mailboxes\",{\"accountId\":null,\"state\":null,\"list\":[{\"id\":\""), 
-                    endsWith("\",\"name\":\"name\",\"parentId\":null,\"role\":null,\"sortOrder\":1000,\"mustBeOnlyMailbox\":false,\"mayReadItems\":false,\"mayAddItems\":false,\"mayRemoveItems\":false,\"mayCreateChild\":false,\"mayRename\":false,\"mayDelete\":false,\"totalMessages\":0,\"unreadMessages\":1,\"totalThreads\":0,\"unreadThreads\":0}],\"notFound\":null},\"#0\"]]"));
+                    endsWith("\",\"name\":\"name\",\"parentId\":null,\"role\":null,\"sortOrder\":1000,\"mustBeOnlyMailbox\":false,\"mayReadItems\":false,\"mayAddItems\":false,\"mayRemoveItems\":false,\"mayCreateChild\":false,\"mayRename\":false,\"mayDelete\":false,\"totalMessages\":1,\"unreadMessages\":1,\"totalThreads\":0,\"unreadThreads\":0}],\"notFound\":null},\"#0\"]]"));
     }
 
     @SuppressWarnings("unchecked")
