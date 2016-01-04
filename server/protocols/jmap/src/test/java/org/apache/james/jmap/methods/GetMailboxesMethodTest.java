@@ -34,6 +34,7 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -167,4 +168,56 @@ public class GetMailboxesMethodTest {
                         Tuple.tuple("TEMPLATES", 80));
     }
 
+    @Test
+    public void getMailboxesShouldReturnEmptyMailboxByDefault() throws MailboxException {
+        MailboxPath mailboxPath = new MailboxPath("#private", USERNAME, "name");
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getTotalMessages, Mailbox::getUnreadMessages)
+                .containsOnly(Tuple.tuple(0L, 0L));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnCorrectTotalMessagesCount() throws MailboxException {
+        MailboxPath mailboxPath = new MailboxPath("#private", USERNAME, "name");
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getTotalMessages)
+                .containsExactly(2L);
+    }
+
+    @Test
+    public void getMailboxesShouldReturnCorrectUnreadMessagesCount() throws MailboxException {
+        MailboxPath mailboxPath = new MailboxPath("#private", USERNAME, "name");
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        Flags defaultUnseenFlag = new Flags();
+        Flags readMessageFlag = new Flags();
+        readMessageFlag.add(Flags.Flag.SEEN);
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag );
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag );
+        messageManager.appendMessage(new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, readMessageFlag);
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
+        assertThat(getMailboxesResponse.getList())
+                .extracting(Mailbox::getUnreadMessages)
+                .containsExactly(2L);
+    }
 }
