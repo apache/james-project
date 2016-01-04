@@ -48,6 +48,10 @@
             <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
           <groupId>javax.inject</groupId>
           <artifactId>javax.inject</artifactId>
         </dependency>

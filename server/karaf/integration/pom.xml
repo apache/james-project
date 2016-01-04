@@ -81,7 +81,6 @@
         <dependency>
             <groupId>org.apache.james.karaf</groupId>
             <artifactId>james-karaf-distribution</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
             <type>tar.gz</type>
             <exclusions>

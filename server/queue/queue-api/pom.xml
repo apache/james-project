@@ -39,13 +39,17 @@
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${javax.mail.groupId}</groupId>
-            <artifactId>${javax.mail.artifactId}</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-lifecycle-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${javax.mail.groupId}</groupId>
+            <artifactId>${javax.mail.artifactId}</artifactId>
         </dependency>
     </dependencies>
 

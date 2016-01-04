@@ -188,10 +188,11 @@
         <mockito-core.version>1.9.0</mockito-core.version>
         <backends.version>1.8.3-SNAPSHOT</backends.version>
         <apache-backends-cassandra.version>1.8.3-SNAPSHOT</apache-backends-cassandra.version>
-        <assertj3>3.2.0</assertj3>
         <jackson-data.version>2.6.3</jackson-data.version>
         <jetty.version>9.3.5.v20151012</jetty.version>
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
+        <assertj-1.version>1.7.1</assertj-1.version>
+        <assertj-3.version>3.2.0</assertj-3.version>
     </properties>
 
     <dependencyManagement>
@@ -972,12 +973,6 @@
                 <groupId>org.jmock</groupId>
                 <artifactId>jmock</artifactId>
                 <version>${jmock.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>1.7.1</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
