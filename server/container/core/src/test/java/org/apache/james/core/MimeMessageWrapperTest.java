@@ -26,10 +26,13 @@ import static org.junit.Assert.fail;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Enumeration;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
@@ -308,5 +311,16 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         mw.setText(newBody);
         mw.saveChanges();
         assertEquals(body.length(), mw.getSize());
+    }
+    
+    @Ignore("will be fixed on next commit")
+    @Test
+    public void jiraJames1593() throws MessagingException, IOException {
+        Properties noProperties = new Properties();
+        Session session = Session.getDefaultInstance(noProperties);
+        InputStream stream = ClassLoader.getSystemResourceAsStream("JAMES-1593.eml");
+        MimeMessage message = new MimeMessage(session, stream);
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(message);
+        assertEquals("\"base64\"", wrapper.getEncoding());
     }
 }
