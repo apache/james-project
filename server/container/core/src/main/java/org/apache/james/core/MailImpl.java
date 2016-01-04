@@ -27,6 +27,7 @@ import org.apache.mailet.MailAddress;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -88,7 +89,7 @@ public class MailImpl implements Disposable, Mail {
     /**
      * The collection of recipients to whom this mail was sent.
      */
-    private Collection recipients;
+    private Collection<MailAddress> recipients;
     /**
      * The identifier for this mail message
      */
@@ -126,7 +127,7 @@ public class MailImpl implements Disposable, Mail {
      * @param sender     the sender for this MailImpl
      * @param recipients the collection of recipients of this MailImpl
      */
-    public MailImpl(String name, MailAddress sender, Collection recipients) {
+    public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients) {
         this();
         this.name = name;
         this.sender = sender;
@@ -134,7 +135,7 @@ public class MailImpl implements Disposable, Mail {
 
         // Copy the recipient list
         if (recipients != null) {
-            this.recipients = new ArrayList();
+            this.recipients = new ArrayList<MailAddress>();
             this.recipients.addAll(recipients);
         }
     }
@@ -154,6 +155,7 @@ public class MailImpl implements Disposable, Mail {
      * @param newName
      * @throws MessagingException
      */
+    @SuppressWarnings("unchecked")
     public MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
         setRemoteHost(mail.getRemoteHost());
@@ -161,11 +163,11 @@ public class MailImpl implements Disposable, Mail {
         setLastUpdated(mail.getLastUpdated());
         try {
             if (mail instanceof MailImpl) {
-                setAttributesRaw((HashMap) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
+                setAttributesRaw((HashMap<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
             } else {
                 HashMap<String, Object> attribs = new HashMap<String, Object>();
-                for (Iterator i = mail.getAttributeNames(); i.hasNext(); ) {
-                    String hashKey = (String) i.next();
+                for (Iterator<String> i = mail.getAttributeNames(); i.hasNext(); ) {
+                    String hashKey = i.next();
                     attribs.put(hashKey, cloneSerializableObject(mail.getAttribute(hashKey)));
                 }
                 setAttributesRaw(attribs);
@@ -188,7 +190,7 @@ public class MailImpl implements Disposable, Mail {
      * @param recipients the collection of recipients of this MailImpl
      * @param messageIn  a stream containing the message source
      */
-    public MailImpl(String name, MailAddress sender, Collection recipients, InputStream messageIn) throws MessagingException {
+    public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, InputStream messageIn) throws MessagingException {
         this(name, sender, recipients);
         MimeMessageSource source = new MimeMessageInputStreamSource(name, messageIn);
         // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
@@ -210,7 +212,7 @@ public class MailImpl implements Disposable, Mail {
      * @param recipients the collection of recipients of this MailImpl
      * @param message    the MimeMessage associated with this MailImpl
      */
-    public MailImpl(String name, MailAddress sender, Collection recipients, MimeMessage message) {
+    public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) {
         this(name, sender, recipients);
         this.setMessage(new MimeMessageCopyOnWriteProxy(message));
     }
@@ -286,7 +288,7 @@ public class MailImpl implements Disposable, Mail {
      * @return the recipients of this MailImpl
      */
     @Override
-    public Collection getRecipients() {
+    public Collection<MailAddress> getRecipients() {
         return recipients;
     }
 
@@ -398,7 +400,7 @@ public class MailImpl implements Disposable, Mail {
      * @param recipients the recipients for this MailImpl
      */
     @Override
-    public void setRecipients(Collection recipients) {
+    public void setRecipients(Collection<MailAddress> recipients) {
         this.recipients = recipients;
     }
 
@@ -479,6 +481,7 @@ public class MailImpl implements Disposable, Mail {
      * @throws ClassNotFoundException ?
      * @throws ClassCastException     if the serialized objects are not of the appropriate type
      */
+    @SuppressWarnings("unchecked")
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             Object obj = in.readObject();
@@ -492,7 +495,7 @@ public class MailImpl implements Disposable, Mail {
         } catch (ParseException pe) {
             throw new IOException("Error parsing sender address: " + pe.getMessage());
         }
-        recipients = (Collection) in.readObject();
+        recipients = (Collection<MailAddress>) in.readObject();
         state = (String) in.readObject();
         errorMessage = (String) in.readObject();
         name = (String) in.readObject();
@@ -502,7 +505,7 @@ public class MailImpl implements Disposable, Mail {
         // the following is under try/catch to be backwards compatible
         // with messages created with James version <= 2.2.0a8
         try {
-            attributes = (HashMap) in.readObject();
+            attributes = (HashMap<String, Object>) in.readObject();
         } catch (OptionalDataException ode) {
             if (ode.eof) {
                 attributes = new HashMap<String, Object>();
@@ -591,7 +594,7 @@ public class MailImpl implements Disposable, Mail {
     }
 
     @Override
-    public Iterator getAttributeNames() {
+    public Iterator<String> getAttributeNames() {
         return attributes.keySet().iterator();
     }
 

@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 import javax.inject.Inject;
@@ -91,8 +93,8 @@ public class FromRepository extends GenericMailet {
      */
     public void service(Mail trigger) throws MessagingException {
         trigger.setState(Mail.GHOST);
-        java.util.Collection processed = new java.util.ArrayList();
-        Iterator list = repository.list();
+        Collection<String> processed = new ArrayList<String>();
+        Iterator<String> list = repository.list();
         while (list.hasNext()) {
             String key = (String) list.next();
             try {

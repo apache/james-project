@@ -126,7 +126,7 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
         if (!getSupportedLogLevels().contains(loglevel)) {
             throw new IllegalArgumentException("Not supported loglevel given");
         } else {
-            ((org.apache.log4j.Logger) logMap.get(component)).getRootLogger().setLevel(Level.toLevel(loglevel));
+            ((org.apache.log4j.Logger) logMap.get(component)).setLevel(Level.toLevel(loglevel));
         }
     }
 

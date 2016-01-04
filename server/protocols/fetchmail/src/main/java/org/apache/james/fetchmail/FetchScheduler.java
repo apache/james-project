@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -104,7 +103,6 @@ public class FetchScheduler implements FetchSchedulerMBean, LogEnabled, Configur
         this.conf = config;
     }
 
-    @SuppressWarnings("unchecked")
     @PostConstruct
     public void init() throws Exception {
         enabled = conf.getBoolean("[@enabled]", false);

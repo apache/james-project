@@ -49,6 +49,7 @@ public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
 
     private ProtocolHandler createProtocolHandler(String name) throws LoadingException {
         try {
+            @SuppressWarnings("unchecked")
             Class<ProtocolHandler> clazz = (Class<ProtocolHandler>) ClassLoader.getSystemClassLoader().loadClass(name);
             return injector.getInstance(clazz);
         } catch (ClassNotFoundException e) {

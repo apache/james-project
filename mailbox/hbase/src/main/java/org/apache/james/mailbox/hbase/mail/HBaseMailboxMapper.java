@@ -82,7 +82,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             
             Scan scan = new Scan();
             scan.addFamily(MAILBOX_CF);
-            scan.setCaching(mailboxes.getScannerCaching() * 2);
+            scan.setCaching(mailboxes.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
 
             /*
@@ -133,7 +133,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             
             Scan scan = new Scan();
             scan.addFamily(MAILBOX_CF);
-            scan.setCaching(mailboxes.getScannerCaching() * 2);
+            scan.setCaching(mailboxes.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             
             FilterList filters = new FilterList(FilterList.Operator.MUST_PASS_ALL);
@@ -195,7 +195,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
             Scan scan = new Scan();
             scan.addFamily(MAILBOX_CF);
-            scan.setCaching(mailboxes.getScannerCaching() * 2);
+            scan.setCaching(mailboxes.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             scanner = mailboxes.getScanner(scan);
             List<Mailbox<HBaseId>> mailboxList = new ArrayList<Mailbox<HBaseId>>();
@@ -279,7 +279,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             
             Scan scan = new Scan();
             scan.addFamily(MAILBOX_CF);
-            scan.setCaching(mailboxes.getScannerCaching() * 2);
+            scan.setCaching(mailboxes.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             
             FilterList filters = new FilterList(FilterList.Operator.MUST_PASS_ALL);

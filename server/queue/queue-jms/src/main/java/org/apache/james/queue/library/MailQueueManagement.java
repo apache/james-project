@@ -110,13 +110,12 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<CompositeData> browse() throws Exception {
         MailQueueIterator it = queue.browse();
         List<CompositeData> data = new ArrayList<CompositeData>();
         String[] names = new String[]{"name", "sender", "state", "recipients", "size", "lastUpdated", "remoteAddress", "remoteHost", "errorMessage", "attributes", "nextDelivery"};
         String[] descs = new String[]{"Unique name", "Sender", "Current state", "Recipients", "Size in bytes", "Timestamp of last update", "IPAddress of the sender", "Hostname of the sender", "Errormessage if any", "Attributes stored", "Timestamp of when the next delivery attempt will be make"};
-        OpenType[] types = new OpenType[]{SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.LONG, SimpleType.LONG, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.LONG};
+        OpenType<?>[] types = new OpenType<?>[]{SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.LONG, SimpleType.LONG, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.LONG};
 
         while (it.hasNext()) {
 

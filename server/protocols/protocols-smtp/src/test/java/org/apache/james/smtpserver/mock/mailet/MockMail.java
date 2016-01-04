@@ -20,21 +20,23 @@ package org.apache.james.smtpserver.mock.mailet;
 
 import java.io.Serializable;
 import java.util.*;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 public class MockMail implements Mail {
 
     private MimeMessage msg = null;
-    private Collection recipients = new ArrayList();
+    private Collection<MailAddress> recipients = new ArrayList<MailAddress>();
     private String name = null;
     private final MailAddress sender = null;
     private String state = null;
     private String errorMessage;
     private Date lastUpdated;
-    private final HashMap attributes = new HashMap();
+    private final HashMap<String, Serializable> attributes = new HashMap<String, Serializable>();
     private static final long serialVersionUID = 1L;
     private long size = 0;
     private String remoteAddr = "127.0.0.1";
@@ -55,12 +57,12 @@ public class MockMail implements Mail {
     }
 
     @Override
-    public Collection getRecipients() {
+    public Collection<MailAddress> getRecipients() {
         return recipients;
     }
 
     @Override
-    public void setRecipients(Collection recipients) {
+    public void setRecipients(Collection<MailAddress> recipients) {
         this.recipients = recipients;
     }
 
@@ -110,7 +112,7 @@ public class MockMail implements Mail {
     }
 
     @Override
-    public Iterator getAttributeNames() {
+    public Iterator<String> getAttributeNames() {
         return attributes.keySet().iterator();
     }
 

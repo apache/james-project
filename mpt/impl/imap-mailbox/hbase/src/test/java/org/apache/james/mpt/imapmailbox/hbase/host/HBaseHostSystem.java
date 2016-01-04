@@ -103,7 +103,12 @@ public class HBaseHostSystem extends JamesImapHostSystem {
 
         SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
 
-        final ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, subscriptionManager, new NoQuotaManager(), new DefaultQuotaRootResolver(mapperFactory));
+        final ImapProcessor defaultImapProcessorFactory = 
+                DefaultImapProcessorFactory.createDefaultProcessor(
+                        mailboxManager, 
+                        subscriptionManager, 
+                        new NoQuotaManager(), 
+                        new DefaultQuotaRootResolver(mapperFactory));
 
         resetUserMetaData();
 

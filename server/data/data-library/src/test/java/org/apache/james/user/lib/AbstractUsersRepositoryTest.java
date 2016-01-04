@@ -36,8 +36,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import junit.framework.Assert;
-
 /**
  * Test basic behaviors of UsersFileRepository
  */
@@ -163,9 +161,9 @@ public abstract class AbstractUsersRepositoryTest {
         usersRepository.addUser(login("myUsername"), "password");
         try {
             usersRepository.addUser(login("MyUsername"), "password");
-            Assert.fail("We should not be able to insert same users, even with different cases");
+            fail("We should not be able to insert same users, even with different cases");
         } catch (UsersRepositoryException e) {
-            Assert.assertTrue("The exception message must contain the username value but was=" + e.getMessage(), e.
+            assertTrue("The exception message must contain the username value but was=" + e.getMessage(), e.
                     getMessage().contains("MyUsername"));
         }
     }

@@ -19,7 +19,6 @@
 
 package org.apache.james.user.lib;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;

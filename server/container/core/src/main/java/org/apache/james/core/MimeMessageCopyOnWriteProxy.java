@@ -298,33 +298,39 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         return getWrappedMessage().getHeader(name, delimiter);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getAllHeaders() throws MessagingException {
+    public Enumeration<String> getAllHeaders() throws MessagingException {
         return getWrappedMessage().getAllHeaders();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
         return getWrappedMessage().getMatchingHeaders(names);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getNonMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
         return getWrappedMessage().getNonMatchingHeaders(names);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getAllHeaderLines() throws MessagingException {
+    public Enumeration<String> getAllHeaderLines() throws MessagingException {
         return getWrappedMessage().getAllHeaderLines();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getMatchingHeaderLines(String[] names) throws MessagingException {
+    public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
         return getWrappedMessage().getMatchingHeaderLines(names);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getNonMatchingHeaderLines(String[] names) throws MessagingException {
+    public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         return getWrappedMessage().getNonMatchingHeaderLines(names);
     }
 

@@ -28,7 +28,6 @@
     </parent>
 
     <artifactId>apache-mailet-crypto</artifactId>
-    <version>2.5.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache James :: Crypto Mailets</name>

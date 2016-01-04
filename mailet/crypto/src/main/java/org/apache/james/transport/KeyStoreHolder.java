@@ -42,7 +42,6 @@ import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -118,19 +117,18 @@ public class KeyStoreHolder {
     public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed) throws Exception, MessagingException {
         CertStore certs = signed.getCertificatesAndCRLs("Collection", "BC");
         SignerInformationStore siginfo = signed.getSignerInfos();
+        @SuppressWarnings("unchecked")
         Collection<SignerInformation> sigCol = siginfo.getSigners();
-        Iterator<SignerInformation> sigIterator = sigCol.iterator();
         List<SMIMESignerInfo> result = new ArrayList<SMIMESignerInfo>(sigCol.size());
         // I iterate over the signer collection 
         // checking if the signatures put
         // on the message are valid.
-        for (int i=0;sigIterator.hasNext();i++) {
-            SignerInformation info = sigIterator.next();
+        for (SignerInformation info: sigCol) {
             // I get the signer's certificate
-            Collection certCollection = certs.getCertificates(info.getSID());
-            Iterator<X509Certificate> certIter = certCollection.iterator();
-            if (certIter.hasNext()) {
-                X509Certificate signerCert = certIter.next();
+            @SuppressWarnings("unchecked")
+            Collection<X509Certificate> certCollection = (Collection<X509Certificate>) certs.getCertificates(info.getSID());
+            if (!certCollection.isEmpty()) {
+                X509Certificate signerCert = certCollection.iterator().next();
                 // The issuer's certifcate is searched in the list of trusted certificate.
                 CertPath path = verifyCertificate(signerCert, certs, keyStore);
 

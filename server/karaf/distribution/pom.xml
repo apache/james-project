@@ -33,7 +33,6 @@
         <dependency>
             <groupId>org.apache.james.karaf</groupId>
             <artifactId>james-karaf-features</artifactId>
-            <version>${project.version}</version>
             <type>pom</type>
         </dependency>
     </dependencies>

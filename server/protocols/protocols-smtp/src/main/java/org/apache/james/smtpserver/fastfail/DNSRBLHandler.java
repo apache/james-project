@@ -40,7 +40,6 @@ public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail
         this.dns = dns;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void init(Configuration config) throws ConfigurationException {
         boolean validConfig = false;

@@ -43,7 +43,7 @@ public class AndTest extends BaseMatchersTest {
         setupChild("RecipientIs=test@james.apache.org");
         setupChild("All");
 
-        Collection matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
         assertEquals(1, matchedRecipients.size());
@@ -56,7 +56,7 @@ public class AndTest extends BaseMatchersTest {
         setupChild("RecipientIs=test@james.apache.org");
         setupChild("RecipientIs=test2@james.apache.org");
 
-        Collection matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
         assertEquals(0, matchedRecipients.size());

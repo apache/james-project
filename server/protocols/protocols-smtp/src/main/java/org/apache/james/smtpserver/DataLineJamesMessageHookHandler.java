@@ -49,6 +49,7 @@ import org.apache.mailet.Mail;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -94,6 +95,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 out.flush();
                 out.close();
 
+                @SuppressWarnings("unchecked")
                 List<MailAddress> recipientCollection = (List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
                 MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
 
@@ -218,18 +220,19 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void wireExtensions(Class interfaceName, List extension) throws WiringException {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (JamesMessageHook.class.equals(interfaceName)) {
-            this.messageHandlers = extension;
+            this.messageHandlers = (List<JamesMessageHook>) extension;
             if (messageHandlers == null || messageHandlers.size() == 0) {
                 throw new WiringException("No messageHandler configured");
             }
         } else if (MessageHook.class.equals(interfaceName)) {
-            this.mHandlers = extension;
+            this.mHandlers = (List<MessageHook>) extension;
         } else if (HookResultHook.class.equals(interfaceName)) {
 
-            this.rHooks = extension;
+            this.rHooks = (List<HookResultHook>) extension;
         }
     }
 

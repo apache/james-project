@@ -398,6 +398,11 @@ public abstract class ImapRequestLineReader {
             			// ignore on close
             		}
             	}
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    // ignore on close
+                }
             }
 
         }

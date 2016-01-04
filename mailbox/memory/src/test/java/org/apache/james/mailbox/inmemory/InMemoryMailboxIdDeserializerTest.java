@@ -32,7 +32,7 @@ public class InMemoryMailboxIdDeserializerTest {
     private static final String MALFORMED_SERIALIZED_ID = "aEZ";
     private static final InMemoryId IN_MEMORY_ID = InMemoryId.of(Long.valueOf(SERIALIZED_ID));
 
-    private MailboxIdDeserializer mailboxIdDeserializer;
+    private MailboxIdDeserializer<InMemoryId> mailboxIdDeserializer;
 
     @Before
     public void setUp() {

@@ -20,6 +20,8 @@ package org.apache.james.smtpserver.mock;
 
 import java.io.*;
 import java.util.*;
+import java.util.Map.Entry;
+
 import javax.activation.DataHandler;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -29,23 +31,23 @@ import javax.mail.search.SearchTerm;
 
 public class MockMimeMessage extends MimeMessage {
 
-    private final List m_fromAddresses = new ArrayList();
-    private Address m_senderAddress;
-    private final List m_toRecepients = new ArrayList();
-    private final List m_ccRecepients = new ArrayList();
-    private final List m_bccRecepients = new ArrayList();
-    private final List m_replyToAddresses = new ArrayList();
-    private String m_subject;
-    private int m_iMessageNumber;
-    private boolean m_bIsExpunged;
-    private Object m_content;
-    private Date m_sentDate;
-    private String[] m_contentLanguage;
-    private String m_fileName;
-    private DataHandler m_dataHandler;
-    private final HashMap m_contentHeaders = new HashMap();
-    private final Flags m_setFlags = new Flags();
-    private boolean m_doMatch;
+    private final List<Address> fromAddresses = new ArrayList<Address>();
+    private Address senderAddress;
+    private final List<Address> toRecepients = new ArrayList<Address>();
+    private final List<Address> ccRecepients = new ArrayList<Address>();
+    private final List<Address> bccRecepients = new ArrayList<Address>();
+    private final List<Address> replyToAddresses = new ArrayList<Address>();
+    private String subject;
+    private int messageNumber;
+    private boolean isExpunged;
+    private Object content;
+    private Date sentDate;
+    private String[] contentLanguage;
+    private String fileName;
+    private DataHandler dataHandler;
+    private final HashMap<String, String> contentHeaders = new HashMap<String, String>();
+    private final Flags setFlags = new Flags();
+    private boolean doMatch;
 
     public MockMimeMessage() {
         super((Session) null);
@@ -53,7 +55,7 @@ public class MockMimeMessage extends MimeMessage {
 
     public MockMimeMessage(int messageNumber) {
         super((Session) null);
-        m_iMessageNumber = messageNumber;
+        this.messageNumber = messageNumber;
     }
 
     public MockMimeMessage(MimeMessage mimeMessage) throws MessagingException {
@@ -62,67 +64,62 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public Address[] getFrom() throws MessagingException {
-        return (Address[]) m_fromAddresses.toArray();
+        return fromAddresses.toArray(new Address[0]);
     }
 
     @Override
     public void setFrom(Address address) throws MessagingException {
-        m_fromAddresses.clear();
-        m_fromAddresses.add(address);
+        fromAddresses.clear();
+        fromAddresses.add(address);
     }
 
     @Override
     public void setFrom() throws MessagingException {
-        m_fromAddresses.clear();
-        m_fromAddresses.add(InternetAddress.getLocalAddress(null));
+        fromAddresses.clear();
+        fromAddresses.add(InternetAddress.getLocalAddress(null));
     }
 
     @Override
     public void addFrom(Address[] addresses) throws MessagingException {
-        m_fromAddresses.add(addresses);
+        fromAddresses.addAll(Arrays.asList(addresses));
     }
 
     @Override
     public Address getSender() throws MessagingException {
-        return m_senderAddress;
+        return senderAddress;
     }
 
     @Override
     public void setSender(Address address) throws MessagingException {
-        m_senderAddress = address;
+        senderAddress = address;
     }
 
     @Override
     public Address[] getRecipients(Message.RecipientType recipientType) throws MessagingException {
-        List recipientsList = getRecipientsList(recipientType);
-        List recipientAddresses = new ArrayList();
-        for (Object aRecipientsList : recipientsList) {
-            String recipient = (String) aRecipientsList;
-            recipientAddresses.add(new InternetAddress(recipient));
-        }
-        return (Address[]) (recipientAddresses.toArray(new Address[recipientAddresses.size()]));
+        List<Address> recipientsList = getRecipientsList(recipientType);
+        return recipientsList.toArray(new Address[0]);
     }
 
-    private List getRecipientsList(Message.RecipientType recipientType) {
+    private List<Address> getRecipientsList(Message.RecipientType recipientType) {
         if (Message.RecipientType.TO.equals(recipientType)) {
-            return m_toRecepients;
+            return toRecepients;
         }
         if (Message.RecipientType.CC.equals(recipientType)) {
-            return m_ccRecepients;
+            return ccRecepients;
         }
         if (Message.RecipientType.BCC.equals(recipientType)) {
-            return m_bccRecepients;
+            return bccRecepients;
         }
         return null;
     }
 
     @Override
     public Address[] getAllRecipients() throws MessagingException {
-        List allRecipients = new ArrayList();
-        allRecipients.addAll(m_toRecepients);
-        allRecipients.addAll(m_ccRecepients);
-        allRecipients.addAll(m_bccRecepients);
-        return (Address[]) allRecipients.toArray();
+        List<Address> allRecipients = new ArrayList<Address>();
+        allRecipients.addAll(toRecepients);
+        allRecipients.addAll(ccRecepients);
+        allRecipients.addAll(bccRecepients);
+        return allRecipients.toArray(new Address[0]);
     }
 
     @Override
@@ -132,7 +129,7 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public void setRecipients(Message.RecipientType recipientType, String recipient) throws MessagingException {
-        getRecipientsList(recipientType).add(recipient);
+        setRecipients(recipientType, InternetAddress.parse(recipient));
     }
 
     @Override
@@ -142,37 +139,37 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public void addRecipients(Message.RecipientType recipientType, String recipient) throws MessagingException {
-        getRecipientsList(recipientType).add(recipient);
+        addRecipients(recipientType, InternetAddress.parse(recipient));
     }
 
     @Override
     public Address[] getReplyTo() throws MessagingException {
-        return (Address[]) m_replyToAddresses.toArray();
+        return replyToAddresses.toArray(new Address[0]);
     }
 
     @Override
     public void setReplyTo(Address[] addresses) throws MessagingException {
-        m_replyToAddresses.addAll(Arrays.asList(addresses));
+        replyToAddresses.addAll(Arrays.asList(addresses));
     }
 
     @Override
     public String getSubject() throws MessagingException {
-        return m_subject;
+        return subject;
     }
 
     @Override
     public void setSubject(String subject) throws MessagingException {
-        m_subject = subject;
+        this.subject = subject;
     }
 
     @Override
     public void setSubject(String subject, String charset) throws MessagingException {
         if (subject == null) {
-            m_subject = null;
+            this.subject = null;
             return;
         }
         try {
-            m_subject = new String(subject.getBytes(charset));
+            this.subject = new String(subject.getBytes(charset));
         } catch (UnsupportedEncodingException e) {
             throw new MessagingException("setting subject failed", e);
         }
@@ -180,12 +177,12 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public Date getSentDate() throws MessagingException {
-        return m_sentDate;
+        return sentDate;
     }
 
     @Override
     public void setSentDate(Date date) throws MessagingException {
-        m_sentDate = date;
+        sentDate = date;
     }
 
     @Override
@@ -269,27 +266,27 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public String[] getContentLanguage() throws MessagingException {
-        return m_contentLanguage;
+        return contentLanguage;
     }
 
     @Override
     public void setContentLanguage(String[] contentLanguage) throws MessagingException {
-        m_contentLanguage = contentLanguage;
+        this.contentLanguage = contentLanguage;
     }
 
     @Override
     public String getMessageID() throws MessagingException {
-        return "ID-" + m_iMessageNumber; // trivial implementation
+        return "ID-" + messageNumber; // trivial implementation
     }
 
     @Override
     public String getFileName() throws MessagingException {
-        return m_fileName;
+        return fileName;
     }
 
     @Override
     public void setFileName(String fileName) throws MessagingException {
-        m_fileName = fileName;
+        this.fileName = fileName;
     }
 
     @Override
@@ -304,30 +301,30 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public InputStream getRawInputStream() throws MessagingException {
-        if (m_content instanceof String) {
-            return new ByteArrayInputStream(m_content.toString().getBytes());
+        if (content instanceof String) {
+            return new ByteArrayInputStream(content.toString().getBytes());
         }
         throw new UnsupportedOperationException("Unimplementated method");
     }
 
     @Override
     public synchronized DataHandler getDataHandler() throws MessagingException {
-        return m_dataHandler;
+        return dataHandler;
     }
 
     @Override
     public synchronized void setDataHandler(DataHandler dataHandler) throws MessagingException {
-        m_dataHandler = dataHandler;
+        this.dataHandler = dataHandler;
     }
 
     @Override
     public Object getContent() throws IOException, MessagingException {
-        return m_content;
+        return content;
     }
 
     @Override
     public void setContent(Object object, String mimeType) throws MessagingException {
-        m_content = object; // trivial implementation
+        content = object; // trivial implementation
     }
 
     @Override
@@ -346,7 +343,7 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public void setContent(Multipart multipart) throws MessagingException {
-        m_content = multipart;
+        content = multipart;
     }
 
     @Override
@@ -366,7 +363,7 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public String[] getHeader(String name) throws MessagingException {
-        String value = (String) m_contentHeaders.get(name);
+        String value = (String) contentHeaders.get(name);
         if (value == null) {
             return null;
         }
@@ -389,22 +386,22 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public void addHeader(String name, String value) throws MessagingException {
-        m_contentHeaders.put(name, value);
+        contentHeaders.put(name, value);
     }
 
     @Override
     public void removeHeader(String name) throws MessagingException {
-        m_contentHeaders.remove(name);
+        contentHeaders.remove(name);
     }
 
     @Override
-    public Enumeration getAllHeaders() throws MessagingException {
-        return Collections.enumeration(m_contentHeaders.values());
+    public Enumeration<String> getAllHeaders() throws MessagingException {
+        return Collections.enumeration(contentHeaders.values());
     }
 
     @Override
-    public Enumeration getMatchingHeaders(String[] names) throws MessagingException {
-        ArrayList matchingHeaders = new ArrayList();
+    public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
+        ArrayList<String> matchingHeaders = new ArrayList<String>();
         for (String name : names) {
             String value = getHeader(name, null);
             if (value == null) {
@@ -416,13 +413,12 @@ public class MockMimeMessage extends MimeMessage {
     }
 
     @Override
-    public Enumeration getNonMatchingHeaders(String[] names) throws MessagingException {
-        List existingHeaders = Arrays.asList(names);
+    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
+        List<String> existingHeaders = Arrays.asList(names);
 
-        ArrayList nonMatchingHeaders = new ArrayList();
+        ArrayList<String> nonMatchingHeaders = new ArrayList<String>();
 
-        for (Object o : m_contentHeaders.keySet()) {
-            String name = (String) o;
+        for (String name : contentHeaders.keySet()) {
             if (existingHeaders.contains(name)) {
                 continue;
             }
@@ -446,23 +442,21 @@ public class MockMimeMessage extends MimeMessage {
     }
 
     @Override
-    public Enumeration getAllHeaderLines() throws MessagingException {
-        return Collections.enumeration(getHeadersAsStrings(m_contentHeaders));
+    public Enumeration<String> getAllHeaderLines() throws MessagingException {
+        return Collections.enumeration(getHeadersAsStrings(contentHeaders));
     }
 
-    private ArrayList getHeadersAsStrings(HashMap contentHeaders) {
-        ArrayList headerLines = new ArrayList();
-        for (Object o : contentHeaders.keySet()) {
-            String key = (String) o;
-            String value = (String) contentHeaders.get(key);
-            headerLines.add(key + ":" + value);
+    private ArrayList<String> getHeadersAsStrings(HashMap<String, String> contentHeaders) {
+        ArrayList<String> headerLines = new ArrayList<String>();
+        for (Entry<String, String> entry : contentHeaders.entrySet()) {
+            headerLines.add(entry.getKey() + ":" + entry.getValue());
         }
         return headerLines;
     }
 
     @Override
-    public Enumeration getMatchingHeaderLines(String[] names) throws MessagingException {
-        ArrayList matchingHeaders = new ArrayList();
+    public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
+        ArrayList<String> matchingHeaders = new ArrayList<String>();
         for (String name : names) {
             String value = getHeader(name, null);
             if (value == null) {
@@ -474,13 +468,12 @@ public class MockMimeMessage extends MimeMessage {
     }
 
     @Override
-    public Enumeration getNonMatchingHeaderLines(String[] names) throws MessagingException {
-        List existingHeaders = names != null ? Arrays.asList(names) : null;
+    public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
+        List<String> existingHeaders = names != null ? Arrays.asList(names) : null;
 
-        ArrayList nonMatchingHeaders = new ArrayList();
+        ArrayList<String> nonMatchingHeaders = new ArrayList<String>();
 
-        for (Object o : m_contentHeaders.keySet()) {
-            String name = (String) o;
+        for (String name : contentHeaders.keySet()) {
             if (existingHeaders != null && existingHeaders.contains(name)) {
                 continue;
             }
@@ -495,20 +488,20 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public synchronized Flags getFlags() throws MessagingException {
-        return new Flags(m_setFlags);
+        return new Flags(setFlags);
     }
 
     @Override
     public synchronized boolean isSet(Flags.Flag flag) throws MessagingException {
-        return m_setFlags.contains(flag);
+        return setFlags.contains(flag);
     }
 
     @Override
     public synchronized void setFlags(Flags flags, boolean set) throws MessagingException {
         if (set) {
-            m_setFlags.add(flags);
+            setFlags.add(flags);
         } else {
-            m_setFlags.remove(flags);
+            setFlags.remove(flags);
         }
     }
 
@@ -540,20 +533,20 @@ public class MockMimeMessage extends MimeMessage {
     @Override
     public void setFlag(Flags.Flag flag, boolean set) throws MessagingException {
         if (set) {
-            m_setFlags.add(flag);
+            setFlags.add(flag);
         } else {
-            m_setFlags.remove(flag);
+            setFlags.remove(flag);
         }
     }
 
     @Override
     public int getMessageNumber() {
-        return m_iMessageNumber;
+        return messageNumber;
     }
 
     @Override
     protected void setMessageNumber(int i) {
-        m_iMessageNumber = i;
+        messageNumber = i;
     }
 
     @Override
@@ -563,20 +556,20 @@ public class MockMimeMessage extends MimeMessage {
 
     @Override
     public boolean isExpunged() {
-        return m_bIsExpunged;
+        return isExpunged;
     }
 
     @Override
     protected void setExpunged(boolean b) {
-        m_bIsExpunged = b;
+        isExpunged = b;
     }
 
     public void setShouldMatch(boolean doMatch) {
-        m_doMatch = doMatch;
+        this.doMatch = doMatch;
     }
 
     @Override
     public boolean match(SearchTerm searchTerm) throws MessagingException {
-        return m_doMatch;
+        return doMatch;
     }
 }

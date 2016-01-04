@@ -93,12 +93,7 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
                 if (deletedUidList.contains(uid) == false) {
 
                     InputStream message = new CountingBodyInputStream(new ExtraDotInputStream(new CRLFTerminatedInputStream(session.getUserMailbox().getMessage(uid))), lines);
-                    if (message != null) {
-                        return new POP3StreamResponse(POP3Response.OK_RESPONSE, "Message follows", message);
-                    } else {
-                        StringBuilder exceptionBuffer = new StringBuilder(64).append("Message (").append(num).append(") does not exist.");
-                        return new POP3Response(POP3Response.ERR_RESPONSE, exceptionBuffer.toString());
-                    }
+                    return new POP3StreamResponse(POP3Response.OK_RESPONSE, "Message follows", message);
 
                 } else {
                     StringBuilder responseBuffer = new StringBuilder(64).append("Message (").append(num).append(") already deleted.");

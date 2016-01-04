@@ -71,7 +71,6 @@ public class MailetConfigImpl implements MailetConfig {
     /**
      * @return an iterator over the set of configuration parameter names.
      */
-    @SuppressWarnings("unchecked")
     public Iterator<String> getInitParameterNames() {
         Iterator<String> it = configuration.getKeys();
         List<String> params = new ArrayList<String>();
@@ -124,7 +123,6 @@ public class MailetConfigImpl implements MailetConfig {
      * @param newConfiguration
      *            the new Configuration for the mailet
      */
-    @SuppressWarnings("unchecked")
     public void setConfiguration(Configuration newConfiguration) {
         DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
         

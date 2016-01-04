@@ -396,7 +396,6 @@
                 <dependency>
                     <groupId>com.jayway.restassured</groupId>
                     <artifactId>rest-assured</artifactId>
-                    <version>2.5.0</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -430,7 +429,7 @@
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
-                    <version>3.0.0</version>
+                    <version>${assertj-3.version}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

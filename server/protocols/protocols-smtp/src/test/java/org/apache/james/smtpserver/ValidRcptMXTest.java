@@ -70,10 +70,6 @@ public class ValidRcptMXTest {
                     return sstate.get(key);
                 }
             }
-
-            public String getRemoteIPAddress() {
-                return "127.0.0.1";
-            }
         };
         return session;
     }
@@ -82,8 +78,8 @@ public class ValidRcptMXTest {
         DNSService dns = new MockDNSService() {
 
             @Override
-            public Collection findMXRecords(String hostname) {
-                Collection mx = new ArrayList();
+            public Collection<String> findMXRecords(String hostname) {
+                Collection<String> mx = new ArrayList<String>();
 
                 if (hostname.equals(INVALID_HOST)) {
                     mx.add(INVALID_MX);
@@ -107,7 +103,7 @@ public class ValidRcptMXTest {
 
     @Test
     public void testRejectLoopbackMX() throws ParseException, MailAddressException {
-        Collection bNetworks = new ArrayList();
+        Collection<String> bNetworks = new ArrayList<String>();
         bNetworks.add("127.0.0.1");
 
         DNSService dns = setupMockedDNSServer();

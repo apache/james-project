@@ -330,10 +330,11 @@ public class BayesianAnalysisFeeder extends GenericMailet {
     }
 
     private void clearAllHeaders(MimeMessage message) throws javax.mail.MessagingException {
-        Enumeration headers = message.getAllHeaders();
+        @SuppressWarnings("unchecked")
+        Enumeration<Header> headers = message.getAllHeaders();
 
         while (headers.hasMoreElements()) {
-            Header header = (Header) headers.nextElement();
+            Header header = headers.nextElement();
             try {
                 message.removeHeader(header.getName());
             } catch (javax.mail.MessagingException me) {

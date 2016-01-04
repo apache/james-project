@@ -63,7 +63,6 @@ public class IMAPServerFactory extends AbstractServerFactory {
        return new IMAPServer();
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception {
         

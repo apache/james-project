@@ -18,16 +18,14 @@
  ****************************************************************/
 package org.apache.james.cli.probe;
 
-import org.apache.james.adapter.mailbox.SerializableQuota;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.model.QuotaRoot;
-
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.Map;
 
 import org.apache.james.rrt.lib.Mappings;
+
+import org.apache.james.adapter.mailbox.SerializableQuota;
+import org.apache.james.mailbox.exception.MailboxException;
 
 public interface ServerProbe extends Closeable {
     /**

@@ -69,7 +69,6 @@ public class MatcherSplitter {
      * @return mailMessageList
      * @throws MessagingException
      */
-    @SuppressWarnings("unchecked")
     @Handler
     public List<Mail> split(@Property(MATCHER_PROPERTY) Matcher matcher, @Property(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException, @Property(LOGGER_PROPERTY) Logger logger, @Property(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container, @Body Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;

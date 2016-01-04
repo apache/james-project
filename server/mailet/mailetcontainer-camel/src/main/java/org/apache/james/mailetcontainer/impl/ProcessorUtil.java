@@ -76,10 +76,9 @@ public class ProcessorUtil {
      *             when the <code>Collection</code> contains objects that are
      *             not <code>MailAddress</code> objects
      */
-    @SuppressWarnings("rawtypes")
-    public static void verifyMailAddresses(Collection col) throws MessagingException {
+    public static void verifyMailAddresses(Collection<MailAddress> col) throws MessagingException {
         try {
-            MailAddress addresses[] = (MailAddress[]) col.toArray(new MailAddress[col.size()]);
+            MailAddress addresses[] = col.toArray(new MailAddress[col.size()]);
 
             // Why is this here? According to the javadoc for
             // java.util.Collection.toArray(Object[]), this should

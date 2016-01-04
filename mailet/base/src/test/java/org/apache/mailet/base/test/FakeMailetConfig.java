@@ -28,35 +28,33 @@ import org.apache.mailet.MailetContext;
 /**
  * MailetConfig over Properties
  */
-public class FakeMailetConfig extends Properties implements MailetConfig {
-
-    private static final long serialVersionUID = 1L;
+public class FakeMailetConfig implements MailetConfig {
 
     public String mailetName;
     public MailetContext mc;
 
+    private Properties properties;
+    
     public FakeMailetConfig() {
     	this("A Mailet", new FakeMailContext());
     }
     
     public FakeMailetConfig(String mailetName, MailetContext mc) {
-        super();
-        this.mailetName = mailetName;
-        this.mc = mc;
+        this(mailetName, mc, new Properties());
     }
 
     public FakeMailetConfig(String mailetName, MailetContext mc, Properties arg0) {
-        super(arg0);
         this.mailetName = mailetName;
         this.mc = mc;
+        this.properties = arg0;
     }
 
     public String getInitParameter(String name) {
-        return getProperty(name);
+        return properties.getProperty(name);
     }
 
-    public Iterator getInitParameterNames() {
-        return keySet().iterator();
+    public Iterator<String> getInitParameterNames() {
+        return properties.stringPropertyNames().iterator();
     }
 
     public MailetContext getMailetContext() {
@@ -69,12 +67,16 @@ public class FakeMailetConfig extends Properties implements MailetConfig {
 
     // Override setProperty to work like it should in this MockMailetConfig
     public Object setProperty(String key, String value) {
-        String oldValue = getProperty(key);
+        String oldValue = properties.getProperty(key);
         String newValue = value;
 
         if (oldValue != null) {
             newValue = oldValue + "," + value;
         }
-        return super.setProperty(key, newValue);
+        return properties.setProperty(key, newValue);
+    }
+    
+    public void clear() {
+        properties.clear();
     }
 }

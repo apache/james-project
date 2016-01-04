@@ -316,7 +316,6 @@ public class BayesianAnalysis extends GenericMailet implements Log {
                 senderString = mail.getSender().toString();
             }
             if (probability > 0.1) {
-                @SuppressWarnings("unchecked")
                 final Collection<MailAddress> recipients = mail.getRecipients();
                 log(headerName + ": " + probabilityString + "; From: " + senderString + "; Recipient(s): " + getAddressesString(recipients));
 

@@ -35,7 +35,6 @@ import org.junit.Test;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -151,13 +150,13 @@ public class HostIsLocalTest {
                         "Unimplemented mock service");
             }
 
-            public void sendMail(MailAddress sender, Collection recipients,
+            public void sendMail(MailAddress sender, Collection<MailAddress> recipients,
                                  MimeMessage msg) throws MessagingException {
                 throw new UnsupportedOperationException(
                         "Unimplemented mock service");
             }
 
-            public void sendMail(MailAddress sender, Collection recipients,
+            public void sendMail(MailAddress sender, Collection<MailAddress> recipients,
                                  MimeMessage msg, String state) throws MessagingException {
                 throw new UnsupportedOperationException(
                         "Unimplemented mock service");
@@ -176,12 +175,6 @@ public class HostIsLocalTest {
             public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
                 throw new UnsupportedOperationException(
                         "Unimplemented mock service");
-            }
-
-            public void storeMail(MailAddress arg0, MailAddress arg1,
-                                  MimeMessage arg2) throws MessagingException {
-                // TODO Auto-generated method stub
-
             }
 
             public void log(LogLevel level, String message) {

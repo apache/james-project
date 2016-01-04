@@ -159,8 +159,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
             scan.setCaching(table.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             resultScanner = table.getScanner(scan);
             int resultCount = 0;
-            Result result = null;
-            while ((result = resultScanner.next()) != null) {
+            while (resultScanner.next() != null) {
                 resultCount++;
             }
             return resultCount;

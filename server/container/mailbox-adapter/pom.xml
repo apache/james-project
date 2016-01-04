@@ -78,6 +78,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <version>${assertj-1.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -90,7 +91,6 @@
             <artifactId>apache-james-mailbox-store</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${mailbox.version}</version>
         </dependency>
     </dependencies>
 

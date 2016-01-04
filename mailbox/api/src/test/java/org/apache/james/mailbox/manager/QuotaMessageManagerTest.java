@@ -24,7 +24,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;

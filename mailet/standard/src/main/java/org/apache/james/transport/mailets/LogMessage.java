@@ -22,6 +22,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Enumeration;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -29,7 +30,6 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 
 import java.io.InputStream;
-import java.lang.StringBuffer;
 
 /**
  * Logs Message Headers and/or Body.
@@ -105,7 +105,8 @@ public class LogMessage extends GenericMailet {
      * @param message
      */
     private String getMessageHeaders(MimeMessage message) throws MessagingException {
-        Enumeration heads = message.getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> heads = message.getAllHeaderLines();
         StringBuilder headBuffer = new StringBuilder(1024).append("\n");
         while(heads.hasMoreElements()) {
             headBuffer.append(heads.nextElement().toString()).append("\n");

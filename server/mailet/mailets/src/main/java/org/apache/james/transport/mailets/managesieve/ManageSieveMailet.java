@@ -29,8 +29,7 @@ import java.util.Scanner;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
@@ -41,9 +40,12 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToMessage;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.MailetContext.LogLevel;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 
 /**
  * <code>ManageSieveMailet</code> interprets mail from a local sender as
@@ -125,7 +127,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
             return;
         }
         if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase())) {
-            getMailetContext().log(MailetContext.LogLevel.ERROR, "Sender not local");
+            getMailetContext().log(LogLevel.ERROR, "Sender not local");
             return;
         }
 
@@ -188,20 +190,17 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
     private String computeHelp() throws MessagingException {
         InputStream stream = null;
+        Scanner scanner = null;
         try {
             stream = helpURL.openStream();
-            return new Scanner(stream, "UTF-8").useDelimiter("\\A").next();
+            scanner = new Scanner(stream, "UTF-8");
+            return scanner.useDelimiter("\\A").next();
         } catch (IOException ex) {
             throw new MessagingException("Unable to access help URL: " + helpURL.toExternalForm(), ex);
         }
         finally {
-            if (stream != null) {
-                try {
-                    stream.close();
-                } catch (IOException ex) {
-                    // no op
-                }
-            }
+            IOUtils.closeQuietly(scanner);
+            IOUtils.closeQuietly(stream);
         }
     }
 

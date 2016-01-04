@@ -49,8 +49,8 @@ public class MockMailetConfig extends Properties implements MailetConfig {
     }
 
     @Override
-    public Iterator getInitParameterNames() {
-        return keySet().iterator();
+    public Iterator<String> getInitParameterNames() {
+        return stringPropertyNames().iterator();
     }
 
     @Override

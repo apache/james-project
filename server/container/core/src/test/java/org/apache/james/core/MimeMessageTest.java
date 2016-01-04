@@ -426,7 +426,8 @@ public class MimeMessageTest {
     public void testHeaderOrder() throws Exception {
         MimeMessage message = getSimpleMessage();
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
-        Enumeration h = message.getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> h = message.getAllHeaderLines();
 
         assertEquals(h.nextElement(), "Return-Path: <test@test.de>");
         LifecycleUtil.dispose(message);

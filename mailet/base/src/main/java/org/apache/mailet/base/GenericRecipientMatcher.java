@@ -26,7 +26,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 /**

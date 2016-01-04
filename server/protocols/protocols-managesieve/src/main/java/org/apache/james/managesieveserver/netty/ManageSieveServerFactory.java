@@ -19,9 +19,14 @@
 
 package org.apache.james.managesieveserver.netty;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
 import org.apache.james.managesieve.transcode.ArgumentParser;
@@ -31,11 +36,6 @@ import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.slf4j.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ManageSieveServerFactory extends AbstractServerFactory {
 

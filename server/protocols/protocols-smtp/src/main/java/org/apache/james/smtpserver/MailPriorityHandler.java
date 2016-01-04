@@ -50,7 +50,6 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
      * org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
      *  org.apache.mailet.Mail)
      */
-    @SuppressWarnings("unchecked")
     public HookResult onMessage(SMTPSession session, Mail mail) {
         Iterator<MailAddress> rcpts = mail.getRecipients().iterator();
 
@@ -79,7 +78,6 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
         return new HookResult(HookReturnCode.DECLINED);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void init(Configuration config) throws ConfigurationException {
         List<HierarchicalConfiguration> entries = ((HierarchicalConfiguration)config).configurationsAt("priorityEntries.priorityEntry");

@@ -90,7 +90,7 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void wireExtensions(Class interfaceName, List extension) throws WiringException {
+    public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(DeliverToRecipientHook.class)) {
             handlers.addAll((Collection<? extends DeliverToRecipientHook>) extension);
         }

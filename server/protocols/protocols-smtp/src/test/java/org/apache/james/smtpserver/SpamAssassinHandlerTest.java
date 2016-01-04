@@ -47,17 +47,7 @@ public class SpamAssassinHandlerTest {
 
             private final HashMap<String, Object> sstate = new HashMap<String, Object>();
             private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
-            private final String ipAddress = "192.168.0.1";
-            private final String host = "localhost";
             private boolean relayingAllowed;
-
-            public String getRemoteHost() {
-                return host;
-            }
-
-            public String getRemoteIPAddress() {
-                return ipAddress;
-            }
 
             @Override
             public Object setAttachment(String key, Object value, State state) {

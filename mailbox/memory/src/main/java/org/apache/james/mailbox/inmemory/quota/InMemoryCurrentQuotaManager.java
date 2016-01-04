@@ -32,6 +32,7 @@ import com.google.common.cache.LoadingCache;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
@@ -46,7 +47,7 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
     private final LoadingCache<QuotaRoot, Entry> quotaCache;
 
     @Inject
-    public InMemoryCurrentQuotaManager(final CurrentQuotaCalculator quotaCalculator, final MailboxManager mailboxManager) {
+    public InMemoryCurrentQuotaManager(final CurrentQuotaCalculator<InMemoryId> quotaCalculator, final MailboxManager mailboxManager) {
         this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, Entry>() {
             @Override
             public Entry load(QuotaRoot quotaRoot) throws Exception {

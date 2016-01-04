@@ -113,8 +113,8 @@ public class Forward extends AbstractRedirect {
     /**
      * @return the <code>recipients</code> init parameter or null if missing
      */
-    protected Collection getRecipients() throws MessagingException {
-        Collection newRecipients = new HashSet();
+    protected Collection<MailAddress> getRecipients() throws MessagingException {
+        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
         String addressList = getInitParameter("forwardto", getInitParameter("forwardTo"));
 
         // if nothing was specified, throw an exception

@@ -69,7 +69,7 @@ public class ClassifyBounce extends GenericMailet {
     public void service(Mail mail) {
         try {
             MimeMessage message = mail.getMessage();
-            Classifier classifier = this.new Classifier(message);
+            Classifier classifier = new Classifier(message);
             String classification = classifier.getClassification();
             //if ( !classification.equals("Normal") ) {
             message.setHeader(headerName, classification);
@@ -89,7 +89,7 @@ public class ClassifyBounce extends GenericMailet {
         return "SetMimeHeader Mailet";
     }
 
-    private class Classifier {
+    private static class Classifier {
 
         public Classifier(Message message) throws MessagingException {
             subject = message.getSubject();
@@ -377,11 +377,9 @@ public class ClassifyBounce extends GenericMailet {
         private String text;
 
         public final static int TYPE_NORMAL = 1;
-        public final static int TYPE_SPAM = 2;  // should be trapped elsewhere
         public final static int TYPE_OUT_OF_OFFICE = 3;
         public final static int TYPE_DELIVERY_FAILURE = 4;
         public final static int TYPE_MAILBOX_FULL = 5;
-        public final static int TYPE_OUTBOUND = 6;
 
     }
 

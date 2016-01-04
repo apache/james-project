@@ -53,9 +53,6 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
             try {
                 final ObjectInputStream stream = new ObjectInputStream(inputStream);
 
-                if (stream == null)
-                    throw new NullPointerException("Null stream returned for key: " + key);
-
                 final Object object = stream.readObject();
                 if (DEBUG) {
                     getLogger().debug("returning object " + object + " for key " + key);
@@ -78,15 +75,12 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
         try {
             final InputStream inputStream = getInputStream(key);
 
-            if (inputStream == null)
+            if (inputStream == null) {
                 throw new NullPointerException("Null input stream returned for key: " + key);
+            }
 
+            final ObjectInputStream stream = new ClassLoaderObjectInputStream(classLoader, inputStream);
             try {
-                final ObjectInputStream stream = new ClassLoaderObjectInputStream(classLoader, inputStream);
-
-                if (stream == null)
-                    throw new NullPointerException("Null stream returned for key: " + key);
-
                 final Object object = stream.readObject();
 
                 if (DEBUG) {
@@ -94,6 +88,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 }
                 return object;
             } finally {
+                stream.close();
                 inputStream.close();
             }
         } catch (final Throwable e) {

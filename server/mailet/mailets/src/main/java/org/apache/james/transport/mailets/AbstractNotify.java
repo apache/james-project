@@ -142,7 +142,7 @@ public abstract class AbstractNotify extends AbstractRedirect {
             out.println("  Sent date: " + message.getSentDate());
         }
         out.println("  MAIL FROM: " + originalMail.getSender());
-        Iterator rcptTo = originalMail.getRecipients().iterator();
+        Iterator<MailAddress> rcptTo = originalMail.getRecipients().iterator();
         out.println("  RCPT TO: " + rcptTo.next());
         while (rcptTo.hasNext()) {
             out.println("           " + rcptTo.next());
@@ -182,7 +182,7 @@ public abstract class AbstractNotify extends AbstractRedirect {
 
     // All subclasses of AbstractNotify are expected to establish their own
     // recipients
-    abstract protected Collection getRecipients() throws MessagingException;
+    abstract protected Collection<MailAddress> getRecipients() throws MessagingException;
 
     /**
      * @return null

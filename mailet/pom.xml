@@ -27,7 +27,6 @@
         <version>1.8.3-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.apache.james</groupId>
     <artifactId>apache-mailet</artifactId>
     <version>2.5.1-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -162,7 +161,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.7</version>
                 <extensions>true</extensions>
             </plugin>
             <plugin>
@@ -222,7 +220,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.2</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.maven.doxia</groupId>

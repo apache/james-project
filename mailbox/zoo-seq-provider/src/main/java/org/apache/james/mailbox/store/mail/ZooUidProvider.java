@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail;
 import com.google.common.base.Preconditions;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
+import com.netflix.curator.framework.imps.CuratorFrameworkState;
 import com.netflix.curator.framework.recipes.atomic.AtomicValue;
 import com.netflix.curator.framework.recipes.atomic.DistributedAtomicLong;
 import com.netflix.curator.retry.RetryOneTime;
@@ -52,21 +53,17 @@ public class ZooUidProvider<E extends MailboxId> implements UidProvider<E> {
     }
 
     @Override
-    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        if (client.isStarted()) {
+    public long nextUid(MailboxSession session, Mailbox<E> mailbox) throws MailboxException {
+        if (client.getState() == CuratorFrameworkState.STARTED) {
             DistributedAtomicLong uid = new DistributedAtomicLong(client, pathForMailbox(mailbox), retryPolicy);
-            AtomicValue<Long> value = null;
             try {
                 uid.increment();
-                value = uid.get();
+                AtomicValue<Long> value = uid.get();
+                if (value.succeeded()) {
+                    return value.postValue();
+                }
             } catch (Exception e) {
                 throw new MailboxException("Exception incrementing UID for session " + session, e);
-            } finally {
-                if (value != null && value.succeeded()) {
-                    return value.postValue();
-                } else {
-                    throw new MailboxException("Failed getting next UID for " + session);
-                }
             }
         }
         throw new MailboxException("Curator client is closed.");
@@ -74,25 +71,21 @@ public class ZooUidProvider<E extends MailboxId> implements UidProvider<E> {
 
     @Override
     public long lastUid(MailboxSession session, Mailbox<E> mailbox) throws MailboxException {
-        if (client.isStarted()) {
+        if (client.getState() == CuratorFrameworkState.STARTED) {
             DistributedAtomicLong uid = new DistributedAtomicLong(client, pathForMailbox(mailbox), retryPolicy);
-            AtomicValue<Long> value = null;
             try {
-                value = uid.get();
+                AtomicValue<Long> value = uid.get();
+                if (value.succeeded()) {
+                    return value.postValue();
+                }
             } catch (Exception e) {
                 throw new MailboxException("Exception getting last UID for session " + session, e);
-            } finally {
-                if (value != null && value.succeeded()) {
-                    return value.postValue();
-                } else {
-                    throw new MailboxException("Failed getting last UID for " + session);
-                }
             }
         }
         throw new MailboxException("Curator client is closed.");
     }
 
-    public static String pathForMailbox(Mailbox mailbox) {
-        return mailbox.getMailboxId().toString() + UID_PATH_SUFFIX;
+    public static <E extends MailboxId> String pathForMailbox(Mailbox<E> mailbox) {
+        return mailbox.getMailboxId().serialize() + UID_PATH_SUFFIX;
     }
 }

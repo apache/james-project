@@ -21,6 +21,7 @@ package org.apache.james.mailetcontainer.api.mock;
 import java.util.Collection;
 import javax.mail.MessagingException;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;
 
@@ -48,7 +49,7 @@ public class ExceptionThrowingMatcher implements Matcher {
     }
 
     @Override
-    public Collection match(Mail arg0) throws MessagingException {
+    public Collection<MailAddress> match(Mail arg0) throws MessagingException {
         throw new MessagingException();
     }
 }

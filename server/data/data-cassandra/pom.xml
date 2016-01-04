@@ -28,7 +28,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james</groupId>
     <artifactId>james-server-data-cassandra</artifactId>
     <name>Apache James :: Server :: Data :: Cassandra Persistence</name>
 
@@ -50,6 +49,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <version>${assertj-1.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -76,7 +76,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * Holds the configured mappings
      */
-    private Map mappings = new HashMap();
+    private Map<String, String> mappings = new HashMap<String, String>();
 
     /**
      * Initialize the mailet

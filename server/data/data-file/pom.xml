@@ -28,7 +28,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james</groupId>
     <artifactId>james-server-data-file</artifactId>
     <packaging>bundle</packaging>
 
@@ -106,11 +105,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-data-library</artifactId>
             <type>test-jar</type>
@@ -131,6 +125,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <version>${assertj-1.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

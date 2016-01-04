@@ -129,7 +129,6 @@
                 <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>james-server-util-java8</artifactId>
-                    <version>3.0.0-beta5-SNAPSHOT</version>
                 </dependency>
 		        <dependency>
 		            <groupId>com.datastax.cassandra</groupId>
@@ -149,11 +148,12 @@
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
             </dependency>
-		        <dependency>
-		            <groupId>org.assertj</groupId>
-		            <artifactId>assertj-core</artifactId>
-		            <scope>test</scope>
-		        </dependency>
+                <dependency>
+                    <groupId>org.assertj</groupId>
+                    <artifactId>assertj-core</artifactId>
+                    <version>${assertj-3.version}</version>
+                    <scope>test</scope>
+                </dependency>
 		        <dependency>
 		            <groupId>org.cassandraunit</groupId>
 		            <artifactId>cassandra-unit</artifactId>

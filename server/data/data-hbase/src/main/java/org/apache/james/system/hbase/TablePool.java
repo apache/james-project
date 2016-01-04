@@ -116,12 +116,16 @@ public class TablePool {
      */
     private static void ensureTable(byte[] tableName, byte[] columnFamilyName) throws IOException {
         HBaseAdmin hbaseAdmin = new HBaseAdmin(configuration);
-        if (!hbaseAdmin.tableExists(tableName)) {
-            HTableDescriptor desc = new HTableDescriptor(tableName);
-            HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamilyName);
-            hColumnDescriptor.setMaxVersions(1);
-            desc.addFamily(hColumnDescriptor);
-            hbaseAdmin.createTable(desc);
+        try {
+            if (!hbaseAdmin.tableExists(tableName)) {
+                HTableDescriptor desc = new HTableDescriptor(tableName);
+                HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamilyName);
+                hColumnDescriptor.setMaxVersions(1);
+                desc.addFamily(hColumnDescriptor);
+                hbaseAdmin.createTable(desc);
+            }
+        } finally {
+            hbaseAdmin.close();
         }
     }
 }

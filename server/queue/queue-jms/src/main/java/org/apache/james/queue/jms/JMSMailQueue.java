@@ -284,7 +284,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws JMSException
      * @throws MessagingException
      */
-    @SuppressWarnings("unchecked")
     protected Map<String, Object> getJMSProperties(Mail mail, long delayInMillis) throws MessagingException {
         Map<String, Object> props = new HashMap<String, Object>();
         long nextDelivery = -1;

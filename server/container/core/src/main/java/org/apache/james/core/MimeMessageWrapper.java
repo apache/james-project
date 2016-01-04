@@ -314,7 +314,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                         saveChanges();
                     myHeaders = headers;
                 }
-                IOUtils.copy(new InternetHeadersInputStream(myHeaders.getNonMatchingHeaderLines(ignoreList)), headerOs);
+                @SuppressWarnings("unchecked")
+                Enumeration<String> filteredHeaders = myHeaders.getNonMatchingHeaderLines(ignoreList);
+                IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
                 IOUtils.copy(in, bodyOs);
             } finally {
                 IOUtils.closeQuietly(in);
@@ -330,7 +332,9 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
             if (headers == null) {
                 loadHeaders();
             }
-            IOUtils.copy(new InternetHeadersInputStream(headers.getNonMatchingHeaderLines(ignoreList)), headerOs);
+            @SuppressWarnings("unchecked")
+            Enumeration<String> filteredHeaders = headers.getNonMatchingHeaderLines(ignoreList);
+            IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
 
             if (preLoad && !messageParsed) {
                 loadMessage();
@@ -446,48 +450,54 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         return headers.getHeader(name, delimiter);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getAllHeaders() throws MessagingException {
+    public Enumeration<String> getAllHeaders() throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getAllHeaders();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getMatchingHeaders(names);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getNonMatchingHeaders(String[] names) throws MessagingException {
+    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getNonMatchingHeaders(names);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getAllHeaderLines() throws MessagingException {
+    public Enumeration<String> getAllHeaderLines() throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getAllHeaderLines();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getMatchingHeaderLines(String[] names) throws MessagingException {
+    public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
         return headers.getMatchingHeaderLines(names);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getNonMatchingHeaderLines(String[] names) throws MessagingException {
+    public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         if (headers == null) {
             loadHeaders();
         }
@@ -655,7 +665,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      * @throws MessagingException
      */
 
-    @SuppressWarnings("unchecked")
     public synchronized InputStream getMessageInputStream() throws MessagingException {
         if (!messageParsed && !isModified() && source != null) {
             try {

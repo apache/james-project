@@ -135,11 +135,6 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
     private static boolean BUFFERING = true;
 
     /**
-     * Whether 'deep debugging' is turned on.
-     */
-    private static final boolean DEEP_DEBUG = true;
-
-    /**
      * The internal list of the emails The key is an adapted MD5 checksum of the
      * mail
      */
@@ -171,7 +166,6 @@ public class MBoxMailRepository implements MailRepository, LogEnabled, Configura
         /*
       The repository configuration
      */
-        HierarchicalConfiguration configuration1 = configuration;
         String destination;
         this.mList = null;
         BUFFERING = configuration.getBoolean("[@BUFFERING]", true);
