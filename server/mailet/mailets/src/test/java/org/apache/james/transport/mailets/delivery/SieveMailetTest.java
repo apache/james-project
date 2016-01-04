@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.delivery;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -704,7 +705,75 @@ public class SieveMailetTest {
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
 
-    // TODO Body extension....
+    @Test
+    public void bodyRawShouldNotMatchNotContainedData() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyRawInvalid.script");
+        final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
+
+    @Test
+    public void bodyRawShouldMatchContent() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyRawMatch.script");
+        final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
+
+    @Test
+    public void bodyContentShouldMatchContent() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentMatch.script");
+        final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
+
+    @Test
+    public void bodyContentShouldNotMatchNotContainedData() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentInvalid.script");
+        final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
+
+    @Test
+    public void bodyContentShouldNotMatchWhenWrongContentType() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentWrongContentType.script");
+        final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
+
+    @Test
+    public void bodyTextShouldNotMatchNotContainedData() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextInvalid.script");
+        final MessageManager messageManager = prepareMessageManagerOn(NOT_SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
+
+    @Test
+    public void bodyTextShouldMatchContent() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextMatch.script");
+        final MessageManager messageManager = prepareMessageManagerOn(SELECTED_MAILBOX);
+
+        sieveMailet.service(createMail());
+
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+    }
 
     private void prepareTestUsingScript(final String script) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
@@ -740,10 +809,10 @@ public class SieveMailetTest {
             new DataHandler(
                 new ByteArrayDataSource(
                     "A text to match",
-                    "application/sieve; charset=UTF-8")
+                    "text/plain; charset=UTF-8")
             ));
         scriptPart.setDisposition(MimeBodyPart.ATTACHMENT);
-        scriptPart.setHeader("Content-Type", "application/sieve; charset=UTF-8");
+        scriptPart.setHeader("Content-Type", "text/plain; charset=UTF-8");
         scriptPart.setFileName("file.txt");
         multipart.addBodyPart(scriptPart);
         message.setContent(multipart);

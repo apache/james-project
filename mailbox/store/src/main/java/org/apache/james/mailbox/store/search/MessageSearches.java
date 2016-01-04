@@ -36,6 +36,7 @@ import java.util.TreeSet;
 
 import javax.mail.Flags;
 
+import com.google.common.collect.Lists;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.model.MessageResult.Header;
@@ -57,6 +58,7 @@ import org.apache.james.mime4j.field.address.AddressFormatter;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.field.datetime.parser.ParseException;
+import org.apache.james.mime4j.utils.search.MessageMatcher;
 import org.slf4j.Logger;
 
 /**
@@ -207,14 +209,15 @@ public class MessageSearches implements Iterable<Long> {
         return result;
     }
 
-    protected boolean isInMessage(String value, final InputStream input, boolean header, Logger log)
-            throws IOException, MimeException {
-        final MessageSearcher searcher = new MessageSearcher(value, true, header);
+    protected boolean isInMessage(String value, final InputStream input, boolean header, Logger log) throws IOException, MimeException {
+        MessageMatcher.MessageMatcherBuilder builder = MessageMatcher.builder()
+            .searchContents(Lists.<CharSequence>newArrayList(value))
+            .caseInsensitive(true)
+            .includeHeaders(header);
         if (log != null) {
-            searcher.setLogger(log);
+            builder.logger(log);
         }
-        final boolean result = searcher.isFoundIn(input);
-        return result;
+        return builder.build().messageMatches(input);
     }
 
     protected boolean messageContains(String value, Message<?> message, Logger log) throws IOException, MimeException {
