@@ -136,7 +136,6 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
      * @throws JMException
      * @throws MalformedObjectNameException
      */
-    @SuppressWarnings("unchecked")
     private void registerMatchers(String parentMBeanName, Iterator<Matcher> matchers, int nestingLevel) throws JMException {
         int i = 0;
 

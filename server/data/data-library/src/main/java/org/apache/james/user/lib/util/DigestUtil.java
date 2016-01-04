@@ -96,7 +96,6 @@ public class DigestUtil {
      */
     public static void digestFile(String filename, String algorithm) {
         byte[] b = new byte[65536];
-        int count = 0;
         int read;
         FileInputStream fis = null;
         FileOutputStream fos = null;
@@ -106,7 +105,6 @@ public class DigestUtil {
             while (fis.available() > 0) {
                 read = fis.read(b);
                 md.update(b, 0, read);
-                count += read;
             }
             byte[] digest = md.digest();
             String fileNameBuffer = filename + "." + algorithm;

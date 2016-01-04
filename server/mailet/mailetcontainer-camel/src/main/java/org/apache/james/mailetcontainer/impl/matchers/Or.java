@@ -38,8 +38,8 @@ public class Or extends GenericCompositeMatcher {
      * @return Collection of Recipient from the Or composition results of the
      *         child matchers.
      */
-    public Collection match(Mail mail) throws MessagingException {
-        Collection finalResult = null;
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        Collection<MailAddress> finalResult = null;
         Matcher matcher;
         boolean first = true;
 
@@ -48,17 +48,17 @@ public class Or extends GenericCompositeMatcher {
 
         // Loop through until the finalResult is full or all the child matchers
         // have been executed
-        for (Iterator matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = (Matcher) matcherIter.next();
+        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
+            matcher = matcherIter.next();
             // log("Matching with "
             // + matcher
             // .getMatcherConfig()
             // .getMatcherName()
             // );
-            Collection result = matcher.match(mail);
+            Collection<MailAddress> result = matcher.match(mail);
             if (first) {
                 if (result == null) {
-                    result = new ArrayList(0);
+                    result = new ArrayList<MailAddress>(0);
                 }
                 finalResult = result;
                 first = false;

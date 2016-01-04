@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.Mail;
 
@@ -39,19 +40,19 @@ public class Not extends GenericCompositeMatcher {
      * @return Collectiom of Recipient from the Negated composition of the child
      *         Matcher(s).
      */
-    public Collection match(Mail mail) throws MessagingException {
-        Collection finalResult = mail.getRecipients();
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        Collection<MailAddress> finalResult = mail.getRecipients();
         Matcher matcher;
-        for (Iterator matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = (Matcher) (matcherIter.next());
+        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
+            matcher = (matcherIter.next());
             // log("Matching with " +
             // matcher.getMatcherConfig().getMatcherName());
-            Collection result = matcher.match(mail);
+            Collection<MailAddress> result = matcher.match(mail);
             if (result == finalResult) {
                 // Not is an empty list
                 finalResult = null;
             } else if (result != null) {
-                finalResult = new ArrayList(finalResult);
+                finalResult = new ArrayList<MailAddress>(finalResult);
                 finalResult.removeAll(result);
             }
         }

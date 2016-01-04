@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;

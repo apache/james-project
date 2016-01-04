@@ -21,7 +21,6 @@ package org.apache.james.smtpserver.fastfail;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;

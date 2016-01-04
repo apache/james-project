@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -491,9 +492,9 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap temp = new HashMap();
-                                for (Iterator i = mc.getAttributeNames(); i.hasNext();) {
-                                    String hashKey = (String) i.next();
+                                HashMap<String, Serializable> temp = new HashMap<String, Serializable>();
+                                for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
+                                    String hashKey = i.next();
                                     temp.put(hashKey, mc.getAttribute(hashKey));
                                 }
                                 oos.writeObject(temp);
@@ -573,9 +574,9 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap temp = new HashMap();
-                                for (Iterator i = mc.getAttributeNames(); i.hasNext();) {
-                                    String hashKey = (String) i.next();
+                                HashMap<String, Serializable> temp = new HashMap<String, Serializable>();
+                                for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
+                                    String hashKey = i.next();
                                     temp.put(hashKey, mc.getAttribute(hashKey));
                                 }
                                 oos.writeObject(temp);
@@ -613,6 +614,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     /**
      * @see org.apache.james.mailrepository.api.MailRepository#retrieve(String)
      */
+    @SuppressWarnings("unchecked")
     public Mail retrieve(String key) throws MessagingException {
         if (DEEP_DEBUG) {
             System.err.println("retrieving " + key);
@@ -642,7 +644,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             }
             // Determine whether attributes are used and retrieve them
             PreparedStatement retrieveMessageAttr = null;
-            HashMap attributes = null;
+            HashMap<String, Object> attributes = null;
             if (jdbcMailAttributesReady) {
                 String retrieveMessageAttrSql = sqlQueries.getSqlString("retrieveMessageAttributesSQL", false);
                 ResultSet rsMessageAttr = null;
@@ -667,7 +669,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (serialized_attr != null) {
                                 ByteArrayInputStream bais = new ByteArrayInputStream(serialized_attr);
                                 ObjectInputStream ois = new ObjectInputStream(bais);
-                                attributes = (HashMap) ois.readObject();
+                                attributes = (HashMap<String, Object>) ois.readObject();
                                 ois.close();
                             }
                         } catch (IOException ioe) {
@@ -703,7 +705,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 mc.setSender(new MailAddress(sender));
             }
             StringTokenizer st = new StringTokenizer(rsMessage.getString(4), "\r\n", false);
-            Set recipients = new HashSet();
+            Set<MailAddress> recipients = new HashSet<MailAddress>();
             while (st.hasMoreTokens()) {
                 recipients.add(new MailAddress(st.nextToken()));
             }
@@ -757,7 +759,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     /**
      * @see org.apache.james.mailrepository.api.MailRepository#list()
      */
-    public Iterator list() throws MessagingException {
+    public Iterator<String> list() throws MessagingException {
         // System.err.println("listing messages");
         Connection conn = null;
         PreparedStatement listMessages = null;
@@ -768,7 +770,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             listMessages.setString(1, repositoryName);
             rsListMessages = listMessages.executeQuery();
 
-            List messageList = new ArrayList();
+            List<String> messageList = new ArrayList<String>();
             while (rsListMessages.next() && !Thread.currentThread().isInterrupted()) {
                 messageList.add(rsListMessages.getString(1));
             }

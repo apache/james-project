@@ -228,8 +228,6 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         final boolean isSignedPlus = request.isSignedPlus();
         final boolean isSignedMinus = request.isSignedMinus();
         final long unchangedSince = request.getUnchangedSince();
-        final boolean replace;
-        final boolean value;
         final MessageManager.FlagsUpdateMode mode;
         if (isSignedMinus) {
             mode = MessageManager.FlagsUpdateMode.REMOVE;

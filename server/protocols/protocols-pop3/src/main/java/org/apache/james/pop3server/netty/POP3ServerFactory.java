@@ -31,7 +31,6 @@ public class POP3ServerFactory extends AbstractServerFactory{
        return new POP3Server();
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception{
 

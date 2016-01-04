@@ -74,7 +74,7 @@ public class QuotaCheckerTest {
                 return QuotaImpl.quota(100, 1000);
             }
         });
-        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+        QuotaChecker<TestId> quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(0, 0)).isTrue();
     }
 
@@ -98,7 +98,7 @@ public class QuotaCheckerTest {
                 return QuotaImpl.quota(100, 1000);
             }
         });
-        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+        QuotaChecker<TestId> quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(89, 899)).isTrue();
     }
 
@@ -122,13 +122,13 @@ public class QuotaCheckerTest {
                 return QuotaImpl.quota(100, 1000);
             }
         });
-        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+        QuotaChecker<TestId> quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(90, 900)).isTrue();
     }
 
     @Test(expected = OverQuotaException.class)
     public void quotaCheckerShouldThrowOnExceededMessages() throws MailboxException {
-        QuotaChecker quotaChecker;
+        QuotaChecker<TestId> quotaChecker;
         try {
             when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
                 @Override
@@ -148,7 +148,7 @@ public class QuotaCheckerTest {
                     return QuotaImpl.quota(100, 1000);
                 }
             });
-            quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+            quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         } catch(Exception e) {
             fail("Exception caught : ", e);
             return;
@@ -158,7 +158,7 @@ public class QuotaCheckerTest {
 
     @Test(expected = OverQuotaException.class)
     public void quotaCheckerShouldThrowOnExceededStorage() throws MailboxException {
-        QuotaChecker quotaChecker;
+        QuotaChecker<TestId> quotaChecker;
         try {
             when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
                 @Override
@@ -178,7 +178,7 @@ public class QuotaCheckerTest {
                     return QuotaImpl.quota(100, 1000);
                 }
             });
-            quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+            quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         } catch(Exception e) {
             fail("Exception caught : ", e);
             return;

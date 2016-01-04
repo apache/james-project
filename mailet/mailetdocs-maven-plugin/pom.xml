@@ -28,7 +28,6 @@
     </parent>
 
     <artifactId>mailetdocs-maven-plugin</artifactId>
-    <version>2.5.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Apache James :: Mailetdocs Maven Plugin</name>

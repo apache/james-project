@@ -396,8 +396,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         sendMail(sender, recipients, message);
     }
 
-    @SuppressWarnings("unchecked")
-    public void sendMail(MailAddress sender, Collection recipients, MimeMessage message) throws MessagingException {
+    public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) throws MessagingException {
         sendMail(sender, recipients, message, Mail.DEFAULT);
     }
 
@@ -409,8 +408,7 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         processorList.service(mail);
     }
 
-    @SuppressWarnings("unchecked")
-    public void sendMail(MailAddress sender, Collection recipients, MimeMessage message, String state) throws MessagingException {
+    public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
         MailImpl mail = new MailImpl(MailImpl.getId(), sender, recipients, message);
         try {
             mail.setState(state);

@@ -113,6 +113,7 @@ public class SMIMEDecrypt extends GenericMailet {
         if (message.isMimeType("application/x-pkcs7-mime") || message.isMimeType("application/pkcs7-mime")) {
             try {
                 SMIMEEnveloped env = new SMIMEEnveloped(message);
+                @SuppressWarnings("unchecked")
                 Collection<RecipientInformation> recipients = env.getRecipientInfos().getRecipients();
                 Iterator<RecipientInformation> iter = recipients.iterator();
                 while (iter.hasNext()) {

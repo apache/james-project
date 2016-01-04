@@ -18,22 +18,24 @@
  ****************************************************************/
 package org.apache.james.core;
 
-import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.mailet.base.RFC2822Headers;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Enumeration;
+import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.mailet.base.RFC2822Headers;
 import org.junit.After;
-
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,38 +57,14 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
             return messageParsed;
         }
 
-        public MailHeaders getInnerHeaders() {
-            return (MailHeaders) headers;
-        }
-
-        public boolean isHeadersLoadable() {
-            return headersLoadable;
-        }
-
         public void setHeadersLoadable(boolean headersLoadable) {
             this.headersLoadable = headersLoadable;
-        }
-
-        public boolean isMessageLoadable() {
-            return messageLoadable;
-        }
-
-        public void setMessageLoadable(boolean messageLoadable) {
-            this.messageLoadable = messageLoadable;
         }
 
         @Override
         protected synchronized void loadHeaders() throws MessagingException {
             if (headersLoadable) {
                 super.loadHeaders();
-            } else {
-                throw new IllegalStateException("headersLoadable disabled");
-            }
-        }
-
-        protected synchronized MailHeaders loadHeaders(InputStream is) throws MessagingException {
-            if (headersLoadable) {
-                return (MailHeaders) super.createInternetHeaders(is);
             } else {
                 throw new IllegalStateException("headersLoadable disabled");
             }
@@ -229,10 +207,12 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testReplaceReturnPathOnBadMessage() throws Exception {
         MimeMessage message = getMessageWithBadReturnPath();
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
-        Enumeration e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
+        @SuppressWarnings("unchecked")
+        Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
         assertEquals("Return-Path: <test@test.de>", e.nextElement());
         assertFalse(e.hasMoreElements());
-        Enumeration h = message.getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> h = message.getAllHeaderLines();
         assertEquals("Return-Path: <test@test.de>", h.nextElement());
         assertFalse(h.nextElement().toString().startsWith("Return-Path:"));
         LifecycleUtil.dispose(message);
@@ -243,11 +223,13 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         MimeMessage message = getMessageWithBadReturnPath();
         message.addHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         // test that we have now 2 return-paths
-        Enumeration e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
+        @SuppressWarnings("unchecked")
+        Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
         assertEquals("Return-Path: <test@test.de>", e.nextElement());
         assertEquals("Return-Path: <mybadreturn@example.com>", e.nextElement());
         // test that return-path is the first line
-        Enumeration h = message.getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> h = message.getAllHeaderLines();
         assertEquals("Return-Path: <test@test.de>", h.nextElement());
         LifecycleUtil.dispose(message);
     }

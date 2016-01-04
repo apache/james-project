@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.api;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.apache.james.rrt.lib.Mappings;

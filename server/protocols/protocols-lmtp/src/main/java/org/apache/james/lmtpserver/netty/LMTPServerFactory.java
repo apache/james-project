@@ -49,7 +49,6 @@ public class LMTPServerFactory extends AbstractServerFactory{
        return new LMTPServer();
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(Logger log, HierarchicalConfiguration config) throws Exception{
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<AbstractConfigurableAsyncServer>();

@@ -249,6 +249,7 @@ public class DefaultDescriptorsExtractor {
     }
 
 
+    @SuppressWarnings("unchecked")
     private JavaClass[] javaClasses(MavenProject project) {
         JavaDocBuilder builder = new JavaDocBuilder();
         for (String s : (Iterable<String>) project.getCompileSourceRoots()) {

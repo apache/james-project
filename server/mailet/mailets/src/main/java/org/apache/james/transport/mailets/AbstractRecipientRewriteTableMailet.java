@@ -35,6 +35,7 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext.LogLevel;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
@@ -84,7 +85,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
                 }
 
             } catch (Exception ex) {
-                getMailetContext().log("Error while storing mail.", ex);
+                getMailetContext().log(LogLevel.INFO, "Error while storing mail.", ex);
                 errors.add(recipient);
             }
         }
@@ -158,7 +159,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
                     if (j.hasNext())
                         logBuffer.append(", ");
                 }
-                getMailetContext().log(logBuffer.toString());
+                getMailetContext().log(LogLevel.INFO, logBuffer.toString());
             } catch (MessagingException me) {
                 StringBuilder logBuffer = new StringBuilder(128).append("Error forwarding mail to ");
                 for (Iterator<MailAddress> j = remoteRecipients.iterator(); j.hasNext();) {
@@ -168,7 +169,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
                 }
                 logBuffer.append("attempting local delivery");
 
-                getMailetContext().log(logBuffer.toString());
+                getMailetContext().log(LogLevel.INFO, logBuffer.toString());
                 throw me;
             }
         }

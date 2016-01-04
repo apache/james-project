@@ -19,18 +19,11 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
-import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
-import org.apache.jsieve.mailet.ResourceLocator;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
+import org.apache.jsieve.mailet.ResourceLocator;
 
 public class ResourceLocatorImpl implements ResourceLocator {
 

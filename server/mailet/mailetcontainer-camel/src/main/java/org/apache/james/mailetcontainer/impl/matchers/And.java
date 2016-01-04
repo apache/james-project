@@ -41,20 +41,20 @@ public class And extends GenericCompositeMatcher {
      * @return Collection of Recipient from the And composition results of the
      *         child Matchers.
      */
-    public Collection match(Mail mail) throws MessagingException {
-        Collection finalResult = null;
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        Collection<MailAddress> finalResult = null;
         Matcher matcher;
         boolean first = true;
-        for (Iterator matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = (Matcher) (matcherIter.next());
-            Collection result = matcher.match(mail);
+        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
+            matcher = (matcherIter.next());
+            Collection<MailAddress> result = matcher.match(mail);
 
             if (result == null) {
                 // short-circuit
                 // log("Matching with " +
                 // matcher.getMatcherConfig().getMatcherName() +
                 // " result.size()=0");
-                return new ArrayList(0);
+                return new ArrayList<MailAddress>(0);
             }
             if (result.size() == 0) {
                 return result;
@@ -77,7 +77,7 @@ public class And extends GenericCompositeMatcher {
                     // them
                     // Ensure that the finalResult only contains recipients
                     // in the result collection
-                    Collection newResult = new ArrayList();
+                    Collection<MailAddress> newResult = new ArrayList<MailAddress>();
                     MailAddress recipient;
                     for (Object aFinalResult : finalResult) {
                         recipient = (MailAddress) aFinalResult;

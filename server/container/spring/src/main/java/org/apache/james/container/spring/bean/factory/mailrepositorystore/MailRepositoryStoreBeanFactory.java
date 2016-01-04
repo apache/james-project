@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
 import javax.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +106,6 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      * @param repConf the Configuration object used to register the repository
      * @throws ConfigurationException if an error occurs accessing the Configuration object
      */
-    @SuppressWarnings("unchecked")
     public synchronized void registerRepository(HierarchicalConfiguration repConf) throws ConfigurationException {
 
         String className = repConf.getString("[@class]");
@@ -199,6 +199,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
             try {
                 // Use the classloader which is used for bean instance stuff
+                @SuppressWarnings("unchecked")
                 Class<MailRepository> clazz = (Class<MailRepository>) getBeanFactory().getBeanClassLoader().loadClass(repClass);
                 reply = (MailRepository) getBeanFactory().autowire(clazz, ConfigurableListableBeanFactory.AUTOWIRE_AUTODETECT, false);
 

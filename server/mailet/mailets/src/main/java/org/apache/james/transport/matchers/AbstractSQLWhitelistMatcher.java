@@ -53,9 +53,11 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
     private UsersRepository localusers;
 
     protected DataSource datasource;
+    protected JDBCUtil jdbcUtil;
 
     /** Holds value of property sqlParameters. */
     private final Map<String, String> sqlParameters = new HashMap<String, String>();
+
 
     @Inject
     public void setDataSource(DataSource datasource) {
@@ -65,6 +67,11 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
     @Inject
     public void setUsersRepository(UsersRepository localusers) {
         this.localusers = localusers;
+    }
+    
+    @Inject
+    public void setJdbcUtil(JDBCUtil jdbcUtil) {
+        this.jdbcUtil = jdbcUtil;
     }
 
     /**

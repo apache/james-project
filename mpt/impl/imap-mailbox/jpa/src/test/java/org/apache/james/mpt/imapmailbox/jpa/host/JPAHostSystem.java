@@ -127,7 +127,12 @@ public class JPAHostSystem extends JamesImapHostSystem {
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mf);
         
-        final ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, subscriptionManager, new NoQuotaManager(), new DefaultQuotaRootResolver(mf));
+        final ImapProcessor defaultImapProcessorFactory = 
+                DefaultImapProcessorFactory.createDefaultProcessor(
+                        mailboxManager, 
+                        subscriptionManager, 
+                        new NoQuotaManager(), 
+                        new DefaultQuotaRootResolver(mf));
         
         resetUserMetaData();
         

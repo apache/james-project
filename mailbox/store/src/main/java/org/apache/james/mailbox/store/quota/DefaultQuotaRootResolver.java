@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store.quota;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -30,20 +30,21 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.List;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
-@Singleton
 public class DefaultQuotaRootResolver implements QuotaRootResolver {
 
     public static final String SEPARATOR = "&"; // Character illegal for mailbox naming in regard of RFC 3501 section 5.1
 
-    private final MailboxSessionMapperFactory factory;
+    private final MailboxSessionMapperFactory<? extends MailboxId> factory;
 
     @Inject
-    public DefaultQuotaRootResolver(MailboxSessionMapperFactory factory) {
+    public DefaultQuotaRootResolver(MailboxSessionMapperFactory<? extends MailboxId> factory) {
         this.factory = factory;
     }
 
@@ -59,7 +60,6 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
         return QuotaRootImpl.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + mailboxPath.getUser());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<MailboxPath> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException {
         List<String> parts = Lists.newArrayList(Splitter.on(SEPARATOR).split(quotaRoot.getValue()));
@@ -69,9 +69,9 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
         String namespace = parts.get(0);
         String user = parts.get(1);
         return Lists.transform(factory.getMailboxMapper(mailboxSession).findMailboxWithPathLike(new MailboxPath(namespace, user, "%")),
-            new Function<Mailbox, MailboxPath>() {
+            new Function<Mailbox<? extends MailboxId>, MailboxPath>() {
                 @Override
-                public MailboxPath apply(Mailbox idMailbox) {
+                public MailboxPath apply(Mailbox<? extends MailboxId> idMailbox) {
                     return new MailboxPath(idMailbox.getNamespace(), idMailbox.getUser(), idMailbox.getName());
                 }
             });

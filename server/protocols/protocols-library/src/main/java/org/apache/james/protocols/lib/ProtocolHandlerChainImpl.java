@@ -50,7 +50,6 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
         this.jmxHandlersPackage = jmxHandlersPackage.getName();
     }
 
-    @SuppressWarnings("unchecked")
     public void init() throws Exception {
         List<org.apache.commons.configuration.HierarchicalConfiguration> children = handlerchainConfig.configurationsAt("handler");
 

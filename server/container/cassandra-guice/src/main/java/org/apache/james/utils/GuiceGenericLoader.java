@@ -32,6 +32,7 @@ public class GuiceGenericLoader<T> {
     }
 
     public T instanciate(String className) throws Exception {
+        @SuppressWarnings("unchecked")
         Class<T> clazz = (Class<T>) ClassLoader.getSystemClassLoader().loadClass(constructFullName(className));
         return injector.getInstance(clazz);
     }

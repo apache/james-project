@@ -75,7 +75,7 @@ public class MailboxConverter<Id extends MailboxId> {
     @SuppressWarnings("unchecked")
     public MailboxDataTransferObject extractMailboxDataTransferObject(MailboxListener.Event event) {
         if (event instanceof EventFactory.MailboxAware) {
-            return convertMailboxDataTransferObject(((EventFactory.MailboxAware) event).getMailbox());
+            return convertMailboxDataTransferObject(((EventFactory.MailboxAware<Id>) event).getMailbox());
         } else {
             throw new RuntimeException("Unsupported event class : " + event.getClass().getCanonicalName());
         }

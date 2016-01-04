@@ -40,7 +40,6 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EditMode;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
-import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SimpleMailboxACL.Rfc4314Rights;

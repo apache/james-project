@@ -115,7 +115,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
         this.logger = logger;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 

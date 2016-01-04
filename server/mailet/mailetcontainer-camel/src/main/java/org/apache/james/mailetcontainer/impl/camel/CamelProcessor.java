@@ -56,7 +56,6 @@ public class CamelProcessor implements Processor {
     /**
      * Call the wrapped mailet for the exchange
      */
-    @SuppressWarnings("unchecked")
     public void process(Exchange exchange) throws Exception {
         Mail mail = exchange.getIn().getBody(Mail.class);
         long start = System.currentTimeMillis();

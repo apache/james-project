@@ -375,7 +375,6 @@ abstract public class JDBCBayesianAnalyzer extends BayesianAnalyzer {
     }
 
     private void checkTables(Connection conn) throws SQLException {
-        DatabaseMetaData dbMetaData = conn.getMetaData();
         // Need to ask in the case that identifiers are stored, ask the
         // DatabaseMetaInfo.
         // Try UPPER, lower, and MixedCase, to see if the table is there.

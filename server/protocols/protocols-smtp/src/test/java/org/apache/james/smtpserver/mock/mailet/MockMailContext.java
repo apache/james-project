@@ -22,18 +22,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
-import org.apache.mailet.TemporaryLookupException;
 
 public class MockMailContext implements MailetContext {
 
-    final HashMap attributes = new HashMap();
+    final HashMap<String, Object> attributes = new HashMap<String, Object>();
 
     @Override
     public void bounce(Mail mail, String message) throws MessagingException {
@@ -51,7 +52,7 @@ public class MockMailContext implements MailetContext {
     }
 
     @Override
-    public Collection getMailServers(String host) {
+    public Collection<String> getMailServers(String host) {
         return null; // trivial implementation
     }
 
@@ -66,7 +67,7 @@ public class MockMailContext implements MailetContext {
     }
 
     @Override
-    public Iterator getAttributeNames() {
+    public Iterator<String> getAttributeNames() {
         return attributes.keySet().iterator();
     }
 
@@ -132,12 +133,12 @@ public class MockMailContext implements MailetContext {
     }
 
     @Override
-    public void sendMail(MailAddress sender, Collection recipients, MimeMessage msg) throws MessagingException {
+    public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
         throw new UnsupportedOperationException("MOCKed method");
     }
 
     @Override
-    public void sendMail(MailAddress sender, Collection recipients, MimeMessage msg, String state) throws
+    public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, String state) throws
             MessagingException {
         throw new UnsupportedOperationException("MOCKed method");
     }
@@ -153,7 +154,7 @@ public class MockMailContext implements MailetContext {
     }
 
     @Override
-    public Iterator getSMTPHostAddresses(String domainName) {
+    public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
         return null; // trivial implementation
     }
 }

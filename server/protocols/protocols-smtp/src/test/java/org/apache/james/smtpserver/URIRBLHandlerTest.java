@@ -56,17 +56,7 @@ public class URIRBLHandlerTest {
         mockedMail = mail;
         SMTPSession mockedSMTPSession = new BaseFakeSMTPSession() {
 
-            private final String ipAddress = "192.168.0.1";
-            private final String host = "localhost";
             private boolean relayingAllowed;
-
-            public String getRemoteHost() {
-                return host;
-            }
-
-            public String getRemoteIPAddress() {
-                return ipAddress;
-            }
 
             private final HashMap<String, Object> sstate = new HashMap<String, Object>();
             private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
@@ -151,8 +141,8 @@ public class URIRBLHandlerTest {
         DNSService mockedDnsServer = new MockDNSService() {
 
             @Override
-            public Collection findTXTRecords(String hostname) {
-                List res = new ArrayList();
+            public Collection<String> findTXTRecords(String hostname) {
+                List<String> res = new ArrayList<String>();
                 if (hostname == null) {
                     return res;
                 }
@@ -182,7 +172,7 @@ public class URIRBLHandlerTest {
     @Test
     public void testNotBlocked() throws IOException, MessagingException {
 
-        ArrayList servers = new ArrayList();
+        ArrayList<String> servers = new ArrayList<String>();
         servers.add(URISERVER);
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(
@@ -200,7 +190,7 @@ public class URIRBLHandlerTest {
     @Test
     public void testBlocked() throws IOException, MessagingException {
 
-        ArrayList servers = new ArrayList();
+        ArrayList<String> servers = new ArrayList<String>();
         servers.add(URISERVER);
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(
@@ -218,7 +208,7 @@ public class URIRBLHandlerTest {
     @Test
     public void testBlockedMultiPart() throws IOException, MessagingException {
 
-        ArrayList servers = new ArrayList();
+        ArrayList<String> servers = new ArrayList<String>();
         servers.add(URISERVER);
 
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessageMP(

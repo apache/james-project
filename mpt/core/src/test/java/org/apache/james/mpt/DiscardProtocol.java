@@ -27,7 +27,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -109,8 +108,7 @@ public class DiscardProtocol {
         synchronized (queue)
         {
             stop();
-            for (Iterator it=queue.iterator();it.hasNext();) {
-                final Server server = (Server) it.next();
+            for (Server server: queue) {
                 server.abort();
             }
             queue.clear();
@@ -134,8 +132,7 @@ public class DiscardProtocol {
                 LOG.warn("Failed to close socket", e);
             }
             socket = null;
-            for (Iterator it = runningServers.iterator(); it.hasNext();) {
-                final Server server = (Server) it.next();
+            for (Server server: runningServers) {
                 server.abort();
             }
         }
@@ -213,10 +210,6 @@ public class DiscardProtocol {
             socketChannel = null;
         }
         
-        
-        public SocketChannel getSocketChannel() {
-            return socketChannel;
-        }
         
         public void setSocketChannel(SocketChannel socketChannel) {
             this.socketChannel = socketChannel;

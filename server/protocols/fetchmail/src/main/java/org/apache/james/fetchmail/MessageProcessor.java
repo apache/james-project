@@ -32,6 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
+
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -561,15 +562,15 @@ public class MessageProcessor extends ProcessorAbstract {
      * @return MimeMessage
      * @throws MessagingException
      */
-    @SuppressWarnings("unchecked")
     protected MimeMessage createEmptyMessage() throws MessagingException {
         // Create an empty messsage
         MimeMessage messageOut = new MimeMessage(getSession());
 
         // Propogate the headers and subject
-        Enumeration headersInEnum = getMessageIn().getAllHeaderLines();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> headersInEnum = getMessageIn().getAllHeaderLines();
         while (headersInEnum.hasMoreElements())
-            messageOut.addHeaderLine((String) headersInEnum.nextElement());
+            messageOut.addHeaderLine(headersInEnum.nextElement());
         messageOut.setSubject(getMessageIn().getSubject());
 
         // Add empty text
@@ -618,7 +619,6 @@ public class MessageProcessor extends ProcessorAbstract {
         return mail;
     }
 
-    @SuppressWarnings("unchecked")
     private void logMailCreation(MailImpl mail) {
         if (getLogger().isDebugEnabled()) {
             StringBuilder messageBuffer = new StringBuilder("Created mail with name: ");
@@ -876,12 +876,12 @@ public class MessageProcessor extends ProcessorAbstract {
      *
      * @return boolean
      */
-    @SuppressWarnings("unchecked")
     protected boolean isBouncing() throws MessagingException {
-        Enumeration enumeration = getMessageIn().getMatchingHeaderLines(new String[]{"X-fetched-from"});
+        @SuppressWarnings("unchecked")
+        Enumeration<String> enumeration = getMessageIn().getMatchingHeaderLines(new String[]{"X-fetched-from"});
         int count = 0;
         while (enumeration.hasMoreElements()) {
-            String header = (String) enumeration.nextElement();
+            String header = enumeration.nextElement();
             if (header.equals(getFetchTaskName()))
                 count++;
         }
@@ -894,7 +894,6 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param mail
      * @throws MessagingException
      */
-    @SuppressWarnings("unchecked")
     protected void sendMail(Mail mail) throws MessagingException {
         // queue the mail
         getMailQueue().enQueue(mail);
@@ -927,7 +926,6 @@ public class MessageProcessor extends ProcessorAbstract {
      * @return String
      */
 
-    @SuppressWarnings("unchecked")
     protected String getEnvelopeRecipient(MimeMessage msg) throws MessagingException {
         String res = getCustomRecipientHeader();
         if (res != null && res.length() > 0) {
@@ -940,9 +938,10 @@ public class MessageProcessor extends ProcessorAbstract {
             }
         } else {
             try {
-                Enumeration enumeration = msg.getMatchingHeaderLines(new String[]{"Received"});
+                @SuppressWarnings("unchecked")
+                Enumeration<String> enumeration = msg.getMatchingHeaderLines(new String[]{"Received"});
                 while (enumeration.hasMoreElements()) {
-                    String received = (String) enumeration.nextElement();
+                    String received = enumeration.nextElement();
 
                     int nextSearchAt = 0;
                     int i = 0;

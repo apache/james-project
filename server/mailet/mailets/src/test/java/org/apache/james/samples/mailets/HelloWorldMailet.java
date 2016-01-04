@@ -19,10 +19,12 @@
 package org.apache.james.samples.mailets;
 
 import javax.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.MailetContext.LogLevel;
 
 /**
  * Simply logs a message.
@@ -53,7 +55,7 @@ public class HelloWorldMailet implements Mailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         MailetContext context = config.getMailetContext();
-        context.log("Hello, World!");
-        context.log("You have mail from " + mail.getSender().getLocalPart());
+        context.log(LogLevel.INFO, "Hello, World!");
+        context.log(LogLevel.INFO, "You have mail from " + mail.getSender().getLocalPart());
     }
 }

@@ -91,27 +91,37 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
                 conn = datasource.getConnection();
             }
 
-            if (selectStmt == null) {
-                selectStmt = conn.prepareStatement(selectNetworks);
-            }
-            selectStmt.setString(1, recipientUser);
-            selectStmt.setString(2, recipientHost);
-            selectRS = selectStmt.executeQuery();
             List<String> nets = new ArrayList<String>();
-            while (selectRS.next()) {
-                nets.add(selectRS.getString(1));
+            try {
+                if (selectStmt == null) {
+                    selectStmt = conn.prepareStatement(selectNetworks);
+                }
+                selectStmt.setString(1, recipientUser);
+                selectStmt.setString(2, recipientHost);
+                selectRS = selectStmt.executeQuery();
+                while (selectRS.next()) {
+                    nets.add(selectRS.getString(1));
+                }
+            } finally {
+                jdbcUtil.closeJDBCResultSet(selectRS);
+                jdbcUtil.closeJDBCStatement(selectStmt);
             }
             NetMatcher matcher = new NetMatcher(nets, dns);
             boolean matched = matcher.matchInetNetwork(mail.getRemoteAddr());
 
             if (!matched) {
-                selectStmt = conn.prepareStatement(selectNetworks);
-                selectStmt.setString(1, "*");
-                selectStmt.setString(2, recipientHost);
-                selectRS = selectStmt.executeQuery();
-                nets = new ArrayList<String>();
-                while (selectRS.next()) {
-                    nets.add(selectRS.getString(1));
+                try {
+                    selectStmt = conn.prepareStatement(selectNetworks);
+                    selectStmt.setString(1, "*");
+                    selectStmt.setString(2, recipientHost);
+                    selectRS = selectStmt.executeQuery();
+                    nets = new ArrayList<String>();
+                    while (selectRS.next()) {
+                        nets.add(selectRS.getString(1));
+                    }
+                } finally {
+                    jdbcUtil.closeJDBCResultSet(selectRS);
+                    jdbcUtil.closeJDBCStatement(selectStmt);
                 }
                 matcher = new NetMatcher(nets, dns);
                 matched = matcher.matchInetNetwork(mail.getRemoteAddr());
@@ -121,8 +131,6 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
             log("Error accessing database", sqle);
             throw new MessagingException("Exception thrown", sqle);
         } finally {
-            theJDBCUtil.closeJDBCResultSet(selectRS);
-            theJDBCUtil.closeJDBCStatement(selectStmt);
             theJDBCUtil.closeJDBCConnection(conn);
         }
     }

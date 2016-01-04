@@ -24,7 +24,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.slf4j.Logger;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 
 import java.io.IOException;

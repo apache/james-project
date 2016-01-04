@@ -20,6 +20,9 @@ package org.apache.james.sieverepository.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -28,13 +31,9 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 public abstract class AbstractSieveRepositoryTest {
 

@@ -18,16 +18,13 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
-import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
@@ -35,6 +32,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.collect.Iterators;
 
 /**
  * Receives a Mail from the Queue and takes care to deliver the message
@@ -87,17 +86,13 @@ public class ToRecipientFolder extends GenericMailet {
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#init()
-     */
     @Override
     public void init() throws MessagingException {
         super.init();
         sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, "INBOX");
         sieveMailet.init(new MailetConfig() {
-            /*
-             * @see org.apache.mailet.MailetConfig#getInitParameter(java.lang.String)
-             */
+            
+            @Override
             public String getInitParameter(String name) {
                 if ("addDeliveryHeader".equals(name)) {
                     return "Delivered-To";
@@ -107,27 +102,20 @@ public class ToRecipientFolder extends GenericMailet {
                     return getMailetConfig().getInitParameter(name);
                 }
             }
-            /*
-             * @see org.apache.mailet.MailetConfig#getInitParameterNames()
-             */
+            
+
+            @Override
             public Iterator<String> getInitParameterNames() {
-                IteratorChain c = new IteratorChain();
-                Collection<String> h = new ArrayList<String>();
-                h.add("addDeliveryHeader");
-                h.add("resetReturnPath");
-                c.addIterator(getMailetConfig().getInitParameterNames());
-                c.addIterator(h.iterator());
-                return c;
+                return Iterators.concat(getMailetConfig().getInitParameterNames(),
+                        Arrays.asList("addDeliveryHeader", "resetReturnPath").iterator());
             }
-            /*
-             * @see org.apache.mailet.MailetConfig#getMailetContext()
-             */
+            
+            @Override
             public MailetContext getMailetContext() {
                 return getMailetConfig().getMailetContext();
             }
-            /*
-             * @see org.apache.mailet.MailetConfig#getMailetName()
-             */
+
+            @Override
             public String getMailetName() {
                 return getMailetConfig().getMailetName();
             }
@@ -137,9 +125,6 @@ public class ToRecipientFolder extends GenericMailet {
         sieveMailet.setQuiet(getInitParameter("quiet", true));
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#getMailetInfo()
-     */
     @Override
     public String getMailetInfo() {
         return ToRecipientFolder.class.getName() + " Mailet";

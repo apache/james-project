@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.james.mailbox.model.UpdatedFlags;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UpdatedFlagsDataTransferObject {
     @JsonProperty("uid")

@@ -45,11 +45,11 @@ public abstract class GenericCompositeMatcher extends GenericMatcher implements 
     /**
      * @return Iterator for the child matchers
      */
-    public Iterator iterator() {
+    public Iterator<Matcher> iterator() {
         return matchers.iterator();
     }
 
     // the collection used to store the child-matchers
-    private final Collection matchers = new ArrayList();
+    private final Collection<Matcher> matchers = new ArrayList<Matcher>();
 
 }

@@ -66,13 +66,12 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
      * @see
      * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
 
         if (interfaceName.equals(LineHandler.class)) {
             // add stats for all hooks
             for (Object anExtension : extension) {
-                LineHandler c = (LineHandler) anExtension;
+                LineHandler<?> c = (LineHandler<?>) anExtension;
                 if (!equals(c)) {
                     String cName = c.getClass().getName();
                     try {

@@ -32,7 +32,7 @@ public class MaildirMailboxIdDeserializerTest {
     private static final String MALFORMED_SERIALIZED_ID = "az";
     private static final MaildirId MAILDIR_ID = MaildirId.of(Integer.valueOf(SERIALIZED_ID));
 
-    private MailboxIdDeserializer mailboxIdDeserializer;
+    private MailboxIdDeserializer<MaildirId> mailboxIdDeserializer;
 
     @Before
     public void setUp() {

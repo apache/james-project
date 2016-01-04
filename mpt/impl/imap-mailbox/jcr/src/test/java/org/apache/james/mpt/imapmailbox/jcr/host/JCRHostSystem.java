@@ -94,7 +94,11 @@ public class JCRHostSystem extends JamesImapHostSystem{
             mailboxManager = new JCRMailboxManager(mf, userManager, locker, aclResolver, groupMembershipResolver);
             mailboxManager.init();
 
-            final ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, new JCRSubscriptionManager(mf), new NoQuotaManager(), new DefaultQuotaRootResolver(mf));
+            final ImapProcessor defaultImapProcessorFactory = 
+                    DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, 
+                            new JCRSubscriptionManager(mf), 
+                            new NoQuotaManager(), 
+                            new DefaultQuotaRootResolver(mf));
             resetUserMetaData();
             MailboxSession session = mailboxManager.createSystemSession("test", LoggerFactory.getLogger("TestLog"));
             mailboxManager.startProcessingRequest(session);

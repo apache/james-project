@@ -358,7 +358,6 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * 
      * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
      */
-    @SuppressWarnings("unchecked")
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         StringBuffer logBuffer;
         if (getLogger().isDebugEnabled()) {

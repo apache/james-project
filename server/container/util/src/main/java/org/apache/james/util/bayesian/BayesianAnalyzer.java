@@ -705,21 +705,6 @@ public class BayesianAnalyzer {
         return (p / (p + np));
     }
 
-    private boolean allSameChar(String s) {
-        if (s.length() < 2) {
-            return false;
-        }
-
-        char c = s.charAt(0);
-
-        for (int i = 1; i < s.length(); i++) {
-            if (s.charAt(i) != c) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private boolean allDigits(String s) {
         for (int i = 0; i < s.length(); i++) {
             if (!Character.isDigit(s.charAt(i))) {

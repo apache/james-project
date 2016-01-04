@@ -25,7 +25,20 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.activation.DataHandler;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMessage.RecipientType;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
@@ -41,18 +54,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.activation.DataHandler;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMessage.RecipientType;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Properties;
+import com.google.common.collect.Lists;
 
 public class ManageSieveMailetTestCase {
 

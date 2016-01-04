@@ -404,7 +404,6 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
      *
      * @see org.apache.james.lifecycle.api.Configurable#configure(HierarchicalConfiguration)
      */
-    @SuppressWarnings("unchecked")
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         // Set any Session parameters passed in the Configuration
         setSessionParameters(configuration);
@@ -506,14 +505,13 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void logJavaMailProperties() {
         // if debugging, list the JavaMail property key/value pairs
         // for this Session
         if (logger.isDebugEnabled()) {
             logger.debug("Session properties:");
             Properties properties = getSession().getProperties();
-            Enumeration e = properties.keys();
+            Enumeration<Object> e = properties.keys();
             while (e.hasMoreElements()) {
                 String key = (String) e.nextElement();
                 String val = (String) properties.get(key);
@@ -849,7 +847,6 @@ public class FetchMail implements Runnable, LogEnabled, Configurable {
      * @param configuration The configuration containing the parameters
      * @throws ConfigurationException
      */
-    @SuppressWarnings("unchecked")
     protected void setSessionParameters(HierarchicalConfiguration configuration) {
 
         if (configuration.getKeys("javaMailProperties.property").hasNext()) {

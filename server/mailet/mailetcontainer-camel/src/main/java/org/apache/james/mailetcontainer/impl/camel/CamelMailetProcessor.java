@@ -27,6 +27,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -136,7 +137,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
             String state = getState();
             Logger logger = getLogger();
 
-            RouteDefinition processorDef = from(getEndpoint()).routeId(state).inOnly()
+            RouteDefinition processorDef = from(getEndpoint()).routeId(state).setExchangePattern(ExchangePattern.InOnly)
             // store the logger in properties
                     .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(getLogger()));
 

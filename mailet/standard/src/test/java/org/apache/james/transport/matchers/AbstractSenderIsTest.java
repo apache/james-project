@@ -85,7 +85,7 @@ public abstract class AbstractSenderIsTest extends TestCase {
                 return r;
             }
 
-            public void setRecipients(Collection recipients) {
+            public void setRecipients(Collection<MailAddress> recipients) {
                 throw new UnsupportedOperationException(
                         "Unimplemented mock service");
             }

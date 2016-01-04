@@ -19,20 +19,18 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import org.apache.james.backends.cassandra.components.CassandraIndex;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
-import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathRegisterTable;
+import static com.datastax.driver.core.DataType.text;
 
 import java.util.Collections;
 import java.util.List;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timeuuid;
+import org.apache.james.backends.cassandra.components.CassandraIndex;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathRegisterTable;
+
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class CassandraRegistrationModule implements CassandraModule {
 

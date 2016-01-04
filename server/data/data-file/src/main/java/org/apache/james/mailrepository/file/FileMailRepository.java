@@ -33,6 +33,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -63,7 +64,7 @@ public class FileMailRepository extends AbstractMailRepository {
     private FilePersistentStreamRepository streamRepository;
     private FilePersistentObjectRepository objectRepository;
     private String destination;
-    private Set keys;
+    private Set<String> keys;
     private final Object lock = new Object();
     private boolean fifo;
     private boolean cacheKeys; // experimental: for use with write mostly
@@ -106,26 +107,28 @@ public class FileMailRepository extends AbstractMailRepository {
             streamRepository.init();
 
             if (cacheKeys)
-                keys = Collections.synchronizedSet(new HashSet());
+                keys = Collections.synchronizedSet(new HashSet<String>());
 
             // Finds non-matching pairs and deletes the extra files
-            HashSet streamKeys = new HashSet();
-            for (Iterator i = streamRepository.list(); i.hasNext(); ) {
+            HashSet<String> streamKeys = new HashSet<String>();
+            for (Iterator<String> i = streamRepository.list(); i.hasNext(); ) {
                 streamKeys.add(i.next());
             }
-            HashSet objectKeys = new HashSet();
-            for (Iterator i = objectRepository.list(); i.hasNext(); ) {
+            HashSet<String> objectKeys = new HashSet<String>();
+            for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 objectKeys.add(i.next());
             }
 
-            Collection strandedStreams = (Collection) streamKeys.clone();
+            @SuppressWarnings("unchecked")
+            Collection<String> strandedStreams = (Collection<String>) streamKeys.clone();
             strandedStreams.removeAll(objectKeys);
             for (Object strandedStream : strandedStreams) {
                 String key = (String) strandedStream;
                 remove(key);
             }
 
-            Collection strandedObjects = (Collection) objectKeys.clone();
+            @SuppressWarnings("unchecked")
+            Collection<String> strandedObjects = (Collection<String>) objectKeys.clone();
             strandedObjects.removeAll(streamKeys);
             for (Object strandedObject : strandedObjects) {
                 String key = (String) strandedObject;
@@ -136,7 +139,7 @@ public class FileMailRepository extends AbstractMailRepository {
                 // Next get a list from the object repository
                 // and use that for the list of keys
                 keys.clear();
-                for (Iterator i = objectRepository.list(); i.hasNext(); ) {
+                for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                     keys.add(i.next());
                 }
             }
@@ -254,17 +257,17 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    public Iterator list() {
+    public Iterator<String> list() {
         // Fix ConcurrentModificationException by cloning
         // the keyset before getting an iterator
-        final ArrayList clone;
+        final ArrayList<String> clone;
         if (keys != null)
             synchronized (lock) {
-                clone = new ArrayList(keys);
+                clone = new ArrayList<String>(keys);
             }
         else {
-            clone = new ArrayList();
-            for (Iterator i = objectRepository.list(); i.hasNext(); ) {
+            clone = new ArrayList<String>();
+            for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
                 clone.add(i.next());
             }
         }

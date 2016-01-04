@@ -19,7 +19,6 @@
 
 package org.apache.james.smtpserver;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.smtpserver.fastfail.*;
 

@@ -52,7 +52,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     @Test
     public void testMessageCloning1() throws Exception {
-        ArrayList r = new ArrayList();
+        ArrayList<MailAddress> r = new ArrayList<MailAddress>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
                 content + sep + body);
@@ -78,7 +78,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     @Test
     public void testMessageCloning2() throws Exception {
-        ArrayList r = new ArrayList();
+        ArrayList<MailAddress> r = new ArrayList<MailAddress>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
                 content + sep + body);
@@ -128,7 +128,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      */
     @Test
     public void testMessageAvoidCloning() throws Exception {
-        ArrayList r = new ArrayList();
+        ArrayList<MailAddress> r = new ArrayList<MailAddress>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
                 content + sep + body);
@@ -164,7 +164,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      */
     @Test
     public void testMessageCloning3() throws Exception {
-        ArrayList r = new ArrayList();
+        ArrayList<MailAddress> r = new ArrayList<MailAddress>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessage m = new MimeMessage(Session.getDefaultInstance(new Properties(null)));
         m.setText("CIPS");
@@ -185,7 +185,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     @Test
     public void testMessageDisposing() throws Exception {
-        ArrayList r = new ArrayList();
+        ArrayList<MailAddress> r = new ArrayList<MailAddress>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
                 content + sep + body);
@@ -207,7 +207,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     @Test
     public void testNPE1() throws MessagingException, InterruptedException {
-        ArrayList recipients = new ArrayList();
+        ArrayList<MailAddress> recipients = new ArrayList<MailAddress>();
         recipients.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy mw = new MimeMessageCopyOnWriteProxy(new MimeMessageInputStreamSource("test",
                 new SharedByteArrayInputStream(("Return-path: return@test.com\r\n" + "Content-Transfer-Encoding: plain\r\n" + "Subject: test\r\n\r\n" + "Body Text testNPE1\r\n").
