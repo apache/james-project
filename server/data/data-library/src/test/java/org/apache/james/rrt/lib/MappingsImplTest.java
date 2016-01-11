@@ -226,7 +226,7 @@ public class MappingsImplTest {
         MappingsImpl mappings = MappingsImpl.builder().add("toto").build();
 
         Optional<Mappings> optional = mappings.toOptional();
-        assertThat(optional).isPresent();
+        assertThat(optional.isPresent()).isTrue();
     }
 
     @Test
@@ -234,7 +234,7 @@ public class MappingsImplTest {
         MappingsImpl mappings = MappingsImpl.empty();
 
         Optional<Mappings> optional = mappings.toOptional();
-        assertThat(optional).isAbsent();
+        assertThat(optional.isPresent()).isFalse();
     }
 
     @Test(expected=IllegalStateException.class)
