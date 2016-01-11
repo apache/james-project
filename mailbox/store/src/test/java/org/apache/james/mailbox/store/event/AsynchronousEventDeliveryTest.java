@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.store.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -33,6 +34,7 @@ import org.junit.Test;
 
 public class AsynchronousEventDeliveryTest {
 
+    private static final int ONE_MINUTE = (int) TimeUnit.MINUTES.toMillis(1);
     private MailboxListener mailboxListener;
     private AsynchronousEventDelivery asynchronousEventDelivery;
 
@@ -51,8 +53,7 @@ public class AsynchronousEventDeliveryTest {
     public void deliverShouldWork() throws Exception {
         MailboxListener.Event event = new MailboxListener.Event(null, null) {};
         asynchronousEventDelivery.deliver(mailboxListener, event);
-        Thread.sleep(100);
-        verify(mailboxListener).event(event);
+        verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }
 
     @Test
@@ -60,20 +61,17 @@ public class AsynchronousEventDeliveryTest {
         MailboxListener.Event event = new MailboxListener.Event(new MockMailboxSession("test"), null) {};
         doThrow(new RuntimeException()).when(mailboxListener).event(event);
         asynchronousEventDelivery.deliver(mailboxListener, event);
-        Thread.sleep(100);
-        verify(mailboxListener).event(event);
+        verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }
 
     @Test
     public void deliverShouldWorkWhenThePoolIsFull() throws Exception {
         MailboxListener.Event event = new MailboxListener.Event(new MockMailboxSession("test"), null) {};
-        WaitMailboxListener waitMailboxListener = new WaitMailboxListener();
-        long operationCount = 10;
+        int operationCount = 10;
         for (int i = 0; i < operationCount; i++) {
-            asynchronousEventDelivery.deliver(waitMailboxListener, event);
+            asynchronousEventDelivery.deliver(mailboxListener, event);
         }
-        Thread.sleep(2000);
-        assertThat(waitMailboxListener.getInvocationCount().get()).isEqualTo(operationCount);
+        verify(mailboxListener, timeout(ONE_MINUTE).times(operationCount)).event(event);
     }
 
 }
