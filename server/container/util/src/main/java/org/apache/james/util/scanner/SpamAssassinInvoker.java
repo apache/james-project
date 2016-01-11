@@ -138,9 +138,9 @@ public class SpamAssassinInvoker {
             try {
                 Closeables.close(in, true);
                 Closeables.close(out, true);
-                Closeables.close(socket, true);
+                socket.close();
             } catch (Exception e) {
-                // Should never happin
+                // Should never happen
             }
 
         }
