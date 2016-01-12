@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
@@ -83,9 +83,9 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
 
                     while (uids.hasNext()) {
                         long next = uids.next();
-                        Iterator<Message<Id>> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, -1);
+                        Iterator<MailboxMessage<Id>> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, -1);
                         while(messages.hasNext()) {
-                            Message<Id> message = messages.next();
+                            MailboxMessage<Id> message = messages.next();
                             try {
                                 add(session, mailbox, message);
                             } catch (MailboxException e) {
@@ -139,14 +139,14 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
     }
 
     /**
-     * Add the {@link Message} for the given {@link Mailbox} to the index
+     * Add the {@link MailboxMessage} for the given {@link Mailbox} to the index
      *
      * @param session
      * @param mailbox
      * @param message
      * @throws MailboxException
      */
-    public abstract void add(MailboxSession session, Mailbox<Id> mailbox, Message<Id> message) throws MailboxException;
+    public abstract void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException;
 
     /**
      * Delete the {@link MessageRange} for the given {@link Mailbox} from the index

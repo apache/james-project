@@ -30,26 +30,27 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.AbstractMessage;
+import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 
 import com.google.common.primitives.Ints;
 
-public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
 
-    public static <Id extends MailboxId> SimpleMessage<Id> copy(Id mailboxId, Message<Id> original) throws MailboxException {
+public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxMessage<Id> {
+
+    public static <Id extends MailboxId> SimpleMailboxMessage<Id> copy(Id mailboxId, MailboxMessage<Id> original) throws MailboxException {
         Date internalDate = original.getInternalDate();
         long size = original.getFullContentOctets();
         Flags flags = original.createFlags();
         SharedByteArrayInputStream content = copyFullContent(original);
         int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
         PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
-        return new SimpleMessage<Id>(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId);
+        return new SimpleMailboxMessage<Id>(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId);
     }
 
-    private static <Id extends MailboxId> SharedByteArrayInputStream copyFullContent(Message<Id> original) throws MailboxException {
+    private static <Id extends MailboxId> SharedByteArrayInputStream copyFullContent(MailboxMessage<Id> original) throws MailboxException {
         try {
             return new SharedByteArrayInputStream(IOUtils.toByteArray(original.getFullContent()));
         } catch (IOException e) {
@@ -76,9 +77,9 @@ public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
     private long modSeq;
     private SharedInputStream content;
 
-    public SimpleMessage(Date internalDate, long size, int bodyStartOctet,
-            SharedInputStream content, Flags flags,
-            PropertyBuilder propertyBuilder, final Id mailboxId) {
+    public SimpleMailboxMessage(Date internalDate, long size, int bodyStartOctet,
+                                SharedInputStream content, Flags flags,
+                                PropertyBuilder propertyBuilder, final Id mailboxId) {
         this.content = content;
 
         this.size = size;
@@ -185,7 +186,7 @@ public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        final SimpleMessage<Id> other = (SimpleMessage<Id>) obj;
+        final SimpleMailboxMessage<Id> other = (SimpleMailboxMessage<Id>) obj;
         if (uid != other.uid)
             return false;
         return true;
@@ -213,21 +214,21 @@ public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getModSeq()
+     * @see MailboxMessage#getModSeq()
      */
     public long getModSeq() {
         return modSeq;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#setModSeq(long)
+     * @see MailboxMessage#setModSeq(long)
      */
     public void setModSeq(long modSeq) {
         this.modSeq = modSeq;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#setUid(long)
+     * @see MailboxMessage#setUid(long)
      */
     public void setUid(long uid) {
         this.uid = uid;

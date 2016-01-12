@@ -20,25 +20,25 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
- * {@link Comparator} which compares {@link Message}'s with their {@link Message#getInternalDate()} value
+ * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getInternalDate()} value
  *
  */
-public class InternalDateComparator  implements Comparator<Message<?>>{
+public class InternalDateComparator  implements Comparator<MailboxMessage<?>>{
 
 
-    private final static Comparator<Message<?>> INTERNALDATE = new InternalDateComparator();;
-    private final static Comparator<Message<?>> REVERSE_INTERNALDATE = new ReverseComparator(INTERNALDATE);
+    private final static Comparator<MailboxMessage<?>> INTERNALDATE = new InternalDateComparator();;
+    private final static Comparator<MailboxMessage<?>> REVERSE_INTERNALDATE = new ReverseComparator(INTERNALDATE);
 
     
     @Override
-    public int compare(Message<?> o1, Message<?> o2) {
+    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         return (o1.getInternalDate().compareTo(o2.getInternalDate()));
     }
 
-    public static Comparator<Message<?>> internalDate(boolean reverse){
+    public static Comparator<MailboxMessage<?>> internalDate(boolean reverse){
         if (reverse) {
             return REVERSE_INTERNALDATE;
         } else {

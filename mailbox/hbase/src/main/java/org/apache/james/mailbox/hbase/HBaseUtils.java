@@ -70,11 +70,11 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
-import org.apache.james.mailbox.hbase.mail.HBaseMessage;
+import org.apache.james.mailbox.hbase.mail.HBaseMailboxMessage;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.user.model.Subscription;
@@ -145,7 +145,7 @@ public class HBaseUtils {
      * @param message
      * @return a put that contains all metadata information.
      */
-    public static Put metadataToPut(Message<HBaseId> message) {
+    public static Put metadataToPut(MailboxMessage<HBaseId> message) {
         Put put = new Put(messageRowKey(message));
         // we store the message uid and mailbox uid in the row key
         // store the meta data
@@ -203,7 +203,7 @@ public class HBaseUtils {
      * @param message message to get row key from
      * @return rowkey byte array that can be used with HBase API
      */
-    public static byte[] messageRowKey(Message<HBaseId> message) {
+    public static byte[] messageRowKey(MailboxMessage<HBaseId> message) {
         return messageRowKey(message.getMailboxId(), message.getUid());
     }
 
@@ -232,16 +232,16 @@ public class HBaseUtils {
     }
 
     /**
-     * Creates a HBaseMessage from a Result object. This method retrieves all information 
+     * Creates a HBaseMailboxMessage from a Result object. This method retrieves all information
      * except for body and header related bytes. The message content will be loaded on demand
      * through a specialised InputStream called {@link ChunkInputStream}. 
      * IMPORTANT: the method expects a single version of each cell. Use setMaxVersions(1).
      * @param conf configuration object for HBase cluster
      * @param result the result object containing message data
-     * @return a HBaseMessage instance with message metadata.
+     * @return a HBaseMailboxMessage instance with message metadata.
      */
-    public static Message<HBaseId> messageMetaFromResult(Configuration conf, Result result) {
-        HBaseMessage message = null;
+    public static MailboxMessage<HBaseId> messageMetaFromResult(Configuration conf, Result result) {
+        HBaseMailboxMessage message = null;
         Flags flags = new Flags();
         List<Property> propList = new ArrayList<Property>();
         KeyValue[] keys = result.raw();
@@ -305,7 +305,7 @@ public class HBaseUtils {
         PropertyBuilder props = new PropertyBuilder(propList);
         props.setMediaType(mediaType);
         props.setSubType(subType);
-        message = new HBaseMessage(conf, uuid, internalDate, flags, contentOctets, (int) (contentOctets - bodyOctets), props);
+        message = new HBaseMailboxMessage(conf, uuid, internalDate, flags, contentOctets, (int) (contentOctets - bodyOctets), props);
         message.setUid(uid);
         message.setModSeq(modSeq);
         message.setTextualLineCount(textualLineCount);
@@ -328,7 +328,7 @@ public class HBaseUtils {
      * @param flags
      * @return a put object with 
      */
-    public static Put flagsToPut(Message<HBaseId> message, Flags flags) {
+    public static Put flagsToPut(MailboxMessage<HBaseId> message, Flags flags) {
         Put put = new Put(messageRowKey(message));
         //system flags
         if (flags.contains(Flag.ANSWERED)) {
@@ -376,7 +376,7 @@ public class HBaseUtils {
         return put;
     }
 
-    public static Delete flagsToDelete(Message<HBaseId> message, Flags flags) {
+    public static Delete flagsToDelete(MailboxMessage<HBaseId> message, Flags flags) {
         Delete delete = new Delete(messageRowKey(message));
         //we mark for delete flags that are not present (they will be Put'ed)
         if (flags.contains(Flag.ANSWERED)) {

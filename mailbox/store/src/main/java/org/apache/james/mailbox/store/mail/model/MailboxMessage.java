@@ -30,7 +30,7 @@ import javax.mail.Flags;
  * plus body content. In the case of multipart documents, this body content
  * has internal structure described by the meta-data.
  */
-public interface Message<Id extends MailboxId> extends Comparable<Message<Id>>{
+public interface MailboxMessage<Id extends MailboxId> extends Comparable<MailboxMessage<Id>>{
 
     MessageId getMessageId();
     
@@ -190,7 +190,7 @@ public interface Message<Id extends MailboxId> extends Comparable<Message<Id>>{
     InputStream getHeaderContent() throws IOException;
     
     /**
-     *Returns the full raw content of the Message via an {@link InputStream}.
+     *Returns the full raw content of the MailboxMessage via an {@link InputStream}.
      *
      * Be aware that this method need to return a new fresh {@link InputStream}
      * on every call

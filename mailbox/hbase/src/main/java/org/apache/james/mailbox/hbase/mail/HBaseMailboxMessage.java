@@ -36,17 +36,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
-import org.apache.james.mailbox.store.mail.model.AbstractMessage;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 /**
- * Concrete HBaseMessage implementation. This implementation does not store any
+ * Concrete HBaseMailboxMessage implementation. This implementation does not store any
  * message content. The message content is retrieved using a ChunkedInputStream
  * directly from HBase.
  */
-public class HBaseMessage extends AbstractMessage<HBaseId> {
+public class HBaseMailboxMessage extends AbstractMailboxMessage<HBaseId> {
 
     private static final String TOSTRING_SEPARATOR = " ";
     /** Configuration for the HBase cluster */
@@ -94,7 +94,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
      * @param original
      * @throws MailboxException
      */
-    public HBaseMessage(Configuration conf, HBaseId mailboxId, long uid, long modSeq, Message<?> original) throws MailboxException {
+    public HBaseMailboxMessage(Configuration conf, HBaseId mailboxId, long uid, long modSeq, MailboxMessage<?> original) throws MailboxException {
         super();
         this.conf = conf;
         this.mailboxId = mailboxId;
@@ -126,7 +126,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
      * @param bodyStartOctet
      * @param propertyBuilder
      */
-    public HBaseMessage(Configuration conf, HBaseId mailboxId, Date internalDate, Flags flags, long contentOctets, int bodyStartOctet, PropertyBuilder propertyBuilder) {
+    public HBaseMailboxMessage(Configuration conf, HBaseId mailboxId, Date internalDate, Flags flags, long contentOctets, int bodyStartOctet, PropertyBuilder propertyBuilder) {
         super();
         this.conf = conf;
         this.mailboxId = mailboxId;
@@ -144,7 +144,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#getBodyContent()
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getBodyContent()
      */
     @Override
     public InputStream getBodyContent() throws IOException {
@@ -153,7 +153,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#getHeaderContent()
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getHeaderContent()
      */
     @Override
     public InputStream getHeaderContent() throws IOException {
@@ -180,7 +180,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final HBaseMessage other = (HBaseMessage) obj;
+        final HBaseMailboxMessage other = (HBaseMailboxMessage) obj;
         if (getMailboxId() != null) {
             if (!getMailboxId().equals(other.getMailboxId())) {
                 return false;
@@ -198,7 +198,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#getModSeq()
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getModSeq()
      */
     @Override
     public long getModSeq() {
@@ -207,7 +207,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#setModSeq(long)
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#setModSeq(long)
      */
     @Override
     public void setModSeq(long modSeq) {
@@ -274,7 +274,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getInternalDate()
+     * @see MailboxMessage#getInternalDate()
      */
     @Override
     public Date getInternalDate() {
@@ -282,7 +282,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getMailboxId()
+     * @see MailboxMessage#getMailboxId()
      */
     @Override
     public HBaseId getMailboxId() {
@@ -290,7 +290,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getUid()
+     * @see MailboxMessage#getUid()
      */
     @Override
     public long getUid() {
@@ -298,7 +298,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isAnswered()
+     * @see MailboxMessage#isAnswered()
      */
     @Override
     public boolean isAnswered() {
@@ -306,7 +306,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isDeleted()
+     * @see MailboxMessage#isDeleted()
      */
     @Override
     public boolean isDeleted() {
@@ -314,7 +314,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isDraft()
+     * @see MailboxMessage#isDraft()
      */
     @Override
     public boolean isDraft() {
@@ -322,7 +322,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isFlagged()
+     * @see MailboxMessage#isFlagged()
      */
     @Override
     public boolean isFlagged() {
@@ -330,7 +330,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isRecent()
+     * @see MailboxMessage#isRecent()
      */
     @Override
     public boolean isRecent() {
@@ -338,7 +338,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isSeen()
+     * @see MailboxMessage#isSeen()
      */
     @Override
     public boolean isSeen() {
@@ -351,7 +351,7 @@ public class HBaseMessage extends AbstractMessage<HBaseId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#setFlags(javax.mail.Flags)
+     * @see MailboxMessage#setFlags(javax.mail.Flags)
      */
     @Override
     public final void setFlags(Flags flags) {

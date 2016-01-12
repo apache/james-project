@@ -45,7 +45,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +128,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         return limit.orElse(maximumLimit);
     }
 
-    private Comparator<Message<Id>> comparatorFor(GetMessageListRequest jmapRequest) {
+    private Comparator<MailboxMessage<Id>> comparatorFor(GetMessageListRequest jmapRequest) {
         return SortToComparatorConvertor.comparatorFor(jmapRequest.getSort());
     }
 
@@ -157,7 +157,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private List<Message<Id>> getMessages(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    private List<MailboxMessage<Id>> getMessages(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.all());
         try {
@@ -173,7 +173,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private Message<Id> getMessage(MailboxPath mailboxPath, MailboxSession mailboxSession, MessageMapper<Id> messageMapper, long messageId) throws MailboxException {
+    private MailboxMessage<Id> getMessage(MailboxPath mailboxPath, MailboxSession mailboxSession, MessageMapper<Id> messageMapper, long messageId) throws MailboxException {
         try {
             return ImmutableList.copyOf(messageMapper.findInMailbox(
                         getMailbox(mailboxPath, mailboxSession).get(), 

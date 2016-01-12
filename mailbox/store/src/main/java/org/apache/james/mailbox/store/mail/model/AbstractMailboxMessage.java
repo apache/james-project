@@ -27,23 +27,23 @@ import javax.mail.Flags;
 
 
 /**
- * Abstract base class for {@link Message}
+ * Abstract base class for {@link MailboxMessage}
  *
  */
-public abstract class AbstractMessage<Id extends MailboxId> implements Message<Id> {
+public abstract class AbstractMailboxMessage<Id extends MailboxId> implements MailboxMessage<Id> {
     
 
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(Message<Id> other) {
+    public int compareTo(MailboxMessage<Id> other) {
         return (int) (getUid() - other.getUid());
     }
     
     
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#createFlags()
+     * @see MailboxMessage#createFlags()
      */
     public final Flags createFlags() {
         final Flags flags = new Flags();

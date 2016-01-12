@@ -23,24 +23,24 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.james.mailbox.model.SearchQuery.Sort;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
- * {@link Comparator} which takes a Array of other {@link Comparator}'s and use them to compare two {@link Message} instances till one of them
+ * {@link Comparator} which takes a Array of other {@link Comparator}'s and use them to compare two {@link MailboxMessage} instances till one of them
  * return <> 0
  *
  */
-public class CombinedComparator implements Comparator<Message<?>>{
+public class CombinedComparator implements Comparator<MailboxMessage<?>>{
 
-    private final Comparator<Message<?>>[] comparators;
-    public CombinedComparator(Comparator<Message<?>>[] comparators) {
+    private final Comparator<MailboxMessage<?>>[] comparators;
+    public CombinedComparator(Comparator<MailboxMessage<?>>[] comparators) {
         if(comparators == null || comparators.length < 1) {
             throw new IllegalArgumentException();
         }
         this.comparators = comparators;
     }
     @Override
-    public int compare(Message<?> o1, Message<?> o2) {
+    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         int i = 0;
         for (int a = 0; a < comparators.length; a++) {
             i = comparators[a].compare(o1, o2);
@@ -52,12 +52,12 @@ public class CombinedComparator implements Comparator<Message<?>>{
     }
     
     @SuppressWarnings("unchecked")
-    public static Comparator<Message<?>> create(List<Sort> sorts) {
+    public static Comparator<MailboxMessage<?>> create(List<Sort> sorts) {
         List<Comparator<?>> comps = new ArrayList<Comparator<?>>();
         for (int i = 0; i < sorts.size(); i++) {
             Sort sort = sorts.get(i);
             boolean reverse = sort.isReverse();
-            Comparator<Message<?>> comparator = null;
+            Comparator<MailboxMessage<?>> comparator = null;
             
             switch (sort.getSortClause()) {
             case Arrival:

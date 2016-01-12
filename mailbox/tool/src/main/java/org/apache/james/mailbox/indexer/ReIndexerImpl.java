@@ -35,7 +35,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,9 +127,9 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
         }
     }
 
-    private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox<Id> mailbox, Iterator<Message<Id>> iterator) throws MailboxException {
+    private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox<Id> mailbox, Iterator<MailboxMessage<Id>> iterator) throws MailboxException {
         while (iterator.hasNext()) {
-            Message<Id> message = iterator.next();
+            MailboxMessage<Id> message = iterator.next();
             ImpactingMessageEvent impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));
             if (impactingMessageEvent == null) {
                 messageSearchIndex.add(mailboxSession, mailbox, message);

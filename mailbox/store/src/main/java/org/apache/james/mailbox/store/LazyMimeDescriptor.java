@@ -30,7 +30,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.model.MessageResult.Header;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 /**
@@ -41,11 +41,11 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
  */
 public class LazyMimeDescriptor implements MimeDescriptor{
 
-    private final Message<?> message;
+    private final MailboxMessage<?> message;
     private final MessageResult result;
     private PropertyBuilder pbuilder;
     
-    public LazyMimeDescriptor(final MessageResult result, final Message<?> message) {
+    public LazyMimeDescriptor(final MessageResult result, final MailboxMessage<?> message) {
         this.message = message;
         this.result = result;
     }

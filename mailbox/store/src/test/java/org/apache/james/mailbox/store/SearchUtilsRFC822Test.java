@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class SearchUtilsRFC822Test {
             + "It has " + RHUBARD + ".\r\n" + "It has " + CUSTARD + ".\r\n"
             + "It needs naught else.\r\n";
 
-    Message<TestId> row;
+    MailboxMessage<TestId> row;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     Collection<Long> recent;

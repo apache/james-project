@@ -17,43 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.store.json;
 
-import static org.junit.Assert.*;
-
-import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.TestId;
-import org.apache.james.mailbox.store.mail.model.Message;
-import org.junit.Test;
+import org.apache.james.mailbox.store.TestIdDeserializer;
+import org.apache.james.mailbox.store.event.EventSerializer;
+import org.apache.james.mailbox.store.json.event.EventConverter;
+import org.apache.james.mailbox.store.json.event.MailboxConverter;
 
-public class AbstractMessageTest {    
-    
-    @Test
-    public void testShouldReturnPositiveWhenFirstGreaterThanSecond()
-            throws Exception {
-        Message<TestId> one = buildMessage(100);
-        Message<TestId> two = buildMessage(99);
-        assertTrue( one.compareTo(two) > 0);
-    }
+public class MailboxMessagePackEventSerializerTest extends EventSerializerTest {
 
-    private Message<TestId> buildMessage(int uid) throws Exception {
-        MessageBuilder builder = new MessageBuilder();
-        builder.uid = uid;
-        return builder.build();
-    }
-
-    @Test
-    public void testShouldReturnNegativeWhenFirstLessThanSecond()
-            throws Exception {
-        Message<TestId> one = buildMessage(98);
-        Message<TestId> two = buildMessage(99);
-        assertTrue( one.compareTo(two) < 0);
-    }
-
-    @Test
-    public void testShouldReturnZeroWhenFirstEqualsSecond() throws Exception {
-        Message<TestId> one = buildMessage(90);
-        Message<TestId> two = buildMessage(90);
-        assertEquals(0, one.compareTo(two));
+    @Override
+    EventSerializer createSerializer() {
+        return new MessagePackEventSerializer<TestId>(
+            new EventConverter<TestId>(
+                new MailboxConverter<TestId>(new TestIdDeserializer())));
     }
 }

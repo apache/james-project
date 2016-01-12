@@ -38,7 +38,7 @@ import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.assertj.core.util.Lists;
@@ -93,7 +93,7 @@ public class ReIndexerImplTest {
                 return mailboxMapper;
             }
         });
-        final Message<TestId> message = new MessageBuilder().build();
+        final MailboxMessage<TestId> message = new MessageBuilder().build();
         final SimpleMailbox<TestId> mailbox = new SimpleMailbox<TestId>(INBOX, 42);
         mailbox.setMailboxId(message.getMailboxId());
         when(mailboxMapper.findMailboxByPath(INBOX)).thenAnswer(new Answer<Mailbox<TestId>>() {
@@ -102,9 +102,9 @@ public class ReIndexerImplTest {
                 return mailbox;
             }
         });
-        when(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT)).thenAnswer(new Answer<Iterator<Message<TestId>>>() {
+        when(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT)).thenAnswer(new Answer<Iterator<MailboxMessage<TestId>>>() {
             @Override
-            public Iterator<Message<TestId>> answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public Iterator<MailboxMessage<TestId>> answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return Lists.newArrayList(message).iterator();
             }
         });

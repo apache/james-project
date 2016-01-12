@@ -41,17 +41,17 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
-import org.apache.james.mailbox.store.mail.model.AbstractMessage;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.slf4j.Logger;
 
 /**
- * JCR implementation of {@link Message}
+ * JCR implementation of {@link MailboxMessage}
  *
  */
-public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstants, Persistent{
+public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements JCRImapConstants, Persistent{
 
     private Node node;
     private final Logger logger;
@@ -98,13 +98,13 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
     public final static String SUBTYPE_PROPERTY  = "jamesMailbox:messageSubType";
     public final static String MODSEQ_PROPERTY = "jamesMailbox:modSeq";
 
-    public JCRMessage(Node node, Logger logger) {
+    public JCRMailboxMessage(Node node, Logger logger) {
         this.logger= logger;
         this.node = node;
     }
     
-    public JCRMessage(JCRId mailboxUUID, Date internalDate, int size, Flags flags, SharedInputStream content,
-            int bodyStartOctet,  final PropertyBuilder propertyBuilder, Logger logger) {
+    public JCRMailboxMessage(JCRId mailboxUUID, Date internalDate, int size, Flags flags, SharedInputStream content,
+                             int bodyStartOctet, final PropertyBuilder propertyBuilder, Logger logger) {
         super();
         this.mailboxUUID = mailboxUUID;
         this.internalDate = internalDate;
@@ -132,7 +132,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
      * @param message
      * @throws IOException 
      */
-    public JCRMessage(JCRId mailboxUUID, long uid,  long modSeq, JCRMessage message, Logger logger) throws MailboxException {
+    public JCRMailboxMessage(JCRId mailboxUUID, long uid, long modSeq, JCRMailboxMessage message, Logger logger) throws MailboxException {
         this.mailboxUUID = mailboxUUID;
         this.internalDate = message.getInternalDate();
         this.size = message.getFullContentOctets();
@@ -372,7 +372,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
         if (getClass() != obj.getClass())
             return false;
         
-        final JCRMessage other = (JCRMessage) obj;
+        final JCRMailboxMessage other = (JCRMailboxMessage) obj;
 
         if (getUUID() != null) {
             if (!getUUID().equals(other.getUUID()))
@@ -694,7 +694,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#getBodyContent()
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getBodyContent()
      */
     public InputStream getBodyContent() throws IOException {
         InputStream body = getFullContent();
@@ -704,7 +704,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#getModSeq()
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getModSeq()
      */
     public long getModSeq() {
         if (isPersistent()) {
@@ -721,7 +721,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#setModSeq(long)
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#setModSeq(long)
      */
     public void setModSeq(long modSeq) {
         if (isPersistent()) {
@@ -737,7 +737,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#setUid(long)
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#setUid(long)
      */
     public void setUid(long uid) {
         if (isPersistent()) {
@@ -753,7 +753,7 @@ public class JCRMessage extends AbstractMessage<JCRId> implements JCRImapConstan
 
     /*
      * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Message#getHeaderContent()
+     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getHeaderContent()
      */
     public InputStream getHeaderContent() throws IOException {
         long limit = getBodyStartOctet();

@@ -99,7 +99,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
             executor = Executors.newFixedThreadPool(numberOfTread);
             startConsuming(streams);
         } else {
-            LOG.warn("This Kafka Message Receiver was already launched.");
+            LOG.warn("This Kafka MailboxMessage Receiver was already launched.");
         }
     }
 

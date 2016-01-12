@@ -29,28 +29,28 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
 /**
- * Maps {@link Message} in a {@link org.apache.james.mailbox.MessageManager}. A {@link MessageMapper} has a lifecycle from the start of a request 
+ * Maps {@link MailboxMessage} in a {@link org.apache.james.mailbox.MessageManager}. A {@link MessageMapper} has a lifecycle from the start of a request
  * to the end of the request.
  */
 public interface MessageMapper<Id extends MailboxId> extends Mapper {
 
     /**
      * Return a {@link Iterator} which holds the messages for the given criterias
-     * The list must be ordered by the {@link Message} uid
+     * The list must be ordered by the {@link MailboxMessage} uid
      * 
      * @param mailbox The mailbox to search
      * @param set message range for batch processing
      * @param type
-     * @param limit the maximal limit of returned {@link Message}'s. Use -1 to set no limit. In any case the caller MUST not expect the limit to get applied in all cases as the implementation
+     * @param limit the maximal limit of returned {@link MailboxMessage}'s. Use -1 to set no limit. In any case the caller MUST not expect the limit to get applied in all cases as the implementation
      *              MAY just ignore it
      * @throws MailboxException
      */
-    Iterator<Message<Id>> findInMailbox(Mailbox<Id> mailbox, MessageRange set, FetchType type, int limit)
+    Iterator<MailboxMessage<Id>> findInMailbox(Mailbox<Id> mailbox, MessageRange set, FetchType type, int limit)
             throws MailboxException;
 
     /**
@@ -87,13 +87,13 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
 
 
     /**
-     * Delete the given {@link Message}
+     * Delete the given {@link MailboxMessage}
      * 
      * @param mailbox
      * @param message
      * @throws StorageException
      */
-    void delete(Mailbox<Id> mailbox, Message<Id> message) throws MailboxException;
+    void delete(Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException;
 
     /**
      * Return the uid of the first unseen message. If non can be found null will get returned
@@ -106,8 +106,8 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
     Long findFirstUnseenMessageUid(Mailbox<Id> mailbox) throws MailboxException;
 
     /**
-     * Return a List of {@link Message} which are recent.
-     * The list must be ordered by the {@link Message} uid. 
+     * Return a List of {@link MailboxMessage} which are recent.
+     * The list must be ordered by the {@link MailboxMessage} uid.
      * 
      * @param mailbox
      * @return recentList
@@ -117,7 +117,7 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
 
 
     /**
-     * Add the given {@link Message} to the underlying storage. Be aware that implementation may choose to replace the uid of the given message while storing.
+     * Add the given {@link MailboxMessage} to the underlying storage. Be aware that implementation may choose to replace the uid of the given message while storing.
      * So you should only depend on the returned uid.
      * 
      * 
@@ -126,7 +126,7 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
      * @return uid
      * @throws StorageException
      */
-    MessageMetaData add(Mailbox<Id> mailbox, Message<Id> message) throws MailboxException;
+    MessageMetaData add(Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException;
     
     /**
      * Update flags for the given {@link MessageRange}. Only the flags may be modified after a message was saved to a mailbox.
@@ -141,28 +141,28 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
             final MessageRange set) throws MailboxException;
     
     /**
-     * Copy the given {@link Message} to a new mailbox and return the uid of the copy. Be aware that the given uid is just a suggestion for the uid of the copied
+     * Copy the given {@link MailboxMessage} to a new mailbox and return the uid of the copy. Be aware that the given uid is just a suggestion for the uid of the copied
      * message. Implementation may choose to use a different one, so only depend on the returned uid!
      * 
      * @param mailbox the Mailbox to copy to
      * @param original the original to copy
      * @throws StorageException
      */
-    MessageMetaData copy(Mailbox<Id> mailbox,Message<Id> original) throws MailboxException;
+    MessageMetaData copy(Mailbox<Id> mailbox,MailboxMessage<Id> original) throws MailboxException;
     
     /**
-     * Move the given {@link Message} to a new mailbox and return the uid of the moved. Be aware that the given uid is just a suggestion for the uid of the moved
+     * Move the given {@link MailboxMessage} to a new mailbox and return the uid of the moved. Be aware that the given uid is just a suggestion for the uid of the moved
      * message. Implementation may choose to use a different one, so only depend on the returned uid!
      * 
      * @param mailbox the Mailbox to move to
      * @param original the original to move
      * @throws StorageException
      */
-    MessageMetaData move(Mailbox<Id> mailbox,Message<Id> original) throws MailboxException;
+    MessageMetaData move(Mailbox<Id> mailbox,MailboxMessage<Id> original) throws MailboxException;
     
     
     /**
-     * Return the last uid which were used for storing a Message in the {@link Mailbox}
+     * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
      * 
      * @param mailbox
      * @return lastUid
@@ -172,7 +172,7 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
     
     
     /**
-     * Return the higest mod-sequence which were used for storing a Message in the {@link Mailbox}
+     * Return the higest mod-sequence which were used for storing a MailboxMessage in the {@link Mailbox}
      * 
      * @param mailbox
      * @return lastUid
@@ -181,48 +181,48 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
     long getHighestModSeq(Mailbox<Id> mailbox) throws MailboxException;
     
     /**
-     * Specify what data needs to get filled in a {@link Message} before returning it
+     * Specify what data needs to get filled in a {@link MailboxMessage} before returning it
      * 
      *
      */
     public static enum FetchType {
 
         /**
-         * Fetch only the meta data of the {@link Message} which includes:
+         * Fetch only the meta data of the {@link MailboxMessage} which includes:
          * <p>
-         *  {@link Message#getUid()}
-         *  {@link Message#getModSeq()}
-         *  {@link Message#getBodyOctets()}
-         *  {@link Message#getFullContentOctets()}
-         *  {@link Message#getInternalDate()}
-         *  {@link Message#getMailboxId()}
-         *  {@link Message#getMediaType()}
-         *  {@link Message#getModSeq()}
-         *  {@link Message#getSubType()}
-         *  {@link Message#getTextualLineCount()}
+         *  {@link MailboxMessage#getUid()}
+         *  {@link MailboxMessage#getModSeq()}
+         *  {@link MailboxMessage#getBodyOctets()}
+         *  {@link MailboxMessage#getFullContentOctets()}
+         *  {@link MailboxMessage#getInternalDate()}
+         *  {@link MailboxMessage#getMailboxId()}
+         *  {@link MailboxMessage#getMediaType()}
+         *  {@link MailboxMessage#getModSeq()}
+         *  {@link MailboxMessage#getSubType()}
+         *  {@link MailboxMessage#getTextualLineCount()}
          * </p>
          */
         Metadata,
         /**
-         * Fetch the {@link #Metadata}, {@link Property}'s and the {@link #Headers}'s for the {@link Message}. This includes:
+         * Fetch the {@link #Metadata}, {@link Property}'s and the {@link #Headers}'s for the {@link MailboxMessage}. This includes:
          * 
          * <p>
-         * {@link Message#getProperties()}
-         * {@link Message#getHeaderContent()}
+         * {@link MailboxMessage#getProperties()}
+         * {@link MailboxMessage#getHeaderContent()}
          * </p>
          */
         Headers,
         /**
-         * Fetch the {@link #Metadata} and the Body for the {@link Message}. This includes:
+         * Fetch the {@link #Metadata} and the Body for the {@link MailboxMessage}. This includes:
          * 
          * <p>
-         *  {@link Message#getBodyContent()}
+         *  {@link MailboxMessage#getBodyContent()}
          * </p>
          */
         Body,
         
         /**
-         * Fetch the complete {@link Message}
+         * Fetch the complete {@link MailboxMessage}
          * 
          */
         Full

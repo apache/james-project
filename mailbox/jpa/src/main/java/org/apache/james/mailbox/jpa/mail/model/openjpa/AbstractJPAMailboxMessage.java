@@ -42,8 +42,8 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.store.mail.model.AbstractMessage;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
@@ -51,55 +51,55 @@ import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 /**
- * Abstract base class for JPA based implementations of {@link AbstractMessage}
+ * Abstract base class for JPA based implementations of {@link AbstractMailboxMessage}
  */
-@IdClass(AbstractJPAMessage.MailboxIdUidKey.class)
+@IdClass(AbstractJPAMailboxMessage.MailboxIdUidKey.class)
 @NamedQueries({
     @NamedQuery(name="findRecentMessageUidsInMailbox",
-            query="SELECT message.uid FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.recent = TRUE ORDER BY message.uid ASC"),
+            query="SELECT message.uid FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.recent = TRUE ORDER BY message.uid ASC"),
     @NamedQuery(name="findUnseenMessagesInMailboxOrderByUid",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.seen = FALSE ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.seen = FALSE ORDER BY message.uid ASC"),
     @NamedQuery(name="findMessagesInMailbox",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid ASC"),
     @NamedQuery(name="findMessagesInMailboxBetweenUIDs",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam ORDER BY message.uid ASC"),
     @NamedQuery(name="findMessagesInMailboxWithUID",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid=:uidParam ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid=:uidParam ORDER BY message.uid ASC"),
     @NamedQuery(name="findMessagesInMailboxAfterUID",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid>=:uidParam ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid>=:uidParam ORDER BY message.uid ASC"),
     @NamedQuery(name="findDeletedMessagesInMailbox",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
     @NamedQuery(name="findDeletedMessagesInMailboxBetweenUIDs",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
     @NamedQuery(name="findDeletedMessagesInMailboxWithUID",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid=:uidParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid=:uidParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
     @NamedQuery(name="findDeletedMessagesInMailboxAfterUID",
-            query="SELECT message FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid>=:uidParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
+            query="SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid>=:uidParam AND message.deleted=TRUE ORDER BY message.uid ASC"),
             
     @NamedQuery(name="deleteDeletedMessagesInMailbox",
-            query="DELETE FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.deleted=TRUE"),        
+            query="DELETE FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.deleted=TRUE"),
     @NamedQuery(name="deleteDeletedMessagesInMailboxBetweenUIDs",
-            query="DELETE FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam AND message.deleted=TRUE"),        
+            query="DELETE FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam AND message.deleted=TRUE"),
     @NamedQuery(name="deleteDeletedMessagesInMailboxWithUID",
-            query="DELETE FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid=:uidParam AND message.deleted=TRUE"),                    
+            query="DELETE FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid=:uidParam AND message.deleted=TRUE"),
     @NamedQuery(name="deleteDeletedMessagesInMailboxAfterUID",
-            query="DELETE FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.uid>=:uidParam AND message.deleted=TRUE"),  
+            query="DELETE FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid>=:uidParam AND message.deleted=TRUE"),
                     
     @NamedQuery(name="countUnseenMessagesInMailbox",
-            query="SELECT COUNT(message) FROM Message message WHERE message.mailbox.mailboxId = :idParam AND message.seen=FALSE"),                     
+            query="SELECT COUNT(message) FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.seen=FALSE"),
     @NamedQuery(name="countMessagesInMailbox",
-            query="SELECT COUNT(message) FROM Message message WHERE message.mailbox.mailboxId = :idParam"),                    
+            query="SELECT COUNT(message) FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam"),
     @NamedQuery(name="deleteMessages",
-            query="DELETE FROM Message message WHERE message.mailbox.mailboxId = :idParam"),
+            query="DELETE FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam"),
     @NamedQuery(name="findLastUidInMailbox",
-            query="SELECT message.uid FROM Message message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid DESC"),
+            query="SELECT message.uid FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid DESC"),
     @NamedQuery(name="findHighestModSeqInMailbox",
-            query="SELECT message.modSeq FROM Message message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.modSeq DESC"),
+            query="SELECT message.modSeq FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.modSeq DESC"),
     @NamedQuery(name="deleteAllMemberships",
-            query="DELETE FROM Message message")
+            query="DELETE FROM MailboxMessage message")
 })
 @MappedSuperclass
-public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
+public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<JPAId> {
 
 
 
@@ -245,9 +245,9 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
     private List<JPAUserFlag> userFlags;
     
     @Deprecated
-    public AbstractJPAMessage() {}
+    public AbstractJPAMailboxMessage() {}
 
-    public AbstractJPAMessage(JPAMailbox mailbox, Date internalDate, Flags flags, final long contentOctets, final int bodyStartOctet, final PropertyBuilder propertyBuilder) {
+    public AbstractJPAMailboxMessage(JPAMailbox mailbox, Date internalDate, Flags flags, final long contentOctets, final int bodyStartOctet, final PropertyBuilder propertyBuilder) {
         super();
         this.mailbox = mailbox;
         this.internalDate = internalDate;
@@ -277,7 +277,7 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
      * @param original message to be copied, not null
      * @throws IOException 
      */
-    public AbstractJPAMessage(JPAMailbox mailbox, long uid, long modSeq,  Message<?> original) throws MailboxException {
+    public AbstractJPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> original) throws MailboxException {
         super();
         this.mailbox = mailbox;
         this.uid = uid;
@@ -323,7 +323,7 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        final AbstractJPAMessage other = (AbstractJPAMessage) obj;
+        final AbstractJPAMailboxMessage other = (AbstractJPAMailboxMessage) obj;
         if (getMailboxId() != null) {
             if (!getMailboxId().equals(other.getMailboxId()))
             return false;
@@ -337,14 +337,14 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getModSeq()
+     * @see MailboxMessage#getModSeq()
      */
     public long getModSeq() {
         return modSeq;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#setModSeq(long)
+     * @see MailboxMessage#setModSeq(long)
      */
     public void setModSeq(long modSeq) {
         this.modSeq = modSeq;
@@ -388,7 +388,7 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getFullContentOctets()
+     * @see MailboxMessage#getFullContentOctets()
      */
     public long getFullContentOctets() {
         return contentOctets;
@@ -401,63 +401,63 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
     
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getInternalDate()
+     * @see MailboxMessage#getInternalDate()
      */
     public Date getInternalDate() {
         return internalDate;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getMailboxId()
+     * @see MailboxMessage#getMailboxId()
      */
     public JPAId getMailboxId() {
         return getMailbox().getMailboxId();
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getUid()
+     * @see MailboxMessage#getUid()
      */
     public long getUid() {
         return uid;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isAnswered()
+     * @see MailboxMessage#isAnswered()
      */
     public boolean isAnswered() {
         return answered;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isDeleted()
+     * @see MailboxMessage#isDeleted()
      */
     public boolean isDeleted() {
         return deleted;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isDraft()
+     * @see MailboxMessage#isDraft()
      */
     public boolean isDraft() {
         return draft;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isFlagged()
+     * @see MailboxMessage#isFlagged()
      */
     public boolean isFlagged() {
         return flagged;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isRecent()
+     * @see MailboxMessage#isRecent()
      */
     public boolean isRecent() {
         return recent;
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isSeen()
+     * @see MailboxMessage#isSeen()
      */
     public boolean isSeen() {
         return seen;
@@ -468,7 +468,7 @@ public abstract class AbstractJPAMessage extends AbstractMessage<JPAId> {
     }
     
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#setFlags(javax.mail.Flags)
+     * @see MailboxMessage#setFlags(javax.mail.Flags)
      */
     public void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);

@@ -16,20 +16,31 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox.store.mail.model;
 
-package org.apache.james.jmap.methods.cassandra;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.backends.cassandra.EmbeddedCassandra;
-import org.apache.james.jmap.JmapServer;
-import org.apache.james.jmap.cassandra.CassandraJmapServer;
-import org.apache.james.jmap.methods.GetMessageListMethodTest;
-import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.junit.rules.TemporaryFolder;
+import org.apache.james.mailbox.store.TestId;
+import org.junit.Test;
 
-public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    @Override
-    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
-        return new CassandraJmapServer(CassandraJmapServer.defaultOverrideModule(temporaryFolder, embeddedElasticSearch, cassandra));
+public class DefaultMailboxMessageIdTest {
+
+    @Test(expected=NullPointerException.class)
+    public void constructorShouldThrowWhenNullMailboxId() {
+        new DefaultMessageId(null, 1);
     }
+
+    @Test
+    public void serializeShouldFormatMailboxIdAndUid() {
+        DefaultMessageId id = new DefaultMessageId(TestId.of(12l), 1);
+        assertThat(id.serialize()).isEqualTo("12-1");
+    }
+    
+    @Test
+    public void shouldRespectJavaBeanContract() {
+        EqualsVerifier.forClass(DefaultMessageId.class).verify();
+    }
+    
 }

@@ -24,7 +24,7 @@ import java.util.Map;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class MessageBuilder {
     
@@ -37,8 +37,8 @@ public class MessageBuilder {
     public final Map<String, String> headers = new HashMap<String, String>();
     public int lineNumber = 0;
     
-    public Message<TestId> build() throws Exception {
-        Message<TestId> result = new SimpleMailboxMembership(mailboxId, uid, -1,  internalDate, size, flags, body, headers);
+    public MailboxMessage<TestId> build() throws Exception {
+        MailboxMessage<TestId> result = new SimpleMailboxMembership(mailboxId, uid, -1,  internalDate, size, flags, body, headers);
         return result;
     }
     

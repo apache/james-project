@@ -66,9 +66,9 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.streaming.BodyOffsetInputStream;
@@ -371,7 +371,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
             contentIn = new SharedFileInputStream(file);
             final int size = (int) file.length();
 
-            final Message<Id> message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder);
+            final MailboxMessage<Id> message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder);
 
             new QuotaChecker<Id>(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
@@ -411,7 +411,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
     }
 
     /**
-     * Create a new {@link Message} for the given data
+     * Create a new {@link MailboxMessage} for the given data
      * 
      * @param internalDate
      * @param size
@@ -421,8 +421,8 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
      * @return membership
      * @throws MailboxException
      */
-    protected Message<Id> createMessage(Date internalDate, final int size, int bodyStartOctet, final SharedInputStream content, final Flags flags, final PropertyBuilder propertyBuilder) throws MailboxException {
-        return new SimpleMessage<Id>(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId());
+    protected MailboxMessage<Id> createMessage(Date internalDate, final int size, int bodyStartOctet, final SharedInputStream content, final Flags flags, final PropertyBuilder propertyBuilder) throws MailboxException {
+        return new SimpleMailboxMessage<Id>(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId());
     }
 
     /**
@@ -611,7 +611,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         }, true);
     }
 
-    protected MessageMetaData appendMessageToStore(final Message<Id> message, MailboxSession session) throws MailboxException {
+    protected MessageMetaData appendMessageToStore(final MailboxMessage<Id> message, MailboxSession session) throws MailboxException {
         final MessageMapper<Id> mapper = mapperFactory.getMessageMapper(session);
         return mapperFactory.getMessageMapper(session).execute(new Mapper.Transaction<MessageMetaData>() {
 
@@ -698,13 +698,13 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         return index.search(mailboxSession, getMailboxEntity(), query);
     }
 
-    private Iterator<MessageMetaData> copy(final Iterator<Message<Id>> originalRows, final MailboxSession session) throws MailboxException {
+    private Iterator<MessageMetaData> copy(final Iterator<MailboxMessage<Id>> originalRows, final MailboxSession session) throws MailboxException {
         final List<MessageMetaData> copiedRows = new ArrayList<MessageMetaData>();
         final MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
         QuotaChecker<Id> quotaChecker = new QuotaChecker<Id>(quotaManager, quotaRootResolver, mailbox);
 
         while (originalRows.hasNext()) {
-            final Message<Id> originalMessage = originalRows.next();
+            final MailboxMessage<Id> originalMessage = originalRows.next();
             quotaChecker.tryAddition(1, originalMessage.getFullContentOctets());
             MessageMetaData data = messageMapper.execute(new Mapper.Transaction<MessageMetaData>() {
                 public MessageMetaData run() throws MailboxException {
@@ -718,13 +718,13 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         return copiedRows.iterator();
     }
 
-    private Iterator<MessageMetaData> move(Iterator<Message<Id>> originalRows,
+    private Iterator<MessageMetaData> move(Iterator<MailboxMessage<Id>> originalRows,
 			MailboxSession session) throws MailboxException {
         final List<MessageMetaData> movedRows = new ArrayList<MessageMetaData>();
         final MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
 
         while (originalRows.hasNext()) {
-            final Message<Id> originalMessage = originalRows.next();
+            final MailboxMessage<Id> originalMessage = originalRows.next();
             MessageMetaData data = messageMapper.execute(new Mapper.Transaction<MessageMetaData>() {
                 public MessageMetaData run() throws MailboxException {
                     return messageMapper.move(getMailboxEntity(), originalMessage);
@@ -747,7 +747,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
 
         final SortedMap<Long, MessageMetaData> copiedMessages = new TreeMap<Long, MessageMetaData>();
-        Iterator<Message<Id>> originalRows = messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
+        Iterator<MailboxMessage<Id>> originalRows = messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
         Iterator<MessageMetaData> ids = to.copy(originalRows, session);
         while (ids.hasNext()) {
             MessageMetaData data = ids.next();
@@ -762,7 +762,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
 
         final SortedMap<Long, MessageMetaData> movedMessages = new TreeMap<Long, MessageMetaData>();
-        Iterator<Message<Id>> originalRows = messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
+        Iterator<MailboxMessage<Id>> originalRows = messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
         Iterator<MessageMetaData> ids = to.move(originalRows, session);
         while (ids.hasNext()) {
             MessageMetaData data = ids.next();

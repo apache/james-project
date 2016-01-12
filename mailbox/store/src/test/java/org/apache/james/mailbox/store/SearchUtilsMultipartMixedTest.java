@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
 import org.junit.Before;
 import org.junit.Test;
@@ -107,7 +107,7 @@ public class SearchUtilsMultipartMixedTest {
             + "  Than both your poets can in praise devise.\r\n"
             + "\r\n--2.50290787509--\r\n" + "\r\n--1729--\r\n";
 
-    Message<TestId> row;
+    MailboxMessage<TestId> row;
 
 
     Collection<Long> recent;

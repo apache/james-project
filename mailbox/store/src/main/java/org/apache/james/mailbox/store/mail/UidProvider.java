@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 public interface UidProvider<Id extends MailboxId> {
 
     /**
-     * Return the next uid which can be used while append a Message to the {@link Mailbox}.
+     * Return the next uid which can be used while append a MailboxMessage to the {@link Mailbox}.
      * Its important that the returned uid is higher then the last used and that the next call of this method does return a higher
      * one
      * 
@@ -45,7 +45,7 @@ public interface UidProvider<Id extends MailboxId> {
     public long nextUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
     
     /**
-     * Return the last uid which were used for storing a Message in the {@link Mailbox}
+     * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
      * 
      * @param session
      * @param mailbox

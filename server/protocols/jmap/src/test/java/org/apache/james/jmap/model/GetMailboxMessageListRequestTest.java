@@ -22,63 +22,78 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class GetMessageListResponseTest {
+public class GetMailboxMessageListRequestTest {
+
+    @Test(expected=IllegalStateException.class)
+    public void builderShouldThrowWhenPositionIsNegative() {
+        GetMessageListRequest.builder().position(-1).build();
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void builderShouldThrowWhenLimitIsNegative() {
+        GetMessageListRequest.builder().limit(-1).build();
+    }
 
     @Test(expected=NotImplementedException.class)
     public void builderShouldThrowWhenAccountId() {
-        GetMessageListResponse.builder().accountId(null);
+        GetMessageListRequest.builder().accountId(null);
     }
 
     @Test(expected=NotImplementedException.class)
     public void builderShouldThrowWhenCollapseThreads() {
-        GetMessageListResponse.builder().collapseThreads(false);
+        GetMessageListRequest.builder().collapseThreads(false);
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenState() {
-        GetMessageListResponse.builder().state(null);
+    public void builderShouldThrowWhenAnchor() {
+        GetMessageListRequest.builder().anchor(null);
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenCanCalculateUpdates() {
-        GetMessageListResponse.builder().canCalculateUpdates(false);
+    public void builderShouldThrowWhenAnchorOffset() {
+        GetMessageListRequest.builder().anchorOffset(0);
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenPosition() {
-        GetMessageListResponse.builder().position(0);
+    public void builderShouldThrowWhenFetchThreads() {
+        GetMessageListRequest.builder().fetchThreads(false);
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenTotal() {
-        GetMessageListResponse.builder().total(0);
+    public void builderShouldThrowWhenFetchMessages() {
+        GetMessageListRequest.builder().fetchMessages(false);
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenThreadIds() {
-        GetMessageListResponse.builder().threadIds(null);
+    public void builderShouldThrowWhenFetchSearchSnippets() {
+        GetMessageListRequest.builder().fetchSearchSnippets(false);
     }
-    
+
     @Test
     public void builderShouldWork() {
         FilterCondition filterCondition = FilterCondition.builder()
                 .inMailboxes(ImmutableList.of("1", "2"))
                 .build();
         List<String> sort = ImmutableList.of("date desc");
-        List<String> messageIds = ImmutableList.of("3", "4");
-        GetMessageListResponse expectedGetMessageListResponse = new GetMessageListResponse(null, filterCondition, sort, false, null, false, 0, 0, ImmutableList.of(), messageIds);
+        List<String> fetchMessageProperties = ImmutableList.of("id", "blobId");
+        GetMessageListRequest expectedGetMessageListRequest = new GetMessageListRequest(Optional.empty(), Optional.of(filterCondition), sort, Optional.empty(), 1, Optional.empty(), Optional.empty(), Optional.of(2),
+                Optional.empty(), Optional.empty(), fetchMessageProperties, Optional.empty());
 
-        GetMessageListResponse getMessageListResponse = GetMessageListResponse.builder()
+        GetMessageListRequest getMessageListRequest = GetMessageListRequest.builder()
             .filter(filterCondition)
             .sort(sort)
-            .messageIds(messageIds)
+            .position(1)
+            .limit(2)
+            .fetchMessageProperties(fetchMessageProperties)
             .build();
-        assertThat(getMessageListResponse).isEqualToComparingFieldByField(expectedGetMessageListResponse);
+
+        assertThat(getMessageListRequest).isEqualToComparingFieldByField(expectedGetMessageListRequest);
     }
 }

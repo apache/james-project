@@ -30,12 +30,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(value = Parameterized.class)
-public class MailderMessageNameTest {
+public class MailderMailboxMessageNameTest {
 
     private String validName;
     private Parts parts;
 
-    public MailderMessageNameTest(Parts parts) {
+    public MailderMailboxMessageNameTest(Parts parts) {
         this.validName = parts.fullName;
         this.parts = parts;
     }

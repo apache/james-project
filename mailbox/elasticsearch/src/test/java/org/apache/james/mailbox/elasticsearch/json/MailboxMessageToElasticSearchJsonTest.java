@@ -22,12 +22,12 @@ package org.apache.james.mailbox.elasticsearch.json;
 import com.google.common.base.Throwables;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.TestId;
-import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_VALUES;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 
-public class MessageToElasticSearchJsonTest {
+public class MailboxMessageToElasticSearchJsonTest {
 
     public static final int SIZE = 25;
     public static final int BODY_START_OCTET = 100;
@@ -69,7 +69,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> spamMail = new SimpleMessage<>(date,
+        MailboxMessage<TestId> spamMail = new SimpleMailboxMessage<>(date,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/spamMail.eml"))),
@@ -87,7 +87,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> htmlMail = new SimpleMessage<>(date,
+        MailboxMessage<TestId> htmlMail = new SimpleMailboxMessage<>(date,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/htmlMail.eml"))),
@@ -106,7 +106,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> pgpSignedMail = new SimpleMessage<>(date,
+        MailboxMessage<TestId> pgpSignedMail = new SimpleMailboxMessage<>(date,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/pgpSignedMail.eml"))),
@@ -125,7 +125,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> mail = new SimpleMessage<>(date,
+        MailboxMessage<TestId> mail = new SimpleMailboxMessage<>(date,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/mail.eml"))),
@@ -144,7 +144,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> recursiveMail = new SimpleMessage<>(date,
+        MailboxMessage<TestId> recursiveMail = new SimpleMailboxMessage<>(date,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/recursiveMail.eml"))),
@@ -163,7 +163,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> mailWithNoInternalDate = new SimpleMessage<>(null,
+        MailboxMessage<TestId> mailWithNoInternalDate = new SimpleMailboxMessage<>(null,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/recursiveMail.eml"))),
@@ -183,9 +183,9 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> mailWithNoMailboxId;
+        MailboxMessage<TestId> mailWithNoMailboxId;
         try {
-            mailWithNoMailboxId = new SimpleMessage<>(date,
+            mailWithNoMailboxId = new SimpleMailboxMessage<>(date,
                 SIZE,
                 BODY_START_OCTET,
                 new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/recursiveMail.eml"))),
@@ -231,7 +231,7 @@ public class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new TikaTextExtractor(),
             ZoneId.of("Europe/Paris"));
-        Message<TestId> spamMail = new SimpleMessage<>(date,
+        MailboxMessage<TestId> spamMail = new SimpleMailboxMessage<>(date,
             SIZE,
             BODY_START_OCTET,
             new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/nonTextual.eml"))),

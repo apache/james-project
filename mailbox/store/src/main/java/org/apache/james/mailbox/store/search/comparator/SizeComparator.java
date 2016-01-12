@@ -20,25 +20,25 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
- * {@link Comparator} which compares {@link Message}'s with their {@link Message#getFullContentOctets()} value
+ * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getFullContentOctets()} value
  *
  */
-public class SizeComparator implements Comparator<Message<?>>{
+public class SizeComparator implements Comparator<MailboxMessage<?>>{
 
 
-    private final static Comparator<Message<?>> SIZE = new SizeComparator();
-    private final static Comparator<Message<?>> REVERSE_SIZE = new ReverseComparator(SIZE);
+    private final static Comparator<MailboxMessage<?>> SIZE = new SizeComparator();
+    private final static Comparator<MailboxMessage<?>> REVERSE_SIZE = new ReverseComparator(SIZE);
 
     
     @Override
-    public int compare(Message<?> o1, Message<?> o2) {
+    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         return (int) (o1.getFullContentOctets() - o2.getFullContentOctets());
     }
 
-    public static Comparator<Message<?>> size(boolean reverse) {
+    public static Comparator<MailboxMessage<?>> size(boolean reverse) {
         if (reverse) {
             return REVERSE_SIZE;
         } else {

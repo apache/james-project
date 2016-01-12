@@ -30,7 +30,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.base.Preconditions;
 import org.apache.james.mailbox.store.extractor.TextExtractor;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class MessageToElasticSearchJson {
 
@@ -51,7 +51,7 @@ public class MessageToElasticSearchJson {
         this(textExtractor, ZoneId.systemDefault());
     }
 
-    public String convertToJson(Message<?> message) throws JsonProcessingException {
+    public String convertToJson(MailboxMessage<?> message) throws JsonProcessingException {
         Preconditions.checkNotNull(message);
         return mapper.writeValueAsString(IndexableMessage.from(message, textExtractor, zoneId));
     }

@@ -20,22 +20,22 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 
 public class BaseSubjectComparator extends AbstractHeaderComparator{
 
 
 
-    private final static Comparator<Message<?>> BASESUBJECT = new BaseSubjectComparator();;
-    private final static Comparator<Message<?>> REVERSE_BASESUBJECT = new ReverseComparator(BASESUBJECT);
+    private final static Comparator<MailboxMessage<?>> BASESUBJECT = new BaseSubjectComparator();;
+    private final static Comparator<MailboxMessage<?>> REVERSE_BASESUBJECT = new ReverseComparator(BASESUBJECT);
 
     
     
     private final static String SUBJECT = "subject";
     
     @Override
-    public int compare(Message<?> o1, Message<?> o2) {
+    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         String baseSubject1 = SearchUtil.getBaseSubject(getHeaderValue(SUBJECT, o1));
         String baseSubject2 = SearchUtil.getBaseSubject(getHeaderValue(SUBJECT, o2));
 
@@ -43,7 +43,7 @@ public class BaseSubjectComparator extends AbstractHeaderComparator{
     }
 
 
-    public static Comparator<Message<?>> baseSubject(boolean reverse){
+    public static Comparator<MailboxMessage<?>> baseSubject(boolean reverse){
         if (reverse) {
             return REVERSE_BASESUBJECT;
         } else {

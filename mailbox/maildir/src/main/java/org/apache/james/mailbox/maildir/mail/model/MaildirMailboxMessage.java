@@ -34,8 +34,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
-import org.apache.james.mailbox.store.mail.model.AbstractMessage;
+import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
@@ -48,7 +49,7 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 
-public class MaildirMessage extends AbstractMessage<MaildirId> {
+public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
 
 	private MaildirMessageName messageName;
     private int bodyStartOctet;
@@ -65,7 +66,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     protected boolean newMessage;
     private long modSeq;
     
-    public MaildirMessage(Mailbox<MaildirId> mailbox, long uid, MaildirMessageName messageName) throws IOException {
+    public MaildirMailboxMessage(Mailbox<MaildirId> mailbox, long uid, MaildirMessageName messageName) throws IOException {
         this.mailbox = mailbox;
         setUid(uid);
         setModSeq(messageName.getFile().lastModified());
@@ -105,7 +106,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
     /**
      * @see
-     * org.apache.james.mailbox.store.mail.model.Message#setFlags(
+     * MailboxMessage#setFlags(
      * javax.mail.Flags)
      */
     @Override
@@ -122,7 +123,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     
     /**
      * @see
-     * org.apache.james.mailbox.store.mail.model.Message#isAnswered()
+     * MailboxMessage#isAnswered()
      */
     @Override
     public boolean isAnswered() {
@@ -131,7 +132,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
 
     /**
      * @see
-     * org.apache.james.mailbox.store.mail.model.Message#isDeleted()
+     * MailboxMessage#isDeleted()
      */
     @Override
     public boolean isDeleted() {
@@ -140,7 +141,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
 
     /**
      * @see
-     * org.apache.james.mailbox.store.mail.model.Message#isDraft()
+     * MailboxMessage#isDraft()
      */
     @Override
     public boolean isDraft() {
@@ -149,7 +150,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
 
     /**
      * @see
-     * org.apache.james.mailbox.store.mail.model.Message#isFlagged()
+     * MailboxMessage#isFlagged()
      */
     @Override
     public boolean isFlagged() {
@@ -158,7 +159,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
 
     /**
      * @see
-     * org.apache.james.mailbox.store.mail.model.Message#isRecent()
+     * MailboxMessage#isRecent()
      */
     @Override
     public boolean isRecent() {
@@ -166,7 +167,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#isSeen()
+     * @see MailboxMessage#isSeen()
      */
     @Override
     public boolean isSeen() {
@@ -174,7 +175,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * Indicates whether this MaildirMessage reflects a new message or one that already
+     * Indicates whether this MaildirMailboxMessage reflects a new message or one that already
      * exists in the file system.
      * @return true if it is new, false if it already exists
      */
@@ -185,7 +186,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     
     @Override
     public String toString() {
-        StringBuilder theString = new StringBuilder("MaildirMessage ");
+        StringBuilder theString = new StringBuilder("MaildirMailboxMessage ");
         theString.append(getUid());
         theString.append(" {");
         Flags flags = createFlags();
@@ -205,7 +206,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getModSeq()
+     * @see MailboxMessage#getModSeq()
      */
     @Override
     public long getModSeq() {
@@ -213,7 +214,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#setModSeq(long)
+     * @see MailboxMessage#setModSeq(long)
      */
     @Override
     public void setModSeq(long modSeq) {
@@ -321,7 +322,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
 
     /**
      * Return the position in the given {@link InputStream} at which the Body of
-     * the Message starts
+     * the MailboxMessage starts
      * 
      * @param msgIn
      * @return bodyStartOctet
@@ -358,7 +359,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getMediaType()
+     * @see MailboxMessage#getMediaType()
      */
     @Override
     public String getMediaType() {
@@ -367,7 +368,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getSubType()
+     * @see MailboxMessage#getSubType()
      */
     @Override
     public String getSubType() {
@@ -376,7 +377,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getFullContentOctets()
+     * @see MailboxMessage#getFullContentOctets()
      */
     @Override
     public long getFullContentOctets() {
@@ -393,7 +394,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getTextualLineCount()
+     * @see MailboxMessage#getTextualLineCount()
      */
     @Override
     public Long getTextualLineCount() {
@@ -402,7 +403,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getProperties()
+     * @see MailboxMessage#getProperties()
      */
     @Override
     public List<Property> getProperties() {
@@ -411,7 +412,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getInternalDate()
+     * @see MailboxMessage#getInternalDate()
      */
     @Override
     public Date getInternalDate() {
@@ -427,7 +428,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getBodyContent()
+     * @see MailboxMessage#getBodyContent()
      */
     @Override
     public InputStream getBodyContent() throws IOException {
@@ -439,7 +440,7 @@ public class MaildirMessage extends AbstractMessage<MaildirId> {
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.AbstractMessage#getBodyStartOctet()
+     * @see AbstractMailboxMessage#getBodyStartOctet()
      */
     @Override
     protected int getBodyStartOctet() {

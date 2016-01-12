@@ -32,14 +32,15 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MessageTest {
+public class MailboxMessageTest {
     private static final TestId MAILBOX_ID = TestId.of(18L);
     private static final long MOD_SEQ = 42L;
     private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
@@ -232,7 +233,7 @@ public class MessageTest {
 
     @Test
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
-        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
                 INTERNAL_DATE,
                 0,
                 0,
@@ -263,7 +264,7 @@ public class MessageTest {
         flags.add(Flag.ANSWERED);
         flags.add(Flag.FLAGGED);
         flags.add(Flag.DRAFT);
-        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
                 INTERNAL_DATE,
                 0,
                 0,
@@ -302,7 +303,7 @@ public class MessageTest {
                 + "Reply-To: \"user to reply to\" <user.reply.to@domain>\n"
                 + "In-Reply-To: <SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>\n"
                 + "Other-header: other header value";
-        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
                 INTERNAL_DATE,
                 headers.length(),
                 headers.length(),
@@ -354,7 +355,7 @@ public class MessageTest {
         String headers = "Subject: test subject\n";
         String body = "Mail body";
         String mail = headers + "\n" + body;
-        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
                 INTERNAL_DATE,
                 mail.length(),
                 headers.length(),
@@ -414,7 +415,7 @@ public class MessageTest {
         assertThat(body300.length()).isEqualTo(300);
         assertThat(expectedPreview.length()).isEqualTo(256);
         String mail = headers + "\n" + body300;
-        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
                 INTERNAL_DATE,
                 mail.length(),
                 headers.length(),
@@ -442,7 +443,7 @@ public class MessageTest {
     
     @Test(expected=NotImplementedException.class)
     public void attachmentsShouldNotBeHandledForNow() throws Exception {
-        org.apache.james.mailbox.store.mail.model.Message<TestId> testMail = new SimpleMessage<>(
+        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
                 INTERNAL_DATE,
                 0,
                 0,

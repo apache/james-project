@@ -24,7 +24,7 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.model.MessageMetaData;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 
 public class SimpleMessageMetaData implements MessageMetaData{
@@ -42,7 +42,7 @@ public class SimpleMessageMetaData implements MessageMetaData{
         this.internalDate = internalDate;
     }
     
-    public SimpleMessageMetaData(Message<?> message) {
+    public SimpleMessageMetaData(MailboxMessage<?> message) {
         this(message.getUid(), message.getModSeq(), message.createFlags(), message.getFullContentOctets(), message.getInternalDate());
     }
     

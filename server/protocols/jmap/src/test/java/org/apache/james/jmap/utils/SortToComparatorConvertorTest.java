@@ -29,9 +29,9 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.store.TestId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,17 +40,17 @@ import com.google.common.collect.Lists;
 
 public class SortToComparatorConvertorTest {
 
-    private List<SimpleMessage<TestId>> messages;
-    private SimpleMessage<TestId> firstMessage;
-    private SimpleMessage<TestId> secondMessage;
+    private List<SimpleMailboxMessage<TestId>> messages;
+    private SimpleMailboxMessage<TestId> firstMessage;
+    private SimpleMailboxMessage<TestId> secondMessage;
 
     @Before
     @SuppressWarnings("unchecked")
     public void setup() {
         LocalDate date = LocalDate.now();
-        firstMessage = new SimpleMessage<TestId>(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        firstMessage = new SimpleMailboxMessage<TestId>(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
         firstMessage.setUid(1);
-        secondMessage = new SimpleMessage<TestId>(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        secondMessage = new SimpleMailboxMessage<TestId>(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
         secondMessage.setUid(2);
         messages = Lists.newArrayList(firstMessage, secondMessage);
     }
@@ -58,7 +58,7 @@ public class SortToComparatorConvertorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void comparatorForShouldBeInitialOrderWhenEmptyList() {
-        Comparator<SimpleMessage<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of());
+        Comparator<SimpleMailboxMessage<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of());
         messages.sort(comparator);
         assertThat(messages).containsExactly(firstMessage, secondMessage);
     }
@@ -66,7 +66,7 @@ public class SortToComparatorConvertorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void comparatorForShouldBeDescByDateWhenOnlyDateInList() {
-        Comparator<Message<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date"));
+        Comparator<MailboxMessage<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(secondMessage, firstMessage);
     }
@@ -74,7 +74,7 @@ public class SortToComparatorConvertorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void comparatorForShouldBeDescByDateWhenOnlyDateDescInList() {
-        Comparator<Message<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date desc"));
+        Comparator<MailboxMessage<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date desc"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(secondMessage, firstMessage);
     }
@@ -82,7 +82,7 @@ public class SortToComparatorConvertorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void comparatorForShouldBeAscByDateWhenOnlyDateAscInList() {
-        Comparator<Message<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc"));
+        Comparator<MailboxMessage<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(firstMessage, secondMessage);
     }
@@ -90,11 +90,11 @@ public class SortToComparatorConvertorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void comparatorForShouldChainComparatorsWhenOnlyMultipleElementInList() {
-        SimpleMessage<TestId> thirdMessage = new SimpleMessage<TestId>(secondMessage.getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        SimpleMailboxMessage<TestId> thirdMessage = new SimpleMailboxMessage<TestId>(secondMessage.getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
         thirdMessage.setUid(3);
         messages.add(thirdMessage);
 
-        Comparator<Message<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc", "id desc"));
+        Comparator<MailboxMessage<TestId>> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc", "id desc"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(firstMessage, thirdMessage, secondMessage);
     }

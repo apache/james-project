@@ -22,14 +22,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.james.mailbox.model.Content;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
  * {@link Content} which is stored in a {@link InputStream}
  *
  */
 public final class InputStreamContent implements Content{
-    private Message<?> m;
+    private MailboxMessage<?> m;
     private Type type;
 
     public static enum Type {
@@ -37,7 +37,7 @@ public final class InputStreamContent implements Content{
         Body
     }
     
-    public InputStreamContent(Message<?> m, Type type) throws IOException{
+    public InputStreamContent(MailboxMessage<?> m, Type type) throws IOException{
         this.m = m;
         this.type = type;
     }

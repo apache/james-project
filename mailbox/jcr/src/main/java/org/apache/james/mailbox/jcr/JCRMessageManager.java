@@ -29,13 +29,13 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
-import org.apache.james.mailbox.jcr.mail.model.JCRMessage;
+import org.apache.james.mailbox.jcr.mail.model.JCRMailboxMessage;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.slf4j.Logger;
@@ -56,8 +56,8 @@ public class JCRMessageManager extends StoreMessageManager<JCRId> {
 
 
     @Override
-    protected Message<JCRId> createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
-        final Message<JCRId> message = new JCRMessage(getMailboxEntity().getMailboxId(), internalDate, 
+    protected MailboxMessage<JCRId> createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
+        final MailboxMessage<JCRId> message = new JCRMailboxMessage(getMailboxEntity().getMailboxId(), internalDate,
                 size, flags, content, bodyStartOctet, propertyBuilder, log);
         return message;
     }

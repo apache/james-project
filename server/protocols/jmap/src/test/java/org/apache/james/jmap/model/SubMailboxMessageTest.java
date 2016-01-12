@@ -28,7 +28,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class SubMessageTest {
+public class SubMailboxMessageTest {
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenHeadersIsNull() {
         SubMessage.builder().build();

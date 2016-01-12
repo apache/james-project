@@ -22,7 +22,7 @@ import java.io.StringReader;
 import java.util.Comparator;
 import java.util.Date;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.dom.datetime.DateTime;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.field.datetime.parser.ParseException;
@@ -35,8 +35,8 @@ public class SentDateComparator extends AbstractHeaderComparator {
 
 
 
-    private final static Comparator<Message<?>> SENTDATE = new SentDateComparator(false);
-    private final static Comparator<Message<?>> REVERSE_SENTDATE = new ReverseComparator(new SentDateComparator(true));
+    private final static Comparator<MailboxMessage<?>> SENTDATE = new SentDateComparator(false);
+    private final static Comparator<MailboxMessage<?>> REVERSE_SENTDATE = new ReverseComparator(new SentDateComparator(true));
     
     private final boolean reverse;
 
@@ -45,7 +45,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
     }
     
     @Override
-    public int compare(Message<?> o1, Message<?> o2) {
+    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         Date date1 = getSentDate(o1);
         Date date2 = getSentDate(o2);
         int i = date1.compareTo(date2);
@@ -57,7 +57,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
         return 0;
     }
     
-    private Date getSentDate(Message<?> message) {
+    private Date getSentDate(MailboxMessage<?> message) {
         final String value = getHeaderValue("Date", message);
         final StringReader reader = new StringReader(value);
         try {
@@ -69,7 +69,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
         }
     }
     
-    public static Comparator<Message<?>> sentDate(boolean reverse){
+    public static Comparator<MailboxMessage<?>> sentDate(boolean reverse){
         if (reverse) {
             return REVERSE_SENTDATE;
         } else {

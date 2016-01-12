@@ -31,7 +31,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MessageResultUtilsTest {
+public class MailboxMessageResultUtilsTest {
 
     private static final String[] NAMES = { "One", "Three" };
 

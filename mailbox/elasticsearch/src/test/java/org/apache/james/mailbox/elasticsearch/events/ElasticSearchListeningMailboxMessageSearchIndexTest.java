@@ -40,7 +40,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.easymock.IMocksControl;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -52,7 +52,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Throwables;
 
-public class ElasticSearchListeningMessageSearchIndexTest {
+public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
     public static final long MODSEQ = 18L;
     private IMocksControl control;
@@ -72,7 +72,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         mapperFactory = control.createMock(MessageMapperFactory.class);
         indexer = control.createMock(ElasticSearchIndexer.class);
         messageToElasticSearchJson = control.createMock(MessageToElasticSearchJson.class);
-        expect(messageToElasticSearchJson.convertToJson(anyObject(Message.class))).andReturn("json content").anyTimes();
+        expect(messageToElasticSearchJson.convertToJson(anyObject(MailboxMessage.class))).andReturn("json content").anyTimes();
         expect(messageToElasticSearchJson.getUpdatedJsonMessagePart(anyObject(Flags.class), anyLong())).andReturn("json updated content").anyTimes();
         
         elasticSearchSearcher = control.createMock(ElasticSearchSearcher.class);
@@ -89,7 +89,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
-        Message<TestId> message = mockedMessage(messageId, mailboxId);
+        MailboxMessage<TestId> message = mockedMessage(messageId, mailboxId);
         
         IndexResponse expectedIndexResponse = control.createMock(IndexResponse.class);
         expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageId), anyString()))
@@ -101,8 +101,8 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @SuppressWarnings("unchecked")
-    private Message<TestId> mockedMessage(long messageId, TestId mailboxId) throws IOException {
-        Message<TestId> message = control.createMock(Message.class);
+    private MailboxMessage<TestId> mockedMessage(long messageId, TestId mailboxId) throws IOException {
+        MailboxMessage<TestId> message = control.createMock(MailboxMessage.class);
         expect(message.getUid()).andReturn(messageId).anyTimes();
         return message;
     }
@@ -115,7 +115,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
-        Message<TestId> message = mockedMessage(messageId, mailboxId);
+        MailboxMessage<TestId> message = mockedMessage(messageId, mailboxId);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
         
         expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageId), anyString()))

@@ -18,55 +18,59 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail.model.openjpa;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
-import javax.persistence.Basic;
+import javax.mail.util.SharedByteArrayInputStream;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.openjpa.persistence.Persistent;
 
-@Entity(name="Message")
+/**
+ * JPA implementation of {@link AbstractJPAMailboxMessage} which use openjpas {@link Persistent} type to
+ * be able to stream the message content without loading it into the memory at all. 
+ * 
+ * This is not supported for all DB's yet. See <a href="http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html">Additional JPA Mappings</a>
+ * 
+ * If your DB is not supported by this, use {@link JPAMailboxMessage}
+ *
+ * TODO: Fix me!
+ */
+@Entity(name="MailboxMessage")
 @Table(name="JAMES_MAIL")
-public class JPAMessage extends AbstractJPAMessage {
+public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
-    /** The value for the body field. Lazy loaded */
-    /** We use a max length to represent 1gb data. Thats prolly overkill, but who knows */
-    @Basic(optional = false, fetch = FetchType.LAZY)
+    @Persistent(optional = false, fetch = FetchType.LAZY)
     @Column(name = "MAIL_BYTES", length = 1048576000, nullable = false)
-    @Lob private byte[] body;
+    private InputStream body;
 
-
-    /** The value for the header field. Lazy loaded */
-    /** We use a max length to represent 10mb data. Thats prolly overkill, but who knows */
-    @Basic(optional = false, fetch = FetchType.LAZY)
+    @Persistent(optional = false, fetch = FetchType.LAZY)
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
-    @Lob private byte[] header;
-    
-    @Deprecated
-    public JPAMessage() {}
+    private InputStream header;
 
-    public JPAMessage(JPAMailbox mailbox,Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, final PropertyBuilder propertyBuilder) throws MailboxException {
+    private SharedInputStream content;
+
+    @Deprecated
+    public JPAStreamingMailboxMessage() {}
+
+    public JPAStreamingMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, final PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
+        this.content = content;
+
         try {
-            int headerEnd = bodyStartOctet;
-            if (headerEnd < 0) {
-                headerEnd = 0;
-            }
-            this.header = IOUtils.toByteArray(content.newStream(0, headerEnd));
-            this.body = IOUtils.toByteArray(content.newStream(getBodyStartOctet(), -1));
+            this.header = getHeaderContent();
+            this.body = getBodyContent();
 
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message",e);
@@ -77,31 +81,36 @@ public class JPAMessage extends AbstractJPAMessage {
      * Create a copy of the given message
      * 
      * @param message
-     * @throws MailboxException 
+     * @throws IOException 
      */
-    public JPAMessage(JPAMailbox mailbox, long uid, long modSeq, Message<?> message) throws MailboxException{
+    public JPAStreamingMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> message) throws MailboxException {
         super(mailbox, uid, modSeq, message);
         try {
-            this.body = IOUtils.toByteArray(message.getBodyContent());
-            this.header = IOUtils.toByteArray(message.getHeaderContent());
+            this.content = new SharedByteArrayInputStream(IOUtils.toByteArray(message.getFullContent()));
+            this.header = getHeaderContent();
+            this.body = getBodyContent();
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message",e);
         }
     }
 
-
+    
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getBodyContent()
+     * @see MailboxMessage#getBodyContent()
      */
     public InputStream getBodyContent() throws IOException {
-        return new ByteArrayInputStream(body);
+        return content.newStream(getBodyStartOctet(), -1);
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getHeaderContent()
+     * @see MailboxMessage#getHeaderContent()
      */
     public InputStream getHeaderContent() throws IOException {
-        return new ByteArrayInputStream(header);
+        int headerEnd = getBodyStartOctet() -2;
+        if (headerEnd < 0) {
+            headerEnd = 0;
+        }
+        return content.newStream(0, headerEnd);
     }
 
 }

@@ -32,7 +32,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
 /**
@@ -71,7 +71,7 @@ public abstract class AbstractMessageMapper<Id extends MailboxId> extends Transa
      */
     public Iterator<UpdatedFlags> updateFlags(final Mailbox<Id> mailbox, final FlagsUpdateCalculator flagsUpdateCalculator, final MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();
-        Iterator<Message<Id>> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
+        Iterator<MailboxMessage<Id>> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
         
         long modSeq = -1;
         if (messages.hasNext()) {
@@ -81,7 +81,7 @@ public abstract class AbstractMessageMapper<Id extends MailboxId> extends Transa
             }
         }
         while(messages.hasNext()) {
-        	final Message<Id> member = messages.next();
+        	final MailboxMessage<Id> member = messages.next();
             Flags originalFlags = member.createFlags();
             member.setFlags(flagsUpdateCalculator.buildNewFlags(originalFlags));
             Flags newFlags = member.createFlags();
@@ -103,9 +103,9 @@ public abstract class AbstractMessageMapper<Id extends MailboxId> extends Transa
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#add(org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.store.mail.model.Message)
+     * @see org.apache.james.mailbox.store.mail.MessageMapper#add(org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
      */
-    public MessageMetaData add(final Mailbox<Id> mailbox, Message<Id> message) throws MailboxException {
+    public MessageMetaData add(final Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException {
         message.setUid(uidProvider.nextUid(mailboxSession, mailbox));
         
         // if a mailbox does not support mod-sequences the provider may be null
@@ -120,9 +120,9 @@ public abstract class AbstractMessageMapper<Id extends MailboxId> extends Transa
 
     
     /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#copy(org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.store.mail.model.Message)
+     * @see org.apache.james.mailbox.store.mail.MessageMapper#copy(org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
      */
-    public MessageMetaData copy(final Mailbox<Id> mailbox, final Message<Id> original) throws MailboxException {
+    public MessageMetaData copy(final Mailbox<Id> mailbox, final MailboxMessage<Id> original) throws MailboxException {
         long uid = uidProvider.nextUid(mailboxSession, mailbox);
         long modSeq = -1;
         if (modSeqProvider != null) {
@@ -137,18 +137,18 @@ public abstract class AbstractMessageMapper<Id extends MailboxId> extends Transa
     
     
     /**
-     * Save the {@link Message} for the given {@link Mailbox} and return the {@link MessageMetaData} 
+     * Save the {@link MailboxMessage} for the given {@link Mailbox} and return the {@link MessageMetaData}
      * 
      * @param mailbox
      * @param message
      * @return metaData
      * @throws MailboxException
      */
-    protected abstract MessageMetaData save(Mailbox<Id> mailbox, Message<Id> message) throws MailboxException;
+    protected abstract MessageMetaData save(Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException;
 
     
     /**
-     * Copy the Message to the Mailbox, using the given uid and modSeq for the new Message
+     * Copy the MailboxMessage to the Mailbox, using the given uid and modSeq for the new MailboxMessage
      * 
      * @param mailbox
      * @param uid
@@ -157,6 +157,6 @@ public abstract class AbstractMessageMapper<Id extends MailboxId> extends Transa
      * @return metaData
      * @throws MailboxException
      */
-    protected abstract MessageMetaData copy(Mailbox<Id> mailbox, long uid, long modSeq, Message<Id> original) throws MailboxException;
+    protected abstract MessageMetaData copy(Mailbox<Id> mailbox, long uid, long modSeq, MailboxMessage<Id> original) throws MailboxException;
     
 }

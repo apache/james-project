@@ -37,12 +37,12 @@ import org.apache.james.mailbox.store.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SimpleMessageTest {
+public class SimpleMailboxMessageTest {
     private static final Charset MESSAGE_CHARSET = Charset.forName("UTF-8");
     private static final String MESSAGE_CONTENT = "Simple message content without special characters";
     private static final String MESSAGE_CONTENT_SPECIAL_CHAR = "Simple message content with special characters: \"'(§è!çà$*`";
-    private SimpleMessage<TestId> MESSAGE;
-    private SimpleMessage<TestId> MESSAGE_SPECIAL_CHAR;
+    private SimpleMailboxMessage<TestId> MESSAGE;
+    private SimpleMailboxMessage<TestId> MESSAGE_SPECIAL_CHAR;
 
     @Before
     public void setUp() {
@@ -91,17 +91,16 @@ public class SimpleMessageTest {
 
     @Test
     public void copyShouldReturnFieldByFieldEqualsObject() throws MailboxException {
-        SimpleMessage<TestId> original = buildMessage("my content");
-        SimpleMessage<TestId> copy = SimpleMessage.copy(TestId.of(1337), original);
+        SimpleMailboxMessage<TestId> original = buildMessage("my content");
+        SimpleMailboxMessage<TestId> copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
         assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "mailboxId").isNotSameAs(original);
-        assertThat(copy.getMailboxId()).isEqualTo(TestId.of(1337));
     }
 
-    private static SimpleMessage<TestId> buildMessage(String content) {
-            return new SimpleMessage<TestId>(Calendar.getInstance().getTime(),
-                content.length(), 0, new SharedByteArrayInputStream(
-                        content.getBytes(MESSAGE_CHARSET)), new Flags(),
-                new PropertyBuilder(), TestId.of(1L));
+    private static SimpleMailboxMessage<TestId> buildMessage(String content) {
+        return new SimpleMailboxMessage<TestId>(Calendar.getInstance().getTime(),
+            content.length(), 0, new SharedByteArrayInputStream(
+                    content.getBytes(MESSAGE_CHARSET)), new Flags(),
+            new PropertyBuilder(), TestId.of(1L));
     }
 
 }

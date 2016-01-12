@@ -57,7 +57,7 @@ import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
@@ -146,7 +146,7 @@ public class HBaseUtilsTest {
         flags.add("userFlag1");
         flags.add("userFlag2");
         HBaseId uuid = HBaseId.of(UUID.randomUUID());
-        final SimpleMessage<HBaseId> message = new SimpleMessage<HBaseId>(new Date(), 100, 10, null, flags, new PropertyBuilder(), uuid);
+        final SimpleMailboxMessage<HBaseId> message = new SimpleMailboxMessage<HBaseId>(new Date(), 100, 10, null, flags, new PropertyBuilder(), uuid);
         Put put = flagsToPut(message, flags);
         //test for the system flags
         assertTrue(put.has(MESSAGES_META_CF, FLAGS_SEEN, MARKER_PRESENT));

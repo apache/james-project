@@ -53,7 +53,7 @@ public class MailboxMessageAppenderOnCyrusHost implements MailboxMessageAppender
         protocolSession.CL("From: Fred Foobar <foobar@Blurdybloop.COM>");
         protocolSession.CL("Subject: afternoon meeting 2");
         protocolSession.CL("To: mooch@owatagu.siam.edu");
-        protocolSession.CL("Message-Id: <B27397-0100000@Blurdybloop.COM>");
+        protocolSession.CL("MailboxMessage-Id: <B27397-0100000@Blurdybloop.COM>");
         protocolSession.CL("MIME-Version: 1.0");
         protocolSession.CL("Content-Type: TEXT/PLAIN; CHARSET=US-ASCII");
         protocolSession.CL("");

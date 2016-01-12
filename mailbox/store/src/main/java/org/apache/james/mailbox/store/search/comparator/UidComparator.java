@@ -20,25 +20,25 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
- * {@link Comparator} which compares {@link Message}'s with their {@link Message#getUid()} value
+ * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getUid()} value
  *
  */
-public class UidComparator implements Comparator<Message<?>>{
+public class UidComparator implements Comparator<MailboxMessage<?>>{
 
 
-    private final static Comparator<Message<?>> UID = new UidComparator();;
-    private final static Comparator<Message<?>> REVERSE_UID = new ReverseComparator(UID);
+    private final static Comparator<MailboxMessage<?>> UID = new UidComparator();;
+    private final static Comparator<MailboxMessage<?>> REVERSE_UID = new ReverseComparator(UID);
 
     
     @Override
-    public int compare(Message<?> o1, Message<?> o2) {
+    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         return (int) (o1.getUid() - o2.getUid());
     }
 
-    public static Comparator<Message<?>> uid(boolean reverse){
+    public static Comparator<MailboxMessage<?>> uid(boolean reverse){
         if (reverse) {
             return REVERSE_UID;
         } else {

@@ -239,7 +239,7 @@ public class ServerCmd {
                 + formatStorageValue(probe.getMaxStorage(arguments[1])));
             break;
         case GETMAXMESSAGECOUNTQUOTA:
-            System.out.println("Message count allowed for Quota Root " + arguments[1] + " : " + formatMessageValue(probe.getMaxMessageCount(arguments[1])));
+            System.out.println("MailboxMessage count allowed for Quota Root " + arguments[1] + " : " + formatMessageValue(probe.getMaxMessageCount(arguments[1])));
             break;
         case SETMAXSTORAGEQUOTA:
             probe.setMaxStorage(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
@@ -291,7 +291,7 @@ public class ServerCmd {
     }
 
     private void printMessageQuota(String quotaRootString, SerializableQuota quota) {
-        System.out.println(String.format("Message count quota for %s is : %s / %s",
+        System.out.println(String.format("MailboxMessage count quota for %s is : %s / %s",
             quotaRootString,
             formatMessageValue(quota.getUsed()),
             formatMessageValue(quota.getMax())));

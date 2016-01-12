@@ -39,13 +39,13 @@ import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.assertj.core.api.iterable.Extractor;
 import org.junit.Test;
 
-public class StoreMessageResultIteratorTest {
+public class StoreMailboxMessageResultIteratorTest {
 
     private final class TestFetchGroup implements FetchGroup {
         @Override
@@ -79,14 +79,14 @@ public class StoreMessageResultIteratorTest {
         }
 
         @Override
-        public Iterator<Message<TestId>> findInMailbox(Mailbox<TestId> mailbox, MessageRange set,
-                org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
+        public Iterator<MailboxMessage<TestId>> findInMailbox(Mailbox<TestId> mailbox, MessageRange set,
+                                                              org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
                 throws MailboxException {
             
             long start = set.getUidFrom();
             long end = Math.min(start + limit, set.getUidTo());
 
-            List<Message<TestId>> messages = new ArrayList<Message<TestId>>();
+            List<MailboxMessage<TestId>> messages = new ArrayList<MailboxMessage<TestId>>();
             
             for (long uid: MessageRange.range(start, end)) {
                 if (messageRange.includes(uid)) {
@@ -96,8 +96,8 @@ public class StoreMessageResultIteratorTest {
             return messages.iterator();
         }
 
-        private SimpleMessage<TestId> createMessage(long uid) {
-            SimpleMessage<TestId> message = new SimpleMessage<TestId>(null, 0, 0, new SharedByteArrayInputStream(
+        private SimpleMailboxMessage<TestId> createMessage(long uid) {
+            SimpleMailboxMessage<TestId> message = new SimpleMailboxMessage<TestId>(null, 0, 0, new SharedByteArrayInputStream(
                     "".getBytes()), new Flags(), new PropertyBuilder(), TestId.of(1L));
             message.setUid(uid);
             return message;
@@ -122,7 +122,7 @@ public class StoreMessageResultIteratorTest {
         }
 
         @Override
-        public void delete(Mailbox<TestId> mailbox, Message<TestId> message) throws MailboxException {
+        public void delete(Mailbox<TestId> mailbox, MailboxMessage<TestId> message) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
@@ -138,7 +138,7 @@ public class StoreMessageResultIteratorTest {
         }
 
         @Override
-        public MessageMetaData add(Mailbox<TestId> mailbox, Message<TestId> message) throws MailboxException {
+        public MessageMetaData add(Mailbox<TestId> mailbox, MailboxMessage<TestId> message) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
@@ -148,7 +148,7 @@ public class StoreMessageResultIteratorTest {
         }
 
         @Override
-        public MessageMetaData copy(Mailbox<TestId> mailbox, Message<TestId> original) throws MailboxException {
+        public MessageMetaData copy(Mailbox<TestId> mailbox, MailboxMessage<TestId> original) throws MailboxException {
             throw new UnsupportedOperationException();
 
         }
@@ -164,7 +164,7 @@ public class StoreMessageResultIteratorTest {
         }
 
         @Override
-        public MessageMetaData move(Mailbox<TestId> mailbox, Message<TestId> original) throws MailboxException {
+        public MessageMetaData move(Mailbox<TestId> mailbox, MailboxMessage<TestId> original) throws MailboxException {
             throw new UnsupportedOperationException();
 
         }

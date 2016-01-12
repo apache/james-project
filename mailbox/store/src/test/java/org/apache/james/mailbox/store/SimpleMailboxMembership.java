@@ -36,10 +36,10 @@ import java.util.Map.Entry;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 
-public class SimpleMailboxMembership implements Message<TestId> {
+public class SimpleMailboxMembership implements MailboxMessage<TestId> {
     
     private static final String TOSTRING_SEPARATOR = " ";
     
@@ -163,7 +163,7 @@ public class SimpleMailboxMembership implements Message<TestId> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        final Message<TestId> other = (Message<TestId>) obj;
+        final MailboxMessage<TestId> other = (MailboxMessage<TestId>) obj;
         if (mailboxId.id != other.getMailboxId().id)
             return false;
         if (uid != other.getUid())
@@ -251,7 +251,7 @@ public class SimpleMailboxMembership implements Message<TestId> {
         return size;
     }
 
-    public int compareTo(Message<TestId> other) {
+    public int compareTo(MailboxMessage<TestId> other) {
         return (int) (getUid() - other.getUid());
     }
 

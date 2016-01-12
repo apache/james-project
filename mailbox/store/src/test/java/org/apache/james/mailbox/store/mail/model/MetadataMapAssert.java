@@ -42,8 +42,8 @@ public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<Lon
     }
 
     @SuppressWarnings("rawtypes") 
-    public MetadataMapAssert containsMetadataForMessages(Message... messages) {
-        for(Message message : messages) {
+    public MetadataMapAssert containsMetadataForMessages(MailboxMessage... messages) {
+        for(MailboxMessage message : messages) {
             if (actual.get(message.getUid()).getUid() != message.getUid()) {
                 failWithMessage("Expected UID stored in MessageMetadata to be <%s> but was <%s>", actual.get(message.getUid()).getUid(), message.getUid());
             }

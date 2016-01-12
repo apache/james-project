@@ -44,12 +44,12 @@ import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.SimpleMailboxMembership;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
 import org.junit.Test;
 
-public class LuceneMessageSearchIndexTest {
+public class LuceneMailboxMessageSearchIndexTest {
 
 	private LuceneMessageSearchIndex<TestId> index;
     
@@ -70,7 +70,7 @@ public class LuceneMessageSearchIndexTest {
             + "It has " + RHUBARD + ".\r\n" + "It has " + CUSTARD + ".\r\n"
             + "It needs naught else.\r\n";
 
-    Message<TestId> row;
+    MailboxMessage<TestId> row;
 
     protected boolean useLenient() {
         return true;

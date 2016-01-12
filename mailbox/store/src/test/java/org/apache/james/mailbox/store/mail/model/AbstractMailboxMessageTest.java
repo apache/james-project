@@ -17,20 +17,42 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.json;
+package org.apache.james.mailbox.store.mail.model;
 
+import static org.junit.Assert.*;
+
+import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.TestId;
-import org.apache.james.mailbox.store.TestIdDeserializer;
-import org.apache.james.mailbox.store.event.EventSerializer;
-import org.apache.james.mailbox.store.json.event.EventConverter;
-import org.apache.james.mailbox.store.json.event.MailboxConverter;
+import org.junit.Test;
 
-public class MessagePackEventSerializerTest extends EventSerializerTest {
+public class AbstractMailboxMessageTest {
+    
+    @Test
+    public void testShouldReturnPositiveWhenFirstGreaterThanSecond()
+            throws Exception {
+        MailboxMessage<TestId> one = buildMessage(100);
+        MailboxMessage<TestId> two = buildMessage(99);
+        assertTrue( one.compareTo(two) > 0);
+    }
 
-    @Override
-    EventSerializer createSerializer() {
-        return new MessagePackEventSerializer<TestId>(
-            new EventConverter<TestId>(
-                new MailboxConverter<TestId>(new TestIdDeserializer())));
+    private MailboxMessage<TestId> buildMessage(int uid) throws Exception {
+        MessageBuilder builder = new MessageBuilder();
+        builder.uid = uid;
+        return builder.build();
+    }
+
+    @Test
+    public void testShouldReturnNegativeWhenFirstLessThanSecond()
+            throws Exception {
+        MailboxMessage<TestId> one = buildMessage(98);
+        MailboxMessage<TestId> two = buildMessage(99);
+        assertTrue( one.compareTo(two) < 0);
+    }
+
+    @Test
+    public void testShouldReturnZeroWhenFirstEqualsSecond() throws Exception {
+        MailboxMessage<TestId> one = buildMessage(90);
+        MailboxMessage<TestId> two = buildMessage(90);
+        assertEquals(0, one.compareTo(two));
     }
 }

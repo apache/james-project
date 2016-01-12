@@ -29,14 +29,14 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMessage;
+import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
@@ -56,10 +56,10 @@ public class JPAMessageManager extends StoreMessageManager<JPAId> {
     }
     
     @Override
-    protected Message<JPAId> createMessage(Date internalDate, final int size, int bodyStartOctet, final SharedInputStream content, 
-            final Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
+    protected MailboxMessage<JPAId> createMessage(Date internalDate, final int size, int bodyStartOctet, final SharedInputStream content,
+                                                  final Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
 
-        final Message<JPAId> message = new JPAMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
+        final MailboxMessage<JPAId> message = new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
         return message;
     }
 

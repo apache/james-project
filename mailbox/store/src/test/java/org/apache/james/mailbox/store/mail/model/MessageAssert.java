@@ -26,17 +26,17 @@ import org.assertj.core.api.AbstractAssert;
 import javax.mail.Flags;
 import java.io.IOException;
 
-public class MessageAssert extends AbstractAssert<MessageAssert, Message<?>> {
+public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage<?>> {
 
-    public MessageAssert(Message<?> actual) {
+    public MessageAssert(MailboxMessage<?> actual) {
         super(actual, MessageAssert.class);
     }
 
-    public static MessageAssert assertThat(Message<?> actual) {
+    public static MessageAssert assertThat(MailboxMessage<?> actual) {
         return new MessageAssert(actual);
     }
 
-    public MessageAssert isEqualTo(Message<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
+    public MessageAssert isEqualTo(MailboxMessage<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
         isNotNull();
         if (!equals(actual.getMailboxId(), expected.getMailboxId())) {
             failWithMessage("Expected Mailbox ID to be <%s> but was <%s>", expected.getMailboxId().toString(), actual.getMailboxId().toString());
@@ -58,7 +58,7 @@ public class MessageAssert extends AbstractAssert<MessageAssert, Message<?>> {
         }
         if (usedFetchType == MessageMapper.FetchType.Full) {
             if (!equals(actual.getFullContentOctets(), expected.getFullContentOctets())) {
-                failWithMessage("Expected Message size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());
+                failWithMessage("Expected MailboxMessage size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());
             }
             if (!equals(IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()))) {
                 failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()));

@@ -59,7 +59,7 @@ import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
@@ -141,22 +141,22 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     
     
     /**
-     * {@link Field} which will contain uid of the {@link Message}
+     * {@link Field} which will contain uid of the {@link MailboxMessage}
      */
     public final static String UID_FIELD = "uid";
     
     /**
-     * {@link Field} which will contain the {@link Flags} of the {@link Message}
+     * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
      */
     public final static String FLAGS_FIELD = "flags";
   
     /**
-     * {@link Field} which will contain the size of the {@link Message}
+     * {@link Field} which will contain the size of the {@link MailboxMessage}
      */
     public final static String SIZE_FIELD = "size";
 
     /**
-     * {@link Field} which will contain the body of the {@link Message}
+     * {@link Field} which will contain the body of the {@link MailboxMessage}
      */
     public final static String BODY_FIELD = "body";
     
@@ -167,7 +167,7 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     public final static String PREFIX_HEADER_FIELD ="header_";
     
     /**
-     * {@link Field} which will contain the whole message header of the {@link Message}
+     * {@link Field} which will contain the whole message header of the {@link MailboxMessage}
      */
     public final static String HEADERS_FIELD ="headers";
 
@@ -375,7 +375,7 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     }
     
     /**
-     * Create a {@link Analyzer} which is used to index the {@link Message}'s
+     * Create a {@link Analyzer} which is used to index the {@link MailboxMessage}'s
      * 
      * @param lenient 
      * 
@@ -446,14 +446,14 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
 
    
     /**
-     * Create a new {@link Document} for the given {@link Message}. This Document does not contain any flags data. The {@link Flags} are stored in a seperate Document. 
+     * Create a new {@link Document} for the given {@link MailboxMessage}. This Document does not contain any flags data. The {@link Flags} are stored in a seperate Document.
      * 
-     * See {@link #createFlagsDocument(Message)}
+     * See {@link #createFlagsDocument(MailboxMessage)}
      * 
      * @param membership
      * @return document
      */
-    private Document createMessageDocument(final MailboxSession session, final Message<?> membership) throws MailboxException{
+    private Document createMessageDocument(final MailboxSession session, final MailboxMessage<?> membership) throws MailboxException{
         final Document doc = new Document();
         // TODO: Better handling
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.ENGLISH), Store.YES, Index.NOT_ANALYZED));
@@ -1189,9 +1189,9 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     
 
     /**
-     * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#add(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.store.mail.model.Message)
+     * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#add(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
      */
-    public void add(MailboxSession session, Mailbox<Id> mailbox, Message<Id> membership) throws MailboxException {
+    public void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> membership) throws MailboxException {
         Document doc = createMessageDocument(session, membership);
         Document flagsDoc = createFlagsDocument(membership);
 
@@ -1249,7 +1249,7 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
      * @param f
      * @param doc
      */
-    private Document createFlagsDocument(Message<?> message) {
+    private Document createFlagsDocument(MailboxMessage<?> message) {
         Document doc = new Document();
         doc.add(new Field(ID_FIELD, "flags-" + message.getMailboxId().serialize() +"-" + Long.toString(message.getUid()), Store.YES, Index.NOT_ANALYZED));
         doc.add(new Field(MAILBOX_ID_FIELD, message.getMailboxId().serialize(), Store.YES, Index.NOT_ANALYZED));

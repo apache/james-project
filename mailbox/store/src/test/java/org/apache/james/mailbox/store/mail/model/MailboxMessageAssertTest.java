@@ -22,7 +22,7 @@ package org.apache.james.mailbox.store.mail.model;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Test;
 
 import javax.mail.Flags;
@@ -31,7 +31,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import java.io.IOException;
 import java.util.Date;
 
-public class MessageAssertTest {
+public class MailboxMessageAssertTest {
 
     public static final TestId MAILBOX_ID = TestId.of(42L);
     public static final long UID = 24L;
@@ -41,10 +41,10 @@ public class MessageAssertTest {
         String headerString = "name: headerName\n\n";
         String bodyString = "body\n.\n";
         Date date = new Date();
-        SimpleMessage<TestId> message1 = new SimpleMessage<TestId>(date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage<TestId> message1 = new SimpleMailboxMessage<TestId>(date, headerString.length() + bodyString.length(),
             headerString.length(), new SharedByteArrayInputStream((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message1.setUid(UID);
-        SimpleMessage<TestId> message2 = new SimpleMessage<TestId>(date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage<TestId> message2 = new SimpleMailboxMessage<TestId>(date, headerString.length() + bodyString.length(),
             headerString.length(), new SharedByteArrayInputStream((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message2.setUid(UID);
         MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.Full);
@@ -55,11 +55,11 @@ public class MessageAssertTest {
         String headerString = "name: headerName\n\n";
         String bodyString = "body\n.\n";
         Date date = new Date();
-        SimpleMessage<TestId> message1 = new SimpleMessage<TestId>(date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage<TestId> message1 = new SimpleMailboxMessage<TestId>(date, headerString.length() + bodyString.length(),
             headerString.length(), new SharedByteArrayInputStream((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message1.setUid(UID);
         bodyString = "work\n.\n";
-        SimpleMessage<TestId> message2 = new SimpleMessage<TestId>(date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage<TestId> message2 = new SimpleMailboxMessage<TestId>(date, headerString.length() + bodyString.length(),
             headerString.length(), new SharedByteArrayInputStream((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message2.setUid(UID);
         MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.Headers);
@@ -70,11 +70,11 @@ public class MessageAssertTest {
         String headerString = "name: headerName\n\n";
         String bodyString = "body\n.\n";
         Date date = new Date();
-        SimpleMessage<TestId> message1 = new SimpleMessage<TestId>(date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage<TestId> message1 = new SimpleMailboxMessage<TestId>(date, headerString.length() + bodyString.length(),
             headerString.length(), new SharedByteArrayInputStream((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message1.setUid(UID);
         bodyString = "work\n.\n";
-        SimpleMessage<TestId> message2 = new SimpleMessage<TestId>(date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage<TestId> message2 = new SimpleMailboxMessage<TestId>(date, headerString.length() + bodyString.length(),
             headerString.length(), new SharedByteArrayInputStream((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message2.setUid(UID);
         MessageAssert.assertThat(message1).isEqualTo(message2, MessageMapper.FetchType.Body);

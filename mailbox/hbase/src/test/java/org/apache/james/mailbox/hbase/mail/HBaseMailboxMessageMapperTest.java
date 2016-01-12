@@ -50,9 +50,9 @@ import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * Unit tests for HBaseMessageMapper.
  *
  */
-public class HBaseMessageMapperTest {
+public class HBaseMailboxMessageMapperTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HBaseMailboxMapperTest.class);
     public static final HBaseClusterSingleton CLUSTER = HBaseClusterSingleton.build();
@@ -71,7 +71,7 @@ public class HBaseMessageMapperTest {
     private static HBaseMessageMapper messageMapper;
     private static final List<MailboxPath> MBOX_PATHS = new ArrayList<MailboxPath>();
     private static final List<Mailbox<HBaseId>> MBOXES = new ArrayList<Mailbox<HBaseId>>();
-    private static final List<Message<HBaseId>> MESSAGE_NO = new ArrayList<Message<HBaseId>>();
+    private static final List<MailboxMessage<HBaseId>> MESSAGE_NO = new ArrayList<MailboxMessage<HBaseId>>();
     private static final int COUNT = 5;
     private static Configuration conf;
     /*
@@ -82,7 +82,7 @@ public class HBaseMessageMapperTest {
             + "From: Fred Foobar <foobar@Blurdybloop.COM>\n"
             + "Subject: Test 02\n"
             + "To: mooch@owatagu.siam.edu\n"
-            + "Message-Id: <B27397-0100000@Blurdybloop.COM>\n"
+            + "MailboxMessage-Id: <B27397-0100000@Blurdybloop.COM>\n"
             + "MIME-Version: 1.0\n"
             + "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\n"
             + "\n"
@@ -137,12 +137,12 @@ public class HBaseMessageMapperTest {
         propBuilder.setSubType("html");
         propBuilder.setTextualLineCount(2L);
 
-        SimpleMessage<HBaseId> myMsg;
+        SimpleMailboxMessage<HBaseId> myMsg;
         final Flags flags = new Flags(Flags.Flag.RECENT);
         final Date today = new Date();
 
         for (int i = 0; i < COUNT * 2; i++) {
-            myMsg = new SimpleMessage<HBaseId>(today, messageTemplate.length,
+            myMsg = new SimpleMailboxMessage<HBaseId>(today, messageTemplate.length,
                     messageTemplate.length - 20, content, flags, propBuilder,
                     MBOXES.get(1).getMailboxId());
             if (i == COUNT * 2 - 1) {

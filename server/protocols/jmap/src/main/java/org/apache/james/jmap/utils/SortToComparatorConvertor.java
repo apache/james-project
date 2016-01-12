@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -40,18 +40,18 @@ public class SortToComparatorConvertor {
     }
 
     @SuppressWarnings("rawtypes")
-    private static final Map<String, Function<Message<?>, Comparable>> fieldsMessageFunctionMap = ImmutableMap.of(
-            "date", Message::getInternalDate,
-            "id", Message::getUid);
+    private static final Map<String, Function<MailboxMessage<?>, Comparable>> fieldsMessageFunctionMap = ImmutableMap.of(
+            "date", MailboxMessage::getInternalDate,
+            "id", MailboxMessage::getUid);
 
-    public static <M extends Message<Id>, Id extends MailboxId> Comparator<M> comparatorFor(List<String> sort) {
+    public static <M extends MailboxMessage<Id>, Id extends MailboxId> Comparator<M> comparatorFor(List<String> sort) {
         return sort.stream()
             .map(SortToComparatorConvertor::<M, Id> comparatorForField)
             .reduce(new EmptyComparator<M>(), (x, y) -> x.thenComparing(y));
     }
 
     @SuppressWarnings("unchecked")
-    private static <M extends Message<Id>, Id extends MailboxId> Comparator<M> comparatorForField(String field) {
+    private static <M extends MailboxMessage<Id>, Id extends MailboxId> Comparator<M> comparatorForField(String field) {
         List<String> splitToList = Splitter.on(SEPARATOR).splitToList(field);
         checkField(splitToList);
         Comparator<M> fieldComparator = Comparator.comparing(functionForField(splitToList.get(0)));
@@ -62,7 +62,7 @@ public class SortToComparatorConvertor {
     }
 
     @SuppressWarnings("rawtypes")
-    private static Function<Message<?>, Comparable> functionForField(String field) {
+    private static Function<MailboxMessage<?>, Comparable> functionForField(String field) {
         if (!fieldsMessageFunctionMap.containsKey(field)) {
             throw new IllegalArgumentException("Unknown sorting field");
         }

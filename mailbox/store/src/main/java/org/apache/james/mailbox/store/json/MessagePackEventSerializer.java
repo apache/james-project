@@ -25,7 +25,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 /**
- * Message Pack ( http://msgpack.org/ ) Event Serializer
+ * MailboxMessage Pack ( http://msgpack.org/ ) Event Serializer
  */
 public class MessagePackEventSerializer<Id extends MailboxId> extends JacksonEventSerializer<Id> {
 

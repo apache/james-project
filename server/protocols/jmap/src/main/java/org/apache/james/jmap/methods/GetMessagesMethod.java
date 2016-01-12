@@ -41,6 +41,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
@@ -86,8 +87,8 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         getMessagesRequest.getAccountId().ifPresent(GetMessagesMethod::notImplemented);
         
-        Function<MessageId, Stream<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>>> loadMessages = loadMessage(mailboxSession);
-        Function<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
+        Function<MessageId, Stream<Pair<MailboxMessage<Id>, MailboxPath>>> loadMessages = loadMessage(mailboxSession);
+        Function<Pair<MailboxMessage<Id>, MailboxPath>, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
         
         List<Message> result = getMessagesRequest.getIds().stream()
             .flatMap(loadMessages)
@@ -102,16 +103,16 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
     }
 
     
-    private Function<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>, Message> toJmapMessage(MailboxSession mailboxSession) {
+    private Function<Pair<MailboxMessage<Id>, MailboxPath>, Message> toJmapMessage(MailboxSession mailboxSession) {
         return (value) -> {
-            org.apache.james.mailbox.store.mail.model.Message<Id> messageResult = value.getValue0();
+            MailboxMessage<Id> messageResult = value.getValue0();
             MailboxPath mailboxPath = value.getValue1();
             return Message.fromMailboxMessage(messageResult, uid -> new MessageId(mailboxSession.getUser(), mailboxPath , uid));
         };
     }
 
     private Function<MessageId, Stream<
-                                    Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, 
+                                    Pair<MailboxMessage<Id>,
                                          MailboxPath>>> 
                 loadMessage(MailboxSession mailboxSession) {
 
@@ -128,9 +129,9 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
                 .andThen(this::iteratorToStream);
     }
     
-    private Stream<Pair<org.apache.james.mailbox.store.mail.model.Message<Id>, MailboxPath>> iteratorToStream(Pair<Iterator<org.apache.james.mailbox.store.mail.model.Message<Id>>, MailboxPath> value) {
-        Iterable<org.apache.james.mailbox.store.mail.model.Message<Id>> iterable = () -> value.getValue0();
-        Stream<org.apache.james.mailbox.store.mail.model.Message<Id>> targetStream = StreamSupport.stream(iterable.spliterator(), false);
+    private Stream<Pair<MailboxMessage<Id>, MailboxPath>> iteratorToStream(Pair<Iterator<MailboxMessage<Id>>, MailboxPath> value) {
+        Iterable<MailboxMessage<Id>> iterable = () -> value.getValue0();
+        Stream<MailboxMessage<Id>> targetStream = StreamSupport.stream(iterable.spliterator(), false);
         
         MailboxPath mailboxPath = value.getValue1();
         return targetStream.map(x -> Pair.with(x, mailboxPath));

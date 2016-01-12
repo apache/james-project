@@ -16,31 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.inmemory.manager;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.manager.QuotaMessageManagerTest;
 
-import org.apache.james.mailbox.store.TestId;
-import org.junit.Test;
+/**
+ * Test for quota support upon basic MailboxMessage manager operation.
+ *
+ * Tests are performed with sufficient rights to ensure all underlying functions behave well.
+ * Quota are adjusted and we check that exceptions are well thrown.
+ */
+public class InMemoryQuotaMailboxMessageManagerTest extends QuotaMessageManagerTest {
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-public class DefaultMessageIdTest {
-
-    @Test(expected=NullPointerException.class)
-    public void constructorShouldThrowWhenNullMailboxId() {
-        new DefaultMessageId(null, 1);
+    @Override
+    protected ManagerTestResources createResources() throws Exception {
+        return new ManagerTestResources(new InMemoryIntegrationResources());
     }
 
-    @Test
-    public void serializeShouldFormatMailboxIdAndUid() {
-        DefaultMessageId id = new DefaultMessageId(TestId.of(12l), 1);
-        assertThat(id.serialize()).isEqualTo("12-1");
-    }
-    
-    @Test
-    public void shouldRespectJavaBeanContract() {
-        EqualsVerifier.forClass(DefaultMessageId.class).verify();
-    }
-    
 }

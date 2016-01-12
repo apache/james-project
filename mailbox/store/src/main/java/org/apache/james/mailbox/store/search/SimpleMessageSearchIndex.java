@@ -39,10 +39,10 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
- * {@link MessageSearchIndex} which just fetch {@link Message}'s from the {@link MessageMapper} and use {@link MessageSearcher}
+ * {@link MessageSearchIndex} which just fetch {@link MailboxMessage}'s from the {@link MessageMapper} and use {@link MessageSearcher}
  * to match them against the {@link SearchQuery}.
  * 
  * This works with every implementation but is SLOW.
@@ -83,7 +83,7 @@ public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSe
     public Iterator<Long> search(MailboxSession session, Mailbox<Id> mailbox, SearchQuery query) throws MailboxException {
         MessageMapper<Id> mapper = factory.getMessageMapper(session);
 
-        final SortedSet<Message<?>> hitSet = new TreeSet<Message<?>>();
+        final SortedSet<MailboxMessage<?>> hitSet = new TreeSet<MailboxMessage<?>>();
 
         UidCriterion uidCrit = findConjugatedUidCriterion(query.getCriterias());
         if (uidCrit != null) {
@@ -92,16 +92,16 @@ public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSe
             NumericRange[] ranges = uidCrit.getOperator().getRange();
             for (int i = 0; i < ranges.length; i++) {
                 NumericRange r = ranges[i];
-                Iterator<Message<Id>> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
+                Iterator<MailboxMessage<Id>> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
                 while(it.hasNext()) {
                 	hitSet.add(it.next());
                 }
             }
         } else {
         	// we have to fetch all messages
-            Iterator<Message<Id>> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+            Iterator<MailboxMessage<Id>> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
             while(messages.hasNext()) {
-            	Message<Id> m = messages.next();
+            	MailboxMessage<Id> m = messages.next();
             	hitSet.add(m);
             }
         }

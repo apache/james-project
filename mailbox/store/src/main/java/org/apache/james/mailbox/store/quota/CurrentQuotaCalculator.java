@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -59,7 +59,7 @@ public class CurrentQuotaCalculator<Id extends MailboxId> {
         long messagesSizes = 0;
         long messageCount = 0;
         for (Mailbox<Id> mailbox : mailboxes) {
-            Iterator<Message<Id>> messages = mapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, -1);
+            Iterator<MailboxMessage<Id>> messages = mapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, -1);
             messageCount += mapper.countMessagesInMailbox(mailbox);
             while(messages.hasNext()) {
                 messagesSizes +=  messages.next().getFullContentOctets();

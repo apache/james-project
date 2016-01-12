@@ -25,11 +25,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MessageResultImplTest {
+public class MailboxMessageResultImplTest {
     private MessageResultImpl msgResultA;
     private MessageResultImpl msgResultACopy;
     private MessageResultImpl msgResultB;
@@ -42,9 +42,9 @@ public class MessageResultImplTest {
     public void initNames() throws Exception
     {
         Date dateAB = new Date();
-        Message<TestId> msgA = buildMessage(100, dateAB);
-        Message<TestId> msgB = buildMessage(100, dateAB);
-        Message<TestId> msgC = buildMessage(200, new Date());
+        MailboxMessage<TestId> msgA = buildMessage(100, dateAB);
+        MailboxMessage<TestId> msgB = buildMessage(100, dateAB);
+        MailboxMessage<TestId> msgC = buildMessage(200, new Date());
         
         msgResultA = new MessageResultImpl(msgA);
         msgResultACopy = new MessageResultImpl(msgA);
@@ -53,7 +53,7 @@ public class MessageResultImplTest {
     }
 
 
-    private Message<TestId> buildMessage(int uid, Date aDate) throws Exception {
+    private MailboxMessage<TestId> buildMessage(int uid, Date aDate) throws Exception {
         MessageBuilder builder = new MessageBuilder();
         builder.uid = uid;
         builder.internalDate = aDate;

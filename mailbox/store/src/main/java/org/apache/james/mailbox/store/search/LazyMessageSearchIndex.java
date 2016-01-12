@@ -30,7 +30,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
  * {@link ListeningMessageSearchIndex} implementation which wraps another {@link ListeningMessageSearchIndex} and will forward all calls to it.
@@ -59,7 +59,7 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox<Id> mailbox, Message<Id> message) throws MailboxException {    
+    public void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException {
         index.add(session, mailbox, message);
     }
 
@@ -86,9 +86,9 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
                 done = oldDone;
             }
             synchronized (done) {
-                Iterator<Message<Id>> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+                Iterator<MailboxMessage<Id>> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
                 while(messages.hasNext()) {
-                    final Message<Id> message = messages.next();
+                    final MailboxMessage<Id> message = messages.next();
                     try {
                         add(session, mailbox, message);
                     } catch (MailboxException e) {

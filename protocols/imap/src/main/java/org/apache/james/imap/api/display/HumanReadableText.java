@@ -35,7 +35,7 @@ public class HumanReadableText {
     public static final HumanReadableText SELECT = new HumanReadableText("org.apache.james.imap.SELECT", "completed.");
 
     public static final HumanReadableText unseen(long numberUnseen) {
-        return new HumanReadableText("org.apache.james.imap.UNSEEN", "Message " + numberUnseen + " is first unseen");
+        return new HumanReadableText("org.apache.james.imap.UNSEEN", "MailboxMessage " + numberUnseen + " is first unseen");
     }
 
     public static final HumanReadableText UIDNEXT = new HumanReadableText("org.apache.james.imap.UIDNEXT", "Predicted next UID");

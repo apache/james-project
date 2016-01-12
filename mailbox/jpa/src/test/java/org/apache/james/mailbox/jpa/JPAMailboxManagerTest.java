@@ -35,8 +35,8 @@ import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMessage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMessage;
+import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
+import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -93,8 +93,8 @@ public class JPAMailboxManagerTest extends AbstractMailboxManagerTest {
         properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
         properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
                 JPAMailbox.class.getName() + ";" +
-                AbstractJPAMessage.class.getName() + ";" +
-                JPAMessage.class.getName() + ";" +
+                AbstractJPAMailboxMessage.class.getName() + ";" +
+                JPAMailboxMessage.class.getName() + ";" +
                 JPAProperty.class.getName() + ";" +
                 JPAUserFlag.class.getName() + ";" +
                 JPASubscription.class.getName() + ")");

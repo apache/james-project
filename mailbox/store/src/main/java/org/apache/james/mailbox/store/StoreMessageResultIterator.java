@@ -37,11 +37,11 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class StoreMessageResultIterator<Id extends MailboxId> implements MessageResultIterator {
 
-    private Iterator<Message<Id>> next = null;
+    private Iterator<MailboxMessage<Id>> next = null;
     private MailboxException exception;
     private Mailbox<Id> mailbox;
     private FetchGroup group;
@@ -154,7 +154,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
           throw new NoSuchElementException();
         }
         
-        final Message<Id> message = next.next();
+        final MailboxMessage<Id> message = next.next();
         MessageResult result;
         try {
             result = ResultUtils.loadMessageResult(message, group);
@@ -190,7 +190,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
 
         private long modSeq = -1;
 
-        public UnloadedMessageResult(final Message<Id> message, final MailboxException exception) {
+        public UnloadedMessageResult(final MailboxMessage<Id> message, final MailboxException exception) {
             super();
             internalDate = message.getInternalDate();
             size = message.getFullContentOctets();

@@ -21,8 +21,8 @@ package org.apache.james.mailbox.cassandra.mail;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.store.mail.model.AbstractMessageMapperTest;
 
-public class CassandraMessageMapperTest extends AbstractMessageMapperTest<CassandraId> {
-    public CassandraMessageMapperTest() {
+public class CassandraMailboxMessageMapperTest extends AbstractMessageMapperTest<CassandraId> {
+    public CassandraMailboxMessageMapperTest() {
         super(new CassandraMapperProvider());
     }
 }

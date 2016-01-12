@@ -16,22 +16,20 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.inmemory.manager;
 
-import org.apache.james.mailbox.manager.ManagerTestResources;
-import org.apache.james.mailbox.manager.QuotaMessageManagerTest;
+package org.apache.james.jmap.methods.cassandra;
 
-/**
- * Test for quota support upon basic Message manager operation.
- *
- * Tests are performed with sufficient rights to ensure all underlying functions behave well.
- * Quota are adjusted and we check that exceptions are well thrown.
- */
-public class InMemoryQuotaMessageManagerTest extends QuotaMessageManagerTest {
+import org.apache.james.backends.cassandra.EmbeddedCassandra;
+import org.apache.james.jmap.JmapServer;
+import org.apache.james.jmap.cassandra.CassandraJmapServer;
+import org.apache.james.jmap.methods.GetMessageListMethodTest;
+import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.junit.rules.TemporaryFolder;
+
+public class CassandraGetMailboxMessageListMethodTest extends GetMessageListMethodTest {
 
     @Override
-    protected ManagerTestResources createResources() throws Exception {
-        return new ManagerTestResources(new InMemoryIntegrationResources());
+    protected JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
+        return new CassandraJmapServer(CassandraJmapServer.defaultOverrideModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }
-
 }

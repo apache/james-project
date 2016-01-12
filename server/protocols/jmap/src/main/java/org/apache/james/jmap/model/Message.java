@@ -42,6 +42,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 @JsonDeserialize(builder = Message.Builder.class)
 public class Message {
@@ -54,7 +55,7 @@ public class Message {
         return new Builder();
     }
 
-    public static Message fromMailboxMessage(org.apache.james.mailbox.store.mail.model.Message<? extends MailboxId> mailboxMessage,
+    public static Message fromMailboxMessage(MailboxMessage<? extends MailboxId> mailboxMessage,
             Function<Long, MessageId> uidToMessageId) {
         IndexableMessage im = IndexableMessage.from(mailboxMessage, new DefaultTextExtractor(), UTC_ZONE_ID);
         if (im.getHasAttachment()) {
@@ -145,7 +146,7 @@ public class Message {
         return String.join(MULTIVALUED_HEADERS_SEPARATOR, iterable);
     }
     
-    private static ZonedDateTime getInternalDate(org.apache.james.mailbox.store.mail.model.Message<? extends MailboxId> mailboxMessage, IndexableMessage im) {
+    private static ZonedDateTime getInternalDate(MailboxMessage<? extends MailboxId> mailboxMessage, IndexableMessage im) {
         return ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), UTC_ZONE_ID);
     }
 

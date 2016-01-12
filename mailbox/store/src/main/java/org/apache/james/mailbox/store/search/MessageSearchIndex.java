@@ -29,7 +29,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 
 /**
- * An index which can be used to search for Message UID's that match a {@link SearchQuery}.
+ * An index which can be used to search for MailboxMessage UID's that match a {@link SearchQuery}.
  * 
  * A developer should think of building an inverse-index for that.
  * 
