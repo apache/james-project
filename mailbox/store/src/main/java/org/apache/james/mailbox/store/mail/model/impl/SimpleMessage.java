@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.mail.model.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -33,11 +32,30 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.model.AbstractMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.Property;
 
+import com.google.common.primitives.Ints;
+
 public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
+
+    public static <Id extends MailboxId> SimpleMessage<Id> copy(Id mailboxId, Message<Id> original) throws MailboxException {
+        Date internalDate = original.getInternalDate();
+        long size = original.getFullContentOctets();
+        Flags flags = original.createFlags();
+        SharedByteArrayInputStream content = copyFullContent(original);
+        int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
+        PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
+        return new SimpleMessage<Id>(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId);
+    }
+
+    private static <Id extends MailboxId> SharedByteArrayInputStream copyFullContent(Message<Id> original) throws MailboxException {
+        try {
+            return new SharedByteArrayInputStream(IOUtils.toByteArray(original.getFullContent()));
+        } catch (IOException e) {
+            throw new MailboxException("Unable to parse message", e);
+        }
+    }
 
     private long uid;
     private final Id mailboxId;
@@ -58,7 +76,7 @@ public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
     private long modSeq;
     private SharedInputStream content;
 
-    public SimpleMessage(Date internalDate, int size, int bodyStartOctet,
+    public SimpleMessage(Date internalDate, long size, int bodyStartOctet,
             SharedInputStream content, Flags flags,
             PropertyBuilder propertyBuilder, final Id mailboxId) {
         this.content = content;
@@ -73,33 +91,6 @@ public class SimpleMessage<Id extends MailboxId> extends AbstractMessage<Id> {
         this.mediaType = propertyBuilder.getMediaType();
         this.subType = propertyBuilder.getSubType();
         this.userFlags = flags.getUserFlags();
-    }
-
-    public SimpleMessage(Mailbox<Id> mailbox, Message<Id> original)
-            throws MailboxException {
-        this.internalDate = original.getInternalDate();
-        this.size = original.getFullContentOctets();
-        this.mailboxId = mailbox.getMailboxId();
-        setFlags(original.createFlags());
-        try {
-            this.content = new SharedByteArrayInputStream(
-                    IOUtils.toByteArray(original.getFullContent()));
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message", e);
-        }
-
-        this.bodyStartOctet = (int) (original.getFullContentOctets() - original
-                .getBodyOctets());
-
-        PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
-        this.lineCount = original.getTextualLineCount();
-        this.mediaType = original.getMediaType();
-        this.subType = original.getSubType();
-        final List<Property> properties = pBuilder.toProperties();
-        this.properties = new ArrayList<Property>(properties.size());
-        for (final Property property : properties) {
-            this.properties.add(new SimpleProperty(property));
-        }
     }
 
     @Override

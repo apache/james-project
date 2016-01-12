@@ -215,7 +215,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
      */
     protected MessageMetaData copy(Mailbox<InMemoryId> mailbox, long uid, long modSeq, Message<InMemoryId> original)
             throws MailboxException {
-        SimpleMessage<InMemoryId> message = new SimpleMessage<InMemoryId>(mailbox, original);
+        SimpleMessage<InMemoryId> message = SimpleMessage.copy(mailbox.getMailboxId(), original);
         message.setUid(uid);
         message.setModSeq(modSeq);
         Flags flags = original.createFlags();
@@ -231,7 +231,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
      *      org.apache.james.mailbox.store.mail.model.Message)
      */
     protected MessageMetaData save(Mailbox<InMemoryId> mailbox, Message<InMemoryId> message) throws MailboxException {
-        SimpleMessage<InMemoryId> copy = new SimpleMessage<InMemoryId>(mailbox, message);
+        SimpleMessage<InMemoryId> copy = SimpleMessage.copy(mailbox.getMailboxId(), message);
         copy.setUid(message.getUid());
         copy.setModSeq(message.getModSeq());
         getMembershipByUidForMailbox(mailbox).put(message.getUid(), copy);

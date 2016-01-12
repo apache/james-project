@@ -413,21 +413,21 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
     public void copyShouldIncrementUid() throws MailboxException, IOException {
         saveMessages();
         long uid = messageMapper.getLastUid(benwaInboxMailbox);
-        messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isGreaterThan(uid);
     }
 
     @Test
     public void copyShouldIncrementMessageCount() throws MailboxException, IOException {
         saveMessages();
-        messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox)).isEqualTo(6);
     }
 
     @Test
     public void copyOfUnSeenMessageShouldIncrementUnSeenMessageCount() throws MailboxException, IOException {
         saveMessages();
-        messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(6);
     }
 
@@ -435,14 +435,14 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
     public void copyShouldIncrementModSeq() throws MailboxException, IOException {
         saveMessages();
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isGreaterThan(modSeq);
     }
 
     @Test
     public void copyShouldCreateAMessageInDestination() throws MailboxException, IOException {
         saveMessages();
-        Message<Id> message7 = new SimpleMessage<Id>(benwaInboxMailbox, message6);
+        Message<Id> message7 = SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6);
         messageMapper.copy(benwaInboxMailbox, message7);
         message7.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
         MessageAssert.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message7.getUid()), MessageMapper.FetchType.Full, LIMIT).next())
@@ -452,13 +452,13 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
     @Test
     public void copyOfSeenMessageShouldNotIncrementUnSeenMessageCount() throws MailboxException {
         message6.setFlags(new Flags(Flags.Flag.SEEN));
-        messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(0);
     }
 
     @Test
     public void copiedMessageShouldBeMarkedAsRecent() throws MailboxException {
-        MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(
             messageMapper.findInMailbox(benwaInboxMailbox,
                 MessageRange.one(metaData.getUid()),
@@ -472,7 +472,7 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
     @Test
     public void copiedRecentMessageShouldBeMarkedAsRecent() throws MailboxException {
         message6.setFlags(new Flags(Flags.Flag.RECENT));
-        MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, new SimpleMessage<Id>(benwaInboxMailbox, message6));
+        MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(
             messageMapper.findInMailbox(benwaInboxMailbox,
                 MessageRange.one(metaData.getUid()),
@@ -639,7 +639,7 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
 
     @Test
     public void messagesShouldBeSavedWithTheirUserFlags() throws Exception {
-        Message<Id> message = new SimpleMessage<Id>(benwaInboxMailbox, message1);
+        Message<Id> message = SimpleMessage.copy(benwaInboxMailbox.getMailboxId(), message1);
         messageMapper.add(benwaInboxMailbox, message);
         MessageAssert.assertThat(retrieveMessageFromStorage(message)).hasFlags(new Flags(USER_FLAG));
     }

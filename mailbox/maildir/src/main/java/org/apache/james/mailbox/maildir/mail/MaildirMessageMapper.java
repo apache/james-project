@@ -283,7 +283,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper<MaildirId> {
     @Override
     protected MessageMetaData copy(Mailbox<MaildirId> mailbox, long uid, long modSeq, Message<MaildirId> original)
             throws MailboxException {
-        SimpleMessage<MaildirId> theCopy = new SimpleMessage<MaildirId>(mailbox, original);
+        SimpleMessage<MaildirId> theCopy = SimpleMessage.copy(mailbox.getMailboxId(), original);
         Flags flags = theCopy.createFlags();
         flags.add(Flag.RECENT);
         theCopy.setFlags(flags);

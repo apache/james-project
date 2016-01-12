@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,8 +31,9 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -88,7 +89,15 @@ public class SimpleMessageTest {
         assertThat(MESSAGE.createUserFlags()).containsOnly("mozzarela", "parmesan", "coppa", "limonchello");
     }
 
-        private static SimpleMessage<TestId> buildMessage(String content) {
+    @Test
+    public void copyShouldReturnFieldByFieldEqualsObject() throws MailboxException {
+        SimpleMessage<TestId> original = buildMessage("my content");
+        SimpleMessage<TestId> copy = SimpleMessage.copy(TestId.of(1337), original);
+        assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "mailboxId").isNotSameAs(original);
+        assertThat(copy.getMailboxId()).isEqualTo(TestId.of(1337));
+    }
+
+    private static SimpleMessage<TestId> buildMessage(String content) {
             return new SimpleMessage<TestId>(Calendar.getInstance().getTime(),
                 content.length(), 0, new SharedByteArrayInputStream(
                         content.getBytes(MESSAGE_CHARSET)), new Flags(),
