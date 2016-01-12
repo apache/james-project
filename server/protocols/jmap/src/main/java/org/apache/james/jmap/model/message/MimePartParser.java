@@ -21,8 +21,7 @@ package org.apache.james.jmap.model.message;
 
 import com.google.common.base.Preconditions;
 import org.apache.james.mailbox.store.extractor.TextExtractor;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
@@ -36,14 +35,14 @@ import java.util.LinkedList;
 
 public class MimePartParser {
 
-    private final MailboxMessage<? extends MailboxId> message;
+    private final Message message;
     private final TextExtractor textExtractor;
     private final MimeTokenStream stream;
     private final Deque<MimePartContainerBuilder> builderStack;
     private MimePart result;
     private MimePartContainerBuilder currentlyBuildMimePart;
 
-    public MimePartParser(MailboxMessage<? extends MailboxId> message, TextExtractor textExtractor) {
+    public MimePartParser(Message message, TextExtractor textExtractor) {
         this.message = message;
         this.textExtractor = textExtractor;
         this.builderStack = new LinkedList<>();

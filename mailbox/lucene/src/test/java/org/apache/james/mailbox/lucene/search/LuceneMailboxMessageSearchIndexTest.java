@@ -44,7 +44,6 @@ import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.SimpleMailboxMembership;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,8 +68,6 @@ public class LuceneMailboxMessageSearchIndexTest {
     private static final String BODY = "This is a simple email\r\n "
             + "It has " + RHUBARD + ".\r\n" + "It has " + CUSTARD + ".\r\n"
             + "It needs naught else.\r\n";
-
-    MailboxMessage<TestId> row;
 
     protected boolean useLenient() {
         return true;

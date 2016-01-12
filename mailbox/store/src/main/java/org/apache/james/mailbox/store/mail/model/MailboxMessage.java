@@ -18,11 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.List;
-
 import javax.mail.Flags;
 
 /**
@@ -30,11 +25,7 @@ import javax.mail.Flags;
  * plus body content. In the case of multipart documents, this body content
  * has internal structure described by the meta-data.
  */
-public interface MailboxMessage<Id extends MailboxId> extends Comparable<MailboxMessage<Id>>{
-
-    MessageId getMessageId();
-    
-    Date getInternalDate();
+public interface MailboxMessage<Id extends MailboxId> extends Message, Comparable<MailboxMessage<Id>> {
 
     /**
      * Return the mailbox id of the linked mailbox
@@ -132,81 +123,6 @@ public interface MailboxMessage<Id extends MailboxId> extends Comparable<Mailbox
      * @return new instance, not null
      */
     Flags createFlags();
-    
-    
-    /**
-     * Gets the body content of the document. Headers are excluded.
-     * 
-     * Be aware that this method need to return a new fresh {@link InputStream}
-     * on every call, which basicly means it need to start at position 0
-     * @return body, not null
-     */
-    InputStream getBodyContent() throws IOException;
 
-    /**
-     * Gets the top level MIME content media type.
-     * 
-     * @return top level MIME content media type, or null if default
-     */
-    String getMediaType();
 
-    /**
-     * Gets the MIME content subtype.
-     * 
-     * @return the MIME content subtype, or null if default
-     */
-    String getSubType();
-    
-    /**
-     * The number of octets contained in the body of this document.
-     * 
-     * @return number of octets
-     */
-    long getBodyOctets();
-    
-    /**
-     * The number of octets contained in the full content of this document.
-     * 
-     * @return number of octets
-     */
-    long getFullContentOctets();
-    
-    /**
-     * Gets the number of CRLF in a textual document.
-     * @return CRLF count when document is textual,
-     * null otherwise
-     */
-    public Long getTextualLineCount();
-    
-    /**
-     * Gets the header as {@link InputStream}. This MUST INCLUDE the CRLF terminator
-     * 
-     * Be aware that this method need to return a new fresh {@link InputStream}
-     * on every call
-     * 
-     * @return header
-     * @throws IOException 
-     */
-    InputStream getHeaderContent() throws IOException;
-    
-    /**
-     *Returns the full raw content of the MailboxMessage via an {@link InputStream}.
-     *
-     * Be aware that this method need to return a new fresh {@link InputStream}
-     * on every call
-     *
-     * @return content
-     * @throws IOException
-     */
-    InputStream getFullContent() throws IOException;
-
-    
-    /**
-     * Gets a read-only list of meta-data properties.
-     * For properties with multiple values, this list will contain
-     * several enteries with the same namespace and local name.
-     * 
-     * @return unmodifiable list of meta-data, not null
-     */
-    List<Property> getProperties();
 }

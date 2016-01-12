@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.streaming.InputStreamContent;
 import org.apache.james.mailbox.store.streaming.InputStreamContent.Type;
 import org.apache.james.mime4j.MimeException;
@@ -373,10 +374,10 @@ public class MessageResultImpl implements MessageResult {
     
     private final class HeadersImpl implements Headers {
 
-        private MailboxMessage<?> msg;
+        private Message msg;
         private List<Header> headers;
         
-        public HeadersImpl(MailboxMessage<?> msg) {
+        public HeadersImpl(Message msg) {
             this.msg = msg;
         }
 
