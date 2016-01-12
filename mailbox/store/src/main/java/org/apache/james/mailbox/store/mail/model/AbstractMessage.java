@@ -118,6 +118,9 @@ public abstract class AbstractMessage<Id extends MailboxId> implements Message<I
         return new SequenceInputStream(getHeaderContent(), getBodyContent());
     }
 
-    
+    @Override
+    public DefaultMessageId getMessageId() {
+        return new DefaultMessageId(getMailboxId(), getUid());
+    }
 
 }

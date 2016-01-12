@@ -449,6 +449,11 @@
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
             </dependency>
+            <dependency>
+                <groupId>nl.jqno.equalsverifier</groupId>
+                <artifactId>equalsverifier</artifactId>
+                <version>1.7.6</version>
+            </dependency>
             <!--
                 END Testing
             -->

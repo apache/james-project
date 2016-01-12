@@ -32,6 +32,8 @@ import javax.mail.Flags;
  */
 public interface Message<Id extends MailboxId> extends Comparable<Message<Id>>{
 
+    MessageId getMessageId();
+    
     Date getInternalDate();
 
     /**

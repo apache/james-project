@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.Property;
 
@@ -71,79 +72,46 @@ public class SimpleMailboxMembership implements Message<TestId> {
         setFlags(flags);
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#getInternalDate()
-     */
     public Date getInternalDate() {
         return internalDate;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#getMailboxId()
-     */
     public TestId getMailboxId() {
         return mailboxId;
     }
     
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#getUid()
-     */
     public long getUid() {
         return uid;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#isAnswered()
-     */
     public boolean isAnswered() {
         return answered;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#isDeleted()
-     */
     public boolean isDeleted() {
         return deleted;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#isDraft()
-     */
     public boolean isDraft() {
         return draft;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#isFlagged()
-     */
     public boolean isFlagged() {
         return flagged;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#isRecent()
-     */
     public boolean isRecent() {
         return recent;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#isSeen()
-     */
     public boolean isSeen() {
         return seen;
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#unsetRecent()
-     */
     public void unsetRecent() {
         recent = false;
     }
     
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#setFlags(javax.mail.Flags)
-     */
     public void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);
@@ -153,9 +121,6 @@ public class SimpleMailboxMembership implements Message<TestId> {
         seen = flags.contains(Flags.Flag.SEEN);
     }
 
-    /**
-     * @see org.apache.james.imap.Message.mail.model.Document#createFlags()
-     */
     public Flags createFlags() {
         final Flags flags = new Flags();
 
@@ -240,17 +205,10 @@ public class SimpleMailboxMembership implements Message<TestId> {
     private long modSeq;
     
 
-    /**
-     * @throws IOException 
-     * @see org.apache.james.imap.Message.mail.model.Document#getBodyContent()
-     */
     public InputStream getBodyContent() throws IOException {
         return new ByteArrayInputStream(body);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Message#getHeaderContent()
-     */
     public InputStream getHeaderContent() throws IOException {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final Writer writer = new OutputStreamWriter(baos, "us-ascii");
@@ -293,9 +251,6 @@ public class SimpleMailboxMembership implements Message<TestId> {
         return size;
     }
 
-    /**
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
     public int compareTo(Message<TestId> other) {
         return (int) (getUid() - other.getUid());
     }
@@ -316,7 +271,10 @@ public class SimpleMailboxMembership implements Message<TestId> {
     public InputStream getFullContent() throws IOException {
         return new SequenceInputStream(getHeaderContent(), getBodyContent());
     }
-    
-    
 
+    @Override
+    public DefaultMessageId getMessageId() {
+        return new DefaultMessageId(getMailboxId(), getUid());
+    }
+    
 }
