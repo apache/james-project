@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail.model.openjpa;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,16 +45,20 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 /**
- * Abstract base class for JPA based implementations of {@link AbstractMailboxMessage}
+ * Abstract base class for JPA based implementations of {@link DelegatingMailboxMessage}
  */
 @IdClass(AbstractJPAMailboxMessage.MailboxIdUidKey.class)
 @NamedQueries({
@@ -99,10 +106,9 @@ import org.apache.openjpa.persistence.jdbc.Index;
             query="DELETE FROM MailboxMessage message")
 })
 @MappedSuperclass
-public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<JPAId> {
+public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId> {
 
-
-
+    private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
     private static final String TOSTRING_SEPARATOR = " ";
 
     /** Identifies composite key */
@@ -244,11 +250,7 @@ public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<J
     @ElementJoinColumn(name="MAIL_UID", referencedColumnName="MAIL_UID")})
     private List<JPAUserFlag> userFlags;
     
-    @Deprecated
-    public AbstractJPAMailboxMessage() {}
-
     public AbstractJPAMailboxMessage(JPAMailbox mailbox, Date internalDate, Flags flags, final long contentOctets, final int bodyStartOctet, final PropertyBuilder propertyBuilder) {
-        super();
         this.mailbox = mailbox;
         this.internalDate = internalDate;
         userFlags = new ArrayList<JPAUserFlag>();
@@ -275,7 +277,6 @@ public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<J
      * @param uid new UID
      * @param modSeq new modSeq
      * @param original message to be copied, not null
-     * @throws IOException 
      */
     public AbstractJPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> original) throws MailboxException {
         super();
@@ -394,7 +395,6 @@ public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<J
         return contentOctets;
     }
 
-    @Override
     protected int getBodyStartOctet() {
         return bodyStartOctet;
     }
@@ -519,12 +519,11 @@ public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<J
         return mailbox;
     }
 
-    /**
-     * This implementation supports user flags
-     * 
-     * 
-     */
     @Override
+    public Flags createFlags() {
+        return FlagsBuilder.createFlags(this, createUserFlags());
+    }
+
     protected String[] createUserFlags() {
         String[] flags = new String[userFlags.size()];
         for (int i = 0; i < userFlags.size(); i++) {
@@ -538,6 +537,26 @@ public abstract class AbstractJPAMailboxMessage extends AbstractMailboxMessage<J
      */
     public void setMailbox(JPAMailbox mailbox) {
         this.mailbox = mailbox;
+    }
+
+    @Override
+    public InputStream getFullContent() throws IOException {
+        return new SequenceInputStream(getHeaderContent(), getBodyContent());
+    }
+
+    @Override
+    public long getBodyOctets() {
+        return getFullContentOctets() - getBodyStartOctet();
+    }
+
+    @Override
+    public MessageId getMessageId() {
+        return new DefaultMessageId(getMailboxId(), uid);
+    }
+
+    @Override
+    public int compareTo(MailboxMessage<JPAId> other) {
+        return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
 
     public String toString() {

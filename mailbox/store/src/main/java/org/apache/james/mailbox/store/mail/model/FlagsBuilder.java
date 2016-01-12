@@ -16,43 +16,40 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.store.mail.model;
 
-import static org.junit.Assert.*;
+import javax.mail.Flags;
 
-import org.apache.james.mailbox.store.MessageBuilder;
-import org.apache.james.mailbox.store.TestId;
-import org.junit.Test;
+public class FlagsBuilder {
 
-public class AbstractMailboxMessageTest {
-    
-    @Test
-    public void testShouldReturnPositiveWhenFirstGreaterThanSecond()
-            throws Exception {
-        MailboxMessage<TestId> one = buildMessage(100);
-        MailboxMessage<TestId> two = buildMessage(99);
-        assertTrue( one.compareTo(two) > 0);
+    public static Flags createFlags(MailboxMessage<?> mailboxMessage, String[] userFlags) {
+        final Flags flags = new Flags();
+
+        if (mailboxMessage.isAnswered()) {
+            flags.add(Flags.Flag.ANSWERED);
+        }
+        if (mailboxMessage.isDeleted()) {
+            flags.add(Flags.Flag.DELETED);
+        }
+        if (mailboxMessage.isDraft()) {
+            flags.add(Flags.Flag.DRAFT);
+        }
+        if (mailboxMessage.isFlagged()) {
+            flags.add(Flags.Flag.FLAGGED);
+        }
+        if (mailboxMessage.isRecent()) {
+            flags.add(Flags.Flag.RECENT);
+        }
+        if (mailboxMessage.isSeen()) {
+            flags.add(Flags.Flag.SEEN);
+        }
+        if (userFlags != null && userFlags.length > 0) {
+            for (int i = 0; i < userFlags.length; i++) {
+                flags.add(userFlags[i]);
+            }
+        }
+        return flags;
     }
 
-    private MailboxMessage<TestId> buildMessage(int uid) throws Exception {
-        MessageBuilder builder = new MessageBuilder();
-        builder.uid = uid;
-        return builder.build();
-    }
 
-    @Test
-    public void testShouldReturnNegativeWhenFirstLessThanSecond()
-            throws Exception {
-        MailboxMessage<TestId> one = buildMessage(98);
-        MailboxMessage<TestId> two = buildMessage(99);
-        assertTrue( one.compareTo(two) < 0);
-    }
-
-    @Test
-    public void testShouldReturnZeroWhenFirstEqualsSecond() throws Exception {
-        MailboxMessage<TestId> one = buildMessage(90);
-        MailboxMessage<TestId> two = buildMessage(90);
-        assertEquals(0, one.compareTo(two));
-    }
 }

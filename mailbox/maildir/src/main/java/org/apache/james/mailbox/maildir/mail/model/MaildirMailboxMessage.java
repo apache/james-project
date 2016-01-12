@@ -19,42 +19,19 @@
 package org.apache.james.mailbox.maildir.mail.model;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PushbackInputStream;
-import java.util.Date;
-import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedFileInputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
-import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.streaming.CountingInputStream;
-import org.apache.james.mailbox.store.streaming.LimitingFileInputStream;
-import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
-import org.apache.james.mime4j.message.MaximalBodyDescriptor;
-import org.apache.james.mime4j.stream.EntityState;
-import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.james.mime4j.stream.MimeTokenStream;
-import org.apache.james.mime4j.stream.RecursionMode;
 
-public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
+public class MaildirMailboxMessage extends DelegatingMailboxMessage<MaildirId> {
 
-	private MaildirMessageName messageName;
-    private int bodyStartOctet;
-    private final PropertyBuilder propertyBuilder = new PropertyBuilder();
-    private boolean parsed;
     private boolean answered;
     private boolean deleted;
     private boolean draft;
@@ -67,6 +44,8 @@ public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
     private long modSeq;
     
     public MaildirMailboxMessage(Mailbox<MaildirId> mailbox, long uid, MaildirMessageName messageName) throws IOException {
+        super(new MaildirMessage(messageName));
+
         this.mailbox = mailbox;
         setUid(uid);
         setModSeq(messageName.getFile().lastModified());
@@ -86,7 +65,6 @@ public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
             }
         }
         setFlags(flags);
-        this.messageName = messageName;
     }
 
     
@@ -104,11 +82,8 @@ public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
     public void setUid(long uid) {
         this.uid = uid;
     }
-    /**
-     * @see
-     * MailboxMessage#setFlags(
-     * javax.mail.Flags)
-     */
+
+
     @Override
     public void setFlags(Flags flags) {
         if (flags != null) {
@@ -121,54 +96,31 @@ public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
         }
     }
     
-    /**
-     * @see
-     * MailboxMessage#isAnswered()
-     */
     @Override
     public boolean isAnswered() {
         return answered;
     }
 
-    /**
-     * @see
-     * MailboxMessage#isDeleted()
-     */
     @Override
     public boolean isDeleted() {
         return deleted;
     }
 
-    /**
-     * @see
-     * MailboxMessage#isDraft()
-     */
     @Override
     public boolean isDraft() {
         return draft;
     }
 
-    /**
-     * @see
-     * MailboxMessage#isFlagged()
-     */
     @Override
     public boolean isFlagged() {
         return flagged;
     }
 
-    /**
-     * @see
-     * MailboxMessage#isRecent()
-     */
     @Override
     public boolean isRecent() {
         return recent;
     }
 
-    /**
-     * @see MailboxMessage#isSeen()
-     */
     @Override
     public boolean isSeen() {
         return seen;
@@ -182,8 +134,17 @@ public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
     public boolean isNew() {
         return newMessage;
     }
-    
-    
+
+    @Override
+    public long getModSeq() {
+        return modSeq;
+    }
+
+    @Override
+    public void setModSeq(long modSeq) {
+        this.modSeq = modSeq;
+    }
+
     @Override
     public String toString() {
         StringBuilder theString = new StringBuilder("MaildirMailboxMessage ");
@@ -204,260 +165,5 @@ public class MaildirMailboxMessage extends AbstractMailboxMessage<MaildirId> {
         theString.append(getInternalDate());
         return theString.toString();
     }
-
-    /**
-     * @see MailboxMessage#getModSeq()
-     */
-    @Override
-    public long getModSeq() {
-        return modSeq;
-    }
-
-    /**
-     * @see MailboxMessage#setModSeq(long)
-     */
-    @Override
-    public void setModSeq(long modSeq) {
-        this.modSeq = modSeq;
-    }
-    /**
-     * Parse message if needed
-     */
-    private synchronized void parseMessage() {
-        if (parsed)
-            return;
-        SharedFileInputStream tmpMsgIn = null;
-        try {
-            tmpMsgIn = new SharedFileInputStream(messageName.getFile());
-
-            bodyStartOctet = bodyStartOctet(tmpMsgIn);
-
-            // Disable line length... This should be handled by the smtp server
-            // component and not the parser itself
-            // https://issues.apache.org/jira/browse/IMAP-122
-            MimeConfig config = MimeConfig.custom().setMaxLineLen(-1).build();
-            final MimeTokenStream parser = new MimeTokenStream(config, new DefaultBodyDescriptorBuilder());
-            parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
-            parser.parse(tmpMsgIn.newStream(0, -1));
-
-            EntityState next = parser.next();
-            while (next != EntityState.T_BODY && next != EntityState.T_END_OF_STREAM && next != EntityState.T_START_MULTIPART) {
-                next = parser.next();
-            }
-            final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
-            final String mediaType;
-            final String mediaTypeFromHeader = descriptor.getMediaType();
-            final String subType;
-            if (mediaTypeFromHeader == null) {
-                mediaType = "text";
-                subType = "plain";
-            } else {
-                mediaType = mediaTypeFromHeader;
-                subType = descriptor.getSubType();
-            }
-            propertyBuilder.setMediaType(mediaType);
-            propertyBuilder.setSubType(subType);
-            propertyBuilder.setContentID(descriptor.getContentId());
-            propertyBuilder.setContentDescription(descriptor.getContentDescription());
-            propertyBuilder.setContentLocation(descriptor.getContentLocation());
-            propertyBuilder.setContentMD5(descriptor.getContentMD5Raw());
-            propertyBuilder.setContentTransferEncoding(descriptor.getTransferEncoding());
-            propertyBuilder.setContentLanguage(descriptor.getContentLanguage());
-            propertyBuilder.setContentDispositionType(descriptor.getContentDispositionType());
-            propertyBuilder.setContentDispositionParameters(descriptor.getContentDispositionParameters());
-            propertyBuilder.setContentTypeParameters(descriptor.getContentTypeParameters());
-            // Add missing types
-            final String codeset = descriptor.getCharset();
-            if (codeset == null) {
-                if ("TEXT".equalsIgnoreCase(mediaType)) {
-                    propertyBuilder.setCharset("us-ascii");
-                }
-            } else {
-                propertyBuilder.setCharset(codeset);
-            }
-
-            final String boundary = descriptor.getBoundary();
-            if (boundary != null) {
-                propertyBuilder.setBoundary(boundary);
-            }
-            if ("text".equalsIgnoreCase(mediaType)) {
-                long lines = -1;
-                final CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream());
-                try {
-                    bodyStream.readAll();
-                    lines = bodyStream.getLineCount();
-                } finally {
-                    IOUtils.closeQuietly(bodyStream);
-                }
-
-                next = parser.next();
-                if (next == EntityState.T_EPILOGUE) {
-                    final CountingInputStream epilogueStream = new CountingInputStream(parser.getInputStream());
-                    try {
-                        epilogueStream.readAll();
-                        lines += epilogueStream.getLineCount();
-                    } finally {
-                        IOUtils.closeQuietly(epilogueStream);
-                    }
-                }
-                propertyBuilder.setTextualLineCount(lines);
-            }
-        } catch (IOException e) {
-            // has successfully been parsen when appending, shouldn't give any
-            // problems
-        } catch (MimeException e) {
-            // has successfully been parsen when appending, shouldn't give any
-            // problems
-        } finally {
-            if (tmpMsgIn != null) {
-                try {
-                    tmpMsgIn.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
-            parsed = true;
-        }
-    }
-
-    /**
-     * Return the position in the given {@link InputStream} at which the Body of
-     * the MailboxMessage starts
-     * 
-     * @param msgIn
-     * @return bodyStartOctet
-     * @throws IOException
-     */
-    private int bodyStartOctet(InputStream msgIn) throws IOException {
-        // we need to pushback maximal 3 bytes
-        PushbackInputStream in = new PushbackInputStream(msgIn, 3);
-        int localBodyStartOctet = in.available();
-        int i = -1;
-        int count = 0;
-        while ((i = in.read()) != -1 && in.available() > 4) {
-            if (i == 0x0D) {
-                int a = in.read();
-                if (a == 0x0A) {
-                    int b = in.read();
-
-                    if (b == 0x0D) {
-                        int c = in.read();
-
-                        if (c == 0x0A) {
-                            localBodyStartOctet = count + 4;
-                            break;
-                        }
-                        in.unread(c);
-                    }
-                    in.unread(b);
-                }
-                in.unread(a);
-            }
-            count++;
-        }
-        return localBodyStartOctet;
-    }
-
-    /**
-     * @see MailboxMessage#getMediaType()
-     */
-    @Override
-    public String getMediaType() {
-        parseMessage();
-        return propertyBuilder.getMediaType();
-    }
-
-    /**
-     * @see MailboxMessage#getSubType()
-     */
-    @Override
-    public String getSubType() {
-        parseMessage();
-        return propertyBuilder.getSubType();
-    }
-
-    /**
-     * @see MailboxMessage#getFullContentOctets()
-     */
-    @Override
-    public long getFullContentOctets() {
-        Long size = messageName.getSize();
-        if (size != null) {
-            return size;
-        } else {
-            try {
-                return messageName.getFile().length();
-            } catch (FileNotFoundException e) {
-                return -1;
-            }
-        }
-    }
-
-    /**
-     * @see MailboxMessage#getTextualLineCount()
-     */
-    @Override
-    public Long getTextualLineCount() {
-        parseMessage();
-        return propertyBuilder.getTextualLineCount();
-    }
-
-    /**
-     * @see MailboxMessage#getProperties()
-     */
-    @Override
-    public List<Property> getProperties() {
-        parseMessage();
-        return propertyBuilder.toProperties();
-    }
-
-    /**
-     * @see MailboxMessage#getInternalDate()
-     */
-    @Override
-    public Date getInternalDate() {
-        return messageName.getInternalDate();
-    }
-
-    /**
-     * Return the full content of the message via a {@link FileInputStream}
-     */
-    @Override
-    public InputStream getFullContent() throws IOException {
-        return new FileInputStream(messageName.getFile());
-    }
-
-    /**
-     * @see MailboxMessage#getBodyContent()
-     */
-    @Override
-    public InputStream getBodyContent() throws IOException {
-        parseMessage();
-        FileInputStream body = new FileInputStream(messageName.getFile());
-        IOUtils.skipFully(body, bodyStartOctet);
-        return body;
-
-    }
-
-    /**
-     * @see AbstractMailboxMessage#getBodyStartOctet()
-     */
-    @Override
-    protected int getBodyStartOctet() {
-        parseMessage();
-        return bodyStartOctet;
-    }
-
-    @Override
-    public InputStream getHeaderContent() throws IOException {
-        parseMessage();
-        long limit = getBodyStartOctet();
-        if (limit < 0) {
-            limit = 0;
-        }
-        return new LimitingFileInputStream(messageName.getFile(), limit);
-
-    }
-
 
 }

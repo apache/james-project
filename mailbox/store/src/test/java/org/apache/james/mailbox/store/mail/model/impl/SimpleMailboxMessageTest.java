@@ -34,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.TestId;
+import org.assertj.core.internal.FieldByFieldComparator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -93,7 +94,8 @@ public class SimpleMailboxMessageTest {
     public void copyShouldReturnFieldByFieldEqualsObject() throws MailboxException {
         SimpleMailboxMessage<TestId> original = buildMessage("my content");
         SimpleMailboxMessage<TestId> copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
-        assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "mailboxId").isNotSameAs(original);
+        assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "message", "mailboxId").isNotSameAs(original);
+        assertThat(copy.getMessage()).usingComparator(new FieldByFieldComparator()).isEqualTo(original.getMessage());
     }
 
     private static SimpleMailboxMessage<TestId> buildMessage(String content) {

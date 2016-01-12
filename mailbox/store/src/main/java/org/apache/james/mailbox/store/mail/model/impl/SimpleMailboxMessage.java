@@ -20,9 +20,7 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
-import java.util.List;
 
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -30,15 +28,14 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
 
+import com.google.common.base.Objects;
 import com.google.common.primitives.Ints;
 
-
-public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxMessage<Id> {
+public class SimpleMailboxMessage<Id extends MailboxId> extends DelegatingMailboxMessage<Id> {
 
     public static <Id extends MailboxId> SimpleMailboxMessage<Id> copy(Id mailboxId, MailboxMessage<Id> original) throws MailboxException {
         Date internalDate = original.getInternalDate();
@@ -60,7 +57,6 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxM
 
     private long uid;
     private final Id mailboxId;
-    private long size;
     private boolean answered;
     private boolean deleted;
     private boolean draft;
@@ -68,39 +64,27 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxM
     private boolean recent;
     private boolean seen;
     private String[] userFlags;
-    private Date internalDate;
-    private final String subType;
-    private List<Property> properties;
-    private final String mediaType;
-    private Long lineCount;
-    private int bodyStartOctet;
     private long modSeq;
-    private SharedInputStream content;
 
     public SimpleMailboxMessage(Date internalDate, long size, int bodyStartOctet,
                                 SharedInputStream content, Flags flags,
                                 PropertyBuilder propertyBuilder, final Id mailboxId) {
-        this.content = content;
+        super(new SimpleMessage(
+            content, size, internalDate, propertyBuilder.getSubType(),
+            propertyBuilder.getMediaType(),
+            bodyStartOctet,
+            propertyBuilder.getTextualLineCount(),
+            propertyBuilder.toProperties()
+            ));
 
-        this.size = size;
-        this.bodyStartOctet = bodyStartOctet;
         setFlags(flags);
-        lineCount = propertyBuilder.getTextualLineCount();
-        this.internalDate = internalDate;
         this.mailboxId = mailboxId;
-        this.properties = propertyBuilder.toProperties();
-        this.mediaType = propertyBuilder.getMediaType();
-        this.subType = propertyBuilder.getSubType();
         this.userFlags = flags.getUserFlags();
     }
 
     @Override
     protected String[] createUserFlags() {
         return userFlags.clone();
-    }
-
-    public Date getInternalDate() {
-        return internalDate;
     }
 
     public Id getMailboxId() {
@@ -135,6 +119,18 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxM
         return seen;
     }
 
+    public long getModSeq() {
+        return modSeq;
+    }
+
+    public void setModSeq(long modSeq) {
+        this.modSeq = modSeq;
+    }
+
+    public void setUid(long uid) {
+        this.uid = uid;
+    }
+
     public synchronized void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);
@@ -143,30 +139,6 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxM
         recent = flags.contains(Flags.Flag.RECENT);
         seen = flags.contains(Flags.Flag.SEEN);
         userFlags = flags.getUserFlags();
-    }
-
-    public InputStream getBodyContent() throws IOException {
-        return content.newStream(getBodyStartOctet(), -1);
-    }
-
-    public long getFullContentOctets() {
-        return size;
-    }
-
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    public List<Property> getProperties() {
-        return properties;
-    }
-
-    public String getSubType() {
-        return subType;
-    }
-
-    public Long getTextualLineCount() {
-        return lineCount;
     }
 
     @Override
@@ -192,60 +164,18 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends AbstractMailboxM
         return true;
     }
 
-    /**
-     * Representation suitable for logging and debugging.
-     * 
-     * @return a <code>String</code> representation of this object.
-     */
     public String toString() {
-        return super.toString() + "[" + "uid = " + this.uid + " "
-                + "mailboxId = " + this.mailboxId + " " + "size = " + this.size
-                + " " + "answered = " + this.answered + " " + "deleted = "
-                + this.deleted + " " + "draft = " + this.draft + " "
-                + "flagged = " + this.flagged + " " + "recent = " + this.recent
-                + " " + "seen = " + this.seen + " " + "internalDate = "
-                + this.internalDate + " " + "subType = " + this.subType + " "
-                + "mediaType = " + this.mediaType + " " + " ]";
-    }
-
-    @Override
-    protected int getBodyStartOctet() {
-        return bodyStartOctet;
-    }
-
-    /**
-     * @see MailboxMessage#getModSeq()
-     */
-    public long getModSeq() {
-        return modSeq;
-    }
-
-    /**
-     * @see MailboxMessage#setModSeq(long)
-     */
-    public void setModSeq(long modSeq) {
-        this.modSeq = modSeq;
-    }
-
-    /**
-     * @see MailboxMessage#setUid(long)
-     */
-    public void setUid(long uid) {
-        this.uid = uid;
-    }
-
-    @Override
-    public InputStream getHeaderContent() throws IOException {
-        long headerEnd = getBodyStartOctet();
-        if (headerEnd < 0) {
-            headerEnd = 0;
-        }
-        return content.newStream(0, headerEnd);
-    }
-
-    @Override
-    public InputStream getFullContent() throws IOException {
-        return content.newStream(0, -1);
+        return Objects.toStringHelper(this)
+            .add("uid", this.uid)
+            .add("mailboxId", this.mailboxId)
+            .add("answered", this.answered)
+            .add("deleted", this.deleted)
+            .add("draft", this.draft)
+            .add("flagged", this.flagged)
+            .add("recent", this.recent)
+            .add("seen", this.seen)
+            .add("message", this.getMessage())
+            .toString();
     }
 
 }

@@ -20,62 +20,33 @@ package org.apache.james.mailbox.store.mail.model;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.SequenceInputStream;
+import java.util.Date;
+import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 
+public abstract class DelegatingMailboxMessage<Id extends MailboxId> implements MailboxMessage<Id> {
 
-/**
- * Abstract base class for {@link MailboxMessage}
- *
- */
-public abstract class AbstractMailboxMessage<Id extends MailboxId> implements MailboxMessage<Id> {
+    private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
     
+    private final Message message;
 
-    /**
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
+    protected DelegatingMailboxMessage(Message message) {
+        this.message = message;
+    }
+
+    @Override
     public int compareTo(MailboxMessage<Id> other) {
-        return (int) (getUid() - other.getUid());
+        return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
-    
-    
 
-    /**
-     * @see MailboxMessage#createFlags()
-     */
+    @Override
     public final Flags createFlags() {
-        final Flags flags = new Flags();
-
-        if (isAnswered()) {
-            flags.add(Flags.Flag.ANSWERED);
-        }
-        if (isDeleted()) {
-            flags.add(Flags.Flag.DELETED);
-        }
-        if (isDraft()) {
-            flags.add(Flags.Flag.DRAFT);
-        }
-        if (isFlagged()) {
-            flags.add(Flags.Flag.FLAGGED);
-        }
-        if (isRecent()) {
-            flags.add(Flags.Flag.RECENT);
-        }
-        if (isSeen()) {
-            flags.add(Flags.Flag.SEEN);
-        }
-        String[] userFlags = createUserFlags();
-        if (userFlags != null && userFlags.length > 0) {
-            for (int i = 0; i < userFlags.length; i++) {
-                flags.add(userFlags[i]);
-            }
-        }
-        return flags;
+        return FlagsBuilder.createFlags(this, createUserFlags());
     }
-    
-    
+
     /**
      * Return all stored user flags or null if none are stored. By default this return null as no user flags are stored
      * permanent. This method SHOULD get overridden, If the implementation supports to store user flags.
@@ -85,37 +56,55 @@ public abstract class AbstractMailboxMessage<Id extends MailboxId> implements Ma
     protected String[] createUserFlags() {
         return null;
     }
-    
-    
-    /**
-     * The number of octets contained in the body of this part.
-     * 
-     * @return number of octets
-     */
+
+    @Override
     public long getBodyOctets() {
-        return getFullContentOctets() - getBodyStartOctet();
+        return message.getBodyOctets();
     }
-    
-    /**
-     * Return the start octet of the body
-     * 
-     * @return startOctet
-     */
-    protected abstract int getBodyStartOctet();
 
+    @Override
+    public long getFullContentOctets() {
+        return message.getFullContentOctets();
+    }
 
+    @Override
+    public Long getTextualLineCount() {
+        return message.getTextualLineCount();
+    }
 
-    
-    /**
-     * This implementation just concat {@link #getHeaderContent()} and {@link #getBodyContent()}.
-     * 
-     * Implementation should override this if they can provide a more performant solution
-     * 
-     * @return content
-     * @throws exception
-     */
+    @Override
+    public InputStream getHeaderContent() throws IOException {
+        return message.getHeaderContent();
+    }
+
+    @Override
     public InputStream getFullContent() throws IOException {
-        return new SequenceInputStream(getHeaderContent(), getBodyContent());
+        return message.getFullContent();
+    }
+
+    @Override
+    public List<Property> getProperties() {
+        return message.getProperties();
+    }
+
+    @Override
+    public Date getInternalDate() {
+        return message.getInternalDate();
+    }
+
+    @Override
+    public InputStream getBodyContent() throws IOException {
+        return message.getBodyContent();
+    }
+
+    @Override
+    public String getMediaType() {
+        return message.getMediaType();
+    }
+
+    @Override
+    public String getSubType() {
+        return message.getSubType();
     }
 
     @Override
@@ -123,4 +112,7 @@ public abstract class AbstractMailboxMessage<Id extends MailboxId> implements Ma
         return new DefaultMessageId(getMailboxId(), getUid());
     }
 
+    public Message getMessage() {
+        return message;
+    }
 }

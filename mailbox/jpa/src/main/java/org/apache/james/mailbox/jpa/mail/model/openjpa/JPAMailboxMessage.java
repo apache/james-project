@@ -55,9 +55,6 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
     @Lob private byte[] header;
     
-    @Deprecated
-    public JPAMailboxMessage() {}
-
     public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, final PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
         try {
@@ -75,9 +72,6 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     /**
      * Create a copy of the given message
-     * 
-     * @param message
-     * @throws MailboxException 
      */
     public JPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> message) throws MailboxException{
         super(mailbox, uid, modSeq, message);
@@ -89,17 +83,12 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
         }
     }
 
-
-    /**
-     * @see MailboxMessage#getBodyContent()
-     */
+    @Override
     public InputStream getBodyContent() throws IOException {
         return new ByteArrayInputStream(body);
     }
 
-    /**
-     * @see MailboxMessage#getHeaderContent()
-     */
+    @Override
     public InputStream getHeaderContent() throws IOException {
         return new ByteArrayInputStream(header);
     }

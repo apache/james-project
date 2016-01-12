@@ -41,18 +41,19 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
-import org.apache.james.mailbox.store.mail.model.AbstractMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.slf4j.Logger;
 
-/**
- * JCR implementation of {@link MailboxMessage}
- *
- */
-public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements JCRImapConstants, Persistent{
+public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstants, Persistent {
 
+    private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
+    
     private Node node;
     private final Logger logger;
     private SharedInputStream content;
@@ -125,12 +126,8 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         
     }
 
-
     /**
      * Create a copy of the given message
-     * 
-     * @param message
-     * @throws IOException 
      */
     public JCRMailboxMessage(JCRId mailboxUUID, long uid, long modSeq, JCRMailboxMessage message, Logger logger) throws MailboxException {
         this.mailboxUUID = mailboxUUID;
@@ -158,11 +155,8 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
             this.properties.add(new JCRProperty(property,  logger));
         }
     }
-    
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Document#getFullContentOctets()
-     */
+
+    @Override
     public long getFullContentOctets() {
         if (isPersistent()) {
             try {
@@ -176,10 +170,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return size;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Document#getMediaType()
-     */
+    @Override
     public String getMediaType() {
         if (isPersistent()) {
             try {
@@ -192,10 +183,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return mediaType;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Document#getProperties()
-     */
+    @Override
     public List<Property> getProperties() {
         if (isPersistent()) {
             try {
@@ -212,10 +200,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return new ArrayList<Property>(properties);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Document#getSubType()
-     */
+    @Override
     public String getSubType() {
         if (isPersistent()) {
             try {
@@ -228,10 +213,12 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return subType;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Document#getTextualLineCount()
-     */
+    @Override
+    public long getBodyOctets() {
+        return getFullContentOctets() - getBodyStartOctet();
+    }
+
+    @Override
     public Long getTextualLineCount() {
         if (isPersistent()) {
             try {
@@ -247,18 +234,12 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return textualLineCount;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.jcr.Persistent#getNode()
-     */
+    @Override
     public Node getNode() {
         return node;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.jcr.Persistent#isPersistent()
-     */
+    @Override
     public boolean isPersistent() {
         return node != null;
     }
@@ -273,11 +254,8 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         }
         return null;
     }
-    
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.jcr.Persistent#merge(javax.jcr.Node)
-     */
+
+    @Override
     public void merge(Node node) throws RepositoryException, IOException {
 
         // update the flags 
@@ -343,13 +321,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
 
     }
     
-    @Override
-    protected String[] createUserFlags() {
-        return userFlags;
-    }
-
-    @Override
-    protected int getBodyStartOctet() {
+    private int getBodyStartOctet() {
         if (isPersistent()) {
             try {
                 return (int)node.getProperty(BODY_START_OCTET_PROPERTY).getLong();
@@ -399,14 +371,12 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
     }
 
 
+    @Override
+    public MessageId getMessageId() {
+        return new DefaultMessageId(getMailboxId(), getUid());
+    }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.model.MailboxMembership#getInternalDate
-     * ()
-     */
+    @Override
     public Date getInternalDate() {
         if (isPersistent()) {
             try {
@@ -423,12 +393,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return internalDate;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.model.MailboxMembership#getMailboxId()
-     */
+    @Override
     public JCRId getMailboxId() {
         if (isPersistent()) {
             try {
@@ -442,11 +407,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#getUid()
-     */
+    @Override
     public long getUid() {
         if (isPersistent()) {
             try {
@@ -460,12 +421,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return uid;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.model.MailboxMembership#isAnswered()
-     */
+    @Override
     public boolean isAnswered() {
         if (isPersistent()) {
             try {
@@ -482,11 +438,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return answered;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#isDeleted()
-     */
+    @Override
     public boolean isDeleted() {
         if (isPersistent()) {
             try {
@@ -503,11 +455,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return deleted;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#isDraft()
-     */
+    @Override
     public boolean isDraft() {
         if (isPersistent()) {
             try {
@@ -522,11 +470,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return draft;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#isFlagged()
-     */
+    @Override
     public boolean isFlagged() {
         if (isPersistent()) {
             try {
@@ -542,11 +486,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return flagged;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#isRecent()
-     */
+    @Override
     public boolean isRecent() {
         if (isPersistent()) {
             try {
@@ -561,11 +501,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return recent;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMembership#isSeen()
-     */
+    @Override
     public boolean isSeen() {
         if (isPersistent()) {
             try {
@@ -579,13 +515,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return seen;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.model.MailboxMembership#setFlags(javax
-     * .mail.Flags)
-     */
+    @Override
     public void setFlags(Flags flags) {
         if (isPersistent()) {
             try {
@@ -616,12 +546,11 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.model.MailboxMembership#unsetRecent()
-     */
+    @Override
+    public Flags createFlags() {
+        return FlagsBuilder.createFlags(this, userFlags);
+    }
+
     public void unsetRecent() {
         if (isPersistent()) {
             try {
@@ -634,7 +563,6 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
             recent = false;
         }
     }
-
 
 
     public String getId() {
@@ -692,20 +620,14 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return content.newStream(0, -1);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getBodyContent()
-     */
+    @Override
     public InputStream getBodyContent() throws IOException {
         InputStream body = getFullContent();
         IOUtils.skipFully(body,  getBodyStartOctet());
         return body;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getModSeq()
-     */
+    @Override
     public long getModSeq() {
         if (isPersistent()) {
             try {
@@ -719,10 +641,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         return modSeq;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#setModSeq(long)
-     */
+    @Override
     public void setModSeq(long modSeq) {
         if (isPersistent()) {
             try {
@@ -735,10 +654,7 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         }  
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#setUid(long)
-     */
+    @Override
     public void setUid(long uid) {
         if (isPersistent()) {
             try {
@@ -751,15 +667,17 @@ public class JCRMailboxMessage extends AbstractMailboxMessage<JCRId> implements 
         }          
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.MailboxMessage#getHeaderContent()
-     */
+    @Override
     public InputStream getHeaderContent() throws IOException {
         long limit = getBodyStartOctet();
         if (limit < 0) {
             limit = 0;
         }
         return new BoundedInputStream(getFullContent(), limit);
+    }
+
+    @Override
+    public int compareTo(MailboxMessage<JCRId> other) {
+        return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
 }
