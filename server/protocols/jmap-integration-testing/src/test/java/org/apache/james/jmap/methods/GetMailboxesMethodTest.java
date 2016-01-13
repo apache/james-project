@@ -23,7 +23,6 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -34,8 +33,6 @@ import java.util.Map;
 
 import javax.mail.Flags;
 
-import com.google.common.collect.ImmutableMap;
-import com.jayway.jsonpath.JsonPath;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.JmapServer;
@@ -50,6 +47,8 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
+import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
@@ -142,7 +141,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() throws Exception {
-        given()
+        String response = given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
@@ -151,7 +150,12 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"mailboxes\",{\"accountId\":null,\"state\":null,\"list\":[],\"notFound\":null},\"#0\"]]"));
+            .content(startsWith("[[\"mailboxes\","))
+            .extract()
+            .asString();
+        
+        String firstResponsePath = "$.[0].[1]";
+        assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(0);
     }
 
     @Test
@@ -162,7 +166,7 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().appendMessage(user, new MailboxPath(MailboxConstants.USER_NAMESPACE, user, "name"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
-        given()
+        String response = given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
@@ -171,8 +175,25 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\",{\"accountId\":null,\"state\":null,\"list\":[{\"id\":\""), 
-                    endsWith("\",\"name\":\"name\",\"parentId\":null,\"role\":null,\"sortOrder\":1000,\"mustBeOnlyMailbox\":false,\"mayReadItems\":false,\"mayAddItems\":false,\"mayRemoveItems\":false,\"mayCreateChild\":false,\"mayRename\":false,\"mayDelete\":false,\"totalMessages\":1,\"unreadMessages\":1,\"totalThreads\":0,\"unreadThreads\":0}],\"notFound\":null},\"#0\"]]"));
+            .content(startsWith("[[\"mailboxes\","))
+            .extract()
+            .asString();
+        
+        String firstMailboxPath = "$.[0].[1].list.[0]";
+        assertThat(JsonPath.parse(response).<String>read(firstMailboxPath + ".name")).isEqualTo("name");
+        assertThat(JsonPath.parse(response).<String>read(firstMailboxPath + ".parentId")).isNull();
+        assertThat(JsonPath.parse(response).<String>read(firstMailboxPath + ".role")).isNull();
+        assertThat(JsonPath.parse(response).<Integer>read(firstMailboxPath + ".sortOrder")).isEqualTo(1000);
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mustBeOnlyMailbox")).isFalse();
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayReadItems")).isFalse();
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayAddItems")).isFalse();
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayRemoveItems")).isFalse();
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayCreateChild")).isFalse();
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayRename")).isFalse();
+        assertThat(JsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayDelete")).isFalse();
+        assertThat(JsonPath.parse(response).<Integer>read(firstMailboxPath + ".totalMessages")).isEqualTo(1);
+        assertThat(JsonPath.parse(response).<Integer>read(firstMailboxPath + ".unreadMessages")).isEqualTo(1);
+        assertThat(JsonPath.parse(response).<Integer>read(firstMailboxPath + ".unreadThreads")).isEqualTo(0);
     }
 
     @SuppressWarnings("unchecked")
