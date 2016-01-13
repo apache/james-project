@@ -21,11 +21,13 @@ package org.apache.james.util.streams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collector;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class Collectors {
 
@@ -35,7 +37,14 @@ public class Collectors {
             return left;
         }, ImmutableList::copyOf);
     }
-    
+
+    public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
+        return Collector.of(ImmutableSet::builder, ImmutableSet.Builder::add, (left, right) -> {
+            left.addAll(right.build());
+            return left;
+        }, ImmutableSet.Builder::build);
+    }
+
     public static <T, K, V> Collector<T, ImmutableMap.Builder<K, V>, ImmutableMap<K, V>> toImmutableMap(
             Function<? super T, ? extends K> keyMapper,
             Function<? super T, ? extends V> valueMapper) {
