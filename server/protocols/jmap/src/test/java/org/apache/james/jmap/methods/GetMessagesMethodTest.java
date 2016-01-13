@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -185,13 +186,10 @@ public class GetMessagesMethodTest {
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getResponse)
-            .hasOnlyElementsOfType(GetMessagesResponse.class)
-            .extracting(GetMessagesResponse.class::cast)
-            .flatExtracting(GetMessagesResponse::list)
-            .extracting(message -> message.getId().getUid(), Message::getSubject)
-            .containsOnly(
-                Tuple.tuple(message1Uid, "message 1 subject"));
+            .extracting(JmapResponse::getProperties)
+            .flatExtracting(Optional::get)
+            .asList()
+            .containsOnly(MessageProperty.id);
     }
 
     @Test
@@ -210,37 +208,9 @@ public class GetMessagesMethodTest {
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getResponse)
-            .hasOnlyElementsOfType(GetMessagesResponse.class)
-            .extracting(GetMessagesResponse.class::cast)
-            .flatExtracting(GetMessagesResponse::list)
-            .extracting(message -> message.getId().getUid(), Message::getSubject)
-            .containsOnly(
-                Tuple.tuple(message1Uid, "message 1 subject"));
+            .extracting(JmapResponse::getProperties)
+            .flatExtracting(Optional::get)
+            .asList()
+            .containsOnly(MessageProperty.id, MessageProperty.subject);
     }
-    
-    @Test
-    public void processShouldReturnAllFieldsWhenUndefinedPropertyList() throws MailboxException {
-        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
-        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
-        
-        GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .build();
-
-        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
-        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
-
-        assertThat(result).hasSize(1)
-            .extracting(JmapResponse::getResponse)
-            .hasOnlyElementsOfType(GetMessagesResponse.class)
-            .extracting(GetMessagesResponse.class::cast)
-            .flatExtracting(GetMessagesResponse::list)
-            .extracting(message -> message.getId().getUid(), Message::getSubject)
-            .containsOnly(
-                Tuple.tuple(message1Uid, "message 1 subject"));
-    }
-
 }

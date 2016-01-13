@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +35,7 @@ import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.model.MessageProperty;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -48,6 +50,8 @@ import org.javatuples.Pair;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class GetMessagesMethod<Id extends MailboxId> implements Method {
 
@@ -84,8 +88,20 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         return Stream.of(JmapResponse.builder().clientId(clientId)
                             .response(getMessagesResponse(mailboxSession, getMessagesRequest))
                             .responseName(RESPONSE_NAME)
-                            .properties(getMessagesRequest.getProperties())
+                            .properties(getMessagesRequest.getProperties().map(this::handleSpecificProperties))
                             .build());
+    }
+
+    private Set<MessageProperty> handleSpecificProperties(Set<MessageProperty> input) {
+        return ensureContainsId(input);
+    }
+    
+    private Set<MessageProperty> ensureContainsId(Set<MessageProperty> input) {
+        if (!input.contains(MessageProperty.id)) {
+            return Sets.union(input, ImmutableSet.of(MessageProperty.id))
+                    .immutableCopy();
+        }
+        return input;
     }
 
     private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
