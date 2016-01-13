@@ -33,7 +33,7 @@ public class JmapResponse {
         
         private Method.Response.Name responseName;
         private ClientId id;
-        private Object response;
+        private Method.Response response;
 
         private Builder() {
         }
@@ -48,7 +48,7 @@ public class JmapResponse {
             return this;
         }
         
-        public Builder response(Object response) {
+        public Builder response(Method.Response response) {
             this.response = response;
             return this;
         }
@@ -69,7 +69,7 @@ public class JmapResponse {
         }
     }
 
-    public static class ErrorResponse {
+    public static class ErrorResponse implements Method.Response {
         
         private final String type;
 
@@ -88,9 +88,9 @@ public class JmapResponse {
     
     private final Method.Response.Name method;
     private final ClientId clientId;
-    private final Object response;
+    private final Method.Response response;
     
-    private JmapResponse(Method.Response.Name method, ClientId clientId, Object response) {
+    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response) {
         this.method = method;
         this.clientId = clientId;
         this.response = response;

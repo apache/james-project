@@ -89,7 +89,7 @@ public class JmapResponseWriterImplTest {
         assertThat(response.getClientId()).isEqualTo(ClientId.of(expectedClientId));
     }
 
-    private static class ResponseClass {
+    private static class ResponseClass implements Method.Response {
 
         @SuppressWarnings("unused")
         public String id;
