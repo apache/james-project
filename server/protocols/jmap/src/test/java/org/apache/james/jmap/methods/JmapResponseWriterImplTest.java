@@ -107,6 +107,35 @@ public class JmapResponseWriterImplTest {
         assertThat(firstObject.get("name")).isNull();
     }
 
+    
+    @Test
+    public void formatMethodResponseShouldNotFilterFieldsWhenSecondCallWithoutProperties() {
+        ObjectResponseClass responseClass = new ObjectResponseClass();
+        responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
+
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        jmapResponseWriterImpl.formatMethodResponse(
+                JmapResponse
+                .builder()
+                .responseName(Method.Response.name("unknownMethod"))
+                .clientId(ClientId.of("#1"))
+                .properties(ImmutableSet.of("id"))
+                .response(responseClass)
+                .build());
+
+        ProtocolResponse response = jmapResponseWriterImpl.formatMethodResponse(
+                JmapResponse
+                .builder()
+                .responseName(Method.Response.name("unknownMethod"))
+                .clientId(ClientId.of("#1"))
+                .response(responseClass)
+                .build());
+
+        JsonNode firstObject = response.getResults().get("list").elements().next();
+        assertThat(firstObject.get("id").asText()).isEqualTo("id");
+        assertThat(firstObject.get("name").asText()).isEqualTo("name");
+    }
+
     @SuppressWarnings("unused")
     private static class ObjectResponseClass implements Method.Response {
         @JsonFilter("propertiesFilter")

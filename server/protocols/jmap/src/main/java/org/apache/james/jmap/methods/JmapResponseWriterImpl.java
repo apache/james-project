@@ -29,23 +29,23 @@ import org.apache.james.jmap.model.ProtocolResponse;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 public class JmapResponseWriterImpl implements JmapResponseWriter {
 
-    private final ObjectMapper objectMapper;
+    private final Set<Module> jacksonModules;
 
     @Inject
     public JmapResponseWriterImpl(Set<Module> jacksonModules) {
-        this.objectMapper = new ObjectMapper().registerModules(jacksonModules)
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        this.jacksonModules = jacksonModules;
     }
 
     @Override
     public ProtocolResponse formatMethodResponse(JmapResponse jmapResponse) {
-        buildPropertiesFilter(jmapResponse.getProperties())
-                .ifPresent(x -> objectMapper.setFilterProvider(x));
+        ObjectMapper objectMapper = newConfiguredObjectMapper(jmapResponse);
         
         return new ProtocolResponse(
                 jmapResponse.getResponseName(), 
@@ -53,9 +53,19 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
                 jmapResponse.getClientId());
     }
     
-    private Optional<SimpleFilterProvider> buildPropertiesFilter(Optional<Set<String>> properties) {
-        return properties
-                .map(x -> SimpleBeanPropertyFilter.filterOutAllExcept(x))
-                .map(x -> new SimpleFilterProvider().addFilter("propertiesFilter", x));
+    private FilterProvider buildPropertiesFilter(Optional<Set<String>> properties) {
+        PropertyFilter filter = properties
+                .map(SimpleBeanPropertyFilter::filterOutAllExcept)
+                .orElse(SimpleBeanPropertyFilter.serializeAll());
+        return new SimpleFilterProvider().addFilter("propertiesFilter", filter);
+    }
+    
+    private ObjectMapper newConfiguredObjectMapper(JmapResponse jmapResponse) {
+        ObjectMapper objectMapper = new ObjectMapper().registerModules(jacksonModules)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        objectMapper.setFilterProvider(buildPropertiesFilter(jmapResponse.getProperties()));
+
+        return objectMapper;
     }
 }
