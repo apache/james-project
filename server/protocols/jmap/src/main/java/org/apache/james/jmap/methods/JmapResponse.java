@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.methods;
 
+import java.util.Optional;
+import java.util.Set;
+
 import org.apache.james.jmap.model.ClientId;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -34,6 +37,7 @@ public class JmapResponse {
         private Method.Response.Name responseName;
         private ClientId id;
         private Method.Response response;
+        private Set<String> properties;
 
         private Builder() {
         }
@@ -53,6 +57,11 @@ public class JmapResponse {
             return this;
         }
 
+        public Builder properties(Set<String> properties) {
+            this.properties = properties;
+            return this;
+        }
+
         public Builder error() {
             return error(DEFAULT_ERROR_MESSAGE);
         }
@@ -65,7 +74,7 @@ public class JmapResponse {
 
         
         public JmapResponse build() {
-            return new JmapResponse(responseName, id, response);
+            return new JmapResponse(responseName, id, response, Optional.ofNullable(properties));
         }
     }
 
@@ -89,11 +98,13 @@ public class JmapResponse {
     private final Method.Response.Name method;
     private final ClientId clientId;
     private final Method.Response response;
+    private Optional<Set<String>> properties;
     
-    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response) {
+    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response, Optional<Set<String>> properties) {
         this.method = method;
         this.clientId = clientId;
         this.response = response;
+        this.properties = properties;
     }
 
     public Method.Response.Name getResponseName() {
@@ -106,5 +117,9 @@ public class JmapResponse {
     
     public ClientId getClientId() {
         return clientId;
+    }
+
+    public Optional<Set<String>> getProperties() {
+        return properties;
     }
 }
