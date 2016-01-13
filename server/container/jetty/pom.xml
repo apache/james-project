@@ -129,6 +129,10 @@
             </activation>
             <dependencies>
                 <dependency>
+                    <groupId>com.github.fge</groupId>
+                    <artifactId>throwing-lambdas</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                 </dependency>

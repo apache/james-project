@@ -19,12 +19,16 @@
 package org.apache.james.jmap;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.RequestHandler;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -42,14 +46,20 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException{
+    JMAPConfiguration provideConfiguration(FileSystem fileSystem) throws ConfigurationException, IOException{
         PropertiesConfiguration configuration = getConfiguration(fileSystem);
-        String keystore = configuration.getString("tls.keystoreURL");
-        String secret = configuration.getString("tls.secret");
-        return new JMAPConfiguration(keystore, secret);
+        return JMAPConfiguration.builder()
+                .keystore(configuration.getString("tls.keystoreURL"))
+                .secret(configuration.getString("tls.secret"))
+                .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
+                .build();
     }
 
     private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
         return new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "jmap.properties"));
+    }
+
+    private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
+        return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url))));
     }
 }

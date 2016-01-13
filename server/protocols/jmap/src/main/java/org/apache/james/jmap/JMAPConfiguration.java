@@ -18,14 +18,58 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.util.Optional;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+
 public class JMAPConfiguration {
 
-    public final String keystore;
-    public final String secret;
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    public JMAPConfiguration(String keystore, String secret) {
+    public static class Builder {
+        public String keystore;
+        public String secret;
+        public Optional<String> jwtPublicKeyPem;
+
+        private Builder() {
+            jwtPublicKeyPem = Optional.empty();
+        }
+
+        public Builder keystore(String keystore) {
+            this.keystore = keystore;
+            return this;
+        }
+
+        public Builder secret(String secret) {
+            this.secret = secret;
+            return this;
+        }
+
+        public Builder jwtPublicKeyPem(Optional<String> jwtPublicKeyPem) {
+            Preconditions.checkNotNull(jwtPublicKeyPem);
+            this.jwtPublicKeyPem = jwtPublicKeyPem;
+            return this;
+        }
+
+        public JMAPConfiguration build() {
+            Preconditions.checkState(!Strings.isNullOrEmpty(keystore), "'keystore' is mandatory");
+            Preconditions.checkState(!Strings.isNullOrEmpty(secret), "'secret' is mandatory");
+            return new JMAPConfiguration(keystore, secret, jwtPublicKeyPem);
+        }
+    }
+
+    private final String keystore;
+    private final String secret;
+    private final Optional<String> jwtPublicKeyPem;
+
+    @VisibleForTesting JMAPConfiguration(String keystore, String secret, Optional<String> jwtPublicKeyPem) {
         this.keystore = keystore;
         this.secret = secret;
+        this.jwtPublicKeyPem = jwtPublicKeyPem;
     }
 
     public String getKeystore() {
@@ -34,5 +78,9 @@ public class JMAPConfiguration {
 
     public String getSecret() {
         return secret;
+    }
+
+    public Optional<String> getJwtPublicKeyPem() {
+        return jwtPublicKeyPem;
     }
 }

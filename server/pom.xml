@@ -193,6 +193,7 @@
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <assertj-1.version>1.7.1</assertj-1.version>
         <assertj-3.version>3.2.0</assertj-3.version>
+        <throwing-lambdas.version>0.5.0</throwing-lambdas.version>
     </properties>
 
     <dependencyManagement>
@@ -1412,6 +1413,11 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.fge</groupId>
+                <artifactId>throwing-lambdas</artifactId>
+                <version>${throwing-lambdas.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
