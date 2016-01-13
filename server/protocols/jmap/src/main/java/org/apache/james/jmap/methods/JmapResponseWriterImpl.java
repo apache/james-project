@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.util.streams.Collectors;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,16 +58,6 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
         });
     }
     
-    private FilterProvider buildPropertiesFilter(Optional<? extends Set<? extends Property>> properties) {
-        PropertyFilter filter = properties
-                .map(x -> x.stream()
-                        .map(Property::asFieldName)
-                        .collect(java.util.stream.Collectors.toSet()))
-                .map(SimpleBeanPropertyFilter::filterOutAllExcept)
-                .orElse(SimpleBeanPropertyFilter.serializeAll());
-        return new SimpleFilterProvider().addFilter("propertiesFilter", filter);
-    }
-    
     private ObjectMapper newConfiguredObjectMapper(JmapResponse jmapResponse) {
         ObjectMapper objectMapper = new ObjectMapper().registerModules(jacksonModules)
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -74,5 +65,19 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
         objectMapper.setFilterProvider(buildPropertiesFilter(jmapResponse.getProperties()));
 
         return objectMapper;
+    }
+
+    private FilterProvider buildPropertiesFilter(Optional<? extends Set<? extends Property>> properties) {
+        PropertyFilter filter = properties
+                .map(this::toFieldNames)
+                .map(SimpleBeanPropertyFilter::filterOutAllExcept)
+                .orElse(SimpleBeanPropertyFilter.serializeAll());
+        return new SimpleFilterProvider().addFilter("propertiesFilter", filter);
+    }
+    
+    private Set<String> toFieldNames(Set<? extends Property> properties) {
+        return properties.stream()
+            .map(Property::asFieldName)
+            .collect(Collectors.toImmutableSet());
     }
 }
