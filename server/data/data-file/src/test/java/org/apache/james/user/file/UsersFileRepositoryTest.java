@@ -67,6 +67,7 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
      * @return the user repository
      * @throws Exception
      */
+    @SuppressWarnings("deprecation")
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         FileSystem fs = new FileSystem() {

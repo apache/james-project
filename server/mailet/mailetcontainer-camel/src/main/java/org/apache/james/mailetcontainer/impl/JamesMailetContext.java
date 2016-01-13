@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
+@SuppressWarnings("deprecation")
 public class JamesMailetContext implements MailetContext, LogEnabled, Configurable {
 
     /**

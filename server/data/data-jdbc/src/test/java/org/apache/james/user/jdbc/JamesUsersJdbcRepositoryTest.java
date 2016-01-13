@@ -45,12 +45,14 @@ public class JamesUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryTes
      */
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
+        @SuppressWarnings("deprecation")
         JamesUsersJdbcRepository res = new JamesUsersJdbcRepository();
         String tableString = "jamesusers";
         configureAbstractJdbcUsersRepository(res, tableString);
         return res;
     }
 
+    @SuppressWarnings("deprecation")
     protected void configureAbstractJdbcUsersRepository(AbstractJdbcUsersRepository res, String tableString) throws Exception {
         res.setFileSystem(new MockFileSystem());
         DataSource dataSource = getDataSource();

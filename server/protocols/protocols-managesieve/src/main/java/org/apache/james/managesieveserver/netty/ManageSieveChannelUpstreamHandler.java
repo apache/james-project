@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import javax.net.ssl.SSLContext;
 import java.net.InetSocketAddress;
 
+@SuppressWarnings("deprecation")
 public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     final static String SSL_HANDLER = "sslHandler";

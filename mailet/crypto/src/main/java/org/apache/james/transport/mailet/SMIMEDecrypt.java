@@ -121,6 +121,7 @@ public class SMIMEDecrypt extends GenericMailet {
                     RecipientId id = info.getRID();
                     if (id.match(keyHolder.getCertificate())) {
                         try {
+                            @SuppressWarnings("deprecation")
                             MimeBodyPart part = SMIMEUtil.toMimeBodyPart(info.getContent(keyHolder.getPrivateKey(), "BC"));
                             // strippedMessage contains the decrypted message.
                             strippedMessage = part;

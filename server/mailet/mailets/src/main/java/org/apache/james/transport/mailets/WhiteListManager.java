@@ -118,6 +118,7 @@ import org.apache.mailet.base.RFC822DateFormat;
  * @see org.apache.james.transport.matchers.IsInWhiteList
  * @since 2.3.0
  */
+@SuppressWarnings("deprecation")
 public class WhiteListManager extends GenericMailet {
 
     private boolean automaticInsert;

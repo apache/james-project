@@ -37,6 +37,7 @@ import org.jboss.netty.handler.codec.compression.ZlibWrapper;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 
+@SuppressWarnings("deprecation")
 public class NettyImapSession implements ImapSession, NettyConstants {
 
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;

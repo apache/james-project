@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class UsersRepositoryManagement extends StandardMBean implements UsersRepositoryManagementMBean {
 
     /**

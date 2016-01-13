@@ -32,6 +32,7 @@ import org.apache.james.protocols.pop3.mailbox.ImapMailbox;
 import org.apache.james.protocols.pop3.mailbox.ImapMessageMetaData;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
+@SuppressWarnings("deprecation")
 public class MockMailbox extends ImapMailbox {
 
     private final Map<Long, Message> messages = new HashMap<Long, Message>();

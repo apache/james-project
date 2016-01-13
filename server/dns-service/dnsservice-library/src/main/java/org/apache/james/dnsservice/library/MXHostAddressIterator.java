@@ -38,6 +38,7 @@ import com.google.common.collect.Maps;
  *
  *
  */
+@SuppressWarnings("deprecation")
 public class MXHostAddressIterator implements Iterator<HostAddress> {
 
     private final Iterator<HostAddress> addresses;

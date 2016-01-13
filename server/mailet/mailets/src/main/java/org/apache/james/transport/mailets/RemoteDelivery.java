@@ -144,6 +144,7 @@ import org.apache.mailet.base.GenericMailet;
  * <li><b>debug</b> (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.</li>
  * </ul>
  */
+@SuppressWarnings("deprecation")
 public class RemoteDelivery extends GenericMailet implements Runnable {
 
     /**

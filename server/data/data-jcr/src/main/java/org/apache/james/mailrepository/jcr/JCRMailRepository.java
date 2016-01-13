@@ -119,6 +119,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             try {
                 Collection<String> keys = new ArrayList<String>();
                 QueryManager manager = session.getWorkspace().getQueryManager();
+                @SuppressWarnings("deprecation")
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(*,james:mail)", Query.XPATH);
                 NodeIterator iterator = query.execute().getNodes();
                 while (iterator.hasNext()) {
@@ -140,6 +141,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             try {
                 String name = toSafeName(key);
                 QueryManager manager = session.getWorkspace().getQueryManager();
+                @SuppressWarnings("deprecation")
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(" + name + ",james:mail)", Query.XPATH);
                 NodeIterator iterator = query.execute().getNodes();
                 if (iterator.hasNext()) {
@@ -484,6 +486,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             node = node.getProperty("jcr:content").getNode();
         }
 
+        @SuppressWarnings("deprecation")
         InputStream stream = node.getProperty("jcr:data").getStream();
         try {
             Properties properties = System.getProperties();
@@ -508,6 +511,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
      * @throws IOException
      *             if an IO error occurs
      */
+    @SuppressWarnings("deprecation")
     private void setMessage(Node node, final MimeMessage message) throws RepositoryException, IOException {
         try {
             node = node.getNode("jcr:content");
@@ -551,6 +555,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             Property property = iterator.nextProperty();
             String name = Text.unescapeIllegalJcrChars(property.getName().substring("jamesattr:".length()));
             if (property.getType() == PropertyType.BINARY) {
+                @SuppressWarnings("deprecation")
                 InputStream input = property.getStream();
                 try {
                     ObjectInputStream stream = new ObjectInputStream(input);
@@ -578,6 +583,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
      * @throws IOException
      *             if an IO error occurs
      */
+    @SuppressWarnings("deprecation")
     private void setAttributes(Node node, Mail mail) throws RepositoryException, IOException {
         Iterator<String> iterator = mail.getAttributeNames();
         while (iterator.hasNext()) {
@@ -603,6 +609,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
             try {
                 String name = ISO9075.encode(Text.escapeIllegalJcrChars(key));
                 QueryManager manager = session.getWorkspace().getQueryManager();
+                @SuppressWarnings("deprecation")
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(" + name + ",james:mail)", Query.XPATH);
                 NodeIterator nodes = query.execute().getNodes();
                 if (nodes.hasNext()) {
@@ -631,6 +638,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                 final String xpath = "/jcr:root/" + MAIL_PATH + "//element(" + name + ",james:mail)";
 
                 QueryManager manager = session.getWorkspace().getQueryManager();
+                @SuppressWarnings("deprecation")
                 Query query = manager.createQuery(xpath, Query.XPATH);
                 NodeIterator iterator = query.execute().getNodes();
 

@@ -30,6 +30,7 @@ import org.apache.james.user.lib.AbstractJamesUsersRepository;
 import org.apache.james.user.lib.model.DefaultJamesUser;
 import org.apache.james.user.lib.model.DefaultUser;
 
+@SuppressWarnings("deprecation")
 public class InMemoryUsersRepository extends AbstractJamesUsersRepository {
 
     private final HashMap<String, User> m_users = new HashMap<String, User>();

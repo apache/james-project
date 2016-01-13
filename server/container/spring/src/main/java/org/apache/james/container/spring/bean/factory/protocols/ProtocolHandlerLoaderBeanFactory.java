@@ -35,6 +35,7 @@ public class ProtocolHandlerLoaderBeanFactory extends AbstractBeanFactory implem
         try {
             // Use the classloader which is used for bean instance stuff
             Class<ProtocolHandler> c = (Class<ProtocolHandler>) getBeanFactory().getBeanClassLoader().loadClass(name);
+            @SuppressWarnings("deprecation")
             ProtocolHandler handler =  (ProtocolHandler) getBeanFactory().createBean(c, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, true);
             handler.init(config);
             return handler;

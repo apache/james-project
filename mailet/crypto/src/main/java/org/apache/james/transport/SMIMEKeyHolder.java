@@ -201,6 +201,7 @@ public class SMIMEKeyHolder implements KeyHolder{
      * and a pool of certs and cerls (if any) to go with the signature.
      * @return The generated SMIMESignedGenerator.
      */    
+    @SuppressWarnings("deprecation")
     public SMIMESignedGenerator createGenerator() throws CertStoreException, SMIMEException {
         
         // create the generator for creating an smime/signed message
@@ -238,6 +239,7 @@ public class SMIMEKeyHolder implements KeyHolder{
      * @param content The content to sign.
      * @return The signed <CODE>MimeMultipart</CODE>.
      */    
+    @SuppressWarnings("deprecation")
     public MimeMultipart generate(MimeBodyPart content) throws CertStoreException,
     NoSuchAlgorithmException, NoSuchProviderException, SMIMEException {
         

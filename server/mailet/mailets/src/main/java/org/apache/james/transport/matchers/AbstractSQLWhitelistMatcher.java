@@ -44,6 +44,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
     /**

@@ -114,6 +114,7 @@ public class KeyStoreHolder {
      * @throws Exception
      * @throws MessagingException
      */
+    @SuppressWarnings("deprecation")
     public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed) throws Exception, MessagingException {
         CertStore certs = signed.getCertificatesAndCRLs("Collection", "BC");
         SignerInformationStore siginfo = signed.getSignerInfos();

@@ -32,6 +32,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 
+@SuppressWarnings("deprecation")
 public class MockMailContext implements MailetContext {
 
     final HashMap<String, Object> attributes = new HashMap<String, Object>();

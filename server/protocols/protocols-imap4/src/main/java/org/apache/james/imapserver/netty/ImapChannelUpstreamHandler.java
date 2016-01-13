@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 /**
  * {@link SimpleChannelUpstreamHandler} which handles IMAP
  */
+@SuppressWarnings("deprecation")
 public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler implements NettyConstants{
 
     private final Logger logger;

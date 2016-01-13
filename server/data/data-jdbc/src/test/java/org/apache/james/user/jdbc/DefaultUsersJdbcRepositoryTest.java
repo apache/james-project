@@ -43,6 +43,7 @@ public class DefaultUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryT
      * @return the user repository
      * @throws Exception
      */
+    @SuppressWarnings("deprecation")
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         DefaultUsersJdbcRepository res = new DefaultUsersJdbcRepository();
@@ -51,6 +52,7 @@ public class DefaultUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryT
         return res;
     }
 
+    @SuppressWarnings("deprecation")
     protected void configureAbstractJdbcUsersRepository(AbstractJdbcUsersRepository res, String tableString) throws Exception {
         res.setFileSystem(new MockFileSystem());
         DataSource dataSource = getDataSource();

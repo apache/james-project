@@ -43,6 +43,7 @@ public class JDBCStepdefs {
         mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
     }
 
+    @SuppressWarnings("deprecation")
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JDBCRecipientRewriteTable localVirtualUserTable = new JDBCRecipientRewriteTable();
         localVirtualUserTable.setLog(LoggerFactory.getLogger("MockLog"));

@@ -43,6 +43,7 @@ public abstract class AbstractLoaderBeanFactory<T> extends AbstractBeanFactory {
         }
         // Use the classloader which is used for bean instance stuff
         Class<T> c = (Class<T>) getBeanFactory().getBeanClassLoader().loadClass(fullName);
+        @SuppressWarnings("deprecation")
         T t = (T) getBeanFactory().createBean(c, AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT, true);
         if (name.equals("LocalDelivery")) {
             System.out.println(t);

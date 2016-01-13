@@ -35,6 +35,7 @@ public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTable
     /**
      * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest#getRecipientRewriteTable()
      */
+    @SuppressWarnings("deprecation")
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JDBCRecipientRewriteTable localVirtualUserTable = new JDBCRecipientRewriteTable();

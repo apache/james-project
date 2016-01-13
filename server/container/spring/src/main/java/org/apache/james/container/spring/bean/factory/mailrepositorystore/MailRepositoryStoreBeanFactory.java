@@ -162,6 +162,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      * @throws MailRepositoryStoreException if any error occurs while parsing the Configuration or
      *                                      retrieving the MailRepository
      */
+    @SuppressWarnings("deprecation")
     public synchronized MailRepository select(String destination) throws MailRepositoryStoreException {
         int idx = destination.indexOf(':');
         if (idx == -1)

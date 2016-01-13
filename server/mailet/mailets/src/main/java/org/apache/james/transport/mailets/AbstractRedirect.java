@@ -1326,6 +1326,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         {@link org.apache.mailet.MailetContext#getMailServers} returns
      *         true for the sender host part
      */
+    @SuppressWarnings("deprecation")
     protected final boolean senderDomainIsValid(Mail mail) throws MessagingException {
         return !getFakeDomainCheck(mail) || mail.getSender() == null || getMailetContext().getMailServers(mail.getSender().getDomain()).size() != 0;
     }
