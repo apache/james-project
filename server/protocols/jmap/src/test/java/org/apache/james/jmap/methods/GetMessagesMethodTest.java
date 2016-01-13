@@ -213,4 +213,26 @@ public class GetMessagesMethodTest {
             .asList()
             .containsOnly(MessageProperty.id, MessageProperty.subject);
     }
+    
+    @Test
+    public void processShouldReturnTextBodyWhenBodyInPropertyListAndEmptyHtmlBody() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .properties(MessageProperty.body)
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1)
+            .extracting(JmapResponse::getProperties)
+            .flatExtracting(Optional::get)
+            .asList()
+            .containsOnly(MessageProperty.id, MessageProperty.textBody);
+    }
 }
