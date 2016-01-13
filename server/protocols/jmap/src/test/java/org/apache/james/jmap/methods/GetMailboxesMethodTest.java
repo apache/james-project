@@ -22,9 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 
+import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
@@ -53,9 +56,11 @@ public class GetMailboxesMethodTest {
 
     private StoreMailboxManager<InMemoryId> mailboxManager;
     private GetMailboxesMethod<InMemoryId> getMailboxesMethod;
-    
+    private ClientId clientId;
+
     @Before
     public void setup() throws Exception {
+        clientId = ClientId.of("#0");
         InMemoryMailboxSessionMapperFactory mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
@@ -71,8 +76,16 @@ public class GetMailboxesMethodTest {
                 .build();
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList()).isEmpty();
+        
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+        
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
+                .isEmpty();
     }
 
     @Test
@@ -87,8 +100,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+        
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getId, Mailbox::getName, Mailbox::getUnreadMessages)
                 .containsOnly(Tuple.tuple("1", mailboxPath.getName(), 2L));
     }
@@ -102,9 +121,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
                 .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getSortOrder)
                 .containsOnly(10);
     }
@@ -118,8 +142,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getSortOrder)
                 .containsOnly(1000);
     }
@@ -133,8 +163,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getSortOrder)
                 .containsOnly(10);
     }
@@ -154,8 +190,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getName, Mailbox::getSortOrder)
                 .containsExactly(
                         Tuple.tuple("INBOX", 10),
@@ -177,8 +219,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getTotalMessages, Mailbox::getUnreadMessages)
                 .containsOnly(Tuple.tuple(0L, 0L));
     }
@@ -195,8 +243,14 @@ public class GetMailboxesMethodTest {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getTotalMessages)
                 .containsExactly(2L);
     }
@@ -215,8 +269,15 @@ public class GetMailboxesMethodTest {
         messageManager.appendMessage(new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, readMessageFlag);
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
-        GetMailboxesResponse getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, mailboxSession);
-        assertThat(getMailboxesResponse.getList())
+
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getUnreadMessages)
                 .containsExactly(2L);
     }

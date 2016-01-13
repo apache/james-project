@@ -21,8 +21,10 @@ package org.apache.james.jmap.methods;
 
 import org.apache.james.jmap.model.ProtocolResponse;
 
+import java.util.stream.Stream;
+
 public interface JmapResponseWriter {
 
-    ProtocolResponse formatMethodResponse(JmapResponse jmapResponse);
+    Stream<ProtocolResponse> formatMethodResponse(Stream<JmapResponse> jmapResponse);
 
 }

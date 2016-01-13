@@ -22,7 +22,9 @@ package org.apache.james.jmap.methods;
 import static com.google.common.base.Objects.toStringHelper;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import org.apache.james.jmap.model.ClientId;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -118,10 +120,8 @@ public interface Method {
 
     Request.Name requestHandled();
 
-    Response.Name responseName();
-    
     Class<? extends JmapRequest> requestType();
     
-    Response process(JmapRequest request, MailboxSession mailboxSession);
+    Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession);
 
 }

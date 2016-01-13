@@ -44,6 +44,8 @@ import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
+import java.util.stream.Stream;
+
 public class JMAPServletTest {
 
     private JettyHttpServer server;
@@ -92,7 +94,7 @@ public class JMAPServletTest {
         json.put("type", "invalidArgument");
 
         when(requestHandler.handle(any()))
-            .thenReturn(new ProtocolResponse(JmapResponse.ERROR_METHOD, json, ClientId.of("#0")));
+            .thenReturn(Stream.of(new ProtocolResponse(JmapResponse.ERROR_METHOD, json, ClientId.of("#0"))));
 
         given()
             .accept(ContentType.JSON)
@@ -116,7 +118,7 @@ public class JMAPServletTest {
         arrayNode.add(list);
 
         when(requestHandler.handle(any()))
-            .thenReturn(new ProtocolResponse(Method.Response.name("accounts"), json, ClientId.of("#0")));
+            .thenReturn(Stream.of(new ProtocolResponse(Method.Response.name("accounts"), json, ClientId.of("#0"))));
 
         given()
             .accept(ContentType.JSON)
@@ -136,5 +138,4 @@ public class JMAPServletTest {
                     "]" + 
                     "},\"#0\"]]"));
     }
-
 }

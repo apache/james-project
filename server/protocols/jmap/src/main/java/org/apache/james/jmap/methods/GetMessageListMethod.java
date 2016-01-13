@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
@@ -84,38 +85,37 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
     }
 
     @Override
-    public Method.Response.Name responseName() {
-        return RESPONSE_NAME;
-    }
-    
-    @Override
     public Class<? extends JmapRequest> requestType() {
         return GetMessageListRequest.class;
     }
 
     @Override
-    public GetMessageListResponse process(JmapRequest request, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
+        return Stream.of(
+                JmapResponse.builder().clientId(clientId)
+                .response(getMessageListResponse((GetMessageListRequest) request, mailboxSession))
+                .responseName(RESPONSE_NAME)
+                .build());
+    }
+
+    private GetMessageListResponse getMessageListResponse(GetMessageListRequest jmapRequest, MailboxSession mailboxSession) {
+        GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
         try {
-            return getMessageListResponse((GetMessageListRequest) request, mailboxSession);
+
+            mailboxManager.list(mailboxSession)
+                    .stream()
+                    .filter(mailboxPath -> isMailboxRequested(jmapRequest, mailboxPath))
+                    .flatMap(mailboxPath -> listMessages(mailboxPath, mailboxSession, jmapRequest))
+                    .skip(jmapRequest.getPosition())
+                    .limit(limit(jmapRequest.getLimit()))
+                    .map(MessageId::serialize)
+                    .forEach(builder::messageId);
+
+            return builder.build();
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    private GetMessageListResponse getMessageListResponse(GetMessageListRequest jmapRequest, MailboxSession mailboxSession) throws MailboxException {
-        GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
-
-        mailboxManager.list(mailboxSession)
-            .stream()
-            .filter(mailboxPath -> isMailboxRequested(jmapRequest, mailboxPath))
-            .flatMap(mailboxPath -> listMessages(mailboxPath, mailboxSession, jmapRequest))
-            .skip(jmapRequest.getPosition())
-            .limit(limit(jmapRequest.getLimit()))
-            .map(MessageId::serialize)
-            .forEach(builder::messageId);
-
-        return builder.build();
     }
 
     private Stream<MessageId> listMessages(MailboxPath mailboxPath, MailboxSession mailboxSession, GetMessageListRequest jmapRequest) {

@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -44,13 +45,15 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     }
 
     @Override
-    public ProtocolResponse formatMethodResponse(JmapResponse jmapResponse) {
-        ObjectMapper objectMapper = newConfiguredObjectMapper(jmapResponse);
-        
-        return new ProtocolResponse(
-                jmapResponse.getResponseName(), 
-                objectMapper.valueToTree(jmapResponse.getResponse()), 
-                jmapResponse.getClientId());
+    public Stream<ProtocolResponse> formatMethodResponse(Stream<JmapResponse> jmapResponses) {
+        return jmapResponses.map(jmapResponse -> {
+            ObjectMapper objectMapper = newConfiguredObjectMapper(jmapResponse);
+
+            return new ProtocolResponse(
+                    jmapResponse.getResponseName(),
+                    objectMapper.valueToTree(jmapResponse.getResponse()),
+                    jmapResponse.getClientId());
+        });
     }
     
     private FilterProvider buildPropertiesFilter(Optional<Set<String>> properties) {

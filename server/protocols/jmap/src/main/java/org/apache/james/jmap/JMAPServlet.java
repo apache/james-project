@@ -63,7 +63,7 @@ public class JMAPServlet extends HttpServlet {
                 requestAsJsonStream(req)
                 .map(ProtocolRequest::deserialize)
                 .map(x -> AuthenticatedProtocolRequest.decorate(x, req))
-                .map(requestHandler::handle)
+                .flatMap(requestHandler::handle)
                 .map(ProtocolResponse::asProtocolSpecification)
                 .collect(Collectors.toList());
 

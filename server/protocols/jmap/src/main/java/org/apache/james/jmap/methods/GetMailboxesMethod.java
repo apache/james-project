@@ -20,9 +20,11 @@
 package org.apache.james.jmap.methods;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
@@ -65,34 +67,30 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     }
 
     @Override
-    public Method.Response.Name responseName() {
-        return RESPONSE_NAME;
-    }
-    
-    @Override
     public Class<? extends JmapRequest> requestType() {
         return GetMailboxesRequest.class;
     }
-    
-    @Override
-    public GetMailboxesResponse process(JmapRequest request, MailboxSession mailboxSession) {
+
+    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
+        return Stream.of(
+                JmapResponse.builder().clientId(clientId)
+                .response(getMailboxesResponse(mailboxSession))
+                .responseName(RESPONSE_NAME)
+                .build());
+    }
+
+    private GetMailboxesResponse getMailboxesResponse(MailboxSession mailboxSession) {
+        GetMailboxesResponse.Builder builder = GetMailboxesResponse.builder();
         try {
-            return getMailboxesResponse(mailboxSession);
+            mailboxManager.list(mailboxSession)
+                .stream()
+                .map(mailboxPath -> mailboxFromMailboxPath(mailboxPath, mailboxSession))
+                .forEach(mailbox -> builder.add(mailbox.get()));
+            return builder.build();
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    private GetMailboxesResponse getMailboxesResponse(MailboxSession mailboxSession) throws MailboxException {
-        GetMailboxesResponse.Builder builder = GetMailboxesResponse.builder();
-
-        mailboxManager.list(mailboxSession)
-            .stream()
-            .map(mailboxPath -> mailboxFromMailboxPath(mailboxPath, mailboxSession))
-            .forEach(mailbox -> builder.add(mailbox.get()));
-
-        return builder.build();
     }
     
     private Optional<Mailbox> mailboxFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {

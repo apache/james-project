@@ -29,6 +29,7 @@ import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
@@ -70,21 +71,23 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
     }
     
     @Override
-    public Method.Response.Name responseName() {
-        return RESPONSE_NAME;
-    }
-    
-    @Override
     public Class<? extends JmapRequest> requestType() {
         return GetMessagesRequest.class;
     }
     
     @Override
-    public GetMessagesResponse process(JmapRequest request, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetMessagesRequest);
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
+        return Stream.of(JmapResponse.builder().clientId(clientId)
+                            .response(getMessagesResponse(mailboxSession, getMessagesRequest))
+                            .responseName(RESPONSE_NAME)
+                            .build());
+    }
+
+    private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
         getMessagesRequest.getAccountId().ifPresent(GetMessagesMethod::notImplemented);
         
         Function<MessageId, Stream<Pair<MailboxMessage<Id>, MailboxPath>>> loadMessages = loadMessage(mailboxSession);

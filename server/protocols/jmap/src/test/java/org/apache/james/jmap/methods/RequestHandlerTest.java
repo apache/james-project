@@ -19,14 +19,15 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.james.jmap.methods.Method.Response.Name;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
+import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -40,6 +41,10 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RequestHandlerTest {
 
@@ -94,20 +99,20 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public Method.Response.Name responseName() {
-            return Method.Response.name("testMethod");
-        }
-        
-        @Override
         public Class<? extends JmapRequest> requestType() {
             return TestJmapRequest.class;
         }
 
         @Override
-        public TestJmapResponse process(JmapRequest request, MailboxSession mailboxSession) {
+        public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
             Preconditions.checkArgument(request instanceof TestJmapRequest);
             TestJmapRequest typedRequest = (TestJmapRequest) request;
-            return new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works");
+            return Stream.of(
+                    JmapResponse.builder()
+                            .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
+                            .responseName(Response.name("test"))
+                            .clientId(ClientId.of("#0"))
+                            .build());
         }
     }
 
@@ -180,17 +185,12 @@ public class RequestHandlerTest {
         }
         
         @Override
-        public Name responseName() {
-            return null;
-        }
-
-        @Override
         public Class<? extends JmapRequest> requestType() {
             return null;
         }
         
         @Override
-        public Method.Response process(JmapRequest request, MailboxSession mailboxSession) {
+        public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
             return null;
         }
     }
@@ -205,10 +205,14 @@ public class RequestHandlerTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        ProtocolResponse response = testee.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest));
+        List<ProtocolResponse> responses = testee.handle(AuthenticatedProtocolRequest.decorate(ProtocolRequest.deserialize(nodes), mockHttpServletRequest))
+                .collect(Collectors.toList());
 
-        assertThat(response.getResults().findValue("id").asText()).isEqualTo("testId");
-        assertThat(response.getResults().findValue("name").asText()).isEqualTo("testName");
-        assertThat(response.getResults().findValue("message").asText()).isEqualTo("works");
+        assertThat(responses).hasSize(1)
+                .extracting(
+                        x -> x.getResults().findValue("id").asText(),
+                        x -> x.getResults().findValue("name").asText(),
+                        x -> x.getResults().findValue("message").asText())
+                .containsExactly(tuple("testId", "testName", "works"));
     }
 }
