@@ -34,7 +34,7 @@ import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
-import org.apache.james.jmap.model.Property;
+import org.apache.james.jmap.model.MessageProperty;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -178,7 +178,7 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(new Property[0])
+                .properties(new MessageProperty[0])
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
@@ -203,7 +203,7 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(Property.subject)
+                .properties(MessageProperty.subject)
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);

@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -39,7 +40,7 @@ public class GetMessagesRequest implements JmapRequest {
         
         private Optional<String> accountId;
         private ImmutableList.Builder<MessageId> ids;
-        private Optional<ImmutableList<Property>> properties;
+        private Optional<ImmutableSet<MessageProperty>> properties;
 
         private Builder() {
             accountId = Optional.empty();
@@ -57,8 +58,8 @@ public class GetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder properties(Property... properties) {
-            this.properties = Optional.of(ImmutableList.copyOf(properties));
+        public Builder properties(MessageProperty... properties) {
+            this.properties = Optional.of(ImmutableSet.copyOf(properties));
             return this;
         }
         
@@ -69,9 +70,9 @@ public class GetMessagesRequest implements JmapRequest {
 
     private final Optional<String> accountId;
     private final ImmutableList<MessageId> ids;
-    private final Optional<ImmutableList<Property>> properties;
+    private final Optional<ImmutableSet<MessageProperty>> properties;
 
-    public GetMessagesRequest(Optional<String> accountId, ImmutableList<MessageId> ids, Optional<ImmutableList<Property>> properties) {
+    public GetMessagesRequest(Optional<String> accountId, ImmutableList<MessageId> ids, Optional<ImmutableSet<MessageProperty>> properties) {
         this.accountId = accountId;
         this.ids = ids;
         this.properties = properties;
@@ -85,7 +86,7 @@ public class GetMessagesRequest implements JmapRequest {
         return ids;
     }
     
-    public Optional<ImmutableList<Property>> getProperties() {
+    public Optional<ImmutableSet<MessageProperty>> getProperties() {
         return properties;
     }
 }

@@ -204,5 +204,4 @@ public abstract class GetMessagesMethodTest {
         assertThat(JsonPath.parse(response).<Map<String, String>>read(firstMessagePath + ".headers")).containsExactly(MapEntry.entry("subject", "my test subject"));
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".date")).isEqualTo("2014-10-30T14:12:00Z");
     }
-
 }

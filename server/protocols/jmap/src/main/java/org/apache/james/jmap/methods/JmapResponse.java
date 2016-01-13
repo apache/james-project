@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.Property;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -37,7 +38,7 @@ public class JmapResponse {
         private Method.Response.Name responseName;
         private ClientId id;
         private Method.Response response;
-        private Set<String> properties;
+        private Optional<? extends Set<? extends Property>> properties = Optional.empty();
 
         private Builder() {
         }
@@ -57,8 +58,13 @@ public class JmapResponse {
             return this;
         }
 
-        public Builder properties(Set<String> properties) {
+        public Builder properties(Optional<? extends Set<? extends Property>> properties) {
             this.properties = properties;
+            return this;
+        }
+
+        public Builder properties(Set<? extends Property> properties) {
+            this.properties = Optional.ofNullable(properties);
             return this;
         }
 
@@ -74,7 +80,7 @@ public class JmapResponse {
 
         
         public JmapResponse build() {
-            return new JmapResponse(responseName, id, response, Optional.ofNullable(properties));
+            return new JmapResponse(responseName, id, response, properties);
         }
     }
 
@@ -98,9 +104,9 @@ public class JmapResponse {
     private final Method.Response.Name method;
     private final ClientId clientId;
     private final Method.Response response;
-    private Optional<Set<String>> properties;
+    private Optional<? extends Set<? extends Property>> properties;
     
-    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response, Optional<Set<String>> properties) {
+    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response, Optional<? extends Set<? extends Property>> properties) {
         this.method = method;
         this.clientId = clientId;
         this.response = response;
@@ -119,7 +125,7 @@ public class JmapResponse {
         return clientId;
     }
 
-    public Optional<Set<String>> getProperties() {
+    public Optional<? extends Set<? extends Property>> getProperties() {
         return properties;
     }
 }

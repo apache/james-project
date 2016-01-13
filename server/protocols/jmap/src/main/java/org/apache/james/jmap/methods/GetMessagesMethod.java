@@ -84,6 +84,7 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         return Stream.of(JmapResponse.builder().clientId(clientId)
                             .response(getMessagesResponse(mailboxSession, getMessagesRequest))
                             .responseName(RESPONSE_NAME)
+                            .properties(getMessagesRequest.getProperties())
                             .build());
     }
 

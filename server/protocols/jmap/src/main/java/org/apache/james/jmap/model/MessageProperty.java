@@ -18,6 +18,47 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-public interface Property {
-    String asFieldName();
+import com.google.common.collect.ImmutableSet;
+
+public enum MessageProperty implements Property {
+    id("id"),
+    blobId("blobId"),
+    threadId("threadId"),
+    mailboxIds("mailboxIds"),
+    inReplyToMessageId("inReplyToMessageId"),
+    isUnread("isUnread"),
+    isFlagged("isFlagged"),
+    isAnswered("isAnswered"),
+    isDraft("isDraft"),
+    hasAttachment("hasAttachment"),
+    headers("headers"),
+    from("from"),
+    to("to"),
+    cc("cc"),
+    bcc("bcc"),
+    replyTo("replyTo"),
+    subject("subject"),
+    date("date"),
+    size("size"),
+    preview("preview"),
+    textBody("textBody"),
+    htmlBody("htmlBody"),
+    attachments("attachments"),
+    attachedMessages("attachedMessages"),
+    body("body"),
+    headers_property("headers.property");
+    
+    private String property;
+
+    MessageProperty(String property) {
+        this.property = property;
+    }
+    
+    public String asFieldName() {
+        return property;
+    }
+    
+    public static ImmutableSet<MessageProperty> all() {
+        return ImmutableSet.copyOf(values());
+    }
 }

@@ -21,18 +21,16 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.assertj.core.groups.Tuple.*;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Iterables;
 import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
-import org.assertj.core.groups.Tuple;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,6 +41,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class JmapResponseWriterImplTest {
 
@@ -100,6 +99,7 @@ public class JmapResponseWriterImplTest {
     public void formatMethodResponseShouldFilterFieldsWhenProperties() {
         ObjectResponseClass responseClass = new ObjectResponseClass();
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
+        Property property = () -> "id";
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
@@ -107,7 +107,7 @@ public class JmapResponseWriterImplTest {
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
                 .clientId(ClientId.of("#1"))
-                .properties(ImmutableSet.of("id"))
+                .properties(ImmutableSet.of(property))
                 .response(responseClass)
                 .build()))
                 .collect(Collectors.toList());
@@ -124,6 +124,7 @@ public class JmapResponseWriterImplTest {
     public void formatMethodResponseShouldNotFilterFieldsWhenSecondCallWithoutProperties() {
         ObjectResponseClass responseClass = new ObjectResponseClass();
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
+        Property property = () -> "id";
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
         @SuppressWarnings("unused")
@@ -132,7 +133,7 @@ public class JmapResponseWriterImplTest {
                         .builder()
                         .responseName(Method.Response.name("unknownMethod"))
                         .clientId(ClientId.of("#1"))
-                        .properties(ImmutableSet.of("id"))
+                        .properties(ImmutableSet.of(property))
                         .response(responseClass)
                         .build()));
 
@@ -155,6 +156,8 @@ public class JmapResponseWriterImplTest {
     public void formatMethodResponseShouldFilterRightFieldsForEachResponse() {
         ObjectResponseClass responseClass = new ObjectResponseClass();
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
+        Property idProperty = () -> "id";
+        Property nameProperty = () -> "name";
 
         JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
 
@@ -163,14 +166,14 @@ public class JmapResponseWriterImplTest {
                             .builder()
                             .responseName(Method.Response.name("unknownMethod"))
                             .clientId(ClientId.of("#1"))
-                            .properties(ImmutableSet.of("id", "name"))
+                            .properties(ImmutableSet.of(idProperty, nameProperty))
                             .response(responseClass)
                             .build(),
                         JmapResponse
                             .builder()
                             .responseName(Method.Response.name("unknownMethod"))
                             .clientId(ClientId.of("#1"))
-                            .properties(ImmutableSet.of("id"))
+                            .properties(ImmutableSet.of(idProperty))
                             .response(responseClass)
                             .build()))
                 .collect(Collectors.toList());
