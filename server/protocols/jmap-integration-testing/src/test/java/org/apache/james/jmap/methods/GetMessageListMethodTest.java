@@ -20,6 +20,7 @@
 package org.apache.james.jmap.methods;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -156,16 +157,24 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldFilterMessagesWhenInMailboxesFilterMatches() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
-
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
+        String mailboxId = 
+                with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMailboxes\", {}, \"#0\"]]")
+                .post("/jmap")
+                .path("[0][1].list[0].id");
+        
         String response = given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"mailbox\"]}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -187,11 +196,20 @@ public abstract class GetMessageListMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox2");
         embeddedElasticSearch.awaitForElasticSearch();
 
+        List<String> mailboxIds = 
+                with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMailboxes\", {}, \"#0\"]]")
+                .post("/jmap")
+                .path("[0][1].list.id");
+        
         String response = given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"mailbox\",\"mailbox2\"]}}, \"#0\"]]")
+            .body(String.format("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"%s\", \"%s\"]}}, \"#0\"]]", mailboxIds.get(0), mailboxIds.get(1)))
         .when()
             .post("/jmap")
         .then()

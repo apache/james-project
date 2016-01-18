@@ -22,7 +22,7 @@ package org.apache.james.jmap.methods;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -42,11 +42,13 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.streams.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class GetMessageListMethod<Id extends MailboxId> implements Method {
 
@@ -103,14 +107,14 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
         try {
 
-            mailboxManager.list(mailboxSession)
-                    .stream()
-                    .filter(mailboxPath -> isMailboxRequested(jmapRequest, mailboxPath))
-                    .flatMap(mailboxPath -> listMessages(mailboxPath, mailboxSession, jmapRequest))
-                    .skip(jmapRequest.getPosition())
-                    .limit(limit(jmapRequest.getLimit()))
-                    .map(MessageId::serialize)
-                    .forEach(builder::messageId);
+            List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
+            listRequestedMailboxes(jmapRequest, mailboxPaths, mailboxSession)
+                .stream()
+                .flatMap(mailboxPath -> listMessages(mailboxPath, mailboxSession, jmapRequest))
+                .skip(jmapRequest.getPosition())
+                .limit(limit(jmapRequest.getLimit()))
+                .map(MessageId::serialize)
+                .forEach(builder::messageId);
 
             return builder.build();
         } catch (MailboxException e) {
@@ -132,22 +136,26 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         return SortToComparatorConvertor.comparatorFor(jmapRequest.getSort());
     }
 
-    private boolean isMailboxRequested(GetMessageListRequest jmapRequest, MailboxPath mailboxPath) {
-        if (jmapRequest.getFilter().isPresent()) {
-            return jmapRequest.getFilter()
-                .filter(FilterCondition.class::isInstance)
-                .map(FilterCondition.class::cast)
-                .map(FilterCondition::getInMailboxes)
-                .filter(list -> isMailboxInList(mailboxPath, list))
-                .isPresent();
-        }
-        return true;
+    private ImmutableSet<MailboxPath> listRequestedMailboxes(GetMessageListRequest jmapRequest, List<MailboxPath> mailboxPaths, MailboxSession session) {
+        ImmutableSet<MailboxPath> mailboxPathSet = ImmutableSet.copyOf(mailboxPaths);
+        return jmapRequest.getFilter()
+            .filter(FilterCondition.class::isInstance)
+            .map(FilterCondition.class::cast)
+            .map(FilterCondition::getInMailboxes)
+            .map(Throwing.function(mailboxIds -> mailboxIdsToMailboxPaths(mailboxIds, session)))
+            .map(requestedMailboxPaths -> Sets.intersection(requestedMailboxPaths, mailboxPathSet).immutableCopy())
+            .orElse(mailboxPathSet);
     }
 
-    private boolean isMailboxInList(MailboxPath mailboxPath, List<String> inMailboxes) {
-        return inMailboxes.contains(mailboxPath.getName());
+    private Set<MailboxPath> mailboxIdsToMailboxPaths(List<String> mailboxIds, MailboxSession session) throws MailboxException {
+        Set<String> mailboxIdSet = Sets.newHashSet(mailboxIds);
+        return mailboxSessionMapperFactory.createMailboxMapper(session).list()
+                .stream()
+                .filter(mailbox -> mailboxIdSet.contains(mailbox.getMailboxId().serialize()))
+                .map(mailbox -> new StoreMailboxPath<>(mailbox))
+                .collect(Collectors.toImmutableSet());
     }
-
+    
     private Optional<MessageManager> getMessageManager(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
             return Optional.of(mailboxManager.getMailbox(mailboxPath, mailboxSession));
@@ -166,7 +174,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
             return ImmutableList.copyOf(messageManager.get().search(searchQuery, mailboxSession))
                     .stream()
                     .map(Throwing.function(messageId -> getMessage(mailboxPath, mailboxSession, messageMapper, messageId)))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toImmutableList());
         } catch (MailboxException e) {
             LOGGER.warn("Error when searching messages for query :" + searchQuery, e);
             return ImmutableList.of();
