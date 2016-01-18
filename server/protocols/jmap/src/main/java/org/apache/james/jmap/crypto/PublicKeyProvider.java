@@ -16,26 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.crypto;
 
-package org.apache.james.jmap.api.access;
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.james.jmap.JMAPConfiguration;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import javax.inject.Inject;
+import java.security.PublicKey;
 
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
-import org.junit.Test;
+public class PublicKeyProvider {
 
-public class AccessTokenTest {
+    private final JMAPConfiguration config;
+    private final PublicKeyReader reader;
 
-    @Test(expected=NotAnAccessTokenException.class)
-    public void fromStringShouldThrowWhenNotAnUUID() throws NotAnAccessTokenException {
-        AccessToken.fromString("bad");
+    @Inject
+    @VisibleForTesting
+    PublicKeyProvider(JMAPConfiguration config, PublicKeyReader reader) {
+        this.config = config;
+        this.reader = reader;
     }
 
-    @Test
-    public void fromStringShouldWork() throws NotAnAccessTokenException {
-        String expectedToken = "dab315ad-a59a-4107-8d00-0fef9a0745b8";
-
-        AccessToken accessToken = AccessToken.fromString(expectedToken);
-        assertThat(accessToken.serialize()).isEqualTo(expectedToken);
+    public PublicKey get() throws MissingOrInvalidKeyException {
+        return reader.fromPEM(config.getJwtPublicKeyPem())
+                .orElseThrow(() -> new MissingOrInvalidKeyException());
     }
+
 }

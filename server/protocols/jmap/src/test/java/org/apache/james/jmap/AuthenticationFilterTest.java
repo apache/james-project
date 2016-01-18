@@ -24,31 +24,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.api.access.exceptions.NotAnUUIDException;
-import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.MailboxSession;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class AuthenticationFilterTest {
     private static final String TOKEN = "df991d2a-1c5a-4910-a90f-808b6eda133e";
 
     private HttpServletRequest mockedRequest;
     private HttpServletResponse mockedResponse;
-    private AccessTokenManager accessTokenManager;
     private AccessTokenRepository accessTokenRepository;
     private AuthenticationFilter testee;
     private FilterChain filterChain;
@@ -59,10 +57,11 @@ public class AuthenticationFilterTest {
         mockedResponse = mock(HttpServletResponse.class);
 
         accessTokenRepository = new MemoryAccessTokenRepository(TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS));
-        accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
-        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
 
-        testee = new AuthenticationFilter(accessTokenManager, mockedMailboxManager);
+        when(mockedRequest.getMethod()).thenReturn("POST");
+        List<AuthenticationStrategy> fakeAuthenticationStrategies = ImmutableList.of( new FakeAuthenticationStrategy(false));
+
+        testee = new AuthenticationFilter(fakeAuthenticationStrategies);
         filterChain = mock(FilterChain.class);
     }
 
@@ -94,19 +93,10 @@ public class AuthenticationFilterTest {
 
         accessTokenRepository.addToken("user@domain.tld", token);
 
-        testee.doFilter(mockedRequest, mockedResponse, filterChain);
+        AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of( new FakeAuthenticationStrategy(true)));
+        sut.doFilter(mockedRequest, mockedResponse, filterChain);
 
         verify(filterChain).doFilter(any(ServletRequest.class), eq(mockedResponse));
-    }
-
-    @Test(expected=BadCredentialsException.class)
-    public void createMailboxSessionShouldThrowWhenAuthHeaderIsEmpty() throws Exception {
-        testee.createMailboxSession(Optional.empty());
-    }
-
-    @Test(expected=NotAnUUIDException.class)
-    public void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() throws Exception {
-        testee.createMailboxSession(Optional.of("bad"));
     }
 
     @Test
@@ -117,5 +107,35 @@ public class AuthenticationFilterTest {
         testee.doFilter(mockedRequest, mockedResponse, filterChain);
         
         verify(mockedResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void filterShouldReturnUnauthorizedWhenNoStrategy() throws Exception {
+        when(mockedRequest.getHeader("Authorization"))
+                .thenReturn(TOKEN);
+
+        AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of());
+        sut.doFilter(mockedRequest, mockedResponse, filterChain);
+
+        verify(mockedResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED);
+    }
+
+    private class FakeAuthenticationStrategy implements AuthenticationStrategy {
+
+        private final boolean isAuthorized;
+
+        private FakeAuthenticationStrategy(boolean isAuthorized) {
+            this.isAuthorized = isAuthorized;
+        }
+
+        @Override
+        public MailboxSession createMailboxSession(Stream<String> requestHeaders) {
+            return null;
+        }
+
+        @Override
+        public boolean checkAuthorizationHeader(Stream<String> requestHeaders) {
+            return isAuthorized;
+        }
     }
 }

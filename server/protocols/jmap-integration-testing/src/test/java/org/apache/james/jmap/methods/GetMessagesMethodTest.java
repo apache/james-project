@@ -24,6 +24,7 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 
 import java.io.ByteArrayInputStream;
@@ -100,7 +101,7 @@ public abstract class GetMessagesMethodTest {
     
     @Test
     public void getMessagesShouldIgnoreUnknownArguments() throws Exception {
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
@@ -109,13 +110,9 @@ public abstract class GetMessagesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"messages\","))
-            .extract()
-            .asString();
-
-        String firstResponsePath = "$.[0].[1]";
-        assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".notFound.length()")).isEqualTo(0);
-        assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(0);
+            .body("[0][1].notFound", hasSize(0))
+            .body("[0][1].list", hasSize(0))
+            .body("[0][2]", equalTo("#0"));
     }
 
     @Test

@@ -16,24 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.crypto;
 
-package org.apache.james.modules;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.FileNotFoundException;
+import java.security.Security;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
 
-import javax.inject.Singleton;
-
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.PortConfiguration;
-import org.apache.james.jmap.methods.GetMessageListMethod;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Names;
-
-public class TestJMAPServerModule extends AbstractModule{
+public class PublicKeyProviderTest {
 
     private static final String PUBLIC_PEM_KEY = "-----BEGIN PUBLIC KEY-----\n" +
             "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
@@ -45,33 +42,33 @@ public class TestJMAPServerModule extends AbstractModule{
             "kwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
 
-    private final int maximumLimit;
-
-    public TestJMAPServerModule(int maximumLimit) {
-        this.maximumLimit = maximumLimit;
+    @BeforeClass
+    public static void init() {
+        Security.addProvider(new BouncyCastleProvider());
     }
 
-    @Override
-    protected void configure() {
-        bind(PortConfiguration.class).to(RandomPortConfiguration.class).in(Singleton.class);
-        bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
-    }
+    @Test
+    public void getShouldNotThrowWhenPEMKeyProvided() {
 
-    @Provides
-    @Singleton
-    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException{
-        return JMAPConfiguration.builder()
-                .keystore("keystore")
-                .secret("james72laBalle")
-                .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY))
+        JMAPConfiguration configWithPEMKey = JMAPConfiguration.builder()
+                .jwtPublicKeyPem(Optional.ofNullable(PUBLIC_PEM_KEY))
+                .keystore(".").secret(".")
                 .build();
-    }
-    
-    private static class RandomPortConfiguration implements PortConfiguration {
 
-        @Override
-        public Optional<Integer> getPort() {
-            return Optional.empty();
-        }
+        PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+
+        assertThat(sut.get()).isInstanceOf(RSAPublicKey.class);
+    }
+
+    @Test
+    public void getShouldThrowWhenPEMKeyNotProvided() {
+        JMAPConfiguration configWithPEMKey = JMAPConfiguration.builder()
+                .jwtPublicKeyPem(Optional.ofNullable(""))
+                .keystore(" ").secret(" ")
+                .build();
+
+        PublicKeyProvider sut = new PublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+
+        assertThatThrownBy(() -> sut.get()).isExactlyInstanceOf(MissingOrInvalidKeyException.class);
     }
 }

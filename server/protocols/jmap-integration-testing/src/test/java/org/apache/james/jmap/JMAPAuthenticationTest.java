@@ -49,7 +49,6 @@ public abstract class JMAPAuthenticationTest {
     private static final ZonedDateTime newDate = ZonedDateTime.parse("2011-12-03T10:16:30+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     private static final ZonedDateTime afterExpirationDate = ZonedDateTime.parse("2011-12-03T10:30:31+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
-    
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
@@ -327,6 +326,47 @@ public abstract class JMAPAuthenticationTest {
             .body("eventSource", both(isA(String.class)).and(notNullValue()))
             .body("upload", both(isA(String.class)).and(notNullValue()))
             .body("download", both(isA(String.class)).and(notNullValue()));
+    }
+
+    @Test
+    public void getMustReturnEndpointsWhenValidJwtAuthorizationHeader() throws Exception {
+        String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
+                "LXkJj24coSZkK13RfG25lpvmSl2MJ7N10KpBk9_-95EGYZdog-BDAn3PJzqVw52z-Bwjh4VOj1-j7cURu0cT4jXehhUrlCxS4n7QHZ" +
+                "DN_bsEYGu7KzjWTpTsUiHe-rN7izXVFxDGG1TGwlmBCBnPW-EFCf9ylUsJi0r2BKNdaaPRfMIrHptH1zJBkkUziWpBN1RNLjmvlAUf" +
+                "49t1Tbv21ZqYM5Ht2vrhJWczFbuC-TD-8zJkXhjTmA1GVgomIX5dx1cH-dZX1wANNmshUJGHgepWlPU-5VIYxPEhb219RMLJIELMY2" +
+                "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/authentication")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    public void getMustReturnBadCredentialsWhenInvalidJwtAuthorizationHeader() throws Exception {
+        String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
+                "LXkJj24coSZkK13RfG25lpvmSl2MJ7N10KpBk9_-95EGYZdog-BDAn3PJzqVw52z-Bwjh4VOj1-j7cURu0cT4jXehhUrlCxS4n7QHZ" +
+                "EN_bsEYGu7KzjWTpTsUiHe-rN7izXVFxDGG1TGwlmBCBnPW-EFCf9ylUsJi0r2BKNdaaPRfMIrHptH1zJBkkUziWpBN1RNLjmvlAUf" +
+                "49t1Tbv21ZqYM5Ht2vrhJWczFbuC-TD-8zJkXhjTmA1GVgomIX5dx1cH-dZX1wANNmshUJGHgepWlPU-5VIYxPEhb219RMLJIELMY2" +
+                "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/authentication")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    public void optionsRequestsShouldNeverRequireAuthentication() {
+        given()
+                .when()
+                .options("/authentication")
+                .then()
+                .statusCode(200);
     }
 
     @Test

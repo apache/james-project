@@ -16,26 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap;
 
-package org.apache.james.jmap.api.access;
+import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.james.mailbox.MailboxSession;
 
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
-import org.junit.Test;
+public interface AuthenticationStrategy {
 
-public class AccessTokenTest {
+    MailboxSession createMailboxSession(Stream<String> requestHeaders);
 
-    @Test(expected=NotAnAccessTokenException.class)
-    public void fromStringShouldThrowWhenNotAnUUID() throws NotAnAccessTokenException {
-        AccessToken.fromString("bad");
-    }
-
-    @Test
-    public void fromStringShouldWork() throws NotAnAccessTokenException {
-        String expectedToken = "dab315ad-a59a-4107-8d00-0fef9a0745b8";
-
-        AccessToken accessToken = AccessToken.fromString(expectedToken);
-        assertThat(accessToken.serialize()).isEqualTo(expectedToken);
-    }
+    boolean checkAuthorizationHeader(Stream<String> requestHeaders);
 }

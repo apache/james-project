@@ -29,59 +29,79 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class BypassOnPostFilterTest {
+public class BypassAuthOnRequestMethodTest {
 
     private HttpServletRequest mockedRequest;
     private AuthenticationFilter nestedFilter;
-    private BypassOnPostFilter tested;
+    private BypassAuthOnRequestMethod sut;
     private FilterChain filterChain;
-    
+
     @Before
     public void setup() throws Exception {
         mockedRequest = mock(HttpServletRequest.class);
         nestedFilter = mock(AuthenticationFilter.class);
-        tested = new BypassOnPostFilter(nestedFilter);
+        sut = BypassAuthOnRequestMethod.bypass(nestedFilter).on("POST").and("OPTIONS").only();
         filterChain = mock(FilterChain.class);
     }
-    
+
     @Test
     public void filterShouldCallNestedFilterOnGet() throws Exception {
         when(mockedRequest.getMethod())
-            .thenReturn("GET");
-        
-        tested.doFilter(mockedRequest, null, filterChain);
-        
+                .thenReturn("GET");
+
+        sut.doFilter(mockedRequest, null, filterChain);
+
         verify(nestedFilter).doFilter(mockedRequest, null, filterChain);
     }
-    
+
     @Test
     public void filterShouldNotCallDirectlyChainOnGet() throws Exception {
         when(mockedRequest.getMethod())
-            .thenReturn("GET");
-        
-        tested.doFilter(mockedRequest, null, filterChain);
-        
+                .thenReturn("GET");
+
+        sut.doFilter(mockedRequest, null, filterChain);
+
         verify(filterChain, never()).doFilter(mockedRequest, null);
     }
-    
+
     @Test
     public void filterShouldNotCallNestedFilterOnPost() throws Exception {
         when(mockedRequest.getMethod())
-            .thenReturn("POST");
-        
-        tested.doFilter(mockedRequest, null, filterChain);
-        
+                .thenReturn("POST");
+
+        sut.doFilter(mockedRequest, null, filterChain);
+
         verify(nestedFilter, never()).doFilter(mockedRequest, null, filterChain);
     }
-    
+
     @Test
     public void filterShouldCallChainOnPost() throws Exception {
         when(mockedRequest.getMethod())
-            .thenReturn("POST");
-        
-        tested.doFilter(mockedRequest, null, filterChain);
-        
+                .thenReturn("POST");
+
+        sut.doFilter(mockedRequest, null, filterChain);
+
         verify(filterChain).doFilter(mockedRequest, null);
     }
-    
+
+    @Test
+    public void filterShouldNotCallNestedFilterOnOptions() throws Exception {
+        when(mockedRequest.getMethod())
+                .thenReturn("OPTIONS");
+
+        sut.doFilter(mockedRequest, null, filterChain);
+
+        verify(nestedFilter, never()).doFilter(mockedRequest, null, filterChain);
+    }
+
+    @Test
+    public void filterShouldCallChainOnOptions() throws Exception {
+        when(mockedRequest.getMethod())
+                .thenReturn("OPTIONS");
+
+        sut.doFilter(mockedRequest, null, filterChain);
+
+        verify(filterChain).doFilter(mockedRequest, null);
+    }
+
 }

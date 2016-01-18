@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap;
 
+import static org.apache.james.jmap.BypassAuthOnRequestMethod.bypass;
+
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -39,17 +41,19 @@ public class JMAPServer implements Configurable {
     private final JettyHttpServer server;
 
     @Inject
-    private JMAPServer(PortConfiguration portConfiguration, 
-            AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet,
-            AuthenticationFilter authenticationFilter) {
+    private JMAPServer(PortConfiguration portConfiguration,
+                       AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet,
+                       AuthenticationFilter authenticationFilter) {
 
         server = JettyHttpServer.create(
                 configurationBuilderFor(portConfiguration)
-                .serve("/authentication").with(authenticationServlet)
-                .filter("/authentication").with(new BypassOnPostFilter(authenticationFilter))
-                .serve("/jmap").with(jmapServlet)
-                .filter("/jmap").with(authenticationFilter)
-                .build());
+                        .serve("/authentication").with(authenticationServlet)
+                        .filter("/authentication").with(new AllowAllCrossOriginRequests(
+                            bypass(authenticationFilter).on("POST").and("OPTIONS").only()))
+                        .serve("/jmap").with(jmapServlet)
+                        .filter("/jmap").with(new AllowAllCrossOriginRequests(
+                            bypass(authenticationFilter).on("OPTIONS").only()))
+                        .build());
     }
 
     private Builder configurationBuilderFor(PortConfiguration portConfiguration) {
@@ -83,5 +87,4 @@ public class JMAPServer implements Configurable {
     public int getPort() {
         return server.getPort();
     }
-
 }

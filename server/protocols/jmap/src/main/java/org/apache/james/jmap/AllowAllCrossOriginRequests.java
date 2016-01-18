@@ -16,47 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap;
 
-package org.apache.james.jmap.api.access;
+import java.io.IOException;
 
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
-import java.util.Objects;
-import java.util.UUID;
+public class AllowAllCrossOriginRequests implements Filter {
 
-public class AccessToken {
+    private final Filter nestedFilter;
 
-    public static AccessToken fromString(String tokenString) throws NotAnAccessTokenException {
-        try {
-            return new AccessToken(UUID.fromString(tokenString));
-        } catch (IllegalArgumentException e) {
-            throw new NotAnAccessTokenException(e);
-        }
-    }
-
-    private final UUID token;
-
-    private AccessToken(UUID token) {
-        this.token = token;
-    }
-    
-    public static AccessToken generate() {
-        return new AccessToken(UUID.randomUUID());
-    }
-
-    public String serialize() {
-        return token.toString();
+    public AllowAllCrossOriginRequests(Filter nestedFilter) {
+        this.nestedFilter = nestedFilter;
     }
 
     @Override
-    public boolean equals(Object o) {
-        return o != null
-            && o instanceof AccessToken
-            && Objects.equals(this.token, ((AccessToken)o).token);
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
+        HttpServletResponse servletResponse = (HttpServletResponse) response;
+        servletResponse.addHeader("Access-Control-Allow-Origin", "*");
+        servletResponse.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+        servletResponse.addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+        nestedFilter.doFilter(request, response, chain);
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(token);
+    public void init(FilterConfig filterConfig) throws ServletException {
+
+    }
+
+    @Override
+    public void destroy() {
     }
 }

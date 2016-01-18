@@ -24,6 +24,8 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.startsWith;
 
 import java.io.ByteArrayInputStream;
@@ -33,6 +35,8 @@ import java.util.Map;
 
 import javax.mail.Flags;
 
+import com.google.common.collect.ImmutableMap;
+import com.jayway.jsonpath.JsonPath;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.JmapServer;
@@ -47,8 +51,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
@@ -156,6 +158,53 @@ public abstract class GetMailboxesMethodTest {
         
         String firstResponsePath = "$.[0].[1]";
         assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(0);
+    }
+
+    @Test
+    public void getMailboxesShouldReturnEmptyListWhenNoMailboxesWithJWTAuthWorkflow() {
+
+        String authToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
+                "LXkJj24coSZkK13RfG25lpvmSl2MJ7N10KpBk9_-95EGYZdog-BDAn3PJzqVw52z-Bwjh4VOj1-j7cURu0cT4jXehhUrlCxS4n7QHZ" +
+                "DN_bsEYGu7KzjWTpTsUiHe-rN7izXVFxDGG1TGwlmBCBnPW-EFCf9ylUsJi0r2BKNdaaPRfMIrHptH1zJBkkUziWpBN1RNLjmvlAUf" +
+                "49t1Tbv21ZqYM5Ht2vrhJWczFbuC-TD-8zJkXhjTmA1GVgomIX5dx1cH-dZX1wANNmshUJGHgepWlPU-5VIYxPEhb219RMLJIELMY2" +
+                "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + authToken)
+                .body("[[\"getMailboxes\", {}, \"#0\"]]")
+                .when()
+                .post("/jmap")
+                .then()
+                .statusCode(200)
+                .body("[0][0]", equalTo("mailboxes"))
+                .body("[0][1].accountId", isEmptyOrNullString())
+                .body("[0][1].state", isEmptyOrNullString())
+                .body("[0][1].notFound", isEmptyOrNullString())
+                .body("[0][1].list", hasSize(0))
+                .body("[0][2]", equalTo("#0"));
+    }
+
+
+    @Test
+    public void getMailboxesShouldErrorWithBadJWTToken() {
+
+        String badAuthToken = "BADTOKENOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
+                "LXkJj24coSZkK13RfG25lpvmSl2MJ7N10KpBk9_-95EGYZdog-BDAn3PJzqVw52z-Bwjh4VOj1-j7cURu0cT4jXehhUrlCxS4n7QHZ" +
+                "DN_bsEYGu7KzjWTpTsUiHe-rN7izXVFxDGG1TGwlmBCBnPW-EFCf9ylUsJi0r2BKNdaaPRfMIrHptH1zJBkkUziWpBN1RNLjmvlAUf" +
+                "49t1Tbv21ZqYM5Ht2vrhJWczFbuC-TD-8zJkXhjTmA1GVgomIX5dx1cH-dZX1wANNmshUJGHgepWlPU-5VIYxPEhb219RMLJIELMY2" +
+                "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + badAuthToken)
+                .body("[[\"getMailboxes\", {}, \"#0\"]]")
+                .when()
+                .post("/jmap")
+                .then()
+                .statusCode(401);
     }
 
     @Test

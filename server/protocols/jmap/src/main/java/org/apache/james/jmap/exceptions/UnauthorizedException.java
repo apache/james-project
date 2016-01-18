@@ -17,12 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.access.exceptions;
+package org.apache.james.jmap.exceptions;
 
-public class NotAnUUIDException extends RuntimeException {
-
-    public NotAnUUIDException(Exception e) {
-        super(e);
-    }
-
+public class UnauthorizedException extends RuntimeException {
 }

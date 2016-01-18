@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.jmap.api.AccessTokenManager;
@@ -31,7 +32,9 @@ import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.utils.DefaultZonedDateTimeProvider;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 public class JMAPCommonModule extends AbstractModule {
@@ -49,4 +52,13 @@ public class JMAPCommonModule extends AbstractModule {
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
     }
 
+    @Provides
+    public List<AuthenticationStrategy> authStrategies(
+            AccessTokenAuthenticationStrategy accessTokenAuthenticationStrategy,
+            JWTAuthenticationStrategy jwtAuthenticationStrategy) {
+
+        return ImmutableList.of(
+                jwtAuthenticationStrategy,
+                accessTokenAuthenticationStrategy);
+    }
 }

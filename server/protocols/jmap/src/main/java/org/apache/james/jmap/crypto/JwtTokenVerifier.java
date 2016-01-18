@@ -16,26 +16,47 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.crypto;
 
-package org.apache.james.jmap.api.access;
+import javax.inject.Inject;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
-import org.junit.Test;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 
-public class AccessTokenTest {
+public class JwtTokenVerifier {
 
-    @Test(expected=NotAnAccessTokenException.class)
-    public void fromStringShouldThrowWhenNotAnUUID() throws NotAnAccessTokenException {
-        AccessToken.fromString("bad");
+    private final PublicKeyProvider pubKeyProvider;
+
+    @Inject
+    @VisibleForTesting
+    JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
+        this.pubKeyProvider = pubKeyProvider;
     }
 
-    @Test
-    public void fromStringShouldWork() throws NotAnAccessTokenException {
-        String expectedToken = "dab315ad-a59a-4107-8d00-0fef9a0745b8";
+    public boolean verify(String token) throws JwtException {
+        parseToken(token);
+        return true;
+    }
 
-        AccessToken accessToken = AccessToken.fromString(expectedToken);
-        assertThat(accessToken.serialize()).isEqualTo(expectedToken);
+    public String extractLogin(String token) throws JwtException {
+        Jws<Claims> jws = parseToken(token);
+        return jws
+                .getBody()
+                .getSubject();
+    }
+
+    private Jws<Claims> parseToken(String token) throws JwtException {
+        return Jwts
+                .parser()
+                .setSigningKey(pubKeyProvider.get())
+                .parseClaimsJws(token);
     }
 }

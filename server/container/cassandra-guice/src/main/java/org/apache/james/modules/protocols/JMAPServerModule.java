@@ -28,6 +28,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.security.Security;
 
 public class JMAPServerModule extends AbstractModule {
 
@@ -53,6 +56,11 @@ public class JMAPServerModule extends AbstractModule {
         public void initModule() throws Exception {
             signatureHandler.init();
             server.configure(null);
+            registerPEMWithSecurityProvider();
+        }
+
+        private void registerPEMWithSecurityProvider() {
+            Security.addProvider(new BouncyCastleProvider());
         }
     }
 

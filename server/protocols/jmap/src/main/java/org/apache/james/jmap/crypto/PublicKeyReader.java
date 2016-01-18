@@ -16,44 +16,39 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap;
+package org.apache.james.jmap.crypto;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
+import org.bouncycastle.openssl.PEMReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class BypassOnPostFilter implements Filter {
-    
-    private Filter nestedFilter;
+public class PublicKeyReader {
 
-    @Inject
-    public BypassOnPostFilter(AuthenticationFilter nestedFilter) {
-        this.nestedFilter = nestedFilter;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PublicKeyReader.class);
+
+    Optional<RSAPublicKey> fromPEM(Optional<String> pemKey) {
+
+        return pemKey
+                .map(k -> new PEMReader(new StringReader(k)))
+                .flatMap(this::publicKeyFrom);
     }
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-    }
-
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest)request;
-        if ("POST".equals(httpRequest.getMethod())) {
-            chain.doFilter(request, response);
-        } else {
-            nestedFilter.doFilter(httpRequest, response, chain);
+    private Optional<RSAPublicKey> publicKeyFrom(PEMReader reader) {
+        try {
+            Object readPEM = reader.readObject();
+            RSAPublicKey rsaPublicKey = null;
+            if (readPEM instanceof RSAPublicKey) {
+                rsaPublicKey = (RSAPublicKey) readPEM;
+            }
+            return Optional.ofNullable(rsaPublicKey);
+        } catch (IOException e) {
+            LOGGER.warn("Error when reading the PEM file", e);
+            return Optional.empty();
         }
     }
-
-    @Override
-    public void destroy() {
-    }
-
 }

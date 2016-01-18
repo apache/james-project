@@ -17,25 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.access;
+package org.apache.james.jmap.exceptions;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
-import org.junit.Test;
-
-public class AccessTokenTest {
-
-    @Test(expected=NotAnAccessTokenException.class)
-    public void fromStringShouldThrowWhenNotAnUUID() throws NotAnAccessTokenException {
-        AccessToken.fromString("bad");
-    }
-
-    @Test
-    public void fromStringShouldWork() throws NotAnAccessTokenException {
-        String expectedToken = "dab315ad-a59a-4107-8d00-0fef9a0745b8";
-
-        AccessToken accessToken = AccessToken.fromString(expectedToken);
-        assertThat(accessToken.serialize()).isEqualTo(expectedToken);
-    }
+public class NoValidAuthHeaderException extends RuntimeException {
 }
