@@ -14,7 +14,7 @@ RUN ln -s /root/apache-maven-3.3.1/bin/mvn /usr/bin/mvn
 
 # Install git
 RUN apt-get update
-RUN apt-get install -y git="$GIT_VERSION"
+RUN apt-get install -y --force-yes git="$GIT_VERSION"
 
 # Copy the script
 COPY compile.sh /root/compile.sh

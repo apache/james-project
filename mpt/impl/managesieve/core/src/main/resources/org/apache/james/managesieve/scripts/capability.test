@@ -20,7 +20,7 @@
 C: CAPABILITY
 SUB {
 S: "SASL" "PLAIN"
-S: "SIEVE" "log reject fileinto i;ascii-numeric envelope body"
+S: "SIEVE" ".*"
 S: "STARTTLS"
 S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
 S: "VERSION" "1.0"
@@ -30,7 +30,7 @@ S: OK
 C: CaPaBiLiTy
 SUB {
 S: "SASL" "PLAIN"
-S: "SIEVE" "log reject fileinto i;ascii-numeric envelope body"
+S: "SIEVE" ".*"
 S: "STARTTLS"
 S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
 S: "VERSION" "1.0"
@@ -46,7 +46,7 @@ C: CAPABILITY
 SUB {
 S: "OWNER" "user"
 S: "SASL" "PLAIN"
-S: "SIEVE" "log reject fileinto i;ascii-numeric envelope body"
+S: "SIEVE" ".*"
 S: "STARTTLS"
 S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
 S: "VERSION" "1.0"

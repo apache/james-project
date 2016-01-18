@@ -387,10 +387,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-backends-cassandra</artifactId>
-        </dependency>
         <!-- Comment jackrabbit dependency to avoid lucene version clash with mailbox-lucene (JAMES-1297)
             <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -419,10 +415,6 @@
                     <groupId>javax.mail</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-kafka</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
@@ -465,22 +457,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-james-mailbox-cassandra</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mail</artifactId>
-                    <groupId>javax.mail</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-data-cassandra</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>james-server-data-file</artifactId>
@@ -601,6 +578,39 @@
                 <james.system-property2>-Dspring.profiles.active=cassandra</james.system-property2>
                 <james.system-properties>${james.system-property1} ${james.system-property2}</james.system-properties>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-cassandra</artifactId>
+                    <scope>runtime</scope>
+                    <exclusions>
+                        <exclusion>
+                            <artifactId>mail</artifactId>
+                            <groupId>javax.mail</groupId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-data-cassandra</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-backends-cassandra</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>kafka</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-kafka</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>lucene</id>

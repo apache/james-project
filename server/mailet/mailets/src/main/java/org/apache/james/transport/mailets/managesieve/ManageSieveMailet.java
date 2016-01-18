@@ -199,7 +199,9 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
             throw new MessagingException("Unable to access help URL: " + helpURL.toExternalForm(), ex);
         }
         finally {
-            IOUtils.closeQuietly(scanner);
+            if (scanner != null) {
+                scanner.close();
+            }
             IOUtils.closeQuietly(stream);
         }
     }
