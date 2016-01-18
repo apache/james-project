@@ -48,3 +48,9 @@ if [ "$SKIPTESTS" = "skipTests" ]; then
 else
    mvn package
 fi
+
+# Retrieve result
+
+if [ $? -eq 0 ]; then
+   cp server/app/target/james-server-app-*-app.zip $DESTINATION
+fi
