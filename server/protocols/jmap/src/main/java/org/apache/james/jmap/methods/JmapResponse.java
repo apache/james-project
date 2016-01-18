@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
 
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.annotations.VisibleForTesting;
 
 public class JmapResponse {
@@ -39,6 +40,7 @@ public class JmapResponse {
         private ClientId id;
         private Method.Response response;
         private Optional<? extends Set<? extends Property>> properties = Optional.empty();
+        private Optional<SimpleFilterProvider> filterProvider = Optional.empty();
 
         private Builder() {
         }
@@ -67,6 +69,11 @@ public class JmapResponse {
             this.properties = Optional.ofNullable(properties);
             return this;
         }
+        
+        public Builder filterProvider(Optional<SimpleFilterProvider> filterProvider) {
+            this.filterProvider = filterProvider;
+            return this;
+        }
 
         public Builder error() {
             return error(DEFAULT_ERROR_MESSAGE);
@@ -80,7 +87,7 @@ public class JmapResponse {
 
         
         public JmapResponse build() {
-            return new JmapResponse(responseName, id, response, properties);
+            return new JmapResponse(responseName, id, response, properties, filterProvider);
         }
     }
 
@@ -105,12 +112,14 @@ public class JmapResponse {
     private final ClientId clientId;
     private final Method.Response response;
     private Optional<? extends Set<? extends Property>> properties;
+    private Optional<SimpleFilterProvider> filterProvider;
     
-    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response, Optional<? extends Set<? extends Property>> properties) {
+    private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response, Optional<? extends Set<? extends Property>> properties, Optional<SimpleFilterProvider> filterProvider) {
         this.method = method;
         this.clientId = clientId;
         this.response = response;
         this.properties = properties;
+        this.filterProvider = filterProvider;
     }
 
     public Method.Response.Name getResponseName() {
@@ -127,5 +136,9 @@ public class JmapResponse {
 
     public Optional<? extends Set<? extends Property>> getProperties() {
         return properties;
+    }
+
+    public Optional<SimpleFilterProvider> getFilterProvider() {
+        return filterProvider;
     }
 }

@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.methods.GetMessagesMethod;
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.model.message.EMailer;
 import org.apache.james.jmap.model.message.IndexableMessage;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -46,7 +48,7 @@ import com.google.common.collect.Multimap;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 @JsonDeserialize(builder = Message.Builder.class)
-@JsonFilter("propertiesFilter")
+@JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
 public class Message {
     public static final String NO_SUBJECT = "(No subject)";
     public static final String MULTIVALUED_HEADERS_SEPARATOR = ", ";
@@ -343,6 +345,7 @@ public class Message {
     private final boolean isAnswered;
     private final boolean isDraft;
     private final boolean hasAttachment;
+    @JsonFilter(GetMessagesMethod.HEADERS_FILTER)
     private final ImmutableMap<String, String> headers;
     private final Optional<Emailer> from;
     private final ImmutableList<Emailer> to;

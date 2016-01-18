@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 public class JmapResponseWriterImpl implements JmapResponseWriter {
 
+    public static final String PROPERTIES_FILTER = "propertiesFilter";
     private final Set<Module> jacksonModules;
 
     @Inject
@@ -59,20 +60,25 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     }
     
     private ObjectMapper newConfiguredObjectMapper(JmapResponse jmapResponse) {
-        ObjectMapper objectMapper = new ObjectMapper().registerModules(jacksonModules)
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModules(jacksonModules)
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        objectMapper.setFilterProvider(buildPropertiesFilter(jmapResponse.getProperties()));
+        
+        FilterProvider filterProvider = jmapResponse
+                .getFilterProvider()
+                .orElseGet(SimpleFilterProvider::new)
+                .addFilter(PROPERTIES_FILTER, getPropertiesFilter(jmapResponse.getProperties()));
+        
+        objectMapper.setFilterProvider(filterProvider);
 
         return objectMapper;
     }
-
-    private FilterProvider buildPropertiesFilter(Optional<? extends Set<? extends Property>> properties) {
-        PropertyFilter filter = properties
+    
+    private PropertyFilter getPropertiesFilter(Optional<? extends Set<? extends Property>> properties) {
+        return properties
                 .map(this::toFieldNames)
                 .map(SimpleBeanPropertyFilter::filterOutAllExcept)
                 .orElse(SimpleBeanPropertyFilter.serializeAll());
-        return new SimpleFilterProvider().addFilter("propertiesFilter", filter);
     }
     
     private Set<String> toFieldNames(Set<? extends Property> properties) {

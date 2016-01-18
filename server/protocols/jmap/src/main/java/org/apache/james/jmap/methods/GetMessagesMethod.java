@@ -19,9 +19,9 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,18 +48,22 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.javatuples.Pair;
 
+import com.fasterxml.jackson.databind.ser.PropertyWriter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class GetMessagesMethod<Id extends MailboxId> implements Method {
 
+    public static final String HEADERS_FILTER = "headersFilter";
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MessageMapperFactory<Id> messageMapperFactory;
     private final MailboxMapperFactory<Id> mailboxMapperFactory;
-    
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
@@ -85,18 +89,21 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetMessagesRequest);
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
+        Optional<ImmutableSet<MessageProperty>> requestedProperties = getMessagesRequest.getProperties();
         return Stream.of(JmapResponse.builder().clientId(clientId)
-                            .response(getMessagesResponse(mailboxSession, getMessagesRequest))
+                            .response(getMessagesResponse(mailboxSession, getMessagesRequest, requestedProperties))
                             .responseName(RESPONSE_NAME)
-                            .properties(getMessagesRequest.getProperties().map(this::handleSpecificProperties))
+                            .properties(requestedProperties.map(this::handleSpecificProperties))
+                            .filterProvider(Optional.of(buildFilteringHeadersFilterProvider(requestedProperties)))
                             .build());
     }
 
     private Set<MessageProperty> handleSpecificProperties(Set<MessageProperty> input) {
-        Set<MessageProperty> toAdd = new HashSet<MessageProperty>();
-        Set<MessageProperty> toRemove = new HashSet<MessageProperty>();
+        Set<MessageProperty> toAdd = Sets.newHashSet();
+        Set<MessageProperty> toRemove = Sets.newHashSet();
         ensureContainsId(input, toAdd);
         handleBody(input, toAdd, toRemove);
+        handleHeadersProperties(input, toAdd, toRemove);
         return Sets.union(Sets.difference(input, toRemove), toAdd).immutableCopy();
     }
         
@@ -112,8 +119,48 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
             toRemove.add(MessageProperty.body);
         }
     }
+    
+    private void handleHeadersProperties(Set<MessageProperty> input, Set<MessageProperty> toAdd, Set<MessageProperty> toRemove) {
+        Set<MessageProperty> selectHeadersProperties = MessageProperty.selectHeadersProperties(input);
+        if (!selectHeadersProperties.isEmpty()) {
+            toAdd.add(MessageProperty.headers);
+            toRemove.addAll(selectHeadersProperties);
+        }
+    }
+    
+    private SimpleFilterProvider buildFilteringHeadersFilterProvider(Optional<ImmutableSet<MessageProperty>> requestedProperties) {
+        Set<MessageProperty> selectedHeadersProperties = requestedProperties
+                .map(MessageProperty::selectHeadersProperties)
+                .orElse(ImmutableSet.of());
 
-    private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
+        return new SimpleFilterProvider()
+                .addFilter(HEADERS_FILTER, buildPropertyFilter(selectedHeadersProperties))
+                .addFilter(JmapResponseWriterImpl.PROPERTIES_FILTER, SimpleBeanPropertyFilter.serializeAll());
+    }
+    
+    private SimpleBeanPropertyFilter buildPropertyFilter(Set<MessageProperty> propertiesToInclude) {
+        if (propertiesToInclude.isEmpty()) {
+            return SimpleBeanPropertyFilter.serializeAll();
+        } else {
+            return new IncludeMessagePropertyPropertyFilter(propertiesToInclude);
+        }
+    }
+    
+    private static class IncludeMessagePropertyPropertyFilter extends SimpleBeanPropertyFilter {
+        private Set<MessageProperty> propertiesToInclude;
+
+        public IncludeMessagePropertyPropertyFilter(Set<MessageProperty> propertiesToInclude) {
+            this.propertiesToInclude = propertiesToInclude;
+        }
+        
+        @Override
+        protected boolean include(PropertyWriter writer) {
+            String currentProperty = writer.getName();
+            return propertiesToInclude.contains(MessageProperty.headerValueOf(currentProperty));
+        }
+    }
+    
+    private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest, Optional<ImmutableSet<MessageProperty>> requestedProperties) {
         getMessagesRequest.getAccountId().ifPresent(GetMessagesMethod::notImplemented);
         
         Function<MessageId, Stream<Pair<MailboxMessage<Id>, MailboxPath>>> loadMessages = loadMessage(mailboxSession);

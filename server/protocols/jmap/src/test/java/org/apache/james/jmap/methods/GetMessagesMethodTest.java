@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -46,14 +47,18 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.assertj.core.api.Condition;
+import org.assertj.core.data.MapEntry;
 import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
 
@@ -234,5 +239,59 @@ public class GetMessagesMethodTest {
             .flatExtracting(Optional::get)
             .asList()
             .containsOnly(MessageProperty.id, MessageProperty.textBody);
+    }
+    
+    @Test
+    public void processShouldReturnHeadersFieldWhenSpecificHeadersRequestedInPropertyList() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+                + "header1: Header1Content\r\n"
+                + "HEADer2: Header2Content\r\n"
+                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .properties(MessageProperty.valueOf("headers.from"), MessageProperty.valueOf("headers.heADER2"))
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result)
+            .hasSize(1)
+            .extracting(JmapResponse::getProperties)
+            .flatExtracting(Optional::get)
+            .asList()
+            .containsOnly(MessageProperty.id, MessageProperty.headers);
+    }
+    
+    @Test
+    public void processShouldReturnAPreconfiguredObjectMapperFilteringHeaders() throws Exception {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+                + "header1: Header1Content\r\n"
+                + "HEADer2: Header2Content\r\n"
+                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .properties(MessageProperty.valueOf("headers.from"), MessageProperty.valueOf("headers.heADER2"))
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result)
+            .hasSize(1)
+            .extracting(JmapResponse::getFilterProvider)
+            .are(new Condition<>(Optional::isPresent, "present"));
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setFilterProvider(result.get(0).getFilterProvider().get());
+        String response = objectMapper.writer().writeValueAsString(result.get(0));
+        assertThat(JsonPath.parse(response).<Map<String, String>>read("$.response.list[0].headers")).containsOnly(MapEntry.entry("from", "user@domain.tld"), MapEntry.entry("header2", "Header2Content"));
     }
 }
