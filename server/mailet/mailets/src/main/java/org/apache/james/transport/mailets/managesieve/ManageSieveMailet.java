@@ -29,7 +29,6 @@ import java.util.Scanner;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
@@ -199,8 +198,9 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
             throw new MessagingException("Unable to access help URL: " + helpURL.toExternalForm(), ex);
         }
         finally {
-            IOUtils.closeQuietly(scanner);
-            IOUtils.closeQuietly(stream);
+            if (scanner != null) {
+                scanner.close();
+            }
         }
     }
 
