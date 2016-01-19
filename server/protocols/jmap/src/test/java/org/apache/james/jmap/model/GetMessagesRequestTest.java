@@ -29,7 +29,7 @@ public class GetMessagesRequestTest {
 
     @Test
     public void shouldAllowOptionalAccountId() {
-        GetMessagesRequest result = GetMessagesRequest.builder().ids(MessageId.of("user-inbox-1")).properties(MessageProperty.id).build();
+        GetMessagesRequest result = GetMessagesRequest.builder().ids(MessageId.of("user|inbox|1")).properties(MessageProperty.id).build();
         assertThat(result).isNotNull();
         assertThat(result.getAccountId()).isEmpty();
     }

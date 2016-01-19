@@ -161,7 +161,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username-inbox-12\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|12\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -171,7 +171,7 @@ public abstract class GetMessagesMethodTest {
             .asString();
         
         assertThat(JsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
-        assertThat(JsonPath.parse(response).<List<String>>read("$.[0].[1].notFound")).containsExactly("username-inbox-12");
+        assertThat(JsonPath.parse(response).<List<String>>read("$.[0].[1].notFound")).containsExactly("username|inbox|12");
     }
     
     @Test
@@ -186,7 +186,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username-inbox-1\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -200,7 +200,7 @@ public abstract class GetMessagesMethodTest {
 
         assertThat(JsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
-        assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld-inbox-1");
+        assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|inbox|1");
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isEqualTo("my test subject");
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isEqualTo("testmail");
         assertThat(JsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isTrue();
@@ -221,7 +221,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username-inbox-1\"], \"properties\": [\"id\", \"subject\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"], \"properties\": [\"id\", \"subject\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -235,7 +235,7 @@ public abstract class GetMessagesMethodTest {
 
         assertThat(jsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
-        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld-inbox-1");
+        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|inbox|1");
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isEqualTo("my test subject");
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isNull();
         assertThat(jsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isNull();
@@ -261,7 +261,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username-inbox-1\"], \"properties\": [\"headers.from\", \"headers.heADER2\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"], \"properties\": [\"headers.from\", \"headers.heADER2\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -275,7 +275,7 @@ public abstract class GetMessagesMethodTest {
 
         assertThat(jsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
-        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld-inbox-1");
+        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|inbox|1");
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isNull();
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isNull();
         assertThat(jsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isNull();

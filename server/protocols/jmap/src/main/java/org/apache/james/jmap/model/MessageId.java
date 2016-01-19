@@ -27,12 +27,13 @@ import org.javatuples.Triplet;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
 public class MessageId {
 
-    private static final String SEPARATOR = "-";
+    private static final String SEPARATOR = "|";
 
     @JsonCreator
     public static MessageId of(String id) {
@@ -50,7 +51,8 @@ public class MessageId {
         this.uid = uid;
     }
     
-    private MessageId(String username, String mailboxPath, long uid) {
+    @VisibleForTesting
+    MessageId(String username, String mailboxPath, long uid) {
         this.username = username;
         this.mailboxPath = mailboxPath;
         this.uid = uid;
