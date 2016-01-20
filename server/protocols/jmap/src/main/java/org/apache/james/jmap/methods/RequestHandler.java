@@ -33,8 +33,12 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.mailbox.MailboxSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RequestHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestHandler.class);
 
     private final JmapRequestParser jmapRequestParser;
     private final JmapResponseWriter jmapResponseWriter;
@@ -62,6 +66,7 @@ public class RequestHandler {
                         JmapRequest jmapRequest = jmapRequestParser.extractJmapRequest(request, method.requestType());
                         return method.process(jmapRequest, request.getClientId(), mailboxSession);
                     } catch (IOException e) {
+                        LOGGER.error("Error occured while parsing the request.", e);
                         if (e.getCause() instanceof NotImplementedException) {
                             return error(request, "Not yet implemented");
                         }
