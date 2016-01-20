@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.javatuples.Triplet;
 
@@ -67,7 +68,7 @@ public class MessageId {
     }
     
     public MailboxPath getMailboxPath(MailboxSession mailboxSession) {
-        return new MailboxPath("", username, mailboxPath);
+        return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxPath);
     }
     
     @JsonValue

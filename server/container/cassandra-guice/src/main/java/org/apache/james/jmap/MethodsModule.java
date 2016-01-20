@@ -28,6 +28,7 @@ import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.methods.SetMessagesMethod;
 import org.apache.james.mailbox.cassandra.CassandraId;
 
 import com.google.inject.AbstractModule;
@@ -50,6 +51,7 @@ public class MethodsModule extends AbstractModule {
         methods.addBinding().to(new TypeLiteral<GetMailboxesMethod<CassandraId>>(){});
         methods.addBinding().to(new TypeLiteral<GetMessageListMethod<CassandraId>>(){});
         methods.addBinding().to(new TypeLiteral<GetMessagesMethod<CassandraId>>(){});
+        methods.addBinding().to(new TypeLiteral<SetMessagesMethod<CassandraId>>(){});
     }
 
 }
