@@ -26,7 +26,52 @@
 <body>
 
   <section name="Sieve Configuration">
-  
+      <p>
+          James relies on jSieve to interpret SIEVE script and allow user to customize behavior upon Mail reception.
+          This section will details how jSieve is integrated in James, and how you can customize it.
+      </p>
+
+      <h2>Storing user scripts</h2>
+      <p>
+          A <code>SieveRepository</code> is an interface that abstract Sieve script storage, and provided needed
+          operations.
+      </p>
+      <p>
+          There are different implementations for <code>SieveRepository</code> :
+          <ul>
+              <li>DefaultSieveRepository is a legacy configuration option, that ensure retro compatibility with
+              previous Sieve storage systems (directly on the filesystem, with a script per user)</li>
+              <li>SieveFileRepository : a file implementation that support multiple Sieve scripts per user, with
+              one active script.</li>
+          </ul>
+      </p>
+      <p>
+          You can specify the <code>SieveRepository</code> you want using the <code>sieverepository.xml</code> configuration
+          file. Have a look to
+          <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/sieverepository-template.xml">sieverepository-template.xml</a>
+          for an example.
+      </p>
+
+      <h2>Details about jSieve integration</h2>
+      <p>
+          Sieve script execution is done during local delivery of eMails, at the end of the mail spool, asynchronously from
+          reception.
+      </p>
+      <p>
+          The <code>SieveMailboxMailet</code> mailet is part of the jsieve/mailet project. It provides
+          mailet that applies SIEVE actions defined by a user SIEVE script to incoming e-mails. Integration
+          is done in the JAMES code base using a SieveMailet in project server/mailet/mailets. This project :
+          <ul>
+              <li>Propose a SieveLocator based on your SieveRepository for locating your user Sieve script</li>
+              <li>Communicate via URLs with the classes introduced in server/mailet/mailets, allowing to
+                  use it independantly from the API defined in James Mailbox. All you need to use
+                  SieveMailboxMailet is a mailet environment</li>
+          </ul>
+      </p>
+      <p>
+          Note that some integration tests in James server on Mail delivery behaves as integration tests for
+          JSIEVE in JAMES. Have a look to <code>org.apache.james.transport.mailets.delivery.SieveMailetTest</code>.
+      </p>
   </section>
 
 </body>
