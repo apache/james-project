@@ -19,12 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Iterator;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.mail.MessagingException;
-
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -34,8 +30,10 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.mail.MessagingException;
+import java.util.Iterator;
 
 /**
  * Receives a Mail from the Queue and takes care of delivery of the
@@ -115,8 +113,10 @@ public class LocalDelivery extends GenericMailet {
         recipientRewriteTable.setDomainList(domainList);
         recipientRewriteTable.setRecipientRewriteTable(rrt);
         recipientRewriteTable.init(getMailetConfig());
- 
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, "INBOX");
+        sieveMailet = new SieveMailet(usersRepository,
+            mailboxManager,
+            ResourceLocatorImpl.instanciate(usersRepository, sieveRepository),
+            "INBOX");
         sieveMailet.init(new MailetConfig() {
             public String getInitParameter(String name) {
                 if ("addDeliveryHeader".equals(name)) {

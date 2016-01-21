@@ -31,6 +31,7 @@ import org.apache.james.transport.util.MailetContextLog;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.mailet.Poster;
+import org.apache.jsieve.mailet.ResourceLocator;
 import org.apache.jsieve.mailet.SieveMailboxMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -46,24 +47,19 @@ import java.util.Date;
 public class SieveMailet extends SieveMailboxMailet implements Poster {
     private final UsersRepository usersRepos;
     private final MailboxManager mailboxManager;
-    private final SieveRepository sieveRepository;
     private final String folder;
+    private final ResourceLocator resourceLocator;
 
-    public SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, SieveRepository sieveRepository, String folder) {
+    public SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder) {
         this.usersRepos = usersRepos;
+        this.resourceLocator = resourceLocator;
         this.mailboxManager = mailboxManager;
-        this.sieveRepository = sieveRepository;
         this.folder = folder;
     }
 
     @Override
     public void init(MailetConfig config) throws MessagingException {
-        // ATM Fixed implementation
-        try {
-            setLocator(new ResourceLocatorImpl(usersRepos.supportVirtualHosting(), sieveRepository));
-        } catch (UsersRepositoryException e) {
-            throw new MessagingException("Unable to access UsersRepository", e);
-        }
+        setLocator(resourceLocator);
         setPoster(this);
         super.init(config);
     }
