@@ -52,6 +52,6 @@ public class ResourceLocatorImplTest {
     public void resourceLocatorImplShouldWork() throws Exception {
         InputStream inputStream = new ByteArrayInputStream(new byte[0]);
         when(sieveRepository.getActive("receiver@localhost")).thenReturn(inputStream);
-        assertThat(resourceLocator.get("//receiver@localhost/sieve")).isEqualTo(inputStream);
+        assertThat(resourceLocator.get("//receiver@localhost/sieve").getScriptContent()).isEqualTo(inputStream);
     }
 }
