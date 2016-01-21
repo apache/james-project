@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -292,6 +294,11 @@ public class SieveFileRepository implements SieveRepository {
             throw new ScriptNotFoundException(ex);
         }
         return script;
+    }
+
+    @Override
+    public Date getStorageDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException {
+        return new Date(getActiveFile(user).lastModified());
     }
 
     @Override

@@ -19,11 +19,11 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.InputStream;
-
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.jsieve.mailet.ResourceLocator;
+
+import java.util.Date;
 
 public class ResourceLocatorImpl implements ResourceLocator {
 
@@ -35,7 +35,7 @@ public class ResourceLocatorImpl implements ResourceLocator {
         this.sieveRepository = sieveRepository;
     }
 
-    public InputStream get(String uri) throws SieveRepositoryException {
+    public UserSieveInformation get(String uri) throws SieveRepositoryException {
         // Use the complete email address for finding the sieve file
         uri = uri.substring(2);
 
@@ -46,6 +46,6 @@ public class ResourceLocatorImpl implements ResourceLocator {
             username = uri.substring(0, uri.indexOf("@"));
         }
 
-        return sieveRepository.getActive(username);
+        return new UserSieveInformation(sieveRepository.getStorageDateForActiveScript(username), new Date(), sieveRepository.getActive(username));
     }
 }

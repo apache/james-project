@@ -21,6 +21,7 @@
 package org.apache.james.sieverepository.api;
 
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.james.sieverepository.api.exception.DuplicateException;
@@ -57,6 +58,8 @@ public interface SieveRepository {
     List<ScriptSummary> listScripts(String user) throws UserNotFoundException, StorageException;
     
     InputStream getActive(String user) throws UserNotFoundException, ScriptNotFoundException, StorageException;
+
+    Date getStorageDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException;
     
     void setActive(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
     

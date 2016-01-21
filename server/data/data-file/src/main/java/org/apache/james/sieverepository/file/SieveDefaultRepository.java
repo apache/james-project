@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -78,13 +79,22 @@ public class SieveDefaultRepository implements SieveRepository {
         }
     }
 
-    public File retrieveUserFile(String user) throws FileNotFoundException {
+    @Override
+    public Date getStorageDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException {
+        return new Date(retrieveUserFile(user).lastModified());
+    }
+
+    public File retrieveUserFile(String user) throws ScriptNotFoundException {
         // RFC 5228 permits extensions: .siv .sieve
         String sieveFilePrefix = FileSystem.FILE_PROTOCOL + "sieve/" + user + ".";
         try {
             return fileSystem.getFile(sieveFilePrefix + "sieve");
         } catch (FileNotFoundException e) {
-            return fileSystem.getFile(sieveFilePrefix + "siv");
+            try {
+                return fileSystem.getFile(sieveFilePrefix + "siv");
+            } catch (FileNotFoundException fileNotFoundException) {
+                throw new ScriptNotFoundException(fileNotFoundException);
+            }
         }
     }
 
