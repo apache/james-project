@@ -25,10 +25,10 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.SieveMailet;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.jsieve.mailet.ResourceLocator;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
@@ -82,19 +82,19 @@ public class SieveMailetTest {
 
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
-    private SieveRepository sieveRepository;
+    private ResourceLocator resourceLocator;
     private SieveMailet sieveMailet;
     private FakeMailContext fakeMailContext;
     private FakeMailetConfig fakeMailetConfig;
 
     @Before
     public void setUp() throws Exception {
-        sieveRepository = mock(SieveRepository.class);
+        resourceLocator = mock(ResourceLocator.class);
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
         fakeMailContext = new FakeMailContext();
         fakeMailetConfig = new FakeMailetConfig("sieveMailet", fakeMailContext);
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, "INBOX");
+        sieveMailet = new SieveMailet(usersRepository, mailboxManager, resourceLocator, "INBOX");
     }
 
     @Test
@@ -104,7 +104,7 @@ public class SieveMailetTest {
                 return true;
             }
         });
-        when(sieveRepository.getActive("receiver@domain.com")).thenThrow(new ScriptNotFoundException());
+        when(resourceLocator.get("receiver@domain.com")).thenThrow(new ScriptNotFoundException());
         final MessageManager messageManager = prepareMessageManagerOn(new MailboxPath("#private", "receiver@domain.com", "INBOX"));
         sieveMailet.init(fakeMailetConfig);
         sieveMailet.service(createMail());
@@ -118,7 +118,7 @@ public class SieveMailetTest {
                 return false;
             }
         });
-        when(sieveRepository.getActive("receiver")).thenThrow(new ScriptNotFoundException());
+        when(resourceLocator.get("receiver")).thenThrow(new ScriptNotFoundException());
         final MessageManager messageManager = prepareMessageManagerOn(INBOX);
         sieveMailet.init(fakeMailetConfig);
         sieveMailet.service(createMail());
@@ -776,7 +776,9 @@ public class SieveMailetTest {
 
     private void prepareTestUsingScript(String script) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(sieveRepository.getActive("receiver")).thenReturn(ClassLoader.getSystemResourceAsStream(script));
+        when(resourceLocator.get("//receiver@localhost/sieve")).thenReturn(new ResourceLocator.UserSieveInformation(new Date(),
+            new Date(),
+            ClassLoader.getSystemResourceAsStream(script)));
         sieveMailet.init(fakeMailetConfig);
     }
 

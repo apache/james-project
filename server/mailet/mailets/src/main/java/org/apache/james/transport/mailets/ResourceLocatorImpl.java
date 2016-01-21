@@ -21,11 +21,22 @@ package org.apache.james.transport.mailets;
 
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.mailet.ResourceLocator;
 
+import javax.mail.MessagingException;
 import java.util.Date;
 
 public class ResourceLocatorImpl implements ResourceLocator {
+
+    public static ResourceLocatorImpl instanciate(UsersRepository usersRepository, SieveRepository sieveRepository) throws MessagingException {
+        try {
+            return new ResourceLocatorImpl(usersRepository.supportVirtualHosting(), sieveRepository);
+        } catch (UsersRepositoryException e) {
+            throw new MessagingException("Unable to access UsersRepository", e);
+        }
+    }
 
     private final boolean virtualHosting;
     private final SieveRepository sieveRepository;
