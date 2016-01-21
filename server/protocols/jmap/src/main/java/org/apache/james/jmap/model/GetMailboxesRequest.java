@@ -18,15 +18,16 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.jmap.methods.JmapRequest;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.util.streams.Collectors;
+
+import java.util.List;
+import java.util.Optional;
 
 @JsonDeserialize(builder = GetMailboxesRequest.Builder.class)
 public class GetMailboxesRequest implements JmapRequest {
@@ -40,11 +41,11 @@ public class GetMailboxesRequest implements JmapRequest {
 
         private String accountId;
         private ImmutableList.Builder<String> ids;
-        private ImmutableList.Builder<String> properties;
+        private Optional<ImmutableSet<MailboxProperty>> properties;
 
         private Builder() {
             ids = ImmutableList.builder();
-            properties = ImmutableList.builder();
+            properties = Optional.empty();
         }
 
         public Builder accountId(String accountId) {
@@ -62,22 +63,25 @@ public class GetMailboxesRequest implements JmapRequest {
         }
 
         public Builder properties(List<String> properties) {
-            if (properties != null) {
-                throw new NotImplementedException();
-            }
+            this.properties = Optional.of(
+                properties.stream()
+                    .map(MailboxProperty::findProperty)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toImmutableSet()));
             return this;
         }
         
         public GetMailboxesRequest build() {
-            return new GetMailboxesRequest(Optional.ofNullable(accountId), ids.build(), properties.build());
+            return new GetMailboxesRequest(Optional.ofNullable(accountId), ids.build(), properties);
         }
     }
 
     private final Optional<String> accountId;
     private final List<String> ids;
-    private final List<String> properties;
+    private final Optional<ImmutableSet<MailboxProperty>> properties;
 
-    private GetMailboxesRequest(Optional<String> accountId, List<String> ids, List<String> properties) {
+    private GetMailboxesRequest(Optional<String> accountId, List<String> ids, Optional<ImmutableSet<MailboxProperty>> properties) {
         this.accountId = accountId;
         this.ids = ids;
         this.properties = properties;
@@ -91,7 +95,7 @@ public class GetMailboxesRequest implements JmapRequest {
         return ids;
     }
 
-    public List<String> getProperties() {
+    public Optional<ImmutableSet<MailboxProperty>> getProperties() {
         return properties;
     }
 }

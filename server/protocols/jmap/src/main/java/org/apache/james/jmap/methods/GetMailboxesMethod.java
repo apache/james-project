@@ -20,13 +20,17 @@
 package org.apache.james.jmap.methods;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
+import org.apache.james.jmap.model.MailboxProperty;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
@@ -73,11 +77,17 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
 
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
+        GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
         return Stream.of(
                 JmapResponse.builder().clientId(clientId)
                 .response(getMailboxesResponse(mailboxSession))
+                .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
                 .responseName(RESPONSE_NAME)
                 .build());
+    }
+
+    private Set<MailboxProperty> ensureContainsId(Set<MailboxProperty> input) {
+        return Sets.union(input, ImmutableSet.of(MailboxProperty.ID)).immutableCopy();
     }
 
     private GetMailboxesResponse getMailboxesResponse(MailboxSession mailboxSession) {

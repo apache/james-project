@@ -27,6 +27,7 @@ import org.apache.james.jmap.model.Property;
 
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 public class JmapResponse {
 
@@ -61,13 +62,12 @@ public class JmapResponse {
         }
 
         public Builder properties(Optional<? extends Set<? extends Property>> properties) {
-            this.properties = properties;
+            this.properties = properties.map(ImmutableSet::copyOf);
             return this;
         }
 
         public Builder properties(Set<? extends Property> properties) {
-            this.properties = Optional.ofNullable(properties);
-            return this;
+            return properties(Optional.ofNullable(properties));
         }
         
         public Builder filterProvider(Optional<SimpleFilterProvider> filterProvider) {

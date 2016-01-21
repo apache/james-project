@@ -22,13 +22,16 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 
 @JsonDeserialize(builder = Mailbox.Builder.class)
+@JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
 public class Mailbox {
 
     public static Builder builder() {
