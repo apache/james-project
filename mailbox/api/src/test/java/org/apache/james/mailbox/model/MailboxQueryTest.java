@@ -262,20 +262,28 @@ public class MailboxQueryTest {
     public void buildShouldMatchAllValuesWhenAll() {
         MailboxQuery query = MailboxQuery.builder()
             .base(path)
-            .all()
+            .matchesAll()
             .pathDelimiter('.')
             .build();
         assertThat(query.isExpressionMatch("folder")).isTrue();
     }
 
     @Test
-    public void buildShouldConstructMailboxPathWhenPrivateMailboxPathForUser() {
+    public void buildShouldConstructMailboxPathWhenPrivateUserMailboxes() {
         MailboxPath expected = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "");
         MailboxPath actual = MailboxQuery.builder()
-                .privateMailboxPathForUser("user")
-                .expression("*")
+                .privateUserMailboxes("user")
                 .pathDelimiter('.')
                 .build().getBase();
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void buildShouldMatchAllWhenPrivateUserMailboxes() {
+        MailboxQuery query = MailboxQuery.builder()
+                .privateUserMailboxes("user")
+                .pathDelimiter('.')
+                .build();
+        assertThat(query.isExpressionMatch("folder")).isTrue();
     }
 }

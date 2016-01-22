@@ -61,10 +61,10 @@ public final class MailboxQuery {
             return this;
         }
         
-        public Builder privateMailboxPathForUser(String username) {
+        public Builder privateUserMailboxes(String username) {
             String emptyName = "";
             this.base = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, emptyName);
-            return this;
+            return matchesAll();
         }
         
         public Builder expression(String expression) {
@@ -72,7 +72,7 @@ public final class MailboxQuery {
             return this;
         }
         
-        public Builder all() {
+        public Builder matchesAll() {
             this.expression = String.valueOf(FREEWILDCARD);
             return this;
         }
