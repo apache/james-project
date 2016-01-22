@@ -74,6 +74,7 @@ public abstract class GetMessagesMethodTest {
 
     private AccessToken accessToken;
     private ParseContext jsonPath;
+    private String username;
 
     @Before
     public void setup() throws Exception {
@@ -84,7 +85,7 @@ public abstract class GetMessagesMethodTest {
                 .build());
 
         String domain = "domain.tld";
-        String username = "username@" + domain;
+        username = "username@" + domain;
         String password = "password";
         jmapServer.serverProbe().addDomain(domain);
         jmapServer.serverProbe().addUser(username, password);
@@ -176,8 +177,10 @@ public abstract class GetMessagesMethodTest {
     
     @Test
     public void getMessagesShouldReturnMessagesWhenAvailable() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        jmapServer.serverProbe().appendMessage("username", new MailboxPath(MailboxConstants.USER_NAMESPACE, "username", "inbox"),
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
                 new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
         
         embeddedElasticSearch.awaitForElasticSearch();
@@ -186,7 +189,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -200,7 +203,7 @@ public abstract class GetMessagesMethodTest {
 
         assertThat(JsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
-        assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|inbox|1");
+        assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo(username + "|inbox|1");
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isEqualTo("my test subject");
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isEqualTo("testmail");
         assertThat(JsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isTrue();
@@ -211,8 +214,10 @@ public abstract class GetMessagesMethodTest {
     
     @Test
     public void getMessagesShouldReturnFilteredPropertiesMessagesWhenAsked() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        jmapServer.serverProbe().appendMessage("username", new MailboxPath(MailboxConstants.USER_NAMESPACE, "username", "inbox"),
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
                 new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
         
         embeddedElasticSearch.awaitForElasticSearch();
@@ -221,7 +226,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"], \"properties\": [\"id\", \"subject\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"], \"properties\": [\"id\", \"subject\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -235,7 +240,7 @@ public abstract class GetMessagesMethodTest {
 
         assertThat(jsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
-        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|inbox|1");
+        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo(username + "|inbox|1");
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isEqualTo("my test subject");
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isNull();
         assertThat(jsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isNull();
@@ -246,8 +251,10 @@ public abstract class GetMessagesMethodTest {
     
     @Test
     public void getMessagesShouldReturnFilteredHeaderPropertyWhenAsked() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        jmapServer.serverProbe().appendMessage("username", new MailboxPath(MailboxConstants.USER_NAMESPACE, "username", "inbox"),
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
                 new ByteArrayInputStream(("From: user@domain.tld\r\n"
                         + "header1: Header1Content\r\n"
                         + "HEADer2: Header2Content\r\n"
@@ -261,7 +268,7 @@ public abstract class GetMessagesMethodTest {
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"], \"properties\": [\"headers.from\", \"headers.heADER2\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"], \"properties\": [\"headers.from\", \"headers.heADER2\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -275,7 +282,7 @@ public abstract class GetMessagesMethodTest {
 
         assertThat(jsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
-        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|inbox|1");
+        assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo(username + "|inbox|1");
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isNull();
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isNull();
         assertThat(jsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isNull();
