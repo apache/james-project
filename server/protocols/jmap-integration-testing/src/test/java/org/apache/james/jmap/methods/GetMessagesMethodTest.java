@@ -290,4 +290,34 @@ public abstract class GetMessagesMethodTest {
         assertThat(jsonPath.parse(response).<Map<String, String>>read(firstMessagePath + ".headers")).containsOnly(MapEntry.entry("from", "user@domain.tld"), MapEntry.entry("header2", "Header2Content"));
         assertThat(jsonPath.parse(response).<String>read(firstMessagePath + ".date")).isNull();
     }
+
+    @Test
+    public void getMessagesShouldReturnNotFoundWhenIdDoesntMatch() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
+                new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+        
+        embeddedElasticSearch.awaitForElasticSearch();
+        
+        String response = given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(startsWith("[[\"messages\","))
+            .extract()
+            .asString();
+
+        String firstResponsePath = "$.[0].[1]";
+
+        assertThat(jsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
+        assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(0);
+        assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".notFound.length()")).isEqualTo(1);
+    }
 }
