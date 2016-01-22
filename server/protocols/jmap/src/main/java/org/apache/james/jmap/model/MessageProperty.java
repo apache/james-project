@@ -18,15 +18,12 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
-
-import org.apache.james.util.streams.Collectors;
 
 import com.google.common.base.Preconditions;
 
 public class MessageProperty implements Property {
+
     public static MessageProperty id = valueOf("id");
     public static MessageProperty blobId = valueOf("blobId");
     public static MessageProperty threadId = valueOf("threadId");
@@ -52,39 +49,23 @@ public class MessageProperty implements Property {
     public static MessageProperty attachments = valueOf("attachments");
     public static MessageProperty attachedMessages = valueOf("attachedMessages");
     public static MessageProperty body = valueOf("body");
-    
-    private static final String HEADER_PROPERTY_PREFIX = "headers.";
-    
+
     private final String property;
-    
+
     private MessageProperty(String property) {
-        this.property = property.toLowerCase(Locale.US);
+        this.property = property;
     }
 
     public static MessageProperty valueOf(String property) {
+        Preconditions.checkNotNull(property);
         return new MessageProperty(property);
-    }
-    
-    public static MessageProperty headerValueOf(String headerProperty) {
-        Preconditions.checkNotNull(headerProperty);
-        return new MessageProperty(HEADER_PROPERTY_PREFIX + headerProperty);
-    }
-    
-    public static Set<MessageProperty> selectHeadersProperties(Set<MessageProperty> properties) {
-        return properties.stream()
-                .filter(MessageProperty::isHeaderProperty)
-                .collect(Collectors.toImmutableSet());
     }
 
     @Override
     public String asFieldName() {
         return property;
     }
-    
-    public boolean isHeaderProperty() {
-        return property.startsWith(HEADER_PROPERTY_PREFIX);
-    }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof MessageProperty) {
@@ -93,12 +74,12 @@ public class MessageProperty implements Property {
         }
         return false;
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(property);
     }
-    
+
     @Override
     public String toString() {
         return Objects.toString(property);

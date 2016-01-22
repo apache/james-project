@@ -19,14 +19,16 @@
 package org.apache.james.jmap.model;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.util.streams.Collectors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = GetMessagesRequest.Builder.class)
 public class GetMessagesRequest implements JmapRequest {
@@ -40,12 +42,12 @@ public class GetMessagesRequest implements JmapRequest {
         
         private Optional<String> accountId;
         private final ImmutableList.Builder<MessageId> ids;
-        private Optional<ImmutableSet<MessageProperty>> properties;
+        private ImmutableSet.Builder<String> propertiesBuilder;
 
         private Builder() {
             accountId = Optional.empty();
             ids = ImmutableList.builder();
-            properties = Optional.empty();
+            propertiesBuilder = null;
         }
         
         public Builder accountId(String accountId) {
@@ -58,24 +60,60 @@ public class GetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder properties(MessageProperty... properties) {
-            this.properties = Optional.of(ImmutableSet.copyOf(properties));
+        public Builder properties(List<String> properties) {
+            if (propertiesBuilder == null) {
+                propertiesBuilder = ImmutableSet.builder();
+            }
+            this.propertiesBuilder.addAll(properties);
             return this;
         }
         
         public GetMessagesRequest build() {
-            return new GetMessagesRequest(accountId, ids.build(), properties);
+            return new GetMessagesRequest(accountId, ids.build(), messageProperties(propertiesBuilder), messageHeaderProperties(propertiesBuilder));
+        }
+
+        private Optional<ImmutableSet<MessageProperty>> messageProperties(ImmutableSet.Builder<String> messageProperties) {
+            if (messageProperties == null) {
+                return Optional.empty();
+            }
+            return toOptional(messageProperties.build().stream()
+                        .filter(property -> !isHeaderProperty(property))
+                        .map(MessageProperty::valueOf)
+                        .collect(Collectors.toImmutableSet()),
+                    MessageProperty.class);
+        }
+
+        private Optional<ImmutableSet<MessageHeaderProperty>> messageHeaderProperties(ImmutableSet.Builder<String> headerProperties) {
+            if (headerProperties == null) {
+                return Optional.empty();
+            }
+            return toOptional(headerProperties.build().stream()
+                        .filter(this::isHeaderProperty)
+                        .map(MessageHeaderProperty::valueOf)
+                        .collect(Collectors.toImmutableSet()),
+                    MessageHeaderProperty.class);
+        }
+
+        private boolean isHeaderProperty(String property) {
+            return property.startsWith(MessageHeaderProperty.HEADER_PROPERTY_PREFIX);
+        }
+
+        private <T extends Property> Optional<ImmutableSet<T>> toOptional(ImmutableSet<T> set, Class<T> clazz) {
+            return Optional.of(set);
         }
     }
 
     private final Optional<String> accountId;
     private final ImmutableList<MessageId> ids;
     private final Optional<ImmutableSet<MessageProperty>> properties;
+    private final Optional<ImmutableSet<MessageHeaderProperty>> headerProperties;
 
-    public GetMessagesRequest(Optional<String> accountId, ImmutableList<MessageId> ids, Optional<ImmutableSet<MessageProperty>> properties) {
+    public GetMessagesRequest(Optional<String> accountId, ImmutableList<MessageId> ids, 
+            Optional<ImmutableSet<MessageProperty>> properties, Optional<ImmutableSet<MessageHeaderProperty>> headerProperties) {
         this.accountId = accountId;
         this.ids = ids;
         this.properties = properties;
+        this.headerProperties = headerProperties;
     }
     
     public Optional<String> getAccountId() {
@@ -88,5 +126,9 @@ public class GetMessagesRequest implements JmapRequest {
     
     public Optional<ImmutableSet<MessageProperty>> getProperties() {
         return properties;
+    }
+
+    public Optional<ImmutableSet<MessageHeaderProperty>> getHeaderProperties() {
+        return headerProperties;
     }
 }

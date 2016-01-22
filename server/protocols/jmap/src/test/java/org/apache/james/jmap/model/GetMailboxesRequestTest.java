@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 
@@ -36,4 +38,29 @@ public class GetMailboxesRequestTest {
         GetMailboxesRequest.builder().ids(ImmutableList.of());
     }
 
+    @Test
+    public void propertiesShouldBeEmptyWhenNotGiven() {
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder().build();
+        assertThat(getMailboxesRequest.getProperties()).isEmpty();
+    }
+
+    @Test
+    public void propertiesShouldNotBeEmptyWhenEmptyListGiven() {
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .properties(ImmutableList.of())
+                .build();
+
+        assertThat(getMailboxesRequest.getProperties()).isPresent();
+        assertThat(getMailboxesRequest.getProperties().get()).isEmpty();;
+    }
+
+    @Test
+    public void propertiesShouldNotBeEmptyWhenListGiven() {
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .properties(ImmutableList.of("id"))
+                .build();
+
+        assertThat(getMailboxesRequest.getProperties()).isPresent();
+        assertThat(getMailboxesRequest.getProperties().get()).containsOnly(MailboxProperty.ID);
+    }
 }

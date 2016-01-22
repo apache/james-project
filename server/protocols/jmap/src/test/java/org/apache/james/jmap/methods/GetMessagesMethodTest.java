@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -58,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
@@ -176,7 +178,7 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnOnlyMessageIdsOnEmptyPropertyList() throws MailboxException {
+    public void processShouldReturnOnlyMandatoryPropertiesOnEmptyPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
         ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
@@ -184,7 +186,7 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(new MessageProperty[0])
+                .properties(ImmutableList.of())
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
@@ -194,11 +196,11 @@ public class GetMessagesMethodTest {
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)
             .asList()
-            .containsOnly(MessageProperty.id);
+            .containsOnly(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds);
     }
 
     @Test
-    public void processShouldReturnIdWhenNotInPropertyList() throws MailboxException {
+    public void processShouldReturnAllPropertiesWhenNoPropertyGiven() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
         ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
@@ -206,8 +208,28 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(MessageProperty.subject)
                 .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProperties()).isEmpty();
+    }
+
+    @Test
+    public void processShouldAddMantoryPropertiesWhenNotInPropertyList() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
+        long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .properties(ImmutableList.of(MessageProperty.subject.asFieldName()))
+                .build();
+
+        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds, MessageProperty.subject);
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -216,7 +238,7 @@ public class GetMessagesMethodTest {
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)
             .asList()
-            .containsOnly(MessageProperty.id, MessageProperty.subject);
+            .containsOnlyElementsOf(expected);
     }
     
     @Test
@@ -228,8 +250,10 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(MessageProperty.body)
+                .properties(ImmutableList.of(MessageProperty.body.asFieldName()))
                 .build();
+
+        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds, MessageProperty.textBody);
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -238,7 +262,7 @@ public class GetMessagesMethodTest {
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)
             .asList()
-            .containsOnly(MessageProperty.id, MessageProperty.textBody);
+            .containsOnlyElementsOf(expected);
     }
     
     @Test
@@ -253,8 +277,10 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(MessageProperty.valueOf("headers.from"), MessageProperty.valueOf("headers.heADER2"))
+                .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
+
+        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds, MessageProperty.headers);
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -264,7 +290,7 @@ public class GetMessagesMethodTest {
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)
             .asList()
-            .containsOnly(MessageProperty.id, MessageProperty.headers);
+            .containsOnlyElementsOf(expected);
     }
     
     @Test
@@ -279,7 +305,7 @@ public class GetMessagesMethodTest {
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(new MessageId(ROBERT, inboxPath, message1Uid))
-                .properties(MessageProperty.valueOf("headers.from"), MessageProperty.valueOf("headers.heADER2"))
+                .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);

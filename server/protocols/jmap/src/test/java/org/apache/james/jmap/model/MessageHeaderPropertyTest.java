@@ -22,30 +22,37 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
-public class MessagePropertyTest {
-    
+public class MessageHeaderPropertyTest {
+
     @Test(expected=NullPointerException.class)
     public void valueOfShouldThrowWhenNull() {
-        MessageProperty.valueOf(null);
+        MessageHeaderProperty.valueOf(null);
     }
-    
+
+    @Test(expected=NullPointerException.class)
+    public void valueOfalueOfShouldThrowWhenNull() {
+        MessageHeaderProperty.valueOf(null);
+    }
+
     @Test
-    public void valueOfThenAsFieldNameShouldReturnMatchingCaseProperty() {
-        assertThat(MessageProperty.valueOf("ProP").asFieldName()).isEqualTo("ProP");
+    public void valueOfShouldReturnLowerCasedProperty() {
+        MessageHeaderProperty headerProperty = MessageHeaderProperty.valueOf("ProP");
+
+        assertThat(headerProperty.asFieldName()).isEqualTo("prop");
     }
-    
+
     @Test
     public void equalsShouldBeTrueWhenIdenticalProperties() {
-        assertThat(MessageProperty.valueOf("prop")).isEqualTo(MessageProperty.valueOf("prop"));
+        assertThat(MessageHeaderProperty.valueOf("prop")).isEqualTo(MessageHeaderProperty.valueOf("prop"));
     }
 
     @Test
     public void equalsShouldBeFalseWhenDifferentProperties() {
-        assertThat(MessageProperty.valueOf("prop")).isNotEqualTo(MessageProperty.valueOf("other"));
+        assertThat(MessageHeaderProperty.valueOf("prop")).isNotEqualTo(MessageHeaderProperty.valueOf("other"));
     }
 
     @Test
-    public void equalsShouldBeFalseWhenDifferentCaseProperties() {
-        assertThat(MessageProperty.valueOf("prOP")).isNotEqualTo(MessageProperty.valueOf("PRop"));
+    public void equalsShouldBeTrueWhenDifferentCaseProperties() {
+        assertThat(MessageHeaderProperty.valueOf("prOP")).isEqualTo(MessageHeaderProperty.valueOf("PRop"));
     }
 }
