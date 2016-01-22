@@ -46,6 +46,46 @@ public final class MailboxQuery {
      * Use this wildcard to match every char except the hierarchy delimiter
      */
     public final static char LOCALWILDCARD = '%';
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static class Builder {
+        private MailboxPath base;
+        private String expression;
+        private char pathDelimiter;
+        
+        public Builder base(MailboxPath base) {
+            this.base = base;
+            return this;
+        }
+        
+        public Builder privateMailboxPathForUser(String username) {
+            String emptyName = "";
+            this.base = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, emptyName);
+            return this;
+        }
+        
+        public Builder expression(String expression) {
+            this.expression = expression;
+            return this;
+        }
+        
+        public Builder all() {
+            this.expression = String.valueOf(FREEWILDCARD);
+            return this;
+        }
+        
+        public Builder pathDelimiter(char pathDelimiter) {
+            this.pathDelimiter = pathDelimiter;
+            return this;
+        }
+        
+        public MailboxQuery build() {
+            return new MailboxQuery(base, expression, pathDelimiter);
+        }
+    }
 
     /**
      * Constructs an expression determining a set of mailbox names.

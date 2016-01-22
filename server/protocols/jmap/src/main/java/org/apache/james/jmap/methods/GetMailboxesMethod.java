@@ -40,7 +40,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -113,11 +112,12 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     
     private List<MailboxMetaData> retrieveUserMailboxes(MailboxSession session) throws MailboxException {
         String username = session.getUser().getUserName();
-        return mailboxManager.search(
-            new MailboxQuery(new MailboxPath(MailboxConstants.USER_NAMESPACE, username, ""),
-                "*",
-                session.getPathDelimiter()),
-            session);
+        return mailboxManager.search(MailboxQuery.builder()
+                                        .pathDelimiter(session.getPathDelimiter())
+                                        .privateMailboxPathForUser(username)
+                                        .all()
+                                        .build(),
+                                   session);
     }
 
     private Optional<Mailbox> mailboxFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
