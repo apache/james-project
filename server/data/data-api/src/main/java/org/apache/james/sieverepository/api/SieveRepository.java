@@ -29,7 +29,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.joda.time.DateTime;
 
 
@@ -38,7 +37,7 @@ import org.joda.time.DateTime;
  */
 public interface SieveRepository {
 
-    void haveSpace(String user, String name, long size) throws UserNotFoundException, QuotaExceededException, StorageException;
+    void haveSpace(String user, String name, long size) throws QuotaExceededException, StorageException;
     
     /**
      * PutScript.
@@ -48,25 +47,24 @@ public interface SieveRepository {
      * @param user
      * @param name
      * @param content
-     * @throws UserNotFoundException
      * @throws StorageException
      * @throws QuotaExceededException
      */
-    void putScript(String user, String name, String content) throws UserNotFoundException, StorageException, QuotaExceededException;
+    void putScript(String user, String name, String content) throws StorageException, QuotaExceededException;
     
-    List<ScriptSummary> listScripts(String user) throws UserNotFoundException, StorageException;
-    
-    InputStream getActive(String user) throws UserNotFoundException, ScriptNotFoundException, StorageException;
+    List<ScriptSummary> listScripts(String user) throws StorageException;
 
-    DateTime getActivationDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException;
+    DateTime getActivationDateForActiveScript(String user) throws StorageException, ScriptNotFoundException;
+
+    InputStream getActive(String user) throws ScriptNotFoundException, StorageException;
     
-    void setActive(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
+    void setActive(String user, String name) throws ScriptNotFoundException, StorageException;
     
-    InputStream getScript(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
+    InputStream getScript(String user, String name) throws ScriptNotFoundException, StorageException;
     
-    void deleteScript(String user, String name) throws UserNotFoundException, ScriptNotFoundException, IsActiveException, StorageException;
+    void deleteScript(String user, String name) throws ScriptNotFoundException, IsActiveException, StorageException;
     
-    void renameScript(String user, String oldName, String newName) throws UserNotFoundException, ScriptNotFoundException, DuplicateException, StorageException;
+    void renameScript(String user, String oldName, String newName) throws ScriptNotFoundException, DuplicateException, StorageException;
 
     boolean hasQuota() throws StorageException;
     
@@ -76,12 +74,12 @@ public interface SieveRepository {
     
     void removeQuota() throws QuotaNotFoundException, StorageException;
     
-    boolean hasQuota(String user) throws UserNotFoundException, StorageException;
+    boolean hasQuota(String user) throws StorageException;
     
-    long getQuota(String user) throws UserNotFoundException, QuotaNotFoundException, StorageException;
+    long getQuota(String user) throws QuotaNotFoundException, StorageException;
     
-    void setQuota(String user, long quota) throws UserNotFoundException, StorageException;
+    void setQuota(String user, long quota) throws StorageException;
     
-    void removeQuota(String user) throws UserNotFoundException, QuotaNotFoundException, StorageException;
+    void removeQuota(String user) throws QuotaNotFoundException, StorageException;
 
 }

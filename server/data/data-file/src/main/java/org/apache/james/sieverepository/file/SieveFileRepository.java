@@ -31,7 +31,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.joda.time.DateTime;
 
 import javax.inject.Inject;
@@ -157,8 +156,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public void deleteScript(String user, String name) throws UserNotFoundException,
-            ScriptNotFoundException, IsActiveException, StorageException {
+    public void deleteScript(String user, String name) throws ScriptNotFoundException, IsActiveException, StorageException {
         synchronized (lock) {
             File file = getScriptFile(user, name);
             if (isActiveFile(user, file)) {
@@ -173,8 +171,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public InputStream getScript(String user, String name) throws UserNotFoundException,
-            ScriptNotFoundException, StorageException {
+    public InputStream getScript(String user, String name) throws ScriptNotFoundException, StorageException {
         InputStream script;
         try {
             script = new FileInputStream(getScriptFile(user, name));
@@ -193,8 +190,7 @@ public class SieveFileRepository implements SieveRepository {
      * @see SieveRepository#haveSpace(java.lang.String, java.lang.String, long)
      */
     @Override
-    public void haveSpace(String user, String name, long size) throws UserNotFoundException,
-            QuotaExceededException, StorageException {
+    public void haveSpace(String user, String name, long size) throws QuotaExceededException, StorageException {
         long usedSpace = 0;
         for (File file : getUserDirectory(user).listFiles()) {
             if (!(file.getName().equals(name) || SYSTEM_FILES.contains(file.getName()))) {
@@ -228,8 +224,7 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
-    @Override
-    public List<ScriptSummary> listScripts(String user) throws UserNotFoundException, StorageException {
+    public List<ScriptSummary> listScripts(String user) throws StorageException {
         File[] files = getUserDirectory(user).listFiles();
         List<ScriptSummary> summaries = new ArrayList<ScriptSummary>(files.length);
         File activeFile = null;
@@ -252,8 +247,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public void putScript(String user, String name, String content)
-            throws UserNotFoundException, StorageException, QuotaExceededException {
+    public void putScript(String user, String name, String content) throws StorageException, QuotaExceededException {
         synchronized (lock) {
             File file = new File(getUserDirectory(user), name);
             haveSpace(user, name, content.length());
@@ -263,8 +257,7 @@ public class SieveFileRepository implements SieveRepository {
 
     @Override
     public void renameScript(String user, String oldName, String newName)
-            throws UserNotFoundException, ScriptNotFoundException,
-            DuplicateException, StorageException {
+            throws ScriptNotFoundException, DuplicateException, StorageException {
         synchronized (lock) {
             File oldFile = getScriptFile(user, oldName);
             File newFile = new File(getUserDirectory(user), newName);
@@ -284,8 +277,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public InputStream getActive(String user) throws UserNotFoundException,
-            ScriptNotFoundException, StorageException {
+    public InputStream getActive(String user) throws ScriptNotFoundException, StorageException {
         InputStream script;
         try {
             script = new FileInputStream(getActiveFile(user));
@@ -296,13 +288,11 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public DateTime getActivationDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException {
+    public DateTime getActivationDateForActiveScript(String user) throws StorageException, ScriptNotFoundException {
         return new DateTime(getActiveFile(user).lastModified());
     }
 
-    @Override
-    public void setActive(String user, String name) throws UserNotFoundException,
-            ScriptNotFoundException, StorageException {
+    public void setActive( String user, String name) throws ScriptNotFoundException, StorageException {
         synchronized (lock) {
             // Turn off currently active script, if any
             File oldActive = null;
@@ -334,7 +324,7 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
-    protected File getUserDirectory(String user) throws UserNotFoundException, StorageException {
+    protected File getUserDirectory(String user) throws StorageException {
         File file = getUserDirectoryFile(user);
         if (!file.exists()) {
             ensureUser(user);
@@ -346,8 +336,7 @@ public class SieveFileRepository implements SieveRepository {
         return new File(getSieveRootDirectory(), user + '/');
     }
 
-    protected File getActiveFile(String user) throws UserNotFoundException,
-            ScriptNotFoundException, StorageException {
+    protected File getActiveFile(String user) throws ScriptNotFoundException, StorageException {
         File dir = getUserDirectory(user);
         String content;
         try {
@@ -358,7 +347,7 @@ public class SieveFileRepository implements SieveRepository {
         return new File(dir, content);
     }
 
-    protected boolean isActiveFile(String user, File file) throws UserNotFoundException, StorageException {
+    protected boolean isActiveFile(String user, File file) throws StorageException {
         try {
             return 0 == getActiveFile(user).compareTo(file);
         } catch (ScriptNotFoundException ex) {
@@ -388,8 +377,7 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
-    protected File getScriptFile(String user, String name) throws UserNotFoundException,
-            ScriptNotFoundException, StorageException {
+    protected File getScriptFile(String user, String name) throws ScriptNotFoundException, StorageException {
         File file = new File(getUserDirectory(user), name);
         if (!file.exists()) {
             throw new ScriptNotFoundException("User: " + user + "Script: " + name);
@@ -461,17 +449,17 @@ public class SieveFileRepository implements SieveRepository {
         toFile(file, content);
     }
 
-    protected File getQuotaFile(String user) throws UserNotFoundException, StorageException {
+    protected File getQuotaFile(String user) throws StorageException {
         return new File(getUserDirectory(user), FILE_NAME_QUOTA);
     }
 
     @Override
-    public boolean hasQuota(String user) throws UserNotFoundException, StorageException {
+    public boolean hasQuota(String user) throws StorageException {
         return getQuotaFile(user).exists();
     }
 
     @Override
-    public long getQuota(String user) throws UserNotFoundException, QuotaNotFoundException, StorageException {
+    public long getQuota(String user) throws QuotaNotFoundException, StorageException {
         Long quota = null;
         File file = getQuotaFile(user);
         if (file.exists()) {
@@ -496,8 +484,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public void removeQuota(String user) throws UserNotFoundException,
-            QuotaNotFoundException, StorageException {
+    public void removeQuota(String user) throws QuotaNotFoundException, StorageException {
         synchronized (lock) {
             File file = getQuotaFile(user);
             if (!file.exists()) {
@@ -512,8 +499,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public void setQuota(String user, long quota) throws UserNotFoundException,
-            StorageException {
+    public void setQuota(String user, long quota) throws StorageException {
         synchronized (lock) {
             File file = getQuotaFile(user);
             String content = Long.toString(quota);

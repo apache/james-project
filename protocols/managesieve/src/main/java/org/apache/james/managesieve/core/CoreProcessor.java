@@ -47,7 +47,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.sieverepository.api.exception.UserNotFoundException;
 import org.apache.james.user.api.UsersRepository;
 
 import java.io.IOException;
@@ -177,7 +176,7 @@ public class CoreProcessor implements CoreCommands {
         }, session);
     }
 
-    private String listScriptsInternals(Session session) throws AuthenticationRequiredException, UserNotFoundException, StorageException {
+    private String listScriptsInternals(Session session) throws AuthenticationRequiredException, StorageException {
         authenticationCheck(session);
         String list = Joiner.on("\r\n").join(
             Iterables.transform(sieveRepository.listScripts(session.getUser()), new Function<ScriptSummary, String>() {
@@ -317,8 +316,6 @@ public class CoreProcessor implements CoreCommands {
             return "NO (NONEXISTENT) \"There is no script by that name\"";
         } catch (IsActiveException ex) {
             return "NO (ACTIVE) \"You may not delete an active script\"";
-        }  catch (UserNotFoundException e) {
-            return "NO : Invalid user " + session.getUser();
         } catch (StorageException e) {
             return "NO : Storage Exception : " + e.getMessage();
         } catch (SyntaxException e) {
