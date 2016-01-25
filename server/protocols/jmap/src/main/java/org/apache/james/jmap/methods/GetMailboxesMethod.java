@@ -96,7 +96,9 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
             mailboxManager.list(mailboxSession)
                 .stream()
                 .map(mailboxPath -> mailboxFromMailboxPath(mailboxPath, mailboxSession))
-                .forEach(mailbox -> builder.add(mailbox.get()));
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .forEach(mailbox -> builder.add(mailbox));
             return builder.build();
         } catch (MailboxException e) {
             throw Throwables.propagate(e);

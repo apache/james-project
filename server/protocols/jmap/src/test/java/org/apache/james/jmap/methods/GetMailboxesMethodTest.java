@@ -19,6 +19,9 @@
 package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
@@ -31,6 +34,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -42,12 +46,15 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.SimpleMailboxSession;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 public class GetMailboxesMethodTest {
 
@@ -57,11 +64,12 @@ public class GetMailboxesMethodTest {
     private StoreMailboxManager<InMemoryId> mailboxManager;
     private GetMailboxesMethod<InMemoryId> getMailboxesMethod;
     private ClientId clientId;
+    private InMemoryMailboxSessionMapperFactory mailboxMapperFactory;
 
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        InMemoryMailboxSessionMapperFactory mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         mailboxManager = new StoreMailboxManager<InMemoryId>(mailboxMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver);
@@ -78,6 +86,30 @@ public class GetMailboxesMethodTest {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
         
         List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+        
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
+                .isEmpty();
+    }
+    
+    @Test
+    public void getMailboxesShouldNotFailWhenMailboxManagerErrors() throws Exception {
+        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
+        when(mockedMailboxManager.list(any()))
+            .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
+        when(mockedMailboxManager.getMailbox(any(), any()))
+            .thenThrow(new MailboxException());
+        GetMailboxesMethod<InMemoryId> testee = new GetMailboxesMethod<>(mockedMailboxManager, mailboxMapperFactory);
+        
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+        MailboxSession session = new SimpleMailboxSession(0, USERNAME, "", null, null, '.', null);
+        
+        List<JmapResponse> getMailboxesResponse = testee.process(getMailboxesRequest, clientId, session).collect(Collectors.toList());
         
         assertThat(getMailboxesResponse)
                 .hasSize(1)
