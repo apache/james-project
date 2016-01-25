@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 
@@ -57,22 +58,39 @@ public final class MailboxQuery {
     }
 
     public static Builder builder(MailboxSession session) {
-        return builder().pathDelimiter(session.getPathDelimiter());
+        return builder().pathDelimiter(session.getPathDelimiter()).username(session.getUser().getUserName());
     }
 
     public static class Builder {
+        private static final String EMPTY_PATH_NAME = "";
         private MailboxPath base;
         private String expression;
         @VisibleForTesting char pathDelimiter;
+        @VisibleForTesting String username;
+        @VisibleForTesting Optional<String> pathName;
+        @VisibleForTesting Optional<String> namespace;
+        
+        private Builder() {
+            this.pathName = Optional.absent();
+            this.namespace = Optional.absent();
+        }
         
         public Builder base(MailboxPath base) {
             this.base = base;
             return this;
         }
         
-        public Builder privateUserMailboxes(String username) {
-            String emptyName = "";
-            this.base = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, emptyName);
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+        
+        public Builder privateUserMailboxes() {
+            Preconditions.checkState(!pathName.isPresent());
+            Preconditions.checkState(!namespace.isPresent());
+            Preconditions.checkState(base == null);
+            this.namespace = Optional.of(MailboxConstants.USER_NAMESPACE);
+            this.pathName = Optional.of(EMPTY_PATH_NAME);
             return matchesAll();
         }
         
@@ -92,8 +110,19 @@ public final class MailboxQuery {
         }
         
         public MailboxQuery build() {
-            Preconditions.checkState(base != null);
-            return new MailboxQuery(base, expression, pathDelimiter);
+            Preconditions.checkState(base != null || username != null);
+            if (base != null && username != null) {
+                throw new IllegalStateException("'base' and 'username' are exclusives");
+            }
+            return new MailboxQuery(buildBase(), expression, pathDelimiter);
+        }
+
+        private MailboxPath buildBase() {
+            if (base != null) {
+                return base;
+            } else {
+                return new MailboxPath(namespace.or(MailboxConstants.USER_NAMESPACE), username, pathName.or(EMPTY_PATH_NAME));
+            }
         }
     }
 

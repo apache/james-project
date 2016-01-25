@@ -111,11 +111,9 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
     }
     
     private List<MailboxMetaData> retrieveUserMailboxes(MailboxSession session) throws MailboxException {
-        String username = session.getUser().getUserName();
-        return mailboxManager.search(MailboxQuery.builder(session)
-                                        .privateUserMailboxes(username)
-                                        .build(),
-                                   session);
+        return mailboxManager.search(
+                MailboxQuery.builder(session).privateUserMailboxes().build(),
+                session);
     }
 
     private Optional<Mailbox> mailboxFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
