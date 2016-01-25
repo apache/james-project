@@ -98,6 +98,7 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
                 .map(mailboxPath -> mailboxFromMailboxPath(mailboxPath, mailboxSession))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
+                .sorted((m1, m2) -> Integer.compare(m1.getSortOrder(), m2.getSortOrder()))
                 .forEach(mailbox -> builder.add(mailbox));
             return builder.build();
         } catch (MailboxException e) {
