@@ -807,6 +807,18 @@ public class SieveMailetTest {
     }
 
     @Test
+    public void vacationShouldNotSendNotificationToMailingLists() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        MessageManager messageManager = prepareMessageManagerOn(INBOX);
+        Mail mail = createMail();
+        mail.getMessage().addHeader("List-Id", "0123456789");
+        sieveMailet.service(mail);
+        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
     public void vacationShouldNotGenerateNotificationIfTooOld() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", dateOld, dateNew);
         MessageManager messageManager = prepareMessageManagerOn(INBOX);
