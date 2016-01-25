@@ -60,6 +60,7 @@ public class GetMailboxesMethodTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMailboxesMethodTest.class);
     private static final String USERNAME = "username@domain.tld";
+    private static final String USERNAME2 = "username2@domain.tld";
 
     private StoreMailboxManager<InMemoryId> mailboxManager;
     private GetMailboxesMethod<InMemoryId> getMailboxesMethod;
@@ -142,6 +143,30 @@ public class GetMailboxesMethodTest {
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getId, Mailbox::getName, Mailbox::getUnreadMessages)
                 .containsOnly(Tuple.tuple("1", mailboxPath.getName(), 2L));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnOnlyMailboxesOfCurrentUserWhenAvailable() throws Exception {
+        MailboxPath mailboxPathToReturn = new MailboxPath("#private", USERNAME, "mailboxToReturn");
+        MailboxPath mailboxPathtoSkip = new MailboxPath("#private", USERNAME2, "mailboxToSkip");
+        MailboxSession userSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        MailboxSession user2Session = mailboxManager.createSystemSession(USERNAME2, LOGGER);
+        mailboxManager.createMailbox(mailboxPathToReturn, userSession);
+        mailboxManager.createMailbox(mailboxPathtoSkip, user2Session);
+
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, userSession).collect(Collectors.toList());
+        
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
+                .extracting(Mailbox::getId, Mailbox::getName)
+                .containsOnly(Tuple.tuple("1", mailboxPathToReturn.getName()));
     }
 
     @Test
