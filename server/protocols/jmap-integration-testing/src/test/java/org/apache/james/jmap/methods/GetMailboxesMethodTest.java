@@ -240,8 +240,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnFilteredMailboxesPropertiesWhenRequestContainsFilterProperties() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "name");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         String response = given()
             .accept(ContentType.JSON)
@@ -276,8 +275,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnIdWhenRequestContainsEmptyPropertyListFilter() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "name");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         String response = given()
             .accept(ContentType.JSON)
@@ -299,8 +297,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldIgnoreUnknownPropertiesWhenRequestContainsUnknownPropertyListFilter() throws Exception {
-        String user = "user";
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, user, "name");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         String response = given()
             .accept(ContentType.JSON)
