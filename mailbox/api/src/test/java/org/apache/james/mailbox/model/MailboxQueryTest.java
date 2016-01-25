@@ -25,6 +25,12 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.MailboxQuery.Builder;
+
 public class MailboxQueryTest {
 
     MailboxPath path;
@@ -248,6 +254,11 @@ public class MailboxQueryTest {
         assertThat(new MailboxQuery(path, null, '.').isExpressionMatch("folder")).isFalse();
     }
 
+    @Test(expected=IllegalStateException.class)
+    public void buildShouldThrowWhenNoBaseDefined() {
+        MailboxQuery.builder().expression("abc").pathDelimiter('/').build();
+    }
+    
     @Test
     public void freeWildcardAreNotEscapedWithDotSeparator() {
         assertThat(new MailboxQuery(path, "folder\\*", '.').isExpressionMatch("folder\\123")).isTrue();
@@ -286,4 +297,14 @@ public class MailboxQueryTest {
                 .build();
         assertThat(query.isExpressionMatch("folder")).isTrue();
     }
+    
+    @Test
+    public void builderShouldInitFromSessionWhenGiven() {
+        MailboxSession mailboxSession = mock(MailboxSession.class);
+        when(mailboxSession.getPathDelimiter()).thenReturn('#');
+        Builder query = MailboxQuery.builder(mailboxSession);
+        assertThat(query.pathDelimiter).isEqualTo('#');
+    }
+    
+    
 }

@@ -22,6 +22,11 @@ package org.apache.james.mailbox.model;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
+import org.apache.james.mailbox.MailboxSession;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+
 
 /**
  * Expresses select criteria for mailboxes.
@@ -50,11 +55,15 @@ public final class MailboxQuery {
     public static Builder builder() {
         return new Builder();
     }
-    
+
+    public static Builder builder(MailboxSession session) {
+        return builder().pathDelimiter(session.getPathDelimiter());
+    }
+
     public static class Builder {
         private MailboxPath base;
         private String expression;
-        private char pathDelimiter;
+        @VisibleForTesting char pathDelimiter;
         
         public Builder base(MailboxPath base) {
             this.base = base;
@@ -83,6 +92,7 @@ public final class MailboxQuery {
         }
         
         public MailboxQuery build() {
+            Preconditions.checkState(base != null);
             return new MailboxQuery(base, expression, pathDelimiter);
         }
     }
