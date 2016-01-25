@@ -22,6 +22,12 @@ package org.apache.james.mailbox.model;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
+import org.apache.james.mailbox.MailboxSession;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+
 
 /**
  * Expresses select criteria for mailboxes.
@@ -46,6 +52,79 @@ public final class MailboxQuery {
      * Use this wildcard to match every char except the hierarchy delimiter
      */
     public final static char LOCALWILDCARD = '%';
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(MailboxSession session) {
+        return builder().pathDelimiter(session.getPathDelimiter()).username(session.getUser().getUserName());
+    }
+
+    public static class Builder {
+        private static final String EMPTY_PATH_NAME = "";
+        private MailboxPath base;
+        private String expression;
+        @VisibleForTesting char pathDelimiter;
+        @VisibleForTesting String username;
+        @VisibleForTesting Optional<String> pathName;
+        @VisibleForTesting Optional<String> namespace;
+        
+        private Builder() {
+            this.pathName = Optional.absent();
+            this.namespace = Optional.absent();
+        }
+        
+        public Builder base(MailboxPath base) {
+            this.base = base;
+            return this;
+        }
+        
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+        
+        public Builder privateUserMailboxes() {
+            Preconditions.checkState(!pathName.isPresent());
+            Preconditions.checkState(!namespace.isPresent());
+            Preconditions.checkState(base == null);
+            this.namespace = Optional.of(MailboxConstants.USER_NAMESPACE);
+            this.pathName = Optional.of(EMPTY_PATH_NAME);
+            return matchesAll();
+        }
+        
+        public Builder expression(String expression) {
+            this.expression = expression;
+            return this;
+        }
+        
+        public Builder matchesAll() {
+            this.expression = String.valueOf(FREEWILDCARD);
+            return this;
+        }
+        
+        public Builder pathDelimiter(char pathDelimiter) {
+            this.pathDelimiter = pathDelimiter;
+            return this;
+        }
+        
+        public MailboxQuery build() {
+            Preconditions.checkState(base != null || username != null);
+            if (base != null && username != null) {
+                throw new IllegalStateException("'base' and 'username' are exclusives");
+            }
+            return new MailboxQuery(buildBase(), expression, pathDelimiter);
+        }
+
+        private MailboxPath buildBase() {
+            if (base != null) {
+                return base;
+            } else {
+                return new MailboxPath(namespace.or(MailboxConstants.USER_NAMESPACE), username, pathName.or(EMPTY_PATH_NAME));
+            }
+        }
+    }
 
     /**
      * Constructs an expression determining a set of mailbox names.

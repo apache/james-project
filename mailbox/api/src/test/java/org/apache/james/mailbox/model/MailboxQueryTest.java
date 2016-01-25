@@ -25,6 +25,13 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.model.MailboxQuery.Builder;
+
 public class MailboxQueryTest {
 
     MailboxPath path;
@@ -248,6 +255,11 @@ public class MailboxQueryTest {
         assertThat(new MailboxQuery(path, null, '.').isExpressionMatch("folder")).isFalse();
     }
 
+    @Test(expected=IllegalStateException.class)
+    public void buildShouldThrowWhenNoBaseDefined() {
+        MailboxQuery.builder().expression("abc").pathDelimiter('/').build();
+    }
+    
     @Test
     public void freeWildcardAreNotEscapedWithDotSeparator() {
         assertThat(new MailboxQuery(path, "folder\\*", '.').isExpressionMatch("folder\\123")).isTrue();
@@ -258,4 +270,68 @@ public class MailboxQueryTest {
         assertThat(new MailboxQuery(path, "folder\\%", '.').isExpressionMatch("folder\\123")).isTrue();
     }
 
+    @Test
+    public void buildShouldMatchAllValuesWhenAll() {
+        MailboxQuery query = MailboxQuery.builder()
+            .base(path)
+            .matchesAll()
+            .pathDelimiter('.')
+            .build();
+        assertThat(query.isExpressionMatch("folder")).isTrue();
+    }
+
+    @Test
+    public void buildShouldConstructMailboxPathWhenPrivateUserMailboxes() {
+        MailboxPath expected = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "");
+        MailboxPath actual = MailboxQuery.builder()
+                .username("user")
+                .privateUserMailboxes()
+                .pathDelimiter('.')
+                .build().getBase();
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void buildShouldMatchAllWhenPrivateUserMailboxes() {
+        MailboxQuery query = MailboxQuery.builder()
+                .username("user")
+                .privateUserMailboxes()
+                .pathDelimiter('.')
+                .build();
+        assertThat(query.isExpressionMatch("folder")).isTrue();
+    }
+    
+    @Test
+    public void builderShouldInitFromSessionWhenGiven() {
+        MailboxSession mailboxSession = mock(MailboxSession.class);
+        when(mailboxSession.getPathDelimiter()).thenReturn('#');
+        User user = mock(User.class);
+        when(user.getUserName()).thenReturn("little bobby table");
+        when(mailboxSession.getUser()).thenReturn(user);
+        Builder query = MailboxQuery.builder(mailboxSession);
+        assertThat(query.pathDelimiter).isEqualTo('#');
+        assertThat(query.username).isEqualTo("little bobby table");
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void builderShouldThrowWhenConflictingBase() {
+        MailboxQuery.builder().base(mock(MailboxPath.class)).username("user").build();
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void builderShouldThrowWhenOverwritingBaseParams() {
+        MailboxQuery.builder().base(mock(MailboxPath.class)).privateUserMailboxes().build();
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void builderShouldThrowWhenMissingUsername() {
+        MailboxQuery.builder().privateUserMailboxes().build();
+    }
+    
+    @Test
+    public void builderShouldUseBaseWhenGiven() {
+        MailboxPath base = new MailboxPath("a", "b", "c");
+        MailboxQuery actual = MailboxQuery.builder().base(base).build();
+        assertThat(actual.getBase()).isSameAs(base);
+    }
 }
