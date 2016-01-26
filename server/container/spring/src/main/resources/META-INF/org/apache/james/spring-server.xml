@@ -28,8 +28,6 @@
           http://www.springframework.org/schema/context
           http://www.springframework.org/schema/context/spring-context-2.5.xsd">
 
-    <import resource="classpath:META-INF/cassandra-session.xml"/>
-
     <!-- 
     ===========================================================================
        Spring Wiring for James Server: Annotation, Bean Post-Processors...
@@ -286,5 +284,9 @@
         <import resource="classpath:jetm-monitoring.conf" />
     -->
 
+
+    <beans profile="cassandra">
+        <import resource="classpath:META-INF/cassandra-session.xml"/>
+    </beans>
 
 </beans>
