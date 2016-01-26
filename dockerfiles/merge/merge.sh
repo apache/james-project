@@ -23,7 +23,8 @@ git fetch apache
 git checkout apache/trunk -b trunk
 
 git fetch origin
-git checkout $SHA1 -b SHA1_BRANCH
+git checkout $SHA1
+git checkout -b SHA1_BRANCH
 
 git checkout trunk
 git checkout -b $RESULTING_BRANCH
