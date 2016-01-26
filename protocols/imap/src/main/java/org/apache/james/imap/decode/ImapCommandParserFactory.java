@@ -21,6 +21,6 @@ package org.apache.james.imap.decode;
 
 public interface ImapCommandParserFactory {
 
-    public abstract ImapCommandParser getParser(String commandName);
+    ImapCommandParser getParser(String commandName);
 
 }

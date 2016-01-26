@@ -20,8 +20,8 @@ package org.apache.james.imap.decode;
 
 public interface DelegatingImapCommandParser {
 
-    public abstract ImapCommandParserFactory getParserFactory();
+    ImapCommandParserFactory getParserFactory();
 
-    public abstract void setParserFactory(ImapCommandParserFactory imapCommandFactory);
+    void setParserFactory(ImapCommandParserFactory imapCommandFactory);
 
 }

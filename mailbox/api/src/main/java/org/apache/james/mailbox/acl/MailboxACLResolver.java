@@ -56,7 +56,7 @@ public interface MailboxACLResolver {
      * @return
      * @throws UnsupportedRightException
      */
-    public MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
     /**
      * Tells whether the given user has the given right granted on the basis of
@@ -125,7 +125,7 @@ public interface MailboxACLResolver {
      * @return
      * @throws UnsupportedRightException
      */
-    public abstract boolean isReadWrite(MailboxACLRights mailboxACLRights, Flags sharedFlags) throws UnsupportedRightException;
+    boolean isReadWrite(MailboxACLRights mailboxACLRights, Flags sharedFlags) throws UnsupportedRightException;
 
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
@@ -148,7 +148,7 @@ public interface MailboxACLResolver {
      *         of rights which can be set for the given identifier and resource.
      * @throws UnsupportedRightException
      */
-    public MailboxACLRights[] listRights(final MailboxACLEntryKey key, final GroupMembershipResolver groupMembershipResolver, final String resourceOwner, final boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACLRights[] listRights(final MailboxACLEntryKey key, final GroupMembershipResolver groupMembershipResolver, final String resourceOwner, final boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
     /**
      * Computes the rights which apply to the given user and resource. Global
@@ -173,6 +173,6 @@ public interface MailboxACLResolver {
      * @return the rights applicable for the given user and resource.
      * @throws UnsupportedRightException
      */
-    public abstract MailboxACLRights resolveRights(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACLRights resolveRights(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
 }

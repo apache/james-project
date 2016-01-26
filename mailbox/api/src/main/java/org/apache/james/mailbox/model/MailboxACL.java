@@ -47,7 +47,7 @@ public interface MailboxACL {
      * {@link #isNegative()} are significant.
      * 
      */
-    public interface MailboxACLEntryKey {
+    interface MailboxACLEntryKey {
         /**
          * Returns the name of a user or of a group to which this
          * {@link MailboxACLEntryKey} applies.
@@ -111,7 +111,7 @@ public interface MailboxACL {
     /**
      * Single right applicable to a mailbox.
      */
-    public interface MailboxACLRight {
+    interface MailboxACLRight {
         /**
          * Returns the char representation of this right.
          * 
@@ -129,7 +129,7 @@ public interface MailboxACL {
      * Implementations must not allow adding or removing of elements once this
      * MailboxACLRights are initialized.
      */
-    public interface MailboxACLRights extends Iterable<MailboxACLRight> {
+    interface MailboxACLRights extends Iterable<MailboxACLRight> {
 
         /**
          * Tells whether this contains the given right.
@@ -156,14 +156,14 @@ public interface MailboxACL {
          * @return
          * @throws UnsupportedRightException
          */
-        public MailboxACLRights except(MailboxACLRights toRemove) throws UnsupportedRightException;
+        MailboxACLRights except(MailboxACLRights toRemove) throws UnsupportedRightException;
 
         /**
          * Tells if this set of rights is empty.
          * 
          * @return true if there are no rights in this set; false otherwise.
          */
-        public boolean isEmpty();
+        boolean isEmpty();
 
         /**
          * Tells whether the implementation supports the given right.
@@ -197,7 +197,7 @@ public interface MailboxACL {
          * @throws UnsupportedRightException
          * 
          */
-        public abstract MailboxACLRights union(MailboxACLRights toAdd) throws UnsupportedRightException;
+        MailboxACLRights union(MailboxACLRights toAdd) throws UnsupportedRightException;
 
     };
 
@@ -206,7 +206,7 @@ public interface MailboxACL {
      * {@link SpecialName}).
      */
 
-    public interface MailboxACLCommand {
+    interface MailboxACLCommand {
         MailboxACLEntryKey getEntryKey();
 
         EditMode getEditMode();
@@ -228,26 +228,26 @@ public interface MailboxACL {
     /**
      * SETACL third argument prefix
      */
-    public static final char ADD_RIGHTS_MARKER = '+';
+    char ADD_RIGHTS_MARKER = '+';
 
     /**
      * Marks groups when (de)serializing {@link MailboxACLEntryKey}s.
      * 
      * @see MailboxACLEntryKey#serialize()
      */
-    public static final char DEFAULT_GROUP_MARKER = '$';
+    char DEFAULT_GROUP_MARKER = '$';
 
     /**
      * Marks negative when (de)serializing {@link MailboxACLEntryKey}s.
      * 
      * @see MailboxACLEntryKey#serialize()
      */
-    public static final char DEFAULT_NEGATIVE_MARKER = '-';
+    char DEFAULT_NEGATIVE_MARKER = '-';
 
     /**
      * SETACL third argument prefix
      */
-    public static final char REMOVE_RIGHTS_MARKER = '-';
+    char REMOVE_RIGHTS_MARKER = '-';
 
     /**
      * Apply the given ACL update on current ACL and return the result as a new ACL.

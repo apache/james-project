@@ -174,7 +174,7 @@ public class DiscardProtocol {
 
     public interface Record {
         /** Blocks until completion of conversation */
-        public String complete() throws Exception;
+        String complete() throws Exception;
     }
     
     /**

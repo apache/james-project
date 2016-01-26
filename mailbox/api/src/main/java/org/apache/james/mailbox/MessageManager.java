@@ -184,7 +184,7 @@ public interface MessageManager {
     /**
      * Meta data about the current state of the mailbox.
      */
-    public interface MetaData {
+    interface MetaData {
 
         /**
          * Describes the optional data types which will get set in the
@@ -193,7 +193,7 @@ public interface MessageManager {
          * These are always set: - HIGHESTMODSEQ - PERMANENTFLAGS - UIDNEXT -
          * UIDVALIDITY - MODSEQPERMANET - WRITABLE
          */
-        public enum FetchGroup {
+        enum FetchGroup {
 
             /**
              * Only include the message and recent count

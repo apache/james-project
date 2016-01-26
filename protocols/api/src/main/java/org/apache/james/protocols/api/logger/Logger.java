@@ -137,7 +137,7 @@ public interface Logger {
      *
      * @param message log this message
      */
-    public void warn(String message);
+    void warn(String message);
 
 
     /**

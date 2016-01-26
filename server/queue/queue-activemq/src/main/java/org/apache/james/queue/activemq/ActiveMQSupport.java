@@ -28,16 +28,16 @@ public interface ActiveMQSupport extends JMSSupport {
     /**
      * The name of the Queue the mail is stored in
      */
-    final static String JAMES_QUEUE_NAME = "JAMES_QUEUE_NAME";
+    String JAMES_QUEUE_NAME = "JAMES_QUEUE_NAME";
 
     /**
      * The URL of the Blobmessage content
      */
-    final static String JAMES_BLOB_URL = "JAMES_BLOB_URL";
+    String JAMES_BLOB_URL = "JAMES_BLOB_URL";
 
     /**
      * Indicate that the Blobmessage content is reused for a new message
      */
-    final static String JAMES_REUSE_BLOB_URL = " JAMES_REUSE_BLOB_URL";
+    String JAMES_REUSE_BLOB_URL = " JAMES_REUSE_BLOB_URL";
 
 }

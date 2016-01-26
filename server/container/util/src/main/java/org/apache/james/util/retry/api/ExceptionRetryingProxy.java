@@ -30,13 +30,13 @@ public interface ExceptionRetryingProxy {
      * @return a new instance that the proxy delegates to
      * @throws Exception
      */
-    abstract public Object newDelegate() throws Exception;
+    Object newDelegate() throws Exception;
     
     /**
      * @return the current instance of the proxy delegate
      * @throws Exception
      */
-    abstract public Object getDelegate();
+    Object getDelegate();
     
     /**
      * Resets the delegate instance to a state from which it can perform the 
@@ -44,6 +44,6 @@ public interface ExceptionRetryingProxy {
      *
      * @throws Exception
      */
-    abstract public void resetDelegate() throws Exception;
+    void resetDelegate() throws Exception;
 
 }

@@ -25,7 +25,7 @@ package org.apache.james.mailbox.model;
 public interface MailboxMetaData {
 
     /** RFC3501 Selectability flag */
-    public enum Selectability {
+    enum Selectability {
         NONE, MARKED, UNMARKED, NOSELECT
     }
 
@@ -33,7 +33,7 @@ public interface MailboxMetaData {
      * Indicates whether this mailbox allows children and - if so - whether it
      * has any.
      */
-    public enum Children {
+    enum Children {
         /**
          * No children allowed.
          */

@@ -42,17 +42,17 @@ public interface ImapProcessor {
      * @param responder <code>not null</code>, the responder use write response for message
      * @param session the imap session
      */
-    public void process(ImapMessage message, Responder responder, ImapSession session);
+    void process(ImapMessage message, Responder responder, ImapSession session);
 
     /**
      * Response message sink.
      */
-    public interface Responder {
+    interface Responder {
         /**
          * Writes the given response.
          * 
          * @param message <code>not null</code>
          */
-        public void respond(ImapResponseMessage message);
+        void respond(ImapResponseMessage message);
     }
 }

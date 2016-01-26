@@ -28,6 +28,6 @@ public interface JCRImapConstants {
 	/**
 	 * Delimiter for Nodes
 	 */
-	public static final String NODE_DELIMITER = "/";
+	String NODE_DELIMITER = "/";
 
 }

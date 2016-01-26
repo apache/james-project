@@ -24,42 +24,42 @@ package org.apache.james.queue.jms;
 public interface JMSSupport {
 
     /** JMS Property which holds the recipient as String */
-    final static String JAMES_MAIL_RECIPIENTS = "JAMES_MAIL_RECIPIENTS";
+    String JAMES_MAIL_RECIPIENTS = "JAMES_MAIL_RECIPIENTS";
 
     /** JMS Property which holds the sender as String */
-    final static String JAMES_MAIL_SENDER = "JAMES_MAIL_SENDER";
+    String JAMES_MAIL_SENDER = "JAMES_MAIL_SENDER";
 
     /** JMS Property which holds the error message as String */
-    final static String JAMES_MAIL_ERROR_MESSAGE = "JAMES_MAIL_ERROR_MESSAGE";
+    String JAMES_MAIL_ERROR_MESSAGE = "JAMES_MAIL_ERROR_MESSAGE";
 
     /** JMS Property which holds the last updated time as long (ms) */
-    final static String JAMES_MAIL_LAST_UPDATED = "JAMES_MAIL_LAST_UPDATED";
+    String JAMES_MAIL_LAST_UPDATED = "JAMES_MAIL_LAST_UPDATED";
 
     /** JMS Property which holds the mail size as long (bytes) */
-    final static String JAMES_MAIL_MESSAGE_SIZE = "JAMES_MAIL_MESSAGE_SIZE";
+    String JAMES_MAIL_MESSAGE_SIZE = "JAMES_MAIL_MESSAGE_SIZE";
 
     /** JMS Property which holds the mail name as String */
-    final static String JAMES_MAIL_NAME = "JAMES_MAIL_NAME";
+    String JAMES_MAIL_NAME = "JAMES_MAIL_NAME";
 
     /**
      * Separator which is used for separate an array of String values in the JMS
      * Property value
      */
-    final static String JAMES_MAIL_SEPARATOR = ";";
+    String JAMES_MAIL_SEPARATOR = ";";
 
     /** JMS Property which holds the remote hostname as String */
-    final static String JAMES_MAIL_REMOTEHOST = "JAMES_MAIL_REMOTEHOST";
+    String JAMES_MAIL_REMOTEHOST = "JAMES_MAIL_REMOTEHOST";
 
     /** JMS Property which holds the remote ipaddress as String */
-    final static String JAMES_MAIL_REMOTEADDR = "JAMES_MAIL_REMOTEADDR";
+    String JAMES_MAIL_REMOTEADDR = "JAMES_MAIL_REMOTEADDR";
 
     /** JMS Property which holds the mail state as String */
-    final static String JAMES_MAIL_STATE = "JAMES_MAIL_STATE";
+    String JAMES_MAIL_STATE = "JAMES_MAIL_STATE";
 
     /** JMS Property which holds the mail attribute names as String */
-    final static String JAMES_MAIL_ATTRIBUTE_NAMES = "JAMES_MAIL_ATTRIBUTE_NAMES";
+    String JAMES_MAIL_ATTRIBUTE_NAMES = "JAMES_MAIL_ATTRIBUTE_NAMES";
 
     /** JMS Property which holds next delivery time as long (ms) */
-    final static String JAMES_NEXT_DELIVERY = "JAMES_NEXT_DELIVERY";
+    String JAMES_NEXT_DELIVERY = "JAMES_NEXT_DELIVERY";
 
 }

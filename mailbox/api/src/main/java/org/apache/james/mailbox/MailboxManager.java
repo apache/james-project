@@ -263,7 +263,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *         mailbox; false otherwise.
      * @throws MailboxException
      */
-    public boolean hasRight(MailboxPath mailboxPath, MailboxACL.MailboxACLRight right, MailboxSession session) throws MailboxException;
+    boolean hasRight(MailboxPath mailboxPath, MailboxACL.MailboxACLRight right, MailboxSession session) throws MailboxException;
 
     /**
      * Returns the rights applicable to the user who has sent the current
@@ -276,7 +276,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *         {@code session.getUser()} is null.
      * @throws UnsupportedRightException
      */
-    public abstract MailboxACL.MailboxACLRights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+    MailboxACL.MailboxACLRights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
@@ -300,7 +300,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @return result suitable for the LISTRIGHTS IMAP command
      * @throws UnsupportedRightException
      */
-    public MailboxACL.MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACL.MailboxACLEntryKey identifier, MailboxSession session) throws MailboxException;
+    MailboxACL.MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACL.MailboxACLEntryKey identifier, MailboxSession session) throws MailboxException;
 
     /**
      * Update the Mailbox ACL of the designated mailbox. We can either ADD REPLACE or REMOVE entries.

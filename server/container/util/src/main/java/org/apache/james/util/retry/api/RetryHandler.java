@@ -30,7 +30,7 @@ public interface RetryHandler {
      * @return the result of invoking an operation
      * @throws Exception
      */
-    public abstract Object perform() throws Exception;
+    Object perform() throws Exception;
 
     /**
      * A hook invoked each time an operation fails if a retry is scheduled
@@ -40,13 +40,13 @@ public interface RetryHandler {
      * @param retryCount
      *      The number of times  
      */
-    public abstract void postFailure(Exception ex, int retryCount);
+    void postFailure(Exception ex, int retryCount);
 
     /**
      * Encapsulates desired behaviour
      * @return The result of performing the behaviour
      * @throws Exception
      */
-    abstract public Object operation() throws Exception;
+    Object operation() throws Exception;
 
 }

@@ -185,7 +185,7 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
      * 
      *
      */
-    public static enum FetchType {
+    enum FetchType {
 
         /**
          * Fetch only the meta data of the {@link MailboxMessage} which includes:

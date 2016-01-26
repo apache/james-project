@@ -28,5 +28,5 @@ import org.w3c.dom.Document;
  */
 public interface SystemContext {
 
-	public Document readXml(final String name)  throws IOException;
+	Document readXml(final String name)  throws IOException;
 }

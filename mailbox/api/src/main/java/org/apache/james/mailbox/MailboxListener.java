@@ -61,7 +61,7 @@ public interface MailboxListener {
      * A mailbox event.
      */
     @SuppressWarnings("serial")
-    public abstract class Event implements Serializable {
+    abstract class Event implements Serializable {
         private final MailboxSession session;
         private final MailboxPath path;
 
@@ -93,7 +93,7 @@ public interface MailboxListener {
     /**
      * Indicates that mailbox has been deleted.
      */
-    public class MailboxDeletion extends Event {
+    class MailboxDeletion extends Event {
 
         /**
          * 
@@ -108,7 +108,7 @@ public interface MailboxListener {
     /**
      * Indicates that a mailbox has been Added.
      */
-    public class MailboxAdded extends Event {
+    class MailboxAdded extends Event {
         /**
          * 
          */
@@ -122,7 +122,7 @@ public interface MailboxListener {
     /**
      * Indicates that a mailbox has been renamed.
      */
-    public abstract class MailboxRenamed extends Event {
+    abstract class MailboxRenamed extends Event {
         /**
          * 
          */
@@ -144,7 +144,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to updated ACL
      */
-    public abstract class MailboxACLUpdated extends MessageEvent {
+    abstract class MailboxACLUpdated extends MessageEvent {
 
         /**
          * 
@@ -161,7 +161,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to a message.
      */
-    public abstract class MessageEvent extends Event {
+    abstract class MessageEvent extends Event {
 
         /**
          * 
@@ -180,7 +180,7 @@ public interface MailboxListener {
         public abstract List<Long> getUids();
     }
 
-    public abstract class MetaDataHoldingEvent extends MessageEvent {
+    abstract class MetaDataHoldingEvent extends MessageEvent {
 
         public MetaDataHoldingEvent(MailboxSession session, MailboxPath path) {
             super(session, path);
@@ -195,7 +195,7 @@ public interface MailboxListener {
 
     }
 
-    public abstract class Expunged extends MetaDataHoldingEvent {
+    abstract class Expunged extends MetaDataHoldingEvent {
 
         /**
          * 
@@ -217,7 +217,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to updated flags
      */
-    public abstract class FlagsUpdated extends MessageEvent {
+    abstract class FlagsUpdated extends MessageEvent {
 
         /**
          * 
@@ -234,7 +234,7 @@ public interface MailboxListener {
     /**
      * A mailbox event related to added message
      */
-    public abstract class Added extends MetaDataHoldingEvent {
+    abstract class Added extends MetaDataHoldingEvent {
 
         /**
          * 

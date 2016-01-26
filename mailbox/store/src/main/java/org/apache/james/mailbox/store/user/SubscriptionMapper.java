@@ -38,25 +38,25 @@ public interface SubscriptionMapper extends Mapper {
      * @return <code>Subscription</code>, 
      * or null when the user is not subscribed to the given mailbox
      */
-    public abstract Subscription findMailboxSubscriptionForUser(
-            final String user, final String mailbox) throws SubscriptionException;
+    Subscription findMailboxSubscriptionForUser(
+        final String user, final String mailbox) throws SubscriptionException;
 
     /**
      * Saves the given subscription.
      * @param subscription not null
      */
-    public abstract void save(Subscription subscription) throws SubscriptionException;
+    void save(Subscription subscription) throws SubscriptionException;
 
     /**
      * Finds subscriptions for the given user.
      * @param user not null
      * @return not null
      */
-    public abstract List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException;
+    List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException;
 
     /**
      * Deletes the given subscription.
      * @param subscription not null
      */
-    public abstract void delete(Subscription subscription) throws SubscriptionException;
+    void delete(Subscription subscription) throws SubscriptionException;
 }

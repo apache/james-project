@@ -24,20 +24,20 @@ import org.jboss.netty.channel.ChannelLocal;
  * Just some constants which are used with the Netty implementation
  */
 public interface NettyConstants {
-    final static String ZLIB_DECODER = "zlibDecoder";
-    final static String ZLIB_ENCODER = "zlibEncoder";
-    final static String SSL_HANDLER = "sslHandler";
-    final static String REQUEST_DECODER = "requestDecoder";
-    final static String FRAMER = "framer";
-    final static String TIMEOUT_HANDLER = "timeoutHandler";
-    final static String CORE_HANDLER = "coreHandler";
-    final static String GROUP_HANDLER = "groupHandler";
-    final static String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
-    final static String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
-    final static String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
-    final static String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
-    final static String EXECUTION_HANDLER = "executionHandler";
-    final static String HEARTBEAT_HANDLER = "heartbeatHandler";
+    String ZLIB_DECODER = "zlibDecoder";
+    String ZLIB_ENCODER = "zlibEncoder";
+    String SSL_HANDLER = "sslHandler";
+    String REQUEST_DECODER = "requestDecoder";
+    String FRAMER = "framer";
+    String TIMEOUT_HANDLER = "timeoutHandler";
+    String CORE_HANDLER = "coreHandler";
+    String GROUP_HANDLER = "groupHandler";
+    String CONNECTION_LIMIT_HANDLER = "connectionLimitHandler";
+    String CONNECTION_LIMIT_PER_IP_HANDLER = "connectionPerIpLimitHandler";
+    String CONNECTION_COUNT_HANDLER = "connectionCountHandler";
+    String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
+    String EXECUTION_HANDLER = "executionHandler";
+    String HEARTBEAT_HANDLER = "heartbeatHandler";
 
-    final static ChannelLocal<Object> attributes = new ChannelLocal<Object>();
+    ChannelLocal<Object> attributes = new ChannelLocal<Object>();
 }

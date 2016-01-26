@@ -29,5 +29,5 @@ public interface SubscriptionMapperFactory {
      * @param session
      * @return mapper
      */
-    public SubscriptionMapper getSubscriptionMapper(MailboxSession session) throws SubscriptionException;
+    SubscriptionMapper getSubscriptionMapper(MailboxSession session) throws SubscriptionException;
 }

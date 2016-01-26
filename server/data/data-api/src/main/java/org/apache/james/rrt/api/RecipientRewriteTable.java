@@ -30,22 +30,22 @@ public interface RecipientRewriteTable {
     /**
      * The prefix which is used for error mappings
      */
-    static final String ERROR_PREFIX = "error:";
+    String ERROR_PREFIX = "error:";
 
     /**
      * The prefix which is used for regex mappings
      */
-    static final String REGEX_PREFIX = "regex:";
+    String REGEX_PREFIX = "regex:";
 
     /**
      * The prefix which is used for alias domain mappings
      */
-    static final String ALIASDOMAIN_PREFIX = "domain:";
+    String ALIASDOMAIN_PREFIX = "domain:";
 
     /**
      * The wildcard used for alias domain mappings
      */
-    final static String WILDCARD = "*";
+    String WILDCARD = "*";
 
     /**
      * Return the mapped MailAddress for the given address. Return null if no

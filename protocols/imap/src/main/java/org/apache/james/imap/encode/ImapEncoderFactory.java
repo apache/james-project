@@ -21,5 +21,5 @@ package org.apache.james.imap.encode;
 
 public interface ImapEncoderFactory {
 
-    public ImapEncoder buildImapEncoder();
+    ImapEncoder buildImapEncoder();
 }

@@ -30,26 +30,26 @@ public interface Session {
      * @return not null
      * @throws Exception
      */
-    public String readLine() throws Exception;
+    String readLine() throws Exception;
 
     /**
      * Writes a line to the session output.
      * @param line not null
      * @throws Exception
      */
-    public void writeLine(String line) throws Exception;
+    void writeLine(String line) throws Exception;
 
     /**
      * Opens the session.
      * 
      * @throws Exception
      */
-    public void start() throws Exception;
+    void start() throws Exception;
 
     /**
      * Closes the session.
      * 
      * @throws Exception
      */
-    public void stop() throws Exception;
+    void stop() throws Exception;
 }

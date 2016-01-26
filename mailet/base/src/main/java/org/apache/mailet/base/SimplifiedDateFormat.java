@@ -42,7 +42,7 @@ public interface SimplifiedDateFormat {
      * @param d the time value to be formatted into a time string.
      * @return the formatted time string.
      */
-    public String format(Date d);
+    String format(Date d);
 
     /**
      * Parses text from the beginning of the given string to produce a date.
@@ -53,19 +53,19 @@ public interface SimplifiedDateFormat {
      * @throws ParseException if the beginning of the specified string
      *         cannot be parsed.
      */
-    public Date parse(String source) throws ParseException;
+    Date parse(String source) throws ParseException;
 
     /**
      * Sets the time zone of this SimplifiedDateFormat object.
      * @param zone the given new time zone.
      */
-    public void setTimeZone(TimeZone zone);
+    void setTimeZone(TimeZone zone);
 
     /**
      * Gets the time zone.
      * @return the time zone associated with this SimplifiedDateFormat.
      */
-    public TimeZone getTimeZone();
+    TimeZone getTimeZone();
 
     /**
      * Specify whether or not date/time parsing is to be lenient.  With
@@ -75,12 +75,12 @@ public interface SimplifiedDateFormat {
      * @param lenient when true, parsing is lenient
      * @see java.util.Calendar#setLenient
      */
-    public void setLenient(boolean lenient);
+    void setLenient(boolean lenient);
 
     /**
      * Tell whether date/time parsing is to be lenient.
      * @return whether this SimplifiedDateFormat is lenient.
      */
-    public boolean isLenient();
+    boolean isLenient();
 }
 

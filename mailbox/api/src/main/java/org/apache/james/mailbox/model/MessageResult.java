@@ -59,28 +59,28 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
     /**
      * Indicates the results fetched.
      */
-    public interface FetchGroup {
+    interface FetchGroup {
 
         /**
          * For example: could have best performance when doing store and then
          * forget. UIDs are always returned
          */
-        public static final int MINIMAL = 0x00;
+        int MINIMAL = 0x00;
 
         /**
          * 
          */
-        public static final int MIME_DESCRIPTOR = 0x01;
+        int MIME_DESCRIPTOR = 0x01;
 
-        public static final int HEADERS = 0x100;
+        int HEADERS = 0x100;
 
-        public static final int FULL_CONTENT = 0x200;
+        int FULL_CONTENT = 0x200;
 
-        public static final int BODY_CONTENT = 0x400;
+        int BODY_CONTENT = 0x400;
 
-        public static final int MIME_HEADERS = 0x800;
+        int MIME_HEADERS = 0x800;
 
-        public static final int MIME_CONTENT = 0x1000;
+        int MIME_CONTENT = 0x1000;
 
         /**
          * Contents to be fetched. Composed bitwise.
@@ -110,7 +110,7 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
          * implementations MUST implement equals. Two implementations are equal
          * if and only if their paths are equal.
          */
-        public interface PartContentDescriptor {
+        interface PartContentDescriptor {
             /**
              * Contents to be fetched. Composed bitwise.
              * 
@@ -163,7 +163,7 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
     /**
      * A header.
      */
-    public interface Header extends Content {
+    interface Header extends Content {
 
         /**
          * Gets the name of this header.
@@ -248,7 +248,7 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
      * must implement equals. Two paths are equal if and only if each position
      * is identical.
      */
-    public interface MimePath {
+    interface MimePath {
 
         /**
          * Gets the positions of each part in the path.

@@ -35,27 +35,27 @@ public interface FileSystem {
     /**
      * Prefix for loading of a filesystem based on the current directory
      */
-    static final String FILE_PROTOCOL = "file://";
+    String FILE_PROTOCOL = "file://";
 
     /**
      * Prefix for loading of a filesystem using the absolute path
      */
-    static final String FILE_PROTOCOL_ABSOLUTE = "file:///";
+    String FILE_PROTOCOL_ABSOLUTE = "file:///";
 
     /**
      * Prefix for loading of the config directory
      */
-    static final String FILE_PROTOCOL_AND_CONF = "file://conf/";
+    String FILE_PROTOCOL_AND_CONF = "file://conf/";
 
     /**
      * Prefix for loading of the var directory
      */
-    static final String FILE_PROTOCOL_AND_VAR = "file://var/";
+    String FILE_PROTOCOL_AND_VAR = "file://var/";
 
     /**
      * Prefix for loading of the classpath
      */
-    static final String CLASSPATH_PROTOCOL = "classpath:";
+    String CLASSPATH_PROTOCOL = "classpath:";
 
     /**
      * to retrieve a resource. this is typically a file resource, but depending

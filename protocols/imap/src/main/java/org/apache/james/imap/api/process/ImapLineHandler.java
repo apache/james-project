@@ -21,5 +21,5 @@ package org.apache.james.imap.api.process;
 
 public interface ImapLineHandler {
 
-    public void onLine(ImapSession session, byte[] data);
+    void onLine(ImapSession session, byte[] data);
 }

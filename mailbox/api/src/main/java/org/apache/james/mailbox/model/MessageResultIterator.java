@@ -39,6 +39,6 @@ public interface MessageResultIterator extends Iterator<MessageResult> {
      * 
      * @return exception
      */
-    public MailboxException getException();
+    MailboxException getException();
 
 }

@@ -36,7 +36,7 @@ public interface MailboxPathLocker {
      * @deprecated use {@link #executeWithLock(MailboxSession, MailboxPath, LockAwareExecution, boolean)} with argument <code>true</code>
      */
     @Deprecated
-    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException;
+    <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException;
 
     
     /**
@@ -51,19 +51,19 @@ public interface MailboxPathLocker {
      * 
      * @throws MailboxException
      */
-    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException;
+    <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException;
 
     /**
      * Execute code while holding a lock
      */
-    public interface LockAwareExecution<T> {
+    interface LockAwareExecution<T> {
 
         /**
          * Execute code block
          * 
          * @throws MailboxException
          */
-        public T execute() throws MailboxException;
+        T execute() throws MailboxException;
     }
 
 }

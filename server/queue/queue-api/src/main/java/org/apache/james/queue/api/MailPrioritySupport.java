@@ -24,13 +24,13 @@ package org.apache.james.queue.api;
 public interface MailPrioritySupport {
 
     /** Handle mail with lowest priority */
-    final static int LOW_PRIORITY = 0;
+    int LOW_PRIORITY = 0;
 
     /** Handle mail with normal priority (this is the default) */
-    final static int NORMAL_PRIORITY = 5;
+    int NORMAL_PRIORITY = 5;
 
     /** Handle mail with highest priority */
-    final static int HIGH_PRIORITY = 9;
+    int HIGH_PRIORITY = 9;
 
     /**
      * Attribute name for support if priority. If the attribute is set and
@@ -38,5 +38,5 @@ public interface MailPrioritySupport {
      * higher priority to the head of the queue (so the mails are faster
      * handled).
      */
-    final static String MAIL_PRIORITY = "MAIL_PRIORITY";
+    String MAIL_PRIORITY = "MAIL_PRIORITY";
 }

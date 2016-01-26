@@ -27,7 +27,7 @@ import org.apache.mailet.Mail;
  */
 public interface ManageableMailQueue extends MailQueue {
 
-    public enum Type {
+    enum Type {
         Sender, Recipient, Name
     }
 
@@ -37,7 +37,7 @@ public interface ManageableMailQueue extends MailQueue {
      * @return size
      * @throws MailQueueException
      */
-    public long getSize() throws MailQueueException;
+    long getSize() throws MailQueueException;
 
     /**
      * Flush the queue, which means it will make all message ready for dequeue
@@ -77,7 +77,7 @@ public interface ManageableMailQueue extends MailQueue {
      * {@link Iterator} subclass which allows to browse the content of a queue.
      * The content is not meant to be modifiable, everything is just READ-ONLY!
      */
-    public interface MailQueueIterator extends Iterator<MailQueueItemView> {
+    interface MailQueueIterator extends Iterator<MailQueueItemView> {
 
         /**
          * Close the iterator. After this was called the iterator MUST NOT be
@@ -89,7 +89,7 @@ public interface ManageableMailQueue extends MailQueue {
     /**
      * Represent a View over a queue {@link MailQueue.MailQueueItem}
      */
-    public interface MailQueueItemView {
+    interface MailQueueItemView {
 
         /**
          * Return the Mail

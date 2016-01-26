@@ -54,5 +54,5 @@ public interface Localizer {
      *            describes preferences, not null
      * @return localized message not null
      */
-    public String localize(HumanReadableText text, Locales locales);
+    String localize(HumanReadableText text, Locales locales);
 }

@@ -31,20 +31,20 @@ public interface Persistent {
      * 
      * @param node
      */
-    public void merge(Node node) throws RepositoryException, IOException;
+    void merge(Node node) throws RepositoryException, IOException;
 
     /**
      * Return underlying Node
      * 
      * @return node
      */
-    public Node getNode();
+    Node getNode();
 
     /**
      * Return if the object is persistent
      * 
      * @return <code>true</code> if object is persistent else <code>false</code>
      */
-    public boolean isPersistent();
+    boolean isPersistent();
 
 }

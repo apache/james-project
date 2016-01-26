@@ -22,7 +22,7 @@ package org.apache.james.jmap.api;
 import org.apache.james.jmap.model.ContinuationToken;
 
 public interface ContinuationTokenManager {
-    public static enum ContinuationTokenStatus {
+    enum ContinuationTokenStatus {
         OK,
         INVALID,
         EXPIRED

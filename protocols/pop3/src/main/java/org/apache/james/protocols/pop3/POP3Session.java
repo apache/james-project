@@ -28,20 +28,20 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
 
 public interface POP3Session extends ProtocolSession {
 
-    final static String UID_LIST = "UID_LIST";
-    final static String DELETED_UID_LIST = "DELETED_UID_LIST";
-    final static String APOP_TIMESTAMP = "APOP_TIMESTAMP";
+    String UID_LIST = "UID_LIST";
+    String DELETED_UID_LIST = "DELETED_UID_LIST";
+    String APOP_TIMESTAMP = "APOP_TIMESTAMP";
 
     // Authentication states for the POP3 interaction
     /** Waiting for user id */
-    final static int AUTHENTICATION_READY = 0;
+    int AUTHENTICATION_READY = 0;
     /** User id provided, waiting for password */
-    final static int AUTHENTICATION_USERSET = 1;
+    int AUTHENTICATION_USERSET = 1;
     /**
      * A valid user id/password combination has been provided. In this state the
      * client can access the mailbox of the specified user.
      */
-    final static int TRANSACTION = 2;
+    int TRANSACTION = 2;
 
     /**
      * Returns the current handler state

@@ -37,14 +37,14 @@ public interface ProtocolHandlerLoader {
      * @return handler
      * @throws LoadingException
      */
-    public ProtocolHandler load(String name, Configuration config) throws LoadingException;
+    ProtocolHandler load(String name, Configuration config) throws LoadingException;
     
     /**
      * Exception which will get thrown if the loading of a {@link ProtocolHandler} failed 
      * 
      *
      */
-    public class LoadingException extends Exception {
+    class LoadingException extends Exception {
         /**
          * 
          */

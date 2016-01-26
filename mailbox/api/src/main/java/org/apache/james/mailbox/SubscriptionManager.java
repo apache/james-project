@@ -40,7 +40,7 @@ public interface SubscriptionManager extends RequestAware {
      * @throws SubscriptionException
      *             when subscription fails
      */
-    public void subscribe(MailboxSession session, String mailbox) throws SubscriptionException;
+    void subscribe(MailboxSession session, String mailbox) throws SubscriptionException;
 
     /**
      * Finds all subscriptions for the user in the session.
@@ -51,7 +51,7 @@ public interface SubscriptionManager extends RequestAware {
      * @throws SubscriptionException
      *             when subscriptions cannot be read
      */
-    public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException;
+    Collection<String> subscriptions(MailboxSession session) throws SubscriptionException;
 
     /**
      * Unsubscribes the user in the session from the given mailbox.
@@ -63,6 +63,6 @@ public interface SubscriptionManager extends RequestAware {
      * @throws SubscriptionException
      *             when subscriptions cannot be read
      */
-    public void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException;
+    void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException;
 
 }

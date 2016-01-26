@@ -27,7 +27,7 @@ public interface MailQueueFactory {
     /**
      * {@link MailQueue} which is used for spooling the messages
      */
-    final static String SPOOL = "spool";
+    String SPOOL = "spool";
 
     /**
      * Return the {@link MailQueue} for the name.

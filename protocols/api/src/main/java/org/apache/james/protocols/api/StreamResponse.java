@@ -34,6 +34,6 @@ public interface StreamResponse extends Response{
      * 
      * @return stream
      */
-    public InputStream getStream();
+    InputStream getStream();
 
 }

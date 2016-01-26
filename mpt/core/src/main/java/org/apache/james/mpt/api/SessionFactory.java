@@ -31,7 +31,7 @@ public interface SessionFactory {
      * @return <code>Session</code>, not null
      * @throws Exception
      */
-    public abstract Session newSession(Continuation continuation)
+    Session newSession(Continuation continuation)
             throws Exception;
 
 }

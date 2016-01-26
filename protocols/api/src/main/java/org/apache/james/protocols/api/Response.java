@@ -32,7 +32,7 @@ public interface Response {
     /**
      * Special {@link Response} implementation which will just disconnect the client
      */
-    public static final Response DISCONNECT = new Response() {
+    Response DISCONNECT = new Response() {
 
         public String getRetCode() {
             return "";

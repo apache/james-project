@@ -42,7 +42,7 @@ public interface UidProvider<Id extends MailboxId> {
      * @return nextUid
      * @throws MailboxException
      */
-    public long nextUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    long nextUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
     
     /**
      * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
@@ -52,5 +52,5 @@ public interface UidProvider<Id extends MailboxId> {
      * @return lastUid
      * @throws MailboxException
      */
-    public long lastUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    long lastUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
 }

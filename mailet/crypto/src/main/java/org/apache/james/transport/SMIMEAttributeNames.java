@@ -32,23 +32,23 @@ public interface SMIMEAttributeNames {
     /**
      * The attribute contains the server-side signing mailet name as a String.
      */
-    public static final String SMIME_SIGNING_MAILET = "org.apache.james.smime.signing.mailetname";
+    String SMIME_SIGNING_MAILET = "org.apache.james.smime.signing.mailetname";
     
     /**
      * The attribute contains the string "valid" or the reason of non-validity of the signature.
      * The status could be non valid either because the signature does not verify
      * or because the certificate could be not valid when the signature was done.
-     */    
-    public static final String SMIME_SIGNATURE_VALIDITY = "org.apache.james.smime.signature.validity";
+     */
+    String SMIME_SIGNATURE_VALIDITY = "org.apache.james.smime.signature.validity";
     
     /**
      * The attribute contains the signer's mail address as a String.
      */
-    public static final String SMIME_SIGNER_ADDRESS = "org.apache.james.smime.signer.address";
+    String SMIME_SIGNER_ADDRESS = "org.apache.james.smime.signer.address";
     
     /**
      * The attribute contains the signature timestamp as a Date object.
      */
-    public static final String SMIME_SIGNING_TIME = "org.apache.james.smime.signing.time";
+    String SMIME_SIGNING_TIME = "org.apache.james.smime.signing.time";
     
 }

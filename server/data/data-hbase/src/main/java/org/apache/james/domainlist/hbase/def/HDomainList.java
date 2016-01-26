@@ -31,7 +31,7 @@ public interface HDomainList {
     byte[] TABLE_NAME = Bytes.toBytes("JAMES_DOMAINLIST");
     byte[] COLUMN_FAMILY_NAME = Bytes.toBytes("JAMES_DOMAINLIST");
     
-    public interface COLUMN {
+    interface COLUMN {
         byte [] DOMAIN = Bytes.toBytes("dom");
     }
 

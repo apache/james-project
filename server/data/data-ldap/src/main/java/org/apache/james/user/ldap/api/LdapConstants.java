@@ -26,7 +26,7 @@ package org.apache.james.user.ldap.api;
 public interface LdapConstants {
 
     // The authentication mechanisms for the provider to use
-    public static final String SECURITY_AUTHENTICATION_NONE = "none";
-    public static final String SECURITY_AUTHENTICATION_SIMPLE = "simple";
+    String SECURITY_AUTHENTICATION_NONE = "none";
+    String SECURITY_AUTHENTICATION_SIMPLE = "simple";
 
 }

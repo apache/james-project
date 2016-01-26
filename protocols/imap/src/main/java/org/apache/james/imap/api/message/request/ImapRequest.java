@@ -32,13 +32,13 @@ public interface ImapRequest extends ImapMessage {
      * 
      * @return <code>ImapCommand</code>, not null
      */
-    public abstract ImapCommand getCommand();
+    ImapCommand getCommand();
 
     /**
      * Gets the prefix tag identifying this request.
      * 
      * @return the tag identifying the client request, not null
      */
-    public abstract String getTag();
+    String getTag();
 
 }

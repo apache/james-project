@@ -30,7 +30,7 @@ public interface Literal {
      *         put onto the channel
      * @throws IOException 
      */
-    public long size() throws IOException;
+    long size() throws IOException;
 
 
     /**
@@ -39,5 +39,5 @@ public interface Literal {
      * @return elementIn
      * @throws IOException
      */
-    public InputStream getInputStream() throws IOException;
+    InputStream getInputStream() throws IOException;
 }

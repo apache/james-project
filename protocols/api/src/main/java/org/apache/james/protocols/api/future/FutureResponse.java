@@ -34,21 +34,21 @@ public interface FutureResponse extends Response{
      * 
      * @param listener
      */
-    public void addListener(ResponseListener listener);
+    void addListener(ResponseListener listener);
     
     /**
      * Remote a {@link ResponseListener}
      * 
      * @param listener
      */
-    public void removeListener(ResponseListener listener);
+    void removeListener(ResponseListener listener);
     
     /**
      * Return <code>true</code> once the {@link FutureResponse} is ready and calling any of the get methods will not block any more.
      * 
      * @return ready
      */
-    public boolean isReady();
+    boolean isReady();
     
     
     /**
@@ -56,13 +56,13 @@ public interface FutureResponse extends Response{
      * 
      *
      */
-    public interface ResponseListener {
+    interface ResponseListener {
 
         /**
          * The {@link FutureResponse} is ready for processing
          * 
          * @param response
          */
-        public void onResponse(FutureResponse response);
+        void onResponse(FutureResponse response);
     }
 }

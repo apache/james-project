@@ -47,40 +47,40 @@ public interface StatusResponse extends ImapResponseMessage {
      * @return The type, either {@link Type#BAD}, {@link Type#BYE}, {@link Type#NO},
      *         {@link Type#OK} or {@link Type#PREAUTH}
      */
-    public Type getServerResponseType();
+    Type getServerResponseType();
 
     /**
      * Gets the tag.
      * 
      * @return if tagged response, the tag. Otherwise null.
      */
-    public String getTag();
+    String getTag();
 
     /**
      * Gets the command.
      * 
      * @return if tagged response, the command. Otherwise null
      */
-    public ImapCommand getCommand();
+    ImapCommand getCommand();
 
     /**
      * Gets the key to the human readable text to be displayed. Required.
      * 
      * @return key for the text message to be displayed, not null
      */
-    public HumanReadableText getTextKey();
+    HumanReadableText getTextKey();
 
     /**
      * Gets the response code. Optional.
      * 
      * @return <code>ResponseCode</code>, or null if there is no response code
      */
-    public ResponseCode getResponseCode();
+    ResponseCode getResponseCode();
 
     /**
      * Enumerates types of RC2060 status response
      */
-    public enum Type {
+    enum Type {
         /** RFC2060 <code>OK</code> server response */
         OK("OK"),
         /** RFC2060 <code>OK</code> server response */
@@ -110,7 +110,7 @@ public interface StatusResponse extends ImapResponseMessage {
     /**
      * Enumerates response codes.
      */
-    public static final class ResponseCode {
+    final class ResponseCode {
 
         /** RFC2060 <code>ALERT</code> response code */
         private static final ResponseCode ALERT = new ResponseCode("ALERT");

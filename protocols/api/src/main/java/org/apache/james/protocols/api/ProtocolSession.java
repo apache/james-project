@@ -33,7 +33,7 @@ import org.apache.james.protocols.api.logger.Logger;
  */
 public interface ProtocolSession {
    
-    public static enum State {
+    enum State {
         Connection,
         Transaction
     }

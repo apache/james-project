@@ -22,7 +22,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 
 public interface MessagingImapCommandParser extends ImapCommandParser {
 
-    public abstract StatusResponseFactory getStatusResponseFactory();
+    StatusResponseFactory getStatusResponseFactory();
 
-    public abstract void setStatusResponseFactory(StatusResponseFactory statusResponseFactory);
+    void setStatusResponseFactory(StatusResponseFactory statusResponseFactory);
 }

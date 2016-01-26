@@ -90,7 +90,7 @@ public interface ImapSession {
      *            name of the key, not null
      * @return <code>Object</code> value or null if this attribute has unvalued
      */
-    public Object getAttribute(String key);
+    Object getAttribute(String key);
 
     /**
      * Sets an attribute of this session by name. Implementations should ensure
@@ -102,7 +102,7 @@ public interface ImapSession {
      *            <code>Object</code> value or null to set this attribute as
      *            unvalued
      */
-    public void setAttribute(String key, Object value);
+    void setAttribute(String key, Object value);
 
     /**
      * Start TLS encryption of the session after the next response was written.
@@ -110,28 +110,28 @@ public interface ImapSession {
      * 
      * @return true if the encryption of the session was successfully
      */
-    public boolean startTLS();
+    boolean startTLS();
 
     /**
      * Return true if the session is bound to a TLS encrypted socket.
      * 
      * @return tlsActive
      */
-    public boolean isTLSActive();
+    boolean isTLSActive();
  
     /**
      * Support startTLS ?
      * 
      * @return true if startTLS is supported
      */
-    public boolean supportStartTLS();
+    boolean supportStartTLS();
 
     /**
      * Return true if compression is active
      * 
      * @return compActive
      */
-    public boolean isCompressionActive();
+    boolean isCompressionActive();
 
     /**
      * Return true if compression is supported. This is related to COMPRESS extension.
@@ -139,34 +139,34 @@ public interface ImapSession {
      * 
      * @return compressSupport
      */
-    public boolean isCompressionSupported();
+    boolean isCompressionSupported();
 
     /**
      * Start the compression
      * 
      * @return success
      */
-    public boolean startCompression();
+    boolean startCompression();
 
     /**
      * Push in a new {@link ImapLineHandler} which is called for the next line received
      * 
      * @param lineHandler
      */
-    public void pushLineHandler(ImapLineHandler lineHandler);
+    void pushLineHandler(ImapLineHandler lineHandler);
 
     /**
      * Pop the current {@link ImapLineHandler}
      * 
      */
-    public void popLineHandler();
+    void popLineHandler();
     
     /**
      * Return true if multiple namespaces are supported
      * 
      * @return multipleNamespaces
      */
-    public boolean supportMultipleNamespaces();
+    boolean supportMultipleNamespaces();
     
     /**
      * Return true if the login / authentication via plain username / password is
@@ -174,6 +174,6 @@ public interface ImapSession {
      * 
      * @return plainDisallowed
      */
-    public boolean isPlainAuthDisallowed();
+    boolean isPlainAuthDisallowed();
 
 }

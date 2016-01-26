@@ -82,7 +82,7 @@ public interface IMAPSession extends ProtocolSession{
      * 
      * @return compActive
      */
-    public boolean isCompressionActive();
+    boolean isCompressionActive();
 
     /**
      * Return true if compression is supported. This is related to COMPRESS extension.
@@ -90,21 +90,21 @@ public interface IMAPSession extends ProtocolSession{
      * 
      * @return compressSupport
      */
-    public boolean isCompressionSupported();
+    boolean isCompressionSupported();
 
     /**
      * Start the compression
      * 
      * @return success
      */
-    public boolean startCompression();
+    boolean startCompression();
 
     /**
      * Return true if multiple namespaces are supported
      * 
      * @return multipleNamespaces
      */
-    public boolean supportMultipleNamespaces();
+    boolean supportMultipleNamespaces();
     
     /**
      * Return true if the login / authentication via plain username / password is
@@ -112,5 +112,5 @@ public interface IMAPSession extends ProtocolSession{
      * 
      * @return plainDisallowed
      */
-    public boolean isPlainAuthDisallowed();
+    boolean isPlainAuthDisallowed();
 }

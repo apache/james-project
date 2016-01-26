@@ -66,6 +66,6 @@ public interface DomainListManagementMBean {
      * 
      * @return the defaultdomain
      */
-    public String getDefaultDomain() throws Exception;
+    String getDefaultDomain() throws Exception;
 
 }

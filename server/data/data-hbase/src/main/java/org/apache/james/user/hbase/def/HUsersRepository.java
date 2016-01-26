@@ -31,7 +31,7 @@ public interface HUsersRepository {
     byte[] TABLE_NAME = Bytes.toBytes("JAMES_USERS");
     byte[] COLUMN_FAMILY_NAME = Bytes.toBytes("JAMES_USERS");
     
-    public interface COLUMN {
+    interface COLUMN {
         byte [] PWD = Bytes.toBytes("pwd");
     }
 

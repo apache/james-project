@@ -37,7 +37,7 @@ public interface ServerProbe extends Closeable {
      *            The password of the user being added.
      * @throws Exception
      */
-    public void addUser(String userName, String password) throws Exception;
+    void addUser(String userName, String password) throws Exception;
 
     /**
      * Delete a user from this mail server.
@@ -46,7 +46,7 @@ public interface ServerProbe extends Closeable {
      *            The name of the user being deleted.
      * @throws Exception
      */
-    public void removeUser(String username) throws Exception;
+    void removeUser(String username) throws Exception;
 
     /**
      * Get a List the names of all users.
@@ -54,7 +54,7 @@ public interface ServerProbe extends Closeable {
      * @return a List of all user names.
      * @throws Exception
      */
-    public String[] listUsers() throws Exception;
+    String[] listUsers() throws Exception;
 
     /**
      * Set a user's password.
@@ -65,7 +65,7 @@ public interface ServerProbe extends Closeable {
      *            The new password.
      * @throws Exception
      */
-    public void setPassword(String userName, String password) throws Exception;
+    void setPassword(String userName, String password) throws Exception;
 
     /**
      * Add domain to the service.
@@ -74,7 +74,7 @@ public interface ServerProbe extends Closeable {
      *            The domain to add.
      * @throws Exception
      */
-    public void addDomain(String domain) throws Exception;
+    void addDomain(String domain) throws Exception;
 
     /**
      * Return true if the domain exists in the service
@@ -83,7 +83,7 @@ public interface ServerProbe extends Closeable {
      *            The domain to remove.
      * @throws Exception
      */
-    public boolean containsDomain(String domain) throws Exception;
+    boolean containsDomain(String domain) throws Exception;
 
     /**
      * Remove domain from the service
@@ -92,7 +92,7 @@ public interface ServerProbe extends Closeable {
      *            The domain to remove.
      * @throws Exception
      */
-    public void removeDomain(String domain) throws Exception;
+    void removeDomain(String domain) throws Exception;
 
     /**
      * Get a list of domains for the service.
@@ -100,7 +100,7 @@ public interface ServerProbe extends Closeable {
      * @return domains an array of domains, or null if no domains exist.
      * @throws Exception
      */
-    public String[] listDomains() throws Exception;
+    String[] listDomains() throws Exception;
 
     /**
      * Get a Map which holds all mappings. The key is the user@domain and the
@@ -109,7 +109,7 @@ public interface ServerProbe extends Closeable {
      * @return a Map which holds all mappings.
      * @throws Exception
      */
-	public Map<String, Mappings> listMappings() throws Exception;
+    Map<String, Mappings> listMappings() throws Exception;
 
     /**
      * Add address mapping.
@@ -122,7 +122,7 @@ public interface ServerProbe extends Closeable {
      *            The address.
      * @throws Exception
      */
-    public void addAddressMapping(String user, String domain, String toAddress) throws Exception;
+    void addAddressMapping(String user, String domain, String toAddress) throws Exception;
 
     /**
      * Remove address mapping.
@@ -135,7 +135,7 @@ public interface ServerProbe extends Closeable {
      *            The address.
      * @throws Exception
      */
-    public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception;
+    void removeAddressMapping(String user, String domain, String fromAddress) throws Exception;
 
     /**
      * Return the explicit mapping stored for the given user and domain. Return
@@ -149,7 +149,7 @@ public interface ServerProbe extends Closeable {
      *         found.
      * @throws Exception
      */
-	public Mappings listUserDomainMappings(String user, String domain) throws Exception;
+    Mappings listUserDomainMappings(String user, String domain) throws Exception;
 
     /**
      * Remove regex mapping.
@@ -162,7 +162,7 @@ public interface ServerProbe extends Closeable {
      *            The regex.
      * @throws Exception
      */
-    public void addRegexMapping(String user, String domain, String regex) throws Exception;
+    void addRegexMapping(String user, String domain, String regex) throws Exception;
 
     /**
      * Remove regex mapping.
@@ -175,7 +175,7 @@ public interface ServerProbe extends Closeable {
      *            The regex.
      * @throws Exception
      */
-    public void removeRegexMapping(String user, String domain, String regex) throws Exception;
+    void removeRegexMapping(String user, String domain, String regex) throws Exception;
 
     /**
      * Copy Mailbox.

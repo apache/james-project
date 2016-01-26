@@ -171,49 +171,49 @@ public final class FetchResponse implements ImapResponseMessage {
          * 
          * @return media type, or null if default
          */
-        public String getMediaType();
+        String getMediaType();
 
         /**
          * Gets the MIME content subtype
          * 
          * @return subtype of null if default
          */
-        public String getSubType();
+        String getSubType();
 
         /**
          * Gets body type parameters.
          * 
          * @return parameters, or null
          */
-        public List<String> getParameters();
+        List<String> getParameters();
 
         /**
          * Gets <code>Content-ID</code>.
          * 
          * @return MIME content ID, possibly null
          */
-        public String getId();
+        String getId();
 
         /**
          * Gets <code>Content-Description</code>.
          * 
          * @return MIME <code>Content-Description</code>, possibly null
          */
-        public String getDescription();
+        String getDescription();
 
         /**
          * Gets content transfer encoding.
          * 
          * @return MIME <code>Content-Transfer-Encoding</code>, possibly null
          */
-        public String getEncoding();
+        String getEncoding();
 
         /**
          * Gets the size of message body the in octets.
          * 
          * @return number of octets in the message.
          */
-        public long getOctets();
+        long getOctets();
 
         /**
          * Gets the number of lines fo transfer encoding for a <code>TEXT</code>
@@ -221,14 +221,14 @@ public final class FetchResponse implements ImapResponseMessage {
          * 
          * @return number of lines when <code>TEXT</code>, -1 otherwise
          */
-        public long getLines();
+        long getLines();
 
         /**
          * Gets <code>Content-MD5</code>.
          * 
          * @return Content-MD5 or null if <code>BODY</code> FETCH or not present
          */
-        public String getMD5();
+        String getMD5();
 
         /**
          * Gets header field-value from <code>Content-Disposition</code>.
@@ -237,14 +237,14 @@ public final class FetchResponse implements ImapResponseMessage {
          *         <code>String</code> or null if <code>BODY</code> FETCH or not
          *         present
          */
-        public Map<String, String> getDispositionParams();
+        Map<String, String> getDispositionParams();
 
         /**
          * Gets header field-value from <code>Content-Disposition</code>.
          * 
          * @return disposition or null if <code>BODY</code> FETCH or not present
          */
-        public String getDisposition();
+        String getDisposition();
 
         /**
          * Gets MIME <code>Content-Language</code>'s.
@@ -253,7 +253,7 @@ public final class FetchResponse implements ImapResponseMessage {
          *         <code>String</code>'s possibly null or null when
          *         <code>BODY</code> FETCH
          */
-        public List<String> getLanguages();
+        List<String> getLanguages();
 
         /**
          * Gets <code>Content-Location</code>.
@@ -261,7 +261,7 @@ public final class FetchResponse implements ImapResponseMessage {
          * @return Content-Location possibly null; or null when
          *         <code>BODY</code> FETCH
          */
-        public String getLocation();
+        String getLocation();
 
         /**
          * Iterates parts of a composite media type.
@@ -269,7 +269,7 @@ public final class FetchResponse implements ImapResponseMessage {
          * @return <code>Structure</code> <code>Iterator</code> when composite
          *         type, null otherwise
          */
-        public Iterator<Structure> parts();
+        Iterator<Structure> parts();
 
         /**
          * Gets the envelope of an embedded mail.
@@ -277,7 +277,7 @@ public final class FetchResponse implements ImapResponseMessage {
          * @return <code>Envelope</code> when <code>message/rfc822</code>
          *         otherwise null
          */
-        public Envelope getEnvelope();
+        Envelope getEnvelope();
 
         /**
          * Gets the envelope of an embedded mail.
@@ -285,7 +285,7 @@ public final class FetchResponse implements ImapResponseMessage {
          * @return <code>Structure</code> when when <code>message/rfc822</code>
          *         otherwise null
          */
-        public Structure getBody();
+        Structure getBody();
     }
 
     /**
@@ -299,7 +299,7 @@ public final class FetchResponse implements ImapResponseMessage {
          * 
          * @return name, not null
          */
-        public String getName();
+        String getName();
 
     }
 
@@ -314,7 +314,7 @@ public final class FetchResponse implements ImapResponseMessage {
          * 
          * @return envelope Date or null if this attribute is <code>NIL</code>
          */
-        public String getDate();
+        String getDate();
 
         /**
          * Gets the envelope <code>subject</code>. This is the value of the
@@ -322,71 +322,71 @@ public final class FetchResponse implements ImapResponseMessage {
          * 
          * @return subject, or null if this attribute is <code>NIL</code>
          */
-        public String getSubject();
+        String getSubject();
 
         /**
          * Gets the envelope <code>from</code> addresses.
          * 
          * @return from addresses, not null
          */
-        public Address[] getFrom();
+        Address[] getFrom();
 
         /**
          * Gets the envelope <code>sender</code> addresses.
          * 
          * @return <code>sender</code> addresses, not null
          */
-        public Address[] getSender();
+        Address[] getSender();
 
         /**
          * Gets the envelope <code>reply-to</code> addresses.
          * 
          * @return <code>reply-to</code>, not null
          */
-        public Address[] getReplyTo();
+        Address[] getReplyTo();
 
         /**
          * Gets the envelope <code>to</code> addresses.
          * 
          * @return <code>to</code>, or null if <code>NIL</code>
          */
-        public Address[] getTo();
+        Address[] getTo();
 
         /**
          * Gets the envelope <code>cc</code> addresses.
          * 
          * @return <code>cc</code>, or null if <code>NIL</code>
          */
-        public Address[] getCc();
+        Address[] getCc();
 
         /**
          * Gets the envelope <code>bcc</code> addresses.
          * 
          * @return <code>bcc</code>, or null if <code>NIL</code>
          */
-        public Address[] getBcc();
+        Address[] getBcc();
 
         /**
          * Gets the envelope <code>in-reply-to</code>.
          * 
          * @return <code>in-reply-to</code> or null if <code>NIL</code>
          */
-        public String getInReplyTo();
+        String getInReplyTo();
 
         /**
          * Gets the envelope <code>message
          * 
          * @return the message id
          */
-        public String getMessageId();
+        String getMessageId();
 
         /**
          * Values an envelope address.
          */
-        public interface Address {
+        interface Address {
 
             /** Empty array */
-            public static final Address[] EMPTY = {};
+            Address[] EMPTY = {};
 
             /**
              * Gets the personal name.
@@ -394,7 +394,7 @@ public final class FetchResponse implements ImapResponseMessage {
              * @return personal name, or null if the personal name is
              *         <code>NIL</code>
              */
-            public String getPersonalName();
+            String getPersonalName();
 
             /**
              * Gets the SMTP source route.
@@ -402,7 +402,7 @@ public final class FetchResponse implements ImapResponseMessage {
              * @return SMTP at-domain-list, or null if the list if
              *         <code>NIL</code>
              */
-            public String getAtDomainList();
+            String getAtDomainList();
 
             /**
              * Gets the mailbox name.
@@ -410,7 +410,7 @@ public final class FetchResponse implements ImapResponseMessage {
              * @return the mailbox name or the group name when
              *         {@link #getHostName()} is null
              */
-            public String getMailboxName();
+            String getMailboxName();
 
             /**
              * Gets the host name.
@@ -418,7 +418,7 @@ public final class FetchResponse implements ImapResponseMessage {
              * @return the host name, or null when this address marks the start
              *         or end of a group
              */
-            public String getHostName();
+            String getHostName();
         }
     }
 }

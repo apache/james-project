@@ -35,5 +35,5 @@ public interface CapabilityImplementingProcessor extends ImapProcessor {
      * @param session
      * @return list not null
      */
-    public List<String> getImplementedCapabilities(ImapSession session);
+    List<String> getImplementedCapabilities(ImapSession session);
 }

@@ -44,7 +44,7 @@ public interface ModSeqProvider<Id extends MailboxId> {
      * @return modSeq
      * @throws MailboxException
      */
-    public long nextModSeq(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    long nextModSeq(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
     
     /**
      * Return the highest mod-sequence which were used for the {@link Mailbox}
@@ -54,5 +54,5 @@ public interface ModSeqProvider<Id extends MailboxId> {
      * @return highest
      * @throws MailboxException
      */
-    public long highestModSeq(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    long highestModSeq(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
 }

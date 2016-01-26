@@ -37,32 +37,32 @@ public interface KeyHolder {
      * Generates a signed MimeMultipart from a MimeMessage.
      * @param message The message to sign.
      * @return The signed <CODE>MimeMultipart</CODE>.
-     */    
-    public MimeMultipart generate(MimeMessage message) throws Exception;
+     */
+    MimeMultipart generate(MimeMessage message) throws Exception;
 
     /**
      * Generates a signed MimeMultipart from a MimeBodyPart.
      * @param content The content to sign.
      * @return The signed <CODE>MimeMultipart</CODE>.
-     */    
-    public MimeMultipart generate(MimeBodyPart content) throws Exception;
+     */
+    MimeMultipart generate(MimeBodyPart content) throws Exception;
 
     /**
      * Getter for property signerDistinguishedName.
      * @return Value of property signerDistinguishedName.
      */
-    public String getSignerDistinguishedName();
+    String getSignerDistinguishedName();
     
     /**
      * Getter for property signerCN.
      * @return Value of property signerCN.
      */
-    public String getSignerCN();
+    String getSignerCN();
     
      /**
      * Getter for property signerAddress.
      * @return Value of property signerMailAddress.
      */
-    public String getSignerAddress();
+     String getSignerAddress();
     
 }

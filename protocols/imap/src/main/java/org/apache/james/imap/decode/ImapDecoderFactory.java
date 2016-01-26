@@ -21,5 +21,5 @@ package org.apache.james.imap.decode;
 
 public interface ImapDecoderFactory {
 
-    public ImapDecoder buildImapDecoder();
+    ImapDecoder buildImapDecoder();
 }

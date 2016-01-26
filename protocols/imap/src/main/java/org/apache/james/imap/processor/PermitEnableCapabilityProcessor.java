@@ -36,7 +36,7 @@ public interface PermitEnableCapabilityProcessor extends CapabilityImplementingP
      * @param session
      * @return permitCaps
      */
-    public List<String> getPermitEnableCapabilities(ImapSession session);
+    List<String> getPermitEnableCapabilities(ImapSession session);
     
     /**
      * Callback which is used when a ENABLED command was used to enable on of the CAPABILITIES which is managed by this implementation
@@ -47,14 +47,14 @@ public interface PermitEnableCapabilityProcessor extends CapabilityImplementingP
      * @param capability
      * @throws EnableException
      */
-    public void enable(ImapMessage message, Responder responder, ImapSession session, String capability) throws EnableException;
+    void enable(ImapMessage message, Responder responder, ImapSession session, String capability) throws EnableException;
 
     /**
      * Exception which should get thrown if for whatever reason its not possible to enable a capability
      * 
      *
      */
-    public final static class EnableException extends Exception {
+    final class EnableException extends Exception {
         /**
          * 
          */

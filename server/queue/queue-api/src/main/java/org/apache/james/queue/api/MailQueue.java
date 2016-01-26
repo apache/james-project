@@ -60,7 +60,7 @@ public interface MailQueue {
     /**
      * No delay for queued {@link MailQueueItem}
      */
-    final static int NO_DELAY = -1;
+    int NO_DELAY = -1;
 
     /**
      * Enqueue the Mail to the queue. The given delay and unit are used to
@@ -109,7 +109,7 @@ public interface MailQueue {
     /**
      *
      */
-    public interface MailQueueItem {
+    interface MailQueueItem {
 
         /**
          * Return the dequeued {@link Mail}

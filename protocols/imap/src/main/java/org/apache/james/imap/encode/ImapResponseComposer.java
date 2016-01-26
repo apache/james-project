@@ -39,7 +39,7 @@ public interface ImapResponseComposer {
      * @param responseCode
      *            response code or null when there is no response code
      */
-    public ImapResponseComposer untaggedNoResponse(String displayMessage, String responseCode) throws IOException;
+    ImapResponseComposer untaggedNoResponse(String displayMessage, String responseCode) throws IOException;
 
     /**
      * Compose flags to output using standard format.
@@ -47,14 +47,14 @@ public interface ImapResponseComposer {
      * @param flags
      *            <code>Flags</code>, not null
      */
-    public ImapResponseComposer flags(Flags flags) throws IOException;
+    ImapResponseComposer flags(Flags flags) throws IOException;
 
     /**
      * Composes a <code>NIL</code>.
      * 
      * @throws IOException
      */
-    public ImapResponseComposer nil() throws IOException;
+    ImapResponseComposer nil() throws IOException;
 
     /**
      * Compose a response which contains the {@link ImapCommand} to which the
@@ -65,7 +65,7 @@ public interface ImapResponseComposer {
      * @return self
      * @throws IOException
      */
-    public ImapResponseComposer commandResponse(ImapCommand command, String message) throws IOException;
+    ImapResponseComposer commandResponse(ImapCommand command, String message) throws IOException;
 
     /**
      * Writes the message provided to the client, prepended with the request
@@ -74,7 +74,7 @@ public interface ImapResponseComposer {
      * @param message
      *            The message to write to the client.
      */
-    public ImapResponseComposer taggedResponse(String message, String tag) throws IOException;
+    ImapResponseComposer taggedResponse(String message, String tag) throws IOException;
 
     /**
      * Writes the message provided to the client, prepended with the untagged
@@ -83,7 +83,7 @@ public interface ImapResponseComposer {
      * @param message
      *            The message to write to the client.
      */
-    public ImapResponseComposer untaggedResponse(String message) throws IOException;
+    ImapResponseComposer untaggedResponse(String message) throws IOException;
 
     /**
      * Write a '*'
@@ -91,7 +91,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer untagged() throws IOException;
+    ImapResponseComposer untagged() throws IOException;
 
     /**
      * 
@@ -99,7 +99,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer commandName(final String name) throws IOException;
+    ImapResponseComposer commandName(final String name) throws IOException;
 
     /**
      * Write the message of type <code>String</code>
@@ -108,7 +108,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer message(final String message) throws IOException;
+    ImapResponseComposer message(final String message) throws IOException;
 
     /**
      * Write the message of type <code>Long</code>
@@ -117,7 +117,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer message(final long number) throws IOException;
+    ImapResponseComposer message(final long number) throws IOException;
 
     /**
      * First encodes the given {@code mailboxName} using
@@ -128,7 +128,7 @@ public interface ImapResponseComposer {
      * @return
      * @throws IOException
      */
-    public ImapResponseComposer mailbox(final String mailboxName) throws IOException;
+    ImapResponseComposer mailbox(final String mailboxName) throws IOException;
 
     /**
      * Write the given sequence-set
@@ -137,7 +137,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer sequenceSet(final IdRange[] ranges) throws IOException;
+    ImapResponseComposer sequenceSet(final IdRange[] ranges) throws IOException;
 
     /**
      * Write a CRLF and flush the composer which will write the content of it to
@@ -146,7 +146,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer end() throws IOException;
+    ImapResponseComposer end() throws IOException;
 
     /**
      * Write a tag
@@ -155,7 +155,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer tag(String tag) throws IOException;
+    ImapResponseComposer tag(String tag) throws IOException;
 
     /**
      * Write a quoted message
@@ -164,7 +164,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer quote(String message) throws IOException;
+    ImapResponseComposer quote(String message) throws IOException;
 
     /**
      * Compose a {@link Literal} and write it to the socket. Everything which
@@ -174,7 +174,7 @@ public interface ImapResponseComposer {
      * @return self
      * @throws IOException
      */
-    public ImapResponseComposer literal(Literal literal) throws IOException;
+    ImapResponseComposer literal(Literal literal) throws IOException;
 
     /**
      * Write a '('
@@ -182,7 +182,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer openParen() throws IOException;
+    ImapResponseComposer openParen() throws IOException;
 
     /**
      * Write a ')'
@@ -190,7 +190,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer closeParen() throws IOException;
+    ImapResponseComposer closeParen() throws IOException;
 
     /**
      * Appends the given message after conversion to upper case. The message may
@@ -202,7 +202,7 @@ public interface ImapResponseComposer {
      * @return self, not null
      * @throws IOException
      */
-    public ImapResponseComposer upperCaseAscii(final String message) throws IOException;
+    ImapResponseComposer upperCaseAscii(final String message) throws IOException;
 
     /**
      * Appends the given message after conversion to upper case. The message may
@@ -214,7 +214,7 @@ public interface ImapResponseComposer {
      * @return self, not null
      * @throws IOException
      */
-    public ImapResponseComposer quoteUpperCaseAscii(final String message) throws IOException;
+    ImapResponseComposer quoteUpperCaseAscii(final String message) throws IOException;
 
     /**
      * Tell the {@link ImapResponseComposer} to skip the next written space
@@ -222,7 +222,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer skipNextSpace() throws IOException;
+    ImapResponseComposer skipNextSpace() throws IOException;
 
     /**
      * Writes a continuation response.
@@ -230,7 +230,7 @@ public interface ImapResponseComposer {
      * @param message
      *            message for display, not null
      */
-    public ImapResponseComposer continuationResponse(String message) throws IOException;
+    ImapResponseComposer continuationResponse(String message) throws IOException;
 
     /**
      * Write a '}'
@@ -238,7 +238,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer closeSquareBracket() throws IOException;
+    ImapResponseComposer closeSquareBracket() throws IOException;
 
     /**
      * Write a '{'
@@ -246,6 +246,6 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    public ImapResponseComposer openSquareBracket() throws IOException;
+    ImapResponseComposer openSquareBracket() throws IOException;
 
 }

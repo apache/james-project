@@ -30,12 +30,12 @@ public interface SMTPSession extends ProtocolSession{
 
     // Keys used to store/lookup data in the internal state hash map
     /** Sender's email address */
-    final static String SENDER = "SENDER_ADDRESS";
+    String SENDER = "SENDER_ADDRESS";
     /** The message recipients */
-    final static String RCPT_LIST = "RCPT_LIST";  
+    String RCPT_LIST = "RCPT_LIST";
     /** HELO or EHLO */
-    final static String CURRENT_HELO_MODE = "CURRENT_HELO_MODE";
-    final static String CURRENT_HELO_NAME = "CURRENT_HELO_NAME";
+    String CURRENT_HELO_MODE = "CURRENT_HELO_MODE";
+    String CURRENT_HELO_NAME = "CURRENT_HELO_NAME";
 
     /**
      * Returns the service wide configuration

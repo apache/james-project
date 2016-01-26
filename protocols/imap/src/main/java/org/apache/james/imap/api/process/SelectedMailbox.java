@@ -30,12 +30,12 @@ import org.apache.james.mailbox.model.MailboxPath;
  */
 public interface SelectedMailbox {
 
-    public final static int NO_SUCH_MESSAGE = -1;
+    int NO_SUCH_MESSAGE = -1;
 
     /**
      * Deselect the Mailbox
      */
-    public abstract void deselect();
+    void deselect();
 
     /**
      * Return the msg index of the given uid or {@link #NO_SUCH_MESSAGE} if no
@@ -44,7 +44,7 @@ public interface SelectedMailbox {
      * @param uid
      * @return index
      */
-    public int msn(long uid);
+    int msn(long uid);
 
     /**
      * Return the uid of the message for the given index or
@@ -53,7 +53,7 @@ public interface SelectedMailbox {
      * @param index
      * @return uid
      */
-    public abstract long uid(int index);
+    long uid(int index);
 
     /**
      * Add a recent uid
@@ -61,7 +61,7 @@ public interface SelectedMailbox {
      * @param uid
      * @return true if it was successfully
      */
-    public boolean addRecent(long uid);
+    boolean addRecent(long uid);
 
     /**
      * Remove a recent uid
@@ -69,35 +69,35 @@ public interface SelectedMailbox {
      * @param uid
      * @return true if it was successfully
      */
-    public boolean removeRecent(long uid);
+    boolean removeRecent(long uid);
 
     /**
      * Return a Collection of all recent uids
      * 
      * @return recentUids
      */
-    public Collection<Long> getRecent();
+    Collection<Long> getRecent();
 
     /**
      * Return the count of all recent uids
      * 
      * @return recentCount
      */
-    public int recentCount();
+    int recentCount();
 
     /**
      * Return the count of all existing uids
      * 
      * @return existsCount
      */
-    public long existsCount();
+    long existsCount();
 
     /**
      * Return the path of the selected Mailbox
      * 
      * @return path
      */
-    public MailboxPath getPath();
+    MailboxPath getPath();
 
     /**
      * Is the given uid recent ?
@@ -105,7 +105,7 @@ public interface SelectedMailbox {
      * @param uid
      * @return true if the given uid is recent
      */
-    public boolean isRecent(long uid);
+    boolean isRecent(long uid);
 
     /**
      * Is the mailbox deleted?
@@ -113,42 +113,42 @@ public interface SelectedMailbox {
      * @return true when the mailbox has been deleted by another session, false
      *         otherwise
      */
-    public boolean isDeletedByOtherSession();
+    boolean isDeletedByOtherSession();
 
     /**
      * Is the size of the mailbox changed ?
      * 
      * @return true if the mailbox size was changed
      */
-    public boolean isSizeChanged();
+    boolean isSizeChanged();
 
     /**
      * Was the recent uid removed ?
      * 
      * @return true if the recent uid for this mailbox was removed
      */
-    public boolean isRecentUidRemoved();
+    boolean isRecentUidRemoved();
 
     /**
      * 
      */
-    public void resetRecentUidRemoved();
+    void resetRecentUidRemoved();
 
 
     /**
      * Reset all events
      */
-    public void resetEvents();
+    void resetEvents();
 
     /**
      * Return a Collection which holds all uids which were expunged
      * 
      * @return expungedUids
      */
-    public Collection<Long> expungedUids();
+    Collection<Long> expungedUids();
 
     
-    public void resetExpungedUids();
+    void resetExpungedUids();
     
     /**
      * Removes the given UID.
@@ -159,7 +159,7 @@ public interface SelectedMailbox {
      *         {@link #NO_SUCH_MESSAGE} if no message with the given uid was
      *         found being expunged
      */
-    public int remove(Long uid);
+    int remove(Long uid);
 
     /**
      * Return a Collection which holds all uids reflecting the Messages which
@@ -167,7 +167,7 @@ public interface SelectedMailbox {
      * 
      * @return flagsUids
      */
-    public Collection<Long> flagUpdateUids();
+    Collection<Long> flagUpdateUids();
 
     /**
      * Return the uid of the first message in the mailbox or -1 if the mailbox
@@ -175,7 +175,7 @@ public interface SelectedMailbox {
      * 
      * @return firstUid
      */
-    public long getFirstUid();
+    long getFirstUid();
 
     /**
      * Return the uid of the last message in the mailbox or -1 if the mailbox is
@@ -183,18 +183,18 @@ public interface SelectedMailbox {
      * 
      * @return lastUid
      */
-    public long getLastUid();
+    long getLastUid();
     
     /**
      * Return all applicable Flags for the selected mailbox
      * 
      * @return flags
      */
-    public Flags getApplicableFlags();
+    Flags getApplicableFlags();
     
     
-    public boolean hasNewApplicableFlags();
+    boolean hasNewApplicableFlags();
     
-    public void resetNewApplicableFlags();
+    void resetNewApplicableFlags();
 
 }

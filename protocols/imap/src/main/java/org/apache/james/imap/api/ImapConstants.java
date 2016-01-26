@@ -21,278 +21,278 @@ package org.apache.james.imap.api;
 
 public interface ImapConstants {
     // Basic response types
-    public static final String OK = "OK";
+    String OK = "OK";
 
-    public static final String NO = "NO";
+    String NO = "NO";
 
-    public static final String BAD = "BAD";
+    String BAD = "BAD";
 
-    public static final String BYE = "BYE";
+    String BYE = "BYE";
 
-    public static final String UNTAGGED = "*";
+    String UNTAGGED = "*";
 
-    public static final String CONTINUATION = "+";
+    String CONTINUATION = "+";
 
-    public static final String SP = " ";
+    String SP = " ";
 
-    public static final String NIL = "NIL";
+    String NIL = "NIL";
 
-    public static final String UID = "UID";
+    String UID = "UID";
 
-    public static final String MIME_HEADER_CONTENT_LOCATION = "Content-Location";
+    String MIME_HEADER_CONTENT_LOCATION = "Content-Location";
 
-    public static final String MIME_HEADER_CONTENT_MD5 = "Content-MD5";
+    String MIME_HEADER_CONTENT_MD5 = "Content-MD5";
 
-    public static final String MIME_HEADER_CONTENT_LANGUAGE = "Content-Language";
+    String MIME_HEADER_CONTENT_LANGUAGE = "Content-Language";
 
-    public static final String[] EMPTY_STRING_ARRAY = {};
+    String[] EMPTY_STRING_ARRAY = {};
 
-    public static final byte BYTE_OPENING_PARENTHESIS = 0x28;
+    byte BYTE_OPENING_PARENTHESIS = 0x28;
 
-    public static final byte BYTE_CLOSING_PARENTHESIS = 0x29;
+    byte BYTE_CLOSING_PARENTHESIS = 0x29;
 
-    public static final byte BYTE_SP = 0x20;
+    byte BYTE_SP = 0x20;
 
-    public static final byte BYTE_DQUOTE = 0x22;
+    byte BYTE_DQUOTE = 0x22;
 
-    public static final byte BYTE_BACK_SLASH = 0x5C;
+    byte BYTE_BACK_SLASH = 0x5C;
 
-    public static final byte BYTE_QUESTION = 0x3F;
+    byte BYTE_QUESTION = 0x3F;
 
-    public static final byte BYTE_OPEN_SQUARE_BRACKET = 0x5B;
+    byte BYTE_OPEN_SQUARE_BRACKET = 0x5B;
 
-    public static final byte BYTE_CLOSE_SQUARE_BRACKET = 0x5D;
+    byte BYTE_CLOSE_SQUARE_BRACKET = 0x5D;
 
-    public static final byte BYTE_OPEN_BRACE = 0x7B;
+    byte BYTE_OPEN_BRACE = 0x7B;
 
-    public static final byte BYTE_CLOSE_BRACE = 0x7D;
+    byte BYTE_CLOSE_BRACE = 0x7D;
 
-    public static final char OPENING_PARENTHESIS = '(';
+    char OPENING_PARENTHESIS = '(';
 
-    public static final char CLOSING_PARENTHESIS = ')';
+    char CLOSING_PARENTHESIS = ')';
 
-    public static final char OPENING_SQUARE_BRACKET = '[';
+    char OPENING_SQUARE_BRACKET = '[';
 
-    public static final char CLOSING_SQUARE_BRACKET = ']';
+    char CLOSING_SQUARE_BRACKET = ']';
 
-    public static final char SP_CHAR = ' ';
+    char SP_CHAR = ' ';
 
-    public static final char DQUOTE = '\"';
+    char DQUOTE = '\"';
 
-    public static final String VERSION = "IMAP4rev1";
+    String VERSION = "IMAP4rev1";
 
-    public static final String SUPPORTS_LITERAL_PLUS = "LITERAL+";
+    String SUPPORTS_LITERAL_PLUS = "LITERAL+";
 
-    public static final String SUPPORTS_RFC3348 = "CHILDREN";
+    String SUPPORTS_RFC3348 = "CHILDREN";
 
-    public static final String UTF8 = "UTF-8";
+    String UTF8 = "UTF-8";
     
-    public static final String SUPPORTS_I18NLEVEL_1 = "I18NLEVEL=1";
+    String SUPPORTS_I18NLEVEL_1 = "I18NLEVEL=1";
 
-    public static final String SUPPORTS_NAMESPACES = "NAMESPACE";
+    String SUPPORTS_NAMESPACES = "NAMESPACE";
 
-    public static final String SUPPORTS_STARTTLS = "STARTTLS";
+    String SUPPORTS_STARTTLS = "STARTTLS";
 
-    public static final String SUPPORTS_IDLE = "IDLE";
+    String SUPPORTS_IDLE = "IDLE";
 
-    public static final String SUPPORTS_XLIST = "XLIST";
+    String SUPPORTS_XLIST = "XLIST";
 
-    public static final String SUPPORTS_ENABLE = "ENABLE";
+    String SUPPORTS_ENABLE = "ENABLE";
     
-    public static final String SUPPORTS_CONDSTORE = "CONDSTORE";
+    String SUPPORTS_CONDSTORE = "CONDSTORE";
     
-    public static final String SUPPORTS_QRESYNC = "QRESYNC";
+    String SUPPORTS_QRESYNC = "QRESYNC";
 
-    public static final String SUPPORTS_ACL = "ACL";
+    String SUPPORTS_ACL = "ACL";
 
-    public static final String SUPPORTS_QUOTA = "QUOTA";
+    String SUPPORTS_QUOTA = "QUOTA";
     
-    public static final String INBOX_NAME = "INBOX";
+    String INBOX_NAME = "INBOX";
 
-    public static final String MIME_TYPE_TEXT = "TEXT";
+    String MIME_TYPE_TEXT = "TEXT";
 
-    public static final String MIME_TYPE_MULTIPART = "MULTIPART";
+    String MIME_TYPE_MULTIPART = "MULTIPART";
 
-    public static final String MIME_SUBTYPE_PLAIN = "PLAIN";
+    String MIME_SUBTYPE_PLAIN = "PLAIN";
 
-    public static final String MIME_TYPE_MESSAGE = "MESSAGE";
+    String MIME_TYPE_MESSAGE = "MESSAGE";
 
-    public static final String MIME_SUBTYPE_RFC822 = "RFC822";
+    String MIME_SUBTYPE_RFC822 = "RFC822";
 
     // RFC822 CONSTANTS:
     // TODO: Consider switching to standard case
-    public static final String RFC822_BCC = "Bcc";
+    String RFC822_BCC = "Bcc";
 
-    public static final String RFC822_CC = "Cc";
+    String RFC822_CC = "Cc";
 
-    public static final String RFC822_FROM = "From";
+    String RFC822_FROM = "From";
 
-    public static final String RFC822_DATE = "Date";
+    String RFC822_DATE = "Date";
 
-    public static final String RFC822_SUBJECT = "Subject";
+    String RFC822_SUBJECT = "Subject";
 
-    public static final String RFC822_TO = "To";
+    String RFC822_TO = "To";
 
-    public static final String RFC822_SENDER = "Sender";
+    String RFC822_SENDER = "Sender";
 
-    public static final String RFC822_REPLY_TO = "Reply-To";
+    String RFC822_REPLY_TO = "Reply-To";
 
-    public static final String RFC822_IN_REPLY_TO = "In-Reply-To";
+    String RFC822_IN_REPLY_TO = "In-Reply-To";
 
-    public static final String RFC822_MESSAGE_ID = "Message-ID";
+    String RFC822_MESSAGE_ID = "Message-ID";
 
-    public static final String NAME_ATTRIBUTE_HAS_CHILDREN = "\\HasChildren";
+    String NAME_ATTRIBUTE_HAS_CHILDREN = "\\HasChildren";
 
-    public static final String NAME_ATTRIBUTE_HAS_NO_CHILDREN = "\\HasNoChildren";
+    String NAME_ATTRIBUTE_HAS_NO_CHILDREN = "\\HasNoChildren";
 
-    public static final String NAMESPACE_COMMAND_NAME = "NAMESPACE";
+    String NAMESPACE_COMMAND_NAME = "NAMESPACE";
 
-    public static final char BACK_SLASH = '\\';
+    char BACK_SLASH = '\\';
 
-    public static final String STATUS_UNSEEN = "UNSEEN";
+    String STATUS_UNSEEN = "UNSEEN";
 
-    public static final String STATUS_UIDVALIDITY = "UIDVALIDITY";
+    String STATUS_UIDVALIDITY = "UIDVALIDITY";
 
-    public static final String STATUS_UIDNEXT = "UIDNEXT";
+    String STATUS_UIDNEXT = "UIDNEXT";
 
-    public static final String STATUS_RECENT = "RECENT";
+    String STATUS_RECENT = "RECENT";
 
-    public static final String STATUS_MESSAGES = "MESSAGES";
+    String STATUS_MESSAGES = "MESSAGES";
     
-    public static final String STATUS_HIGHESTMODSEQ = "HIGHESTMODSEQ";
+    String STATUS_HIGHESTMODSEQ = "HIGHESTMODSEQ";
 
-    public static final String UNSUBSCRIBE_COMMAND_NAME = "UNSUBSCRIBE";
+    String UNSUBSCRIBE_COMMAND_NAME = "UNSUBSCRIBE";
 
-    public static final String UID_COMMAND_NAME = "UID";
+    String UID_COMMAND_NAME = "UID";
 
-    public static final String SUBSCRIBE_COMMAND_NAME = "SUBSCRIBE";
+    String SUBSCRIBE_COMMAND_NAME = "SUBSCRIBE";
 
-    public static final String STORE_COMMAND_NAME = "STORE";
+    String STORE_COMMAND_NAME = "STORE";
 
-    public static final String STATUS_COMMAND_NAME = "STATUS";
+    String STATUS_COMMAND_NAME = "STATUS";
 
-    public static final String SELECT_COMMAND_NAME = "SELECT";
+    String SELECT_COMMAND_NAME = "SELECT";
 
-    public static final String UNSELECT_COMMAND_NAME = "UNSELECT";
+    String UNSELECT_COMMAND_NAME = "UNSELECT";
 
-    public static final String SEARCH_COMMAND_NAME = "SEARCH";
+    String SEARCH_COMMAND_NAME = "SEARCH";
 
-    public static final String RENAME_COMMAND_NAME = "RENAME";
+    String RENAME_COMMAND_NAME = "RENAME";
 
-    public static final String NOOP_COMMAND_NAME = "NOOP";
+    String NOOP_COMMAND_NAME = "NOOP";
 
-    public static final String IDLE_COMMAND_NAME = "IDLE";
+    String IDLE_COMMAND_NAME = "IDLE";
 
-    public static final String LSUB_COMMAND_NAME = "LSUB";
+    String LSUB_COMMAND_NAME = "LSUB";
 
-    public static final String LOGOUT_COMMAND_NAME = "LOGOUT";
+    String LOGOUT_COMMAND_NAME = "LOGOUT";
 
-    public static final String LOGIN_COMMAND_NAME = "LOGIN";
+    String LOGIN_COMMAND_NAME = "LOGIN";
 
-    public static final String LIST_COMMAND_NAME = "LIST";
+    String LIST_COMMAND_NAME = "LIST";
 
-    public static final String XLIST_COMMAND_NAME = "XLIST";
+    String XLIST_COMMAND_NAME = "XLIST";
 
-    public static final String FETCH_COMMAND_NAME = "FETCH";
+    String FETCH_COMMAND_NAME = "FETCH";
 
-    public static final String EXPUNGE_COMMAND_NAME = "EXPUNGE";
+    String EXPUNGE_COMMAND_NAME = "EXPUNGE";
 
-    public static final String EXAMINE_COMMAND_NAME = "EXAMINE";
+    String EXAMINE_COMMAND_NAME = "EXAMINE";
 
-    public static final String DELETE_COMMAND_NAME = "DELETE";
+    String DELETE_COMMAND_NAME = "DELETE";
 
-    public static final String CREATE_COMMAND_NAME = "CREATE";
+    String CREATE_COMMAND_NAME = "CREATE";
 
-    public static final String COPY_COMMAND_NAME = "COPY";
+    String COPY_COMMAND_NAME = "COPY";
 
-    public static final String MOVE_COMMAND_NAME = "MOVE";
+    String MOVE_COMMAND_NAME = "MOVE";
 
-    public static final String CLOSE_COMMAND_NAME = "CLOSE";
+    String CLOSE_COMMAND_NAME = "CLOSE";
 
-    public static final String CHECK_COMMAND_NAME = "CHECK";
+    String CHECK_COMMAND_NAME = "CHECK";
 
-    public static final String CAPABILITY_COMMAND_NAME = "CAPABILITY";
+    String CAPABILITY_COMMAND_NAME = "CAPABILITY";
 
-    public static final String AUTHENTICATE_COMMAND_NAME = "AUTHENTICATE";
+    String AUTHENTICATE_COMMAND_NAME = "AUTHENTICATE";
 
-    public static final String APPEND_COMMAND_NAME = "APPEND";
+    String APPEND_COMMAND_NAME = "APPEND";
     
-    public static final String ENABLE_COMMAND_NAME = "ENABLE";
+    String ENABLE_COMMAND_NAME = "ENABLE";
     
-    public static final String GETACL_COMMAND_NAME = "GETACL";
+    String GETACL_COMMAND_NAME = "GETACL";
 
-    public static final String SETACL_COMMAND_NAME = "SETACL";
+    String SETACL_COMMAND_NAME = "SETACL";
     
-    public static final String DELETEACL_COMMAND_NAME = "DELETEACL";
+    String DELETEACL_COMMAND_NAME = "DELETEACL";
     
-    public static final String LISTRIGHTS_COMMAND_NAME = "LISTRIGHTS";
+    String LISTRIGHTS_COMMAND_NAME = "LISTRIGHTS";
     
-    public static final String MYRIGHTS_COMMAND_NAME = "MYRIGHTS";
+    String MYRIGHTS_COMMAND_NAME = "MYRIGHTS";
 
-    public static final String GETQUOTAROOT_COMMAND_NAME = "GETQUOTAROOT";
+    String GETQUOTAROOT_COMMAND_NAME = "GETQUOTAROOT";
 
-    public static final String GETQUOTA_COMMAND_NAME = "GETQUOTA";
+    String GETQUOTA_COMMAND_NAME = "GETQUOTA";
 
-    public static final String SETQUOTA_COMMAND_NAME = "SETQUOTA";
+    String SETQUOTA_COMMAND_NAME = "SETQUOTA";
 
-    public static final String LIST_RESPONSE_NAME = "LIST";
+    String LIST_RESPONSE_NAME = "LIST";
 
-    public static final String XLIST_RESPONSE_NAME = "XLIST";
+    String XLIST_RESPONSE_NAME = "XLIST";
 
-    public static final String LSUB_RESPONSE_NAME = "LSUB";
+    String LSUB_RESPONSE_NAME = "LSUB";
 
-    public static final String SEARCH_RESPONSE_NAME = "SEARCH";
+    String SEARCH_RESPONSE_NAME = "SEARCH";
 
-    public static final String ACL_RESPONSE_NAME = "ACL";
+    String ACL_RESPONSE_NAME = "ACL";
 
-    public static final String QUOTA_RESPONSE_NAME = "QUOTA";
+    String QUOTA_RESPONSE_NAME = "QUOTA";
 
-    public static final String QUOTAROOT_RESPONSE_NAME = "QUOTAROOT";
+    String QUOTAROOT_RESPONSE_NAME = "QUOTAROOT";
 
-    public static final String LISTRIGHTS_RESPONSE_NAME = "LISTRIGHTS";
+    String LISTRIGHTS_RESPONSE_NAME = "LISTRIGHTS";
     
-    public static final String MYRIGHTS_RESPONSE_NAME = "MYRIGHTS";
+    String MYRIGHTS_RESPONSE_NAME = "MYRIGHTS";
 
-    public static final String NAME_ATTRIBUTE_NOINFERIORS = "\\Noinferiors";
+    String NAME_ATTRIBUTE_NOINFERIORS = "\\Noinferiors";
 
-    public static final String NAME_ATTRIBUTE_NOSELECT = "\\Noselect";
+    String NAME_ATTRIBUTE_NOSELECT = "\\Noselect";
 
-    public static final String NAME_ATTRIBUTE_MARKED = "\\Marked";
+    String NAME_ATTRIBUTE_MARKED = "\\Marked";
 
-    public static final String NAME_ATTRIBUTE_UNMARKED = "\\Unmarked";
+    String NAME_ATTRIBUTE_UNMARKED = "\\Unmarked";
 
-    public static final String PS_TEXT = "TEXT";
+    String PS_TEXT = "TEXT";
 
-    public static final String PS_HEADER = "HEADER";
+    String PS_HEADER = "HEADER";
 
-    public static final String PS_MIME = "MIME";
+    String PS_MIME = "MIME";
 
-    public static final String FETCH_RFC822 = "RFC822";
+    String FETCH_RFC822 = "RFC822";
 
-    public static final String FETCH_RFC822_HEADER = "RFC822.HEADER";
+    String FETCH_RFC822_HEADER = "RFC822.HEADER";
 
-    public static final String FETCH_RFC822_TEXT = "RFC822.TEXT";
+    String FETCH_RFC822_TEXT = "RFC822.TEXT";
 
-    public static final String FETCH_BODY_STRUCTURE = "BODYSTRUCTURE";
+    String FETCH_BODY_STRUCTURE = "BODYSTRUCTURE";
 
-    public static final String FETCH_BODY = "BODY";
+    String FETCH_BODY = "BODY";
     
-    public static final String FETCH_MODSEQ = "MODSEQ";
+    String FETCH_MODSEQ = "MODSEQ";
 
     
-    public static final String STARTTLS = "STARTTLS";
+    String STARTTLS = "STARTTLS";
 
-    public static final String LINE_END = "\r\n";
-    public static final long MAX_NZ_NUMBER = 4294967295L;
-    public static final long MIN_NZ_NUMBER = 1L;
+    String LINE_END = "\r\n";
+    long MAX_NZ_NUMBER = 4294967295L;
+    long MIN_NZ_NUMBER = 1L;
 
-    public static final String COMPRESS_COMMAND_NAME = "COMPRESS";
+    String COMPRESS_COMMAND_NAME = "COMPRESS";
 
-    public static final int DEFAULT_BATCH_SIZE = 100;
+    int DEFAULT_BATCH_SIZE = 100;
 
     // Quota resources definition
 
-    public static final String STORAGE_QUOTA_RESOURCE = "STORAGE";
+    String STORAGE_QUOTA_RESOURCE = "STORAGE";
 
-    public static final String MESSAGE_QUOTA_RESOURCE = "MESSAGE";
+    String MESSAGE_QUOTA_RESOURCE = "MESSAGE";
 }

@@ -30,7 +30,7 @@ public interface Mapper {
     /**
      * IMAP Request was complete. Cleanup all Request scoped stuff
      */
-    public void endRequest();
+    void endRequest();
     
     /**
      * Execute the given Transaction
@@ -38,24 +38,24 @@ public interface Mapper {
      * @param transaction 
      * @throws MailboxException
      */
-    public <T> T execute(Transaction<T> transaction) throws MailboxException;
+    <T> T execute(Transaction<T> transaction) throws MailboxException;
         
     /**
      * Unit of work executed in a Transaction
      *
      */
-    public interface Transaction<T> {
+    interface Transaction<T> {
         
         /**
          * Run unit of work in a Transaction and return a value
          * 
          * @throws MailboxException
          */
-        public T run() throws MailboxException;
+        T run() throws MailboxException;
     }
     
     
-    public abstract class VoidTransaction implements Transaction<Void> {
+    abstract class VoidTransaction implements Transaction<Void> {
         
         public final Void run() throws MailboxException {
             runVoid();

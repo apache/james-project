@@ -30,6 +30,6 @@ public interface RetrySchedule {
      * @param index
      * @return
      */
-    public long getInterval(int index);
+    long getInterval(int index);
 
 }

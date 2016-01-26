@@ -29,7 +29,7 @@ public interface RequestAware {
      * 
      * @param session
      */
-    public void startProcessingRequest(MailboxSession session);
+    void startProcessingRequest(MailboxSession session);
 
     /**
      * End the processing of a request for the given MailboxSession. If the user
@@ -37,5 +37,5 @@ public interface RequestAware {
      * 
      * @param session
      */
-    public void endProcessingRequest(MailboxSession session);
+    void endProcessingRequest(MailboxSession session);
 }

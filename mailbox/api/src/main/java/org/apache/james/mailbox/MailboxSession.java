@@ -35,9 +35,9 @@ public interface MailboxSession {
     /**
      * Id which will be used for a System session
      */
-    public final static long SYSTEM_SESSION_ID = 0L;
+    long SYSTEM_SESSION_ID = 0L;
 
-    public static enum SessionType {
+    enum SessionType {
         /**
          * Session was created via the System
          */
@@ -92,7 +92,7 @@ public interface MailboxSession {
     /**
      * A mailbox user. Useful for specialist mailbox implementation.
      */
-    public interface User {
+    interface User {
         /**
          * Gets the name of the user.
          * 

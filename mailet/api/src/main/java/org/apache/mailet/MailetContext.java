@@ -60,7 +60,7 @@ public interface MailetContext {
      *
      * @since Mailet API v2.5
      */
-    public static enum LogLevel {
+    enum LogLevel {
         DEBUG,
         INFO,
         WARN,
@@ -72,7 +72,7 @@ public interface MailetContext {
      *
      * @since Mailet API v2.5
      */
-    public enum RecordType {
+    enum RecordType {
         A, AAAA, PTR, MX, TXT, SPF
     }
 

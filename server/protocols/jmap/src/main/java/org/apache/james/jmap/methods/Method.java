@@ -34,11 +34,11 @@ public interface Method {
 
     interface Request {
 
-        public static Name name(String name) {
+        static Name name(String name) {
             return new Name(name);
         }
         
-        public class Name {
+        class Name {
 
             private final String name;
             
@@ -77,11 +77,11 @@ public interface Method {
     
     interface Response {
 
-        public static Name name(String name) {
+        static Name name(String name) {
             return new Name(name);
         }
         
-        public class Name {
+        class Name {
 
             private final String name;
 

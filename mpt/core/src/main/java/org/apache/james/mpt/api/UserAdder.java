@@ -30,5 +30,5 @@ public interface UserAdder {
      * @param password not null
      * @throws Exception when user cannot be added
      */
-    public void addUser(String user, String password) throws Exception;
+    void addUser(String user, String password) throws Exception;
 }

@@ -29,22 +29,22 @@ import org.jboss.netty.channel.ChannelPipeline;
  */
 public interface HandlerConstants {
 
-    public static final String SSL_HANDLER = "sslHandler";
+    String SSL_HANDLER = "sslHandler";
 
-    public static final String GROUP_HANDLER = "groupHandler";
+    String GROUP_HANDLER = "groupHandler";
 
-    public static final String CONNECTION_LIMIT_HANDLER = " connectionLimit";
+    String CONNECTION_LIMIT_HANDLER = " connectionLimit";
 
-    public static final String CONNECTION_PER_IP_LIMIT_HANDLER = "connectionPerIpLimit";
+    String CONNECTION_PER_IP_LIMIT_HANDLER = "connectionPerIpLimit";
 
-    public static final String FRAMER = "framer";
+    String FRAMER = "framer";
 
-    public static final String EXECUTION_HANDLER = "executionHandler";
+    String EXECUTION_HANDLER = "executionHandler";
 
-    public static final String TIMEOUT_HANDLER = "timeoutHandler";
+    String TIMEOUT_HANDLER = "timeoutHandler";
 
-    public static final String CORE_HANDLER = "coreHandler";
+    String CORE_HANDLER = "coreHandler";
 
-    public static final String CHUNK_HANDLER = "chunkHandler";
+    String CHUNK_HANDLER = "chunkHandler";
 
 }
