@@ -21,5 +21,5 @@ COPY compile.sh /root/compile.sh
 COPY integration_tests.sh /root/integration_tests.sh
 
 # Define the entrypoint
-WORKDIR /james-parent
+WORKDIR /james-project
 ENTRYPOINT ["/root/compile.sh"]
