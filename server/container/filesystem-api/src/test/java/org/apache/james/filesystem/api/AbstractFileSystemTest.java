@@ -114,7 +114,7 @@ public abstract class AbstractFileSystemTest {
 
     public final void emptyInputShouldThrowReturnEmptyPathFile() throws Exception {
         File file = fileSystem.getFile("");
-        assertThat(file.getPath()).isEmpty();;
+        assertThat(file.getPath()).isEmpty();
     }
 
     @Test

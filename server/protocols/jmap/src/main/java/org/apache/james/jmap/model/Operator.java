@@ -28,5 +28,5 @@ public enum Operator {
     @JsonProperty("OR")
     OR,
     @JsonProperty("NOT")
-    NOT;
+    NOT
 }

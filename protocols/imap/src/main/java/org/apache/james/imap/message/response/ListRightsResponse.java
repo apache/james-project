@@ -83,6 +83,6 @@ public final class ListRightsResponse implements ImapResponseMessage {
         }
 
         return result.toString();
-    };
+    }
 
 }

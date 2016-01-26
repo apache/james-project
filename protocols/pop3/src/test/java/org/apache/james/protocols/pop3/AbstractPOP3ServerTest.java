@@ -159,8 +159,8 @@ public abstract class AbstractPOP3ServerTest {
 
             // try to retrieve message that not exist
             mInfo = client.listUniqueIdentifier(10);
-            assertThat(mInfo).isNull();;
-            
+            assertThat(mInfo).isNull();
+
             assertThat(client.logout()).isTrue();
            
         } finally {

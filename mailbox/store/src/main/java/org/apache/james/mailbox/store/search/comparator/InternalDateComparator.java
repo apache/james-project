@@ -29,7 +29,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 public class InternalDateComparator  implements Comparator<MailboxMessage<?>>{
 
 
-    private final static Comparator<MailboxMessage<?>> INTERNALDATE = new InternalDateComparator();;
+    private final static Comparator<MailboxMessage<?>> INTERNALDATE = new InternalDateComparator();
     private final static Comparator<MailboxMessage<?>> REVERSE_INTERNALDATE = new ReverseComparator(INTERNALDATE);
 
     

@@ -115,7 +115,7 @@ public interface Method {
                 return toStringHelper(this).add("name", name).toString();
             }
         }
-    };
+    }
 
 
     Request.Name requestHandled();

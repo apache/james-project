@@ -114,7 +114,7 @@ public class CollectorsTest {
         Map<String, Integer> actual = Arrays.stream(data)
                 .collect(Collectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
-        assertThat(actual).containsExactly(entry("A", 1), entry("BB", 2), entry("CCC", 3));;
+        assertThat(actual).containsExactly(entry("A", 1), entry("BB", 2), entry("CCC", 3));
     }
     
 }

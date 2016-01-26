@@ -214,7 +214,7 @@ public interface MessageManager {
              * Only return the "always set" metadata as documented above
              */
             NO_COUNT
-        };
+        }
 
         /**
          * Gets the UIDs of recent messages if requested or an empty

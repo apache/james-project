@@ -40,7 +40,7 @@ public class ContinuationTokenResponse {
         public String toString() {
             return value;
         }
-    };
+    }
 
     public static Builder builder() {
         return new Builder();

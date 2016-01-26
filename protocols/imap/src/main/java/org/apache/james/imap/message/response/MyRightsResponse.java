@@ -73,6 +73,6 @@ public final class MyRightsResponse implements ImapResponseMessage {
         .append(myRights.toString());
         
         return result.toString();
-    };
+    }
 
 }

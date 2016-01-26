@@ -27,7 +27,7 @@ public class BaseSubjectComparator extends AbstractHeaderComparator{
 
 
 
-    private final static Comparator<MailboxMessage<?>> BASESUBJECT = new BaseSubjectComparator();;
+    private final static Comparator<MailboxMessage<?>> BASESUBJECT = new BaseSubjectComparator();
     private final static Comparator<MailboxMessage<?>> REVERSE_BASESUBJECT = new ReverseComparator(BASESUBJECT);
 
     

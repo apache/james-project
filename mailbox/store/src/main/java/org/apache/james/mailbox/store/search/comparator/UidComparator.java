@@ -29,7 +29,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 public class UidComparator implements Comparator<MailboxMessage<?>>{
 
 
-    private final static Comparator<MailboxMessage<?>> UID = new UidComparator();;
+    private final static Comparator<MailboxMessage<?>> UID = new UidComparator();
     private final static Comparator<MailboxMessage<?>> REVERSE_UID = new ReverseComparator(UID);
 
     

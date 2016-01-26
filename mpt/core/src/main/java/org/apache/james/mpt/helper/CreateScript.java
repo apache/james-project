@@ -359,7 +359,6 @@ public class CreateScript {
         builder.setMailbox("base").select();
         builder.setMailbox("BOGUS").select();
         builder.setMailbox("WHATEVER").select();
-        ;
         builder.setMailbox("BOGUS").delete();
         builder.setMailbox("WHATEVER").delete();
         builder.setMailbox(originalMailbox).delete();

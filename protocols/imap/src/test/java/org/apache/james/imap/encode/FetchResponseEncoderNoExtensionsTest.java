@@ -123,8 +123,7 @@ public class FetchResponseEncoderNoExtensionsTest  {
             allowing(stubStructure).getParameters(); will(returnValue(parameterList));
             allowing(stubStructure).getEncoding(); will(returnValue("7BIT"));
             ignoring(stubStructure);
-           
-           ;
+
         }});
         final FakeImapSession fakeImapSession = new FakeImapSession();
         encoder.doEncode(message, composer, fakeImapSession);

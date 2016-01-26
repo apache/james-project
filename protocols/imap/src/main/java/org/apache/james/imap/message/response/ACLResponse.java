@@ -84,6 +84,6 @@ public final class ACLResponse implements ImapResponseMessage {
         }
         
         return result.toString();
-    };
+    }
 
 }

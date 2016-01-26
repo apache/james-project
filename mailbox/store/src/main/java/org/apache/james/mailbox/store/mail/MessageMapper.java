@@ -168,9 +168,9 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
      * @return lastUid
      * @throws MailboxException
      */
-    long getLastUid(Mailbox<Id> mailbox) throws MailboxException;;
-    
-    
+    long getLastUid(Mailbox<Id> mailbox) throws MailboxException;
+
+
     /**
      * Return the higest mod-sequence which were used for storing a MailboxMessage in the {@link Mailbox}
      * 

@@ -72,7 +72,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     }
     
     private final long sessionId;
-    private final Set<Long> flagUpdateUids = new TreeSet<Long>();;
+    private final Set<Long> flagUpdateUids = new TreeSet<Long>();
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
     private final Set<Long> expungedUids = new TreeSet<Long>();
 
@@ -83,7 +83,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     private boolean applicableFlagsChanged;
     
-    private final SortedMap<Integer, Long> msnToUid =new TreeMap<Integer, Long>();;
+    private final SortedMap<Integer, Long> msnToUid =new TreeMap<Integer, Long>();
 
     private final SortedMap<Long, Integer> uidToMsn = new TreeMap<Long, Integer>();
 

@@ -199,7 +199,7 @@ public interface MailboxACL {
          */
         MailboxACLRights union(MailboxACLRights toAdd) throws UnsupportedRightException;
 
-    };
+    }
 
     /**
      * Allows distinguishing between users, groups and special names (see
@@ -212,18 +212,18 @@ public interface MailboxACL {
         EditMode getEditMode();
 
         MailboxACLRights getRights();
-    };
+    }
 
     enum NameType {
         group, special, user
-    };
+    }
 
     /**
      * Special name literals.
      */
     enum SpecialName {
         anybody, authenticated, owner
-    };
+    }
 
     /**
      * SETACL third argument prefix

@@ -99,7 +99,6 @@ public class DNSRBLHandlerTest {
                 if (hostname == null) {
                     return res;
                 }
-                ;
                 if ("2.0.0.127.bl.spamcop.net.".equals(hostname)) {
                     res.add("Blocked - see http://www.spamcop.net/bl.shtml?127.0.0.2");
                 }

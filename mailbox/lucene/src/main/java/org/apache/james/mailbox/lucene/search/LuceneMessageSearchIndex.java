@@ -1014,7 +1014,7 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
                 break;
             case DisplayFrom:
                 if (reverse) {
-                    sf = FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;;
+                    sf = FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
                 } else {
                     sf = FIRST_FROM_MAILBOX_DISPLAY_SORT;
                 }

@@ -40,7 +40,7 @@ public class JmapRequestParserImpl implements JmapRequestParser {
     public JmapRequestParserImpl(Set<Module> jacksonModules) {
         this.objectMapper = new ObjectMapper()
                 .registerModules(jacksonModules)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);;
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override

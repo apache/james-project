@@ -493,8 +493,8 @@ public class MailboxEventAnalyserTest {
         public boolean isCompressionActive() {
             return false;
         }
-    };
-    
+    }
+
 
     @Test
     public void testShouldBeNoSizeChangeOnOtherEvent() throws Exception {
