@@ -240,7 +240,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 // This is the <> case. Let senderAddress == null
             } else {
 
-                if (sender.indexOf("@") < 0) {
+                if (!sender.contains("@")) {
                     sender = sender
                             + "@"
                             + getDefaultDomain();

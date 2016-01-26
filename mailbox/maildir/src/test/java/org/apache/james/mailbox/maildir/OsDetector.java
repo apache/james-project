@@ -28,7 +28,7 @@ public class OsDetector {
      */
     public static boolean isWindows() {
         String os = System.getProperty("os.name").toLowerCase();
-        return (os.indexOf( "win" ) >= 0); 
+        return (os.contains("win"));
     }
     
     

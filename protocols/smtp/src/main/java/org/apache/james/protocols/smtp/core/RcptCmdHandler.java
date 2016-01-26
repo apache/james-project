@@ -150,7 +150,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
             recipient = recipient.substring(1, recipient.length() - 1);
         }
 
-        if (recipient.indexOf("@") < 0) {
+        if (!recipient.contains("@")) {
             // set the default domain
             recipient = recipient
                     + "@"

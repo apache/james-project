@@ -420,7 +420,7 @@ public class MessageSearches implements Iterable<Long> {
             if (headerName.equalsIgnoreCase(name)) {
                 final String value = header.getValue();
                 if (value != null) {
-                    if (value.toUpperCase().indexOf(text) > -1) {
+                    if (value.toUpperCase().contains(text)) {
                         result = true;
                         break;
                     }

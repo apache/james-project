@@ -406,7 +406,7 @@ public class MailAddress {
 
     private int parseDomainLiteral(StringBuffer dSB, String address, int pos) throws MailAddressException {
         //throw away all irrelevant '\' they're not necessary for escaping of '.' or digits, and are illegal as part of the domain-literal
-        while(address.indexOf("\\")>-1){
+        while(address.contains("\\")){
              address= address.substring(0,address.indexOf("\\")) + address.substring(address.indexOf("\\")+1);
         }
         StringBuffer resultSB = new StringBuffer();
