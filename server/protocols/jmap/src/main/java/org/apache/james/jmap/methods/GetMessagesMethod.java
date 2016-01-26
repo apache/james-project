@@ -147,7 +147,7 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
     }
     
     private static class IncludeMessagePropertyPropertyFilter extends SimpleBeanPropertyFilter {
-        private Set<MessageProperty> propertiesToInclude;
+        private final Set<MessageProperty> propertiesToInclude;
 
         public IncludeMessagePropertyPropertyFilter(Set<MessageProperty> propertiesToInclude) {
             this.propertiesToInclude = propertiesToInclude;

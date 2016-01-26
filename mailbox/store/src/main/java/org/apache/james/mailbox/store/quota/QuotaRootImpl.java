@@ -28,7 +28,7 @@ public class QuotaRootImpl implements QuotaRoot {
         return new QuotaRootImpl(value);
     }
 
-    private String value;
+    private final String value;
 
     private QuotaRootImpl(String value) {
         this.value = value;

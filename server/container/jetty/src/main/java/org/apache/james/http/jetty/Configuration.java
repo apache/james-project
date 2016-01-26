@@ -42,12 +42,12 @@ public class Configuration {
         
         private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, 65535);
 
-        private ImmutableMap.Builder<String, Object> mappings;
-        private ImmutableMap.Builder<String, Object> filters;
+        private final ImmutableMap.Builder<String, Object> mappings;
+        private final ImmutableMap.Builder<String, Object> filters;
         private Optional<Integer> port;
         
         public class ServletBinder {
-            private String mappingUrl;
+            private final String mappingUrl;
 
             private ServletBinder(String mappingUrl) {
                 this.mappingUrl = mappingUrl;
@@ -67,7 +67,7 @@ public class Configuration {
         }
         
         public class FilterBinder {
-            private String filterUrl;
+            private final String filterUrl;
 
             private FilterBinder(String filterUrl) {
                 this.filterUrl = filterUrl;

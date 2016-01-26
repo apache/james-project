@@ -45,7 +45,7 @@ import javax.mail.MessagingException;
  */
 public class RemoveMailAttribute extends GenericMailet {
     
-    private ArrayList<String> attributesToRemove = new ArrayList<String>();
+    private final ArrayList<String> attributesToRemove = new ArrayList<String>();
     
     /**
      * Return a string describing this mailet.

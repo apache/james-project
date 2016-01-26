@@ -37,14 +37,14 @@ public class GetMessageListResponse implements Method.Response {
 
         private String accountId;
         private Filter filter;
-        private ImmutableList.Builder<String> sort;
+        private final ImmutableList.Builder<String> sort;
         private boolean collapseThreads;
         private String state;
         private boolean canCalculateUpdates;
         private int position;
         private int total;
-        private ImmutableList.Builder<String> threadIds;
-        private ImmutableList.Builder<String> messageIds;
+        private final ImmutableList.Builder<String> threadIds;
+        private final ImmutableList.Builder<String> messageIds;
 
         private Builder() {
             sort = ImmutableList.builder();

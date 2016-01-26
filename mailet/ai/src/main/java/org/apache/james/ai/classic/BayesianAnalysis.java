@@ -129,7 +129,7 @@ public class BayesianAnalysis extends GenericMailet implements Log {
     /**
      * The JDBCBayesianAnalyzer class that does all the work.
      */
-    private JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer(this);
+    private final JDBCBayesianAnalyzer analyzer = new JDBCBayesianAnalyzer(this);
 
     DataSource datasource;
 

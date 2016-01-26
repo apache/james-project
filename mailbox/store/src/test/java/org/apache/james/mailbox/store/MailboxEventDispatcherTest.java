@@ -63,7 +63,7 @@ public class MailboxEventDispatcherTest {
         
     };
 
-    private Mockery mockery = new JUnit4Mockery();
+    private  Mockery mockery = new JUnit4Mockery();
 
     private Mailbox<TestId> mailbox = new Mailbox<TestId>() {
 

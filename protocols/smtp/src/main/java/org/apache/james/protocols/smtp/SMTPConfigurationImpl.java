@@ -31,7 +31,7 @@ import org.apache.james.protocols.api.ProtocolConfigurationImpl;
 public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements SMTPConfiguration{
 
     public String helloName = "localhost";
-    private long maxMessageSize = 0;
+    private final long maxMessageSize = 0;
     private boolean bracketsEnforcement = true;
     private boolean enforceHeloEhlo = true;
 

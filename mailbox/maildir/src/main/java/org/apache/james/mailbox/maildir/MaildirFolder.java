@@ -62,12 +62,12 @@ public class MaildirFolder {
     public static final String NEW = "new";
     public static final String TMP = "tmp";
     
-    private File rootFolder;
-    private File curFolder;
-    private File newFolder;
-    private File tmpFolder;
-    private File uidFile;
-    private File aclFile;
+    private final File rootFolder;
+    private final File curFolder;
+    private final File newFolder;
+    private final File tmpFolder;
+    private final File uidFile;
+    private final File aclFile;
     
     private long lastUid = -1;
     private int messageCount = 0;

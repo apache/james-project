@@ -33,8 +33,8 @@ import com.google.common.collect.Multimaps;
 
 public class MailboxListenerRegistry {
 
-    private Multimap<MailboxPath, MailboxListener> listeners;
-    private ConcurrentLinkedQueue<MailboxListener> globalListeners;
+    private final Multimap<MailboxPath, MailboxListener> listeners;
+    private final ConcurrentLinkedQueue<MailboxListener> globalListeners;
 
     public MailboxListenerRegistry() {
         this.globalListeners = new ConcurrentLinkedQueue<MailboxListener>();

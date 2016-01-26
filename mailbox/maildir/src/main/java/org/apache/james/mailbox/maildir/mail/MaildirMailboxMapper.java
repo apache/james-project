@@ -53,7 +53,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     /**
      * A request-scoped list of mailboxes in order to refer to them via id
      */
-    private ArrayList<Mailbox<MaildirId>> mailboxCache = new ArrayList<Mailbox<MaildirId>>();
+    private final ArrayList<Mailbox<MaildirId>> mailboxCache = new ArrayList<Mailbox<MaildirId>>();
 
     private final MailboxSession session;
     

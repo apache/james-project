@@ -48,7 +48,7 @@ import java.util.Collection;
 public class DNSJavaServiceTest {
 
     private TestableDNSServer dnsServer;
-    private static byte[] DNS_SERVER_CONFIG = ("<dnsserver>" +
+    private static final byte[] DNS_SERVER_CONFIG = ("<dnsserver>" +
             "<autodiscover>true</autodiscover>" +
             "<authoritative>false</authoritative>" +
             "</dnsserver>").getBytes();

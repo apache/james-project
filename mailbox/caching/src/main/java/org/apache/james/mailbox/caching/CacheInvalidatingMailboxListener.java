@@ -11,8 +11,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
  */
 public class CacheInvalidatingMailboxListener<Id extends MailboxId> implements MailboxListener {
 
-    private MailboxByPathCache<Id> mailboxCacheByPath;
-    private MailboxMetadataCache<Id> mailboxMetadataCache;
+    private final MailboxByPathCache<Id> mailboxCacheByPath;
+    private final MailboxMetadataCache<Id> mailboxMetadataCache;
 
     public CacheInvalidatingMailboxListener(MailboxByPathCache<Id> mailboxCacheByPath, MailboxMetadataCache<Id> mailboxMetadataCache) {
         this.mailboxCacheByPath = mailboxCacheByPath;

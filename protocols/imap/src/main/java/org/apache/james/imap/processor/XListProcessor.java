@@ -42,7 +42,7 @@ import org.apache.james.mailbox.MailboxManager;
 public class XListProcessor extends ListProcessor implements CapabilityImplementingProcessor {
 
     private final static List<String> XLIST_CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_XLIST));
-    private MailboxTyper mailboxTyper;
+    private final MailboxTyper mailboxTyper;
 
     // some interface
     public XListProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory, final MailboxTyper mailboxTyper) {

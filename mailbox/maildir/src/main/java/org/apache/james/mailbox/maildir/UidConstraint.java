@@ -22,7 +22,7 @@ import java.util.LinkedList;
 
 public class UidConstraint {
     
-    private LinkedList<Constraint> constraints = new LinkedList<Constraint>();
+    private final LinkedList<Constraint> constraints = new LinkedList<Constraint>();
     
     public UidConstraint append(Constraint constraint) {
         constraints.add(constraint);
@@ -64,7 +64,7 @@ public class UidConstraint {
     
     public static class Equals extends Constraint {
 
-        private long uid;
+        private final long uid;
         
         public Equals(long uid) {
             this.uid = uid;
@@ -79,7 +79,7 @@ public class UidConstraint {
     
     public static class LessOrEquals extends Constraint {
 
-        private long uid;
+        private final long uid;
         
         public LessOrEquals(long uid) {
             this.uid = uid;
@@ -94,7 +94,7 @@ public class UidConstraint {
     
     public static class GreaterOrEquals extends Constraint {
 
-        private long uid;
+        private final long uid;
         
         public GreaterOrEquals(long uid) {
             this.uid = uid;
@@ -109,8 +109,8 @@ public class UidConstraint {
     
     public static class Between extends Constraint {
         
-        private long lower;
-        private long upper;
+        private final long lower;
+        private final long upper;
         
         public Between(long lower, long upper) {
             this.lower = lower;

@@ -39,7 +39,7 @@ public class GetMessagesRequest implements JmapRequest {
     public static class Builder {
         
         private Optional<String> accountId;
-        private ImmutableList.Builder<MessageId> ids;
+        private final ImmutableList.Builder<MessageId> ids;
         private Optional<ImmutableSet<MessageProperty>> properties;
 
         private Builder() {

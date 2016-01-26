@@ -36,10 +36,10 @@ public class ManageSieveSession implements Session {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveSession.class);
 
-    private ByteBufferOutputStream out;
-    private ByteBufferInputStream in;
-    private ManageSieveProcessor manageSieveProcessor;
-    private SettableSession settableSession;
+    private final ByteBufferOutputStream out;
+    private final ByteBufferInputStream in;
+    private final ManageSieveProcessor manageSieveProcessor;
+    private final SettableSession settableSession;
     private boolean isReadLast = true;
 
     public ManageSieveSession(ManageSieveProcessor manageSieveProcessor, Continuation continuation) {

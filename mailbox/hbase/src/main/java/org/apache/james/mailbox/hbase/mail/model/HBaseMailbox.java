@@ -39,7 +39,7 @@ public class HBaseMailbox implements Mailbox<HBaseId> {
     /** The value for the name field */
     private String name;
     /** The value for the uidValidity field */
-    private long uidValidity;
+    private final long uidValidity;
     private String user;
     private String namespace;
     private long lastUid;

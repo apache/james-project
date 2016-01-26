@@ -28,7 +28,7 @@ import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 public class EncryptDecryptHelper {    
 
     // Use one static instance as it is thread safe
-    private static StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+    private static final StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
     
     
     /**

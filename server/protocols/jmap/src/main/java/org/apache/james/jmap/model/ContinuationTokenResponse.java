@@ -30,7 +30,7 @@ public class ContinuationTokenResponse {
         EXTERNAL("external"),
         PROMPT("prompt");
 
-        private String value;
+        private final String value;
 
         AuthenticationMethod(String value) {
             this.value = value;

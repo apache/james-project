@@ -52,7 +52,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
     /**
      * The full path of the temporary file
      */
-    private String sourceId;
+    private final String sourceId;
 
     /**
      * 100kb threshold for the stream.

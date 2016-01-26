@@ -27,7 +27,7 @@ import org.apache.james.mailetcontainer.api.jmx.MatcherManagementMBean;
 import org.apache.mailet.MatcherConfig;
 
 public final class MatcherManagement extends StandardMBean implements MatcherManagementMBean {
-    private MatcherConfig matcherConfig;
+    private final MatcherConfig matcherConfig;
     private final AtomicLong errorCount = new AtomicLong(0);
     private final AtomicLong successCount = new AtomicLong(0);
     private final AtomicLong fastestProcessing = new AtomicLong(-1);

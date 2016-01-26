@@ -71,17 +71,17 @@ public class SMIMEKeyHolder implements KeyHolder{
     /**
      * Holds value of property privateKey.
      */
-    private PrivateKey privateKey;
+    private final PrivateKey privateKey;
     
     /**
      * Holds value of property certificate.
      */
-    private X509Certificate certificate;
+    private final X509Certificate certificate;
     
     /**
      * Holds value of property certStore.
      */
-    private CertStore certStore;
+    private final CertStore certStore;
     
     /**
      * Creates a new instance of <CODE>KeyHolder</CODE> using {@link java.security.KeyStore} related parameters.

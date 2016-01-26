@@ -233,7 +233,7 @@ public class MessageRange implements Iterable<Long>{
      */
     private final class RangeIterator implements Iterator<Long> {
 
-        private long to;
+        private final long to;
         private long current;
         
         public RangeIterator(long from, long to) {

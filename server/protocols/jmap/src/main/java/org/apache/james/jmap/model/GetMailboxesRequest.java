@@ -40,8 +40,8 @@ public class GetMailboxesRequest implements JmapRequest {
     public static class Builder {
 
         private String accountId;
-        private ImmutableList.Builder<String> ids;
         private Optional<ImmutableSet<MailboxProperty>> properties;
+        private final ImmutableList.Builder<String> ids;
 
         private Builder() {
             ids = ImmutableList.builder();

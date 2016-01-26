@@ -25,7 +25,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class GroupFolderResolver {
     
-    private MailboxSession mailboxSession;
+    private final MailboxSession mailboxSession;
 
     public GroupFolderResolver(MailboxSession mailboxSession) {
         this.mailboxSession = mailboxSession;

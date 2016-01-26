@@ -26,7 +26,7 @@ import cucumber.api.java.Before;
 
 public class XMLStepdefs {
 
-    private RewriteTablesStepdefs mainStepdefs;
+    private final RewriteTablesStepdefs mainStepdefs;
 
     public XMLStepdefs(RewriteTablesStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;

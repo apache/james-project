@@ -32,7 +32,7 @@ import org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean;
  * {@link org.apache.james.mailetcontainer.impl.camel.CamelProcessor} implementations
  */
 public class MailProcessorManagement extends StandardMBean implements MailProcessorManagementMBean {
-    private String processorName;
+    private final String processorName;
     private final AtomicLong errorCount = new AtomicLong(0);
     private final AtomicLong successCount = new AtomicLong(0);
     private final AtomicLong fastestProcessing = new AtomicLong(-1);

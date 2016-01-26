@@ -33,7 +33,7 @@ public enum MailboxType {
     ALLMAIL("\\AllMail"),
     OTHER(null);
 
-    private String attributeName;
+    private final String attributeName;
 
     MailboxType(String attributeName) {
         this.attributeName = attributeName;

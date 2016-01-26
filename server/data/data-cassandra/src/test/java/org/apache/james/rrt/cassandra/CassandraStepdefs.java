@@ -31,7 +31,7 @@ public class CassandraStepdefs {
 
     private CassandraCluster cassandra;
 
-    private RewriteTablesStepdefs mainStepdefs;
+    private final RewriteTablesStepdefs mainStepdefs;
 
     public CassandraStepdefs(RewriteTablesStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;

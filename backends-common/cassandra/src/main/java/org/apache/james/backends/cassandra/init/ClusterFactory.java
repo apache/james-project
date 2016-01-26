@@ -30,8 +30,8 @@ import com.google.common.collect.ImmutableList;
 public class ClusterFactory {
 
     public static class CassandraServer {
-        private String ip;
-        private int port;
+        private final String ip;
+        private final int port;
 
         public CassandraServer(String ip, int port) {
             this.ip = ip;

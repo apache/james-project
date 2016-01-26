@@ -34,8 +34,8 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     private long maxMessage = Quota.UNLIMITED;
     private long maxStorage = Quota.UNLIMITED;
 
-    private Map<String, Long> userMaxStorage = new ConcurrentHashMap<String, Long>();
-    private Map<String, Long> userMaxMessage = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Long> userMaxStorage = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Long> userMaxMessage = new ConcurrentHashMap<String, Long>();
 
     @Override
     public void setDefaultMaxStorage(long maxStorage) throws MailboxException {

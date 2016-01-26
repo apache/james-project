@@ -29,9 +29,9 @@ import java.nio.charset.Charset;
 
 public class ByteBufferOutputStream extends OutputStream {
 
-    private ByteBuffer buffer = ByteBuffer.allocate(65536);
-    private Charset ascii = Charset.forName("ASCII");
-    private Continuation continuation;
+    private final ByteBuffer buffer = ByteBuffer.allocate(65536);
+    private final Charset ascii = Charset.forName("ASCII");
+    private final Continuation continuation;
     private boolean matchPlus = false;
     private boolean matchCR = false;
     private boolean matchLF = false;

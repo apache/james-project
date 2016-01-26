@@ -36,7 +36,7 @@ import org.apache.mailet.MatcherConfig;
  */
 public class MatcherInverter implements Matcher {
 
-    private Matcher wrappedMatcher;
+    private final Matcher wrappedMatcher;
 
     public MatcherInverter(Matcher wrappedMatcher) {
         this.wrappedMatcher = wrappedMatcher;

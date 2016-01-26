@@ -323,7 +323,7 @@ public class FileMailQueue implements ManageableMailQueue {
     private final class FileMimeMessageSource extends MimeMessageSource implements Disposable {
 
         private File file;
-        private SharedFileInputStream in;
+        private final SharedFileInputStream in;
 
         public FileMimeMessageSource(File file) throws IOException {
             this.file = file;

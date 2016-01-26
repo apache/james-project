@@ -23,7 +23,7 @@ import javax.mail.Flags;
 
 public class FlagsBuilder {
 
-    private Flags internalFlags;
+    private final Flags internalFlags;
 
     public FlagsBuilder() {
         internalFlags = new Flags();

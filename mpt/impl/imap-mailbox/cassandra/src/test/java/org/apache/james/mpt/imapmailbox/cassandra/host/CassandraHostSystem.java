@@ -58,7 +58,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     
     private final CassandraMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
-    private CassandraCluster cassandraClusterSingleton;
+    private final CassandraCluster cassandraClusterSingleton;
 
     public CassandraHostSystem() throws Exception {
         CassandraModule mailboxModule = new CassandraModuleComposite(

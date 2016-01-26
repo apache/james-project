@@ -27,7 +27,7 @@ import java.net.URLConnection;
 
 public class UrlResource implements Resource {
     public static final String URL_PROTOCOL_FILE = "file";
-    private URL url;
+    private final URL url;
 
     public UrlResource(URL url) {
         this.url = url;

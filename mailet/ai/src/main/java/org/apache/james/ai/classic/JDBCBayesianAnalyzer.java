@@ -58,7 +58,7 @@ public class JDBCBayesianAnalyzer extends BayesianAnalyzer implements Log {
     private Log log;
     
     /** Contains all of the sql strings for this component. */
-    private SqlResources sqlQueries = new SqlResources();
+    private final SqlResources sqlQueries = new SqlResources();
 
     /** Holds value of property sqlFileName. */
     private String sqlFileName;

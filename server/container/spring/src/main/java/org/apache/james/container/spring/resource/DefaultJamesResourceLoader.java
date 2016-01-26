@@ -34,7 +34,7 @@ import org.springframework.core.io.Resource;
  */
 public class DefaultJamesResourceLoader extends DefaultResourceLoader implements JamesResourceLoader {
 
-    private JamesDirectoriesProvider jamesDirectoriesProvider;
+    private final JamesDirectoriesProvider jamesDirectoriesProvider;
 
     public DefaultJamesResourceLoader(JamesDirectoriesProvider jamesDirectoriesProvider) {
         this.jamesDirectoriesProvider = jamesDirectoriesProvider;

@@ -35,7 +35,7 @@ public class FileSystemImplTest extends AbstractFileSystemTest {
     }
     
     private class TestApplicationContextProvider extends JamesServerApplicationContext {
-        private String configurationRootDirectory;
+        private final String configurationRootDirectory;
 
         public TestApplicationContextProvider(String configurationRootDirectory, String[] configs) {
             super(configs);

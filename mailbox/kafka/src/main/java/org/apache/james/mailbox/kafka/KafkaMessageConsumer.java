@@ -42,7 +42,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
 
     private class Consumer implements Runnable {
 
-        private KafkaStream<byte[], byte[]> m_stream;
+        private final KafkaStream<byte[], byte[]> m_stream;
 
         public Consumer(KafkaStream<byte[], byte[]> a_stream) {
             m_stream = a_stream;

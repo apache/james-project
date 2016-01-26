@@ -41,10 +41,10 @@ public abstract class AbstractCommandHandlerStats extends StandardMBean implemen
     private final AtomicLong all = new AtomicLong(0);
     private final AtomicLong disconnect = new AtomicLong();
 
-    private String name;
-    private String handlerName;
-    private MBeanServer mbeanserver;
-    private String[] commands;
+    private final String name;
+    private final String handlerName;
+    private final MBeanServer mbeanserver;
+    private final String[] commands;
 
     public AbstractCommandHandlerStats(Class<?> jmxClass, String jmxName, String handlerName, String[] commands) throws NotCompliantMBeanException, MalformedObjectNameException, NullPointerException, InstanceAlreadyExistsException, MBeanRegistrationException {
         super(jmxClass);

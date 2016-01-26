@@ -32,13 +32,13 @@ import org.slf4j.LoggerFactory;
 
 public class MockMailboxSession implements MailboxSession{
 
-    private User user;
+    private final User user;
     private boolean close;
-    private Map<Object, Object> attrs = new HashMap<Object, Object>();
-    private Logger log = LoggerFactory.getLogger("MockLog");
+    private final Map<Object, Object> attrs = new HashMap<Object, Object>();
+    private final Logger log = LoggerFactory.getLogger("MockLog");
     private final static Random RANDOM = new Random();
 
-    private long sessionId = RANDOM.nextLong();
+    private final long sessionId = RANDOM.nextLong();
     
     public MockMailboxSession(final String username) {
         this.user = new User() {

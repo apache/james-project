@@ -53,9 +53,9 @@ public class MessageProperty implements Property {
     public static MessageProperty attachedMessages = valueOf("attachedMessages");
     public static MessageProperty body = valueOf("body");
     
-    private static String HEADER_PROPERTY_PREFIX = "headers.";
+    private static final String HEADER_PROPERTY_PREFIX = "headers.";
     
-    private String property;
+    private final String property;
     
     private MessageProperty(String property) {
         this.property = property.toLowerCase(Locale.US);

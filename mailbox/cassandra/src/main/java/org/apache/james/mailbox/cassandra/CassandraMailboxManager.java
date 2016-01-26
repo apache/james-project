@@ -41,7 +41,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
  */
 @Singleton
 public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
-    private MailboxPathLocker locker;
+    private final MailboxPathLocker locker;
 
     @Inject
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, final MailboxPathLocker locker) {

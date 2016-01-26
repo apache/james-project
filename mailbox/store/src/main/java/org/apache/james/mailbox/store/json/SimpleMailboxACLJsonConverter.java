@@ -45,7 +45,7 @@ public class SimpleMailboxACLJsonConverter {
         }
     }
 
-    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     static {
         objectMapper.addMixInAnnotations(SimpleMailboxACL.Rfc4314Rights.class, Rfc4314RightsMixIn.class);

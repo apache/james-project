@@ -45,7 +45,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
 
-    private Map<InMemoryId, Map<Long, MailboxMessage<InMemoryId>>> mailboxByUid;
+    private final Map<InMemoryId, Map<Long, MailboxMessage<InMemoryId>>> mailboxByUid;
     private static final int INITIAL_SIZE = 256;
 
     public InMemoryMessageMapper(MailboxSession session, UidProvider<InMemoryId> uidProvider,

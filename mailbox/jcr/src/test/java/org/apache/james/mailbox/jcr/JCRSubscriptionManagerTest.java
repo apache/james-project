@@ -38,9 +38,9 @@ public class JCRSubscriptionManagerTest extends AbstractSubscriptionManagerTest 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
 
     private static RepositoryImpl repository;
-    private static String user = "user";
-    private static String pass = "pass";
-    private static String workspace = null;
+    private static final String user = "user";
+    private static final String pass = "pass";
+    private static final String workspace = null;
 
     @BeforeClass
     public static void before() throws RepositoryException {

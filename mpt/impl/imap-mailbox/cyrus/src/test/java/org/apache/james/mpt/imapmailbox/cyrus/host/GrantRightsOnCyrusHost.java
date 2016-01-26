@@ -28,7 +28,7 @@ import org.apache.james.mpt.protocol.ProtocolSession;
 public class GrantRightsOnCyrusHost implements GrantRightsOnHost {
     private static final String GRANT_RIGHTS_LOCATION = "ACLCommands.grantRights";
 
-    private CyrusHostSystem system;
+    private final CyrusHostSystem system;
 
     @Inject
     private GrantRightsOnCyrusHost(CyrusHostSystem system) {

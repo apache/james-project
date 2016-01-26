@@ -29,7 +29,7 @@ import java.io.ObjectStreamClass;
  * Avalon components that are juggling many classloaders.
  */
 public class ClassLoaderObjectInputStream extends ObjectInputStream {
-    private ClassLoader m_classLoader;
+    private final ClassLoader m_classLoader;
 
     public ClassLoaderObjectInputStream(final ClassLoader classLoader, final InputStream inputStream) throws IOException {
         super(inputStream);

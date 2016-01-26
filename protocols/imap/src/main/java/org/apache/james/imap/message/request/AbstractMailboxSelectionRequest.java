@@ -31,11 +31,11 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 public abstract class AbstractMailboxSelectionRequest extends AbstractImapRequest {
     private final String mailboxName;
     private final boolean condstore;
-    private Long lastKnownUidValidity;
-    private Long knownModSeq;
-    private IdRange[] uidSet;
-    private IdRange[] knownUidSet;
-    private IdRange[] knownSequenceSet;
+    private final Long lastKnownUidValidity;
+    private final Long knownModSeq;
+    private final IdRange[] uidSet;
+    private final IdRange[] knownUidSet;
+    private final IdRange[] knownSequenceSet;
 
     public AbstractMailboxSelectionRequest(final ImapCommand command, final String mailboxName, final boolean condstore, final Long lastKnownUidValidity, final Long knownModSeq, final IdRange[] uidSet, final IdRange[] knownUidSet, final IdRange[] knownSequenceSet, final String tag) {
         super(tag, command);

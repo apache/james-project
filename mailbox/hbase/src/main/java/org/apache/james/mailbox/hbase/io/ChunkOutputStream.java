@@ -41,7 +41,7 @@ public class ChunkOutputStream extends OutputStream {
     private final byte[] tableName;
     private final byte[] cf;
     private final byte[] key;
-    private byte[] chunk;
+    private final byte[] chunk;
     private long chunkPos = 1;
     private long pos = 0;
 

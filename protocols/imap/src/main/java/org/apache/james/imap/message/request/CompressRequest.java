@@ -22,7 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 
 public class CompressRequest extends AbstractImapRequest {
 
-    private String algorithm;
+    private final String algorithm;
 
     public CompressRequest(String tag, ImapCommand command, String algorithm) {
         super(tag, command);

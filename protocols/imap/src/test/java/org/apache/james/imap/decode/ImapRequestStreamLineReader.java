@@ -32,9 +32,9 @@ import org.apache.james.protocols.imap.utils.FixedLengthInputStream;
  * {@link ImapRequestLineReader} which use normal IO Streaming
  */
 public class ImapRequestStreamLineReader extends ImapRequestLineReader {
-    private InputStream input;
+    private final InputStream input;
 
-    private OutputStream output;
+    private final OutputStream output;
 
     public ImapRequestStreamLineReader(InputStream input, OutputStream output) {
         this.input = input;

@@ -65,7 +65,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
     private final HBaseMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
     private MiniHBaseCluster hbaseCluster;
-    private Configuration conf;
+    private final Configuration conf;
 
     public static synchronized JamesImapHostSystem build() throws Exception {
         if (host == null) {

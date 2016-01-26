@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 
 public class GuiceMailboxManagerResolver implements MailboxManagerResolver {
 
-    private ImmutableMap<String, MailboxManager> managers;
+    private final ImmutableMap<String, MailboxManager> managers;
 
     @Inject
     private GuiceMailboxManagerResolver(Set<MailboxManagerDefinition> managers) {

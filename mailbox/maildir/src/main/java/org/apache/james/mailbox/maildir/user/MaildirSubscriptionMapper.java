@@ -40,7 +40,7 @@ import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 public class MaildirSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
 
     private static final String FILE_SUBSCRIPTION = "subscriptions";
-    private MaildirStore store;
+    private final MaildirStore store;
     
     public MaildirSubscriptionMapper(MaildirStore store) {
         this.store = store;

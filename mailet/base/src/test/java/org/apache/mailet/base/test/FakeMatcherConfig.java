@@ -27,9 +27,9 @@ import org.apache.mailet.MatcherConfig;
  */
 public class FakeMatcherConfig implements MatcherConfig {
 
-    private String matcherName;
+    private final String matcherName;
 
-    private MailetContext mc;
+    private final MailetContext mc;
 
     public FakeMatcherConfig(String matcherName, MailetContext mc) {
         super();

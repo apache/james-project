@@ -42,9 +42,9 @@ public class MimePart {
 
     public static class Builder implements MimePartContainerBuilder {
 
-        private HeaderCollection.Builder headerCollectionBuilder;
+        private final HeaderCollection.Builder headerCollectionBuilder;
         private Optional<InputStream> bodyContent;
-        private List<MimePart> children;
+        private final List<MimePart> children;
         private Optional<String> mediaType;
         private Optional<String> subType;
         private Optional<String> fileName;

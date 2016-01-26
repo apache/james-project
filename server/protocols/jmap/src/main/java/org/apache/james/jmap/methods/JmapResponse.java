@@ -111,8 +111,8 @@ public class JmapResponse {
     private final Method.Response.Name method;
     private final ClientId clientId;
     private final Method.Response response;
-    private Optional<? extends Set<? extends Property>> properties;
-    private Optional<SimpleFilterProvider> filterProvider;
+    private final Optional<? extends Set<? extends Property>> properties;
+    private final Optional<SimpleFilterProvider> filterProvider;
     
     private JmapResponse(Method.Response.Name method, ClientId clientId, Method.Response response, Optional<? extends Set<? extends Property>> properties, Optional<SimpleFilterProvider> filterProvider) {
         this.method = method;

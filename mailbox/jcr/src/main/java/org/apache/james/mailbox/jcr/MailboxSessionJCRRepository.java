@@ -33,8 +33,8 @@ import org.apache.james.mailbox.MailboxSession.User;
  */
 public class MailboxSessionJCRRepository {
     private final static String JCR_SESSION = "JCR_SESSION";
-    private Repository repository;
-    private String workspace;
+    private final Repository repository;
+    private final String workspace;
     
     public MailboxSessionJCRRepository(Repository repository ,String workspace) {
         this.repository = repository;

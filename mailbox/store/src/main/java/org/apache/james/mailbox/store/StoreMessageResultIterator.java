@@ -43,15 +43,15 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
 
     private Iterator<MailboxMessage<Id>> next = null;
     private MailboxException exception;
-    private Mailbox<Id> mailbox;
-    private FetchGroup group;
-    private long from;
+    private final Mailbox<Id> mailbox;
+    private final FetchGroup group;
+    private final long from;
     private long cursor;
-    private long to;
-    private int batchSize;
-    private Type type;
-    private MessageMapper<Id> mapper;
-    private FetchType ftype;
+    private final long to;
+    private final int batchSize;
+    private final Type type;
+    private final MessageMapper<Id> mapper;
+    private final FetchType ftype;
 
     public StoreMessageResultIterator(MessageMapper<Id> mapper, Mailbox<Id> mailbox, MessageRange range, int batchSize, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
         this.mailbox = mailbox;

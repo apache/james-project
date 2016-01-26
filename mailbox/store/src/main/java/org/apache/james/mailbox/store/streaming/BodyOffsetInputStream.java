@@ -32,7 +32,7 @@ import java.io.PushbackInputStream;
 public class BodyOffsetInputStream extends InputStream{
     private long count = 0;
     private long bodyStartOctet = -1;
-    private PushbackInputStream in;
+    private final PushbackInputStream in;
     private long readBytes = 0;
 
     public BodyOffsetInputStream(InputStream in) {

@@ -26,7 +26,7 @@ import org.apache.james.imap.api.process.ImapSession;
 abstract public class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
 
     private final ImapProcessor next;
-    private Class<M> acceptableClass;
+    private final Class<M> acceptableClass;
 
     /**
      * Constructs a chainable <code>ImapProcessor</code>.

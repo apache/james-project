@@ -28,7 +28,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  * Normalizes token text to upper case.
  */
 public final class UpperCaseFilter extends TokenFilter {
-    private CharTermAttribute termAtt;
+    private final CharTermAttribute termAtt;
 
     public UpperCaseFilter(TokenStream in) {
         super(in);

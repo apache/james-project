@@ -43,9 +43,9 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
     private final AtomicLong denysoft = new AtomicLong(0);
     private final AtomicLong all = new AtomicLong(0);
 
-    private String name;
-    private MBeanServer mbeanserver;
-    private String hookname;
+    private final String name;
+    private final MBeanServer mbeanserver;
+    private final String hookname;
 
     public HookStats(String jmxName, String hookname) throws InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException, NullPointerException {
         super(HookStatsMBean.class);

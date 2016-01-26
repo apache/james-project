@@ -41,9 +41,9 @@ public class FakeMailContext implements MailetContext {
 
     public static class SentMail {
 
-        private MailAddress sender;
-        private Collection<MailAddress> recipients;
-        private MimeMessage msg;
+        private final MailAddress sender;
+        private final Collection<MailAddress> recipients;
+        private final MimeMessage msg;
 
         public SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) {
             this.sender = sender;

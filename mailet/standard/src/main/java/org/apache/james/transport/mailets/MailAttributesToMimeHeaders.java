@@ -47,7 +47,7 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
     /**
      * HashMap which holds the attributeName and headerName
      */
-    private HashMap<String, String> map = new HashMap<String, String>();
+    private final HashMap<String, String> map = new HashMap<String, String>();
 
     /*
      * (non-Javadoc)

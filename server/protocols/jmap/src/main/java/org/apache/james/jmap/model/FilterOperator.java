@@ -38,7 +38,7 @@ public class FilterOperator implements Filter {
     public static class Builder {
 
         private Operator operator;
-        private ImmutableList.Builder<Filter> conditionsBuilder;
+        private final ImmutableList.Builder<Filter> conditionsBuilder;
 
         private Builder() {
             conditionsBuilder = ImmutableList.builder();

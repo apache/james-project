@@ -88,7 +88,7 @@ public class HBaseMailboxMessageMapperTest {
             + "\n"
             + "Test\n"
             + "\n.");
-    private static SharedInputStream content = new SharedByteArrayInputStream(messageTemplate);
+    private static final SharedInputStream content = new SharedByteArrayInputStream(messageTemplate);
 
     @Before
     public void setUp() throws Exception {

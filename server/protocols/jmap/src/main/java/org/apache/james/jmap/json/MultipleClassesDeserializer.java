@@ -34,7 +34,7 @@ import com.google.common.base.Throwables;
 
 public class MultipleClassesDeserializer extends StdDeserializer<Object> {
 
-    private Map<String, Class<?>> registry =  new HashMap<String, Class<?>>();
+    private final Map<String, Class<?>> registry =  new HashMap<String, Class<?>>();
 
     MultipleClassesDeserializer() {
         super(Object.class);

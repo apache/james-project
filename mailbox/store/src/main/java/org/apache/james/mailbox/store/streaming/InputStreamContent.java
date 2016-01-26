@@ -30,8 +30,8 @@ import org.apache.james.mailbox.store.mail.model.Message;
  */
 public final class InputStreamContent implements Content{
 
-    private Message m;
-    private Type type;
+    private final Message m;
+    private final Type type;
 
     public static enum Type {
         Full,

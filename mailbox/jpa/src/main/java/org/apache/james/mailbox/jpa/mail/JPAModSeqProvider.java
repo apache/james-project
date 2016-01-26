@@ -32,7 +32,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class JPAModSeqProvider extends AbstractLockingModSeqProvider<JPAId> {
 
-    private EntityManagerFactory factory;
+    private final EntityManagerFactory factory;
 
     public JPAModSeqProvider(MailboxPathLocker locker, EntityManagerFactory factory) {
         super(locker);

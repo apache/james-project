@@ -47,7 +47,7 @@ public class DNSRBLHandler implements RcptHook {
         
     private boolean getDetail = false;
     
-    private String blocklistedDetail = null;
+    private final String blocklistedDetail = null;
     
     public static final String RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME = "org.apache.james.smtpserver.rbl.blocklisted";
     

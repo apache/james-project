@@ -40,7 +40,7 @@ import com.google.inject.Singleton;
 @Singleton
 public class EmbeddedActiveMQ {
 
-    private ActiveMQConnectionFactory activeMQConnectionFactory;
+    private final ActiveMQConnectionFactory activeMQConnectionFactory;
     private BrokerService brokerService;
 
     @Inject private EmbeddedActiveMQ(FileSystem fileSystem) {

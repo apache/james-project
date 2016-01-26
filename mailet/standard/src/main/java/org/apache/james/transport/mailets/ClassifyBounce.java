@@ -373,8 +373,8 @@ public class ClassifyBounce extends GenericMailet {
             return m.find();
         }
 
-        private String subject;
-        private String text;
+        private final String subject;
+        private final String text;
 
         public final static int TYPE_NORMAL = 1;
         public final static int TYPE_OUT_OF_OFFICE = 3;

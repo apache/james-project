@@ -46,13 +46,13 @@ import org.w3c.dom.NodeList;
  */
 class SqlResources {
     /** A map of statement types to SQL statements */
-    private Map<String, String> m_sql = new HashMap<String, String>();
+    private final Map<String, String> m_sql = new HashMap<String, String>();
 
     /** A map of engine specific options */
-    private Map<String, String> m_dbOptions = new HashMap<String, String>();
+    private final Map<String, String> m_dbOptions = new HashMap<String, String>();
 
     /** A set of all used String values */
-    static private Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
+    static private final Map<String, String> stringTable = java.util.Collections.synchronizedMap(new HashMap<String, String>());
 
     /**
      * <p>

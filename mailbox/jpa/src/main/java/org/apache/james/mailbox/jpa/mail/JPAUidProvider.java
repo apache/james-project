@@ -32,7 +32,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class JPAUidProvider extends AbstractLockingUidProvider<JPAId> {
 
-    private EntityManagerFactory factory;
+    private final EntityManagerFactory factory;
 
     public JPAUidProvider(MailboxPathLocker locker, EntityManagerFactory factory) {
         super(locker);

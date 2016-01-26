@@ -37,9 +37,9 @@ import org.apache.james.protocols.api.Response;
  */
 public class LineHandlerStats extends StandardMBean implements HandlerStatsMBean, Disposable {
 
-    private String name;
-    private String handlerName;
-    private MBeanServer mbeanserver;
+    private final String name;
+    private final String handlerName;
+    private final MBeanServer mbeanserver;
     private final AtomicLong all = new AtomicLong(0);
     private final AtomicLong disconnect = new AtomicLong(0);
 

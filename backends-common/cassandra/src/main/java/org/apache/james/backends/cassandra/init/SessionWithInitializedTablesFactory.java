@@ -26,7 +26,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 public class SessionWithInitializedTablesFactory {
     private final static String DEFAULT_KEYSPACE_NAME = "apache_james";
 
-    private CassandraModule module;
+    private final CassandraModule module;
 
     public SessionWithInitializedTablesFactory(CassandraModule module) {
         this.module = module;

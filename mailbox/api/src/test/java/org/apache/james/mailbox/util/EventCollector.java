@@ -28,7 +28,7 @@ public class EventCollector implements MailboxListener {
 
     private final List<Event> events = new ArrayList<Event>();
 
-    private ListenerType listenerType;
+    private final ListenerType listenerType;
 
     public EventCollector(ListenerType listenerType) {
         this.listenerType = listenerType;

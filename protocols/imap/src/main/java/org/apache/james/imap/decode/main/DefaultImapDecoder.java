@@ -41,7 +41,7 @@ public class DefaultImapDecoder implements ImapDecoder {
 
     private final ImapCommandParserFactory imapCommands;
 
-    private int maxInvalidCommands;
+    private final int maxInvalidCommands;
 
     private final static String INVALID_COMMAND_COUNT = "INVALID_COMMAND_COUNT";
     public final static int DEFAULT_MAX_INVALID_COMMANDS = 9;

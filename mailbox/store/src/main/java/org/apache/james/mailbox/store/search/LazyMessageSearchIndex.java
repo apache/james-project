@@ -44,7 +44,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  */
 public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessageSearchIndex<Id> {
 
-    private ListeningMessageSearchIndex<Id> index;
+    private final ListeningMessageSearchIndex<Id> index;
     private final ConcurrentHashMap<Id, Object> indexed = new ConcurrentHashMap<Id, Object>();
     
     

@@ -37,7 +37,7 @@ public class StoreRequest extends AbstractImapRequest {
 
     private final boolean signedPlus;
 
-    private long unchangedSince;
+    private final long unchangedSince;
 
     public StoreRequest(final ImapCommand command, final IdRange[] idSet, final boolean silent, final Flags flags, final boolean useUids, final String tag, final Boolean sign, final long unchangedSince) {
         super(tag, command);

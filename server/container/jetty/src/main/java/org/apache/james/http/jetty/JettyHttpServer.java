@@ -42,7 +42,7 @@ public class JettyHttpServer implements Closeable {
         return new JettyHttpServer(configuration);
     }
 
-    private Server server;
+    private final Server server;
     private ServerConnector serverConnector;
     private final Configuration configuration;
 

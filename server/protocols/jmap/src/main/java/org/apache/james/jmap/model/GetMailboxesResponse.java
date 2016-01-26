@@ -37,8 +37,8 @@ public class GetMailboxesResponse implements Method.Response {
 
         private String accountId;
         private String state;
-        private ImmutableList.Builder<Mailbox> mailboxes;
-        private ImmutableList.Builder<String> notFoundBuilder;
+        private final ImmutableList.Builder<Mailbox> mailboxes;
+        private final ImmutableList.Builder<String> notFoundBuilder;
 
         private Builder() {
             mailboxes = ImmutableList.builder();

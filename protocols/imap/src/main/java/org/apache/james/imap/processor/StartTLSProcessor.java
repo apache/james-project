@@ -35,7 +35,7 @@ import org.apache.james.imap.processor.base.AbstractChainedProcessor;
  */
 public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest> implements CapabilityImplementingProcessor {
     private final static List<String> STARTTLS_CAP = Collections.unmodifiableList(Arrays.asList(ImapConstants.SUPPORTS_STARTTLS));
-    private StatusResponseFactory factory;
+    private final StatusResponseFactory factory;
 
     public StartTLSProcessor(final ImapProcessor next, final StatusResponseFactory factory) {
         super(StartTLSRequest.class, next);

@@ -25,8 +25,8 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
 public class VanishedResponse implements ImapResponseMessage{
 
-    private IdRange[] uids;
-    private boolean earlier;
+    private final IdRange[] uids;
+    private final boolean earlier;
 
     public VanishedResponse(IdRange[] uids, boolean earlier) {
         this.earlier = earlier;

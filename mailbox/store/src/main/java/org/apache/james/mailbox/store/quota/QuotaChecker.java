@@ -31,9 +31,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
 
 public class QuotaChecker<Id extends MailboxId> {
 
-    private Quota messageQuota;
-    private Quota sizeQuota;
-    private QuotaRoot quotaRoot;
+    private final Quota messageQuota;
+    private final Quota sizeQuota;
+    private final QuotaRoot quotaRoot;
 
     public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox<Id> mailbox) throws MailboxException {
         this.quotaRoot = quotaRootResolver.getQuotaRoot(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()));

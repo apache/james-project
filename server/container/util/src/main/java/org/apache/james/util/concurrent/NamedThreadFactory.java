@@ -28,7 +28,7 @@ public class NamedThreadFactory implements ThreadFactory {
 
     public final String name;
     private final AtomicLong count = new AtomicLong();
-    private int priority;
+    private final int priority;
 
     public NamedThreadFactory(final String name, final int priority) {
         if (priority > Thread.MAX_PRIORITY || priority < Thread.MIN_PRIORITY) {

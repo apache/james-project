@@ -195,7 +195,7 @@ public class HeaderCollection {
     private final ImmutableSet<EMailer> replyToAddressSet;
     private final ImmutableSet<String> subjectSet;
     private final ImmutableMultimap<String, String> headers;
-    private Optional<ZonedDateTime> sentDate;
+    private final Optional<ZonedDateTime> sentDate;
 
     private HeaderCollection(ImmutableSet<EMailer> toAddressSet, ImmutableSet<EMailer> fromAddressSet,
         ImmutableSet<EMailer> ccAddressSet, ImmutableSet<EMailer> bccAddressSet, ImmutableSet<EMailer> replyToAddressSet, ImmutableSet<String> subjectSet,

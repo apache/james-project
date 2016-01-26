@@ -32,9 +32,9 @@ public class ESearchResponse implements ImapResponseMessage{
     private final long count;
     private final IdRange[] all;
     private final String tag;
-    private boolean useUid;
-    private List<SearchResultOption> options;
-    private Long highestModSeq;
+    private final boolean useUid;
+    private final List<SearchResultOption> options;
+    private final Long highestModSeq;
 
     public ESearchResponse(final long minUid, final long maxUid, final long count, final IdRange[] all, final Long highestModSeq, String tag, final boolean useUid, final List<SearchResultOption> options) {
         super();

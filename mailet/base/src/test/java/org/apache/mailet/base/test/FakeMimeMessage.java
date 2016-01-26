@@ -47,8 +47,8 @@ public class FakeMimeMessage extends MimeMessage {
     private String[] m_contentLanguage;
     private String m_fileName;
     private DataHandler m_dataHandler;
-    private HashMap<String, String> m_contentHeaders = new HashMap<String, String>();
-    private Flags m_setFlags = new Flags();
+    private final HashMap<String, String> m_contentHeaders = new HashMap<String, String>();
+    private final Flags m_setFlags = new Flags();
     private boolean m_doMatch;
 
     public FakeMimeMessage() throws MessagingException {

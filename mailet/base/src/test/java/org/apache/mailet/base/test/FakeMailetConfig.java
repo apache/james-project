@@ -33,7 +33,7 @@ public class FakeMailetConfig implements MailetConfig {
     public String mailetName;
     public MailetContext mc;
 
-    private Properties properties;
+    private final Properties properties;
     
     public FakeMailetConfig() {
     	this("A Mailet", new FakeMailContext());

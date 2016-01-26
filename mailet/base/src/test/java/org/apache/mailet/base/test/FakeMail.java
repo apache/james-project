@@ -50,7 +50,7 @@ public class FakeMail implements Mail {
 
     private Date lastUpdated;
 
-    private HashMap<String, Serializable> attributes = new HashMap<String, Serializable>();
+    private final HashMap<String, Serializable> attributes = new HashMap<String, Serializable>();
 
     private static final long serialVersionUID = 1L;
 

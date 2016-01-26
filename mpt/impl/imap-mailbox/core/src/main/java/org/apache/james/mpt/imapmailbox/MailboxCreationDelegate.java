@@ -29,7 +29,7 @@ public class MailboxCreationDelegate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxCreationDelegate.class);
 
-    private MailboxManager mailboxManager;
+    private final MailboxManager mailboxManager;
 
     public MailboxCreationDelegate(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;

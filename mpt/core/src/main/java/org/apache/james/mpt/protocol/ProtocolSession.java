@@ -206,9 +206,9 @@ public class ProtocolSession implements ProtocolInteractor {
      * A client request, which write the specified message to a Writer.
      */
     private static class ClientRequest implements ProtocolElement {
-        private int sessionNumber;
+        private final int sessionNumber;
 
-        private String message;
+        private final String message;
 
         /**
          * Initialises the ClientRequest with the supplied message.
@@ -263,11 +263,11 @@ public class ProtocolSession implements ProtocolInteractor {
      * this line.
      */
     private class ServerResponse implements ProtocolElement {
-        private String lastClientMessage;
+        private final String lastClientMessage;
 
-        private int sessionNumber;
+        private final int sessionNumber;
 
-        private String expectedLine;
+        private final String expectedLine;
 
         protected String location;
 

@@ -78,8 +78,8 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
 
     public static final class DataLineFilterWrapper implements LineHandler<SMTPSession> {
 
-        private DataLineFilter filter;
-        private LineHandler<SMTPSession> next;
+        private final DataLineFilter filter;
+        private final LineHandler<SMTPSession> next;
         
         public DataLineFilterWrapper(DataLineFilter filter, LineHandler<SMTPSession> next) {
             this.filter = filter;

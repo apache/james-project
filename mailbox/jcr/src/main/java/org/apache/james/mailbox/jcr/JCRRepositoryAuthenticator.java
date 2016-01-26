@@ -35,7 +35,7 @@ import org.apache.james.mailbox.store.Authenticator;
  */
 public class JCRRepositoryAuthenticator implements Authenticator{
 
-    private MailboxSessionJCRRepository repository;
+    private final MailboxSessionJCRRepository repository;
     
     public JCRRepositoryAuthenticator(MailboxSessionJCRRepository repository) {
         this.repository = repository;

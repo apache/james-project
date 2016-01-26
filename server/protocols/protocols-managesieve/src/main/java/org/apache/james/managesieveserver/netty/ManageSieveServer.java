@@ -58,8 +58,8 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     final static String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
     final static String EXECUTION_HANDLER = "executionHandler";
 
-    private int maxLineLength;
-    private ManageSieveProcessor manageSieveProcessor;
+    private final int maxLineLength;
+    private final ManageSieveProcessor manageSieveProcessor;
 
     public ManageSieveServer(int maxLineLength, ManageSieveProcessor manageSieveProcessor) {
         this.maxLineLength = maxLineLength;

@@ -338,11 +338,11 @@ public final class SearchKey {
 
     private final String value;
 
-    private IdRange[] sequence;
+    private final IdRange[] sequence;
 
-    private long seconds;
+    private final long seconds;
 
-    private long modSeq;
+    private final long modSeq;
 
     private SearchKey(final int type, final DayMonthYear date, final List<SearchKey> keys, final long number, final String name, final String value, IdRange[] sequence, long seconds, long modSeq) {
         super();

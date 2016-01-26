@@ -48,7 +48,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class SetMailAttribute extends GenericMailet {
 
-    private HashMap<String, String> attributesToSet = new HashMap<String, String>(2);
+    private final HashMap<String, String> attributesToSet = new HashMap<String, String>(2);
     
     private Set<Map.Entry<String, String>> entries;
     

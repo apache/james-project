@@ -32,8 +32,8 @@ import org.apache.james.mailbox.MailboxSession;
  */
 public class GlobalMailboxSessionJCRRepository extends MailboxSessionJCRRepository{
 
-    private String username;
-    private char[] pass;
+    private final String username;
+    private final char[] pass;
 
     public GlobalMailboxSessionJCRRepository(Repository repository, String workspace, String username, String password) {
         super(repository, workspace);

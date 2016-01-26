@@ -34,7 +34,7 @@ import com.google.inject.name.Names;
 
 public class TestFilesystemModule extends AbstractModule {
     
-    private Supplier<File> workingDirectory;
+    private final Supplier<File> workingDirectory;
 
     private static File createTempDir(TemporaryFolder temporaryFolder) {
         try {

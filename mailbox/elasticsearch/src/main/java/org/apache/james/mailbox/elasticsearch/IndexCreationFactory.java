@@ -33,7 +33,7 @@ import java.util.Optional;
 
 public class IndexCreationFactory {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
 
     public static ClientProvider createIndex(ClientProvider clientProvider, int nbShards, int nbReplica) {
         try {

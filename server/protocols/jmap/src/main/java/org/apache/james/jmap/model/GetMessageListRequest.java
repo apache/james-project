@@ -43,7 +43,7 @@ public class GetMessageListRequest implements JmapRequest {
 
         private String accountId;
         private Filter filter;
-        private ImmutableList.Builder<String> sort;
+        private final ImmutableList.Builder<String> sort;
         private Boolean collapseThreads;
         private int position;
         private String anchor;
@@ -51,7 +51,7 @@ public class GetMessageListRequest implements JmapRequest {
         private Integer limit;
         private Boolean fetchThreads;
         private Boolean fetchMessages;
-        private ImmutableList.Builder<String> fetchMessageProperties;
+        private final ImmutableList.Builder<String> fetchMessageProperties;
         private Boolean fetchSearchSnippets;
 
         private Builder() {

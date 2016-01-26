@@ -30,8 +30,8 @@ import java.util.List;
 public class SetQuotaRequest extends AbstractImapRequest {
 
     public class ResourceLimit {
-        private String resource;
-        private Long limit;
+        private final String resource;
+        private final Long limit;
 
         public ResourceLimit(String resource, long limit) {
             this.limit = limit;

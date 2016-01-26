@@ -28,9 +28,9 @@ import org.apache.james.mailbox.model.Quota;
  * Quota Response
  */
 public class QuotaResponse implements ImapResponseMessage {
-    private String resourceName;
-    private String quotaRoot;
-    private Quota quota;
+    private final String resourceName;
+    private final String quotaRoot;
+    private final Quota quota;
 
     public QuotaResponse(String resource, String quotaRoot, Quota quota) {
         this.quota = quota;

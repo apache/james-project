@@ -34,7 +34,7 @@ public class HeaderDisplayComparator extends AbstractHeaderComparator{
     private final static Comparator<MailboxMessage<?>> REVERSE_TO_COMPARATOR = new ReverseComparator(TO_COMPARATOR);
 
     
-    private String headerName;
+    private final String headerName;
 
     public HeaderDisplayComparator(String headerName) {
         this.headerName = headerName;

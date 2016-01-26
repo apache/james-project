@@ -36,8 +36,8 @@ import com.beetstra.jutf7.CharsetProvider;
  */
 public class CharsetUtil {
 
-    private static Set<String> charsetNames;
-    private static Set<Charset> charsets;
+    private static final Set<String> charsetNames;
+    private static final Set<Charset> charsets;
     private static final String X_MODIFIED_UTF_7 = "X-MODIFIED-UTF-7";
     private static final Charset X_MODIFIED_UTF_7_CHARSET = new CharsetProvider().charsetForName(X_MODIFIED_UTF_7);
 

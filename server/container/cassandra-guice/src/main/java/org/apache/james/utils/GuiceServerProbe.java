@@ -55,9 +55,9 @@ public class GuiceServerProbe implements ExtendedServerProbe {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
 
-    private MailboxManager mailboxManager;
-    private DomainList domainList;
-    private UsersRepository usersRepository;
+    private final MailboxManager mailboxManager;
+    private final DomainList domainList;
+    private final UsersRepository usersRepository;
 
     @Inject
     private GuiceServerProbe(MailboxManager mailboxManager, DomainList domainList, UsersRepository usersRepository) {

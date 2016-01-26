@@ -33,7 +33,7 @@ public class RFC822DateFormat extends SynchronizedDateFormat {
     /**
      * A static instance of the RFC822DateFormat, used by toString
      */
-    private static RFC822DateFormat instance;
+    private static final RFC822DateFormat instance;
 
     static {
         instance = new RFC822DateFormat();

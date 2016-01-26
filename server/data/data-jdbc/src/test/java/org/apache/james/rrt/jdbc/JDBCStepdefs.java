@@ -32,7 +32,7 @@ import cucumber.api.java.Before;
 
 public class JDBCStepdefs {
 
-    private RewriteTablesStepdefs mainStepdefs;
+    private final RewriteTablesStepdefs mainStepdefs;
 
     public JDBCStepdefs(RewriteTablesStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;

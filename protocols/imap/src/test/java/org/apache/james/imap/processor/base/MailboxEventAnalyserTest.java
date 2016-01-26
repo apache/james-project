@@ -354,7 +354,7 @@ public class MailboxEventAnalyserTest {
     };
     
     private final class MyMailboxSession implements MailboxSession {
-        private long sessionId;
+        private final long sessionId;
 
         public MyMailboxSession(long sessionId) {
             this.sessionId = sessionId;
@@ -410,7 +410,7 @@ public class MailboxEventAnalyserTest {
     }
     
     private class MyImapSession implements ImapSession{
-        private MailboxSession mSession;
+        private final MailboxSession mSession;
 
         public MyImapSession(MailboxSession mSession) {
             this.mSession = mSession;

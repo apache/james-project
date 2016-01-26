@@ -28,11 +28,11 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 
 public class SimpleMessageMetaData implements MessageMetaData{
-    private long uid;
-    private Flags flags;
-    private long size;
-    private Date internalDate;
-    private long modSeq;
+    private final long uid;
+    private final Flags flags;
+    private final long size;
+    private final Date internalDate;
+    private final long modSeq;
 
     public SimpleMessageMetaData(long uid, long modSeq, Flags flags, long size, Date internalDate) {
         this.uid = uid;

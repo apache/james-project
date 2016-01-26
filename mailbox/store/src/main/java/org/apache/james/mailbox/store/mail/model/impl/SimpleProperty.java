@@ -21,9 +21,9 @@ package org.apache.james.mailbox.store.mail.model.impl;
 import org.apache.james.mailbox.store.mail.model.Property;
 
 public final class SimpleProperty implements Property {
-    private String namespace;
-    private String localName;
-    private String value;
+    private final String namespace;
+    private final String localName;
+    private final String value;
     
     /**
      * Construct a property.

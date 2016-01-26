@@ -32,7 +32,7 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
  */
 public class EolInputStream extends FilterInputStream {
 
-    private ImapRequestLineReader reader;
+    private final ImapRequestLineReader reader;
     private boolean eolCalled = false;
 
     public EolInputStream(ImapRequestLineReader reader, InputStream in) {

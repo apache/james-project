@@ -43,8 +43,8 @@ import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 
 public class CriterionConverter {
 
-    private Map<Class<?>, Function<SearchQuery.Criterion, FilteredQueryRepresentation>> criterionConverterMap;
-    private Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, FilteredQueryRepresentation>> headerOperatorConverterMap;
+    private final Map<Class<?>, Function<SearchQuery.Criterion, FilteredQueryRepresentation>> criterionConverterMap;
+    private final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, FilteredQueryRepresentation>> headerOperatorConverterMap;
 
     public CriterionConverter() {
         criterionConverterMap = new HashMap<>();

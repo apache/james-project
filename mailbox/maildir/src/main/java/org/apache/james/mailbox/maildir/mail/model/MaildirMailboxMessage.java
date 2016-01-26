@@ -38,7 +38,7 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage<MaildirId> {
     private boolean flagged;
     private boolean recent;
     private boolean seen;
-    private Mailbox<MaildirId> mailbox;
+    private final Mailbox<MaildirId> mailbox;
     private long uid;
     protected boolean newMessage;
     private long modSeq;

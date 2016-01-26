@@ -33,7 +33,7 @@ import java.io.InputStream;
 public class FixedLengthInputStream extends FilterInputStream {
     private long pos = 0;
 
-    private long length;
+    private final long length;
 
     public FixedLengthInputStream(InputStream in, long length) {
         super(in);

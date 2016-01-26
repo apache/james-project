@@ -45,7 +45,7 @@ import java.util.List;
 
 public class MaildirMessage implements Message {
 
-    private MaildirMessageName messageName;
+    private final MaildirMessageName messageName;
     private int bodyStartOctet;
     private final PropertyBuilder propertyBuilder = new PropertyBuilder();
     private boolean parsed;

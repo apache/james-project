@@ -41,7 +41,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class CassandraSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
-    private Session session;
+    private final Session session;
 
     public CassandraSubscriptionMapper(Session session) {
         this.session = session;

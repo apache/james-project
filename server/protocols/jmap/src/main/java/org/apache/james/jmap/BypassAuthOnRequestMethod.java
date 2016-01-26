@@ -42,7 +42,7 @@ public class BypassAuthOnRequestMethod implements Filter {
     }
 
     public static class Builder {
-        private ImmutableList.Builder<Predicate<HttpServletRequest>> reasons = new ImmutableList.Builder<>();
+        private final ImmutableList.Builder<Predicate<HttpServletRequest>> reasons = new ImmutableList.Builder<>();
         private final AuthenticationFilter authenticationFilter;
 
         private Builder(AuthenticationFilter authenticationFilter) {

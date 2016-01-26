@@ -61,12 +61,12 @@ public class MaildirMessageName {
     /**
      * The number of deliveries done by the server since its last start
      */
-    private static AtomicInteger deliveries = new AtomicInteger(0);
+    private static final AtomicInteger deliveries = new AtomicInteger(0);
     
     /**
      * A random generator for the random part in the unique message names
      */
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     /**
      * The process id of the server process
@@ -92,7 +92,7 @@ public class MaildirMessageName {
 
     private String fullName;
     private File file;
-    private MaildirFolder parentFolder;
+    private final MaildirFolder parentFolder;
     private String timestamp;
     private String uniqueString;
     private String hostnameAndMeta; // tim-erwin.de,S=1000:2,RS

@@ -43,7 +43,7 @@ public class MaildirStore implements UidProvider<MaildirId>, ModSeqProvider<Mail
     
     public static final String maildirDelimiter = ".";
     
-    private String maildirLocation;
+    private final String maildirLocation;
     
     private File maildirRootFile;
     private final MailboxPathLocker locker;

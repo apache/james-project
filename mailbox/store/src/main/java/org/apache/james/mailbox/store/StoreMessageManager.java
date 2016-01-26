@@ -128,7 +128,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
 
     private final QuotaRootResolver quotaRootResolver;
 
-    private MailboxPathLocker locker;
+    private final MailboxPathLocker locker;
 
     private int fetchBatchSize;
 

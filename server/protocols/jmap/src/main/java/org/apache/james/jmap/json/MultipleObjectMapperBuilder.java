@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class MultipleObjectMapperBuilder {
 
-    private MultipleClassesDeserializer multipleClassesDeserializer = new MultipleClassesDeserializer();
+    private final MultipleClassesDeserializer multipleClassesDeserializer = new MultipleClassesDeserializer();
 
     public MultipleObjectMapperBuilder registerClass(String uniqueJsonPath, Class<?> clazz) {
         multipleClassesDeserializer.registerClass(uniqueJsonPath, clazz);

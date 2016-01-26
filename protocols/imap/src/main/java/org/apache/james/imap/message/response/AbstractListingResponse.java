@@ -42,7 +42,7 @@ public abstract class AbstractListingResponse {
 
     private final String name;
 
-    private MailboxType type;
+    private final MailboxType type;
 
     public AbstractListingResponse(final boolean noInferiors, final boolean noSelect, final boolean marked, final boolean unmarked, boolean hasChildren, boolean hasNoChildren, final String name, final char hierarchyDelimiter, final MailboxType type) {
         super();

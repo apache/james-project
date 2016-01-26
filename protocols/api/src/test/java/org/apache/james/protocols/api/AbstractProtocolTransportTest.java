@@ -212,7 +212,7 @@ public class AbstractProtocolTransportTest {
     
     private final static class TestResponse implements Response {
 
-        private String msg;
+        private final String msg;
 
         public TestResponse() {
             this.msg =  UUID.randomUUID().toString();

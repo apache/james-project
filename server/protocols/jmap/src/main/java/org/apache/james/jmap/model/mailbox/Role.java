@@ -32,7 +32,7 @@ public enum Role {
     SPAM("spam"),
     TEMPLATES("templates");
 
-    private String name;
+    private final String name;
 
     Role(String name) {
         this.name = name;

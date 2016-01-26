@@ -143,7 +143,7 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
         private int count = 0;
         private int limit = -1;
         private int lastChar;
-        private InputStream in;
+        private final InputStream in;
         private boolean isBody = false; // starting from header
         private boolean isEmptyLine = false;
 

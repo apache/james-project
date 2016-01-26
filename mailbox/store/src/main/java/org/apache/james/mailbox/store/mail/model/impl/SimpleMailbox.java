@@ -30,7 +30,7 @@ public class SimpleMailbox<Id extends MailboxId> implements Mailbox<Id> {
     private String namespace;
     private String user;
     private String name;
-    private long uidValidity;
+    private final long uidValidity;
     private MailboxACL acl = SimpleMailboxACL.EMPTY;
 
     public SimpleMailbox(MailboxPath path, long uidValidity) {

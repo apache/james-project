@@ -43,7 +43,7 @@ public class JCRSubscription implements Subscription, Persistent, JCRImapConstan
     
     private Node node;
     private final Logger log;
-    private String mailbox;
+    private final String mailbox;
     private String username;
 
     

@@ -42,7 +42,7 @@ public class PartContentBuilder {
 
     private static final byte[] EMPTY = {};
 
-    private MimeTokenStream parser;
+    private final MimeTokenStream parser;
 
     private boolean empty = false;
 

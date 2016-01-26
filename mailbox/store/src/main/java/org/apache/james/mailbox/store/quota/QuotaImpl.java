@@ -33,7 +33,7 @@ public final class QuotaImpl implements Quota{
         return new QuotaImpl(used, max);
     }
 
-    private long max;
+    private final long max;
     private long used;
 
     private QuotaImpl(long used, long max) {

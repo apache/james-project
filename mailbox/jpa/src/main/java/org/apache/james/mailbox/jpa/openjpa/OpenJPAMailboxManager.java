@@ -41,7 +41,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  */
 public class OpenJPAMailboxManager extends JPAMailboxManager {
 
-    private AdvancedFeature feature;
+    private final AdvancedFeature feature;
 
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, boolean useStreaming, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         super(mapperFactory, authenticator,  locker, aclResolver, groupMembershipResolver);

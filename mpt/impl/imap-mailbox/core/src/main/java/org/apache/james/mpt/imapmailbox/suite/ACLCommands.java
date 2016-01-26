@@ -34,7 +34,7 @@ public class ACLCommands extends BaseImapProtocol {
     public static final String OTHER_USER_NAME = "Boby";
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_MAILBOX = new MailboxPath("#private", OTHER_USER_NAME, "") ;
-    private MailboxACL.MailboxACLRights readWriteSeenRight;
+    private final MailboxACL.MailboxACLRights readWriteSeenRight;
 
     @Inject
     private static HostSystem system;

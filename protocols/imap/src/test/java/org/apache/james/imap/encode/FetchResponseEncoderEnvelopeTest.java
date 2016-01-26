@@ -86,7 +86,7 @@ public class FetchResponseEncoderEnvelopeTest {
     private Address[] to;
     
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
-    private ImapResponseComposer composer = new ImapResponseComposerImpl(writer); 
+    private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
     
     
     @Before

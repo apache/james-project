@@ -31,7 +31,7 @@ import javax.jms.ConnectionFactory;
 
 public class ActiveMQQueueModule extends AbstractModule {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(ActiveMQQueueModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQQueueModule.class);
 
     @Override
     protected void configure() {

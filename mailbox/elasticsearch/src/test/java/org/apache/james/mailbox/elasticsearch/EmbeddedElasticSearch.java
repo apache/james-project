@@ -41,7 +41,7 @@ import com.jayway.awaitility.Duration;
 
 public class EmbeddedElasticSearch extends ExternalResource {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(EmbeddedElasticSearch.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedElasticSearch.class);
 
     private final Supplier<Path> folder;
     private Node node;

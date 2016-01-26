@@ -40,8 +40,8 @@ public class FilterCondition implements Filter {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private ImmutableList.Builder<String> inMailboxes;
-        private ImmutableList.Builder<String> notInMailboxes;
+        private final ImmutableList.Builder<String> inMailboxes;
+        private final ImmutableList.Builder<String> notInMailboxes;
         private Date before;
         private Date after;
         private Integer minSize;
@@ -58,7 +58,7 @@ public class FilterCondition implements Filter {
         private String bcc;
         private String subject;
         private String body;
-        private ImmutableList.Builder<String> header;
+        private final ImmutableList.Builder<String> header;
 
         private Builder() {
             inMailboxes = ImmutableList.builder();

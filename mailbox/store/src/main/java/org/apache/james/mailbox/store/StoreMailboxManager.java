@@ -103,7 +103,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
 
     private int moveBatchSize = 0;
 
-    private MailboxPathLocker locker;
+    private final MailboxPathLocker locker;
 
     private MessageSearchIndex<Id> index;
 

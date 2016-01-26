@@ -31,9 +31,9 @@ public final class HookResult {
     private static final HookResult DENYSOFT = new HookResult(HookReturnCode.DENYSOFT);
     private static final HookResult DISCONNECT = new HookResult(HookReturnCode.DISCONNECT);
 
-    private int result;
-    private String smtpRetCode;
-    private String smtpDescription;
+    private final int result;
+    private final String smtpRetCode;
+    private final String smtpDescription;
     
     /**
      * Construct new HookResult

@@ -34,7 +34,7 @@ import org.apache.james.imap.decode.MessagingImapCommandParser;
  * Command instances are created on demand, when first accessed.
  */
 public class ImapParserFactory implements ImapCommandParserFactory {
-    private Map<String, Class<?>> _imapCommands;
+    private final Map<String, Class<?>> _imapCommands;
 
     private final StatusResponseFactory statusResponseFactory;
 

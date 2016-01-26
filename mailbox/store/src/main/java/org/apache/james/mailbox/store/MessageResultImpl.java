@@ -374,7 +374,7 @@ public class MessageResultImpl implements MessageResult {
     
     private final class HeadersImpl implements Headers {
 
-        private Message msg;
+        private final Message msg;
         private List<Header> headers;
         
         public HeadersImpl(Message msg) {

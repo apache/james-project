@@ -39,9 +39,9 @@ import org.apache.james.mailbox.model.MessageResult.Header;
 public class FullByteContent implements Content {
 
 
-    private List<Header> headers;
-    private byte[] body;
-    private long size;
+    private final List<Header> headers;
+    private final byte[] body;
+    private final long size;
     
     public FullByteContent(final byte[] body, final List<MessageResult.Header> headers) throws MailboxException {
         this.headers = headers;

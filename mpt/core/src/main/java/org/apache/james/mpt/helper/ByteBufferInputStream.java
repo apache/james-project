@@ -28,9 +28,9 @@ import java.nio.charset.CharsetEncoder;
 
 
 public class ByteBufferInputStream extends InputStream {
-    private ByteBuffer buffer = ByteBuffer.allocate(16384);
+    private final ByteBuffer buffer = ByteBuffer.allocate(16384);
 
-    private CharsetEncoder encoder = Charset.forName("ASCII").newEncoder();
+    private final CharsetEncoder encoder = Charset.forName("ASCII").newEncoder();
 
     private boolean readLast = true;
 

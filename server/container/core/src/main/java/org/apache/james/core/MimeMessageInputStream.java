@@ -31,7 +31,7 @@ import javax.mail.internet.MimeMessage;
  * Provide an {@link InputStream} over an {@link MimeMessage}
  */
 public class MimeMessageInputStream extends InputStream {
-    private InputStream in;
+    private final InputStream in;
 
     /**
      * Provide an {@link InputStream} over a {@link MimeMessage}.

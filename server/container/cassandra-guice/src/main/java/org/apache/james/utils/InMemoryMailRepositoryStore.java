@@ -45,10 +45,10 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMailRepositoryStore.class);
 
-    private Set<MailRepositoryProvider> mailRepositories;
-    private ConcurrentMap<String, MailRepository> destinationToRepositoryAssociations;
-    private Map<String, MailRepositoryProvider> protocolToRepositoryProvider;
-    private Map<String, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
+    private final Set<MailRepositoryProvider> mailRepositories;
+    private final ConcurrentMap<String, MailRepository> destinationToRepositoryAssociations;
+    private final Map<String, MailRepositoryProvider> protocolToRepositoryProvider;
+    private final Map<String, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
     private HierarchicalConfiguration configuration;
 
     @Inject

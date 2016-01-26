@@ -200,7 +200,7 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
     public String mediaType = null;
     public Long textualLineCount = null;
 
-    private int size;
+    private final int size;
 
     private long modSeq;
     

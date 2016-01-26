@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class MockAuthenticator implements Authenticator{
 
-    private Map<String, String> users = new HashMap<String, String>();
+    private final Map<String, String> users = new HashMap<String, String>();
 
     public boolean isAuthentic(String userid, CharSequence passwd) {
         String pass = users.get(userid);

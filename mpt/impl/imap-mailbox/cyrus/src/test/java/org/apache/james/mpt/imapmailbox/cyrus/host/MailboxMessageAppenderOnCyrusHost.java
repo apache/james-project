@@ -25,9 +25,9 @@ import org.apache.james.mpt.imapmailbox.MailboxMessageAppender;
 import org.apache.james.mpt.protocol.ProtocolSession;
 
 public class MailboxMessageAppenderOnCyrusHost implements MailboxMessageAppender {
-    private static String LOCATION = "cyrus.MailboxMessageProviderOnCyrusHost";
+    private static final String LOCATION = "cyrus.MailboxMessageProviderOnCyrusHost";
 
-    private CyrusHostSystem hostSystem;
+    private final CyrusHostSystem hostSystem;
 
     @Inject
     private MailboxMessageAppenderOnCyrusHost(CyrusHostSystem hostSystem) {

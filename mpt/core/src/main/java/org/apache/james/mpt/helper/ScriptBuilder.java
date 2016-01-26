@@ -514,9 +514,9 @@ public class ScriptBuilder {
     }
 
     public static final class Flags {
-        private StringBuffer flags;
+        private final StringBuffer flags;
 
-        private StringBuffer msn;
+        private final StringBuffer msn;
 
         private boolean first;
 
@@ -1104,7 +1104,7 @@ public class ScriptBuilder {
 
         private final WritableByteChannel sump;
 
-        private ByteBuffer inBuffer = ByteBuffer.allocate(256);
+        private final ByteBuffer inBuffer = ByteBuffer.allocate(256);
 
         private final ByteBuffer outBuffer = ByteBuffer.allocate(262144);
 

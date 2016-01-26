@@ -24,7 +24,7 @@ package org.apache.james.ai.classic;
  */
 class CorpusLoaderThread extends Thread {
 
-    private BayesianAnalysis analysis;
+    private final BayesianAnalysis analysis;
 
     CorpusLoaderThread(BayesianAnalysis analysis) {
         super("BayesianAnalysis Corpus Loader");

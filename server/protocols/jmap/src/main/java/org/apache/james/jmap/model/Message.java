@@ -168,18 +168,18 @@ public class Message {
         private boolean hasAttachment;
         private ImmutableMap<String, String> headers;
         private Emailer from;
-        private ImmutableList.Builder<Emailer> to;
-        private ImmutableList.Builder<Emailer> cc;
-        private ImmutableList.Builder<Emailer> bcc;
-        private ImmutableList.Builder<Emailer> replyTo;
+        private final ImmutableList.Builder<Emailer> to;
+        private final ImmutableList.Builder<Emailer> cc;
+        private final ImmutableList.Builder<Emailer> bcc;
+        private final ImmutableList.Builder<Emailer> replyTo;
         private String subject;
         private ZonedDateTime date;
         private Long size;
         private String preview;
         private String textBody;
         private String htmlBody;
-        private ImmutableList.Builder<Attachment> attachments;
-        private ImmutableMap.Builder<String, SubMessage> attachedMessages;
+        private final ImmutableList.Builder<Attachment> attachments;
+        private final ImmutableMap.Builder<String, SubMessage> attachedMessages;
 
         private Builder() {
             to = ImmutableList.builder();

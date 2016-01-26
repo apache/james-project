@@ -39,7 +39,7 @@ public abstract class AbstractSimpleScriptedTestProtocol extends AbstractProtoco
     
     private static final Locale BASE_DEFAULT_LOCALE = Locale.getDefault();
 
-    private FileProtocolSessionBuilder builder = new FileProtocolSessionBuilder();
+    private final FileProtocolSessionBuilder builder = new FileProtocolSessionBuilder();
     private final String scriptDirectory;
 
     /**

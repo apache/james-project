@@ -66,7 +66,7 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
      */
     private static final class TypePredicate implements Predicate {
         
-        private MailetMatcherDescriptor.Type type;
+        private final MailetMatcherDescriptor.Type type;
 
         public TypePredicate(MailetMatcherDescriptor.Type typeMatcher) {
             this.type = typeMatcher;

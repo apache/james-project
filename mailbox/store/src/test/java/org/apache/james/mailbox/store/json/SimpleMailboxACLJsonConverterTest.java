@@ -33,7 +33,7 @@ import org.junit.Test;
 public class SimpleMailboxACLJsonConverterTest {
 
     public class ACLMapBuilder {
-        private Map<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights> map;
+        private final Map<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights> map;
 
         public ACLMapBuilder() {
             map = new HashMap<SimpleMailboxACL.MailboxACLEntryKey, MailboxACL.MailboxACLRights>();

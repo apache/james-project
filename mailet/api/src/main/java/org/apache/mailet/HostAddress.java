@@ -28,7 +28,7 @@ package org.apache.mailet;
  * @deprecated
  */
 public class HostAddress extends javax.mail.URLName {
-    private String hostname;
+    private final String hostname;
 
     /**
      * Constructs a new host address with the given details.

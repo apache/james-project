@@ -33,9 +33,9 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFactory<InMemoryId> {
 
-    private MailboxMapper<InMemoryId> mailboxMapper;
-    private MessageMapper<InMemoryId> messageMapper;
-    private SubscriptionMapper subscriptionMapper;
+    private final MailboxMapper<InMemoryId> mailboxMapper;
+    private final MessageMapper<InMemoryId> messageMapper;
+    private final SubscriptionMapper subscriptionMapper;
     
     public InMemoryMailboxSessionMapperFactory() {
         mailboxMapper = new InMemoryMailboxMapper();

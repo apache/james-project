@@ -39,7 +39,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 public class SpamTrapHandler implements RcptHook {
 
     /** Map which hold blockedIps and blockTime in memory */
-    private Map<String,Long> blockedIps = new HashMap<String,Long>();
+    private final Map<String,Long> blockedIps = new HashMap<String,Long>();
     
     private Collection<String> spamTrapRecips = new ArrayList<String>();
     

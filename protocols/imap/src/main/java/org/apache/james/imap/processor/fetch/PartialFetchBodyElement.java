@@ -79,7 +79,7 @@ final class PartialFetchBodyElement implements BodyElement {
 
     private final class LimitingInputStream extends FilterInputStream {
         private long pos = 0;
-        private long length;
+        private final long length;
         private long offset;
 
         public LimitingInputStream(InputStream in, long offset, long length) {

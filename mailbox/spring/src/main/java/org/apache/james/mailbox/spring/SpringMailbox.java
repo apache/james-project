@@ -23,7 +23,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class SpringMailbox {
     
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     
     public SpringMailbox() {
         applicationContext = new ClassPathXmlApplicationContext("META-INF/spring/spring-mailbox.xml",

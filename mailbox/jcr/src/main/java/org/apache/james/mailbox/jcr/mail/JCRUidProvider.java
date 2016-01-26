@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class JCRUidProvider extends AbstractLockingUidProvider<JCRId> {
 
-    private MailboxSessionJCRRepository repository;
+    private final MailboxSessionJCRRepository repository;
 
     public JCRUidProvider(MailboxPathLocker locker, MailboxSessionJCRRepository repository) {
         super(locker);

@@ -40,7 +40,7 @@ public class MockMailboxManager {
     /**
      * The mock mailbox manager constructed based on a provided mailboxmanager.
      */
-    private MailboxManager mockMailboxManager;
+    private final MailboxManager mockMailboxManager;
     
     /**
      * Number of Domains to be created in the Mailbox Manager.

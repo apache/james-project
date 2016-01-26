@@ -19,9 +19,9 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 public class CachingMailboxSessionMapperFactory<Id extends MailboxId> extends
 		MailboxSessionMapperFactory<Id> {
 
-	private MailboxSessionMapperFactory<Id> underlying;
-	private MailboxByPathCache<Id> mailboxByPathCache;
-	private MailboxMetadataCache<Id> mailboxMetadataCache;
+	private final MailboxSessionMapperFactory<Id> underlying;
+	private final MailboxByPathCache<Id> mailboxByPathCache;
+	private final MailboxMetadataCache<Id> mailboxMetadataCache;
 
 	public CachingMailboxSessionMapperFactory(MailboxSessionMapperFactory<Id> underlying, MailboxByPathCache<Id> mailboxByPathCache, MailboxMetadataCache<Id> mailboxMetadataCache) {
 		this.underlying = underlying;

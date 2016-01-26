@@ -44,7 +44,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  */
 public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implements MessageSearchIndex<Id>, MailboxListener {
 
-    private MessageMapperFactory<Id> factory;
+    private final MessageMapperFactory<Id> factory;
 
     public ListeningMessageSearchIndex(MessageMapperFactory<Id> factory) {
         this.factory = factory;

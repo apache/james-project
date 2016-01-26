@@ -57,13 +57,13 @@ public class HBaseMailboxMessage implements MailboxMessage<HBaseId> {
     /** Configuration for the HBase cluster */
     private final Configuration conf;
     /** The value for the mailboxId field */
-    private HBaseId mailboxId;
+    private final HBaseId mailboxId;
     /** The value for the uid field */
     private long uid;
     /** The value for the modSeq field */
     private long modSeq;
     /** The value for the internalDate field */
-    private Date internalDate;
+    private final Date internalDate;
     /** The value for the answered field */
     private boolean answered = false;
     /** The value for the deleted field */
@@ -77,18 +77,18 @@ public class HBaseMailboxMessage implements MailboxMessage<HBaseId> {
     /** The value for the seen field */
     private boolean seen = false;
     /** The first body octet */
-    private int bodyStartOctet;
+    private final int bodyStartOctet;
     /** Number of octets in the full document content */
-    private long contentOctets;
+    private final long contentOctets;
     /** MIME media type */
-    private String mediaType;
+    private final String mediaType;
     /** MIME sub type */
-    private String subType;
+    private final String subType;
     /** THE CRFL count when this document is textual, null otherwise */
     private Long textualLineCount;
     /** Meta data for this message */
-    private List<Property> properties;
-    private List<String> userFlags;
+    private final List<Property> properties;
+    private final List<String> userFlags;
     
     /**
      * Create a copy of the given message.

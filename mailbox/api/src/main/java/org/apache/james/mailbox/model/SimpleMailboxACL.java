@@ -221,7 +221,7 @@ public class SimpleMailboxACL implements MailboxACL {
         /**
          * See RFC 4314 section 2.1.1. Obsolete Rights.
          */
-        private CompatibilityMode compatibilityMode = CompatibilityMode.ckx_det;
+        private final CompatibilityMode compatibilityMode = CompatibilityMode.ckx_det;
 
         /**
          * 32 bit <code>int</code> to store the rights.
@@ -798,9 +798,9 @@ public class SimpleMailboxACL implements MailboxACL {
     }
 
     public static class SimpleMailboxACLCommand implements MailboxACLCommand {
-        private MailboxACLEntryKey key;
-        private EditMode editMode;
-        private MailboxACLRights rights;
+        private final MailboxACLEntryKey key;
+        private final EditMode editMode;
+        private final MailboxACLRights rights;
 
         public SimpleMailboxACLCommand(MailboxACLEntryKey key, EditMode editMode, MailboxACLRights rights) {
             this.key = key;

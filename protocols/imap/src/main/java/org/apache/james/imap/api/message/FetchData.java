@@ -39,7 +39,7 @@ public class FetchData {
 
     private boolean setSeen = false;
 
-    private Set<BodyFetchElement> bodyElements = new HashSet<BodyFetchElement>();
+    private final Set<BodyFetchElement> bodyElements = new HashSet<BodyFetchElement>();
 
     private boolean modSeq;
 

@@ -50,7 +50,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         @Column(name = "MAIL_BYTES", length = 1048576000, nullable = false)
         @Externalizer("EncryptDecryptHelper.getEncrypted")
         @Factory("EncryptDecryptHelper.getDecrypted")
-        @Lob private byte[] body;
+        @Lob private final byte[] body;
 
 
         /** The value for the header field. Lazy loaded */
@@ -59,7 +59,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
         @Externalizer("EncryptDecryptHelper.getEncrypted")
         @Factory("EncryptDecryptHelper.getDecrypted")
-        @Lob private byte[] header;
+        @Lob private final byte[] header;
         
         public JPAEncryptedMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, final PropertyBuilder propertyBuilder) throws MailboxException {
             super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);

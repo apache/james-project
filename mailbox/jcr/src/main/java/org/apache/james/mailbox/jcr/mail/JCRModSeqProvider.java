@@ -33,7 +33,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class JCRModSeqProvider extends AbstractLockingModSeqProvider<JCRId>{
 
-    private MailboxSessionJCRRepository repository;
+    private final MailboxSessionJCRRepository repository;
 
     public JCRModSeqProvider(MailboxPathLocker locker, MailboxSessionJCRRepository repository) {
         super(locker);

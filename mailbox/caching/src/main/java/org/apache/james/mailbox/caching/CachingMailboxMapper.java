@@ -18,8 +18,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class CachingMailboxMapper<Id extends MailboxId> implements MailboxMapper<Id> {
 
-	private MailboxMapper<Id> underlying;
-	private MailboxByPathCache<Id> cache;
+	private final MailboxMapper<Id> underlying;
+	private final MailboxByPathCache<Id> cache;
 
 	public CachingMailboxMapper(MailboxMapper<Id> underlying, MailboxByPathCache<Id> cache) {
 		this.underlying = underlying;

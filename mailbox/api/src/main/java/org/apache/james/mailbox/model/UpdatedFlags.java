@@ -35,7 +35,7 @@ public class UpdatedFlags {
     private final Flags oldFlags;
     private final Flags newFlags;
     private final Flags modifiedFlags;
-    private long modSeq;
+    private final long modSeq;
 
     public UpdatedFlags(long uid, long modSeq, Flags oldFlags, Flags newFlags) {
        this.uid = uid;

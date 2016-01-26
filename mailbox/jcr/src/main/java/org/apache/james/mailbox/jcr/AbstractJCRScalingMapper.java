@@ -40,7 +40,7 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
     private final MailboxSessionJCRRepository repository;
     private final int scaling;
 
-    private MailboxSession mSession;
+    private final MailboxSession mSession;
     private final static char PAD ='_';
     
     public AbstractJCRScalingMapper(MailboxSessionJCRRepository repository, MailboxSession mSession, int scaling) {

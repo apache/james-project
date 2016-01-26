@@ -55,7 +55,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     private boolean recentUidRemoved = false;
 
-    private MailboxManager mailboxManager;
+    private final MailboxManager mailboxManager;
 
     private MailboxPath path;
 
