@@ -13,6 +13,9 @@ A **Message** object has the following properties:
   the original message or to attach it directly to another message etc.
 - **threadId**: `String`
   The id of the thread to which this message belongs.
+<aside class="warning">
+  <ins>As of now, James project does not provide thread-related features (incl. threadId)</ins>
+</aside>
 - **mailboxIds**: `String[]` (Mutable)
   The ids of the mailboxes the message is in. A message MUST belong to one or more mailboxes at all times (until it is deleted).
 - **inReplyToMessageId**: `String|null`
@@ -398,6 +401,10 @@ The following errors may be returned instead of the *messageImported* response:
 `maxQuotaReached`: Returned if the user has reached their mail quota so the message cannot be imported.
 
 ### copyMessages
+
+<aside class="notice">
+  <ins>Command not yet implemented</ins>
+</aside>
 
 The only way to move messages **between** two different accounts is to copy them using the *copyMessages* method, then once the copy has succeeded, delete the original. It takes the following arguments:
 
