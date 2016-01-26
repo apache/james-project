@@ -39,10 +39,10 @@
         <provider>default</provider>
     </quotaRootResolver>
     <currentQuotaManager>
-        <provider>cassandra</provider>
+        <provider>inmemory</provider>
     </currentQuotaManager>
     <maxQuotaManager>
-        <provider>cassandra</provider>
+        <provider>inmemory</provider>
     </maxQuotaManager>
     <quotaManager>
         <provider>store</provider>

@@ -19,5 +19,5 @@
  -->
 
 <mailbox>
-  <provider>cassandra</provider>
+  <provider>jpa</provider>
 </mailbox>
