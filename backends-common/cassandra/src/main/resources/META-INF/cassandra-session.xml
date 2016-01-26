@@ -75,6 +75,10 @@
           class="org.apache.james.rrt.cassandra.CassandraRRTModule"
           lazy-init="true"/>
 
+    <bean id="cassandra-sieve-repository-module"
+          class="org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule"
+          lazy-init="true"/>
+
     <bean id="cassandra-usersrepository-module"
           class="org.apache.james.user.cassandra.CassandraUsersRepositoryModule"
           lazy-init="true"/>
@@ -99,6 +103,7 @@
                 <ref bean="cassandra-rrt-module"/>
                 <ref bean="cassandra-usersrepository-module"/>
                 <ref bean="cassandra-domainlist-module"/>
+                <ref bean="cassandra-sieve-repository-module"/>
             </list>
         </constructor-arg>
     </bean>
