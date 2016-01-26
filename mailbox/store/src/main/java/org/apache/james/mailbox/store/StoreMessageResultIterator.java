@@ -72,7 +72,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
      * @param group
      * @return fetchType
      */
-    private static final FetchType getFetchType(FetchGroup group) {
+    private static FetchType getFetchType(FetchGroup group) {
         int content = group.content();
         boolean headers = false;
         boolean body = false;

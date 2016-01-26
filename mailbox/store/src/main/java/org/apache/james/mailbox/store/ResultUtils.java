@@ -196,7 +196,7 @@ public class ResultUtils {
    
 
   
-    private static final int[] path(MimePath mimePath) {
+    private static int[] path(MimePath mimePath) {
         final int[] result;
         if (mimePath == null) {
             result = null;

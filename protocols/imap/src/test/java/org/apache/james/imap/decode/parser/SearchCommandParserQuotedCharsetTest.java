@@ -123,7 +123,7 @@ public class SearchCommandParserQuotedCharsetTest {
     private static final byte[] CHARSET = NioUtils.toBytes("CHARSET UTF-8 ",
             ASCII);
 
-    private static final byte[] add(byte[] one, byte[] two) {
+    private static byte[] add(byte[] one, byte[] two) {
         byte[] results = new byte[one.length + two.length];
         System.arraycopy(one, 0, results, 0, one.length);
         System.arraycopy(two, 0, results, one.length, two.length);
