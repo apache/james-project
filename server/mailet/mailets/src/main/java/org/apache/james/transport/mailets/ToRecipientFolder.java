@@ -83,6 +83,9 @@ public class ToRecipientFolder extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         if (!mail.getState().equals(Mail.GHOST)) {
             sieveMailet.service(mail);
+            if (getInitParameter("consume", false)) {
+                mail.setState(Mail.GHOST);
+            }
         }
     }
 
