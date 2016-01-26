@@ -61,11 +61,10 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
         this.internalDate = internalDate;
         this.size = size;
         this.body = body;
-        final Map<String,String> originalHeaders = headers;
-        if (originalHeaders == null) {
+        if (headers == null) {
             this.headers = new HashMap<String,String>();
         } else {
-            this.headers = originalHeaders;
+            this.headers = headers;
         }
         
         this.body =  body;
@@ -171,23 +170,19 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
         return true;
     }
 
-    public String toString()
-    {
-        final String retValue = 
-            "mailbox("
-            + "mailboxId = " + this.mailboxId + TOSTRING_SEPARATOR
-            + "uid = " + this.uid + TOSTRING_SEPARATOR
-            + "internalDate = " + this.internalDate + TOSTRING_SEPARATOR
-            + "size = " + this.size + TOSTRING_SEPARATOR
-            + "answered = " + this.answered + TOSTRING_SEPARATOR
-            + "deleted = " + this.deleted + TOSTRING_SEPARATOR
-            + "draft = " + this.draft + TOSTRING_SEPARATOR
-            + "flagged = " + this.flagged + TOSTRING_SEPARATOR
-            + "recent = " + this.recent + TOSTRING_SEPARATOR
-            + "seen = " + this.seen + TOSTRING_SEPARATOR
-            + " )";
-
-        return retValue;
+    public String toString() {
+        return "mailbox("
+        + "mailboxId = " + this.mailboxId + TOSTRING_SEPARATOR
+        + "uid = " + this.uid + TOSTRING_SEPARATOR
+        + "internalDate = " + this.internalDate + TOSTRING_SEPARATOR
+        + "size = " + this.size + TOSTRING_SEPARATOR
+        + "answered = " + this.answered + TOSTRING_SEPARATOR
+        + "deleted = " + this.deleted + TOSTRING_SEPARATOR
+        + "draft = " + this.draft + TOSTRING_SEPARATOR
+        + "flagged = " + this.flagged + TOSTRING_SEPARATOR
+        + "recent = " + this.recent + TOSTRING_SEPARATOR
+        + "seen = " + this.seen + TOSTRING_SEPARATOR
+        + " )";
     }
 
     

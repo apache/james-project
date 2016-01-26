@@ -530,8 +530,7 @@ public class DSNBounce extends AbstractNotify {
      */
     @Override
     protected String[] getAllowedInitParameters() {
-        String[] allowedArray = {"debug", "passThrough", "messageString", "attachment", "sender", "prefix"};
-        return allowedArray;
+        return new String[]{"debug", "passThrough", "messageString", "attachment", "sender", "prefix"};
     }
 
     /**

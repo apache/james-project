@@ -30,8 +30,7 @@ public class MoveProcessor extends CopyProcessor implements CapabilityImplementi
 			final MailboxSession mailboxSession,
 			final MailboxManager mailboxManager, MessageRange messageSet)
 			throws MailboxException {
-		List<MessageRange> processedUids = mailboxManager.moveMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
-		return processedUids;
+		return mailboxManager.moveMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
 	}
 
     /**

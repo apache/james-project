@@ -43,7 +43,8 @@ public class SpamAssassinHandlerTest {
 
     private SMTPSession setupMockedSMTPSession(final Mail mail) {
         mockedMail = mail;
-        SMTPSession mockedSMTPSession = new BaseFakeSMTPSession() {
+
+        return new BaseFakeSMTPSession() {
 
             private final HashMap<String, Object> sstate = new HashMap<String, Object>();
             private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
@@ -84,8 +85,6 @@ public class SpamAssassinHandlerTest {
                 this.relayingAllowed = relayingAllowed;
             }
         };
-
-        return mockedSMTPSession;
 
     }
 

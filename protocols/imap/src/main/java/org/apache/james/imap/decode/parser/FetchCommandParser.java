@@ -215,8 +215,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
 
         final List<String> names = decoder.getNames();
         final int[] path = decoder.getPath();
-        final BodyFetchElement bodyFetchElement = new BodyFetchElement(responseName, sectionType, path, names, firstOctet, numberOfOctets);
-        return bodyFetchElement;
+        return new BodyFetchElement(responseName, sectionType, path, names, firstOctet, numberOfOctets);
     }
 
     private int getSectionType(FetchPartPathDecoder decoder) throws DecodingException {
@@ -286,8 +285,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         
         request.eol();
 
-        final ImapMessage result = new FetchRequest(command, useUids, idSet, fetch, tag);
-        return result;
+        return new FetchRequest(command, useUids, idSet, fetch, tag);
     }
 
 }

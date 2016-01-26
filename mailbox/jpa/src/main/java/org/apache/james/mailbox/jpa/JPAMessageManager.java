@@ -59,8 +59,7 @@ public class JPAMessageManager extends StoreMessageManager<JPAId> {
     protected MailboxMessage<JPAId> createMessage(Date internalDate, final int size, int bodyStartOctet, final SharedInputStream content,
                                                   final Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
 
-        final MailboxMessage<JPAId> message = new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
-        return message;
+        return new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
     }
 
 

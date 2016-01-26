@@ -74,8 +74,7 @@ public class MimeMessageStreamRepositorySource extends MimeMessageSource {
      * @return the String ID
      */
     public String getSourceId() {
-        String sourceIdBuffer = repositoryName + "/" + key;
-        return sourceIdBuffer;
+        return repositoryName + "/" + key;
     }
 
     /**

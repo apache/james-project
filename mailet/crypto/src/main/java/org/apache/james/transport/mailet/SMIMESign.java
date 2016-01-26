@@ -67,7 +67,7 @@ public class SMIMESign extends Sign {
      *
      */
     protected  String[] getAllowedInitParameters() {
-        String[] allowedArray = {
+        return new String[]{
             "debug",
             "keyStoreFileName",
             "keyStorePassword",
@@ -79,7 +79,6 @@ public class SMIMESign extends Sign {
             "rebuildFrom",
             "explanationText"
         };
-        return allowedArray;
     }
     
      /* ******************************************************************** */

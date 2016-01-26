@@ -47,8 +47,7 @@ public class LoginCommandParser extends AbstractImapCommandParser {
         final String password = request.astring();
         request.eol();
 
-        final ImapMessage result = new LoginRequest(command, userid, password, tag);
-        return result;
+        return new LoginRequest(command, userid, password, tag);
     }
 
 }

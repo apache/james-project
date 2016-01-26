@@ -49,8 +49,7 @@ public class ExpungeCommandParser extends AbstractUidCommandParser {
         }
         request.eol();
 
-        final ImapMessage result = new ExpungeRequest(command, tag, uidSet);
-        return result;
+        return new ExpungeRequest(command, tag, uidSet);
     }
 
 }

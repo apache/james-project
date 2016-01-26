@@ -117,16 +117,14 @@ public class ScriptedUserAdder implements UserAdder {
     public String toString()
     {
         final String TAB = " ";
-        
-        String result = "ScriptedUserAdder ( "
+
+        return "ScriptedUserAdder ( "
             + super.toString() + TAB
             + "host = " + this.host + TAB
             + "port = " + this.port + TAB
             + "script = " + this.script + TAB
             + "monitor = " + this.monitor + TAB
             + " )";
-    
-        return result;
     }
     
     

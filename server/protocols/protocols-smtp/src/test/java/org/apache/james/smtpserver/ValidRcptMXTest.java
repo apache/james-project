@@ -42,7 +42,7 @@ public class ValidRcptMXTest {
     private final static String LOOPBACK = "127.0.0.1";
 
     private SMTPSession setupMockedSMTPSession(final MailAddress rcpt) {
-        SMTPSession session = new BaseFakeSMTPSession() {
+        return new BaseFakeSMTPSession() {
 
             private final HashMap<String, Object> sstate = new HashMap<String, Object>();
             private final HashMap<String, Object> connectionState = new HashMap<String, Object>();
@@ -71,11 +71,11 @@ public class ValidRcptMXTest {
                 }
             }
         };
-        return session;
     }
 
     private DNSService setupMockedDNSServer() {
-        DNSService dns = new MockDNSService() {
+
+        return new MockDNSService() {
 
             @Override
             public Collection<String> findMXRecords(String hostname) {
@@ -97,8 +97,6 @@ public class ValidRcptMXTest {
                 throw new UnknownHostException("Unknown host");
             }
         };
-
-        return dns;
     }
 
     @Test

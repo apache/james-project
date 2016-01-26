@@ -47,32 +47,32 @@ public class ResolvableEhloHeloHandlerTest {
 
     private SMTPSession setupMockSession(final String argument,
              final boolean relaying, final boolean authRequired, final String user, final MailAddress recipient) {
-        
-        SMTPSession session = new BaseFakeSMTPSession() {
+
+        return new BaseFakeSMTPSession() {
 
             HashMap<String,Object> connectionMap = new HashMap<String,Object>();
             HashMap<String,Object> map = new HashMap<String,Object>();
-            
+
             public boolean isAuthSupported() {
                 return authRequired;
             }
-            
+
             public String getUser() {
                 return user;
             }
-            
+
             public Map<String,Object> getConnectionState() {
                 return connectionMap;
             }
-            
+
             public boolean isRelayingAllowed() {
                 return relaying;
             }
-            
+
             public Map<String,Object> getState() {
                 return map;
             }
-            
+
             /*
              * (non-Javadoc)
              * @see org.apache.james.protocols.api.ProtocolSession#setAttachment(java.lang.String, java.lang.Object, org.apache.james.protocols.api.ProtocolSession.State)
@@ -104,10 +104,8 @@ public class ResolvableEhloHeloHandlerTest {
                     return connectionMap.get(key);
                 }
             }
-            
-        };
 
-        return session;
+        };
     }
     
     private ResolvableEhloHeloHandler createHandler() {

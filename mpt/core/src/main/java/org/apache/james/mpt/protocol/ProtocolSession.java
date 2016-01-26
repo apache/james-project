@@ -354,8 +354,7 @@ public class ProtocolSession implements ProtocolInteractor {
          * @return <code>true</code> if the actual matches the expected.
          */
         protected boolean match(String expected, String actual) {
-            final boolean result = Pattern.matches(expected, actual);
-            return result;
+            return Pattern.matches(expected, actual);
         }
 
         /**

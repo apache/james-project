@@ -45,8 +45,7 @@ public class JCRUser implements User {
      */
     public static String hashPassword(String username, String password) {
         // Combine dynamic and static salt
-        final String hashedSaltedPassword = Text.md5(Text.md5(username + password) + SALT);
-        return hashedSaltedPassword;
+        return Text.md5(Text.md5(username + password) + SALT);
     }
 
     private final String userName;

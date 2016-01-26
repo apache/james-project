@@ -315,9 +315,8 @@ public class WhiteListManager extends GenericMailet {
             for (MailAddress recipient : recipients) {
                 ResultSet selectRS = null;
                 try {
-                    MailAddress recipientMailAddress = recipient;
-                    String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
-                    String recipientHost = recipientMailAddress.getDomain().toLowerCase(Locale.US);
+                    String recipientUser = recipient.getLocalPart().toLowerCase(Locale.US);
+                    String recipientHost = recipient.getDomain().toLowerCase(Locale.US);
 
                     if (getMailetContext().isLocalServer(recipientHost)) {
                         // not a remote recipient, so skip

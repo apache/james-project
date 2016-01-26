@@ -29,8 +29,7 @@ public class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerT
     public SubscriptionManager createSubscriptionManager() {
         MaildirStore store = new MaildirStore("target/Maildir/%domain/%user", new JVMMailboxPathLocker());
         MaildirMailboxSessionMapperFactory factory = new MaildirMailboxSessionMapperFactory(store);
-        StoreSubscriptionManager sm = new StoreSubscriptionManager(factory);
-        return sm;
+        return new StoreSubscriptionManager(factory);
     }
 
 }

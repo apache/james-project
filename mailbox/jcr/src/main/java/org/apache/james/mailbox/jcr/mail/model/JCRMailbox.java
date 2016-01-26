@@ -164,12 +164,11 @@ public class JCRMailbox implements Mailbox<JCRId>, JCRImapConstants, Persistent{
     
     @Override
     public String toString() {
-        final String retValue = "Mailbox ( "
+        return "Mailbox ( "
             + "mailboxUID = " + this.getMailboxId() + TAB
             + "name = " + this.getName() + TAB
             + "uidValidity = " + this.getUidValidity() + TAB
             + " )";
-        return retValue;
     }
     
     @Override

@@ -171,10 +171,8 @@ public class JPAProperty implements Property {
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        final String result = "JPAProperty ( " + "id = " + this.id + " " + "localName = " + this.localName + " "
+        return "JPAProperty ( " + "id = " + this.id + " " + "localName = " + this.localName + " "
                 + "namespace = " + this.namespace + " " + "value = " + this.value + " )";
-
-        return result;
     }
 
 }

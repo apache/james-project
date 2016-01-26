@@ -38,7 +38,6 @@ public class LsubCommandParser extends ListCommandParser {
      * java.lang.String, java.lang.String, java.lang.String)
      */
     protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, String tag) {
-        final ImapMessage result = new LsubRequest(command, referenceName, mailboxPattern, tag);
-        return result;
+        return new LsubRequest(command, referenceName, mailboxPattern, tag);
     }
 }

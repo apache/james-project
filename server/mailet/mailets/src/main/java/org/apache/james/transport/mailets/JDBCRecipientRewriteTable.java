@@ -190,14 +190,13 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             for (MailAddress recipient : recipients) {
                 ResultSet mappingRS = null;
                 try {
-                    MailAddress source = recipient;
-                    mappingStmt.setString(1, source.getLocalPart());
-                    mappingStmt.setString(2, source.getDomain());
-                    mappingStmt.setString(3, source.getDomain());
+                    mappingStmt.setString(1, recipient.getLocalPart());
+                    mappingStmt.setString(2, recipient.getDomain());
+                    mappingStmt.setString(3, recipient.getDomain());
                     mappingRS = mappingStmt.executeQuery();
                     if (mappingRS.next()) {
                         String targetString = mappingRS.getString(1);
-                        recipientsMap.put(source, targetString);
+                        recipientsMap.put(recipient, targetString);
                     }
                 } finally {
                     theJDBCUtil.closeJDBCResultSet(mappingRS);

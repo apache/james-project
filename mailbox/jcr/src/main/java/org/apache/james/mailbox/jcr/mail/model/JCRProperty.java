@@ -220,12 +220,11 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
      * of this object.
      */
     public String toString() {
-        final String result = "Property ( "
+
+        return "Property ( "
             + "localName = " + this.getLocalName() + " "
             + "namespace = " + this.getNamespace() + " "
-            + "value = " + this.getValue() 
+            + "value = " + this.getValue()
             + " )";
-    
-        return result;
     }
 }

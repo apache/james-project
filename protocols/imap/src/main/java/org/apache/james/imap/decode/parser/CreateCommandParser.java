@@ -63,8 +63,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
             }
         }
         request.eol();
-        final ImapMessage result = new CreateRequest(command, mailboxName, tag);
-        return result;
+        return new CreateRequest(command, mailboxName, tag);
     }
 
 }

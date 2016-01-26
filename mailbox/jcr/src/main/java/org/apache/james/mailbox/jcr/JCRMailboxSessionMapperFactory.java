@@ -59,20 +59,17 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory<
     
     @Override
     public MailboxMapper<JCRId> createMailboxMapper(MailboxSession session) throws MailboxException {
-        JCRMailboxMapper mapper = new JCRMailboxMapper(repository, session, scaling);
-        return mapper;
+        return new JCRMailboxMapper(repository, session, scaling);
     }
 
     @Override
     public MessageMapper<JCRId> createMessageMapper(MailboxSession session) throws MailboxException {
-        JCRMessageMapper messageMapper = new JCRMessageMapper(repository, session, uidProvider, modSeqProvider,  messageScaling);
-        return messageMapper;
+        return new JCRMessageMapper(repository, session, uidProvider, modSeqProvider,  messageScaling);
     }
 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
-        JCRSubscriptionMapper mapper = new JCRSubscriptionMapper(repository, session, DEFAULT_SCALING);
-        return mapper;
+        return new JCRSubscriptionMapper(repository, session, DEFAULT_SCALING);
     }
     
     public MailboxSessionJCRRepository getRepository() {

@@ -335,8 +335,7 @@ public class SqlResources {
             index = input.indexOf(find, index + find_length);
         }
 
-        String result = output.toString();
-        return result;
+        return output.toString();
     }
 
     /**

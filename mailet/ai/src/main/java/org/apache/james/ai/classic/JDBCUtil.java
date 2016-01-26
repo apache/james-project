@@ -100,8 +100,7 @@ final class JDBCUtil {
     public boolean tableExistsCaseSensitive(DatabaseMetaData dbMetaData, String tableName) throws SQLException {
         ResultSet rsTables = dbMetaData.getTables(null, null, tableName, null);
         try {
-            boolean found = rsTables.next();
-            return found;
+            return rsTables.next();
         } finally {
             closeJDBCResultSet(rsTables);
         }
@@ -147,8 +146,7 @@ final class JDBCUtil {
     public boolean columnExistsCaseSensitive(DatabaseMetaData dbMetaData, String tableName, String columnName) throws SQLException {
         ResultSet rsTables = dbMetaData.getColumns(null, null, tableName, columnName);
         try {
-            boolean found = rsTables.next();
-            return found;
+            return rsTables.next();
         } finally {
             closeJDBCResultSet(rsTables);
         }

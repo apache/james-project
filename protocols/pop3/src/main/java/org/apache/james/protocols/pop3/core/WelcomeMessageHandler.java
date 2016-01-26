@@ -54,8 +54,7 @@ public class WelcomeMessageHandler implements ConnectHandler<POP3Session> {
         
         // complete the response banner and send it back to the client
         responseBuffer.append("POP3 server (").append(session.getConfiguration().getSoftwareName()).append(") ready ");
-        POP3Response response = new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
-        return response;
+        return new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
     }
 
 }

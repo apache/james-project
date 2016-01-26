@@ -65,8 +65,7 @@ public class AggregateMailetdocsReport extends AbstractMailetdocsReport {
             logNoSubprojects(project);
             extractor.extract(project, getLog());
         }
-        final List<MailetMatcherDescriptor> descriptors = extractor.descriptors();
-        return descriptors;
+        return extractor.descriptors();
     }
 
     private void logProject(MavenProject project) {

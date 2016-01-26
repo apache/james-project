@@ -41,23 +41,22 @@ import org.junit.Test;
 public class MaxRcptHandlerTest {
     
     private SMTPSession setupMockedSession(final int rcptCount) {
-        SMTPSession session = new BaseFakeSMTPSession() {
+        return new BaseFakeSMTPSession() {
             HashMap<String,Object> state = new HashMap<String,Object>();
 
             public Map<String,Object> getState() {
                 return state;
             }
-            
+
             public boolean isRelayingAllowed() {
                 return false;
             }
-            
+
             public int getRcptCount() {
                 return rcptCount;
             }
-            
+
         };
-        return session;
     }
     
     @Test

@@ -80,7 +80,7 @@ public class HBaseMailboxManager extends StoreMailboxManager<HBaseId> {
 
     @Override
     protected StoreMessageManager<HBaseId> createMessageManager(Mailbox<HBaseId> mailboxRow, MailboxSession session) throws MailboxException {
-        StoreMessageManager<HBaseId> result = new HBaseMessageManager(getMapperFactory(),
+        return new HBaseMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),
             getLocker(),
@@ -89,6 +89,5 @@ public class HBaseMailboxManager extends StoreMailboxManager<HBaseId> {
             getGroupMembershipResolver(),
             getQuotaManager(),
             getQuotaRootResolver());
-        return result;
     }
 }

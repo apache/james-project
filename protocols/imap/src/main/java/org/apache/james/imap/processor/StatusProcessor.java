@@ -107,8 +107,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     private Long uidValidity(final StatusDataItems statusDataItems, final MessageManager.MetaData metaData) throws MailboxException {
         final Long uidValidity;
         if (statusDataItems.isUidValidity()) {
-            final long uidValidityValue = metaData.getUidValidity();
-            uidValidity = uidValidityValue;
+            uidValidity = metaData.getUidValidity();
         } else {
             uidValidity = null;
         }
@@ -130,8 +129,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     private Long uidNext(final StatusDataItems statusDataItems, final MessageManager.MetaData metaData) throws MailboxException {
         final Long uidNext;
         if (statusDataItems.isUidNext()) {
-            final long uidNextValue = metaData.getUidNext();
-            uidNext = uidNextValue;
+            uidNext = metaData.getUidNext();
         } else {
             uidNext = null;
         }

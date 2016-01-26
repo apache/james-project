@@ -60,7 +60,7 @@ public class ValidSenderDomainHandlerTest {
     }
     
     private SMTPSession setupMockedSession(final MailAddress sender) {
-        SMTPSession session = new BaseFakeSMTPSession() {
+        return new BaseFakeSMTPSession() {
             HashMap<String,Object> map = new HashMap<String,Object>();
 
             public Map<String,Object> getState() {
@@ -69,7 +69,7 @@ public class ValidSenderDomainHandlerTest {
 
                 return map;
             }
-            
+
             public boolean isRelayingAllowed() {
                 return false;
             }
@@ -101,9 +101,8 @@ public class ValidSenderDomainHandlerTest {
                     return getState().get(key);
                 }
             }
-            
+
         };
-        return session;
     }
     
     

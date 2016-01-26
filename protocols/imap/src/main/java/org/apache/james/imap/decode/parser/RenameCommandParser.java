@@ -46,8 +46,7 @@ public class RenameCommandParser extends AbstractImapCommandParser {
         final String existingName = request.mailbox();
         final String newName = request.mailbox();
         request.eol();
-        final ImapMessage result = new RenameRequest(command, existingName, newName, tag);
-        return result;
+        return new RenameRequest(command, existingName, newName, tag);
     }
 
 }

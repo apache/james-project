@@ -97,8 +97,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
                 handler.handleRequest(in, out, session);
                 isReadLast = true;
             }
-            final String result = out.nextLine();
-            return result;
+            return out.nextLine();
         }
 
         public void start() throws Exception {

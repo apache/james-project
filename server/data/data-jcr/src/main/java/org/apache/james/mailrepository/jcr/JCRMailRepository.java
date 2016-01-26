@@ -105,8 +105,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     }
 
     protected String toSafeName(String key) {
-        String name = ISO9075.encode(Text.escapeIllegalJcrChars(key));
-        return name;
+        return ISO9075.encode(Text.escapeIllegalJcrChars(key));
     }
 
     private Session login() throws RepositoryException {

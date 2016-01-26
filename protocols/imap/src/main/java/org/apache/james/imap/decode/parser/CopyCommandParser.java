@@ -49,8 +49,7 @@ public class CopyCommandParser extends AbstractUidCommandParser {
         IdRange[] idSet = request.parseIdRange(session);
         String mailboxName = request.mailbox();
         request.eol();
-        final ImapMessage result = createRequest(command, tag, useUids, idSet, mailboxName);
-        return result;
+        return createRequest(command, tag, useUids, idSet, mailboxName);
     }
 
 	protected CopyRequest createRequest(ImapCommand command, String tag,

@@ -66,9 +66,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
      */
     public HookResult doMailParameter(SMTPSession session, String paramName,
             String paramValue) {
-        HookResult res = doMailSize(session, paramValue,
+        return doMailSize(session, paramValue,
                 (String) session.getAttachment(SMTPSession.SENDER, State.Transaction));
-        return res;
     }
 
     /**

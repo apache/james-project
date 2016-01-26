@@ -112,7 +112,6 @@ public class StoreCommandParser extends AbstractUidCommandParser {
         }
 
         request.eol();
-        final ImapMessage result = new StoreRequest(command, idSet, silent, flags, useUids, tag, sign, unchangedSince);
-        return result;
+        return new StoreRequest(command, idSet, silent, flags, useUids, tag, sign, unchangedSince);
     }
 }

@@ -587,22 +587,20 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
 
 
     public String toString() {
-        final String retValue = 
-            "message("
-            + "uuid = " + getUUID()
-            + "mailboxUUID = " + this.getMailboxId() + TOSTRING_SEPARATOR
-            + "uuid = " + this.getId() + TOSTRING_SEPARATOR
-            + "internalDate = " + this.getInternalDate() + TOSTRING_SEPARATOR
-            + "size = " + this.getFullContentOctets() + TOSTRING_SEPARATOR
-            + "answered = " + this.isAnswered() + TOSTRING_SEPARATOR
-            + "deleted = " + this.isDeleted() + TOSTRING_SEPARATOR
-            + "draft = " + this.isDraft() + TOSTRING_SEPARATOR
-            + "flagged = " + this.isFlagged() + TOSTRING_SEPARATOR
-            + "recent = " + this.isRecent() + TOSTRING_SEPARATOR
-            + "seen = " + this.isSeen() + TOSTRING_SEPARATOR
-            + " )";
 
-        return retValue;
+        return "message("
+        + "uuid = " + getUUID()
+        + "mailboxUUID = " + this.getMailboxId() + TOSTRING_SEPARATOR
+        + "uuid = " + this.getId() + TOSTRING_SEPARATOR
+        + "internalDate = " + this.getInternalDate() + TOSTRING_SEPARATOR
+        + "size = " + this.getFullContentOctets() + TOSTRING_SEPARATOR
+        + "answered = " + this.isAnswered() + TOSTRING_SEPARATOR
+        + "deleted = " + this.isDeleted() + TOSTRING_SEPARATOR
+        + "draft = " + this.isDraft() + TOSTRING_SEPARATOR
+        + "flagged = " + this.isFlagged() + TOSTRING_SEPARATOR
+        + "recent = " + this.isRecent() + TOSTRING_SEPARATOR
+        + "seen = " + this.isSeen() + TOSTRING_SEPARATOR
+        + " )";
     }
 
 
@@ -611,8 +609,7 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
         if (isPersistent()) {
             try {
                 //TODO: Maybe we should cache this somehow...
-                InputStream contentStream = node.getNode(JcrConstants.JCR_CONTENT).getProperty(JcrConstants.JCR_DATA).getBinary().getStream();
-                return contentStream;
+                return node.getNode(JcrConstants.JCR_CONTENT).getProperty(JcrConstants.JCR_DATA).getBinary().getStream();
             } catch (RepositoryException e) {
                 throw new IOException("Unable to retrieve property " + JcrConstants.JCR_CONTENT, e);
             }

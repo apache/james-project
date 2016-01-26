@@ -205,8 +205,7 @@ public class MessageSearches implements Iterable<Long> {
 
     protected boolean bodyContains(String value, MailboxMessage<?> message, Logger log) throws IOException, MimeException {
         final InputStream input = message.getFullContent();
-        final boolean result = isInMessage(value, input, false, log);
-        return result;
+        return isInMessage(value, input, false, log);
     }
 
     protected boolean isInMessage(String value, final InputStream input, boolean header, Logger log) throws IOException, MimeException {
@@ -222,8 +221,7 @@ public class MessageSearches implements Iterable<Long> {
 
     protected boolean messageContains(String value, MailboxMessage<?> message, Logger log) throws IOException, MimeException {
         final InputStream input = message.getFullContent();
-        final boolean result = isInMessage(value, input, true, log);
-        return result;
+        return isInMessage(value, input, true, log);
     }
 
     private boolean matches(SearchQuery.ConjunctionCriterion criterion, MailboxMessage<?> message,
@@ -313,8 +311,7 @@ public class MessageSearches implements Iterable<Long> {
         final SearchQuery.BooleanOperator operator = criterion.getOperator();
         final boolean isSet = operator.isSet();
         final String flag = criterion.getFlag();
-        final boolean result = isSet == message.createFlags().contains(flag);
-        return result;
+        return isSet == message.createFlags().contains(flag);
     }
 
     private boolean matches(SearchQuery.UidCriterion criterion, MailboxMessage<?> message) {
@@ -520,8 +517,7 @@ public class MessageSearches implements Iterable<Long> {
     private boolean matches(SearchQuery.InternalDateCriterion criterion, MailboxMessage<?> message)
             throws UnsupportedSearchException {
         final SearchQuery.DateOperator operator = criterion.getOperator();
-        final boolean result = matchesInternalDate(operator, message);
-        return result;
+        return matchesInternalDate(operator, message);
     }
 
     private boolean matchesInternalDate(final SearchQuery.DateOperator operator, final MailboxMessage<?> message)

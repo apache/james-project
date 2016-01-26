@@ -560,19 +560,17 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId>
     }
 
     public String toString() {
-        final String retValue = 
-            "message("
-            + "mailboxId = " + this.getMailboxId() + TOSTRING_SEPARATOR
-            + "uid = " + this.uid + TOSTRING_SEPARATOR
-            + "internalDate = " + this.internalDate + TOSTRING_SEPARATOR
-            + "answered = " + this.answered + TOSTRING_SEPARATOR
-            + "deleted = " + this.deleted + TOSTRING_SEPARATOR
-            + "draft = " + this.draft + TOSTRING_SEPARATOR
-            + "flagged = " + this.flagged + TOSTRING_SEPARATOR
-            + "recent = " + this.recent + TOSTRING_SEPARATOR
-            + "seen = " + this.seen + TOSTRING_SEPARATOR
-            + " )";
-        return retValue;
+        return "message("
+        + "mailboxId = " + this.getMailboxId() + TOSTRING_SEPARATOR
+        + "uid = " + this.uid + TOSTRING_SEPARATOR
+        + "internalDate = " + this.internalDate + TOSTRING_SEPARATOR
+        + "answered = " + this.answered + TOSTRING_SEPARATOR
+        + "deleted = " + this.deleted + TOSTRING_SEPARATOR
+        + "draft = " + this.draft + TOSTRING_SEPARATOR
+        + "flagged = " + this.flagged + TOSTRING_SEPARATOR
+        + "recent = " + this.recent + TOSTRING_SEPARATOR
+        + "seen = " + this.seen + TOSTRING_SEPARATOR
+        + " )";
     }
     
 

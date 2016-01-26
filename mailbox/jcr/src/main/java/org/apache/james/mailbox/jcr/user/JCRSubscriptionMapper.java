@@ -107,8 +107,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
             
             NodeIterator nodeIt = result.getNodes();
             if (nodeIt.hasNext()) {
-                JCRSubscription sub = new JCRSubscription(nodeIt.nextNode(), mailbox, getLogger());
-                return sub;
+                return new JCRSubscription(nodeIt.nextNode(), mailbox, getLogger());
             }
             
         } catch (PathNotFoundException e) {

@@ -129,8 +129,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
      * org.apache.james.imap.api.process.ImapSession#getAttribute(java.lang.String)
      */
     public Object getAttribute(String key) {
-        final Object result = attributesByKey.get(key);
-        return result;
+        return attributesByKey.get(key);
     }
 
     /**

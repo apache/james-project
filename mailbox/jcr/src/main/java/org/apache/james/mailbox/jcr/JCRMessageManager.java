@@ -57,9 +57,8 @@ public class JCRMessageManager extends StoreMessageManager<JCRId> {
 
     @Override
     protected MailboxMessage<JCRId> createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
-        final MailboxMessage<JCRId> message = new JCRMailboxMessage(getMailboxEntity().getMailboxId(), internalDate,
+        return new JCRMailboxMessage(getMailboxEntity().getMailboxId(), internalDate,
                 size, flags, content, bodyStartOctet, propertyBuilder, log);
-        return message;
     }
 
     /**

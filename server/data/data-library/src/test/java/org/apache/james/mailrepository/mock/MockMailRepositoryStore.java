@@ -37,8 +37,7 @@ public class MockMailRepositoryStore implements MailRepositoryStore {
 
     @Override
     public MailRepository select(String url) throws MailRepositoryStoreException {
-        MailRepository result = get(url);
-        return result;
+        return get(url);
     }
 
     private MailRepository get(String key) {

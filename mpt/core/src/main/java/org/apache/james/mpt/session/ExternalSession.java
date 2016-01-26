@@ -179,11 +179,9 @@ public final class ExternalSession implements Session {
     public String toString() {
         final String TAB = " ";
 
-        String result = "External ( " + "socket = " + this.socket + TAB + "monitor = " + this.monitor + TAB
+        return "External ( " + "socket = " + this.socket + TAB + "monitor = " + this.monitor + TAB
                 + "readBuffer = " + this.readBuffer + TAB + "ascii = " + this.ascii + TAB + "lineEndBuffer = "
                 + this.lineEndBuffer + TAB + "first = " + this.first + TAB + "shabang = " + this.shabang + TAB + " )";
-
-        return result;
     }
 
 }

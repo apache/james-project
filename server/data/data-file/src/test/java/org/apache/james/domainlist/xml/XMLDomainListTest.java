@@ -44,7 +44,7 @@ public class XMLDomainListTest {
     }
 
     private DNSService setUpDNSServer(final String hostName) {
-        DNSService dns = new MockDNSService() {
+        return new MockDNSService() {
 
             @Override
             public String getHostName(InetAddress inet) {
@@ -61,7 +61,6 @@ public class XMLDomainListTest {
                 return InetAddress.getLocalHost();
             }
         };
-        return dns;
     }
 
     // See https://issues.apache.org/jira/browse/JAMES-998

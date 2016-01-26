@@ -110,18 +110,16 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     private Address[] mockOneAddress() {
-        Address[] one = { mockAddress(ADDRESS_ONE_NAME,
+        return new Address[]{ mockAddress(ADDRESS_ONE_NAME,
                 ADDRESS_ONE_DOMAIN_LIST, ADDRESS_ONE_MAILBOX, ADDRESS_ONE_HOST) };
-        return one;
     }
 
     private Address[] mockManyAddresses() {
-        Address[] many = {
+        return new Address[]{
                 mockAddress(ADDRESS_ONE_NAME, ADDRESS_ONE_DOMAIN_LIST,
                         ADDRESS_ONE_MAILBOX, ADDRESS_ONE_HOST),
                 mockAddress(ADDRESS_TWO_NAME, ADDRESS_TWO_DOMAIN_LIST,
                         ADDRESS_TWO_MAILBOX, ADDRESS_TWO_HOST) };
-        return many;
     }
 
     private Address mockAddress(final String name, final String domainList,

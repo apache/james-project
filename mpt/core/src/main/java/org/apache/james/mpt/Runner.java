@@ -125,14 +125,12 @@ public class Runner {
     public String toString()
     {
         final String TAB = " ";
-        
-        String result  = "Runner ( "
+
+        return "Runner ( "
             + "preElements = " + this.preElements + TAB
             + "testElements = " + this.testElements + TAB
             + "postElements = " + this.postElements + TAB
             + " )";
-    
-        return result;
     }
 
     

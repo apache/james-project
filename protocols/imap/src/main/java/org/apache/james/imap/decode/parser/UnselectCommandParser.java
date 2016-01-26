@@ -50,8 +50,7 @@ public class UnselectCommandParser extends AbstractImapCommandParser {
      */
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         request.eol();
-        final ImapMessage result = new UnselectRequest(tag, command);
-        return result;
+        return new UnselectRequest(tag, command);
     }
 
 }

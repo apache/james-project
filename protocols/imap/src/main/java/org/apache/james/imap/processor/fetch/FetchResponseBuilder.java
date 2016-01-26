@@ -100,8 +100,7 @@ public final class FetchResponseBuilder {
     }
 
     public FetchResponse build() {
-        final FetchResponse result = new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
-        return result;
+        return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements);
     }
 
     public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session, boolean useUids) throws MessageRangeException, MailboxException {
@@ -220,8 +219,7 @@ public final class FetchResponseBuilder {
         final Collection<String> names = fetchElement.getFieldNames();
         final boolean isBase = (path == null || path.length == 0);
         final FetchResponse.BodyElement fullResult = bodyContent(messageResult, name, specifier, path, names, isBase);
-        final FetchResponse.BodyElement result = wrapIfPartialFetch(firstOctet, numberOfOctets, fullResult);
-        return result;
+        return wrapIfPartialFetch(firstOctet, numberOfOctets, fullResult);
 
     }
 
@@ -383,8 +381,7 @@ public final class FetchResponseBuilder {
 
     private Iterator<MessageResult.Header> getMimeHeaders(final MessageResult messageResult, final int[] path, final boolean isBase) throws MailboxException {
         MessageResult.MimePath mimePath = new MimePathImpl(path);
-        final Iterator<MessageResult.Header> headers = messageResult.iterateMimeHeaders(mimePath);
-        return headers;
+        return messageResult.iterateMimeHeaders(mimePath);
     }
 
     private FetchResponse.BodyElement content(final MessageResult messageResult, String name, final int[] path, final boolean isBase) throws MailboxException {

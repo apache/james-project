@@ -728,8 +728,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
 
     private SearchKey sequenceSet(ImapSession session, ImapRequestLineReader request) throws DecodingException {
         final IdRange[] range = request.parseIdRange(session);
-        final SearchKey result = SearchKey.buildSequenceSet(range);
-        return result;
+        return SearchKey.buildSequenceSet(range);
     }
 
     private SearchKey to(ImapRequestLineReader request, final Charset charset) throws DecodingException {
@@ -908,8 +907,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     private ImapMessage unsupportedCharset(final String tag, final ImapCommand command) {
         final StatusResponseFactory factory = getStatusResponseFactory();
         final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames());
-        final StatusResponse result = factory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
-        return result;
+        return factory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
     }
 
     /**
@@ -1026,9 +1024,8 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             if (options == null) {
                 options = new ArrayList<SearchResultOption>();
             }
-            
-            final ImapMessage result = new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);
-            return result;
+
+            return new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);
         } catch (IllegalCharsetNameException e) {
             session.getLog().debug("Unable to decode request", e);
             return unsupportedCharset(tag, command);

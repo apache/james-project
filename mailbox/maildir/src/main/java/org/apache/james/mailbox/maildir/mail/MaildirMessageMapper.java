@@ -76,8 +76,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper<MaildirId> {
         if (newFiles == null || curFiles == null)
             throw new MailboxException("Unable to count messages in Mailbox " + mailbox, new IOException(
                     "Not a valid Maildir folder: " + maildirStore.getFolderName(mailbox)));
-        int count = newFiles.length + curFiles.length;
-        return count;
+        return newFiles.length + curFiles.length;
     }
 
     /**
@@ -93,8 +92,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper<MaildirId> {
         if (newUnseenMessages == null || unseenMessages == null)
             throw new MailboxException("Unable to count unseen messages in Mailbox " + mailbox, new IOException(
                     "Not a valid Maildir folder: " + maildirStore.getFolderName(mailbox)));
-        int count = newUnseenMessages.length + unseenMessages.length;
-        return count;
+        return newUnseenMessages.length + unseenMessages.length;
     }
 
     /**

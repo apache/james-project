@@ -64,8 +64,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
     public static JamesImapHostSystem build() throws Exception {
-        JPAHostSystem host =  new JPAHostSystem();
-        return host;
+        return new JPAHostSystem();
     }
     
     private final OpenJPAMailboxManager mailboxManager;

@@ -75,8 +75,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     protected final void doProcess(final M acceptableMessage, final Responder responder, final ImapSession session) {
-        final M request = acceptableMessage;
-        process(request, responder, session);
+        process(acceptableMessage, responder, session);
     }
 
     protected final void process(final M message, final Responder responder, final ImapSession session) {
@@ -290,8 +289,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     
     private MessageManager getMailbox(final ImapSession session, final SelectedMailbox selected) throws MailboxException {
         final MailboxManager mailboxManager = getMailboxManager();
-        final MessageManager mailbox = mailboxManager.getMailbox(selected.getPath(), ImapSessionUtils.getMailboxSession(session));
-        return mailbox;
+        return mailboxManager.getMailbox(selected.getPath(), ImapSessionUtils.getMailboxSession(session));
     }
 
     private void addRecentResponses(final SelectedMailbox selected, final ImapProcessor.Responder responder) {
@@ -503,8 +501,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
                 return MessageRange.one(selected.getLastUid());
             } 
         }
-        MessageRange mRange = MessageRange.range(lowVal, highVal);
-        return mRange;
+        return MessageRange.range(lowVal, highVal);
     }
 
     /**

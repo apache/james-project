@@ -457,8 +457,7 @@ public class PropertyBuilder {
      * @return not null
      */
     public List<Property> toProperties() {
-        final List<Property> results = new ArrayList<Property>(properties);
-        return results;
+        return new ArrayList<Property>(properties);
     }
 
     /**

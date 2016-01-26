@@ -54,7 +54,8 @@ public class URIRBLHandlerTest {
 
     private SMTPSession setupMockedSMTPSession(final Mail mail) {
         mockedMail = mail;
-        SMTPSession mockedSMTPSession = new BaseFakeSMTPSession() {
+
+        return new BaseFakeSMTPSession() {
 
             private boolean relayingAllowed;
 
@@ -98,8 +99,6 @@ public class URIRBLHandlerTest {
             }
         };
 
-        return mockedSMTPSession;
-
     }
 
     private Mail setupMockedMail(MimeMessage message) {
@@ -138,7 +137,8 @@ public class URIRBLHandlerTest {
      * 
      */
     private DNSService setupMockedDnsServer() {
-        DNSService mockedDnsServer = new MockDNSService() {
+
+        return new MockDNSService() {
 
             @Override
             public Collection<String> findTXTRecords(String hostname) {
@@ -165,8 +165,6 @@ public class URIRBLHandlerTest {
                 throw new UnsupportedOperationException("getByName(" + host + ") not implemented by this mock");
             }
         };
-
-        return mockedDnsServer;
     }
 
     @Test

@@ -105,12 +105,10 @@ public class JPAUserFlag {
      * of this object.
      */
     public String toString() {
-        final String result = "JPAUserFlag ( "
+        return "JPAUserFlag ( "
             + "id = " + this.id + " "
             + "name = " + this.name
             + " )";
-    
-        return result;
     }
     
 }

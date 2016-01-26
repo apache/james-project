@@ -141,12 +141,11 @@ public class JPAMailbox implements Mailbox<JPAId> {
 
     @Override
     public String toString() {
-        final String retValue = "Mailbox ( "
+        return "Mailbox ( "
             + "mailboxId = " + this.mailboxId + TAB
             + "name = " + this.name + TAB
             + "uidValidity = " + this.uidValidity + TAB
             + " )";
-        return retValue;
     }
 
     @Override

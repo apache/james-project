@@ -456,8 +456,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             }
         }
 
-        Criterion crit = SearchQuery.uid(ranges.toArray(new SearchQuery.NumericRange[0]));
-        return crit;
+        return SearchQuery.uid(ranges.toArray(new SearchQuery.NumericRange[0]));
     }
 
     private Criterion or(List<SearchKey> keys, final ImapSession session) throws MessageRangeException {
@@ -465,15 +464,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         final SearchKey keyTwo = keys.get(1);
         final Criterion criterionOne = toCriterion(keyOne, session);
         final Criterion criterionTwo = toCriterion(keyTwo, session);
-        final Criterion result = SearchQuery.or(criterionOne, criterionTwo);
-        return result;
+        return SearchQuery.or(criterionOne, criterionTwo);
     }
 
     private Criterion not(List<SearchKey> keys, final ImapSession session) throws MessageRangeException {
         final SearchKey key = keys.get(0);
         final Criterion criterion = toCriterion(key, session);
-        final Criterion result = SearchQuery.not(criterion);
-        return result;
+        return SearchQuery.not(criterion);
     }
 
     private Criterion and(List<SearchKey> keys, final ImapSession session) throws MessageRangeException {
@@ -483,8 +480,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             final Criterion criterion = toCriterion(key, session);
             criteria.add(criterion);
         }
-        final Criterion result = SearchQuery.and(criteria);
-        return result;
+        return SearchQuery.and(criteria);
     }
 
     /**

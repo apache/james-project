@@ -111,9 +111,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        final String retValue = "IdRange ( " + this._lowVal + "->" + this._highVal + " )";
-
-        return retValue;
+        return "IdRange ( " + this._lowVal + "->" + this._highVal + " )";
     }
 
     public String getFormattedString() {

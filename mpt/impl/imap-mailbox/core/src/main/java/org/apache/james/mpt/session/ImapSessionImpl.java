@@ -78,8 +78,7 @@ public class ImapSessionImpl implements ImapSession {
     }
 
     public Object getAttribute(String key) {
-        final Object result = attributesByKey.get(key);
-        return result;
+        return attributesByKey.get(key);
     }
 
     public void setAttribute(String key, Object value) {

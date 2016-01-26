@@ -35,8 +35,7 @@ public class DefaultImapDecoderFactory implements ImapDecoderFactory {
     public static final ImapDecoder createDecoder() {
         final UnpooledStatusResponseFactory unpooledStatusResponseFactory = new UnpooledStatusResponseFactory();
         final ImapCommandParserFactory imapCommands = new ImapParserFactory(unpooledStatusResponseFactory);
-        final ImapDecoder result = new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommands);
-        return result;
+        return new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommands);
     }
 
     public ImapDecoder buildImapDecoder() {

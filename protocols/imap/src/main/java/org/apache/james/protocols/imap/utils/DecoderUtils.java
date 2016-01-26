@@ -139,8 +139,7 @@ public final class DecoderUtils {
             final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.US);
             calendar.clear();
             calendar.set(year, month, day, hour, minute, second);
-            final Date result = calendar.getTime();
-            return result;
+            return calendar.getTime();
         } else {
             final String message;
             if (chars == null) {
@@ -168,13 +167,11 @@ public final class DecoderUtils {
     }
 
     private static int applyMinuteOffset(final int offset, final int minutes) {
-        final int result = minutes - ((Math.abs(offset) % 100) * (offset == 0 ? 0 : offset > 0 ? 1 : -1));
-        return result;
+        return minutes - ((Math.abs(offset) % 100) * (offset == 0 ? 0 : offset > 0 ? 1 : -1));
     }
 
     private static int applyHourOffset(final int offset, final int hours) {
-        final int result = hours - (offset / 100);
-        return result;
+        return hours - (offset / 100);
     }
 
     public static int decodeNumber(final char high, final char low) throws DecodingException {
@@ -193,8 +190,7 @@ public final class DecoderUtils {
         } else {
             throw createTimeZoneException(zoneDeterminent, zoneDigitOne, zoneDigitTwo, zoneDigitThree, zoneDigitFour);
         }
-        final int result = sign * ((1000 * decodeDigit(zoneDigitOne)) + (100 * decodeDigit(zoneDigitTwo)) + (10 * decodeDigit(zoneDigitThree)) + decodeDigit(zoneDigitFour));
-        return result;
+        return sign * ((1000 * decodeDigit(zoneDigitOne)) + (100 * decodeDigit(zoneDigitTwo)) + (10 * decodeDigit(zoneDigitThree)) + decodeDigit(zoneDigitFour));
     }
 
     private static DecodingException createTimeZoneException(char zoneDeterminent, char zoneDigitOne, char zoneDigitTwo, char zoneDigitThree, char zoneDigitFour) {
@@ -219,8 +215,7 @@ public final class DecoderUtils {
      * @return true if ASCII 0-9, false otherwise
      */
     public static boolean isSimpleDigit(char character) {
-        final boolean result = !(character < '0' || character > '9');
-        return result;
+        return !(character < '0' || character > '9');
     }
 
     /**

@@ -184,12 +184,11 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         final Collection<MimeDescriptor> parts = new ArrayList<MimeDescriptor>();
         final String location = descriptor.getContentLocation();
         final String md5 = descriptor.getContentMD5Raw();
-        final MimeDescriptorImpl mimeDescriptorImpl = new MimeDescriptorImpl(
+        return new MimeDescriptorImpl(
                 bodyOctets, contentDescription, contentId, lines, subType,
                 type, transferEncoding, headers, contentTypeParameters,
                 languages, disposition, dispositionParams, embeddedMessage,
                 parts, location, md5);
-        return mimeDescriptorImpl;
     }
 
     private final long bodyOctets;

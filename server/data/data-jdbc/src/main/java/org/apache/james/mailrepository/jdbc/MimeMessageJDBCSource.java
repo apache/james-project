@@ -113,8 +113,7 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
      * @return the String ID
      */
     public String getSourceId() {
-        String sourceIdBuffer = repository.repositoryName + "/" + key;
-        return sourceIdBuffer;
+        return repository.repositoryName + "/" + key;
     }
 
     /**

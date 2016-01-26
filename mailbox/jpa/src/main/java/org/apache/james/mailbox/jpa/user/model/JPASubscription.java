@@ -127,12 +127,11 @@ public class JPASubscription implements Subscription {
      * @return output suitable for debugging
      */
     public String toString() {
-        final String result = "Subscription ( "
+        return "Subscription ( "
             + "id = " + this.id + TO_STRING_SEPARATOR
             + "user = " + this.username + TO_STRING_SEPARATOR
             + "mailbox = " + this.mailbox + TO_STRING_SEPARATOR
             + " )";
-        return result;
     }
     
 }

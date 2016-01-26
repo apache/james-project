@@ -97,8 +97,7 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getMatching(final Collection<String> names, final Iterator<MessageResult.Header> iterator) throws MailboxException {
-        final List<MessageResult.Header> result = matching(names, iterator, false);
-        return result;
+        return matching(names, iterator, false);
     }
 
     private static List<MessageResult.Header> matching(final Collection<String> names, final Iterator<MessageResult.Header> iterator, boolean not) throws MailboxException {
@@ -144,8 +143,7 @@ public class MessageResultUtils {
      * @throws MessagingException
      */
     public static List<MessageResult.Header> getNotMatching(final Collection<String> names, final Iterator<MessageResult.Header> iterator) throws MailboxException {
-        final List<MessageResult.Header> result = matching(names, iterator, true);
-        return result;
+        return matching(names, iterator, true);
     }
 
     /**

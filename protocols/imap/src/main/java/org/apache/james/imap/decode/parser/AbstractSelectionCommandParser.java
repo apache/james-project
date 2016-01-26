@@ -145,8 +145,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
         }
 
         request.eol();
-        final ImapMessage result = createRequest(command, mailboxName, condstore, lastKnownUidValidity, knownModSeq, uidSet, knownUidSet, knownSequenceSet, tag);
-        return result;
+        return createRequest(command, mailboxName, condstore, lastKnownUidValidity, knownModSeq, uidSet, knownUidSet, knownSequenceSet, tag);
     }
     
     /**

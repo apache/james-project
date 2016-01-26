@@ -130,14 +130,13 @@ public class HBaseMailbox implements Mailbox<HBaseId> {
 
     @Override
     public String toString() {
-        final String retValue = "Mailbox ( "
+        return "Mailbox ( "
                 + "mailboxId = " + this.mailboxId + TAB
 //                + "namespace = " + this.namespace + TAB
                 + "name = " + this.name + TAB
 //                + "user = " + this.user + TAB
                 + "uidValidity = " + this.uidValidity + TAB
                 + " )";
-        return retValue;
     }
 
     @Override

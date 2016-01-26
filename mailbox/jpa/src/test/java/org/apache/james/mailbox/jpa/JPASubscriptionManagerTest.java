@@ -69,9 +69,7 @@ public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest{
 
         JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(locker, entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
 
-        JPASubscriptionManager sm = new JPASubscriptionManager(mf);
-        
-        return sm;
+        return new JPASubscriptionManager(mf);
     }
 
     @After

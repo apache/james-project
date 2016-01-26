@@ -292,8 +292,7 @@ public class Redirect extends AbstractRedirect {
 
     /** Gets the expected init parameters. */
     protected String[] getAllowedInitParameters() {
-        String[] allowedArray = { "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
-        return allowedArray;
+        return new String[]{ "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
     }
 
     /**

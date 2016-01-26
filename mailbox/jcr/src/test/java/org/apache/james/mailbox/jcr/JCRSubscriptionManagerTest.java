@@ -63,8 +63,7 @@ public class JCRSubscriptionManagerTest extends AbstractSubscriptionManagerTest 
     public SubscriptionManager createSubscriptionManager() {
         MailboxSessionJCRRepository sessionRepos = new GlobalMailboxSessionJCRRepository(repository, workspace, user, pass);
         JCRMailboxSessionMapperFactory mf = new JCRMailboxSessionMapperFactory(sessionRepos, null, null);
-        JCRSubscriptionManager sm = new JCRSubscriptionManager(mf);
-        return sm;
+        return new JCRSubscriptionManager(mf);
     }
 
 }

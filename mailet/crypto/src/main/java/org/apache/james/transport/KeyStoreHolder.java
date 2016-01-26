@@ -193,8 +193,7 @@ public class KeyStoreHolder {
         
         try {
             CertPathBuilderResult result = pathBuilder.build(params);
-            CertPath path = result.getCertPath();
-            return path;
+            return result.getCertPath();
         } catch (CertPathBuilderException e) {
             // A certification path is not found, so null is returned.
             return null;

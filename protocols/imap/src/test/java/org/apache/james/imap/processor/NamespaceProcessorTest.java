@@ -147,10 +147,9 @@ public class NamespaceProcessorTest {
         final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<NamespaceResponse.Namespace>();
         personalSpaces.add(new NamespaceResponse.Namespace(PERSONAL_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
         final List<NamespaceResponse.Namespace> otherUsersSpaces = new ArrayList<NamespaceResponse.Namespace>();
-        otherUsersSpaces.add(new NamespaceResponse.Namespace(USERS_PREFIX, MailboxConstants.DEFAULT_DELIMITER)); 
-        
-        final NamespaceResponse response = new NamespaceResponse(personalSpaces, otherUsersSpaces, sharedSpaces);
-        return response;
+        otherUsersSpaces.add(new NamespaceResponse.Namespace(USERS_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
+
+        return new NamespaceResponse(personalSpaces, otherUsersSpaces, sharedSpaces);
     }
 
     private Responder expectResponse(final NamespaceResponse response) {

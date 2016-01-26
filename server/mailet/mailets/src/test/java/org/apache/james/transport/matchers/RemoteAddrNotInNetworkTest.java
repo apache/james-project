@@ -63,7 +63,6 @@ public class RemoteAddrNotInNetworkTest extends AbstractRemoteAddrInNetworkTest 
 
     @Override
     protected String getAllowedNetworks() {
-        String ALLOWED_NETWORK = "192.168.200.0/24";
-        return ALLOWED_NETWORK;
+        return "192.168.200.0/24";
     }
 }

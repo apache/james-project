@@ -205,10 +205,8 @@ public abstract class AbstractListingResponse {
     public String toString() {
         final String TAB = " ";
 
-        String retValue = getClass().getName() + " ( " + "noInferiors = " + this.noInferiors + TAB + "noSelect = " + this.noSelect + TAB + "marked = " + this.marked + TAB + "unmarked = " + this.unmarked + TAB + "hierarchyDelimiter = " + this.hierarchyDelimiter + TAB + "name = " + this.name + TAB
+        return getClass().getName() + " ( " + "noInferiors = " + this.noInferiors + TAB + "noSelect = " + this.noSelect + TAB + "marked = " + this.marked + TAB + "unmarked = " + this.unmarked + TAB + "hierarchyDelimiter = " + this.hierarchyDelimiter + TAB + "name = " + this.name + TAB
                 + "type = " + this.type + TAB + " )";
-
-        return retValue;
     }
 
 }

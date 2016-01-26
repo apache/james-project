@@ -121,10 +121,8 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     public String toString() {
         final String TAB = " ";
 
-        String retValue = "MailboxSession ( " + "sessionId = "
+        return "MailboxSession ( " + "sessionId = "
                 + this.sessionId + TAB + "open = " + this.open + TAB + " )";
-
-        return retValue;
     }
     
     /**

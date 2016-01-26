@@ -46,8 +46,7 @@ public class DeleteCommandParser extends AbstractImapCommandParser {
         String mailboxName = request.mailbox();
         request.eol();
 
-        final ImapMessage result = new DeleteRequest(command, mailboxName, tag);
-        return result;
+        return new DeleteRequest(command, mailboxName, tag);
     }
 
 }

@@ -260,8 +260,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
         }
         curCommandName = curCommandName.toUpperCase(Locale.US);
 
-        BaseRequest request = new BaseRequest(curCommandName, curCommandArgument);
-        return request;
+        return new BaseRequest(curCommandName, curCommandArgument);
 
     }
    

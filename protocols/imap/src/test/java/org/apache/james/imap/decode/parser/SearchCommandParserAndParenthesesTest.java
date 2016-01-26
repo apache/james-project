@@ -67,8 +67,7 @@ public class SearchCommandParserAndParenthesesTest {
         if (parens) {
             buffer.append(")");
         }
-        Input input = new Input(buffer.toString(), SearchKey.buildAnd(keys));
-        return input;
+        return new Input(buffer.toString(), SearchKey.buildAnd(keys));
     }
 
     public static Input sequence() {

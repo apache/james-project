@@ -55,8 +55,7 @@ public class MessageRange implements Iterable<Long>{
      * @return not null
      */
     public static MessageRange one(long uid) {
-        final MessageRange result = new MessageRange(Type.ONE, uid, uid);
-        return result;
+        return new MessageRange(Type.ONE, uid, uid);
     }
 
     /**
@@ -65,8 +64,7 @@ public class MessageRange implements Iterable<Long>{
      * @return not null
      */
     public static MessageRange all() {
-        final MessageRange result = new MessageRange(Type.ALL, NOT_A_UID, MAX_UID);
-        return result;
+        return new MessageRange(Type.ALL, NOT_A_UID, MAX_UID);
     }
 
     /**

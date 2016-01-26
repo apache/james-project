@@ -102,8 +102,7 @@ public class JDBCAlias extends GenericMailet {
             }
 
             // Build the query
-            String queryBuffer = "SELECT " + getInitParameter("target_column") + " FROM " + tableName + " WHERE " + getInitParameter("source_column") + " = ?";
-            query = queryBuffer;
+            query = "SELECT " + getInitParameter("target_column") + " FROM " + tableName + " WHERE " + getInitParameter("source_column") + " = ?";
         } catch (MailetException me) {
             throw me;
         } catch (Exception e) {
@@ -130,8 +129,7 @@ public class JDBCAlias extends GenericMailet {
 
             for (MailAddress recipient : recipients) {
                 try {
-                    MailAddress source = recipient;
-                    mappingStmt.setString(1, source.toString());
+                    mappingStmt.setString(1, recipient.toString());
                     mappingRS = mappingStmt.executeQuery();
                     if (!mappingRS.next()) {
                         // This address was not found
@@ -143,12 +141,12 @@ public class JDBCAlias extends GenericMailet {
 
                         // Mark this source address as an address to remove from
                         // the recipient list
-                        recipientsToRemove.add(source);
+                        recipientsToRemove.add(recipient);
                         recipientsToAdd.add(target);
                     } catch (ParseException pe) {
                         // Don't alias this address... there's an invalid
                         // address mapping here
-                        String exceptionBuffer = "There is an invalid alias from " + source + " to " + mappingRS.getString(1);
+                        String exceptionBuffer = "There is an invalid alias from " + recipient + " to " + mappingRS.getString(1);
                         log(exceptionBuffer);
                     }
                 } finally {

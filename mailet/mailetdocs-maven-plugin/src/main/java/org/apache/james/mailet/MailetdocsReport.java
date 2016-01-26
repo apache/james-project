@@ -44,8 +44,7 @@ public class MailetdocsReport extends AbstractMailetdocsReport {
      */
     protected List<MailetMatcherDescriptor> buildDescriptors(final MavenProject project) {
         logProject(project);
-        final List<MailetMatcherDescriptor> descriptors = new DefaultDescriptorsExtractor().extract(project, getLog()).descriptors();
-        return descriptors;
+        return new DefaultDescriptorsExtractor().extract(project, getLog()).descriptors();
     }
 
     private void logProject(final MavenProject project) {

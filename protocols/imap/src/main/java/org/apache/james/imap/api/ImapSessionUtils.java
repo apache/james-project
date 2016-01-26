@@ -29,8 +29,7 @@ public class ImapSessionUtils {
     public static final String MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY = "org.apache.james.api.imap.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY";
 
     public static MailboxSession getMailboxSession(final ImapSession session) {
-        final MailboxSession result = (MailboxSession) session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
-        return result;
+        return (MailboxSession) session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
     }
 
     public static String getUserName(final ImapSession imapSession) {

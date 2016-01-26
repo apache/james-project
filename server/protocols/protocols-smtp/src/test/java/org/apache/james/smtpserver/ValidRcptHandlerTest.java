@@ -73,7 +73,8 @@ public class ValidRcptHandlerTest {
 
     private SMTPSession setupMockedSMTPSession(final SMTPConfiguration conf, final MailAddress rcpt,
                                                final boolean relayingAllowed) {
-        SMTPSession session = new BaseFakeSMTPSession() {
+
+        return new BaseFakeSMTPSession() {
 
             @Override
             public boolean isRelayingAllowed() {
@@ -106,12 +107,10 @@ public class ValidRcptHandlerTest {
                 }
             }
         };
-
-        return session;
     }
 
     private RecipientRewriteTable setUpRecipientRewriteTable() {
-        final RecipientRewriteTable table = new RecipientRewriteTable() {
+        return new RecipientRewriteTable() {
 
             @Override
             public Mappings getMappings(String user, String domain) throws ErrorMappingException,
@@ -200,11 +199,11 @@ public class ValidRcptHandlerTest {
 
             }
         };
-        return table;
     }
 
     private SMTPConfiguration setupMockedSMTPConfiguration() {
-        SMTPConfiguration conf = new SMTPConfiguration() {
+
+        return new SMTPConfiguration() {
 
             @Override
             public String getHelloName() {
@@ -248,8 +247,6 @@ public class ValidRcptHandlerTest {
                 return null;
             }
         };
-
-        return conf;
     }
 
     @Test

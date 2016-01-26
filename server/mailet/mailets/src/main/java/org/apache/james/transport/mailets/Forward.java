@@ -83,10 +83,9 @@ public class Forward extends AbstractRedirect {
 
     /** Gets the expected init parameters. */
     protected String[] getAllowedInitParameters() {
-        String[] allowedArray = {
+        return new String[]{
                 // "static",
                 "debug", "passThrough", "fakeDomainCheck", "forwardto", "forwardTo" };
-        return allowedArray;
     }
 
     /**

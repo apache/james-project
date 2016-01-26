@@ -93,8 +93,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
          */
         public Response onLine(SMTPSession session, ByteBuffer line) {
             line.rewind();
-            Response r = filter.onLine(session, line, next);
-            return r;
+            return filter.onLine(session, line, next);
         }
 
         @Override

@@ -740,17 +740,14 @@ public class SearchUtilsTest {
     }
     
     private SearchQuery.NumericRange[] range(long low, long high) {
-        SearchQuery.NumericRange[] results = { new SearchQuery.NumericRange(
-                low, high) };
-        return results;
+        return new SearchQuery.NumericRange[]{ new SearchQuery.NumericRange(low, high) };
     }
 
     private SearchQuery.NumericRange[] range(long lowOne, long highOne,
             long lowTwo, long highTwo) {
-        SearchQuery.NumericRange[] results = {
+        return new SearchQuery.NumericRange[]{
                 new SearchQuery.NumericRange(lowOne, highOne),
                 new SearchQuery.NumericRange(lowTwo, highTwo) };
-        return results;
     }
     
     

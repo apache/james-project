@@ -38,8 +38,7 @@ public class MessageBuilder {
     public int lineNumber = 0;
     
     public MailboxMessage<TestId> build() throws Exception {
-        MailboxMessage<TestId> result = new SimpleMailboxMembership(mailboxId, uid, -1,  internalDate, size, flags, body, headers);
-        return result;
+        return new SimpleMailboxMembership(mailboxId, uid, -1,  internalDate, size, flags, body, headers);
     }
     
     public void header(String field, String value) {

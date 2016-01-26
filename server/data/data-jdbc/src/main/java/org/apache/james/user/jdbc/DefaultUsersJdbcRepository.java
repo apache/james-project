@@ -46,8 +46,7 @@ public class DefaultUsersJdbcRepository extends AbstractJdbcUsersRepository {
         String username = rsUsers.getString(1);
         String passwordHash = rsUsers.getString(2);
         String passwordAlg = rsUsers.getString(3);
-        DefaultUser user = new DefaultUser(username, passwordHash, passwordAlg);
-        return user;
+        return new DefaultUser(username, passwordHash, passwordAlg);
     }
 
     @Override

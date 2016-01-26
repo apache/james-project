@@ -73,7 +73,7 @@ public class Sign extends AbstractSign {
      *
      */
     protected  String[] getAllowedInitParameters() {
-        String[] allowedArray = {
+        return new String[]{
             "keyHolderClass",
             "debug",
             "keyStoreFileName",
@@ -86,7 +86,6 @@ public class Sign extends AbstractSign {
             "rebuildFrom",
             "explanationText"
         };
-        return allowedArray;
     }
     
      /* ******************************************************************** */

@@ -57,8 +57,7 @@ public class ExternalSessionFactory implements SessionFactory {
         monitor.note("Connecting to " + address.getHostName() + ":" + address.getPort());
         final SocketChannel channel = SocketChannel.open(address);
         channel.configureBlocking(false);
-        final ExternalSession result = new ExternalSession(channel, monitor, shabang);
-        return result;
+        return new ExternalSession(channel, monitor, shabang);
     }
 
     protected InetSocketAddress getAddress() {
@@ -75,12 +74,10 @@ public class ExternalSessionFactory implements SessionFactory {
     public String toString() {
         final String TAB = " ";
 
-        String retValue = "ExternalSessionFactory ( "
+        return "ExternalSessionFactory ( "
             + "address = " + this.getAddress() + TAB
             + "monitor = " + this.monitor + TAB
             + "shabang = " + this.shabang + TAB
             + " )";
-
-        return retValue;
     }
 }

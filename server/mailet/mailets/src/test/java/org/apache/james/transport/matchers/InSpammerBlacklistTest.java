@@ -41,7 +41,7 @@ public class InSpammerBlacklistTest {
     private final static StringBuffer LISTED_HOST = new StringBuffer("111.222.111.222");
 
     private DNSService setUpDNSServer() {
-        DNSService dns = new MockDNSService() {
+        return new MockDNSService() {
 
             @Override
             public InetAddress getByName(String name) throws UnknownHostException {
@@ -52,7 +52,6 @@ public class InSpammerBlacklistTest {
                 }
             }
         };
-        return dns;
     }
 
     private void setupMockedMail(String remoteAddr) throws ParseException {

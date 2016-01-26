@@ -46,8 +46,7 @@ public class SubscribeCommandParser extends AbstractImapCommandParser {
         final String mailboxName = request.mailbox();
         request.eol();
 
-        final ImapMessage result = new SubscribeRequest(command, mailboxName, tag);
-        return result;
+        return new SubscribeRequest(command, mailboxName, tag);
     }
 
 }

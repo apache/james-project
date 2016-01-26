@@ -120,7 +120,6 @@ public class CopyProcessor extends AbstractMailboxProcessor<CopyRequest> {
 			final MailboxSession mailboxSession,
 			final MailboxManager mailboxManager, MessageRange messageSet)
 			throws MailboxException {
-		List<MessageRange> processedUids = mailboxManager.copyMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
-		return processedUids;
+        return mailboxManager.copyMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
 }
 }

@@ -68,8 +68,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         }
     }
 
-    private void handleExpungedEvent(Expunged event, QuotaRoot quotaRoot) throws MailboxException {
-        Expunged expunged = event;
+    private void handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) throws MailboxException {
         long addedSize = 0;
         long addedCount = 0;
         List<Long> uids = expunged.getUids();
@@ -83,8 +82,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         }
     }
 
-    private void handleAddedEvent(Added event, QuotaRoot quotaRoot) throws MailboxException {
-        Added added = event;
+    private void handleAddedEvent(Added added, QuotaRoot quotaRoot) throws MailboxException {
         long addedSize = 0;
         long addedCount = 0;
         List<Long> uids = added.getUids();

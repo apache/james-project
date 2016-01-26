@@ -82,9 +82,7 @@ public class CapabilityResponse implements ImapResponseMessage {
      * @return a description suitable for debugging
      */
     public String toString() {
-        final String retValue = "CapabilityResponse ( " + "capabilities = " + this.capabilities + " )";
-
-        return retValue;
+        return "CapabilityResponse ( " + "capabilities = " + this.capabilities + " )";
     }
 
 }

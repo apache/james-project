@@ -355,11 +355,8 @@ public class AuthCmdHandler
        
         session.popLineHandler();
 
-        
         // Authenticate user
-        Response response = doAuthTest(session, user, pass, "LOGIN");
-       
-        return response;
+        return doAuthTest(session, user, pass, "LOGIN");
     }
 
 

@@ -44,8 +44,7 @@ public class CapabilityCommandParser extends AbstractImapCommandParser {
      */
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         request.eol();
-        final ImapMessage result = new CapabilityRequest(command, tag);
-        return result;
+        return new CapabilityRequest(command, tag);
     }
 
 }

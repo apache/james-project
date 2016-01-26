@@ -64,8 +64,7 @@ public abstract class ImapRequestLineReader {
 
 
     public static int cap(char next) {
-        final int cap = next > 'Z' ? next ^ 32 : next;
-        return cap;
+        return next > 'Z' ? next ^ 32 : next;
     }
     
     /**
@@ -306,8 +305,7 @@ public abstract class ImapRequestLineReader {
         final char decadeChar = consume();
         final char yearChar = consume();
         final int year = DecoderUtils.decodeYear(milleniumChar, centuryChar, decadeChar, yearChar);
-        final DayMonthYear result = new DayMonthYear(day, month, year);
-        return result;
+        return new DayMonthYear(day, month, year);
     }
 
     private void nextIsDash() throws DecodingException {
@@ -445,8 +443,7 @@ public abstract class ImapRequestLineReader {
 
     private String decode(final Charset charset, final ByteBuffer buffer) throws DecodingException {
         try {
-            final String result = charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(buffer).toString();
-            return result;
+            return charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(buffer).toString();
 
         } catch (IllegalStateException e) {
             throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
@@ -836,8 +833,7 @@ public abstract class ImapRequestLineReader {
                     next = request.nextChar();
                 }
                 completeDecoding();
-                final String result = charBuffer.toString();
-                return result;
+                return charBuffer.toString();
 
             } catch (IllegalStateException e) {
                 throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);

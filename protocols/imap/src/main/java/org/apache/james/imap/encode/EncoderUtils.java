@@ -39,7 +39,6 @@ public class EncoderUtils {
      */
     public static String encodeDateTime(final Date date) {
         final FastDateFormat format = FastDateFormat.getInstance("dd-MMM-yyyy HH:mm:ss Z", TimeZone.getTimeZone("GMT"), Locale.US);
-        final String result = format.format(date);
-        return result;
+        return format.format(date);
     }
 }

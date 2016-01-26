@@ -111,10 +111,9 @@ public class NotifyPostmaster extends AbstractNotify {
 
     /** Gets the expected init parameters. */
     protected String[] getAllowedInitParameters() {
-        String[] allowedArray = {
+        return new String[]{
                 // "static",
                 "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
-        return allowedArray;
     }
 
     /**

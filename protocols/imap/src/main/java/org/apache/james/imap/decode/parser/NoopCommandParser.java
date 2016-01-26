@@ -44,8 +44,7 @@ public class NoopCommandParser extends AbstractImapCommandParser {
      */
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         request.eol();
-        final ImapMessage result = new NoopRequest(command, tag);
-        return result;
+        return new NoopRequest(command, tag);
     }
 
 }

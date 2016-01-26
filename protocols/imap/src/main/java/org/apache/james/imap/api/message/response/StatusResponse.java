@@ -310,8 +310,7 @@ public interface StatusResponse extends ImapResponseMessage {
                 buffer.append('X');
             }
             buffer.append(name);
-            final ResponseCode result = new ResponseCode(buffer.toString());
-            return result;
+            return new ResponseCode(buffer.toString());
         }
 
         public final static int NO_NUMBER = -1;

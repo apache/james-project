@@ -85,7 +85,6 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         }
         request.nextWordChar();
 
-        final ImapMessage result = new AppendRequest(command, mailboxName, flags, datetime, request.consumeLiteral(true), tag);
-        return result;
+        return new AppendRequest(command, mailboxName, flags, datetime, request.consumeLiteral(true), tag);
     }
 }

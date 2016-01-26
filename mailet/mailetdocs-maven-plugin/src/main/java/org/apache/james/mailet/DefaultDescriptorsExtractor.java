@@ -255,8 +255,7 @@ public class DefaultDescriptorsExtractor {
         for (String s : (Iterable<String>) project.getCompileSourceRoots()) {
             builder.addSourceTree(new File(s));
         }
-        final JavaClass[] classes = builder.getClasses();
-        return classes;
+        return builder.getClasses();
     }
 
 

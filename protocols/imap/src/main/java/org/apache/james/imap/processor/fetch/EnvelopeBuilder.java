@@ -61,8 +61,7 @@ public final class EnvelopeBuilder {
         final FetchResponse.Envelope.Address[] bccAddresses = buildAddresses(headers, ImapConstants.RFC822_BCC);
         final String inReplyTo = headerValue(headers, ImapConstants.RFC822_IN_REPLY_TO);
         final String messageId = headerValue(headers, ImapConstants.RFC822_MESSAGE_ID);
-        final FetchResponse.Envelope envelope = new EnvelopeImpl(date, subject, fromAddresses, senderAddresses, replyToAddresses, toAddresses, ccAddresses, bccAddresses, inReplyTo, messageId);
-        return envelope;
+        return new EnvelopeImpl(date, subject, fromAddresses, senderAddresses, replyToAddresses, toAddresses, ccAddresses, bccAddresses, inReplyTo, messageId);
     }
 
     private String headerValue(final Headers message, final String headerName) throws MailboxException {
@@ -175,8 +174,7 @@ public final class EnvelopeBuilder {
             atDomainList = route.toRouteString();
         }
         final String localPart = mailbox.getLocalPart();
-        final FetchResponse.Envelope.Address result = buildMailboxAddress(name, atDomainList, localPart, domain);
-        return result;
+        return buildMailboxAddress(name, atDomainList, localPart, domain);
     }
 
     private void addAddresses(final Group group, final List<FetchResponse.Envelope.Address> addresses) {
@@ -194,17 +192,14 @@ public final class EnvelopeBuilder {
     }
 
     private FetchResponse.Envelope.Address startGroup(String groupName) {
-        final FetchResponse.Envelope.Address result = new AddressImpl(null, null, groupName, null);
-        return result;
+        return new AddressImpl(null, null, groupName, null);
     }
 
     private FetchResponse.Envelope.Address endGroup() {
-        final FetchResponse.Envelope.Address result = new AddressImpl(null, null, null, null);
-        return result;
+        return new AddressImpl(null, null, null, null);
     }
 
     private FetchResponse.Envelope.Address buildMailboxAddress(String name, String atDomainList, String mailbox, String domain) {
-        final FetchResponse.Envelope.Address result = new AddressImpl(atDomainList, domain, mailbox, name);
-        return result;
+        return new AddressImpl(atDomainList, domain, mailbox, name);
     }
 }

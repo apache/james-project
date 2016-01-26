@@ -33,14 +33,12 @@ abstract class AbstractUidCommandParser extends AbstractImapCommandParser {
     }
 
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
-        final ImapMessage result = decode(command, request, tag, false, session);
-        return result;
+        return decode(command, request, tag, false, session);
     }
 
     public ImapMessage decode(ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
         final ImapCommand command = getCommand();
-        final ImapMessage result = decode(command, request, tag, useUids, session);
-        return result;
+        return decode(command, request, tag, useUids, session);
     }
 
     protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException;
