@@ -34,7 +34,7 @@ public class MailetMatcherDescriptor {
 
         private final String name;
 
-        private Type(final String name) {
+        Type(final String name) {
             this.name = name;
         }
 

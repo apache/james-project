@@ -94,7 +94,7 @@ public interface StatusResponse extends ImapResponseMessage {
 
         private final String code;
 
-        private Type(final String code) {
+        Type(final String code) {
             this.code = code;
         }
 

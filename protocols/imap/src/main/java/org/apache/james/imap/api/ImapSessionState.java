@@ -49,7 +49,7 @@ public enum ImapSessionState {
     /** To aid debugging */
     private final String name;
 
-    private ImapSessionState(String name) {
+    ImapSessionState(String name) {
         this.name = name;
     }
 

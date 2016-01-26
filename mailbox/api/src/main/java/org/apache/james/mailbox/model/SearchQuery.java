@@ -48,11 +48,11 @@ public class SearchQuery implements Serializable {
     /**
      * The Resolution which should get used for {@link Date} searches
      */
-    public static enum DateResolution {
+    public enum DateResolution {
         Second, Minute, Hour, Day, Month, Year
     }
 
-    public static enum AddressType {
+    public enum AddressType {
         From, To, Cc, Bcc
     }
 
@@ -65,7 +65,7 @@ public class SearchQuery implements Serializable {
         /**
          * Specify on what to sort
          */
-        public static enum SortClause {
+        public enum SortClause {
 
             /**
              * Internal date and time of the message (internaldate)

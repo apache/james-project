@@ -85,7 +85,7 @@ public class ResourceFactory {
         
         private final String protocolPrefix;
         
-        private FileProtocol(String protocolPrefix) {
+        FileProtocol(String protocolPrefix) {
             this.protocolPrefix = protocolPrefix;
         }
         

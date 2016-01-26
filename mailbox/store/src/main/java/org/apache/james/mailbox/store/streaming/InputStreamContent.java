@@ -33,7 +33,7 @@ public final class InputStreamContent implements Content{
     private final Message m;
     private final Type type;
 
-    public static enum Type {
+    public enum Type {
         Full,
         Body
     }

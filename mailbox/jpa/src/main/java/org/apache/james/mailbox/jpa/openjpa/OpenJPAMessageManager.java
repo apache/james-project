@@ -49,7 +49,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
 
     private final AdvancedFeature feature;
 
-    public static enum AdvancedFeature {
+    public enum AdvancedFeature {
         None,
         Streaming,
         Encryption
