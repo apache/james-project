@@ -84,22 +84,51 @@ as it is needed by the container that will run James.
 - SHA1 (optional): is the given git SHA1 of the james-project repository to build or trunk if none.
 - -s option: given tests will not be played while building. Not specifying means play tests.
 
+
 Howto run James in Docker
 =========================
 
-This feature is only available for Java 8 / Cassandra mailbox backend yet.
+This feature available for two configurations :
 
+ * Java 8 + Guice + Cassandra + ElasticSearch
+ * Java 6 + Spring + JPA
+
+
+Run James with Java 8 + Guice + Cassandra + ElasticSearch
+=========================================================
 
 * Requirements
-You should have the zip resulting of the build in the ./dockerfiles/run/spring/destination folder.
-
+Built artifacts should be in ./dockerfiles/run/guice/destination folder.
 
 * Howto ?
 You need a running cassandra in docker. To achieve this run :
-$ docker run -d --name=cassandra cassandra
+$ docker run -d --name=cassandra cassandra:2.2.3
 
 You need a running ElasticSearch in docker. To achieve this run :
 $ docker run -d --name=elasticsearch elasticsearch:1.5.2
+
+We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TSL keys to destination/run/guice/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
+$ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/destination/conf/keystore
+
+Then we need to build james container :
+$ docker build -t james_run dockerfiles/run/guice/
+
+To run this container :
+$ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+
+Where :
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+
+Run James with Java 6 + Spring + JPA
+====================================
+
+* Requirements
+Built artifacts should be in ./dockerfiles/run/spring/destination folder.
+
+* Howto ?
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
@@ -110,23 +139,29 @@ Then we need to build james container :
 $ docker build -t james_run dockerfiles/run/spring/
 
 To run this container :
-$ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+$ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
 
 Where :
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
 
-* Useful commands
+Useful commands
+===============
+
+The base command is different whether you choose guice flavor or spring :
+
+  * guice use : `docker exec james_run java -jar /root/james-cli.jar`
+  * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh`
 
 ** How to add a domain ?
 # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
-$ docker exec james_run /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh -h 127.0.0.1 -p 9999 adddomain DOMAIN
+$ <your-command-here> -h 127.0.0.1 -p 9999 adddomain DOMAIN
 
 Where :
 - DOMAIN: is the domain you want to add.
 
 ** How to add a user ?
-$ docker exec james_run /root/james-server-app-3.0.0-beta5-SNAPSHOT/bin/james-cli.sh -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
+$ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
 
 Where :
 - USER_MAIL_ADDRESS: is the mail address that will be used by this user.
@@ -157,17 +192,6 @@ Where :
 - WORKDIR: is the absolute path to your james-parent workdir.
 
 Beware : you will have concurrency issues if multiple containers are running on this single volume.
-
-
-How to run James in Docker using guice container
-================================================
-
-You have to follow above documentation and replace spring by guice in paths.
-
-Once you run the container, you have to use the following command to launch the cli :
-
-$ docker exec james_run java -jar /root/james-cli.jar -h localhost <command>
-
 
 Running deployement Tests
 =========================
