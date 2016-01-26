@@ -18,34 +18,26 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
 public class MessagePropertyTest {
     
-    @Test(expected=NullPointerException.class)
-    public void valueOfShouldThrowWhenNull() {
-        MessageProperty.valueOf(null);
+    @Test
+    public void findShouldThrowWhenNull() {
+        assertThatThrownBy(() -> MessageProperty.find(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    
+    @Test
+    public void findShouldReturnEmptyWhenNotFound() {
+        assertThat(MessageProperty.find("not found")).isEmpty();
     }
     
     @Test
-    public void valueOfThenAsFieldNameShouldReturnMatchingCaseProperty() {
-        assertThat(MessageProperty.valueOf("ProP").asFieldName()).isEqualTo("ProP");
-    }
-    
-    @Test
-    public void equalsShouldBeTrueWhenIdenticalProperties() {
-        assertThat(MessageProperty.valueOf("prop")).isEqualTo(MessageProperty.valueOf("prop"));
-    }
-
-    @Test
-    public void equalsShouldBeFalseWhenDifferentProperties() {
-        assertThat(MessageProperty.valueOf("prop")).isNotEqualTo(MessageProperty.valueOf("other"));
-    }
-
-    @Test
-    public void equalsShouldBeFalseWhenDifferentCaseProperties() {
-        assertThat(MessageProperty.valueOf("prOP")).isNotEqualTo(MessageProperty.valueOf("PRop"));
+    public void findShouldReturnEnumEntryWhenFound() {
+        assertThat(MessageProperty.find("subject")).containsExactly(MessageProperty.subject);
     }
 }
