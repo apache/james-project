@@ -74,13 +74,7 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
     
     public void beforeTest() throws Exception {
         container = docker.start();
-        addressSupplier = new Supplier<InetSocketAddress>() {
-            
-            @Override
-            public InetSocketAddress get() {
-                return new InetSocketAddress(docker.getHost(container), docker.getIMAPPort(container));
-            }
-        };
+        addressSupplier = () -> new InetSocketAddress(docker.getHost(container), docker.getIMAPPort(container));
     }
 
     public void afterTest() throws Exception {
