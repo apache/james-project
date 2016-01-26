@@ -66,10 +66,10 @@ public class CassandraSubscriptionMapperTest {
         LOG.info("Creating subscription list");
         SimpleSubscription subscription;
         String user, mailbox;
-        subscriptionList = new HashMap<String, List<SimpleSubscription>>();
+        subscriptionList = new HashMap<>();
         for (int i = 0; i < USERS; i++) {
             user = "user" + i;
-            final List<SimpleSubscription> mailboxes = new ArrayList<SimpleSubscription>();
+            final List<SimpleSubscription> mailboxes = new ArrayList<>();
             subscriptionList.put(user, mailboxes);
 
             for (int j = 0; j < MAILBOX_NO; j++) {

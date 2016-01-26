@@ -48,9 +48,9 @@ public class SortToComparatorConvertorTest {
     @SuppressWarnings("unchecked")
     public void setup() {
         LocalDate date = LocalDate.now();
-        firstMessage = new SimpleMailboxMessage<TestId>(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        firstMessage = new SimpleMailboxMessage<>(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
         firstMessage.setUid(1);
-        secondMessage = new SimpleMailboxMessage<TestId>(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        secondMessage = new SimpleMailboxMessage<>(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
         secondMessage.setUid(2);
         messages = Lists.newArrayList(firstMessage, secondMessage);
     }
@@ -90,7 +90,7 @@ public class SortToComparatorConvertorTest {
     @Test
     @SuppressWarnings("unchecked")
     public void comparatorForShouldChainComparatorsWhenOnlyMultipleElementInList() {
-        SimpleMailboxMessage<TestId> thirdMessage = new SimpleMailboxMessage<TestId>(secondMessage.getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        SimpleMailboxMessage<TestId> thirdMessage = new SimpleMailboxMessage<>(secondMessage.getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
         thirdMessage.setUid(3);
         messages.add(thirdMessage);
 

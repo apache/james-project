@@ -47,7 +47,7 @@ public class SortToComparatorConvertor {
     public static <M extends MailboxMessage<Id>, Id extends MailboxId> Comparator<M> comparatorFor(List<String> sort) {
         return sort.stream()
             .map(SortToComparatorConvertor::<M, Id> comparatorForField)
-            .reduce(new EmptyComparator<M>(), (x, y) -> x.thenComparing(y));
+            .reduce(new EmptyComparator<>(), (x, y) -> x.thenComparing(y));
     }
 
     @SuppressWarnings("unchecked")
