@@ -19,5 +19,5 @@
  -->
 
 <indexer>
-  <provider>elasticsearch</provider>
+  <provider>lazyIndex</provider>
 </indexer>
