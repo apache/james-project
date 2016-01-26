@@ -77,9 +77,9 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
      * @throws WiringException
      */
     public SMTPProtocolHandlerChain(Hook... hooks) throws WiringException {
-        this(true);    
-        for (int i = 0; i < hooks.length; i++) {
-            add(hooks[i]);
+        this(true);
+        for (Hook hook : hooks) {
+            add(hook);
         }
         wireExtensibleHandlers();
     }

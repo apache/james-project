@@ -338,8 +338,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     @Override
     public long size() throws MailboxException {
         long result = 0;
-        for (final Iterator<MessageResult.Header> it = headers.iterator(); it.hasNext();) {
-            final MessageResult.Header header = it.next();
+        for (final MessageResult.Header header : headers) {
             if (header != null) {
                 result += header.size();
                 result += 2;

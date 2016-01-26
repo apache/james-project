@@ -64,8 +64,8 @@ public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHa
     public Response onCommand(POP3Session session, Request request) {
         POP3Response response = new POP3Response(POP3Response.OK_RESPONSE, "Capability list follows");
 
-        for (int i = 0; i < caps.size(); i++) {
-            for (String cap: caps.get(i).getImplementedCapabilities(session)) {
+        for (CapaCapability capabilities : caps) {
+            for (String cap : capabilities.getImplementedCapabilities(session)) {
                 response.appendLine(cap);
             }
         }

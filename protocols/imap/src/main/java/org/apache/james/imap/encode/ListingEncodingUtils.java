@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -43,8 +42,7 @@ public class ListingEncodingUtils {
         composer.message(responseTypeName);
         composer.openParen();
         if (attributes != null) {
-            for (Iterator<String> it = attributes.iterator(); it.hasNext();) {
-                final String attribute = it.next();
+            for (final String attribute : attributes) {
                 composer.message(attribute);
             }
         }

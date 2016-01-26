@@ -96,9 +96,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
         // Configure the pipeline factory.
         bootstrap.setPipelineFactory(factory);
         configureBootstrap(bootstrap);
-        
-        for (int i = 0; i < addresses.size();i++) {
-            channels.add(bootstrap.bind(addresses.get(i)));
+
+        for (InetSocketAddress address : addresses) {
+            channels.add(bootstrap.bind(address));
         }
         started = true;
 

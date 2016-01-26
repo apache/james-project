@@ -629,8 +629,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     public List<MailboxPath> list(MailboxSession session) throws MailboxException {
         List<MailboxPath> mList = new ArrayList<MailboxPath>();
         List<Mailbox<Id>> mailboxes = mailboxSessionMapperFactory.getMailboxMapper(session).list();
-        for (int i = 0; i < mailboxes.size(); i++) {
-            Mailbox<Id> m = mailboxes.get(i);
+        for (Mailbox<Id> m : mailboxes) {
             mList.add(new MailboxPath(m.getNamespace(), m.getUser(), m.getName()));
         }
         return Collections.unmodifiableList(mList);

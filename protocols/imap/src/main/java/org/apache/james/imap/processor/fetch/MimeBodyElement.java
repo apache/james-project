@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -68,8 +67,7 @@ public class MimeBodyElement implements BodyElement {
            result = 0;
         } else {
             int count = 0;
-            for (final Iterator<MessageResult.Header> it = headers.iterator(); it.hasNext();) {
-                MessageResult.Header header = it.next();
+            for (MessageResult.Header header : headers) {
                 count += header.size() + ImapConstants.LINE_END.length();
             }
             result = count + ImapConstants.LINE_END.length();
@@ -92,8 +90,7 @@ public class MimeBodyElement implements BodyElement {
     public InputStream getInputStream() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        for (final Iterator<MessageResult.Header> it = headers.iterator(); it.hasNext();) {
-            MessageResult.Header header = it.next();
+        for (MessageResult.Header header : headers) {
             try {
                 out.write((header.getName() + ": " + header.getValue() + ImapConstants.LINE_END).getBytes(US_ASCII));
             } catch (MailboxException e) {

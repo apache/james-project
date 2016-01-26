@@ -72,8 +72,8 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
                 Property prop = node.getProperty(JCRSubscription.MAILBOXES_PROPERTY);
                 Value[] values = prop.getValues();
                 List<String> newValues = new ArrayList<String>();
-                for (int i = 0; i < values.length; i++) {
-                    String m = values[i].getString();
+                for (Value value : values) {
+                    String m = value.getString();
                     if (m.equals(sub.getMailbox()) == false) {
                         newValues.add(m);
                     }
@@ -139,8 +139,8 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
                 Node node = nodeIt.nextNode();
                 if (node.hasProperty(JCRSubscription.MAILBOXES_PROPERTY)) {
                     Value[] values = node.getProperty(JCRSubscription.MAILBOXES_PROPERTY).getValues();
-                    for (int i = 0; i < values.length; i++) {
-                        subList.add(new JCRSubscription(node, values[i].getString(), getLogger()));
+                    for (Value value : values) {
+                        subList.add(new JCRSubscription(node, value.getString(), getLogger()));
                     }
                 }
             }

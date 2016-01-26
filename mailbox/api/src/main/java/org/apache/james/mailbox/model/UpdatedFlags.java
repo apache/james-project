@@ -76,11 +76,9 @@ public class UpdatedFlags {
     
 
     private static void addModifiedUserFlags(Flags oldFlags, Flags newFlags, String[] userflags, Flags modifiedFlags) {
-        for (int i = 0; i < userflags.length; i++) {
-            String userFlag = userflags[i];
+        for (String userFlag : userflags) {
             if (isChanged(oldFlags, newFlags, userFlag)) {
                 modifiedFlags.add(userFlag);
-
             }
         }
     }

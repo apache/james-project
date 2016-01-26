@@ -358,8 +358,7 @@ public class JPAMessageMapper extends AbstractMessageMapper<JPAId> implements Me
 
     private Map<Long, MessageMetaData> createMetaData(List<MailboxMessage<JPAId>> uids) {
         final Map<Long, MessageMetaData> data = new HashMap<Long, MessageMetaData>();
-        for (int i = 0; i < uids.size(); i++) {
-            MailboxMessage<JPAId> m = uids.get(i);
+        for (MailboxMessage<JPAId> m : uids) {
             data.put(m.getUid(), new SimpleMessageMetaData(m));
         }
         return data;

@@ -84,28 +84,28 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
         List<Hook> hooks = getHooks();
         if (hooks != null) {
             int count = hooks.size();
-            for (int i = 0; i < count; i++) {
+            int i = 0;
+            while (i < count) {
                 Hook rawHook = hooks.get(i);
                 session.getLogger().debug("executing hook " + rawHook.getClass().getName());
                 long start = System.currentTimeMillis();
-                
+
                 HookResult hRes = callHook(rawHook, session, parameters);
                 long executionTime = System.currentTimeMillis() - start;
 
                 if (rHooks != null) {
-                    for (int i2 = 0; i2 < rHooks.size(); i2++) {
-                        Object rHook = rHooks.get(i2);
+                    for (HookResultHook rHook : rHooks) {
                         session.getLogger().debug("executing hook " + rHook);
-                        hRes = ((HookResultHook) rHook).onHookResult(session, hRes, executionTime, rawHook);
+                        hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
-                
+
                 // call the core cmd if we receive a ok return code of the hook so no other hooks are executed
                 if ((hRes.getResult() & HookReturnCode.OK) == HookReturnCode.OK) {
                     final Response response = doCoreCmd(session, command, parameters);
                     if ((hRes.getResult() & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
                         return new Response() {
-                            
+
                             /*
                              * (non-Javadoc)
                              * @see org.apache.james.protocols.api.Response#isEndSession()
@@ -113,7 +113,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                             public boolean isEndSession() {
                                 return true;
                             }
-                            
+
                             /*
                              * (non-Javadoc)
                              * @see org.apache.james.protocols.api.Response#getRetCode()
@@ -121,7 +121,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                             public String getRetCode() {
                                 return response.getRetCode();
                             }
-                            
+
                             /*
                              * (non-Javadoc)
                              * @see org.apache.james.protocols.api.Response#getLines()
@@ -138,6 +138,7 @@ public abstract class AbstractHookableCmdHandler<Hook extends org.apache.james.p
                         return res;
                     }
                 }
+                i++;
             }
         }
         return null;

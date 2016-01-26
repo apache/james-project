@@ -237,8 +237,7 @@ public class ProtocolSession implements ProtocolInteractor {
          */
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             if (sessionNumber < 0) {
-                for (int i = 0; i < sessions.length; i++) {
-                    Session session = sessions[i];
+                for (Session session : sessions) {
                     writeMessage(session);
                 }
             }
@@ -318,8 +317,7 @@ public class ProtocolSession implements ProtocolInteractor {
          */
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             if (sessionNumber < 0) {
-                for (int i = 0; i < sessions.length; i++) {
-                    Session session = sessions[i];
+                for (Session session : sessions) {
                     checkResponse(session, continueAfterFailure);
                 }
             }

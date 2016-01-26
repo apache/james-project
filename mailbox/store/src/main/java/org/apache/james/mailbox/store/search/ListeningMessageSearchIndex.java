@@ -99,8 +99,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                     final Mailbox<Id> mailbox = expunged.getMailbox();
                     List<Long> uids = expunged.getUids();
                     List<MessageRange> ranges = MessageRange.toRanges(uids);
-                    for (int i = 0; i < ranges.size(); i++) {
-                        MessageRange range = ranges.get(i);
+                    for (MessageRange range : ranges) {
                         try {
                             delete(session, mailbox, range);
                         } catch (MailboxException e) {

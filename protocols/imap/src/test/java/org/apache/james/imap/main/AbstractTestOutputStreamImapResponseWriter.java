@@ -47,8 +47,8 @@ public abstract class AbstractTestOutputStreamImapResponseWriter {
         writer.flush();
         out.flush();
         byte[] output = out.toByteArray();
-        for (int i = 0; i < output.length; i++) {
-            buffer.append((char) output[i]);
+        for (byte aChar : output) {
+            buffer.append((char) aChar);
         }
         assertEquals(expected, buffer.toString());
     }

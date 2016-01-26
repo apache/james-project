@@ -176,14 +176,14 @@ public class SearchCommandParserTopLevelAndTest {
             check(keys, buffer);
         } else {
             mutations -= 1;
-            for (int i = 0; i < inputs.length; i++) {
+            for (Input input : inputs) {
                 StringBuffer nextBuffer = new StringBuffer(buffer.toString());
                 if (nextBuffer.length() > 0) {
                     nextBuffer.append(' ');
                 }
-                nextBuffer.append(inputs[i].input);
+                nextBuffer.append(input.input);
                 List<SearchKey> nextKeys = new ArrayList<SearchKey>(keys);
-                nextKeys.add(inputs[i].key);
+                nextKeys.add(input.key);
                 permute(mutations, nextKeys, nextBuffer, inputs);
             }
         }

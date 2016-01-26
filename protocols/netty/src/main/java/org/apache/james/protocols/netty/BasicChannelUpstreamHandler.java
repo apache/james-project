@@ -86,26 +86,24 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
         ProtocolSession session = (ProtocolSession) ctx.getAttachment();
         session.getLogger().info("Connection established from " + session.getRemoteAddress().getAddress().getHostAddress());
         if (connectHandlers != null) {
-            for (int i = 0; i < connectHandlers.size(); i++) {
-                ConnectHandler cHandler = connectHandlers.get(i);
-                
+            for (ConnectHandler cHandler : connectHandlers) {
                 long start = System.currentTimeMillis();
-                Response response = connectHandlers.get(i).onConnect(session);
+                Response response = cHandler.onConnect(session);
                 long executionTime = System.currentTimeMillis() - start;
-                
-                for (int a = 0; a < resultHandlers.size(); a++) {
+
+                for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
                     // Disable till PROTOCOLS-37 is implemented
                     if (response instanceof FutureResponse) {
                         session.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
                         break;
-                    } 
-                    resultHandlers.get(a).onResponse(session, response, executionTime, cHandler);
+                    }
+                    resultHandler.onResponse(session, response, executionTime, cHandler);
                 }
                 if (response != null) {
                     // TODO: This kind of sucks but I was able to come up with something more elegant here
-                    ((ProtocolSessionImpl)session).getProtocolTransport().writeResponse(response, session);
+                    ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
                 }
-               
+
             }
         }
         super.channelConnected(ctx, e);
@@ -119,8 +117,8 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
         List<DisconnectHandler> connectHandlers = chain.getHandlers(DisconnectHandler.class);
         ProtocolSession session = (ProtocolSession) ctx.getAttachment();
         if (connectHandlers != null) {
-            for (int i = 0; i < connectHandlers.size(); i++) {
-                connectHandlers.get(i).onDisconnect(session);
+            for (DisconnectHandler connectHandler : connectHandlers) {
+                connectHandler.onDisconnect(session);
             }
         }
         super.channelDisconnected(ctx, e);
@@ -147,13 +145,13 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
             Response response = lHandler.onLine(pSession,buf.toByteBuffer());
             long executionTime = System.currentTimeMillis() - start;
 
-            for (int i = 0; i < resultHandlers.size(); i++) {
+            for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
                 // Disable till PROTOCOLS-37 is implemented
                 if (response instanceof FutureResponse) {
                     pSession.getLogger().debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
                     break;
-                } 
-                response = resultHandlers.get(i).onResponse(pSession, response, executionTime, lHandler);
+                }
+                response = resultHandler.onResponse(pSession, response, executionTime, lHandler);
             }
             if (response != null) {
                 // TODO: This kind of sucks but I was able to come up with something more elegant here

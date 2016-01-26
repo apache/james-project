@@ -378,34 +378,29 @@ public class AuthCmdHandler
         List<AuthHook> hooks = getHooks();
         
         if (hooks != null) {
-            int count = hooks.size();
-            for (int i = 0; i < count; i++) {
-                AuthHook rawHook = hooks.get(i);
+            for (AuthHook rawHook : hooks) {
                 session.getLogger().debug("executing  hook " + rawHook);
-                
 
                 long start = System.currentTimeMillis();
                 HookResult hRes = rawHook.doAuth(session, user, pass);
                 long executionTime = System.currentTimeMillis() - start;
 
                 if (rHooks != null) {
-                    for (int i2 = 0; i2 < rHooks.size(); i2++) {
-                        Object rHook = rHooks.get(i2);
+                    for (HookResultHook rHook : rHooks) {
                         session.getLogger().debug("executing  hook " + rHook);
-                    
-                        hRes = ((HookResultHook) rHook).onHookResult(session, hRes, executionTime, rawHook);
+                        hRes = rHook.onHookResult(session, hRes, executionTime, rawHook);
                     }
                 }
-                
+
                 res = calcDefaultSMTPResponse(hRes);
-                
+
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
-                        session.getLogger().info("AUTH method "+authType+" failed");
+                        session.getLogger().info("AUTH method " + authType + " failed");
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
                         if (session.getLogger().isDebugEnabled()) {
                             // TODO: Make this string a more useful debug message
-                            session.getLogger().debug("AUTH method "+authType+" succeeded");
+                            session.getLogger().debug("AUTH method " + authType + " succeeded");
                         }
                     }
                     return res;

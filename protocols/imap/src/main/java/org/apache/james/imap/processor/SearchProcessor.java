@@ -133,8 +133,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             } else {
                 IdRange[] idRanges;
                 List<Long> idList = new ArrayList<Long>(ids.length);
-                for ( int i = 0; i < ids.length; i++) {
-                    idList.add(ids[i]);
+                for (long id : ids) {
+                    idList.add(id);
                 }
                 List<MessageRange> ranges = MessageRange.toRanges(idList);
                 idRanges = new IdRange[ranges.size()];
@@ -144,8 +144,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 }
                 
                 boolean esearch = false;
-                for (int i = 0; i < resultOptions.size(); i++) {
-                    if (SearchResultOption.SAVE != resultOptions.get(i)) {
+                for (SearchResultOption resultOption : resultOptions) {
+                    if (SearchResultOption.SAVE != resultOption) {
                         esearch = true;
                         break;
                     }
@@ -390,7 +390,6 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
      * @throws MessageRangeException
      */
     private Criterion sequence(IdRange[] sequenceNumbers, final ImapSession session, boolean msn) throws MessageRangeException {
-        final int length = sequenceNumbers.length;
         final List<SearchQuery.NumericRange> ranges = new ArrayList<SearchQuery.NumericRange>();
         final SelectedMailbox selected = session.getSelected();
         boolean useUids = !msn;
@@ -398,9 +397,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         // First of check if we have any messages in the mailbox
         // if not we don't need to go through all of this
         if (selected.existsCount() > 0) {
-            for (int i = 0; i < length; i++) {
-                final IdRange range = sequenceNumbers[i];
-
+            for (final IdRange range : sequenceNumbers) {
                 long lowVal = range.getLowVal();
                 long highVal = range.getHighVal();
                 if (useUids) {

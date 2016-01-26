@@ -97,24 +97,23 @@ public class MailProtocolTest implements Monitor{
     */
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		validate();
-		
-    
-		for (int i = 0; i < addUsers.length; i++) {
-			AddUser addUser = (AddUser) addUsers[i];
-			  try {
-		            
-		            final Reader reader; 
-		            if (addUser.getScriptText() != null) {
-		            	reader = new StringReader(addUser.getScriptText());
-		            } else {
-		            	reader = new FileReader(addUser.getScriptFile());
-		            }
-		            final ScriptedUserAdder adder = new ScriptedUserAdder(addUser.getHost(), addUser.getPort(), this);
-		            adder.addUser(addUser.getUser(), addUser.getPasswd(), reader);
-		        } catch (Exception e) {
-		            //getLog().error("Unable to add user", e);
-		            throw new MojoFailureException("User addition failed: \n" + e.getMessage());
-		        }
+
+
+		for (AddUser addUser : addUsers) {
+			try {
+
+				final Reader reader;
+				if (addUser.getScriptText() != null) {
+					reader = new StringReader(addUser.getScriptText());
+				} else {
+					reader = new FileReader(addUser.getScriptFile());
+				}
+				final ScriptedUserAdder adder = new ScriptedUserAdder(addUser.getHost(), addUser.getPort(), this);
+				adder.addUser(addUser.getUser(), addUser.getPasswd(), reader);
+			} catch (Exception e) {
+				//getLog().error("Unable to add user", e);
+				throw new MojoFailureException("User addition failed: \n" + e.getMessage());
+			}
 		}
        final Runner runner = new Runner();
        InputStream inputStream;
@@ -148,21 +147,20 @@ public class MailProtocolTest implements Monitor{
 		if (scriptFile.exists() == false ) {
            throw new MojoFailureException("'scriptFile' not exists");
 		}
-		
-		for (int i = 0; i < addUsers.length; i++) {
-			AddUser addUser = (AddUser)addUsers[i];
-			
+
+		for (AddUser addUser : addUsers) {
+
 			if (addUser.getScriptText() == null && addUser.getScriptFile() == null) {
-	            throw new MojoFailureException("AddUser must contain the text of the script or a scriptFile");
-	        }
-	        
-	        if (addUser.getPort() <= 0) {
-	            throw new MojoFailureException("'port' attribute must be set on AddUser to the port against which the script should run.");
-	        }
-	        
-	        if (addUser.getHost() == null) {
-	            throw new MojoFailureException("'host' attribute must be set on AddUser to the host against which the script should run.");
-	        }
+				throw new MojoFailureException("AddUser must contain the text of the script or a scriptFile");
+			}
+
+			if (addUser.getPort() <= 0) {
+				throw new MojoFailureException("'port' attribute must be set on AddUser to the port against which the script should run.");
+			}
+
+			if (addUser.getHost() == null) {
+				throw new MojoFailureException("'host' attribute must be set on AddUser to the host against which the script should run.");
+			}
 		}
 		
 	}

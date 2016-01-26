@@ -22,7 +22,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Locale;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -84,8 +83,7 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
             if (parameters != null && !parameters.isEmpty()) {
                 if (useParens)
                 	composer.openParen();
-                for (Iterator<String> it = parameters.iterator(); it.hasNext();) {
-                    final String parameter = it.next();
+                for (String parameter : parameters) {
                     composer.message(parameter);
                 }
                 if (useParens)

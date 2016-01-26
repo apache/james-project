@@ -298,10 +298,9 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
 
 
             List<Property> currentProperties = getProperties();
-            List<Property> newProperites = new ArrayList<Property>();
-            for (int i = 0; i < currentProperties.size(); i++) {
-                Property prop = currentProperties.get(i);
-                newProperites.add(new JCRProperty(prop, logger));
+            List<Property> newProperties = new ArrayList<Property>();
+            for (Property prop : currentProperties) {
+                newProperties.add(new JCRProperty(prop, logger));
             }
             // remove old properties, we will add a bunch of new ones
             NodeIterator iterator = node.getNodes("messageProperty");
@@ -310,8 +309,8 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
             }
 
             // store new properties
-            for (int i = 0; i < newProperites.size(); i++) {
-                JCRProperty prop = (JCRProperty) newProperites.get(i);
+            for (Property newProperty : newProperties) {
+                JCRProperty prop = (JCRProperty) newProperty;
                 Node propNode = node.addNode("messageProperty", "nt:unstructured");
                 propNode.addMixin(PROPERTY_NODE_TYPE);
                 prop.merge(propNode);

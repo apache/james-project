@@ -185,29 +185,29 @@ public class FetchPartPathDecoderTest {
 
     private void checkReadNames(String base, String[] names) throws Exception {
         base = base + " (";
-        for (int i = 0; i < names.length; i++) {
-            base = base + ' ' + names[i];
+        for (String name : names) {
+            base = base + ' ' + name;
         }
         base = base + ')';
         decoder.decode(base);
         Collection<String> results = decoder.getNames();
         assertNotNull(results);
         Iterator<String> it = results.iterator();
-        for (int i = 0; i < names.length; i++) {
-            assertEquals(names[i], it.next());
+        for (String name : names) {
+            assertEquals(name, it.next());
         }
     }
 
     private void checkEndingPermutations(int[] values) throws Exception {
         String base = "";
         boolean first = true;
-        for (int i = 0; i < values.length; i++) {
+        for (int value : values) {
             if (first) {
                 first = false;
             } else {
                 base = base + ".";
             }
-            base = base + values[i];
+            base = base + value;
         }
         checkPath(values, base);
         checkPath(values, base + ".TEXT");

@@ -42,8 +42,8 @@ public class CombinedComparator implements Comparator<MailboxMessage<?>>{
     @Override
     public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
         int i = 0;
-        for (int a = 0; a < comparators.length; a++) {
-            i = comparators[a].compare(o1, o2);
+        for (Comparator<MailboxMessage<?>> comparator : comparators) {
+            i = comparator.compare(o1, o2);
             if (i != 0) {
                 break;
             }
@@ -54,43 +54,42 @@ public class CombinedComparator implements Comparator<MailboxMessage<?>>{
     @SuppressWarnings("unchecked")
     public static Comparator<MailboxMessage<?>> create(List<Sort> sorts) {
         List<Comparator<?>> comps = new ArrayList<Comparator<?>>();
-        for (int i = 0; i < sorts.size(); i++) {
-            Sort sort = sorts.get(i);
+        for (Sort sort : sorts) {
             boolean reverse = sort.isReverse();
             Comparator<MailboxMessage<?>> comparator = null;
-            
+
             switch (sort.getSortClause()) {
-            case Arrival:
-                comparator = InternalDateComparator.internalDate(reverse);
-                break;
-            case MailboxCc:
-                comparator = HeaderMailboxComparator.cc(reverse);
-                break;
-            case MailboxFrom:
-                comparator = HeaderMailboxComparator.from(reverse);
-                break;
-            case Size:
-                comparator = SizeComparator.size(reverse);
-                break;
-            case BaseSubject:
-                comparator = BaseSubjectComparator.baseSubject(reverse);
-                break;
-            case MailboxTo:
-                comparator = HeaderMailboxComparator.to(reverse);
-                break;
-            case Uid:
-                comparator = UidComparator.uid(reverse);
-                break;
-            case SentDate: 
-                comparator = SentDateComparator.sentDate(reverse);
-            case DisplayFrom: 
-                comparator = HeaderDisplayComparator.from(reverse);
-                break;
-            case DisplayTo:
-                comparator = HeaderDisplayComparator.to(reverse);
-                break;
-            default:
-                break;
+                case Arrival:
+                    comparator = InternalDateComparator.internalDate(reverse);
+                    break;
+                case MailboxCc:
+                    comparator = HeaderMailboxComparator.cc(reverse);
+                    break;
+                case MailboxFrom:
+                    comparator = HeaderMailboxComparator.from(reverse);
+                    break;
+                case Size:
+                    comparator = SizeComparator.size(reverse);
+                    break;
+                case BaseSubject:
+                    comparator = BaseSubjectComparator.baseSubject(reverse);
+                    break;
+                case MailboxTo:
+                    comparator = HeaderMailboxComparator.to(reverse);
+                    break;
+                case Uid:
+                    comparator = UidComparator.uid(reverse);
+                    break;
+                case SentDate:
+                    comparator = SentDateComparator.sentDate(reverse);
+                case DisplayFrom:
+                    comparator = HeaderDisplayComparator.from(reverse);
+                    break;
+                case DisplayTo:
+                    comparator = HeaderDisplayComparator.to(reverse);
+                    break;
+                default:
+                    break;
             }
             if (comparator != null) {
                 comps.add(comparator);

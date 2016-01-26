@@ -44,8 +44,8 @@ public class FlagsBuilder {
             flags.add(Flags.Flag.SEEN);
         }
         if (userFlags != null && userFlags.length > 0) {
-            for (int i = 0; i < userFlags.length; i++) {
-                flags.add(userFlags[i]);
+            for (String userFlag : userFlags) {
+                flags.add(userFlag);
             }
         }
         return flags;

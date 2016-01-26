@@ -69,8 +69,8 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 } else {
                     // Handle UID EXPUNGE which is part of UIDPLUS
                     // See http://tools.ietf.org/html/rfc4315
-                    for (int i = 0; i < ranges.length; i++) {
-                        MessageRange mRange = messageRange(session.getSelected(), ranges[i], true);
+                    for (IdRange range : ranges) {
+                        MessageRange mRange = messageRange(session.getSelected(), range, true);
                         if (mRange != null) {
                             expunged += expunge(mailbox, mRange, session, mailboxSession);
                         }

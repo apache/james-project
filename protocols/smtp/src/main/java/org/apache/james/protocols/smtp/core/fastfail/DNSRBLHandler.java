@@ -133,16 +133,16 @@ public class DNSRBLHandler implements RcptHook {
 
             if (whitelist != null) {
                 String[] rblList = whitelist;
-                for (int i = 0 ; i < rblList.length ; i++) {
-                    if (resolve(reversedOctets + rblList[i])) {
+                for (String rbl : rblList) {
+                    if (resolve(reversedOctets + rbl)) {
                         if (session.getLogger().isInfoEnabled()) {
-                            session.getLogger().info("Connection from " + ipAddress + " whitelisted by " + rblList[i]);
+                            session.getLogger().info("Connection from " + ipAddress + " whitelisted by " + rbl);
                         }
-                    
+
                         return;
                     } else {
                         if (session.getLogger().isDebugEnabled()) {
-                            session.getLogger().debug("IpAddress " + session.getRemoteAddress().getAddress()  + " not listed on " + rblList[i]);
+                            session.getLogger().debug("IpAddress " + session.getRemoteAddress().getAddress() + " not listed on " + rbl);
                         }
                     }
                 }
@@ -150,34 +150,34 @@ public class DNSRBLHandler implements RcptHook {
 
             if (blacklist != null) {
                 String[] rblList = blacklist;
-                for (int i = 0 ; i < rblList.length ; i++) {
-                    if (resolve(reversedOctets + rblList[i])) {
+                for (String rbl : rblList) {
+                    if (resolve(reversedOctets + rbl)) {
                         if (session.getLogger().isInfoEnabled()) {
-                            session.getLogger().info("Connection from " + ipAddress + " restricted by " + rblList[i] + " to SMTP AUTH/postmaster/abuse.");
+                            session.getLogger().info("Connection from " + ipAddress + " restricted by " + rbl + " to SMTP AUTH/postmaster/abuse.");
                         }
-                        
+
                         // we should try to retrieve details
                         if (getDetail) {
-                            Collection<String> txt = resolveTXTRecords(reversedOctets + rblList[i]);
-                            
+                            Collection<String> txt = resolveTXTRecords(reversedOctets + rbl);
+
                             // Check if we found a txt record
                             if (!txt.isEmpty()) {
                                 // Set the detail
                                 String blocklistedDetail = txt.iterator().next().toString();
-                                
+
                                 session.setAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, blocklistedDetail, State.Connection);
                             }
                         }
-                        
+
                         session.setAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, "true", State.Connection);
                         return;
                     } else {
                         // if it is unknown, it isn't blocked
                         if (session.getLogger().isDebugEnabled()) {
-                            session.getLogger().debug("unknown host exception thrown:" + rblList[i]);
+                            session.getLogger().debug("unknown host exception thrown:" + rbl);
                         }
                     }
-                   
+
                 }
             }
         }

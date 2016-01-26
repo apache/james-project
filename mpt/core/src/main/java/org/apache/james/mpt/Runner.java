@@ -109,8 +109,8 @@ public class Runner {
             continuation.session = postElements;
             postElements.runSessions(sessions);
         } finally {
-            for (int i = 0; i < sessions.length; i++) {
-                sessions[i].stop();
+            for (Session session : sessions) {
+                session.stop();
             }
         }
     }

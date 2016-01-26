@@ -18,29 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase.mail;
 
-import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
-import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
-import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
-import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES;
-import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
-import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_TABLE;
-import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_BODY_CF;
-import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
-import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
-import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
-import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-
-import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
-import javax.mail.util.SharedByteArrayInputStream;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.MailboxSession;
@@ -57,6 +34,28 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.mail.Flags;
+import javax.mail.internet.SharedInputStream;
+import javax.mail.util.SharedByteArrayInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_BODY_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for HBaseMessageMapper.
@@ -100,8 +99,8 @@ public class HBaseMailboxMessageMapperTest {
         generateTestData();
         final MailboxSession session = new MockMailboxSession("ieugen");
         messageMapper = new HBaseMessageMapper(session, uidProvider, modSeqProvider, conf);
-        for (int i = 0; i < MESSAGE_NO.size(); i++) {
-            messageMapper.add(MBOXES.get(1), MESSAGE_NO.get(i));
+        for (MailboxMessage<HBaseId> message : MESSAGE_NO) {
+            messageMapper.add(MBOXES.get(1), message);
         }
     }
 

@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -304,11 +303,10 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     public void wireExtensions(Class interfaceName, List extension) {
         if (MailParametersHook.class.equals(interfaceName)) {
             this.paramHooks = new HashMap<String, MailParametersHook>();
-            for (Iterator<MailParametersHook> i = extension.iterator(); i.hasNext(); ) {
-                MailParametersHook hook =  i.next();
+            for (MailParametersHook hook : (Iterable<MailParametersHook>) extension) {
                 String[] params = hook.getMailParamNames();
-                for (int k = 0; k < params.length; k++) {
-                    paramHooks.put(params[k], hook);
+                for (String param : params) {
+                    paramHooks.put(param, hook);
                 }
             }
         } else {

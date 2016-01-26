@@ -65,8 +65,7 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
             int count = 0;
             if (uidList.isEmpty() == false) {
                 List<MessageMetaData> validResults = new ArrayList<MessageMetaData>();
-                for (int i = 0; i < uidList.size(); i++) {
-                    MessageMetaData data = uidList.get(i);
+                for (MessageMetaData data : uidList) {
                     if (deletedUidList.contains(data.getUid()) == false) {
                         size += data.getSize();
                         count++;

@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import com.beetstra.jutf7.CharsetProvider;
@@ -47,8 +46,7 @@ public class CharsetUtil {
         Set<String>cNames = new HashSet<String>();
         Set<Charset> sets = new HashSet<Charset>();
 
-        for (final Iterator<Charset> it = Charset.availableCharsets().values().iterator(); it.hasNext();) {
-            final Charset charset = it.next();
+        for (Charset charset : Charset.availableCharsets().values()) {
             final Set<String> aliases = charset.aliases();
             cNames.add(charset.name());
             cNames.addAll(aliases);

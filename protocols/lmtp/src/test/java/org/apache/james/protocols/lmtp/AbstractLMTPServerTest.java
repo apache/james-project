@@ -56,12 +56,11 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest{
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {
         LMTPProtocolHandlerChain chain = new LMTPProtocolHandlerChain();
         List<ProtocolHandler> hList = new ArrayList<ProtocolHandler>();
-        
-        for (int i = 0; i < handlers.length; i++) {
-            ProtocolHandler handler = handlers[i];
+
+        for (ProtocolHandler handler : handlers) {
             if (handler instanceof MessageHook) {
                 handler = new MessageHookAdapter((MessageHook) handler);
-            } 
+            }
             hList.add(handler);
         }
         chain.addAll(0, hList);

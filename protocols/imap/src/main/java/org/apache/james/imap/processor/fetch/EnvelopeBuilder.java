@@ -38,6 +38,7 @@ import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.DomainList;
 import org.apache.james.mime4j.dom.address.Group;
+import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.slf4j.Logger;
@@ -133,14 +134,13 @@ public final class EnvelopeBuilder {
                 AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
                 final int size = addressList.size();
                 final List<FetchResponse.Envelope.Address> addresses = new ArrayList<FetchResponse.Envelope.Address>(size);
-                for (int i = 0; i < size; i++) {
-                    final Address address = addressList.get(i);
+                for (Address address : addressList) {
                     if (address instanceof Group) {
                         final Group group = (Group) address;
                         addAddresses(group, addresses);
 
-                    } else if (address instanceof org.apache.james.mime4j.dom.address.Mailbox) {
-                        final org.apache.james.mime4j.dom.address.Mailbox mailbox = (org.apache.james.mime4j.dom.address.Mailbox) address;
+                    } else if (address instanceof Mailbox) {
+                        final Mailbox mailbox = (Mailbox) address;
                         final FetchResponse.Envelope.Address mailboxAddress = buildMailboxAddress(mailbox);
                         addresses.add(mailboxAddress);
 
@@ -149,7 +149,7 @@ public final class EnvelopeBuilder {
                     }
                 }
 
-                results = (FetchResponse.Envelope.Address[]) addresses.toArray(FetchResponse.Envelope.Address.EMPTY);
+                results = addresses.toArray(FetchResponse.Envelope.Address.EMPTY);
                 
 
             }
@@ -182,8 +182,7 @@ public final class EnvelopeBuilder {
         final FetchResponse.Envelope.Address start = startGroup(groupName);
         addresses.add(start);
         final MailboxList mailboxList = group.getMailboxes();
-        for (int i = 0; i < mailboxList.size(); i++) {
-            final org.apache.james.mime4j.dom.address.Mailbox mailbox = mailboxList.get(i);
+        for (Mailbox mailbox : mailboxList) {
             final FetchResponse.Envelope.Address address = buildMailboxAddress(mailbox);
             addresses.add(address);
         }

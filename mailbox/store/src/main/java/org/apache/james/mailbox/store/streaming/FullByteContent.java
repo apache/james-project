@@ -18,18 +18,17 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.streaming;
 
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.MessageResult.Header;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.util.Iterator;
 import java.util.List;
-
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Content;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.Header;
 
 /**
  * Abstract base class for {@link Content} implementations which hold the headers and 
@@ -52,8 +51,7 @@ public class FullByteContent implements Content {
     protected long caculateSize() throws MailboxException{
         long result = body.length;
         result += 2;
-        for (final Iterator<MessageResult.Header> it = headers.iterator(); it.hasNext();) {
-            final MessageResult.Header header = it.next();
+        for (final Header header : headers) {
             if (header != null) {
                 result += header.size();
                 result += 2;
@@ -65,8 +63,7 @@ public class FullByteContent implements Content {
     @Override
     public InputStream getInputStream() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (final Iterator<MessageResult.Header> it = headers.iterator(); it.hasNext();) {
-            final MessageResult.Header header = it.next();
+        for (Header header : headers) {
             if (header != null) {
                 try {
                     out.write((header.getName() + ": " + header.getValue() + "\r\n").getBytes("US-ASCII"));

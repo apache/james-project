@@ -121,12 +121,11 @@ public abstract class AbstractStressTest {
 
         // check if the uids were higher on each append. See MAILBOX-131
         long last = 0;
-        for (int i = 0; i < uList.size(); i++) {
-            long l = uList.get(i);
-            if (l <= last) {
-                fail(l + "->" + last);
+        for (Long uid : uList) {
+            if (uid <= last) {
+                fail(uid + "->" + last);
             } else {
-                last = l;
+                last = uid;
             }
 
         }

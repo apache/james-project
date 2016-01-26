@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.model;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.james.mailbox.model.MessageResult.MimePath;
@@ -92,8 +91,7 @@ public class FetchGroupImpl implements MessageResult.FetchGroup {
             partContentDescriptors = new HashSet<PartContentDescriptor>();
         }
         PartContentDescriptorImpl currentDescriptor = null;
-        for (Iterator<PartContentDescriptor> it = partContentDescriptors.iterator(); it.hasNext();) {
-            PartContentDescriptor descriptor = (PartContentDescriptor) it.next();
+        for (PartContentDescriptor descriptor : partContentDescriptors) {
             if (path.equals(descriptor.path())) {
                 currentDescriptor = (PartContentDescriptorImpl) descriptor;
                 break;

@@ -106,8 +106,8 @@ public abstract class AbstractProtocolTestFramework {
             postElements.runSessions(sessions);
         }
         finally {
-            for (int i = 0; i < sessions.length; i++) {
-                sessions[i].stop();
+            for (Session session : sessions) {
+                session.stop();
             }
         }
     }

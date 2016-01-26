@@ -21,7 +21,6 @@
 package org.apache.james.mailbox.acl;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -251,8 +250,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
         boolean result = false;
         Map<MailboxACLEntryKey, MailboxACLRights> entries = resourceOwnerIsGroup ? groupGlobalACL.getEntries() : userGlobalACL.getEntries();
         if (entries != null) {
-            for (Iterator<Map.Entry<MailboxACLEntryKey, MailboxACLRights>> it = entries.entrySet().iterator(); it.hasNext();) {
-                final Entry<MailboxACLEntryKey, MailboxACLRights> entry = it.next();
+            for (Entry<MailboxACLEntryKey, MailboxACLRights> entry : entries.entrySet()) {
                 final MailboxACLEntryKey key = entry.getKey();
                 if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup) && entry.getValue().contains(right)) {
                     if (key.isNegative()) {
@@ -267,8 +265,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
         if (resourceACL != null) {
             entries = resourceACL.getEntries();
             if (entries != null) {
-                for (Iterator<Map.Entry<MailboxACLEntryKey, MailboxACLRights>> it = entries.entrySet().iterator(); it.hasNext();) {
-                    final Entry<MailboxACLEntryKey, MailboxACLRights> entry = it.next();
+                for (Entry<MailboxACLEntryKey, MailboxACLRights> entry : entries.entrySet()) {
                     final MailboxACLEntryKey key = entry.getKey();
                     if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup) && entry.getValue().contains(right)) {
                         if (key.isNegative()) {
@@ -425,8 +422,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     private void resolveRights(MailboxACLEntryKey queryKey, GroupMembershipResolver groupMembershipResolver, final Map<MailboxACLEntryKey, MailboxACLRights> entries, String resourceOwner, boolean resourceOwnerIsGroup, MailboxACL.MailboxACLRights[] positiveNegativePair)
             throws UnsupportedRightException {
         if (entries != null) {
-            for (Iterator<Map.Entry<MailboxACLEntryKey, MailboxACLRights>> it = entries.entrySet().iterator(); it.hasNext();) {
-                final Entry<MailboxACLEntryKey, MailboxACLRights> entry = it.next();
+            for (Entry<MailboxACLEntryKey, MailboxACLRights> entry : entries.entrySet()) {
                 final MailboxACLEntryKey key = entry.getKey();
                 if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup)) {
                     if (key.isNegative()) {

@@ -1387,10 +1387,10 @@ public class ScriptBuilder {
             lineBuffer.flip();
             final String text = lineBuffer.toString();
             String[] lines = text.split("\r\n");
-            for (int i = 0; i < lines.length; i++) {
-                String line = StringUtils.chomp(lines[i]);
-                if (!ignoreLine(line)) {
-                    final String[] words = StringUtils.split(line);
+            for (String line : lines) {
+                String chompedLine = StringUtils.chomp(line);
+                if (!ignoreLine(chompedLine)) {
+                    final String[] words = StringUtils.split(chompedLine);
                     if (words.length > 3 && "S:".equalsIgnoreCase(words[0]) && "OK".equalsIgnoreCase(words[2])) {
                         final int commandWordIndex;
                         if (words[3] == null || !words[3].startsWith("\\[")) {
@@ -1432,26 +1432,26 @@ public class ScriptBuilder {
                             commandOkPhrase = null;
                         }
                         if (commandOkPhrase != null) {
-                            line = words[0] + " "  + words[1] + " " + commandOkPhrase;
+                            chompedLine = words[0] + " " + words[1] + " " + commandOkPhrase;
                         }
                     }
-                    line = StringUtils.replace(line, "\\\\Seen \\\\Draft",
-                    "\\\\Draft \\\\Seen");
-                    line = StringUtils.replace(line, "\\\\Flagged \\\\Deleted",
-                    "\\\\Deleted \\\\Flagged");
-                    line = StringUtils.replace(line, "\\\\Flagged \\\\Draft",
-                    "\\\\Draft \\\\Flagged");
-                    line = StringUtils.replace(line, "\\\\Seen \\\\Recent",
-                    "\\\\Recent \\\\Seen");
-                    line = StringUtils.replace(line, "\\] First unseen\\.",
-                    "\\](.)*");
-                    if (line.startsWith("S: \\* OK \\[UIDVALIDITY ")) {
-                        line = "S: \\* OK \\[UIDVALIDITY \\d+\\]";
-                    } else if (line.startsWith("S: \\* OK \\[UIDNEXT")) {
-                        line = "S: \\* OK \\[PERMANENTFLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\Seen\\)\\]";
+                    chompedLine = StringUtils.replace(chompedLine, "\\\\Seen \\\\Draft",
+                        "\\\\Draft \\\\Seen");
+                    chompedLine = StringUtils.replace(chompedLine, "\\\\Flagged \\\\Deleted",
+                        "\\\\Deleted \\\\Flagged");
+                    chompedLine = StringUtils.replace(chompedLine, "\\\\Flagged \\\\Draft",
+                        "\\\\Draft \\\\Flagged");
+                    chompedLine = StringUtils.replace(chompedLine, "\\\\Seen \\\\Recent",
+                        "\\\\Recent \\\\Seen");
+                    chompedLine = StringUtils.replace(chompedLine, "\\] First unseen\\.",
+                        "\\](.)*");
+                    if (chompedLine.startsWith("S: \\* OK \\[UIDVALIDITY ")) {
+                        chompedLine = "S: \\* OK \\[UIDVALIDITY \\d+\\]";
+                    } else if (chompedLine.startsWith("S: \\* OK \\[UIDNEXT")) {
+                        chompedLine = "S: \\* OK \\[PERMANENTFLAGS \\(\\\\Answered \\\\Deleted \\\\Draft \\\\Flagged \\\\Seen\\)\\]";
                     }
 
-                    System.out.println(line);
+                    System.out.println(chompedLine);
                 }
             }
             lineBuffer.clear();
@@ -1459,8 +1459,8 @@ public class ScriptBuilder {
 
         private boolean ignoreLine(String line) {
             boolean result = false;
-            for (int i = 0; i < IGNORE_LINES_CONTAINING.length; i++) {
-                if (line.indexOf(IGNORE_LINES_CONTAINING[i]) > 0) {
+            for (String entry : IGNORE_LINES_CONTAINING) {
+                if (line.indexOf(entry) > 0) {
                     result = true;
                     break;
                 }

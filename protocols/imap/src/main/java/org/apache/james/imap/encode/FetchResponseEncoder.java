@@ -196,8 +196,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
             composer.openParen();
             final Set<String> keySet = params.keySet();
             final Collection<String> names = new TreeSet<String>(keySet);
-            for (Iterator<String> iter = names.iterator(); iter.hasNext();) {
-                final String name = iter.next();
+            for (final String name : names) {
                 final String value = params.get(name);
                 if (value == null) {
                     final Logger logger = session.getLog();
@@ -264,8 +263,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
 
     private void encodeBodyElements(final ImapResponseComposer composer, final List<FetchResponse.BodyElement> elements) throws IOException {
         if (elements != null) {
-            for (final Iterator<FetchResponse.BodyElement> it = elements.iterator(); it.hasNext();) {
-                FetchResponse.BodyElement element = it.next();
+            for (FetchResponse.BodyElement element : elements) {
                 final String name = element.getName();
                 composer.message(name);
                 composer.literal(element);
@@ -348,9 +346,7 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
             composer.nil();
         } else {
             composer.openParen();
-            final int length = addresses.length;
-            for (int i = 0; i < length; i++) {
-                final FetchResponse.Envelope.Address address = addresses[i];
+            for (FetchResponse.Envelope.Address address : addresses) {
                 encodeAddress(composer, address);
             }
             composer.closeParen();

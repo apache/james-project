@@ -224,8 +224,8 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         }
         
         String[] userFlags = flags.getUserFlags();
-        for (int i = 0; i < userFlags.length; i++) {
-            message(userFlags[i]);
+        for (String userFlag : userFlags) {
+            message(userFlag);
         }
         closeParen();
         return this;

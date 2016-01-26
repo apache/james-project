@@ -124,13 +124,11 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
      */
     private void processExtensions(SMTPSession session, SMTPResponse resp) {
         if (ehloExtensions != null) {
-            int count = ehloExtensions.size();
-            for (int i = 0; i < count; i++) {
-                List<String> lines = ((EhloExtension) ehloExtensions.get(i))
-                        .getImplementedEsmtpFeatures(session);
+            for (EhloExtension ehloExtension : ehloExtensions) {
+                List<String> lines = ehloExtension.getImplementedEsmtpFeatures(session);
                 if (lines != null) {
-                    for (int j = 0; j < lines.size(); j++) {
-                        resp.appendLine(lines.get(j));
+                    for (String line : lines) {
+                        resp.appendLine(line);
                     }
                 }
             }

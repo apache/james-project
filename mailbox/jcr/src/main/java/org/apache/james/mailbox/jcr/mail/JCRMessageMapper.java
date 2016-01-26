@@ -409,8 +409,7 @@ public class JCRMessageMapper extends AbstractMessageMapper<JCRId> implements JC
                 break;
             }
             Map<Long, MessageMetaData> uids = new HashMap<Long, MessageMetaData>();
-            for (int i = 0; i < results.size(); i++) {
-                MailboxMessage<JCRId> m = results.get(i);
+            for (MailboxMessage<JCRId> m : results) {
                 long uid = m.getUid();
                 uids.put(uid, new SimpleMessageMetaData(m));
                 delete(mailbox, m);

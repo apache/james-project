@@ -116,18 +116,18 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void wireExtensions(Class interfaceName, List extension) throws WiringException {
+    public void wireExtensions(Class interfaceName, List extensions) throws WiringException {
         if (interfaceName.equals(ProtocolHandlerResultHandler.class)) {
-            rHandlers.addAll(extension);
+            rHandlers.addAll(extensions);
         }
         if (interfaceName.equals(CommandHandler.class)) {
-            for (Iterator it = extension.iterator(); it.hasNext();) {
-                CommandHandler handler = (CommandHandler) it.next();
+            for (Object extension : extensions) {
+                CommandHandler handler = (CommandHandler) extension;
                 Collection implCmds = handler.getImplCommands();
 
-                for (Iterator i = implCmds.iterator(); i.hasNext();) {
-                    String commandName = ((String) i.next()).trim().toUpperCase(Locale.US);
-                    addToMap(commandName, (CommandHandler) handler);
+                for (Object implCmd : implCmds) {
+                    String commandName = ((String) implCmd).trim().toUpperCase(Locale.US);
+                    addToMap(commandName, handler);
                 }
             }
             

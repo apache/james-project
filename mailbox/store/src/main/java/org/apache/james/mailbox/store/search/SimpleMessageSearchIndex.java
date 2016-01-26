@@ -90,11 +90,10 @@ public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSe
             // if there is a conjugated uid range criterion in the query tree we can optimize by
             // only fetching this uid range
             NumericRange[] ranges = uidCrit.getOperator().getRange();
-            for (int i = 0; i < ranges.length; i++) {
-                NumericRange r = ranges[i];
+            for (NumericRange r : ranges) {
                 Iterator<MailboxMessage<Id>> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
-                while(it.hasNext()) {
-                	hitSet.add(it.next());
+                while (it.hasNext()) {
+                    hitSet.add(it.next());
                 }
             }
         } else {

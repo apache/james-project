@@ -252,8 +252,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper<MaildirId> {
             break;
         }
         Map<Long, MessageMetaData> uids = new HashMap<Long, MessageMetaData>();
-        for (int i = 0; i < results.size(); i++) {
-            MailboxMessage<MaildirId> m = results.get(i);
+        for (MailboxMessage<MaildirId> m : results) {
             long uid = m.getUid();
             uids.put(uid, new SimpleMessageMetaData(m));
             delete(mailbox, m);

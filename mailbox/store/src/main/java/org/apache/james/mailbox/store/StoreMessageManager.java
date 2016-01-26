@@ -502,9 +502,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         Flags permFlags = getPermanentFlags(session);
 
         Flag[] systemFlags = flags.getSystemFlags();
-        for (int i = 0; i < systemFlags.length; i++) {
-            Flag f = systemFlags[i];
-
+        for (Flag f : systemFlags) {
             if (f != Flag.RECENT && permFlags.contains(f) == false) {
                 flags.remove(f);
             }
@@ -513,8 +511,7 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         // all user flags are allowed
         if (permFlags.contains(Flags.Flag.USER) == false) {
             String[] uFlags = flags.getUserFlags();
-            for (int i = 0; i < uFlags.length; i++) {
-                String uFlag = uFlags[i];
+            for (String uFlag : uFlags) {
                 if (permFlags.contains(uFlag) == false) {
                     flags.remove(uFlag);
                 }

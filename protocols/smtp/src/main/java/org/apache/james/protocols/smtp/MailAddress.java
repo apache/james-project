@@ -363,9 +363,9 @@ public class MailAddress {
                 if (c <= 31 || c >= 127 || c == ' ') {
                     throw new MailAddressException("Invalid character in local-part (user account) at position " + (pos + 1) + " in '" + address + "'",address,pos+1);
                 }
-                for (int i = 0; i < SPECIAL.length; i++) {
-                    if (c == SPECIAL[i]) {
-                        throw new MailAddressException("Invalid character in local-part (user account) at position " + (pos + 1) + " in '" + address + "'",address,pos+1);
+                for (char aChar : SPECIAL) {
+                    if (c == aChar) {
+                        throw new MailAddressException("Invalid character in local-part (user account) at position " + (pos + 1) + " in '" + address + "'", address, pos + 1);
                     }
                 }
                 resultSB.append(c);

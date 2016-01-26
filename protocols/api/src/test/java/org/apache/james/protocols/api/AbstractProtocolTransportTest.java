@@ -113,10 +113,9 @@ public class AbstractProtocolTransportTest {
                     List<Response> responses = new ArrayList<Response>(messages);
                     if (reverse) {
                         Collections.reverse(responses);
-                    } 
-                    
-                    for (int i = 0; i < responses.size(); i++) {
-                        Response r = responses.get(i);
+                    }
+
+                    for (Response r : responses) {
                         if (r instanceof FutureResponseImpl) {
                             ((FutureResponseImpl) r).setResponse(new TestResponse());
                         }

@@ -21,7 +21,6 @@ package org.apache.james.imap.processor.fetch;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -98,8 +97,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             
             List<MessageRange> ranges = new ArrayList<MessageRange>();
 
-            for (int i = 0; i < idSet.length; i++) {
-                MessageRange messageSet = messageRange(session.getSelected(), idSet[i], useUids);
+            for (IdRange range : idSet) {
+                MessageRange messageSet = messageRange(session.getSelected(), range, useUids);
                 if (messageSet != null) {
                     MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
                     MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
@@ -156,16 +155,16 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder(session.getLog()));
         FetchGroup resultToFetch = getFetchGroup(fetch);
 
-        for (int i = 0; i < ranges.size(); i++) {
-            MessageResultIterator messages = mailbox.getMessages(ranges.get(i), resultToFetch, mailboxSession);
+        for (MessageRange range : ranges) {
+            MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
             while (messages.hasNext()) {
                 final MessageResult result = messages.next();
-                
+
                 //skip unchanged messages - this should be filtered at the mailbox level to take advantage of indexes
-                if(fetch.isModSeq() && result.getModSeq() <= fetch.getChangedSince()) {
-                	continue;
+                if (fetch.isModSeq() && result.getModSeq() <= fetch.getChangedSince()) {
+                    continue;
                 }
-                
+
                 try {
                     final FetchResponse response = builder.build(fetch, result, mailbox, session, useUids);
                     responder.respond(response);
@@ -185,10 +184,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                     }
                 }
             }
-            
+
             // Throw the exception if we received one
             if (messages.getException() != null) {
-            	throw messages.getException();
+                throw messages.getException();
             }
         }
 
@@ -206,32 +205,31 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
         if (bodyElements != null) {
-            for (final Iterator<BodyFetchElement> it = bodyElements.iterator(); it.hasNext();) {
-                final BodyFetchElement element = it.next();
+            for (final BodyFetchElement element : bodyElements) {
                 final int sectionType = element.getSectionType();
                 final int[] path = element.getPath();
                 final boolean isBase = (path == null || path.length == 0);
                 switch (sectionType) {
-                case BodyFetchElement.CONTENT:
-                    if (isBase) {
-                        addContent(result, path, isBase, MessageResult.FetchGroup.FULL_CONTENT);
-                    } else {
-                        addContent(result, path, isBase, MessageResult.FetchGroup.MIME_CONTENT);
-                    }
-                    break;
-                case BodyFetchElement.HEADER:
-                case BodyFetchElement.HEADER_NOT_FIELDS:
-                case BodyFetchElement.HEADER_FIELDS:
-                    addContent(result, path, isBase, MessageResult.FetchGroup.HEADERS);
-                    break;
-                case BodyFetchElement.MIME:
-                    addContent(result, path, isBase, MessageResult.FetchGroup.MIME_HEADERS);
-                    break;
-                case BodyFetchElement.TEXT:
-                    addContent(result, path, isBase, MessageResult.FetchGroup.BODY_CONTENT);
-                    break;
-                default:
-                    break;
+                    case BodyFetchElement.CONTENT:
+                        if (isBase) {
+                            addContent(result, path, isBase, FetchGroup.FULL_CONTENT);
+                        } else {
+                            addContent(result, path, isBase, FetchGroup.MIME_CONTENT);
+                        }
+                        break;
+                    case BodyFetchElement.HEADER:
+                    case BodyFetchElement.HEADER_NOT_FIELDS:
+                    case BodyFetchElement.HEADER_FIELDS:
+                        addContent(result, path, isBase, FetchGroup.HEADERS);
+                        break;
+                    case BodyFetchElement.MIME:
+                        addContent(result, path, isBase, FetchGroup.MIME_HEADERS);
+                        break;
+                    case BodyFetchElement.TEXT:
+                        addContent(result, path, isBase, FetchGroup.BODY_CONTENT);
+                        break;
+                    default:
+                        break;
                 }
 
             }

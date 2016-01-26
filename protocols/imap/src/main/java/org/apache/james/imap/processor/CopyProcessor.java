@@ -75,12 +75,12 @@ public class CopyProcessor extends AbstractMailboxProcessor<CopyRequest> {
                 final MessageManager mailbox = mailboxManager.getMailbox(targetMailbox, mailboxSession);
 
                 List<IdRange> resultRanges = new ArrayList<IdRange>();
-                for (int i = 0; i < idSet.length; i++) {
-                    MessageRange messageSet = messageRange(currentMailbox, idSet[i], useUids);
+                for (IdRange range : idSet) {
+                    MessageRange messageSet = messageRange(currentMailbox, range, useUids);
                     if (messageSet != null) {
                         List<MessageRange> processedUids = process(
-								targetMailbox, currentMailbox, mailboxSession,
-								mailboxManager, messageSet);
+                            targetMailbox, currentMailbox, mailboxSession,
+                            mailboxManager, messageSet);
                         for (MessageRange mr : processedUids) {
                             // Set recent flag on copied message as this SHOULD be
                             // done.

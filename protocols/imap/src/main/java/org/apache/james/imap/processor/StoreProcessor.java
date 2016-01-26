@@ -108,24 +108,24 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             } 
             final List<Long> failed = new ArrayList<Long>();
             final List<String> userFlags = Arrays.asList(flags.getUserFlags());
-            for (int i = 0; i < idSet.length; i++) {
+            for (IdRange range : idSet) {
                 final SelectedMailbox selected = session.getSelected();
-                MessageRange messageSet = messageRange(selected, idSet[i], useUids);
+                MessageRange messageSet = messageRange(selected, range, useUids);
                 if (messageSet != null) {
-                    
+
                     if (unchangedSince != -1) {
                         // Ok we have a CONDSTORE option so use the CONDSTORE_COMMAND
                         imapCommand = CONDSTORE_COMMAND;
-                        
+
                         List<Long> uids = new ArrayList<Long>();
 
                         MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
-                        while(results.hasNext()) {
+                        while (results.hasNext()) {
                             MessageResult r = results.next();
                             long uid = r.getUid();
-                            
+
                             boolean fail = false;
-                            
+
                             // Check if UNCHANGEDSINCE 0 was used and the Message contains the request flag.
                             // In such cases we need to fail for this message.
                             //
@@ -135,16 +135,16 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                             //       considered existent, whether it was set or not.
                             if (unchangedSince == 0) {
                                 String[] uFlags = r.getFlags().getUserFlags();
-                                for (int a = 0; a < uFlags.length; a++) {
-                                    if (userFlags.contains(uFlags[a])) {
+                                for (String uFlag : uFlags) {
+                                    if (userFlags.contains(uFlag)) {
                                         fail = true;
                                         break;
                                     }
                                 }
                             }
-                            
+
                             // Check if the mod-sequence of the message is <= the unchangedsince.
-                            // 
+                            //
                             // See RFC4551 3.2. STORE and UID STORE Commands
                             if (!fail && r.getModSeq() <= unchangedSince) {
                                 uids.add(uid);
@@ -157,16 +157,16 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                             }
                         }
                         List<MessageRange> mRanges = MessageRange.toRanges(uids);
-                        for (int a = 0 ; a < mRanges.size(); a++) {
-                            setFlags(request, mailboxSession, mailbox, mRanges.get(a), session, tag, imapCommand, responder);
+                        for (MessageRange mRange : mRanges) {
+                            setFlags(request, mailboxSession, mailbox, mRange, session, tag, imapCommand, responder);
                         }
                     } else {
                         setFlags(request, mailboxSession, mailbox, messageSet, session, tag, imapCommand, responder);
                     }
-                    
+
                 }
 
-                
+
             }
             final boolean omitExpunged = (!useUids);
             unsolicitedResponses(session, responder, omitExpunged, useUids);

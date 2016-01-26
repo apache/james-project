@@ -758,8 +758,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
 
     private Map<Long, MessageMetaData> createMetaData(List<MailboxMessage<HBaseId>> uids) {
         final Map<Long, MessageMetaData> data = new HashMap<Long, MessageMetaData>();
-        for (int i = 0; i < uids.size(); i++) {
-            MailboxMessage<HBaseId> m = uids.get(i);
+        for (MailboxMessage<HBaseId> m : uids) {
             data.put(m.getUid(), new SimpleMessageMetaData(m));
         }
         return data;

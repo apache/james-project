@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.api.handler;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -44,10 +43,9 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
     public <T> LinkedList<T> getHandlers(Class<T> type) {
         LinkedList<T> result = new LinkedList<T>();
         List<ProtocolHandler> handlers = getHandlers();
-        for (Iterator<?> i = handlers.iterator(); i.hasNext(); ) {
-            Object handler = i.next();
+        for (ProtocolHandler handler : handlers) {
             if (type.isInstance(handler)) {
-                result.add((T)handler);
+                result.add((T) handler);
             }
         }
         return result;
@@ -61,15 +59,13 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
      */
     public void wireExtensibleHandlers() throws WiringException {
         List<ProtocolHandler> handlers = getHandlers();
-        for (Iterator<?> h = handlers.iterator(); h.hasNext(); ) {
-            Object handler = h.next();
+        for (ProtocolHandler handler : handlers) {
             if (handler instanceof ExtensibleHandler) {
                 final ExtensibleHandler extensibleHandler = (ExtensibleHandler) handler;
                 final List<Class<?>> markerInterfaces = extensibleHandler.getMarkerInterfaces();
-                for (int i= 0;i < markerInterfaces.size(); i++) {
-                    final Class<?> markerInterface = markerInterfaces.get(i);
+                for (final Class<?> markerInterface : markerInterfaces) {
                     final List<?> extensions = getHandlers(markerInterface);
-                    extensibleHandler.wireExtensions(markerInterface,extensions);
+                    extensibleHandler.wireExtensions(markerInterface, extensions);
                 }
             }
         }

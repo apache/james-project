@@ -173,9 +173,8 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
      */
     private void checkIdRanges(IdRange[] ranges, boolean checkOrder) throws DecodingException {
         long last = 0;
-        for (int i = 0; i < ranges.length; i++ ) {
-            
-            IdRange r = ranges[i];
+        for (IdRange r : ranges) {
+
             long low = r.getLowVal();
             long high = r.getHighVal();
             if (low == Long.MAX_VALUE || high == Long.MAX_VALUE) {

@@ -61,13 +61,13 @@ final class MimePathImpl implements MessageResult.MimePath {
     public String toString() {
         final StringBuffer buffer = new StringBuffer("MIMEPath:");
         boolean isFirst = false;
-        for (int i = 0; i < positions.length; i++) {
+        for (int position : positions) {
             if (isFirst) {
                 isFirst = false;
             } else {
                 buffer.append('.');
             }
-            buffer.append(positions[i]);
+            buffer.append(position);
         }
         return buffer.toString();
     }

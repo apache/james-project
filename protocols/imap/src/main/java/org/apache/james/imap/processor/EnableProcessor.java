@@ -86,8 +86,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
             String cap = caps.next();
             // Check if the CAPABILITY is supported at all
             if (CapabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
-                for (int a = 0; a < capabilities.size(); a++) {
-                    PermitEnableCapabilityProcessor enableProcessor = capabilities.get(a);
+                for (PermitEnableCapabilityProcessor enableProcessor : capabilities) {
                     if (enableProcessor.getPermitEnableCapabilities(session).contains(cap)) {
                         enableProcessor.enable(request, responder, session, cap);
                         enabledCaps.add(cap);

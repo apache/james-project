@@ -39,8 +39,7 @@ public class MailProtocolTestMojo extends AbstractMojo{
     private MailProtocolTest[] mailProtocolTests;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		for (int i = 0; i < mailProtocolTests.length; i++) {
-			MailProtocolTest test = mailProtocolTests[i];
+		for (MailProtocolTest test : mailProtocolTests) {
 			test.execute();
 		}
 	}

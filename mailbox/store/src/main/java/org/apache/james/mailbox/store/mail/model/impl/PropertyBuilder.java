@@ -173,8 +173,7 @@ public class PropertyBuilder {
      */
     public SortedMap<String,String> getProperties(final String namespace) {
         final SortedMap<String, String> parameters = new TreeMap<String, String>();
-        for (Iterator<SimpleProperty> it= properties.iterator();it.hasNext();) {
-            final SimpleProperty property = it.next();
+        for (final SimpleProperty property : properties) {
             if (property.isInSpace(namespace)) {
                 parameters.put(property.getLocalName(), property.getValue());
             }

@@ -507,8 +507,8 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId>
         */
         String[] userflags =  flags.getUserFlags();
         userFlags.clear();
-        for (int i = 0 ; i< userflags.length; i++) {
-            userFlags.add(new JPAUserFlag(userflags[i]));
+        for (String userflag : userflags) {
+            userFlags.add(new JPAUserFlag(userflag));
         }
     }
 

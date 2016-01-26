@@ -79,8 +79,7 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
                 List<MessageMetaData> validResults = new ArrayList<MessageMetaData>();
                 if (uidList.isEmpty() == false) {
 
-                    for (int i = 0; i < uidList.size(); i++) {
-                        MessageMetaData data = uidList.get(i);
+                    for (MessageMetaData data : uidList) {
                         if (deletedUidList.contains(data.getUid()) == false) {
                             size += data.getSize();
                             count++;

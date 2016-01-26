@@ -100,18 +100,18 @@ public class MailAddressTest {
         MailAddress a = new MailAddress(GOOD_ADDRESS);
         assertTrue(GOOD_ADDRESS.equals(a.toString()));
 
-        for (int i = 0; i < GOOD_ADDRESSES.length; i++) {
+        for (String goodAddress : GOOD_ADDRESSES) {
             try {
-                a = new MailAddress(GOOD_ADDRESSES[i]);
+                a = new MailAddress(goodAddress);
             } catch (AddressException e) {
                 fail(e.getMessage());
             }
         }
 
-        for (int i = 0; i < BAD_ADDRESSES.length; i++) {
+        for (String badAddress : BAD_ADDRESSES) {
             try {
-                a = new MailAddress(BAD_ADDRESSES[i]);
-                fail(BAD_ADDRESSES[i]);
+                a = new MailAddress(badAddress);
+                fail(badAddress);
             } catch (AddressException ignore) {
             }
         }

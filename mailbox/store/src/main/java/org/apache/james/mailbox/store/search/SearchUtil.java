@@ -150,8 +150,7 @@ public class SearchUtil {
      */
     public static String getMailboxAddress(String headerValue) {
         AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(headerValue);
-        for (int i = 0; i < aList.size(); i++) {
-            Address address = aList.get(i);
+        for (Address address : aList) {
             if (address instanceof Mailbox) {
                 Mailbox m = (Mailbox) address;
                 String mailboxName = m.getLocalPart();
@@ -161,7 +160,7 @@ public class SearchUtil {
                 return mailboxName;
             } else if (address instanceof Group) {
                 MailboxList mList = ((Group) address).getMailboxes();
-                for (int a = 0; a < mList.size();) {
+                for (int a = 0; a < mList.size(); ) {
                     String mailboxName = mList.get(a).getLocalPart();
                     if (mailboxName == null) {
                         mailboxName = "";

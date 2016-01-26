@@ -182,8 +182,7 @@ public class ResultUtils {
         PartContentBuilder result = new PartContentBuilder();
         result.parse(stream);
         try {
-            for (int i = 0; i < path.length; i++) {
-                final int next = path[i];
+            for (int next : path) {
                 result.to(next);
             }
         } catch (PartContentBuilder.PartNotFoundException e) {

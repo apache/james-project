@@ -161,8 +161,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
     public Long findFirstUnseenMessageUid(Mailbox<InMemoryId> mailbox) throws MailboxException {
         List<MailboxMessage<InMemoryId>> memberships = new ArrayList<MailboxMessage<InMemoryId>>(getMembershipByUidForMailbox(mailbox).values());
         Collections.sort(memberships);
-        for (int i = 0; i < memberships.size(); i++) {
-            MailboxMessage<InMemoryId> m = memberships.get(i);
+        for (MailboxMessage<InMemoryId> m : memberships) {
             if (m.isSeen() == false) {
                 return m.getUid();
             }

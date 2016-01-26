@@ -149,13 +149,12 @@ public class JCRHostSystem extends JamesImapHostSystem{
         if (home.exists()) {
             File[] files = home.listFiles();
             if (files == null) return;
-            for (int i = 0;i < files.length; i++) {
-                File f = files[i];
+            for (File f : files) {
                 if (f.isDirectory()) {
                     delete(f);
                 } else {
                     f.delete();
-                }            
+                }
             }
             home.delete();
         }

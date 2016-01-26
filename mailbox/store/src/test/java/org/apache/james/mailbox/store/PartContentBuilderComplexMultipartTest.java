@@ -218,8 +218,8 @@ public class PartContentBuilderComplexMultipartTest {
         InputStream in = new ByteArrayInputStream(Charset.forName("us-ascii")
                 .encode(MULTIPART_MIXED).array());
         builder.parse(in);
-        for (int i = 0; i < path.length; i++) {
-            builder.to(path[i]);
+        for (int aPath : path) {
+            builder.to(aPath);
         }
     }
 }

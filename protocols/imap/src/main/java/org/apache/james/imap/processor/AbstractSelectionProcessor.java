@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -214,11 +213,9 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                         
                         // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
                         List<Long> knownUidsList = new ArrayList<Long>();
-                        for (int a = 0; a < knownUids.length; a++) {
-                            Iterator<Long> it =  knownUids[a].iterator();
-                            
-                            while(it.hasNext()) {
-                                knownUidsList.add(it.next());
+                        for (IdRange range : knownUids) {
+                            for (Long uid : range) {
+                                knownUidsList.add(uid);
                             }
                         }
                        
@@ -227,16 +224,15 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                         // loop over the known sequences and check the UID for MSN X again the known UID X 
                         long firstUid = 1;
                         int index = 0;
-                        for (int a = 0; a < knownSequences.length; a++) {
+                        for (IdRange knownSequence : knownSequences) {
                             boolean done = false;
-                            Iterator<Long> it =  knownSequences[a].iterator();
-                            while(it.hasNext()) {
-                                
+                            for (Long uid : knownSequence) {
+
                                 // Check if we have uids left to check against
                                 if (knownUidsList.size() > index++) {
-                                    int msn = it.next().intValue();
+                                    int msn = uid.intValue();
                                     long knownUid = knownUidsList.get(index);
-                                    
+
                                     // Check if the uid mathc if not we are done here
                                     if (selected.uid(msn) != knownUid) {
                                         done = true;
@@ -244,22 +240,21 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                     } else {
                                         firstUid = knownUid;
                                     }
-                                    
+
                                 } else {
                                     done = true;
                                     break;
                                 }
 
                             }
-                            
+
                             // We found the first uid to start with 
                             if (done) {
                                 firstUid++;
-                                
+
                                 // Ok now its time to filter out the IdRanges which we are not interested in
                                 List<IdRange> filteredUidSet = new ArrayList<IdRange>();
-                                for ( int i = 0; i < uidSet.length; i++) {
-                                    IdRange r = uidSet[i];
+                                for (IdRange r : uidSet) {
                                     if (r.getLowVal() < firstUid) {
                                         if (r.getHighVal() > firstUid) {
                                             r.setLowVal(firstUid);
@@ -270,7 +265,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                     }
                                 }
                                 uidSet = filteredUidSet.toArray(new IdRange[0]);
-                                
+
                                 break;
                             }
                         }
@@ -279,8 +274,8 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                     }
                     
                     List<MessageRange> ranges = new ArrayList<MessageRange>();
-                    for (int i = 0; i < uidSet.length; i++) {
-                        MessageRange messageSet = messageRange(session.getSelected(), uidSet[i], true);
+                    for (IdRange range : uidSet) {
+                        MessageRange messageSet = messageRange(session.getSelected(), range, true);
                         if (messageSet != null) {
                             MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
                             ranges.add(normalizedMessageSet);
@@ -429,8 +424,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
 
     private void addRecent(final MessageManager.MetaData metaData, SelectedMailbox sessionMailbox) throws MailboxException {
         final List<Long> recentUids = metaData.getRecent();
-        for (int i = 0; i < recentUids.size(); i++) {
-            long uid = recentUids.get(i);
+        for (Long uid : recentUids) {
             sessionMailbox.addRecent(uid);
         }
     }

@@ -115,8 +115,8 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
      */
     public static Set<String> getSupportedCapabilities(ImapSession session) {
         Set<String> caps = new HashSet<String>();
-        for (int i = 0; i < capabilities.size(); i++) {
-            caps.addAll(capabilities.get(i).getImplementedCapabilities(session));
+        for (CapabilityImplementingProcessor capability : capabilities) {
+            caps.addAll(capability.getImplementedCapabilities(session));
         }
         caps.removeAll(disabledCaps);
         return caps;

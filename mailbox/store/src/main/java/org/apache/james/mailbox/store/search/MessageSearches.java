@@ -124,8 +124,7 @@ public class MessageSearches implements Iterable<Long> {
         final Collection<Long> recentMessageUids = query.getRecentMessageUids();
         boolean result = true;
         if (criteria != null) {
-            for (Iterator<SearchQuery.Criterion> it = criteria.iterator(); it.hasNext();) {
-                final SearchQuery.Criterion criterion = it.next();
+            for (final SearchQuery.Criterion criterion : criteria) {
                 if (!isMatch(criterion, message, recentMessageUids, log)) {
                     result = false;
                     break;
@@ -242,8 +241,7 @@ public class MessageSearches implements Iterable<Long> {
     private boolean and(final List<SearchQuery.Criterion> criteria, final MailboxMessage<?> message,
             final Collection<Long> recentMessageUids, Logger log) throws MailboxException {
         boolean result = true;
-        for (Iterator<SearchQuery.Criterion> it = criteria.iterator(); it.hasNext();) {
-            final SearchQuery.Criterion criterion = it.next();
+        for (final SearchQuery.Criterion criterion : criteria) {
             final boolean matches = isMatch(criterion, message, recentMessageUids, log);
             if (!matches) {
                 result = false;
@@ -256,8 +254,7 @@ public class MessageSearches implements Iterable<Long> {
     private boolean or(final List<SearchQuery.Criterion> criteria, final MailboxMessage<?> message,
             final Collection<Long> recentMessageUids, Logger log) throws MailboxException {
         boolean result = false;
-        for (Iterator<SearchQuery.Criterion> it = criteria.iterator(); it.hasNext();) {
-            final SearchQuery.Criterion criterion = it.next();
+        for (final SearchQuery.Criterion criterion : criteria) {
             final boolean matches = isMatch(criterion, message, recentMessageUids, log);
             if (matches) {
                 result = true;
@@ -270,8 +267,7 @@ public class MessageSearches implements Iterable<Long> {
     private boolean nor(final List<SearchQuery.Criterion> criteria, final MailboxMessage<?> message,
             final Collection<Long> recentMessageUids, Logger log) throws MailboxException {
         boolean result = true;
-        for (Iterator<SearchQuery.Criterion> it = criteria.iterator(); it.hasNext();) {
-            final SearchQuery.Criterion criterion = it.next();
+        for (final SearchQuery.Criterion criterion : criteria) {
             final boolean matches = isMatch(criterion, message, recentMessageUids, log);
             if (matches) {
                 result = false;
@@ -318,10 +314,8 @@ public class MessageSearches implements Iterable<Long> {
         final SearchQuery.InOperator operator = criterion.getOperator();
         final NumericRange[] ranges = operator.getRange();
         final long uid = message.getUid();
-        final int length = ranges.length;
         boolean result = false;
-        for (int i = 0; i < length; i++) {
-            final NumericRange numericRange = ranges[i];
+        for (final NumericRange numericRange : ranges) {
             if (numericRange.isIn(uid)) {
                 result = true;
                 break;
@@ -368,18 +362,17 @@ public class MessageSearches implements Iterable<Long> {
             if (headerName.equalsIgnoreCase(name)) {
                 final String value = header.getValue();
                 AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(value);
-                for (int i = 0; i < aList.size(); i++) {
-                    Address address = aList.get(i);
+                for ( Address address : aList) {
                     if (address instanceof Mailbox) {
                         if (AddressFormatter.DEFAULT.encode((Mailbox) address).toUpperCase(Locale.ENGLISH)
-                                .contains(text)) {
+                            .contains(text)) {
                             return true;
                         }
                     } else if (address instanceof Group) {
                         MailboxList mList = ((Group) address).getMailboxes();
-                        for (int a = 0; a < mList.size(); a++) {
-                            if (AddressFormatter.DEFAULT.encode(mList.get(a)).toUpperCase(Locale.ENGLISH)
-                                    .contains(text)) {
+                        for (Mailbox mailbox : mList) {
+                            if (AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.ENGLISH)
+                                .contains(text)) {
                                 return true;
                             }
                         }

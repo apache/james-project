@@ -419,15 +419,15 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
             // Not return flags documents
             query.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST_NOT);
             List<Criterion> crits = searchQuery.getCriterias();
-            for (int i = 0; i < crits.size(); i++) {
-                query.add(createQuery(crits.get(i), mailbox, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
+            for (Criterion crit : crits) {
+                query.add(createQuery(crit, mailbox, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
             }
 
             // query for all the documents sorted as specified in the SearchQuery
             TopDocs docs = searcher.search(query, null, maxQueryResults, createSort(searchQuery.getSorts()));
             ScoreDoc[] sDocs = docs.scoreDocs;
-            for (int i = 0; i < sDocs.length; i++) {
-                long uid = Long.valueOf(searcher.doc(sDocs[i].doc).get(UID_FIELD));
+            for (ScoreDoc sDoc : sDocs) {
+                long uid = Long.valueOf(searcher.doc(sDoc.doc).get(UID_FIELD));
                 uids.add(uid);
             }
         } catch (IOException e) {
@@ -848,8 +848,7 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
             return NumericRangeQuery.newLongRange(UID_FIELD, range.getLowValue(), range.getHighValue(), true, true);
         } else {
             BooleanQuery rangesQuery = new BooleanQuery();
-            for (int i = 0; i < ranges.length; i++) {
-                NumericRange range = ranges[i];
+            for (NumericRange range : ranges) {
                 rangesQuery.add(NumericRangeQuery.newLongRange(UID_FIELD, range.getLowValue(), range.getHighValue(), true, true), BooleanClause.Occur.SHOULD);
             }        
             return rangesQuery;
@@ -911,8 +910,8 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
             // query for all the documents sorted by uid
             TopDocs docs = searcher.search(query, null, maxQueryResults, new Sort(UID_SORT));
             ScoreDoc[] sDocs = docs.scoreDocs;
-            for (int i = 0; i < sDocs.length; i++) {
-                long uid = Long.valueOf(searcher.doc(sDocs[i].doc).get(UID_FIELD));
+            for (ScoreDoc sDoc : sDocs) {
+                long uid = Long.valueOf(searcher.doc(sDoc.doc).get(UID_FIELD));
                 uids.add(uid);
             }
             
@@ -948,91 +947,90 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     private Sort createSort(List<SearchQuery.Sort> sorts) {
         Sort sort = new Sort();
         List<SortField> fields = new ArrayList<SortField>();
-        
-        for (int i = 0; i < sorts.size(); i++) {
-            SearchQuery.Sort s = sorts.get(i);
+
+        for (SearchQuery.Sort s : sorts) {
             boolean reverse = s.isReverse();
             SortField sf = null;
-            
+
             switch (s.getSortClause()) {
-            case Arrival:
-                if (reverse) {
-                    sf = ARRIVAL_MAILBOX_SORT_REVERSE;
-                } else {
-                    sf = ARRIVAL_MAILBOX_SORT;
-                }
-                break;
-            case SentDate:
-                if (reverse) {
-                    sf = SENT_DATE_SORT_REVERSE;
-                } else {
-                    sf = SENT_DATE_SORT;
-                }
-                break;
-            case MailboxCc:
-                if (reverse) {
-                    sf = FIRST_CC_MAILBOX_SORT_REVERSE;
-                } else {
-                    sf = FIRST_CC_MAILBOX_SORT;
-                }
-                break;
-            case MailboxFrom:
-                if (reverse) {
-                    sf = FIRST_FROM_MAILBOX_SORT_REVERSE;
-                } else {
-                    sf = FIRST_FROM_MAILBOX_SORT;
-                }
-                break;
-            case Size:
-                if (reverse) {
-                    sf = SIZE_SORT_REVERSE;
-                } else {
-                    sf = SIZE_SORT;
-                }
-                break;
-            case BaseSubject:
-                if (reverse) {
-                    sf = BASE_SUBJECT_SORT_REVERSE;
-                } else {
-                    sf = BASE_SUBJECT_SORT;
-                }
-                break;
-            case MailboxTo:
-                if (reverse) {
-                    sf = FIRST_TO_MAILBOX_SORT_REVERSE;
-                } else {
-                    sf = FIRST_TO_MAILBOX_SORT;
-                }
-                break;
-                
-            case Uid:
-                if (reverse) {
-                    sf = UID_SORT_REVERSE;
-                } else {
-                    sf = UID_SORT;
-                }
-                break;
-            case DisplayFrom:
-                if (reverse) {
-                    sf = FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
-                } else {
-                    sf = FIRST_FROM_MAILBOX_DISPLAY_SORT;
-                }
-                break;
-            case DisplayTo:
-                if (reverse) {
-                    sf = FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE;
-                } else {
-                    sf = FIRST_TO_MAILBOX_DISPLAY_SORT;
-                }
-                break;   
-            default:
-                break;
+                case Arrival:
+                    if (reverse) {
+                        sf = ARRIVAL_MAILBOX_SORT_REVERSE;
+                    } else {
+                        sf = ARRIVAL_MAILBOX_SORT;
+                    }
+                    break;
+                case SentDate:
+                    if (reverse) {
+                        sf = SENT_DATE_SORT_REVERSE;
+                    } else {
+                        sf = SENT_DATE_SORT;
+                    }
+                    break;
+                case MailboxCc:
+                    if (reverse) {
+                        sf = FIRST_CC_MAILBOX_SORT_REVERSE;
+                    } else {
+                        sf = FIRST_CC_MAILBOX_SORT;
+                    }
+                    break;
+                case MailboxFrom:
+                    if (reverse) {
+                        sf = FIRST_FROM_MAILBOX_SORT_REVERSE;
+                    } else {
+                        sf = FIRST_FROM_MAILBOX_SORT;
+                    }
+                    break;
+                case Size:
+                    if (reverse) {
+                        sf = SIZE_SORT_REVERSE;
+                    } else {
+                        sf = SIZE_SORT;
+                    }
+                    break;
+                case BaseSubject:
+                    if (reverse) {
+                        sf = BASE_SUBJECT_SORT_REVERSE;
+                    } else {
+                        sf = BASE_SUBJECT_SORT;
+                    }
+                    break;
+                case MailboxTo:
+                    if (reverse) {
+                        sf = FIRST_TO_MAILBOX_SORT_REVERSE;
+                    } else {
+                        sf = FIRST_TO_MAILBOX_SORT;
+                    }
+                    break;
+
+                case Uid:
+                    if (reverse) {
+                        sf = UID_SORT_REVERSE;
+                    } else {
+                        sf = UID_SORT;
+                    }
+                    break;
+                case DisplayFrom:
+                    if (reverse) {
+                        sf = FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
+                    } else {
+                        sf = FIRST_FROM_MAILBOX_DISPLAY_SORT;
+                    }
+                    break;
+                case DisplayTo:
+                    if (reverse) {
+                        sf = FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE;
+                    } else {
+                        sf = FIRST_TO_MAILBOX_DISPLAY_SORT;
+                    }
+                    break;
+                default:
+                    break;
             }
             if (sf != null) {
 
                 fields.add(sf);
-                
+
                 // Add the uid sort as tie-breaker
                 if (sf == SENT_DATE_SORT) {
                     fields.add(UID_SORT);
@@ -1121,19 +1119,19 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
         BooleanQuery conQuery = new BooleanQuery();
         switch (crit.getType()) {
         case AND:
-            for (int i = 0; i < crits.size(); i++) {
-                conQuery.add(createQuery(crits.get(i), mailbox, recentUids), BooleanClause.Occur.MUST);
+            for (Criterion criterion : crits) {
+                conQuery.add(createQuery(criterion, mailbox, recentUids), BooleanClause.Occur.MUST);
             }
             return conQuery;
         case OR:
-            for (int i = 0; i < crits.size(); i++) {
-                conQuery.add(createQuery(crits.get(i), mailbox, recentUids), BooleanClause.Occur.SHOULD);
+            for (Criterion criterion : crits) {
+                conQuery.add(createQuery(criterion, mailbox, recentUids), BooleanClause.Occur.SHOULD);
             }
             return conQuery;
         case NOR:
             BooleanQuery nor = new BooleanQuery();
-            for (int i = 0; i < crits.size(); i++) {
-                conQuery.add(createQuery(crits.get(i), mailbox, recentUids), BooleanClause.Occur.SHOULD);
+            for (Criterion criterion : crits) {
+                conQuery.add(createQuery(criterion, mailbox, recentUids), BooleanClause.Occur.SHOULD);
             }
             nor.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
 
@@ -1219,15 +1217,15 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
 
             TopDocs docs = searcher.search(query, 100000);
             ScoreDoc[] sDocs = docs.scoreDocs;
-            for (int i = 0; i < sDocs.length; i++) {
-                Document doc = searcher.doc(sDocs[i].doc);
-                
+            for (ScoreDoc sDoc : sDocs) {
+                Document doc = searcher.doc(sDoc.doc);
+
                 if (doc.getFieldable(FLAGS_FIELD) == null) {
                     doc.removeFields(FLAGS_FIELD);
                     indexFlags(doc, f);
 
                     writer.updateDocument(new Term(ID_FIELD, doc.get(ID_FIELD)), doc);
-            
+
                 }
             }
         } catch (IOException e) {
@@ -1268,14 +1266,14 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     private void indexFlags(Document doc, Flags f) {
         List<String> fString = new ArrayList<String>();
         Flag[] flags = f.getSystemFlags();
-        for (int a = 0; a < flags.length; a++) {
-            fString.add(toString(flags[a]));
-            doc.add(new Field(FLAGS_FIELD, toString(flags[a]),Store.NO, Index.NOT_ANALYZED));
+        for (Flag flag : flags) {
+            fString.add(toString(flag));
+            doc.add(new Field(FLAGS_FIELD, toString(flag), Store.NO, Index.NOT_ANALYZED));
         }
         
         String[] userFlags = f.getUserFlags();
-        for (int a = 0; a < userFlags.length; a++) {
-            doc.add(new Field(FLAGS_FIELD, userFlags[a],Store.NO, Index.NOT_ANALYZED));
+        for (String userFlag : userFlags) {
+            doc.add(new Field(FLAGS_FIELD, userFlag, Store.NO, Index.NOT_ANALYZED));
         }
         
         // if no flags are there we just use a empty field

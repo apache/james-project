@@ -452,21 +452,17 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
                 if (messageEvent instanceof Added) {
                     sizeChanged = true;
                     final List<Long> uids = ((Added) event).getUids();
-                    for (int i = 0; i < uids.size(); i++) {
-                        add(uids.get(i));
+                    for (Long uid : uids) {
+                        add(uid);
                     }
                 } else if (messageEvent instanceof FlagsUpdated) {
                     FlagsUpdated updated = (FlagsUpdated) messageEvent;
                     List<UpdatedFlags> uFlags = updated.getUpdatedFlags();
                     if (sessionId != eventSessionId || !silentFlagChanges) {
 
-                        for (int i = 0; i < uFlags.size(); i++) {
-                            UpdatedFlags u = uFlags.get(i);
-
+                        for (UpdatedFlags u : uFlags) {
                             if (interestingFlags(u)) {
-
                                 flagUpdateUids.add(u.getUid());
-
                             }
                         }
                     }
@@ -478,8 +474,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
                         // \RECENT flag
                         // See IMAP-287
                         List<UpdatedFlags> uflags = updated.getUpdatedFlags();
-                        for (int i = 0; i < uflags.size(); i++) {
-                            UpdatedFlags u = uflags.get(i);
+                        for (UpdatedFlags u : uflags) {
                             Iterator<Flag> flags = u.systemFlagIterator();
 
                             while (flags.hasNext()) {
@@ -490,7 +485,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
                                     }
                                 }
                             }
-                          
+
 
                         }
                     }
@@ -499,8 +494,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
                     FlagsUpdated updatedF = (FlagsUpdated) messageEvent;
                     List<UpdatedFlags> flags = updatedF.getUpdatedFlags();
 
-                    for (int i = 0; i < flags.size(); i++) {
-                        applicableFlags.add(flags.get(i).getNewFlags());
+                    for (UpdatedFlags flag : flags) {
+                        applicableFlags.add(flag.getNewFlags());
 
                     }
 

@@ -42,9 +42,7 @@ public class SearchResponseEncoder extends AbstractChainedImapEncoder {
         composer.untagged();
         composer.message(ImapConstants.SEARCH_RESPONSE_NAME);
         if (ids != null) {
-            final int length = ids.length;
-            for (int i = 0; i < length; i++) {
-                final long id = ids[i];
+            for (long id : ids) {
                 composer.message(id);
             }
         }

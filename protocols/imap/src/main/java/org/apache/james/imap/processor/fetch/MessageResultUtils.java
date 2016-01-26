@@ -70,9 +70,7 @@ public class MessageResultUtils {
                 MessageResult.Header header = iterator.next();
                 final String headerName = header.getName();
                 if (headerName != null) {
-                    final int length = names.length;
-                    for (int i = 0; i < length; i++) {
-                        final String name = names[i];
+                    for (final String name : names) {
                         if (headerName.equalsIgnoreCase(name)) {
                             results.add(header);
                             break;
@@ -119,8 +117,7 @@ public class MessageResultUtils {
         boolean match = false;
         final String headerName = header.getName();
         if (headerName != null) {
-            for (final Iterator<String> it = names.iterator(); it.hasNext();) {
-                final String name = it.next();
+            for (final String name : names) {
                 if (name.equalsIgnoreCase(headerName)) {
                     match = true;
                     break;
@@ -192,10 +189,8 @@ public class MessageResultUtils {
                 MessageResult.Header header = iterator.next();
                 final String headerName = header.getName();
                 if (headerName != null) {
-                    final int length = names.length;
                     boolean match = false;
-                    for (int i = 0; i < length; i++) {
-                        final String name = names[i];
+                    for (String name : names) {
                         if (headerName.equalsIgnoreCase(name)) {
                             match = true;
                             break;
