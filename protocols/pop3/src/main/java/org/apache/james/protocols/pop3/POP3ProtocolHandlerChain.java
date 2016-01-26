@@ -20,6 +20,7 @@
 package org.apache.james.protocols.pop3;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
@@ -71,9 +72,7 @@ public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl{
     protected List<ProtocolHandler> initDefaultHandlers(AbstractPassCmdHandler... authHandlers) {
         List<ProtocolHandler> handlers = new ArrayList<ProtocolHandler>();
         // add all pass handlers
-        for (AbstractPassCmdHandler handler: authHandlers) {
-            handlers.add(handler);
-        }
+        Collections.addAll(handlers, authHandlers);
         
         handlers.add(new CapaCmdHandler());
         handlers.add(new UserCmdHandler());

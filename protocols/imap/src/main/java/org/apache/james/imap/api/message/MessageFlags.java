@@ -21,6 +21,7 @@ package org.apache.james.imap.api.message;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.mail.Flags;
 
@@ -100,9 +101,8 @@ public class MessageFlags {
         
         // Add user flags
         String[] userFlags = flags.getUserFlags();
-        for (int i = 0; i < userFlags.length; i++) {
-            results.add(userFlags[i]);
-        }
+        Collections.addAll(results, userFlags);
+
         if (flags.contains(Flags.Flag.USER)) {
             results.add(USER_OUTPUT_CAPITALISED);
         }
