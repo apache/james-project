@@ -35,6 +35,8 @@ import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -45,9 +47,6 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
     private static final String TARGET_REPOSITORY_FOLDER = "target/var/users";
 	private File targetRepositoryFolder;
 
-    /**
-     * @see junit.framework.TestCase#setUp()
-     */
     @Before
     @Override
     public void setUp() throws Exception {
@@ -61,12 +60,6 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
         FileUtils.forceDelete(targetRepositoryFolder);
     }
 
-    /**
-     * Create the repository to be tested.
-     * 
-     * @return the user repository
-     * @throws Exception
-     */
     @SuppressWarnings("deprecation")
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
@@ -103,14 +96,11 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
         return res;
     }
     
-    /* Disable testUpperCaseSameUser test.
-     *
-     * @see org.apache.james.user.lib.AbstractUsersRepositoryTest#testUpperCaseSameUser()
-     */
     @Override
-    public void testUpperCaseSameUser() throws UsersRepositoryException {
+    @Ignore
+    @Test
+    public void addUserShouldThrowWhenSameUsernameWithDifferentCase() throws UsersRepositoryException {
     }
-
 
     protected void disposeUsersRepository() throws UsersRepositoryException {
         if (this.usersRepository != null) {
@@ -121,5 +111,4 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
             LifecycleUtil.dispose(this.usersRepository);
         }
     }
-
 }

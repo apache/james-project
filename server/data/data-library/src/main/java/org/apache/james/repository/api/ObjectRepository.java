@@ -33,5 +33,5 @@ public interface ObjectRepository extends Repository {
 
     void put(String key, Object value);
 
-    void remove(String key);
+    boolean remove(String key);
 }

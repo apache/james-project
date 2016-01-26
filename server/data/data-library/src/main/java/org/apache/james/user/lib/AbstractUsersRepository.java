@@ -60,7 +60,6 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
     }
 
     protected void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
-
     }
 
     public void setEnableVirtualHosting(boolean virtualHosting) {

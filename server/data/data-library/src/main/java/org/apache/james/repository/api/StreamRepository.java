@@ -31,5 +31,5 @@ public interface StreamRepository extends Repository {
 
     OutputStream put(String key);
 
-    void remove(String key);
+    boolean remove(String key);
 }

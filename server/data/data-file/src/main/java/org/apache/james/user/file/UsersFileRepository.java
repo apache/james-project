@@ -206,7 +206,9 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
      * @see org.apache.james.user.api.UsersRepository#removeUser(java.lang.String)
      */
     public synchronized void removeUser(String name) throws UsersRepositoryException {
-        objectRepository.remove(name);
+        if (!objectRepository.remove(name)) {
+            throw new UsersRepositoryException("User " + name + " does not exist");
+        }
     }
 
     /**

@@ -261,19 +261,19 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * 
      * @param key
      *            the key to remove
+     * @throws IOException 
      */
-    public synchronized void remove(final String key) {
+    
+    public synchronized boolean remove(final String key) {
         try {
             FileUtils.forceDelete(getFile(key));
-            if (DEBUG)
-                getLogger().debug("removed key " + key);
-        } catch (FileNotFoundException e) {
-            getLogger().debug("File for " + key + " not found: wasn't able to remove");
+            return true;
+        } catch (FileNotFoundException e) { 
+            return false;
         } catch (Exception e) {
             throw new RuntimeException("Exception caught while removing" + " an object: " + e);
         }
     }
-
     /**
      * 
      * Indicates if the given key is associated to a contained object

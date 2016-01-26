@@ -19,6 +19,20 @@
 
 package org.apache.james.mailrepository.file;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.MimeMessageCopyOnWriteProxy;
@@ -28,20 +42,6 @@ import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.mailet.Mail;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * <p>
@@ -250,8 +250,9 @@ public class FileMailRepository extends AbstractMailRepository {
 
     @Override
     protected void internalRemove(String key) throws MessagingException {
-        if (keys != null)
+        if (keys != null) {
             keys.remove(key);
+        }
         streamRepository.remove(key);
         objectRepository.remove(key);
     }

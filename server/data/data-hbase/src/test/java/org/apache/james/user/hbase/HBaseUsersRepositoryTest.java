@@ -29,6 +29,8 @@ import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -78,5 +80,11 @@ public class HBaseUsersRepositoryTest extends AbstractUsersRepositoryTest {
         userRepository.setLog(LoggerFactory.getLogger("MockLog"));
         userRepository.configure(new DefaultConfigurationBuilder());
         return userRepository;
+    }
+    
+    @Override
+    @Ignore
+    @Test(expected = UsersRepositoryException.class)
+    public void removeUserShouldThrowWhenUserNotInRepository() throws UsersRepositoryException {
     }
 }
