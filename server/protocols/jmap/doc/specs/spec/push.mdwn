@@ -1,4 +1,7 @@
 ## Push
+<aside class="warning">
+Not implemented
+</aside>
 
 Any modern email client should be able to update instantly whenever the data on the server is changed by another client or message delivery. Push notifications in JMAP occur out-of-band (i.e. not over the same connection as API exchanges) so that they can make use of efficient native push mechanisms on different platforms.
 

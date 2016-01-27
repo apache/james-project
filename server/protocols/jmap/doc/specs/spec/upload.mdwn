@@ -1,4 +1,7 @@
 ## File Uploads
+<aside class="warning">
+Not implemented
+</aside>
 
 There is a single endpoint which handles all file uploads, regardless of what they are to be used for. To upload a file, submit a POST request to the file upload endpoint (see the authentication section for information on how to obtain this URL). The Content-Type MUST be correctly set for the type of the file being uploaded. The request MUST be authenticated as per any HTTP request. The request MAY include an "X-JMAP-AccountId" header, with the value being the account to use for the request. Otherwise, the default account will be used.
 

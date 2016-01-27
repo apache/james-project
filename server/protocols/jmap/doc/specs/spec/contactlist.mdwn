@@ -1,4 +1,7 @@
 ## ContactLists
+<aside class="warning">
+Not implemented
+</aside>
 
 A **ContactList** is a query on the set of contacts in a user's contacts. The client can optionally also fetch the contacts.
 

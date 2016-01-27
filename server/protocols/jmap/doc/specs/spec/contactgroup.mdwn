@@ -1,4 +1,7 @@
 ## Contact Groups
+<aside class="warning">
+Not implemented
+</aside>
 
 A **Contact Group** represents a named set of contacts. It has the following properties:
 

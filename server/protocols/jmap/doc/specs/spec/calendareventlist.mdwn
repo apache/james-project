@@ -1,4 +1,7 @@
 ## CalendarEventLists
+<aside class="warning">
+Not implemented
+</aside>
 
 A **CalendarEventList** is a query on the set of events in a user's calendars. The client can optionally also fetch the events.
 

@@ -1,4 +1,7 @@
 ## Calendar Events
+<aside class="warning">
+Not implemented
+</aside>
 
 A CalendarEvent contains information about an event, or recurring series of events, that takes place at a particular time. The object is designed to be easily convertible to/from iCalendar format ([RFC 5545](https://tools.ietf.org/html/rfc5545)) for compatibility with existing calendaring systems.
 

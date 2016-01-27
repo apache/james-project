@@ -1,4 +1,7 @@
 ## Contacts
+<aside class="warning">
+Not implemented
+</aside>
 
 A **Contact** object stores information about a person or company. It has the following properties:
 
