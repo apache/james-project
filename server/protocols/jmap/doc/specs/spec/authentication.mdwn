@@ -5,6 +5,9 @@ Before connecting to any JMAP service, the client must first gain an access toke
 The server may support multiple different mechanisms for authenticating a user to gain the access token. It is expected that further types may be added in future extensions to the JMAP specification (for example [FIDO](https://fidoalliance.org/)).
 
 ### Service autodiscovery
+<aside class="warning">
+Not implemented
+</aside>
 
 There are three common autodiscovery methods in use for internet protocols:
 
@@ -22,6 +25,9 @@ The authentication URL is `https://hostname/.well-known/jmap` (following any red
 Other autodiscovery options using `autoconfig.example.com` or `autodiscover.example.com` may be added to a future version of JMAP to support clients which can't use SRV lookup.
 
 ### Getting an access token
+<aside class="notice">
+Partially supported
+</aside>
 
 Authorization always starts with the client making a POST request to the authentication URL (found either via service autodiscovery or manual entry). The request MUST be of type `application/json` and specify an `Accept: application/json` header. The body of the request MUST be a single JSON object, encoded in UTF-8, with the following properties:
 
@@ -46,6 +52,11 @@ The response body will be a single JSON object with the following properties.
   A token from the server to allow it to connect the next request with previous requests in the login process. This SHOULD be of limited time validity (e.g. 15 minutes from previous call).
 - **methods**: `String[]`
   A list of the supported authentication methods to continue with authentication. This will often have only have one item in it. Allowed values are `"password"`, `"external"` and `"oauth"`. More options may be added in future extensions to JMAP.
+<aside class="warning">
+Support only `"password"`
+The client can also use OAuth by providing a header in the request such as this:
+`Authorization: Bearer JWT_TOKEN`
+</aside>
 - **prompt**: `String|null`
   A message to display in the client to the user.
 
@@ -85,10 +96,19 @@ The response body will be a single JSON object with the following properties.
 - **api**: `String`
   The URL to use for JMAP API requests.
 - **eventSource**: `String`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The URL to connect to for push events (see the Push section of this spec).
 - **upload**: `String`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The URL endpoint to use when uploading files (see the Upload section of this spec).
 - **download**: `String`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The URL endpoint to use when downloading files, in [RFC6570 URI Template](https://tools.ietf.org/html/rfc6570) (level 1) format. The URL MUST contain a variable called `blobId`. The URL SHOULD contain a variable called `name`. The client may use this template in combination with a blobId to download any binary data (files) referenced by other objects. Since a blob is not associated with a particular name, the template SHOULD allow a name to be substituted in as well; the server will return this as the filename if it sets a `Content-Disposition` header. To download the data the client MUST make an authenticated GET request (see below for how to authenticate requests) to the expanded URL, and then follow any redirects.
 
 URLs are returned only after logging in. This allows different URLs to be used for users located in different geographic datacentres within the same service.
@@ -153,6 +173,9 @@ Something has gone wrong internally, and the server is in a broken state. Don't 
 The server is currently down. Try again later with exponential backoff. There is no content in the response.
 
 ### Revoking an access token
+<aside class="notice">
+Tokens only have an expiration time of 15 minutes.
+</aside>
 
 The validity of an access token is determined by the server. It may be valid for a limited time only, or expire after a certain time of inactivity, or be valid indefinitely etc. If an access token expires, it MUST NOT be resurrected. The client MUST restart the authentication process to get a new access token.
 
