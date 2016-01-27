@@ -55,7 +55,7 @@ public class MessagePropertiesTest {
     public void toOutputPropertiesShouldReturnMandatoryPropertiesWhenEmptyRequest() {
         MessageProperties actual = new MessageProperties(Optional.of(ImmutableSet.of())).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties())
-            .hasValue(ImmutableSet.of(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds));
+            .hasValue(ImmutableSet.of(MessageProperty.id));
     }
 
     @Test

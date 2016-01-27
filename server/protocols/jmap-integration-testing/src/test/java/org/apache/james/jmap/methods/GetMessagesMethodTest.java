@@ -349,8 +349,6 @@ public abstract class GetMessagesMethodTest {
         assertThat(JsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo("username@domain.tld|mailbox|1");
-        assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".threadId")).isNotNull();
-        assertThat(JsonPath.parse(response).<List<String>>read(firstMessagePath + ".mailboxIds")).isNotEmpty();
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isEqualTo("my test subject");
     }
 }

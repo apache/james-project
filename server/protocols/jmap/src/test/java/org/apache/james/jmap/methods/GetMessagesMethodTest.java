@@ -199,7 +199,7 @@ public class GetMessagesMethodTest {
             .extracting(JmapResponse::getProperties)
             .flatExtracting(Optional::get)
             .asList()
-            .containsOnly(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds);
+            .containsOnly(MessageProperty.id);
     }
 
     @Test
@@ -224,7 +224,7 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldAddMantoryPropertiesWhenNotInPropertyList() throws MailboxException {
+    public void processShouldAddMandatoryPropertiesWhenNotInPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
         ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(Charsets.UTF_8));
@@ -235,7 +235,7 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of(MessageProperty.subject.asFieldName()))
                 .build();
 
-        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds, MessageProperty.subject);
+        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.subject);
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -259,7 +259,7 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of(MessageProperty.body.asFieldName()))
                 .build();
 
-        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds, MessageProperty.textBody);
+        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.textBody);
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
@@ -286,7 +286,7 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 
-        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds, MessageProperty.headers);
+        Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.headers);
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());

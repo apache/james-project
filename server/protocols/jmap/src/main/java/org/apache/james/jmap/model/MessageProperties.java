@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class MessageProperties {
 
-    public static final ImmutableSet<MessageProperty> MANDATORY_PROPERTIES = ImmutableSet.of(MessageProperty.id, MessageProperty.threadId, MessageProperty.mailboxIds);
+    public static final ImmutableSet<MessageProperty> MANDATORY_PROPERTIES = ImmutableSet.of(MessageProperty.id);
 
     private final Optional<ImmutableSet<MessageProperty>> messageProperties;
     private final Optional<ImmutableSet<HeaderProperty>> headersProperties;
