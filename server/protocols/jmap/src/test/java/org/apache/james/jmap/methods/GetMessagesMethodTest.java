@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.ClientId;
@@ -37,7 +38,7 @@ import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
-import org.apache.james.jmap.model.MessageProperty;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -57,6 +58,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -211,10 +214,13 @@ public class GetMessagesMethodTest {
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
-        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+        Stream<JmapResponse> result = testee.process(request, clientId, session);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getProperties()).isEmpty();
+        assertThat(result).hasSize(1)
+            .extracting(JmapResponse::getProperties)
+            .flatExtracting(Optional::get)
+            .asList()
+            .containsOnlyElementsOf(MessageProperty.allOutputProperties());
     }
 
     @Test
@@ -294,7 +300,7 @@ public class GetMessagesMethodTest {
     }
     
     @Test
-    public void processShouldReturnAPreconfiguredObjectMapperFilteringHeaders() throws Exception {
+    public void processShouldReturnPropertyFilterWhenFilteringHeadersRequested() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         Date now = new Date();
         ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
@@ -315,8 +321,9 @@ public class GetMessagesMethodTest {
             .hasSize(1)
             .extracting(JmapResponse::getFilterProvider)
             .are(new Condition<>(Optional::isPresent, "present"));
+        SimpleFilterProvider actualFilterProvider = result.get(0).getFilterProvider().get();
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setFilterProvider(result.get(0).getFilterProvider().get());
+        objectMapper.setFilterProvider(actualFilterProvider.setDefaultFilter(SimpleBeanPropertyFilter.serializeAll()));
         String response = objectMapper.writer().writeValueAsString(result.get(0));
         assertThat(JsonPath.parse(response).<Map<String, String>>read("$.response.list[0].headers")).containsOnly(MapEntry.entry("from", "user@domain.tld"), MapEntry.entry("header2", "Header2Content"));
     }

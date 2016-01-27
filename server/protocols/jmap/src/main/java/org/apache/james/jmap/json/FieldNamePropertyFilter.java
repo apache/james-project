@@ -16,54 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
+package org.apache.james.jmap.json;
 
-import com.google.common.base.Preconditions;
 
-public enum MessageProperty implements Property {
+import com.fasterxml.jackson.databind.ser.PropertyWriter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 
-    id("id"),
-    blobId("blobId"),
-    threadId("threadId"),
-    mailboxIds("mailboxIds"),
-    inReplyToMessageId("inReplyToMessageId"),
-    isUnread("isUnread"),
-    isFlagged("isFlagged"),
-    isAnswered("isAnswered"),
-    isDraft("isDraft"),
-    hasAttachment("hasAttachment"),
-    headers("headers"),
-    from("from"),
-    to("to"),
-    cc("cc"),
-    bcc("bcc"),
-    replyTo("replyTo"),
-    subject("subject"),
-    date("date"),
-    size("size"),
-    preview("preview"),
-    textBody("textBody"),
-    htmlBody("htmlBody"),
-    attachments("attachments"),
-    attachedMessages("attachedMessages"),
-    body("body");
+import java.util.function.Predicate;
 
-    private final String property;
+public class FieldNamePropertyFilter extends SimpleBeanPropertyFilter {
 
-    private MessageProperty(String property) {
-        this.property = property;
+    private final Predicate<String> predicate;
+
+    public FieldNamePropertyFilter(Predicate<String> predicate) {
+        this.predicate = predicate;
     }
 
     @Override
-    public String asFieldName() {
-        return property;
+    protected boolean include(PropertyWriter writer) {
+        return predicate.test(writer.getName());
     }
 
-    public static Stream<MessageProperty> find(String property) {
-        Preconditions.checkNotNull(property);
-        return Arrays.stream(values()).filter(entry -> entry.property.equals(property));
-    }
 }

@@ -19,40 +19,68 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
 import org.junit.Test;
 
 public class MessageHeaderPropertyTest {
 
-    @Test(expected=NullPointerException.class)
-    public void valueOfShouldThrowWhenNull() {
-        MessageHeaderProperty.valueOf(null);
+    @Test
+    public void fromFieldNameShouldLowercaseFieldName() {
+        assertThat(HeaderProperty.fromFieldName("FiElD")).isEqualTo(HeaderProperty.fromFieldName("field"));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test
+    public void fromFieldNameShouldThrowWhenStartWithHeaderPrefix() {
+        assertThatThrownBy(() -> HeaderProperty.fromFieldName("headers.FiElD")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void valueOfShouldThrowWhenNull() {
+        assertThatThrownBy(() -> HeaderProperty.valueOf(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     public void valueOfalueOfShouldThrowWhenNull() {
-        MessageHeaderProperty.valueOf(null);
+        assertThatThrownBy(() -> HeaderProperty.valueOf(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void valueOfShouldReturnLowerCasedProperty() {
-        MessageHeaderProperty headerProperty = MessageHeaderProperty.valueOf("ProP");
+        HeaderProperty headerProperty = HeaderProperty.valueOf("headers.ProP");
 
         assertThat(headerProperty.asFieldName()).isEqualTo("prop");
     }
 
     @Test
+    public void valueOfShouldThrowWhenValueIsNotHeader() {
+        assertThatThrownBy(() -> HeaderProperty.valueOf("ProP")).isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @Test
+    public void findShouldReturnStreamWhenValueStartsWithRightString() {
+        assertThat(HeaderProperty.find(HeaderProperty.HEADER_PROPERTY_PREFIX + "myvalue"))
+            .contains(HeaderProperty.valueOf(HeaderProperty.HEADER_PROPERTY_PREFIX + "myvalue"));
+    }
+
+    @Test
+    public void findShouldReturnEmptyStreamWhenValueStartsWithWrongString() {
+        assertThat(HeaderProperty.find("bad value" + HeaderProperty.HEADER_PROPERTY_PREFIX + "myvalue")).isEmpty();
+    }
+    
+    @Test
     public void equalsShouldBeTrueWhenIdenticalProperties() {
-        assertThat(MessageHeaderProperty.valueOf("prop")).isEqualTo(MessageHeaderProperty.valueOf("prop"));
+        assertThat(HeaderProperty.valueOf("headers.prop")).isEqualTo(HeaderProperty.valueOf("headers.prop"));
     }
 
     @Test
     public void equalsShouldBeFalseWhenDifferentProperties() {
-        assertThat(MessageHeaderProperty.valueOf("prop")).isNotEqualTo(MessageHeaderProperty.valueOf("other"));
+        assertThat(HeaderProperty.valueOf("headers.prop")).isNotEqualTo(HeaderProperty.valueOf("headers.other"));
     }
 
     @Test
     public void equalsShouldBeTrueWhenDifferentCaseProperties() {
-        assertThat(MessageHeaderProperty.valueOf("prOP")).isEqualTo(MessageHeaderProperty.valueOf("PRop"));
+        assertThat(HeaderProperty.valueOf("headers.prOP")).isEqualTo(HeaderProperty.valueOf("headers.PRop"));
     }
 }

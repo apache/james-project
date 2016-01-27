@@ -21,6 +21,8 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -60,8 +62,8 @@ public class GetMessagesRequestTest {
                 .ids()
                 .build();
         assertThat(result).isNotNull();
-        assertThat(result.getProperties()).isEmpty();
-        assertThat(result.getHeaderProperties()).isEmpty();
+        assertThat(result.getProperties().getOptionalMessageProperties()).isEmpty();
+        assertThat(result.getProperties().getOptionalHeadersProperties()).isEmpty();
     }
 
     @Test
@@ -72,8 +74,8 @@ public class GetMessagesRequestTest {
                 .properties(ImmutableList.of())
                 .build();
         assertThat(result).isNotNull();
-        assertThat(result.getProperties()).isPresent();
-        assertThat(result.getHeaderProperties()).isPresent();
+        assertThat(result.getProperties().getOptionalMessageProperties()).hasValue(ImmutableSet.of());
+        assertThat(result.getProperties().getOptionalHeadersProperties()).hasValue(ImmutableSet.of());
     }
 
     @Test
@@ -84,7 +86,7 @@ public class GetMessagesRequestTest {
                 .properties(ImmutableList.of("id", "headers.subject", "threadId", "headers.test"))
                 .build();
         assertThat(result).isNotNull();
-        assertThat(result.getProperties()).contains(ImmutableSet.of(MessageProperty.id, MessageProperty.threadId));
-        assertThat(result.getHeaderProperties()).contains(ImmutableSet.of(MessageHeaderProperty.valueOf("headers.subject"), MessageHeaderProperty.valueOf("headers.test")));
+        assertThat(result.getProperties().getOptionalMessageProperties()).hasValue(ImmutableSet.of(MessageProperty.id, MessageProperty.threadId));
+        assertThat(result.getProperties().getOptionalHeadersProperties()).hasValue(ImmutableSet.of(HeaderProperty.valueOf("headers.subject"), HeaderProperty.valueOf("headers.test")));
     }
 }

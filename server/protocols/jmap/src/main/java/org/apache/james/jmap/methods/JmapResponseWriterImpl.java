@@ -67,6 +67,7 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
         FilterProvider filterProvider = jmapResponse
                 .getFilterProvider()
                 .orElseGet(SimpleFilterProvider::new)
+                .setDefaultFilter(SimpleBeanPropertyFilter.serializeAll())
                 .addFilter(PROPERTIES_FILTER, getPropertiesFilter(jmapResponse.getProperties()));
         
         objectMapper.setFilterProvider(filterProvider);
