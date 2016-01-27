@@ -9,8 +9,15 @@ A **Mailbox** object has the following properties:
 - **name**: `String`
   User-visible name for the mailbox, e.g. "Inbox". This may be any UTF-8 string of at least 1 character in length and maximum 256 bytes in size. Mailboxes MAY have the same name as a sibling Mailbox.
 - **parentId**: `String|null`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The mailbox id for the parent of this mailbox, or `null` if this mailbox is at the top level. Mailboxes form acyclic graphs (forests) directed by the child-to-parent relationship. There MUST NOT be a loop.
 - **role**: `String|null`
+  <aside class="notice">
+  The role of a mailbox depends actually on the mailbox name.
+  We should implement RFC 6154 in James in order to fully support this feature.
+  </aside>
   Identifies system mailboxes. This property is immutable.
 
   The following values SHOULD be used for the relevant mailboxes:
@@ -38,30 +45,60 @@ A **Mailbox** object has the following properties:
   alphabetical order by name. The sorting should take into locale-specific
   character order convention.
 - **mustBeOnlyMailbox**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   If true, messages in this mailbox may not also be in any other mailbox.
 - **mayReadItems**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   If true, may use this mailbox as part of a filter in a *getMessageList* call.
   If a submailbox is shared but not the parent mailbox, this may be `false`.
 - **mayAddItems**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The user may add messages to this mailbox (by either creating a new message or modifying an existing one).
 - **mayRemoveItems**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The user may remove messages from this mailbox (by either changing the mailboxes of a message or deleting it).
 - **mayCreateChild**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The user may create a mailbox with this mailbox as its parent.
 - **mayRename**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The user may rename the mailbox or make it a child of another mailbox.
 - **mayDelete**: `Boolean`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The user may delete the mailbox itself.
 - **totalMessages**: `Number`
   The number of messages in this mailbox.
 - **unreadMessages**: `Number`
   The number of messages in this mailbox where the *isUnread* property of the message is `true` and the *isDraft* property is `false`.
 - **totalThreads**: `Number`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The number of threads where at least one message in the thread is in this mailbox (but see below for special case handling of Trash).
 - **unreadThreads**: `Number`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The number of threads where at least one message in the thread has `isUnread == true` and `isDraft == false` AND at least one message in the thread is in this mailbox (but see below for special case handling of Trash). Note, the unread message does not need to be the one in this mailbox.
 
 The Trash mailbox (that is a mailbox with `role == "trash"`) MUST be treated specially:
+<aside class="warning">
+Not implemented
+</aside>
 
 * Messages in the Trash are ignored when calculating the `unreadThreads` and `totalThreads` count of other mailboxes.
 * Messages not in the Trash are ignored when calculating the `unreadThreads` and `totalThreads` count for the Trash folder.
@@ -75,8 +112,14 @@ For example, suppose you have an account where the entire contents is a single c
 Mailboxes can either be fetched explicitly by id, or all of them at once. To fetch mailboxes, make a call to `getMailboxes`. It takes the following arguments:
 
 - **accountId**: `String|null`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The Account to fetch the mailboxes for. If `null`, the primary account is used.
 - **ids**: `String[]|null`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The ids of the mailboxes to fetch. If `null`, all mailboxes in the account are returned.
 - **properties**: `String[]|null`
   The properties of each mailbox to fetch. If `null`, all properties are returned. The id of the mailbox will **always** be returned, even if not explicitly requested.
@@ -84,12 +127,21 @@ Mailboxes can either be fetched explicitly by id, or all of them at once. To fet
 The response to *getMailboxes* is called *mailboxes*. It has the following arguments:
 
 - **accountId**: `String`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The id of the account used for the call.
 - **state**: `String`
+  <aside class="warning">
+  Not implemented
+  </aside>
   A string representing the state on the server for **all** mailboxes. If the state of a mailbox changes, or a new mailbox is created, or a mailbox is destroyed, this string will change. It is used to get delta updates.
 - **list**: `Mailbox[]`
   An array of the Mailbox objects requested. This will be the **empty array** if the *ids* argument was the empty array, or contained only ids for mailboxes that could not be found.
 - **notFound**: `String[]|null`
+  <aside class="warning">
+  Not implemented
+  </aside>
   This array contains the ids passed to the method for mailboxes that do not exist, or `null` if all requested ids were found. It will always be `null` if the *ids* argument in the call was `null`.
 
 The following errors may be returned instead of the *mailboxes* response:
@@ -101,6 +153,9 @@ The following errors may be returned instead of the *mailboxes* response:
 `invalidArguments`: Returned if the request does not include one of the required arguments, or one of the arguments is of the wrong type, or otherwise invalid. A `description` property MAY be present on the response object to help debug with an explanation of what the problem was.
 
 ### getMailboxUpdates
+<aside class="warning">
+Not implemented
+</aside>
 
 The *getMailboxUpdates* call allows a client to efficiently update the state of its cached mailboxes to match the new state on the server. It takes the following arguments:
 
@@ -141,6 +196,9 @@ The following errors may be returned instead of the `mailboxUpdates` response:
 `cannotCalculateChanges`: Returned if the server cannot calculate the changes from the state string given by the client. Usually due to the client's state being too old. The client MUST invalidate its Mailbox cache. The error object MUST also include a `newState: String` property with the current state for the type.
 
 ### setMailboxes
+<aside class="warning">
+Not implemented
+</aside>
 
 Mailboxes can be created, updated and destroyed using the *setMailboxes* method. The method takes the following arguments:
 
@@ -267,4 +325,3 @@ Example request:
       },
       "destroy": [ "f5" ]
     }, "#0" ]
-
