@@ -56,6 +56,9 @@ public class ToRecipientFolder extends GenericMailet {
     private MailboxManager mailboxManager;
     private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
+    
+    private String folder;
+    private boolean consume;
 
     @Inject
     public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
@@ -63,8 +66,8 @@ public class ToRecipientFolder extends GenericMailet {
     }
 
     @Inject
-    public void setSetUsersRepository(SieveRepository setUsersRepository) {
-        this.sieveRepository = setUsersRepository;
+    public void setSieveRepository(SieveRepository sieveRepository) {
+        this.sieveRepository = sieveRepository;
     }
 
     @Inject
@@ -83,13 +86,18 @@ public class ToRecipientFolder extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         if (!mail.getState().equals(Mail.GHOST)) {
             sieveMailet.service(mail);
+            if (consume) {
+                mail.setState(Mail.GHOST);
+            }
         }
     }
 
     @Override
     public void init() throws MessagingException {
         super.init();
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, "INBOX");
+        this.folder = getInitParameter("folder", "INBOX");
+        this.consume = getInitParameter("consume", false);
+        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, this.folder);
         sieveMailet.init(new MailetConfig() {
             
             @Override

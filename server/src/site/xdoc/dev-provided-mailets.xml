@@ -578,6 +578,26 @@ Default is to not add a header.</li>
 </p>
 </subsection>
 
+<subsection name="ToRecipientFolder">
+  <p>
+    Description: Place a copy of the mail message in a folder of the recipient. It receives a Mail from the Queue and 
+      takes care to deliver the message to a defined folder of the recipient(s).
+  </p>
+  
+  <p>Parameters:
+    <ul>
+      <li><strong>folder</strong> (required) - The folder name of the Recipient mailbox in which the mail will be copied.</li>
+      <li><strong>consume</strong> (optional) - flag true or false: will tell is the mail will be further processed by the upcoming processor mailets, or not</li>
+    </ul>
+  </p>
+  
+<source>
+&lt;mailet match="RecipientIsLocal" class="ToRecipientFolder"&gt;
+  &lt;folder&gt;Junk&lt;/folder&gt;
+  &lt;consume&gt;false&lt;/consume&gt;
+&lt;/mailet&gt;
+</source>
+
 <subsection name="ToRepository">
 <p>Places a copy of the message in the specified repository.</p>
 
