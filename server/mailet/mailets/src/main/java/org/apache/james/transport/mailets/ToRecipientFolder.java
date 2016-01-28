@@ -89,7 +89,7 @@ public class ToRecipientFolder extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         super.init();
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, "INBOX");
+        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, getInitParameter("folder", "INBOX"));
         sieveMailet.init(new MailetConfig() {
             
             @Override
