@@ -244,18 +244,9 @@ public class MailboxMessageTest {
         testMail.setModSeq(MOD_SEQ);
         
         Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
-        Message expected = Message.builder()
-                .id(MessageId.of("user|box|0"))
-                .blobId("0")
-                .threadId("0")
-                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
-                .headers(ImmutableMap.of())
-                .subject("(No subject)")
-                .size(0)
-                .date(ZONED_DATE)
-                .preview("(Empty)")
-                .build();
-        assertThat(testee).isEqualToComparingFieldByField(expected);
+        assertThat(testee)
+            .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
+            .containsExactly("(Empty)", 0L, "(No subject)", ImmutableMap.of(), ZONED_DATE);
     }
 
     @Test
@@ -275,22 +266,9 @@ public class MailboxMessageTest {
         testMail.setModSeq(MOD_SEQ);
         
         Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
-        Message expected = Message.builder()
-                .id(MessageId.of("user|box|0"))
-                .blobId("0")
-                .threadId("0")
-                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
-                .isUnread(true)
-                .isFlagged(true)
-                .isAnswered(true)
-                .isDraft(true)
-                .headers(ImmutableMap.of())
-                .subject("(No subject)")
-                .size(0)
-                .date(ZONED_DATE)
-                .preview("(Empty)")
-                .build();
-        assertThat(testee).isEqualToComparingFieldByField(expected);
+        assertThat(testee)
+            .extracting(Message::isIsUnread, Message::isIsFlagged, Message::isIsAnswered, Message::isIsDraft)
+            .containsExactly(true, true, true, true);
     }
 
     @Test
@@ -333,7 +311,7 @@ public class MailboxMessageTest {
         Message expected = Message.builder()
                 .id(MessageId.of("user|box|0"))
                 .blobId("0")
-                .threadId("0")
+                .threadId("user|box|0")
                 .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
                 .inReplyToMessageId("<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .headers(headersMap)
@@ -366,19 +344,7 @@ public class MailboxMessageTest {
         testMail.setModSeq(MOD_SEQ);
         
         Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
-        Message expected = Message.builder()
-                .id(MessageId.of("user|box|0"))
-                .blobId("0")
-                .threadId("0")
-                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
-                .headers(ImmutableMap.of("subject", "test subject"))
-                .subject("test subject")
-                .size(mail.length())
-                .date(ZONED_DATE)
-                .preview("Mail body")
-                .textBody("Mail body")
-                .build();
-        assertThat(testee).isEqualToComparingFieldByField(expected);
+        assertThat(testee.getTextBody()).hasValue("Mail body");
     }
     
     @Test
@@ -426,19 +392,7 @@ public class MailboxMessageTest {
         testMail.setModSeq(MOD_SEQ);
         
         Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
-        Message expected = Message.builder()
-                .id(MessageId.of("user|box|0"))
-                .blobId("0")
-                .threadId("0")
-                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
-                .headers(ImmutableMap.of("subject", "test subject"))
-                .subject("test subject")
-                .size(mail.length())
-                .date(ZONED_DATE)
-                .preview(expectedPreview)
-                .textBody(body300)
-                .build();
-        assertThat(testee).isEqualToComparingFieldByField(expected);
+        assertThat(testee.getPreview()).isEqualTo(expectedPreview);
     }
     
     @Test(expected=NotImplementedException.class)

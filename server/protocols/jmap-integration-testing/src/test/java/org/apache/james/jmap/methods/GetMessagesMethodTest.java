@@ -204,6 +204,7 @@ public abstract class GetMessagesMethodTest {
         assertThat(JsonPath.parse(response).<Integer>read("$.length()")).isEqualTo(1);
         assertThat(JsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(1);
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".id")).isEqualTo(username + "|inbox|1");
+        assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".threadId")).isEqualTo(username + "|inbox|1");
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".subject")).isEqualTo("my test subject");
         assertThat(JsonPath.parse(response).<String>read(firstMessagePath + ".textBody")).isEqualTo("testmail");
         assertThat(JsonPath.parse(response).<Boolean>read(firstMessagePath + ".isUnread")).isTrue();

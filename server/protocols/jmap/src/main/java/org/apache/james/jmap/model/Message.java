@@ -65,10 +65,11 @@ public class Message {
         if (im.getHasAttachment()) {
             throw new NotImplementedException();
         }
+        MessageId messageId = uidToMessageId.apply(im.getId());
         return builder()
-                .id(uidToMessageId.apply(im.getId()))
+                .id(messageId)
                 .blobId(String.valueOf(im.getId()))
-                .threadId(String.valueOf(im.getId()))
+                .threadId(messageId.serialize())
                 .mailboxIds(ImmutableList.of(im.getMailboxId()))
                 .inReplyToMessageId(getHeaderAsSingleValue(im, "in-reply-to"))
                 .isUnread(im.isUnRead())
