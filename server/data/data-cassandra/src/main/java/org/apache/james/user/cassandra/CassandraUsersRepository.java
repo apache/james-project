@@ -51,7 +51,7 @@ import com.google.common.primitives.Ints;
 
 public class CassandraUsersRepository extends AbstractUsersRepository {
 
-    private static final String DEFAULT_ALGO_VALUE = "SHA1";
+    private static final String DEFAULT_ALGO_VALUE = "SHA-256";
 
     private Session session;
 

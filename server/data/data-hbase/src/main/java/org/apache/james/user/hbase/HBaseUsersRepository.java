@@ -62,7 +62,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
      */
     @Override
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
-        algo = config.getString("algorithm", "MD5");
+        algo = config.getString("algorithm", "SHA-256");
         super.doConfigure(config);
     }
 

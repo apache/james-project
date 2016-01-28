@@ -39,12 +39,12 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     public MemoryUsersRepository() {
         this.userByName = new HashMap<String, User>();
-        this.algo = "MD5";
+        this.algo = "SHA-256";
     }
 
     @Override
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
-        algo = config.getString("algorithm", "MD5");
+        algo = config.getString("algorithm", "SHA-256");
         super.doConfigure(config);
     }
 

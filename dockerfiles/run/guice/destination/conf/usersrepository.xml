@@ -19,7 +19,7 @@
  -->
 
 <usersrepository name="LocalUsers">
-    <algorithm>MD5</algorithm>
+    <algorithm>SHA-256</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>    
 </usersrepository>
 

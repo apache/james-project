@@ -251,7 +251,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * org.apache.james.user.lib.AbstractUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
      */
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
-        algo = config.getString("algorithm", "MD5");
+        algo = config.getString("algorithm", "SHA-256");
         super.doConfigure(config);
     }
 

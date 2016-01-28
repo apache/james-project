@@ -55,7 +55,9 @@ public class JPAUser implements User {
         if (alg == null || alg.equals("MD5")) {
             newPass = DigestUtils.md5Hex(password);
         } else if (alg.equals("NONE")) {
-            newPass = "password";
+            // Actually this case (No hashing algorithm) never happens 
+            // but if it occurs then password should be the (plain) password entered.
+            newPass = password;
         } else if (alg.equals("SHA-256")) {
             newPass = DigestUtils.sha256Hex(password);
         } else if (alg.equals("SHA-512")) {

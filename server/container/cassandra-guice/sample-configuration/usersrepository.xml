@@ -20,7 +20,7 @@
 
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
     <destination URL="file://users/"/>
-    <algorithm>MD5</algorithm>
+    <algorithm>SHA-256</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>    
 </usersrepository>
 

@@ -94,7 +94,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
      * org.apache.james.user.lib.AbstractUsersRepository#doAddUser(java.lang.String, java.lang.String)
      */
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
-        User newbie = new DefaultJamesUser(username, "SHA");
+        User newbie = new DefaultJamesUser(username, "SHA-256");
         newbie.setPassword(password);
         doAddUser(newbie);
     }
