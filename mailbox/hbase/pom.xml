@@ -35,7 +35,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>11.0.2</version>
+            <version>11.0.2</version><!--$NO-MVN-MAN-VER$-->
         </dependency>
         <dependency>
             <groupId>${javax.mail.groupId}</groupId>
