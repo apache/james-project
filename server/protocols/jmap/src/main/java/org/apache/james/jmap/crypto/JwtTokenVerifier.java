@@ -21,15 +21,13 @@ package org.apache.james.jmap.crypto;
 import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
 
 public class JwtTokenVerifier {
 
@@ -42,7 +40,10 @@ public class JwtTokenVerifier {
     }
 
     public boolean verify(String token) throws JwtException {
-        parseToken(token);
+        String subject = extractLogin(token);
+        if (Strings.isNullOrEmpty(subject)) {
+            throw new MalformedJwtException("'subject' field in token is mandatory");
+        }
         return true;
     }
 
