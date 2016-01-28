@@ -29,14 +29,15 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.concurrent.TimeUnit;
+
 public class CassandraMailboxPathRegistrerMapperTest {
 
     private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraRegistrationModule());
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("namespace2", "user2", "name2");
     private static final Topic TOPIC = new Topic("topic");
-    private static final int CASSANDRA_TIME_OUT_IN_S = 1;
-    private static final int CASSANDRA_TIME_OUT_IN_MS = 1000 * CASSANDRA_TIME_OUT_IN_S;
+    private static final int CASSANDRA_TIME_OUT_IN_S = 100;
     private static final Topic TOPIC_2 = new Topic("topic2");
 
     private CassandraMailboxPathRegisterMapper mapper;
@@ -98,8 +99,10 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     @Test
     public void entriesShouldExpire() throws Exception {
+        int verySmallTimeoutInSecond = 1;
+        mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(), cassandra.getTypesProvider(), verySmallTimeoutInSecond);
         mapper.doRegister(MAILBOX_PATH, TOPIC);
-        Thread.sleep(2 * CASSANDRA_TIME_OUT_IN_MS);
+        Thread.sleep(2 * TimeUnit.SECONDS.toMillis(verySmallTimeoutInSecond));
         assertThat(mapper.getTopics(MAILBOX_PATH)).isEmpty();
     }
 
