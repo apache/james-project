@@ -19,14 +19,13 @@
 
 package org.apache.james.jmap.methods;
 
+import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.collect.ImmutableSet;
 
 public class JmapRequestParserImplTest {
 
@@ -36,7 +35,7 @@ public class JmapRequestParserImplTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory());
         jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), null);
     }
 
@@ -48,7 +47,7 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory());
         jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
 
@@ -59,7 +58,7 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory());
         jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
 

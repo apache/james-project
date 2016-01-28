@@ -210,7 +210,15 @@
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-guava</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
                     <artifactId>jackson-datatype-jdk8</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr310</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.github.fge</groupId>
@@ -258,6 +266,12 @@
                 <dependency>
                     <groupId>junit</groupId>
                     <artifactId>junit</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>net.javacrumbs.json-unit</groupId>
+                    <artifactId>json-unit-fluent</artifactId>
+                    <version>1.5.5</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

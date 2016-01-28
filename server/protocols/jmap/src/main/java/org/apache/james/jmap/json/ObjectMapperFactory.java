@@ -17,31 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.json;
 
-import java.io.IOException;
+import java.util.Set;
 
-import javax.inject.Inject;
-
-import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.model.ProtocolRequest;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.ImmutableSet;
 
-public class JmapRequestParserImpl implements JmapRequestParser {
+public class ObjectMapperFactory {
 
-    private final ObjectMapper objectMapper;
+    private static final Set<Module> JACKSON_MODULES = ImmutableSet.of(new Jdk8Module(), new JavaTimeModule(), new GuavaModule());
 
-    @Inject
-    public JmapRequestParserImpl(ObjectMapperFactory objectMapperFactory) {
-        this.objectMapper = objectMapperFactory.forParsing();
+    public ObjectMapper forParsing() {
+        return new ObjectMapper()
+                .registerModules(JACKSON_MODULES)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Override
-    public <T extends JmapRequest> T extractJmapRequest(ProtocolRequest request, Class<T> requestClass) 
-            throws IOException, JsonParseException, JsonMappingException {
-        return objectMapper.readValue(request.getParameters().toString(), requestClass);
+    public ObjectMapper forWriting() {
+        return new ObjectMapper()
+                .registerModules(JACKSON_MODULES)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 }

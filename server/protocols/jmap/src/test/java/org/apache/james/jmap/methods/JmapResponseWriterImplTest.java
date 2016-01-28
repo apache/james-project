@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.ProtocolRequest;
@@ -38,7 +39,6 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -52,7 +52,7 @@ public class JmapResponseWriterImplTest {
         String expectedClientId = "#1";
         String expectedId = "myId";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         Stream<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(Stream.of(JmapResponse
                 .builder()
                 .clientId(ClientId.of(expectedClientId))
@@ -73,7 +73,7 @@ public class JmapResponseWriterImplTest {
         ResponseClass responseClass = new ResponseClass();
         responseClass.id = expectedId;
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
@@ -101,7 +101,7 @@ public class JmapResponseWriterImplTest {
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
         Property property = () -> "id";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
@@ -126,7 +126,7 @@ public class JmapResponseWriterImplTest {
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
         Property property = () -> "id";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         @SuppressWarnings("unused")
         Stream<ProtocolResponse> ignoredResponse = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
@@ -159,7 +159,7 @@ public class JmapResponseWriterImplTest {
         Property idProperty = () -> "id";
         Property nameProperty = () -> "name";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
 
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
@@ -210,7 +210,7 @@ public class JmapResponseWriterImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()

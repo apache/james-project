@@ -19,13 +19,18 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.ProtocolRequest;
@@ -37,14 +42,9 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class RequestHandlerTest {
 
@@ -123,8 +123,8 @@ public class RequestHandlerTest {
 
     @Before
     public void setup() {
-        jmapRequestParser = new JmapRequestParserImpl(ImmutableSet.of(new Jdk8Module()));
-        jmapResponseWriter = new JmapResponseWriterImpl(ImmutableSet.of(new Jdk8Module()));
+        jmapRequestParser = new JmapRequestParserImpl(new ObjectMapperFactory());
+        jmapResponseWriter = new JmapResponseWriterImpl(new ObjectMapperFactory());
         mockHttpServletRequest = mock(HttpServletRequest.class);
         testee = new RequestHandler(ImmutableSet.of(new TestMethod()), jmapRequestParser, jmapResponseWriter);
     }
