@@ -332,6 +332,34 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    public void getMessageListShouldWorkWhenCollapseThreadIsFalse() {
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"collapseThreads\":false}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(startsWith("[[\"messageList\","));
+    }
+    
+    @Test
+    public void getMessageListShouldReturnErrorWhenCollapseThreadIsTrue() {
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"collapseThreads\":true}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(equalTo("[[\"error\",{\"type\":\"Not yet implemented\"},\"#0\"]]"));
+    }
+    
+    @Test
     public void getMessageListShouldReturnAllMessagesWhenPositionIsNotGiven() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
