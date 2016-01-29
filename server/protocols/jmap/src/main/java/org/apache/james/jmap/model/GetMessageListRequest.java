@@ -101,7 +101,8 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder fetchMessages(boolean fetchMessages) {
-            throw new NotImplementedException();
+            this.fetchMessages = fetchMessages;
+            return this;
         }
 
         public Builder fetchMessageProperties(List<String> fetchMessageProperties) {

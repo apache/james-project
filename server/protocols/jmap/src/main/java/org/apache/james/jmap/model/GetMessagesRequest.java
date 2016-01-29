@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,8 +53,8 @@ public class GetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder ids(MessageId... ids) {
-            this.ids.addAll(Arrays.asList(ids));
+        public Builder ids(List<MessageId> ids) {
+            this.ids.addAll(ids);
             return this;
         }
 

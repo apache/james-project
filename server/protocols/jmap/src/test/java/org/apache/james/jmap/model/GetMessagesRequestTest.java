@@ -33,7 +33,7 @@ public class GetMessagesRequestTest {
     @Test
     public void shouldAllowOptionalAccountId() {
         GetMessagesRequest result = GetMessagesRequest.builder()
-                .ids(MessageId.of("user|inbox|1"))
+                .ids(ImmutableList.of(MessageId.of("user|inbox|1")))
                 .build();
         assertThat(result).isNotNull();
         assertThat(result.getAccountId()).isEmpty();
@@ -49,7 +49,7 @@ public class GetMessagesRequestTest {
     public void shouldAllowEmptyMessagesList() {
         GetMessagesRequest result = GetMessagesRequest.builder()
                 .accountId("accountId")
-                .ids()
+                .ids(ImmutableList.of())
                 .build();
         assertThat(result).isNotNull();
         assertThat(result.getIds()).isEmpty();
@@ -59,7 +59,7 @@ public class GetMessagesRequestTest {
     public void shouldAllowAbsentPropertyList() {
         GetMessagesRequest result = GetMessagesRequest.builder()
                 .accountId("accountId")
-                .ids()
+                .ids(ImmutableList.of())
                 .build();
         assertThat(result).isNotNull();
         assertThat(result.getProperties().getOptionalMessageProperties()).isEmpty();
@@ -70,7 +70,7 @@ public class GetMessagesRequestTest {
     public void shouldAllowEmptyPropertyList() {
         GetMessagesRequest result = GetMessagesRequest.builder()
                 .accountId("accountId")
-                .ids()
+                .ids(ImmutableList.of())
                 .properties(ImmutableList.of())
                 .build();
         assertThat(result).isNotNull();
@@ -82,7 +82,7 @@ public class GetMessagesRequestTest {
     public void shouldConvertPropertiesWhenMessageAndHeaderPropertiesAreGiven() {
         GetMessagesRequest result = GetMessagesRequest.builder()
                 .accountId("accountId")
-                .ids()
+                .ids(ImmutableList.of())
                 .properties(ImmutableList.of("id", "headers.subject", "threadId", "headers.test"))
                 .build();
         assertThat(result).isNotNull();

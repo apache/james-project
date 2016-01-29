@@ -160,9 +160,9 @@ public class GetMessagesMethodTest {
         long message3Uid = inbox.appendMessage(message3Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid),
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid),
                           new MessageId(ROBERT, inboxPath, message2Uid),
-                          new MessageId(ROBERT, inboxPath, message3Uid))
+                          new MessageId(ROBERT, inboxPath, message3Uid)))
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
@@ -188,7 +188,7 @@ public class GetMessagesMethodTest {
         long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .properties(ImmutableList.of())
                 .build();
 
@@ -210,7 +210,7 @@ public class GetMessagesMethodTest {
         long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .build();
 
         GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
@@ -231,7 +231,7 @@ public class GetMessagesMethodTest {
         long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .properties(ImmutableList.of(MessageProperty.subject.asFieldName()))
                 .build();
 
@@ -255,7 +255,7 @@ public class GetMessagesMethodTest {
         long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .properties(ImmutableList.of(MessageProperty.body.asFieldName()))
                 .build();
 
@@ -282,7 +282,7 @@ public class GetMessagesMethodTest {
         long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 
@@ -310,7 +310,7 @@ public class GetMessagesMethodTest {
         long message1Uid = inbox.appendMessage(message1Content, now, session, false, null);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
-                .ids(new MessageId(ROBERT, inboxPath, message1Uid))
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 

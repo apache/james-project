@@ -62,11 +62,6 @@ public class GetMessageListRequestTest {
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenFetchMessages() {
-        GetMessageListRequest.builder().fetchMessages(false);
-    }
-
-    @Test(expected=NotImplementedException.class)
     public void builderShouldThrowWhenFetchSearchSnippets() {
         GetMessageListRequest.builder().fetchSearchSnippets(false);
     }
@@ -79,7 +74,7 @@ public class GetMessageListRequestTest {
         List<String> sort = ImmutableList.of("date desc");
         List<String> fetchMessageProperties = ImmutableList.of("id", "blobId");
         GetMessageListRequest expectedGetMessageListRequest = new GetMessageListRequest(Optional.empty(), Optional.of(filterCondition), sort, Optional.of(true), 1, Optional.empty(), Optional.empty(), Optional.of(2),
-                Optional.empty(), Optional.empty(), fetchMessageProperties, Optional.empty());
+                Optional.empty(), Optional.of(true), fetchMessageProperties, Optional.empty());
 
         GetMessageListRequest getMessageListRequest = GetMessageListRequest.builder()
             .filter(filterCondition)
@@ -87,6 +82,7 @@ public class GetMessageListRequestTest {
             .collapseThreads(true)
             .position(1)
             .limit(2)
+            .fetchMessages(true)
             .fetchMessageProperties(fetchMessageProperties)
             .build();
 
