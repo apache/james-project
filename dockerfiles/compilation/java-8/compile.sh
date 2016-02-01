@@ -34,7 +34,7 @@ do
 done
 
 if [ -z "$SHA1" ]; then
-   SHA1=trunk
+   SHA1=master
 fi
 
 # Sources retrieval

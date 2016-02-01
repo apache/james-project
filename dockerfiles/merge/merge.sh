@@ -3,7 +3,7 @@
 printUsage() {
    echo "Usage : "
    echo "./merge.sh SHA1 RESULTING_BRANCH"
-   echo "    SHA1: SHA1 to merge with trunk"
+   echo "    SHA1: SHA1 to merge with master"
    echo "    RESULTING_BRANCH : Resulting branch of the merge"
    exit 1
 }
@@ -20,12 +20,12 @@ if [ -z "$APACHE_REPO" ]; then
     git remote add apache https://github.com/apache/james-project.git
 fi 
 git fetch apache
-git checkout apache/trunk -b trunk
+git checkout apache/master -b master
 
 git fetch origin
 git checkout $SHA1
 git checkout -b SHA1_BRANCH
 
-git checkout trunk
+git checkout master
 git checkout -b $RESULTING_BRANCH
 git merge --no-edit SHA1_BRANCH

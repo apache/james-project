@@ -5,7 +5,7 @@ printUsage() {
    echo "./integration_tests.sh URL BRANCH JAMES_IP JAMES_IMAP_PORT"
    echo "    JAMES_IP: IP of the James server to be tests"
    echo "    JAMES_IMAP_PORT: Exposed IMAP port of this James server"
-   echo "    SHA1(optional): Branch to build or trunk if none"
+   echo "    SHA1(optional): Branch to build or master if none"
    exit 1
 }
 
@@ -43,7 +43,7 @@ if [ -z "$JAMES_IMAP_PORT" ]; then
 fi
 
 if [ -z "$SHA1" ]; then
-   SHA1=trunk
+   SHA1=master
 fi
 
 export JAMES_ADDRESS=$JAMES_ADDRESS
