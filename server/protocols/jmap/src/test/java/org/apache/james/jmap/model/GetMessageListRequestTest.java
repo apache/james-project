@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class GetMailboxMessageListRequestTest {
+public class GetMessageListRequestTest {
 
     @Test(expected=IllegalStateException.class)
     public void builderShouldThrowWhenPositionIsNegative() {
