@@ -22,12 +22,11 @@ package org.apache.james.jmap.methods;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
@@ -51,6 +50,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class GetMailboxesMethod<Id extends MailboxId> implements Method {
 
@@ -83,7 +85,7 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
         return Stream.of(
                 JmapResponse.builder().clientId(clientId)
-                .response(getMailboxesResponse(mailboxSession))
+                .response(getMailboxesResponse(mailboxesRequest, mailboxSession))
                 .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
                 .responseName(RESPONSE_NAME)
                 .build());
@@ -93,7 +95,7 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
         return Sets.union(input, ImmutableSet.of(MailboxProperty.ID)).immutableCopy();
     }
 
-    private GetMailboxesResponse getMailboxesResponse(MailboxSession mailboxSession) {
+    private GetMailboxesResponse getMailboxesResponse(GetMailboxesRequest mailboxesRequest, MailboxSession mailboxSession) {
         GetMailboxesResponse.Builder builder = GetMailboxesResponse.builder();
         try {
             retrieveUserMailboxes(mailboxSession)
@@ -102,6 +104,7 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
                 .map(mailboxPath -> mailboxFromMailboxPath(mailboxPath, mailboxSession))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
+                .filter(filterMailboxesById(mailboxesRequest.getIds()))
                 .sorted((m1, m2) -> Integer.compare(m1.getSortOrder(), m2.getSortOrder()))
                 .forEach(mailbox -> builder.add(mailbox));
             return builder.build();
@@ -109,7 +112,11 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
             throw Throwables.propagate(e);
         }
     }
-    
+
+    private Predicate<? super Mailbox> filterMailboxesById(Optional<ImmutableList<String>> ids) {
+        return (mailbox -> ids.map(list -> list.contains(mailbox.getId())).orElse(true));
+    }
+
     private List<MailboxMetaData> retrieveUserMailboxes(MailboxSession session) throws MailboxException {
         return mailboxManager.search(
                 MailboxQuery.builder(session).privateUserMailboxes().build(),

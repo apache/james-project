@@ -36,12 +36,16 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.slf4j.Logger;
@@ -56,12 +60,14 @@ public class GuiceServerProbe implements ExtendedServerProbe {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
 
     private final MailboxManager mailboxManager;
+    private final MailboxMapperFactory<CassandraId> mailboxMapperFactory;
     private final DomainList domainList;
     private final UsersRepository usersRepository;
 
     @Inject
-    private GuiceServerProbe(MailboxManager mailboxManager, DomainList domainList, UsersRepository usersRepository) {
+    private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory<CassandraId> mailboxMapperFactory, DomainList domainList, UsersRepository usersRepository) {
         this.mailboxManager = mailboxManager;
+        this.mailboxMapperFactory = mailboxMapperFactory;
         this.domainList = domainList;
         this.usersRepository = usersRepository;
     }
@@ -157,6 +163,20 @@ public class GuiceServerProbe implements ExtendedServerProbe {
             mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
             mailboxManager.startProcessingRequest(mailboxSession);
             mailboxManager.createMailbox(new MailboxPath(namespace, user, name), mailboxSession);
+        } catch (MailboxException e) {
+            throw Throwables.propagate(e);
+        } finally {
+            closeSession(mailboxSession);
+        }
+    }
+
+    @Override
+    public Mailbox<CassandraId> getMailbox(String namespace, String user, String name) {
+        MailboxSession mailboxSession = null;
+        try {
+            mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
+            MailboxMapper<CassandraId> mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
+            return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name));
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         } finally {

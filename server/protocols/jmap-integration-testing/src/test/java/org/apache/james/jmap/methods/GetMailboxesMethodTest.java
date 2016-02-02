@@ -39,9 +39,11 @@ import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.JmapServer;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -106,9 +108,76 @@ public abstract class GetMailboxesMethodTest {
             .content(equalTo("[[\"error\",{\"type\":\"Not yet implemented\"},\"#0\"]]"));
     }
 
-    
     @Test
-    public void getMailboxesShouldErrorNotSupportedWhenRequestContainsNonNullIds() throws Exception {
+    public void getMailboxesShouldReturnEmptyWhenIdsDoesntMatch() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"notAMailboxId\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body("[0][0]", equalTo("mailboxes"))
+            .body("[0][1].list", hasSize(0));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMailboxesWhenIdsMatch() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+
+        Mailbox<CassandraId> mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        Mailbox<CassandraId> mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+
+        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId2 = mailbox2.getMailboxId().serialize();
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\", \"" + mailboxId2 + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body("[0][0]", equalTo("mailboxes"))
+            .body("[0][1].list", hasSize(2))
+            .body("[0][1].list[0].id", equalTo(mailboxId))
+            .body("[0][1].list[1].id", equalTo(mailboxId2));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnOnlyMatchingMailboxesWhenIdsGiven() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+
+        Mailbox<CassandraId> mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+
+        String mailboxId = mailbox.getMailboxId().serialize();
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body("[0][0]", equalTo("mailboxes"))
+            .body("[0][1].list", hasSize(1))
+            .body("[0][1].list[0].id", equalTo(mailboxId));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnEmptyWhenIdsIsEmpty() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -118,7 +187,34 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"error\",{\"type\":\"Not yet implemented\"},\"#0\"]]"));
+            .body("[0][0]", equalTo("mailboxes"))
+            .body("[0][1].list", hasSize(0));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnAllMailboxesWhenIdsIsNull() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+
+        Mailbox<CassandraId> mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        Mailbox<CassandraId> mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+
+        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId2 = mailbox2.getMailboxId().serialize();
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": null}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body("[0][0]", equalTo("mailboxes"))
+            .body("[0][1].list", hasSize(2))
+            .body("[0][1].list[0].id", equalTo(mailboxId))
+            .body("[0][1].list[1].id", equalTo(mailboxId2));
     }
     
     @Test

@@ -33,9 +33,27 @@ public class GetMailboxesRequestTest {
         GetMailboxesRequest.builder().accountId("1");
     }
 
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenIds() {
+    @Test
+    public void builderShouldNotThrowWhenIds() {
         GetMailboxesRequest.builder().ids(ImmutableList.of());
+    }
+
+    @Test
+    public void idsShouldBeEmptyListWhenEmptyList() {
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+            .ids(ImmutableList.of())
+            .build();
+        assertThat(getMailboxesRequest.getIds()).isPresent();
+        assertThat(getMailboxesRequest.getIds().get()).hasSize(0);
+    }
+
+    @Test
+    public void idsShouldBePresentWhenListIsNotEmpty() {
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+            .ids(ImmutableList.of("123"))
+            .build();
+        assertThat(getMailboxesRequest.getIds()).isPresent();
+        assertThat(getMailboxesRequest.getIds().get()).containsExactly("123");
     }
 
     @Test
