@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
@@ -130,12 +131,14 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(unknownMailboxMessageId), Matchers.allOf(
                     hasEntry("type", "anErrorOccurred"),
-                    hasEntry("description", "An error occurred while deleting message " + unknownMailboxMessageId)))
+                    hasEntry("description", "An error occurred while deleting message " + unknownMailboxMessageId),
+                    hasEntry(equalTo("properties"), isEmptyOrNullString())))
             );
     }
 
@@ -152,12 +155,14 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(messageId), Matchers.allOf(
                     hasEntry("type", "notFound"),
-                    hasEntry("description", "The message " + messageId + " can't be found")))
+                    hasEntry("description", "The message " + messageId + " can't be found"),
+                    hasEntry(equalTo("properties"), isEmptyOrNullString())))
             );
     }
 
