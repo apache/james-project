@@ -42,6 +42,7 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +50,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
@@ -120,44 +120,50 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnNotDestroyedWhenUnknownMailbox() throws Exception {
+
+        String unknownMailboxMessageId = username + "|unknown|12345";
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|unknown|1\"]}, \"#0\"]]")
+            .body("[[\"setMessages\", {\"destroy\": [\"" + unknownMailboxMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(username + "|unknown|1", 
-                    ImmutableMap.of("type", "anErrorOccurred",
-                            "description", "An error occurred while deleting message " + username + "|unknown|1")));
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(unknownMailboxMessageId), Matchers.allOf(
+                    hasEntry("type", "anErrorOccurred"),
+                    hasEntry("description", "An error occurred while deleting message " + unknownMailboxMessageId)))
+            );
     }
 
     @Test
     public void setMessagesShouldReturnNotDestroyedWhenNoMatchingMessage() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
+        String messageId = username + "|mailbox|12345";
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|12345\"]}, \"#0\"]]")
+            .body("[[\"setMessages\", {\"destroy\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(username + "|mailbox|12345", 
-                    ImmutableMap.of("type", "notFound",
-                            "description", "The message " + username + "|mailbox|12345 can't be found")));
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(messageId), Matchers.allOf(
+                    hasEntry("type", "notFound"),
+                    hasEntry("description", "The message " + messageId + " can't be found")))
+            );
     }
 
     @Test
     public void setMessagesShouldReturnDestroyedWhenMatchingMessage() throws Exception {
+        // Given
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
@@ -227,11 +233,12 @@ public abstract class SetMessagesMethodTest {
                 new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
+        String missingMessageId = username + "|mailbox|4";
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\", \"" + username + "|mailbox|4\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
+            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\", \"" + missingMessageId + "\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -240,9 +247,10 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".destroyed", hasSize(2))
             .body(ARGUMENTS + ".notDestroyed", aMapWithSize(1))
             .body(ARGUMENTS + ".destroyed", contains(username + "|mailbox|1", username + "|mailbox|3"))
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(username + "|mailbox|4", 
-                    ImmutableMap.of("type", "notFound",
-                            "description", "The message " + username + "|mailbox|4 can't be found")));
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(missingMessageId), Matchers.allOf(
+                    hasEntry("type", "notFound"),
+                    hasEntry("description", "The message " + missingMessageId + " can't be found")))
+            );
     }
 
     @Test
