@@ -74,11 +74,8 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder collapseThreads(boolean collapseThreads) {
-            if (collapseThreads == false) {
-                this.collapseThreads = collapseThreads;
-                return this;
-            }
-            throw new NotImplementedException();
+            this.collapseThreads = collapseThreads;
+            return this;
         }
 
         public Builder position(int position) {

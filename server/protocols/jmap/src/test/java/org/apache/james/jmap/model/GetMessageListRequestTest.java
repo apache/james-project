@@ -47,11 +47,6 @@ public class GetMessageListRequestTest {
     }
 
     @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenCollapseThreadsIsTrue() {
-        GetMessageListRequest.builder().collapseThreads(true);
-    }
-
-    @Test(expected=NotImplementedException.class)
     public void builderShouldThrowWhenAnchor() {
         GetMessageListRequest.builder().anchor(null);
     }
@@ -83,13 +78,13 @@ public class GetMessageListRequestTest {
                 .build();
         List<String> sort = ImmutableList.of("date desc");
         List<String> fetchMessageProperties = ImmutableList.of("id", "blobId");
-        GetMessageListRequest expectedGetMessageListRequest = new GetMessageListRequest(Optional.empty(), Optional.of(filterCondition), sort, Optional.of(false), 1, Optional.empty(), Optional.empty(), Optional.of(2),
+        GetMessageListRequest expectedGetMessageListRequest = new GetMessageListRequest(Optional.empty(), Optional.of(filterCondition), sort, Optional.of(true), 1, Optional.empty(), Optional.empty(), Optional.of(2),
                 Optional.empty(), Optional.empty(), fetchMessageProperties, Optional.empty());
 
         GetMessageListRequest getMessageListRequest = GetMessageListRequest.builder()
             .filter(filterCondition)
             .sort(sort)
-            .collapseThreads(false)
+            .collapseThreads(true)
             .position(1)
             .limit(2)
             .fetchMessageProperties(fetchMessageProperties)

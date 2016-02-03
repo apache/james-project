@@ -340,11 +340,11 @@ public abstract class GetMessageListMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"messageList\","));
+            .body("[0][0]", equalTo("messageList"));
     }
     
     @Test
-    public void getMessageListShouldReturnErrorWhenCollapseThreadIsTrue() {
+    public void getMessageListShouldWorkWhenCollapseThreadIsTrue() {
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -354,7 +354,7 @@ public abstract class GetMessageListMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"error\",{\"type\":\"Not yet implemented\"},\"#0\"]]"));
+            .body("[0][0]", equalTo("messageList"));
     }
     
     @Test
