@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.mail.Flags;
@@ -34,6 +35,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -337,5 +339,42 @@ public class GetMailboxesMethodTest {
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getUnreadMessages)
                 .containsExactly(2L);
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMailboxesWithRoles() throws Exception {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "INBOX"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "ARCHIVE"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "DRAFTS"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "OUTBOX"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "SENT"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "TRASH"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "SPAM"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "TEMPLATES"), mailboxSession);
+        mailboxManager.createMailbox(new MailboxPath("#private", USERNAME, "WITHOUT ROLE"), mailboxSession);
+        
+        GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
+                .build();
+
+        List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
+
+        assertThat(getMailboxesResponse)
+                .hasSize(1)
+                .extracting(JmapResponse::getResponse)
+                .hasOnlyElementsOfType(GetMailboxesResponse.class)
+                .extracting(GetMailboxesResponse.class::cast)
+                .flatExtracting(GetMailboxesResponse::getList)
+                .extracting(Mailbox::getName, Mailbox::getRole)
+                .containsOnly(
+                        Tuple.tuple("INBOX", Optional.of(Role.INBOX)),
+                        Tuple.tuple("ARCHIVE", Optional.of(Role.ARCHIVE)),
+                        Tuple.tuple("DRAFTS", Optional.of(Role.DRAFTS)),
+                        Tuple.tuple("OUTBOX", Optional.of(Role.OUTBOX)),
+                        Tuple.tuple("SENT", Optional.of(Role.SENT)),
+                        Tuple.tuple("TRASH", Optional.of(Role.TRASH)),
+                        Tuple.tuple("SPAM", Optional.of(Role.SPAM)),
+                        Tuple.tuple("TEMPLATES", Optional.of(Role.TEMPLATES)),
+                        Tuple.tuple("WITHOUT ROLE", Optional.empty()));
     }
 }

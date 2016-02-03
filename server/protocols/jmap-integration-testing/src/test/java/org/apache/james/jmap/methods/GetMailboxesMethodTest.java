@@ -35,11 +35,6 @@ import java.util.Map;
 
 import javax.mail.Flags;
 
-import com.google.common.collect.ImmutableMap;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.ParseContext;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.JmapServer;
@@ -54,6 +49,11 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.ParseContext;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
@@ -340,6 +340,27 @@ public abstract class GetMailboxesMethodTest {
                 .containsOnly(
                         ImmutableMap.of("name", "trash", "sortOrder", 60),
                         ImmutableMap.of("name", "inbox", "sortOrder", 10));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMailboxesWithRolesInLowerCase() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "outbox");
+
+        String response = given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .content(startsWith("[[\"mailboxes\","))
+            .extract()
+            .asString();
+        
+        String firstMailboxPath = "$.[0].[1].list.[0]";
+        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".role")).isEqualTo("outbox");
     }
 
 }

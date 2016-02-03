@@ -21,6 +21,8 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Locale;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum Role {
 
     INBOX("inbox"),
@@ -47,6 +49,7 @@ public enum Role {
         return Optional.empty();
     }
 
+    @JsonValue
     public String serialize() {
         return name;
     }
