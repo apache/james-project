@@ -21,20 +21,26 @@ package org.apache.james.jmap.methods;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import javax.inject.Inject;
+import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
+import org.apache.james.jmap.model.UpdateMessagePatch;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -44,9 +50,11 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class SetMessagesMethod<Id extends MailboxId> implements Method {
 
@@ -94,7 +102,63 @@ public class SetMessagesMethod<Id extends MailboxId> implements Method {
     private SetMessagesResponse setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) throws MailboxException {
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
         processDestroy(request.getDestroy(), mailboxSession, responseBuilder);
+        processUpdates(request.getUpdate(), mailboxSession, responseBuilder);
         return responseBuilder.build();
+    }
+
+    private void processUpdates(Map<MessageId, UpdateMessagePatch> mapOfMessagePatchesById, MailboxSession mailboxSession,
+                                SetMessagesResponse.Builder responseBuilder) {
+        mapOfMessagePatchesById.entrySet().stream()
+                .filter(kv -> kv.getValue().isValid())
+                .forEach(kv -> update(kv.getKey(), kv.getValue(), mailboxSession, responseBuilder));
+    }
+
+    private void update(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, SetMessagesResponse.Builder builder){
+        try {
+            MessageMapper<Id> messageMapper = mailboxSessionMapperFactory.createMessageMapper(mailboxSession);
+            Mailbox<Id> mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(messageId.getMailboxPath(mailboxSession));
+            Iterator<MailboxMessage<Id>> mailboxMessage = messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), FetchType.Metadata, LIMIT_BY_ONE);
+            MailboxMessage<Id> messageWithUpdatedFlags = applyMessagePatch(messageId, mailboxMessage.next(), updateMessagePatch, builder);
+            savePatchedMessage(mailbox, messageId, messageWithUpdatedFlags, messageMapper);
+        } catch(NoSuchElementException e) {
+            addMessageIdNotFoundToResponse(messageId, builder);
+        } catch(MailboxException e) {
+            handleMessageUpdateException(messageId, builder, e);
+        }
+    }
+
+    private void handleMessageUpdateException(MessageId messageId, SetMessagesResponse.Builder builder, MailboxException e) {
+        LOGGER.error("An error occurred when updating a message", e);
+        builder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
+                .type("anErrorOccurred")
+                .description("An error occurred when updating a message")
+                .build()));
+    }
+
+    private boolean savePatchedMessage(Mailbox<Id> mailbox, MessageId messageId,
+                                       MailboxMessage<Id> message,
+                                       MessageMapper<Id> messageMapper) throws MailboxException {
+            return messageMapper.updateFlags(mailbox, new FlagsUpdateCalculator(message.createFlags(),
+                    MessageManager.FlagsUpdateMode.REPLACE),
+                    MessageRange.one(messageId.getUid()))
+                    .hasNext()
+                    ;
+    }
+
+    private void addMessageIdNotFoundToResponse(MessageId messageId, SetMessagesResponse.Builder builder) {
+        builder.notUpdated(ImmutableMap.of( messageId,
+                SetError.builder()
+                        .type("notFound")
+                        .properties(ImmutableSet.of(MessageProperties.MessageProperty.id))
+                        .description("message not found")
+                        .build()));
+    }
+
+    private MailboxMessage<Id> applyMessagePatch(MessageId messageId, MailboxMessage<Id> message, UpdateMessagePatch updatePatch, SetMessagesResponse.Builder builder) {
+        Flags newStateFlags = updatePatch.applyToState(message.isSeen(), message.isAnswered(), message.isFlagged());
+        message.setFlags(newStateFlags);
+        builder.updated(ImmutableList.of(messageId));
+        return message;
     }
 
     private void processDestroy(List<MessageId> messageIds, MailboxSession mailboxSession, SetMessagesResponse.Builder responseBuilder) throws MailboxException {
