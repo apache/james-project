@@ -42,7 +42,6 @@ import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -125,7 +124,6 @@ public abstract class GetMessageListMethodTest {
             .containsOnly("username@domain.tld|mailbox|1", "username@domain.tld|mailbox|2");
     }
 
-    @Ignore("ISSUE-53")
     @Test
     public void getMessageListShouldReturnAllMessagesWhenMultipleMailboxesAndNoParameters() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
@@ -151,7 +149,7 @@ public abstract class GetMessageListMethodTest {
             .asString();
         
         assertThat(JsonPath.parse(response).<List<String>>read("$.[0].[1].messageIds"))
-            .containsOnly("1", "2");
+            .containsOnly("username@domain.tld|mailbox|1", "username@domain.tld|mailbox2|1");
     }
 
     @Test
