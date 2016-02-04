@@ -22,16 +22,15 @@ package org.apache.james.jmap.methods;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 import javax.mail.Flags;
 
@@ -51,21 +50,17 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.ParseContext;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class GetMailboxesMethodTest {
+    private static final String NAME = "[0][0]";
+    private static final String ARGUMENTS = "[0][1]";
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
     private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra);
-    private ParseContext jsonPath;
 
     protected abstract JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra);
 
@@ -82,9 +77,6 @@ public abstract class GetMailboxesMethodTest {
     public void setup() throws Exception {
         RestAssured.port = jmapServer.getPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-        jsonPath = JsonPath.using(Configuration.builder()
-            .options(Option.DEFAULT_PATH_LEAF_TO_NULL)
-            .build());
 
         String domain = "domain.tld";
         username = "username@" + domain;
@@ -105,7 +97,8 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"error\",{\"type\":\"Not yet implemented\"},\"#0\"]]"));
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
     }
 
     @Test
@@ -121,8 +114,8 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body("[0][0]", equalTo("mailboxes"))
-            .body("[0][1].list", hasSize(0));
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(0));
     }
 
     @Test
@@ -145,10 +138,10 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body("[0][0]", equalTo("mailboxes"))
-            .body("[0][1].list", hasSize(2))
-            .body("[0][1].list[0].id", equalTo(mailboxId))
-            .body("[0][1].list[1].id", equalTo(mailboxId2));
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(2))
+            .body(ARGUMENTS + ".list[0].id", equalTo(mailboxId))
+            .body(ARGUMENTS + ".list[1].id", equalTo(mailboxId2));
     }
 
     @Test
@@ -169,9 +162,9 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body("[0][0]", equalTo("mailboxes"))
-            .body("[0][1].list", hasSize(1))
-            .body("[0][1].list[0].id", equalTo(mailboxId));
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].id", equalTo(mailboxId));
     }
 
     @Test
@@ -187,8 +180,8 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body("[0][0]", equalTo("mailboxes"))
-            .body("[0][1].list", hasSize(0));
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", empty());
     }
 
     @Test
@@ -211,10 +204,10 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body("[0][0]", equalTo("mailboxes"))
-            .body("[0][1].list", hasSize(2))
-            .body("[0][1].list[0].id", equalTo(mailboxId))
-            .body("[0][1].list[1].id", equalTo(mailboxId2));
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(2))
+            .body(ARGUMENTS + ".list[0].id", equalTo(mailboxId))
+            .body(ARGUMENTS + ".list[1].id", equalTo(mailboxId2));
     }
     
     @Test
@@ -228,12 +221,13 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"error\",{\"type\":\"invalidArguments\"},\"#0\"]]"));
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
     }
 
     @Test
     public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() throws Exception {
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
@@ -242,12 +236,8 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\","))
-            .extract()
-            .asString();
-        
-        String firstResponsePath = "$.[0].[1]";
-        assertThat(jsonPath.parse(response).<Integer>read(firstResponsePath + ".list.length()")).isEqualTo(0);
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", empty());
     }
 
     @Test
@@ -260,20 +250,19 @@ public abstract class GetMailboxesMethodTest {
                 "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + authToken)
-                .body("[[\"getMailboxes\", {}, \"#0\"]]")
-                .when()
-                .post("/jmap")
-                .then()
-                .statusCode(200)
-                .body("[0][0]", equalTo("mailboxes"))
-                .body("[0][1].accountId", isEmptyOrNullString())
-                .body("[0][1].state", isEmptyOrNullString())
-                .body("[0][1].notFound", isEmptyOrNullString())
-                .body("[0][1].list", hasSize(0))
-                .body("[0][2]", equalTo("#0"));
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + authToken)
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".accountId", isEmptyOrNullString())
+            .body(ARGUMENTS + ".state", isEmptyOrNullString())
+            .body(ARGUMENTS + ".notFound", isEmptyOrNullString())
+            .body(ARGUMENTS + ".list", hasSize(0));
     }
 
 
@@ -287,14 +276,14 @@ public abstract class GetMailboxesMethodTest {
                 "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + badAuthToken)
-                .body("[[\"getMailboxes\", {}, \"#0\"]]")
-                .when()
-                .post("/jmap")
-                .then()
-                .statusCode(401);
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + badAuthToken)
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(401);
     }
 
     @Test
@@ -304,7 +293,7 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "name"), 
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
@@ -313,136 +302,96 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\","))
-            .extract()
-            .asString();
-        
-        String firstMailboxPath = "$.[0].[1].list.[0]";
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".name")).isEqualTo("name");
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".parentId")).isNull();
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".role")).isNull();
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".sortOrder")).isEqualTo(1000);
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mustBeOnlyMailbox")).isFalse();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayReadItems")).isFalse();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayAddItems")).isFalse();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayRemoveItems")).isFalse();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayCreateChild")).isFalse();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayRename")).isFalse();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayDelete")).isFalse();
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".totalMessages")).isEqualTo(1);
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".unreadMessages")).isEqualTo(1);
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".unreadThreads")).isEqualTo(0);
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list[0].name", equalTo("name"))
+            .body(ARGUMENTS + ".list[0].parentId", nullValue())
+            .body(ARGUMENTS + ".list[0].role", nullValue())
+            .body(ARGUMENTS + ".list[0].sortOrder", equalTo(1000))
+            .body(ARGUMENTS + ".list[0].mustBeOnlyMailbox", equalTo(false))
+            .body(ARGUMENTS + ".list[0].mayReadItems", equalTo(false))
+            .body(ARGUMENTS + ".list[0].mayAddItems", equalTo(false))
+            .body(ARGUMENTS + ".list[0].mayRemoveItems", equalTo(false))
+            .body(ARGUMENTS + ".list[0].mayCreateChild", equalTo(false))
+            .body(ARGUMENTS + ".list[0].mayRename", equalTo(false))
+            .body(ARGUMENTS + ".list[0].mayDelete", equalTo(false))
+            .body(ARGUMENTS + ".list[0].totalMessages", equalTo(1))
+            .body(ARGUMENTS + ".list[0].unreadMessages", equalTo(1))
+            .body(ARGUMENTS + ".list[0].unreadThreads", equalTo(0));
     }
 
     @Test
     public void getMailboxesShouldReturnFilteredMailboxesPropertiesWhenRequestContainsFilterProperties() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\" : [\"unreadMessages\", \"sortOrder\"]}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\","))
-            .extract()
-            .asString();
-
-        String firstMailboxPath = "$.[0].[1].list.[0]";
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".id")).isNotEmpty();
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".name")).isNull();
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".parentId")).isNull();
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".role")).isNull();
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".sortOrder")).isEqualTo(1000);
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mustBeOnlyMailbox")).isNull();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayReadItems")).isNull();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayAddItems")).isNull();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayRemoveItems")).isNull();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayCreateChild")).isNull();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayRename")).isNull();
-        assertThat(jsonPath.parse(response).<Boolean>read(firstMailboxPath + ".mayDelete")).isNull();
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".totalMessages")).isNull();
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".unreadMessages")).isEqualTo(0);
-        assertThat(jsonPath.parse(response).<Integer>read(firstMailboxPath + ".unreadThreads")).isNull();
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list[0].id", not(isEmptyOrNullString()))
+            .body(ARGUMENTS + ".list[0].name", nullValue())
+            .body(ARGUMENTS + ".list[0].parentId", nullValue())
+            .body(ARGUMENTS + ".list[0].role", nullValue())
+            .body(ARGUMENTS + ".list[0].sortOrder", equalTo(1000))
+            .body(ARGUMENTS + ".list[0].mustBeOnlyMailbox", nullValue())
+            .body(ARGUMENTS + ".list[0].mayReadItems", nullValue())
+            .body(ARGUMENTS + ".list[0].mayAddItems", nullValue())
+            .body(ARGUMENTS + ".list[0].mayRemoveItems", nullValue())
+            .body(ARGUMENTS + ".list[0].mayCreateChild", nullValue())
+            .body(ARGUMENTS + ".list[0].mayRename", nullValue())
+            .body(ARGUMENTS + ".list[0].mayDelete", nullValue())
+            .body(ARGUMENTS + ".list[0].totalMessages", nullValue())
+            .body(ARGUMENTS + ".list[0].unreadMessages", equalTo(0))
+            .body(ARGUMENTS + ".list[0].unreadThreads", nullValue());
     }
 
     @Test
     public void getMailboxesShouldReturnIdWhenRequestContainsEmptyPropertyListFilter() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\" : []}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\","))
-            .extract()
-            .asString();
-
-        String firstMailboxPath = "$.[0].[1].list.[0]";
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".id")).isNotEmpty();
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".name")).isNull();
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list[0].id", not(isEmptyOrNullString()))
+            .body(ARGUMENTS + ".list[0].name", nullValue());
     }
 
     @Test
     public void getMailboxesShouldIgnoreUnknownPropertiesWhenRequestContainsUnknownPropertyListFilter() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\" : [\"unknown\"]}, \"#0\"]]")
-            .when()
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\","))
-            .extract()
-            .asString();
-
-        String firstMailboxPath = "$.[0].[1].list.[0]";
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".id")).isNotEmpty();
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".name")).isNull();
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list[0].id", not(isEmptyOrNullString()))
+            .body(ARGUMENTS + ".list[0].name", nullValue());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void getMailboxesShouldReturnMailboxesWithSortOrder() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "trash");
 
-        String response = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMailboxes\", {}, \"#0\"]]")
-            .when()
-                .post("/jmap")
-            .then()
-                .statusCode(200)
-                .content(startsWith("[[\"mailboxes\",{\"accountId\":null,\"state\":null,\"list\":[{\"id\":\""))
-                .extract()
-                .asString();
-        assertThat(jsonPath.parse(response).<List<Map<String, Object>>>read("$.[0].[1].list[*].['name','sortOrder']"))
-                .hasSize(2)
-                .containsOnly(
-                        ImmutableMap.of("name", "trash", "sortOrder", 60),
-                        ImmutableMap.of("name", "inbox", "sortOrder", 10));
-    }
-
-    @Test
-    public void getMailboxesShouldReturnMailboxesWithRolesInLowerCase() throws Exception {
-        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "outbox");
-
-        String response = given()
+        given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
@@ -451,12 +400,30 @@ public abstract class GetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .content(startsWith("[[\"mailboxes\","))
-            .extract()
-            .asString();
-        
-        String firstMailboxPath = "$.[0].[1].list.[0]";
-        assertThat(jsonPath.parse(response).<String>read(firstMailboxPath + ".role")).isEqualTo("outbox");
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(2))
+            .body(ARGUMENTS + ".list[0].name", equalTo("inbox"))
+            .body(ARGUMENTS + ".list[0].sortOrder", equalTo(10))
+            .body(ARGUMENTS + ".list[1].name", equalTo("trash"))
+            .body(ARGUMENTS + ".list[1].sortOrder", equalTo(60));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnMailboxesWithRolesInLowerCase() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "outbox");
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxes"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].role", equalTo("outbox"));
     }
 
 }
