@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.Method;
 
@@ -184,5 +185,23 @@ public class SetMessagesResponse implements Method.Response {
     @JsonSerialize
     public Map<MessageId, SetError> getNotDestroyed() {
         return notDestroyed;
+    }
+
+    public void mergeInto(SetMessagesResponse.Builder responseBuilder) {
+        responseBuilder.created(getCreated());
+        responseBuilder.updated(getUpdated());
+        responseBuilder.destroyed(getDestroyed());
+        responseBuilder.notCreated(getNotCreated());
+        responseBuilder.notUpdated(getNotUpdated());
+        responseBuilder.notDestroyed(getNotDestroyed());
+        if(! Strings.isNullOrEmpty(getAccountId())) {
+            responseBuilder.accountId(getAccountId());
+        }
+        if(! Strings.isNullOrEmpty(getOldState())) {
+            responseBuilder.accountId(getOldState());
+        }
+        if(! Strings.isNullOrEmpty(getNewState())) {
+            responseBuilder.accountId(getAccountId());
+        }
     }
 }

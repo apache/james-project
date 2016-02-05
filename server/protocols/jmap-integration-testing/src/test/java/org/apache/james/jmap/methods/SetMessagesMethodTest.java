@@ -31,6 +31,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
@@ -46,6 +47,7 @@ import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.junit.Ignore;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
@@ -54,7 +56,6 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -512,7 +513,39 @@ public abstract class SetMessagesMethodTest {
                 .body("[0][1].notUpdated", hasKey(messageId))
                 .body("[0][1].notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
                 .body("[0][1].notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].description", startsWith("Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized"))
+                .body("[0][1].notUpdated[\""+messageId+"\"].description", startsWith("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
+                        " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
+                .body("[0][1].updated", hasSize(0));
+    }
+
+    @Test
+    @Ignore("Jackson json deserializer stops after first error found")
+    public void setMessagesShouldRejectUpdateWhenPropertiesHaveWrongTypes() throws MailboxException {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String messageId = username + "|mailbox|1";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\", \"isFlagged\" : 456 } } }, \"#0\"]]", messageId))
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body("[0][0]", equalTo("messagesSet"))
+                .body("[0][1].notUpdated", hasKey(messageId))
+                .body("[0][1].notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body("[0][1].notUpdated[\""+messageId+"\"].properties", hasSize(2))
+                .body("[0][1].notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body("[0][1].notUpdated[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
+                // .body("[0][1].notUpdated[\""+messageId+"\"].description", startsWith("Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized"))
                 .body("[0][1].updated", hasSize(0));
     }
 

@@ -21,10 +21,13 @@ package org.apache.james.jmap.model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.mail.Flags;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.methods.ValidationResult;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -43,6 +46,7 @@ public class UpdateMessagePatch {
         private Optional<Boolean> isFlagged = Optional.empty();
         private Optional<Boolean> isUnread = Optional.empty();
         private Optional<Boolean> isAnswered = Optional.empty();
+        private Set<ValidationResult> validationResult = ImmutableSet.of();
 
         public Builder mailboxIds(Optional<List<String>> mailboxIds) {
             if (mailboxIds.isPresent()) {
@@ -51,24 +55,28 @@ public class UpdateMessagePatch {
             return this;
         }
 
-        public Builder isFlagged(Optional<Boolean> isFlagged) {
-            this.isFlagged = isFlagged;
+        public Builder isFlagged(Boolean isFlagged) {
+            this.isFlagged = Optional.of(isFlagged);
             return this;
         }
 
-        public Builder isUnread(Optional<Boolean> isUnread) {
-            this.isUnread = isUnread;
+        public Builder isUnread(Boolean isUnread) {
+            this.isUnread = Optional.of(isUnread);
             return this;
         }
 
-        public Builder isAnswered(Optional<Boolean> isAnswered) {
-            this.isAnswered = isAnswered;
+        public Builder isAnswered(Boolean isAnswered) {
+            this.isAnswered = Optional.of(isAnswered);
+            return this;
+        }
+
+        public Builder validationResult(Set<ValidationResult> validationResult) {
+            this.validationResult = ImmutableSet.copyOf(validationResult);
             return this;
         }
 
         public UpdateMessagePatch build() {
-
-            return new UpdateMessagePatch(mailboxIds.build(), isUnread, isFlagged, isAnswered);
+            return new UpdateMessagePatch(mailboxIds.build(), isUnread, isFlagged, isAnswered, ImmutableList.copyOf(validationResult));
         }
     }
 
@@ -77,16 +85,20 @@ public class UpdateMessagePatch {
     private final Optional<Boolean> isFlagged;
     private final Optional<Boolean> isAnswered;
 
+    private final ImmutableList<ValidationResult> validationErrors;
+
     @VisibleForTesting
     UpdateMessagePatch(List<String> mailboxIds,
                        Optional<Boolean> isUnread,
                        Optional<Boolean> isFlagged,
-                       Optional<Boolean> isAnswered) {
+                       Optional<Boolean> isAnswered,
+                       ImmutableList<ValidationResult> validationResults) {
 
         this.mailboxIds = mailboxIds;
         this.isUnread = isUnread;
         this.isFlagged = isFlagged;
         this.isAnswered = isAnswered;
+        this.validationErrors = validationResults;
     }
 
     public List<String> getMailboxIds() {
@@ -105,21 +117,30 @@ public class UpdateMessagePatch {
         return isAnswered;
     }
 
+    public ImmutableList<ValidationResult> getValidationErrors() {
+        return validationErrors;
+    }
+
     public boolean isValid() {
-        return true; // to be implemented when UpdateMessagePatch would allow any message property to be set
+        return getValidationErrors().isEmpty();
     }
 
     public Flags applyToState(boolean isSeen, boolean isAnswered, boolean isFlagged) {
         Flags newStateFlags = new Flags();
-        if (!isSeen && isUnread().isPresent() && !isUnread().get()) {
-            newStateFlags.add(Flags.Flag.SEEN);
+
+        boolean shouldMessageBeFlagged = isFlagged().isPresent() && isFlagged().get() || (!isFlagged().isPresent() && isFlagged);
+        if (shouldMessageBeFlagged) {
+            newStateFlags.add(Flags.Flag.FLAGGED);
         }
-        if (!isAnswered && isAnswered().isPresent() && isAnswered().get()) {
+        boolean shouldMessageBeMarkAnswered = isAnswered().isPresent() && isAnswered().get() || (!isAnswered().isPresent() && isAnswered);
+        if (shouldMessageBeMarkAnswered) {
             newStateFlags.add(Flags.Flag.ANSWERED);
         }
-        if (!isFlagged && isFlagged().isPresent() && isFlagged().get()) {
-            newStateFlags.add(Flags.Flag.FLAGGED);
+        boolean shouldMessageBeMarkSeen = isUnread().isPresent() && !isUnread().get() || (!isUnread().isPresent() && isSeen);
+        if (shouldMessageBeMarkSeen) {
+            newStateFlags.add(Flags.Flag.SEEN);
         }
         return newStateFlags;
     }
+
 }
