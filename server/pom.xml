@@ -105,12 +105,6 @@
         <module>queue/queue-activemq</module>
     </modules>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/server/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/server/trunk</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/james/server/trunk?root=Apache-SVN</url>
-    </scm>
-
     <distributionManagement>
         <site>
             <id>server-trunk-website</id>

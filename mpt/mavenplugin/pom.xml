@@ -39,12 +39,6 @@ scriptable functional testing of ASCII based line protocols. This Maven2 Plugin 
 to the library requiring no extra coding.</description>
     <url>http://james.apache.org/mpt/mavenplugin</url>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mpt/trunk/mavenplugin</connection>
-        <developerConnection>scm:svn:https://rdonkin@svn.apache.org/repos/asf/james/mpt/trunk/mavenplugin</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/james/mpt/trunk/mavenplugin?root=Apache-SVN</url>
-    </scm>
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

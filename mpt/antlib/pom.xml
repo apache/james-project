@@ -38,12 +38,6 @@ scritable functional testing of ASCII based line protocols. This AntLib provides
 to the library requiring no extra coding.</description>
     <url>http://james.apache.org/mpt/antlib</url>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mpt/trunk/antlib</connection>
-        <developerConnection>scm:svn:https://rdonkin@svn.apache.org/repos/asf/james/mpt/trunk/antlib</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/james/mpt/trunk/antlib?root=Apache-SVN</url>
-    </scm>
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

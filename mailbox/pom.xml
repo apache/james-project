@@ -66,11 +66,6 @@
         <module>kafka</module>
     </modules>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mailbox/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/mailbox/trunk</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/james/mailbox/trunk?root=Apache-SVN</url>
-    </scm>
     <issueManagement>
         <system>JIRA</system>
         <url>http://issues.apache.org/jira/browse/MAILBOX</url>

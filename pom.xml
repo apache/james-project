@@ -510,9 +510,9 @@
     </prerequisites>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/trunk</developerConnection>
-        <url>http://svn.apache.org/viewvc/james/project/trunk</url>
+        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/james-project.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/james-project.git</developerConnection>
+        <url>http://git-wip-us.apache.org/repos/asf/james-project.git</url>
     </scm>
 
     <issueManagement>

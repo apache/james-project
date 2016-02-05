@@ -292,12 +292,6 @@
         </plugins>
     </build>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/protocols/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/protocols/trunk</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/james/protocols/trunk?root=Apache-SVN</url>
-    </scm>
-
     <distributionManagement>
         <site>
             <id>server-trunk-website</id>

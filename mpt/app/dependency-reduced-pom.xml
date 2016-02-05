@@ -12,11 +12,6 @@
 scriptable functional testing of ASCII based line protocols. This application provides easy executable
 interfaces to the MPT library.</description>
   <url>http://james.apache.org/mpt/app</url>
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/james/mpt/trunk/app</connection>
-    <developerConnection>scm:svn:https://rdonkin@svn.apache.org/repos/asf/james/mpt/trunk/app</developerConnection>
-    <url>http://svn.apache.org/viewcvs.cgi/james/mpt/trunk/app?root=Apache-SVN</url>
-  </scm>
   <build>
     <plugins>
       <plugin>

@@ -268,12 +268,6 @@
         <url>http://issues.apache.org/jira/browse/MAILET</url>
     </issueManagement>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mailet/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/mailet/trunk</developerConnection>
-        <url>http://svn.apache.org/viewcvs.cgi/james/mailet/trunk/?root=Apache-SVN</url>
-    </scm>
-
     <distributionManagement>
         <site>
             <id>mailet-umbrella-website</id>
