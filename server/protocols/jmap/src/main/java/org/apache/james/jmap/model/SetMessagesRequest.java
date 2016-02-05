@@ -28,6 +28,7 @@ import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,7 +46,7 @@ public class SetMessagesRequest implements JmapRequest {
         private String accountId;
         private String ifInState;
         private ImmutableList.Builder<Message> create;
-        private ImmutableMap.Builder<MessageId, UpdateMessagePatch> update;
+        private ImmutableMap.Builder<MessageId, ObjectNode> update;
         private ImmutableList.Builder<MessageId> destroy;
 
         private Builder() {
@@ -75,7 +76,7 @@ public class SetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder update(Map<MessageId, UpdateMessagePatch> updates) {
+        public Builder update(Map<MessageId, ObjectNode> updates) {
             this.update.putAll(updates);
             return this;
         }
@@ -93,10 +94,10 @@ public class SetMessagesRequest implements JmapRequest {
     private final Optional<String> accountId;
     private final Optional<String> ifInState;
     private final List<Message> create;
-    private final Map<MessageId, UpdateMessagePatch> update;
+    private final Map<MessageId, ObjectNode> update;
     private final List<MessageId> destroy;
 
-    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<Message> create, Map<MessageId, UpdateMessagePatch> update, List<MessageId> destroy) {
+    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<Message> create, Map<MessageId, ObjectNode> update, List<MessageId> destroy) {
         this.accountId = accountId;
         this.ifInState = ifInState;
         this.create = create;
@@ -116,7 +117,7 @@ public class SetMessagesRequest implements JmapRequest {
         return create;
     }
 
-    public Map<MessageId, UpdateMessagePatch> getUpdate() {
+    public Map<MessageId, ObjectNode> getUpdate() {
         return update;
     }
 

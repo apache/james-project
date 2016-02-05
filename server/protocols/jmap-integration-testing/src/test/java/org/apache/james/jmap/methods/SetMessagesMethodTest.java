@@ -489,7 +489,6 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    @Ignore("Unable to deal with invalid types from SetMessages requests handler")
     public void setMessagesShouldRejectUpdateWhenPropertyHasWrongType() throws MailboxException {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
@@ -504,7 +503,6 @@ public abstract class SetMessagesMethodTest {
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\" } } }, \"#0\"]]", messageId))
-                // Does not work, jackson throws InvalidFormatException way before SetMessageMethod can deal with !
         .when()
                 .post("/jmap")
         .then()
@@ -513,8 +511,8 @@ public abstract class SetMessagesMethodTest {
                 .body("[0][0]", equalTo("messagesSet"))
                 .body("[0][1].notUpdated", hasKey(messageId))
                 .body("[0][1].notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].properties", equalTo("isUnread"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].description", equalTo("invalid properties"))
+                .body("[0][1].notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body("[0][1].notUpdated[\""+messageId+"\"].description", startsWith("Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized"))
                 .body("[0][1].updated", hasSize(0));
     }
 
