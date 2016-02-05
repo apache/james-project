@@ -40,7 +40,7 @@
 
   <subsection>
 
-    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/james-listmanager-template.xml">james-listmanager.xml</a> in SVN to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-listmanager-template.xml">james-listmanager.xml</a> in GIT to get some examples and hints.</p>
 
     <p>One of the frequent questions on the James-User Mailing List is how
     to create a mailing list. This document explains one way of using the
@@ -148,7 +148,7 @@
   
   <section name="miResources.xml">
   
-    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/miResources.xml">miResources.xml</a> in SVN to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/miResources.xml">miResources.xml</a> in GIT to get some examples and hints.</p>
 
   </section>
   

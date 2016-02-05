@@ -27,7 +27,7 @@
 
   <section name="Quota Configuration">
 
-    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/quota-template.xml">quota-template.xml</a> in SVN to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/quota-template.xml">quota-template.xml</a> in GIT to get some examples and hints.</p>
     
     <p>Use this configuration to define the type of quota storage used to persist the quotas.</p>
     
@@ -63,7 +63,7 @@
     </p>
 
     <p>
-      To choose the implementation you want for the given components you want simply have a look to the <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/quota-template.xml">quota-template.xml</a> file.
+      To choose the implementation you want for the given components you want simply have a look to the <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/quota-template.xml">quota-template.xml</a> file.
     </p>
 
     <p>

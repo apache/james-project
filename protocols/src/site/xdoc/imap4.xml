@@ -69,7 +69,7 @@
      <ul>
        <li>IMAP4 SORT and THREAD Extensions (RFC 5256 http://www.ietf.org/rfc/rfc5256.txt)</li>
      </ul>
-     <p>We have <a href="http://svn.apache.org/repos/asf/james/mpt/trunk/">integration tests</a> for IMAP.</p>
+     <p>We have <a href="https://github.com/apache/james-project/tree/master/mpt">integration tests</a> for IMAP.</p>
      <p>Our implementation is also tested against external tools such as <a href="http://www.imapwiki.org/ImapTest">http://www.imapwiki.org/ImapTest</a>.</p>
   </section>
 

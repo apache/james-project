@@ -46,12 +46,12 @@
           <a href="http://james.apache.org/download.cgi">James release mirrors</a>.
           Simply choose the version of James you'd like to download, and pick the source
           distribution appropriate for your platform.</li>
-      <li>Get the source code using SVN - this method gives you access to the cutting edge code
-          base.  Instructions on how to use SVN to get the James source code
-          can be found <a href="http://www.apache.org/dev/version-control.html">here</a>.
-          Apache James Server beta4 repository is <a href="http://svn.apache.org/repos/asf/james/server/tags/james-server-3.0-beta4/">http://svn.apache.org/repos/asf/james/server/tags/james-server-3.0-beta4/</a>.</li>
-      <li>For information, you can download all Apache James sources (server, mailbox, imap, mailet...) if you check out <a href="http://svn.apache.org/repos/asf/james/current">http://svn.apache.org/repos/asf/james/current/</a>.
-         Watch out!: you will get a release, but what we call a "trunk", that is on constant development and debugging.</li>
+      <li>Get the source code using GIT - this method gives you access to the cutting edge code
+          base.  Instructions on how to use GIT to get the James source code
+          can be found <a href="http://www.apache.org/dev/git.html">here</a>.
+          Apache James Server repository is <a href="http://git-wip-us.apache.org/repos/asf/james-project.git">http://git-wip-us.apache.org/repos/asf/james-project.git</a>.</li>
+      <li>For information, you can download all Apache James sources (server, mailbox, imap, mailet...) if you check out <a href="http://git-wip-us.apache.org/repos/asf/james-project.git">http://git-wip-us.apache.org/repos/asf/james-project.git</a>.
+         Watch out!: you will get a release, but what we call a "master", that is on constant development and debugging.</li>
     </ol>
 
     <p>We consider in this document that you have checked-out James source code in JAMES_SRC_HOME directory.</p>
@@ -190,7 +190,7 @@
           <img src="./images/netbeans/netbeans-svn-checkout1.png"/>
           <p>In the <code>Repository URL</code> field enter the location for James repository and click <code>Next</code>.
           You can use the following URL to get the trunk or development version:
-          <a href="http://svn.apache.org/repos/asf/james/server/trunk">http://svn.apache.org/repos/asf/james/server/trunk</a>.<br/>
+          <a href="http://git-wip-us.apache.org/repos/asf/james-project.git">http://git-wip-us.apache.org/repos/asf/james-project.git</a>.<br/>
           After this you will be presented with another dialog window where you can configure which folders to check out and where to save them on your machine.</p>
           <img src="./images/netbeans/netbeans-svn-checkout2.png"/>
           <p>If you supplied the above URL you can click <code>Finish</code> to get trunk version and start hacking.
@@ -216,7 +216,7 @@
   <section name="Build James from IntelliJ IDEA">
 
       <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the trunk version of the server
-          from <code>http://svn.apache.org/repos/asf/james/server/trunk/</code>.
+          from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
       </p>
 
       <subsection name="Getting the sources from the repository">

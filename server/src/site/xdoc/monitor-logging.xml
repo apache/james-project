@@ -67,7 +67,7 @@ drwxrwxrwx. 7 root root   4096 2010-11-06 09:01 ../
 -rw-r--r--. 1 root root     71 2010-11-06 09:24 usersrepository.log
 </source>    
        
-    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/log4j.properties">log4j.properties</a> in SVN to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/log4j.properties">log4j.properties</a> in GIT to get some examples and hints.</p>
 
     <p>You can rise the logging level on protocols.</p>
     <p>Set log4j.logger.james.smtpserver=DEBUG, SMTPSERVER</p>

@@ -43,7 +43,7 @@
          file (james-server-context.xml) which imports 4 other files (1 per mailbox type): james-mailbox-jcr-context.xml, james-mailbox-jpa-context.xml, 
          james-mailbox-maildir-context.xml, james-mailbox-memory-context.xml.</p>
     
-      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a> in SVN to
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/container/spring/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a> in GIT to
          get some examples and hints.</p>
       
       <p>spring beans files are the place where the Apache James Server wiring is done. It should be modified only by expert-users.</p>
@@ -54,7 +54,7 @@
 
     <subsection name="james-database.properties">
     
-      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/james-database-template.properties">james-database.properties</a> in SVN to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/james-database-template.properties">james-database.properties</a> in GIT to get some examples and hints.</p>
 
       <p>The database connection in database.properties</p>
 
@@ -97,11 +97,11 @@
     
     <subsection name="META-INF/persistence.xml">
     
-      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/META-INF/persistence.xml">META-INF/persistence.xml</a> in SVN to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/META-INF/persistence.xml">META-INF/persistence.xml</a> in GIT to get some examples and hints.</p>
       
       <p>The JPA mapping and properties are defined in the in META-INF/persistence.xml.</p>
       
-      <p>You can override the definition in external file and importing the external file in the persistence.xml (see jpa-mappings.xml provided example in SVN)</p>
+      <p>You can override the definition in external file and importing the external file in the persistence.xml (see jpa-mappings.xml provided example in GIT)</p>
 
             <source>
 &lt;mapping-file&gt;META-INF/jpa-mappings.xml&lt;/mapping-file&gt;</source>
@@ -110,7 +110,7 @@
 
     <subsection name="jmx.properties">
     
-      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/jmx-template.properties">jmx.properties</a> in SVN to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jmx-template.properties">jmx.properties</a> in GIT to get some examples and hints.</p>
       
       <p>This is used to configure the JMX MBean server via which all management is achieved (also used by via the james-cli).</p>
       
@@ -128,7 +128,7 @@
 
     <subsection name="sqlResources.xml">
     
-      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/sqlResources.xml">sqlResources.xml</a> in SVN to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/sqlResources.xml">sqlResources.xml</a> in GIT to get some examples and hints.</p>
       
       <p>This file is deprecated but some mailets... still need it. The standard way to access database
          is JPA, but some functionalities are not yet migrated and still need the sqlResources.xml resources.</p>
@@ -149,7 +149,7 @@
 
     <subsection name="JCR Repository Configuration">
 
-      <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/jcr-repository-template.xml">jcr-repository.xml</a> in SVN to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository-template.xml">jcr-repository.xml</a> in GIT to get some examples and hints.</p>
       
       <p>Used to configure the JCR mailbox (if configure in mailbox.xml).</p>
 

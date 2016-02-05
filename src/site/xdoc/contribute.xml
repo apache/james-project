@@ -158,7 +158,7 @@
       </p>
       <p>
         To edit an existing document try to edit the xml version in src/site/xdocs
-        (check it out from SVN)
+        (check it out from GIT)
         and if you can, submit a patch as for Code Patches.
       </p>
       <p>

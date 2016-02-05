@@ -27,7 +27,7 @@
 
   <section name="Cassandra Configuration">
 
-    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a> to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a> to get some examples and hints.</p>
 
       <dl>
         <dt><strong>cassandra.ip</strong></dt>

@@ -27,7 +27,7 @@
 
   <section name="Mailet Container Configuration">
 
-    <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer-template.xml</a> in SVN to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer-template.xml</a> in GIT to get some examples and hints.</p>
     
     <p>Changes between 3.0-M2 and 3.0-beta3:</p>
     <ul>

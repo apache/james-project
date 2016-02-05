@@ -52,7 +52,7 @@
     <p><a href="http://james.apache.org/server/3">Apache James Server 3</a> uses this library to implement its user mailboxes.</p>
     <p>Apache James Mailbox is tested and fully compatible with other Apache James libraries
        such as the <a href="http://james.apache.org/imap">Apache James IMAP</a> 
-       (see <a href="https://svn.apache.org/repos/asf/james/trunk/mpt">this link</a> 
+       (see <a href="http://james.apache.org/mpt/index.html">this link</a> 
        for the Mailbox/IMAP integration tests source code) </p>
   </section>
 

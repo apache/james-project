@@ -46,42 +46,42 @@
       </tr>
 
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/cassandra-template.properties">cassandra-template.properties</a></td>
         <td><a href="config-cassandra.html">Cassandra Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/dnsservice-template.xml">dnsservice.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/dnsservice-template.xml">dnsservice.xml</a></td>
         <td><a href="config-dnsservice.html">DNS Service Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/elasticsearch-template.properties">elasticsearch-template.properties</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/elasticsearch-template.properties">elasticsearch-template.properties</a></td>
         <td><a href="config-elasticsearch.html">ElasticSearch Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/imapserver-template.xml">imapserver.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/imapserver-template.xml">imapserver.xml</a></td>
         <td><a href="config-imap4.html">IMAP4 Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/lmtpserver-template.xml">lmtpserver.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/lmtpserver-template.xml">lmtpserver.xml</a></td>
         <td><a href="config-smtp-lmtp.html">LMTP Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer.xml</a></td>
         <td><a href="config-mailetcontainer.html">Mailet Container Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/pop3server-template.xml">pop3server.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/pop3server-template.xml">pop3server.xml</a></td>
         <td><a href="config-pop3.html">POP3 Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/smtpserver-template.xml">smtpserver.xml</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/smtpserver-template.xml">smtpserver.xml</a></td>
         <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
         <td></td>
       </tr>

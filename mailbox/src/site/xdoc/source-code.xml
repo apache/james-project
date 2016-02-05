@@ -42,20 +42,22 @@
   <section name="Get Source Code">
 
     <subsection name="Anonymous Access">
-      <p>The source can be checked out anonymously from SVN with the following command.</p>
-      <p><code>$ svn checkout http://svn.apache.org/repos/asf/james/trunk/mailbox james-mailbox</code></p>
+      <p>The source can be checked out anonymously from GIT with the following command.</p>
+      <p><code>$ git clone http://git-wip-us.apache.org/repos/asf/james-project.git</code></p>
+      <p><code>$ cd mailbox</code></p>
     </subsection>
 
     <subsection name="Developer Access">
-      <p>Everyone can access the Subversion repository via HTTP, but Committers must checkout the Subversion repository via HTTPS.</p>
-      <p><code>$ svn checkout https://svn.apache.org/repos/asf/james/trunk/mailbox james-mailbox</code></p>
+      <p>Everyone can access the GIT repository via HTTP, but Committers must checkout the GIT repository via HTTPS.</p>
+      <p><code>$ git clone https://git-wip-us.apache.org/repos/asf/james-project.git</code></p>
+      <p><code>$ cd mailbox</code></p>
     </subsection>
 
   </section>
 
   <section name="Build Source Code">
     <p>You can read a tutorial on how to build Apache James Server on <a href="http://james.apache.org/server/3/dev-build.html">http://james.apache.org/server/3/dev-build.html</a>.</p>
-    <p>The SVN URLs and the project names must be adapted, but the requirements and process are the same and you can inspire
+    <p>The GIT URLs and the project names must be adapted, but the requirements and process are the same and you can inspire
        from the build the Apache James Mailbox libraries.</p>
   </section>
 

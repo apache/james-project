@@ -27,7 +27,7 @@
 
         <section name="Events System Configuration">
 
-            <p>Consult <a href="http://svn.apache.org/repos/asf/james/server/trunk/app/src/main/resources/events-template.xml">events-template.xml</a> in SVN to get some examples and hints.</p>
+            <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/events-template.xml">events-template.xml</a> in GIT to get some examples and hints.</p>
 
             <p>Use this configuration to define the type of Event System you want.</p>
 

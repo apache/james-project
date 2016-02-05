@@ -105,12 +105,12 @@
           members and Apache Software Foundation Members.
         </p>
       </subsection>
-      <subsection name="SVN">
+      <subsection name="GIT">
         <p>
           All of the Apache James products are maintained in shared information
-          repositories using SVN on svn.apache.org. The Apache
+          repositories using GIT on git-wip-us.apache.org. The Apache
           committers have write access to these repositories; everyone
-          has read access via anonymous SVN.
+          has read access via anonymous GIT.
         </p>
       </subsection>
     </section>
