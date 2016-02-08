@@ -389,6 +389,10 @@
 
       <subsection name="News">
         <ul>
+          <li>Feb/2016 - <ul>
+          <li><a href="newsarchive.html#20160208"><strong>Moving to GIT !</strong> All James projects has been migrated from SVN to GIT.</a></li>
+          </ul>
+          </li>
           <li>Jan/2016 - <ul>
           <li><a href="newsarchive.html#20160108"><strong>James modules merge into james-project</strong> Some of James modules were merged into james-project.</a></li>
           </ul>

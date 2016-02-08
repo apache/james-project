@@ -36,6 +36,19 @@
 
    <subsection name='2016'>
 
+     <a name="20150208"><h4>Feb 2016 - Moving to GIT !</h4></a>
+     <p>All James projects has been migrated from SVN to GIT.</p>
+     <p>Here are the links to your favorite projects:
+       <ul>
+         <li><a href="https://git-wip-us.apache.org/repos/asf?p=james-project.git">james-project</a></li>
+         <li><a href="https://git-wip-us.apache.org/repos/asf?p=james-jdkim.git">james-jdkim</a></li>
+         <li><a href="https://git-wip-us.apache.org/repos/asf?p=james-jsieve.git">james-jsieve</a></li>
+         <li><a href="https://git-wip-us.apache.org/repos/asf?p=james-jspf.git">james-jspf</a></li>
+         <li><a href="https://git-wip-us.apache.org/repos/asf?p=james-mime4j.git">james-mime4j</a></li>
+         <li><a href="https://git-wip-us.apache.org/repos/asf?p=james-postage.git">james-postage</a></li>
+       </ul>
+     </p>
+
      <a name="20160108"><h4>Jan 2016 - James modules merge into james-project</h4></a>
      <p>Some of James modules were merged into <a href="https://git-wip-us.apache.org/repos/asf?p=james-project.git;a=tree">james-project</a>.</p>
      <p>This change was done in order to speed up our development phase before the 3.0 release and as long as important changes are needed on the API.</p>
