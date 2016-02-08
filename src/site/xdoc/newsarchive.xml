@@ -34,6 +34,15 @@
         </div>
       </div>
 
+   <subsection name='2016'>
+
+     <a name="20160108"><h4>Jan 2016 - James modules merge into james-project</h4></a>
+     <p>Some of James modules were merged into <a href="https://git-wip-us.apache.org/repos/asf?p=james-project.git;a=tree">james-project</a>.</p>
+     <p>This change was done in order to speed up our development phase before the 3.0 release and as long as important changes are needed on the API.</p>
+     <p>The modules merged are: james-server, apache-james-mailbox, apache-mailet, apache-james-mpt,  protocols</p>
+
+   </subsection>
+
    <subsection name='2015'>
 
      <a name="20151026"><h4>Oct 2015 - Guice injection for Cassandra backend</h4></a>
