@@ -128,7 +128,8 @@ public abstract class GetMessagesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("error"))
-            .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("N/A (through reference chain: org.apache.james.jmap.model.Builder[\"ids\"])"));
     }
 
     @Test

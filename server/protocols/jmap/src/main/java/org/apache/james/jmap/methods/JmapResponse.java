@@ -26,7 +26,6 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
 
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class JmapResponse {
@@ -76,12 +75,20 @@ public class JmapResponse {
         }
 
         public Builder error() {
-            return error(DEFAULT_ERROR_MESSAGE);
+            this.response = ErrorResponse.builder().build();
+            this.responseName = ErrorResponse.ERROR_METHOD;
+            return this;
         }
 
         public Builder error(String message) {
-            this.response = new ErrorResponse(message);
-            this.responseName = ERROR_METHOD;
+            this.response = ErrorResponse.builder().type(message).build();
+            this.responseName = ErrorResponse.ERROR_METHOD;
+            return this;
+        }
+        
+        public Builder error(ErrorResponse error) {
+            this.response = error;
+            this.responseName = ErrorResponse.ERROR_METHOD;
             return this;
         }
 
@@ -91,23 +98,6 @@ public class JmapResponse {
         }
     }
 
-    public static class ErrorResponse implements Method.Response {
-        
-        private final String type;
-
-        public ErrorResponse(String type) {
-            this.type = type;
-        }
-        
-        public String getType() {
-            return type;
-        }
-    }
-    
-    @VisibleForTesting static final String DEFAULT_ERROR_MESSAGE = "Error while processing";
-    public static final Method.Response.Name ERROR_METHOD = Method.Response.name("error");
-
-    
     private final Method.Response.Name method;
     private final ClientId clientId;
     private final Method.Response response;

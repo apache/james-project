@@ -68,16 +68,31 @@ public class RequestHandler {
                     } catch (IOException e) {
                         LOGGER.error("Error occured while parsing the request.", e);
                         if (e.getCause() instanceof NotImplementedException) {
-                            return error(request, "Not yet implemented");
+                            return errorNotImplemented(request);
                         }
-                        return error(request, "invalidArguments");
+                        return error(request, ErrorResponse.builder()
+                                                        .type("invalidArguments")
+                                                        .description(e.getMessage())
+                                                        .build());
                     } catch (NotImplementedException e) {
-                        return error(request, "Not yet implemented");
+                        return errorNotImplemented(request);
                     }
                 };
     }
 
-    private Stream<JmapResponse> error(AuthenticatedProtocolRequest request, String message) {
-        return Stream.of(JmapResponse.builder().clientId(request.getClientId()).error(message).build());
+    private Stream<JmapResponse> errorNotImplemented(AuthenticatedProtocolRequest request) {
+        return Stream.of(
+                JmapResponse.builder()
+                    .clientId(request.getClientId())
+                    .error("Not yet implemented")
+                    .build());
+    }
+
+    private Stream<JmapResponse> error(AuthenticatedProtocolRequest request, ErrorResponse error) {
+        return Stream.of(
+                JmapResponse.builder()
+                    .clientId(request.getClientId())
+                    .error(error)
+                    .build());
     }
 }

@@ -221,7 +221,35 @@ public class JmapResponseWriterImplTest {
 
         assertThat(response).hasSize(1)
                 .extracting(ProtocolResponse::getResponseName, x -> x.getResults().get("type").asText(), ProtocolResponse::getClientId)
-                .containsExactly(tuple(JmapResponse.ERROR_METHOD, JmapResponse.DEFAULT_ERROR_MESSAGE, ClientId.of(expectedClientId)));
+                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, ErrorResponse.DEFAULT_ERROR_MESSAGE, ClientId.of(expectedClientId)));
+    }
+
+    @Test
+    public void formatErrorResponseShouldWorkWithTypeAndDescription() {
+        String expectedClientId = "#1";
+
+        ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
+        parameters.put("id", "myId");
+        JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
+                parameters,
+                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
+
+        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
+        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+                Stream.of(JmapResponse
+                    .builder()
+                    .clientId(ProtocolRequest.deserialize(nodes).getClientId())
+                    .error(ErrorResponse
+                            .builder()
+                            .type("errorType")
+                            .description("complete description")
+                            .build())
+                    .build()))
+                .collect(Collectors.toList());
+
+        assertThat(response).hasSize(1)
+                .extracting(ProtocolResponse::getResponseName, x -> x.getResults().get("type").asText(), x -> x.getResults().get("description").asText(), ProtocolResponse::getClientId)
+                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, "errorType", "complete description", ClientId.of(expectedClientId)));
     }
 
 }
