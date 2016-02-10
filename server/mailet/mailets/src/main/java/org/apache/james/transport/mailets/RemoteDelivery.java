@@ -53,7 +53,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.ParseException;
 
-import org.apache.geronimo.javamail.transport.smtp.SMTPTransport;
+import com.sun.mail.smtp.SMTPTransport;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.dnsservice.library.MXHostAddressIterator;
@@ -1250,6 +1250,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
             // We fail permanently if this was a 5xx error
             return failMessage(mail, ex, ('5' == ex.getMessage().charAt(0)));
         } catch (Exception ex) {
+            log("Generic exception = permanent failure: "+ex.getMessage(), ex);
             // Generic exception = permanent failure
             return failMessage(mail, ex, true);
         }
