@@ -36,6 +36,12 @@
 
    <subsection name='2016'>
 
+     <a name="20160210"><h4>Feb 2016 - JMAP implementation</h4></a>
+     <p>We are actively working on implementing JMAP protocol into James.</p>
+     <p><a href="http://jmap.io">JMAP</a> is a transport-agnostic, stateless JSON-based API for synchronising a mail client with a mail server.</p>
+     <p>It allows to develop easily a mail client in a browser, without the pain of using a server to proxy IMAP commands.</p>
+     <p>Feel free to help us, you can see our advancement on the specification implementation into <a href="https://github.com/apache/james-project/tree/master/server/protocols/jmap/doc/specs">jmap/doc</a></p>
+     
      <a name="20150208"><h4>Feb 2016 - Moving to GIT !</h4></a>
      <p>All James projects has been migrated from SVN to GIT.</p>
      <p>Here are the links to your favorite projects:
