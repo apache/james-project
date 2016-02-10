@@ -46,7 +46,9 @@ import com.google.inject.multibindings.Multibinder;
 
 public class CamelMailetContainerModule extends AbstractModule {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(CamelMailetContainerModule.class);
+    private static final Logger CAMEL_LOGGER = LoggerFactory.getLogger(CamelCompositeProcessor.class);
+    private static final Logger SPOOLER_LOGGER = LoggerFactory.getLogger(JamesMailSpooler.class);
+    private static final Logger MAILET_LOGGER = LoggerFactory.getLogger(JamesMailetContext.class);
 
     @Override
     protected void configure() {
@@ -64,7 +66,7 @@ public class CamelMailetContainerModule extends AbstractModule {
                                                     UsersRepository localusers,
                                                     DomainList domains) {
         JamesMailetContext jamesMailetContext = new JamesMailetContext();
-        jamesMailetContext.setLog(LOGGER);
+        jamesMailetContext.setLog(MAILET_LOGGER);
         jamesMailetContext.setDNSService(dns);
         jamesMailetContext.setMailProcessor(processorList);
         jamesMailetContext.setUsersRepository(localusers);
@@ -93,14 +95,14 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         @Override
         public void initModule() throws Exception {
-            camelCompositeProcessor.setLog(LOGGER);
+            camelCompositeProcessor.setLog(CAMEL_LOGGER);
             camelCompositeProcessor.setCamelContext(new DefaultCamelContext());
             camelCompositeProcessor.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("processors"));
             camelCompositeProcessor.init();
-            jamesMailSpooler.setLog(LOGGER);
+            jamesMailSpooler.setLog(SPOOLER_LOGGER);
             jamesMailSpooler.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("spooler"));
             jamesMailSpooler.init();
-            mailetContext.setLog(LOGGER);
+            mailetContext.setLog(MAILET_LOGGER);
             mailetContext.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("context"));
             mailetContext.setMailProcessor(camelCompositeProcessor);
         }
