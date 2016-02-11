@@ -21,7 +21,6 @@ package org.apache.james.jmap.methods;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,16 +73,12 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> {
 
     public SetMessagesResponse processUpdates(SetMessagesRequest request,  MailboxSession mailboxSession) {
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
-
-        List<Map.Entry<MessageId, UpdateMessagePatch>> updatePatchesById = request.buildUpdatePatchs(updatePatchConverter)
-                .entrySet().stream()
-                .collect(Collectors.toList());
-        updatePatchesById.stream()
-                .filter(mwp -> ! mwp.getValue().isValid())
-                .forEach(mwp -> handleInvalidRequest(responseBuilder, mwp.getKey(), mwp.getValue().getValidationErrors()));
-        updatePatchesById.stream()
-                .filter(mwp -> mwp.getValue().isValid())
-                .forEach(e -> update(e.getKey(), e.getValue(), mailboxSession, responseBuilder));
+        request.buildUpdatePatches(updatePatchConverter).forEach( (id, patch) -> {
+            if (patch.isValid()) {
+                update(id, patch, mailboxSession, responseBuilder);
+            } else {
+                handleInvalidRequest(responseBuilder, id, patch.getValidationErrors());
+            }});
         return responseBuilder.build();
     }
 
@@ -110,8 +105,7 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> {
         return messageMapper.updateFlags(mailbox, new FlagsUpdateCalculator(message.createFlags(),
                         MessageManager.FlagsUpdateMode.REPLACE),
                 MessageRange.one(messageId.getUid()))
-                .hasNext()
-                ;
+                .hasNext();
     }
 
     private void addMessageIdNotFoundToResponse(MessageId messageId, SetMessagesResponse.Builder builder) {

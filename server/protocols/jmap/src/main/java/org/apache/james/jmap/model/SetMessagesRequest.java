@@ -121,7 +121,7 @@ public class SetMessagesRequest implements JmapRequest {
         return create;
     }
 
-    public Map<MessageId, UpdateMessagePatch> buildUpdatePatchs(UpdateMessagePatchConverter converter) {
+    public Map<MessageId, UpdateMessagePatch> buildUpdatePatches(UpdateMessagePatchConverter converter) {
         return Maps.transformValues(update, func -> func.apply(converter));
     }
 

@@ -40,11 +40,10 @@ public class UpdateMessagePatchTest {
     }
 
     @Test
-    public void builderShouldSetSeenFlagWhenBuiltWithIsUnreadFalse() {
+    public void builderShouldSetUnreadFalseWhenBuiltWithIsUnreadFalse() {
         UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(false).build();
         assertThat(testee.isUnread()).isPresent();
         assertThat(testee.isUnread().get()).isFalse();
-        assertThat(testee.isFlagged()).isEmpty(); // belts and braces !
     }
 
     @Test

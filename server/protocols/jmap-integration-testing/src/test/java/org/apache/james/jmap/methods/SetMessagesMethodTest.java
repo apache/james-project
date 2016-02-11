@@ -31,7 +31,6 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
@@ -47,6 +46,7 @@ import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+
 import org.junit.Ignore;
 
 import com.google.common.base.Charsets;
@@ -331,15 +331,13 @@ public abstract class SetMessagesMethodTest {
     }
 
     private ResponseSpecification getSetMessagesUpdateOKResponseAssertions(String messageId) {
-        String responseHeaderPath = "[0][0]";
-        String responseBodyBasePath = "[0][1]";
         ResponseSpecBuilder builder = new ResponseSpecBuilder()
                 .expectStatusCode(200)
-                .expectBody(responseHeaderPath, equalTo("messagesSet"))
-                .expectBody(responseBodyBasePath +".updated", hasSize(1))
-                .expectBody(responseBodyBasePath +".updated", contains(messageId))
-                .expectBody(responseBodyBasePath +".error", isEmptyOrNullString())
-                .expectBody(responseBodyBasePath +".notUpdated", not(hasKey(messageId)));
+                .expectBody(NAME, equalTo("messagesSet"))
+                .expectBody(ARGUMENTS + ".updated", hasSize(1))
+                .expectBody(ARGUMENTS + ".updated", contains(messageId))
+                .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
+                .expectBody(ARGUMENTS + ".notUpdated", not(hasKey(messageId)));
         return builder.build();
     }
 
@@ -361,18 +359,17 @@ public abstract class SetMessagesMethodTest {
         // When
                 .post("/jmap");
         // Then
-        given()
+        with()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-        .when()
                 .post("/jmap")
         .then()
                 .statusCode(200)
-                .body("[0][0]", equalTo("messages"))
-                .body("[0][1].list", hasSize(1))
-                .body("[0][1].list[0].isUnread", equalTo(false))
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isUnread", equalTo(false))
                 .log().ifValidationFails();
     }
 
@@ -418,17 +415,16 @@ public abstract class SetMessagesMethodTest {
         // When
                 .post("/jmap");
         // Then
-        given()
+        with()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-        .when()
                 .post("/jmap")
         .then()
-                .body("[0][0]", equalTo("messages"))
-                .body("[0][1].list", hasSize(1))
-                .body("[0][1].list[0].isUnread", equalTo(true))
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
                 .log().ifValidationFails();
     }
 
@@ -475,17 +471,16 @@ public abstract class SetMessagesMethodTest {
         // When
                 .post("/jmap");
         // Then
-        given()
+        with()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-        .when()
                 .post("/jmap")
         .then()
-                .body("[0][0]", equalTo("messages"))
-                .body("[0][1].list", hasSize(1))
-                .body("[0][1].list[0].isFlagged", equalTo(true))
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
                 .log().ifValidationFails();
     }
 
@@ -509,13 +504,13 @@ public abstract class SetMessagesMethodTest {
         .then()
                 .log().ifValidationFails()
                 .statusCode(200)
-                .body("[0][0]", equalTo("messagesSet"))
-                .body("[0][1].notUpdated", hasKey(messageId))
-                .body("[0][1].notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].description", startsWith("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
                         " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
-                .body("[0][1].updated", hasSize(0));
+                .body(ARGUMENTS + ".updated", hasSize(0));
     }
 
     @Test
@@ -539,14 +534,13 @@ public abstract class SetMessagesMethodTest {
         .then()
                 .log().ifValidationFails()
                 .statusCode(200)
-                .body("[0][0]", equalTo("messagesSet"))
-                .body("[0][1].notUpdated", hasKey(messageId))
-                .body("[0][1].notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].properties", hasSize(2))
-                .body("[0][1].notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body("[0][1].notUpdated[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
-                // .body("[0][1].notUpdated[\""+messageId+"\"].description", startsWith("Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized"))
-                .body("[0][1].updated", hasSize(0));
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", hasSize(2))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
+                .body(ARGUMENTS + ".updated", hasSize(0));
     }
 
     @Test
@@ -591,17 +585,16 @@ public abstract class SetMessagesMethodTest {
         // When
                 .post("/jmap");
         // Then
-        given()
+        with()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-        .when()
                 .post("/jmap")
         .then()
-                .body("[0][0]", equalTo("messages"))
-                .body("[0][1].list", hasSize(1))
-                .body("[0][1].list[0].isAnswered", equalTo(true))
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
                 .log().ifValidationFails();
     }
 
@@ -621,10 +614,10 @@ public abstract class SetMessagesMethodTest {
         .then()
             .log().ifValidationFails()
             .statusCode(200)
-            .body("[0][0]", equalTo("messagesSet"))
-            .body("[0][1].notUpdated", hasKey(nonExistingMessageId))
-            .body("[0][1].notUpdated[\""+nonExistingMessageId+"\"].type", equalTo("notFound"))
-            .body("[0][1].notUpdated[\""+nonExistingMessageId+"\"].description", equalTo("message not found"))
-            .body("[0][1].updated", hasSize(0));
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasKey(nonExistingMessageId))
+            .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].type", equalTo("notFound"))
+            .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].description", equalTo("message not found"))
+            .body(ARGUMENTS + ".updated", hasSize(0));
     }
 }
