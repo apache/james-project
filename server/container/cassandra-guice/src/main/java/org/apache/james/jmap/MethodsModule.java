@@ -28,6 +28,7 @@ import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.methods.SetMessagesCreationProcessor;
 import org.apache.james.jmap.methods.SetMessagesMethod;
 import org.apache.james.jmap.methods.SetMessagesUpdateProcessor;
 import org.apache.james.mailbox.cassandra.CassandraId;
@@ -54,6 +55,7 @@ public class MethodsModule extends AbstractModule {
         methods.addBinding().to(new TypeLiteral<GetMessagesMethod<CassandraId>>(){});
         methods.addBinding().to(new TypeLiteral<SetMessagesMethod<CassandraId>>(){});
         bind(SetMessagesUpdateProcessor.class).to(new TypeLiteral<SetMessagesUpdateProcessor<CassandraId>>(){});
+        bind(SetMessagesCreationProcessor.class).to(new TypeLiteral<SetMessagesCreationProcessor<CassandraId>>(){});
     }
 
 }

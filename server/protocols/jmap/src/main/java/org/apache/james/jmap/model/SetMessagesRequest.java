@@ -48,7 +48,7 @@ public class SetMessagesRequest implements JmapRequest {
 
         private String accountId;
         private String ifInState;
-        private ImmutableMap.Builder<MessageId, Message> create;
+        private ImmutableMap.Builder<String, CreationMessage> create;
         private ImmutableMap.Builder<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> updatesProvider;
 
         private ImmutableList.Builder<MessageId> destroy;
@@ -73,8 +73,8 @@ public class SetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder create(Map<MessageId, Message> creates) {
-            this.create.putAll(creates);
+        public Builder create(Map<String, CreationMessage> creations) {
+            this.create.putAll(creations);
             return this;
         }
 
@@ -95,11 +95,11 @@ public class SetMessagesRequest implements JmapRequest {
 
     private final Optional<String> accountId;
     private final Optional<String> ifInState;
-    private final Map<MessageId, Message> create;
+    private final Map<String, CreationMessage> create;
     private final Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> update;
     private final List<MessageId> destroy;
 
-    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, Map<MessageId, Message> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
+    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, Map<String, CreationMessage> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
         this.accountId = accountId;
         this.ifInState = ifInState;
         this.create = create;
@@ -115,7 +115,7 @@ public class SetMessagesRequest implements JmapRequest {
         return ifInState;
     }
 
-    public Map<MessageId, Message> getCreate() {
+    public Map<String, CreationMessage> getCreate() {
         return create;
     }
 

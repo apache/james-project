@@ -52,7 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SetMessagesUpdateProcessor<Id extends MailboxId> {
+public class SetMessagesUpdateProcessor<Id extends MailboxId> implements SetMessagesProcessor<Id> {
 
     private static final int LIMIT_BY_ONE = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesUpdateProcessor.class);
@@ -71,7 +71,7 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
-    public SetMessagesResponse processUpdates(SetMessagesRequest request,  MailboxSession mailboxSession) {
+    public SetMessagesResponse process(SetMessagesRequest request,  MailboxSession mailboxSession) {
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
         request.buildUpdatePatches(updatePatchConverter).forEach( (id, patch) -> {
             if (patch.isValid()) {

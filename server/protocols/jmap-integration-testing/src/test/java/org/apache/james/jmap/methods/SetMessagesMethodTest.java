@@ -648,7 +648,6 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    @Ignore("pending SetMessages's send messages feature implementation")
     public void setMessageShouldReturnCreatedMessageWhenSendingMessage() {
         String messageCreationId = "user|inbox|1";
         String requestBody = "[" +
@@ -701,7 +700,6 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    @Ignore("pending SetMessages's send messages feature implementation")
     public void setMessagesShouldCreateMessageInOutboxWhenSendingMessage() throws MailboxException {
         // Given
         String messageCreationId = "user|inbox|1";
