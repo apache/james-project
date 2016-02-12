@@ -256,7 +256,6 @@ The *setMessages* method encompasses:
 - Adding/removing a message to/from mailboxes (moving a message)
 <aside class="warning">Not implemented</aside>
 - Deleting messages
-<aside class="warning">Not implemented</aside>
 
 It takes the following arguments:
 
