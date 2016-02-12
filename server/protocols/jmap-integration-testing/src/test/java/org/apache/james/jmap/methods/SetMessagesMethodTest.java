@@ -36,6 +36,9 @@ import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
@@ -46,20 +49,19 @@ import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-
+import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public abstract class SetMessagesMethodTest {
 
@@ -70,6 +72,7 @@ public abstract class SetMessagesMethodTest {
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
     private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra);
+    private String outboxId;
 
     protected abstract JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra);
 
@@ -94,6 +97,25 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().addUser(username, password);
         jmapServer.serverProbe().createMailbox("#private", "username", "inbox");
         accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "outbox");
+        embeddedElasticSearch.awaitForElasticSearch();
+        // Find the newly created outbox mailbox (using getMailboxes command on /jmap endpoint)
+        List<Map<String, String>> mailboxes = with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
+                .post("/jmap")
+                .andReturn()
+                .body()
+                .jsonPath()
+                .getList(ARGUMENTS + ".list");
+
+        outboxId = mailboxes.stream()
+                .filter(x -> x.get("role").equals("outbox"))
+                .map(x -> x.get("id"))
+                .findFirst().get();
     }
 
     @Test
@@ -623,5 +645,104 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].type", equalTo("notFound"))
             .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].description", equalTo("message not found"))
             .body(ARGUMENTS + ".updated", hasSize(0));
+    }
+
+    @Test
+    @Ignore("pending SetMessages's send messages feature implementation")
+    public void setMessageShouldReturnCreatedMessageWhenSendingMessage() {
+        String messageCreationId = "user|inbox|1";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"MAILER-DEAMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+                // note that assertions on result message had to be split between
+                // string-typed values and boolean-typed value assertions on the same .created entry
+                // make sure only one creation has been processed
+                .body(ARGUMENTS + ".created", aMapWithSize(1))
+                // assert server-set attributes are returned
+                .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
+                        hasEntry(equalTo("id"), not(isEmptyOrNullString())),
+                        hasEntry(equalTo("blobId"), not(isEmptyOrNullString())),
+                        hasEntry(equalTo("threadId"), not(isEmptyOrNullString())),
+                        hasEntry(equalTo("size"), not(isEmptyOrNullString()))
+                )))
+                // assert that message flags are all unset
+                .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
+                        hasEntry(equalTo("isDraft"), equalTo(false)),
+                        hasEntry(equalTo("isUnread"), equalTo(false)),
+                        hasEntry(equalTo("isFlagged"), equalTo(false)),
+                        hasEntry(equalTo("isAnswered"), equalTo(false))
+                )))
+                ;
+    }
+
+    @Test
+    @Ignore("pending SetMessages's send messages feature implementation")
+    public void setMessagesShouldCreateMessageInOutboxWhenSendingMessage() throws MailboxException {
+        // Given
+        String messageCreationId = "user|inbox|1";
+        String presumedMessageId = "username@domain.tld|outbox|1";
+        String messageSubject = "Thank you for joining example.com!";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"subject\": \"" + messageSubject + "\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+        // When
+        .when()
+                .post("/jmap");
+
+        // Then
+        with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+        .post("/jmap")
+        .then()
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].subject", equalTo(messageSubject))
+                .log().ifValidationFails();
     }
 }
