@@ -22,17 +22,47 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
+import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraRecipientRewriteTableModule extends AbstractModule {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTable.class);
+
     @Override
     public void configure() {
+        bind(CassandraRecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(CassandraRRTModule.class);
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraRecipientRewriteTablePerformer.class);
+    }
+
+    @Singleton
+    public static class CassandraRecipientRewriteTablePerformer implements ConfigurationPerformer {
+
+        private final ConfigurationProvider configurationProvider;
+        private final CassandraRecipientRewriteTable recipientRewriteTable;
+
+        @Inject
+        public CassandraRecipientRewriteTablePerformer(ConfigurationProvider configurationProvider, CassandraRecipientRewriteTable recipientRewriteTable) {
+            this.configurationProvider = configurationProvider;
+            this.recipientRewriteTable = recipientRewriteTable;
+        }
+
+        @Override
+        public void initModule() throws Exception {
+            recipientRewriteTable.setLog(LOGGER);
+            recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
+        }
     }
 
 }
