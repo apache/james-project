@@ -351,12 +351,13 @@ public abstract class SetMessagesMethodTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         String presumedMessageId = username + "|mailbox|1";
-        with()
+        given()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
         // When
+        .when()
                 .post("/jmap");
         // Then
         with()
@@ -407,12 +408,13 @@ public abstract class SetMessagesMethodTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         String presumedMessageId = username + "|mailbox|1";
-        with()
+        given()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
+        .when()
                 .post("/jmap");
         // Then
         with()
@@ -463,12 +465,13 @@ public abstract class SetMessagesMethodTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         String presumedMessageId = username + "|mailbox|1";
-        with()
+        given()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
+        .when()
                 .post("/jmap");
         // Then
         with()
@@ -577,12 +580,13 @@ public abstract class SetMessagesMethodTest {
         embeddedElasticSearch.awaitForElasticSearch();
 
         String presumedMessageId = username + "|mailbox|1";
-        with()
+        given()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
+        .when()
                 .post("/jmap");
         // Then
         with()
