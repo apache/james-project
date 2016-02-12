@@ -48,13 +48,13 @@ public class SetMessagesRequest implements JmapRequest {
 
         private String accountId;
         private String ifInState;
-        private ImmutableList.Builder<Message> create;
+        private ImmutableMap.Builder<MessageId, Message> create;
         private ImmutableMap.Builder<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> updatesProvider;
 
         private ImmutableList.Builder<MessageId> destroy;
 
         private Builder() {
-            create = ImmutableList.builder();
+            create = ImmutableMap.builder();
             updatesProvider = ImmutableMap.builder();
             destroy = ImmutableList.builder();
         }
@@ -73,10 +73,8 @@ public class SetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder create(List<Message> create) {
-            if (create != null && !create.isEmpty()) {
-                throw new NotImplementedException();
-            }
+        public Builder create(Map<MessageId, Message> creates) {
+            this.create.putAll(creates);
             return this;
         }
 
@@ -97,11 +95,11 @@ public class SetMessagesRequest implements JmapRequest {
 
     private final Optional<String> accountId;
     private final Optional<String> ifInState;
-    private final List<Message> create;
+    private final Map<MessageId, Message> create;
     private final Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> update;
     private final List<MessageId> destroy;
 
-    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<Message> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
+    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, Map<MessageId, Message> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
         this.accountId = accountId;
         this.ifInState = ifInState;
         this.create = create;
@@ -117,7 +115,7 @@ public class SetMessagesRequest implements JmapRequest {
         return ifInState;
     }
 
-    public List<Message> getCreate() {
+    public Map<MessageId, Message> getCreate() {
         return create;
     }
 
