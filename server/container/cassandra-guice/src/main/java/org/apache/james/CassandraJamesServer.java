@@ -18,38 +18,41 @@
  ****************************************************************/
 package org.apache.james;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.apache.james.utils.ExtendedServerProbe;
 import org.apache.james.utils.GuiceServerProbe;
-import org.apache.onami.lifecycle.jsr250.PreDestroyModule;
+import org.apache.onami.lifecycle.core.Stager;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import com.google.inject.TypeLiteral;
 
 public class CassandraJamesServer {
 
     private final Module serverModule;
-    private final PreDestroyModule preDestroyModule;
+    private Stager<PreDestroy> preDestroy;
     private GuiceServerProbe serverProbe;
     private int jmapPort;
 
     public CassandraJamesServer(Module serverModule) {
         this.serverModule = serverModule;
-        this.preDestroyModule = new PreDestroyModule();
     }
 
     public void start() throws Exception {
-        Injector injector = Guice.createInjector(Modules.combine(serverModule, preDestroyModule));
+        Injector injector = Guice.createInjector(serverModule);
         injector.getInstance(ConfigurationsPerformer.class).initModules();
+        preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
         serverProbe = injector.getInstance(GuiceServerProbe.class);
         jmapPort = injector.getInstance(JMAPServer.class).getPort();
     }
 
     public void stop() {
-        preDestroyModule.getStager().stage();
+        preDestroy.stage();
     }
 
     public ExtendedServerProbe serverProbe() {
