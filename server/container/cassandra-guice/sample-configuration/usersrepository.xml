@@ -21,6 +21,7 @@
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
     <destination URL="file://users/"/>
     <algorithm>MD5</algorithm>
-    <enableVirtualHosting>true</enableVirtualHosting>    
+    <enableVirtualHosting>true</enableVirtualHosting>
+    <enableForwarding>true</enableForwarding>
 </usersrepository>
 
