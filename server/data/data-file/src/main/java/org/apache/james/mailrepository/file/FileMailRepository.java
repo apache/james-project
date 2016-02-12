@@ -88,6 +88,7 @@ public class FileMailRepository extends AbstractMailRepository {
         // ignore model
     }
 
+    @Override
     @PostConstruct
     public void init() throws Exception {
         try {

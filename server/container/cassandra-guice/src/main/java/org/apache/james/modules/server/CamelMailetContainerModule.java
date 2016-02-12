@@ -102,6 +102,7 @@ public class CamelMailetContainerModule extends AbstractModule {
             jamesMailSpooler.init();
             mailetContext.setLog(LOGGER);
             mailetContext.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("context"));
+            mailetContext.setMailProcessor(camelCompositeProcessor);
         }
     }
 

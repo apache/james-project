@@ -82,6 +82,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         this.repository = repository;
     }
 
+    @Override
     @PostConstruct
     public void init() throws Exception {
         // register the nodetype

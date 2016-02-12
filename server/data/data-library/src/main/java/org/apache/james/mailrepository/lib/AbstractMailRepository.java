@@ -19,24 +19,25 @@
 
 package org.apache.james.mailrepository.lib;
 
+import java.io.IOException;
+import java.util.Collection;
+
+import javax.mail.MessagingException;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LogEnabled;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.repository.api.Initializable;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
-
-import javax.mail.MessagingException;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * This class represent an AbstractMailRepository. All MailRepositories should
  * extend this class.
  */
-public abstract class AbstractMailRepository implements MailRepository, LogEnabled, Configurable {
+public abstract class AbstractMailRepository implements MailRepository, LogEnabled, Configurable, Initializable {
 
     /**
      * Whether 'deep debugging' is turned on.

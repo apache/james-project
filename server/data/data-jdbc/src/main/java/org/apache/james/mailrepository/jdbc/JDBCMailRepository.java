@@ -231,6 +231,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
      * @throws Exception
      *             if an error occurs
      */
+    @Override
     @PostConstruct
     public void init() throws Exception {
         StringBuffer logBuffer;
