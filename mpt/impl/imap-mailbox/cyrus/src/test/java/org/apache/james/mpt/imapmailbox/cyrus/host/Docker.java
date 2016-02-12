@@ -50,6 +50,7 @@ public class Docker {
                 .image(imageName)
                 .networkDisabled(false)
                 .exposedPorts(ImmutableSet.of(EXPOSED_IMAP_PORT))
+                .hostConfig(ALL_PORTS_HOST_CONFIG)
                 .build();
         
         try {
@@ -62,7 +63,7 @@ public class Docker {
 
     public ContainerCreation start() throws Exception {
         ContainerCreation container = dockerClient.createContainer(containerConfig);
-        dockerClient.startContainer(container.id(), ALL_PORTS_HOST_CONFIG);
+        dockerClient.startContainer(container.id());
         waitingForSocketToBeReady(container);
         return container;
     }

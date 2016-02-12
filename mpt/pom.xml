@@ -46,6 +46,7 @@
         <module>core</module>
         <module>impl/imap-mailbox</module>
         <module>impl/managesieve</module>
+        <module>impl/smtp</module>
         <module>mavenplugin</module>
     </modules>
 
@@ -232,6 +233,28 @@
                 <version>${james-mailbox.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-cassandra-guice</artifactId>
+                <version>${james.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-cassandra-guice</artifactId>
+                <version>${james.version}</version>
+                <scope>test</scope>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-data-api</artifactId>
+                <version>${james.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-dnsservice-api</artifactId>
+                <version>${james.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.james.protocols</groupId>
                 <artifactId>protocols-imap</artifactId>
                 <version>${james-protocols.version}</version>
@@ -253,6 +276,21 @@
                 <artifactId>ant-antunit</artifactId>
                 <version>1.1</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>2.6.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jayway.restassured</groupId>
+                <artifactId>rest-assured</artifactId>
+                <version>2.6.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-client</artifactId>
+                <version>3.5.10</version>
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
@@ -340,6 +378,11 @@
                 <version>${javax.mail.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj-3.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.jmock</groupId>
                 <artifactId>jmock</artifactId>
                 <version>${jmock.version}</version>
@@ -358,6 +401,11 @@
                 <groupId>org.apache.onami</groupId>
                 <artifactId>org.apache.onami.test</artifactId>
                 <version>${onami.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.cassandraunit</groupId>
+                <artifactId>cassandra-unit</artifactId>
+                <version>2.1.9.2</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
