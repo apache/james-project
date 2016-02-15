@@ -31,7 +31,7 @@ import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
-
+import org.joda.time.DateTime;
 
 
 /**
@@ -59,7 +59,7 @@ public interface SieveRepository {
     
     InputStream getActive(String user) throws UserNotFoundException, ScriptNotFoundException, StorageException;
 
-    Date getActivationDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException;
+    DateTime getActivationDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException;
     
     void setActive(String user, String name) throws UserNotFoundException, ScriptNotFoundException, StorageException;
     

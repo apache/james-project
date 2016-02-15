@@ -39,6 +39,7 @@ import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.api.exception.UserNotFoundException;
+import org.joda.time.DateTime;
 
 /**
  * <code>SieveFileRepository</code> manages sieve scripts stored on the file system.
@@ -80,8 +81,8 @@ public class SieveDefaultRepository implements SieveRepository {
     }
 
     @Override
-    public Date getActivationDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException {
-        return new Date(retrieveUserFile(user).lastModified());
+    public DateTime getActivationDateForActiveScript(String user) throws StorageException, UserNotFoundException, ScriptNotFoundException {
+        return new DateTime(retrieveUserFile(user).lastModified());
     }
 
     public File retrieveUserFile(String user) throws ScriptNotFoundException {

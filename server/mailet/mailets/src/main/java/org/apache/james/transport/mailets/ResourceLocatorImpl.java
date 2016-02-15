@@ -24,9 +24,9 @@ import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.mailet.ResourceLocator;
+import org.joda.time.DateTime;
 
 import javax.mail.MessagingException;
-import java.util.Date;
 
 public class ResourceLocatorImpl implements ResourceLocator {
 
@@ -57,6 +57,6 @@ public class ResourceLocatorImpl implements ResourceLocator {
             username = uri.substring(0, uri.indexOf("@"));
         }
 
-        return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), new Date(), sieveRepository.getActive(username));
+        return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), DateTime.now(), sieveRepository.getActive(username));
     }
 }
