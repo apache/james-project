@@ -19,11 +19,9 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
@@ -42,11 +40,11 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SetMessagesMethod<Id extends MailboxId> implements Method {
 
@@ -57,11 +55,14 @@ public class SetMessagesMethod<Id extends MailboxId> implements Method {
 
     private final MailboxMapperFactory<Id> mailboxMapperFactory;
     private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final SetMessagesUpdateProcessor<Id> messageUpdater;
 
     @Inject
-    @VisibleForTesting SetMessagesMethod(MailboxMapperFactory<Id> mailboxMapperFactory, MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory) {
+    @VisibleForTesting SetMessagesMethod(MailboxMapperFactory<Id> mailboxMapperFactory,
+                                         MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory, SetMessagesUpdateProcessor<Id> messageUpdater) {
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+        this.messageUpdater = messageUpdater;
     }
 
     @Override
@@ -94,6 +95,7 @@ public class SetMessagesMethod<Id extends MailboxId> implements Method {
     private SetMessagesResponse setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) throws MailboxException {
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder();
         processDestroy(request.getDestroy(), mailboxSession, responseBuilder);
+        messageUpdater.processUpdates(request, mailboxSession).mergeInto(responseBuilder);
         return responseBuilder.build();
     }
 

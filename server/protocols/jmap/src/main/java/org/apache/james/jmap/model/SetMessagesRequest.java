@@ -20,15 +20,21 @@
 package org.apache.james.jmap.model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.UpdateMessagePatchConverter;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import org.apache.commons.lang.NotImplementedException;
 
 @JsonDeserialize(builder = SetMessagesRequest.Builder.class)
 public class SetMessagesRequest implements JmapRequest {
@@ -43,12 +49,13 @@ public class SetMessagesRequest implements JmapRequest {
         private String accountId;
         private String ifInState;
         private ImmutableList.Builder<Message> create;
-        private ImmutableList.Builder<Message> update;
+        private ImmutableMap.Builder<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> updatesProvider;
+
         private ImmutableList.Builder<MessageId> destroy;
 
         private Builder() {
             create = ImmutableList.builder();
-            update = ImmutableList.builder();
+            updatesProvider = ImmutableMap.builder();
             destroy = ImmutableList.builder();
         }
 
@@ -73,10 +80,8 @@ public class SetMessagesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder update(List<Message> update) {
-            if (update != null && !update.isEmpty()) {
-                throw new NotImplementedException();
-            }
+        public Builder update(Map<MessageId, ObjectNode> updates) {
+            this.updatesProvider.putAll(Maps.transformValues(updates, json -> converter -> converter.fromJsonNode(json)));
             return this;
         }
 
@@ -86,17 +91,17 @@ public class SetMessagesRequest implements JmapRequest {
         }
 
         public SetMessagesRequest build() {
-            return new SetMessagesRequest(Optional.ofNullable(accountId), Optional.ofNullable(ifInState), create.build(), update.build(), destroy.build());
+            return new SetMessagesRequest(Optional.ofNullable(accountId), Optional.ofNullable(ifInState), create.build(), updatesProvider.build(), destroy.build());
         }
     }
 
     private final Optional<String> accountId;
     private final Optional<String> ifInState;
     private final List<Message> create;
-    private final List<Message> update;
+    private final Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> update;
     private final List<MessageId> destroy;
 
-    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<Message> create, List<Message> update, List<MessageId> destroy) {
+    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<Message> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
         this.accountId = accountId;
         this.ifInState = ifInState;
         this.create = create;
@@ -116,8 +121,8 @@ public class SetMessagesRequest implements JmapRequest {
         return create;
     }
 
-    public List<Message> getUpdate() {
-        return update;
+    public Map<MessageId, UpdateMessagePatch> buildUpdatePatches(UpdateMessagePatchConverter converter) {
+        return Maps.transformValues(update, func -> func.apply(converter));
     }
 
     public List<MessageId> getDestroy() {

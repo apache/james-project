@@ -20,19 +20,22 @@
 package org.apache.james.jmap.methods;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
-
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
@@ -40,18 +43,23 @@ import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.JmapServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+
+import org.junit.Ignore;
+
+import com.google.common.base.Charsets;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.ResponseSpecBuilder;
+import com.jayway.restassured.http.ContentType;
+import com.jayway.restassured.specification.ResponseSpecification;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
 
 public abstract class SetMessagesMethodTest {
 
@@ -120,44 +128,54 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnNotDestroyedWhenUnknownMailbox() throws Exception {
+
+        String unknownMailboxMessageId = username + "|unknown|12345";
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|unknown|1\"]}, \"#0\"]]")
+            .body("[[\"setMessages\", {\"destroy\": [\"" + unknownMailboxMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(username + "|unknown|1", 
-                    ImmutableMap.of("type", "anErrorOccurred",
-                            "description", "An error occurred while deleting message " + username + "|unknown|1")));
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(unknownMailboxMessageId), Matchers.allOf(
+                    hasEntry("type", "anErrorOccurred"),
+                    hasEntry("description", "An error occurred while deleting message " + unknownMailboxMessageId),
+                    hasEntry(equalTo("properties"), isEmptyOrNullString())))
+            );
     }
 
     @Test
     public void setMessagesShouldReturnNotDestroyedWhenNoMatchingMessage() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
+        String messageId = username + "|mailbox|12345";
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|12345\"]}, \"#0\"]]")
+            .body("[[\"setMessages\", {\"destroy\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", empty())
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(username + "|mailbox|12345", 
-                    ImmutableMap.of("type", "notFound",
-                            "description", "The message " + username + "|mailbox|12345 can't be found")));
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(messageId), Matchers.allOf(
+                    hasEntry("type", "notFound"),
+                    hasEntry("description", "The message " + messageId + " can't be found"),
+                    hasEntry(equalTo("properties"), isEmptyOrNullString())))
+            );
     }
 
     @Test
     public void setMessagesShouldReturnDestroyedWhenMatchingMessage() throws Exception {
+        // Given
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"), 
@@ -227,11 +245,12 @@ public abstract class SetMessagesMethodTest {
                 new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
         embeddedElasticSearch.awaitForElasticSearch();
 
+        String missingMessageId = username + "|mailbox|4";
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\", \"" + username + "|mailbox|4\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
+            .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\", \"" + missingMessageId + "\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -240,9 +259,10 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".destroyed", hasSize(2))
             .body(ARGUMENTS + ".notDestroyed", aMapWithSize(1))
             .body(ARGUMENTS + ".destroyed", contains(username + "|mailbox|1", username + "|mailbox|3"))
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(username + "|mailbox|4", 
-                    ImmutableMap.of("type", "notFound",
-                            "description", "The message " + username + "|mailbox|4 can't be found")));
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(missingMessageId), Matchers.allOf(
+                    hasEntry("type", "notFound"),
+                    hasEntry("description", "The message " + missingMessageId + " can't be found")))
+            );
     }
 
     @Test
@@ -283,5 +303,325 @@ public abstract class SetMessagesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1));
+    }
+
+    @Test
+    public void setMessagesShouldReturnUpdatedIdAndNoErrorWhenIsUnreadPassedToFalse() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+
+        // When
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
+        .when()
+            .post("/jmap")
+        // Then
+        .then()
+            .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
+            .log().ifValidationFails();
+    }
+
+    private ResponseSpecification getSetMessagesUpdateOKResponseAssertions(String messageId) {
+        ResponseSpecBuilder builder = new ResponseSpecBuilder()
+                .expectStatusCode(200)
+                .expectBody(NAME, equalTo("messagesSet"))
+                .expectBody(ARGUMENTS + ".updated", hasSize(1))
+                .expectBody(ARGUMENTS + ".updated", contains(messageId))
+                .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
+                .expectBody(ARGUMENTS + ".notUpdated", not(hasKey(messageId)));
+        return builder.build();
+    }
+
+    @Test
+    public void setMessagesShouldMarkAsReadWhenIsUnreadPassedToFalse() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
+        // When
+        .when()
+                .post("/jmap");
+        // Then
+        with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+                .post("/jmap")
+        .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isUnread", equalTo(false))
+                .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessagesShouldReturnUpdatedIdAndNoErrorWhenIsUnreadPassed() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.SEEN));
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
+        // When
+        .when()
+                .post("/jmap")
+        // Then
+        .then()
+                .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
+                .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessagesShouldMarkAsUnreadWhenIsUnreadPassed() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.SEEN));
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
+        // When
+        .when()
+                .post("/jmap");
+        // Then
+        with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+                .post("/jmap")
+        .then()
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
+                .log().ifValidationFails();
+    }
+
+
+    @Test
+    public void setMessagesShouldReturnUpdatedIdAndNoErrorWhenIsFlaggedPassed() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
+        // When
+        .when()
+                .post("/jmap")
+        // Then
+        .then()
+                .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
+                .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessagesShouldMarkAsFlaggedWhenIsFlaggedPassed() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
+        // When
+        .when()
+                .post("/jmap");
+        // Then
+        with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+                .post("/jmap")
+        .then()
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
+                .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessagesShouldRejectUpdateWhenPropertyHasWrongType() throws MailboxException {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String messageId = username + "|mailbox|1";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\" } } }, \"#0\"]]", messageId))
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
+                        " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
+                .body(ARGUMENTS + ".updated", hasSize(0));
+    }
+
+    @Test
+    @Ignore("Jackson json deserializer stops after first error found")
+    public void setMessagesShouldRejectUpdateWhenPropertiesHaveWrongTypes() throws MailboxException {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String messageId = username + "|mailbox|1";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\", \"isFlagged\" : 456 } } }, \"#0\"]]", messageId))
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", hasSize(2))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
+                .body(ARGUMENTS + ".updated", hasSize(0));
+    }
+
+    @Test
+    public void setMessagesShouldMarkMessageAsAnsweredWhenIsAnsweredPassed() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        // When
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
+        .when()
+                .post("/jmap")
+        // Then
+        .then()
+                .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
+                .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessagesShouldMarkAsAnsweredWhenIsAnsweredPassed() throws MailboxException {
+        // Given
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String presumedMessageId = username + "|mailbox|1";
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
+        // When
+        .when()
+                .post("/jmap");
+        // Then
+        with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+                .post("/jmap")
+        .then()
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
+                .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessageShouldReturnNotFoundWhenUpdateUnknownMessage() {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
+
+        String nonExistingMessageId = username + "|mailbox|12345";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", nonExistingMessageId))
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasKey(nonExistingMessageId))
+            .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].type", equalTo("notFound"))
+            .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].description", equalTo("message not found"))
+            .body(ARGUMENTS + ".updated", hasSize(0));
     }
 }

@@ -244,16 +244,17 @@ The following errors may be returned instead of the *messageUpdates* response:
 `cannotCalculateChanges`: Returned if the server cannot calculate the changes from the state string given by the client. Usually due to the client's state being too old, or the server being unable to produce an update to an intermediate state when there are too many updates. The client MUST invalidate its Message cache. The error object MUST also include a `newState: String` property with the current state for the type.
 
 ### setMessages
-<aside class="warning">
-Not implemented
-</aside>
 
 The *setMessages* method encompasses:
 
 - Creating a draft message
+<aside class="warning">Not implemented</aside>
 - Sending a message
+<aside class="warning">Not implemented</aside>
 - Changing the flags of a message (unread/flagged status)
+
 - Adding/removing a message to/from mailboxes (moving a message)
+<aside class="warning">Not implemented</aside>
 - Deleting messages
 
 It takes the following arguments:

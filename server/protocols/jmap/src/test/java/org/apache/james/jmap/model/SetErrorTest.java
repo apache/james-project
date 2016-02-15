@@ -21,10 +21,12 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 
 import java.util.Optional;
 
 import org.junit.Test;
+import com.google.common.collect.ImmutableSet;
 
 public class SetErrorTest {
 
@@ -36,7 +38,7 @@ public class SetErrorTest {
 
     @Test
     public void buildShouldWorkWhenAllMandatoryFieldsAreGiven() {
-        SetError expected = new SetError("type", Optional.empty());
+        SetError expected = new SetError("type", Optional.empty(), Optional.empty());
 
         SetError setError = SetError.builder()
             .type("type")
@@ -47,13 +49,59 @@ public class SetErrorTest {
 
     @Test
     public void buildShouldWorkWhenAllFieldsAreGiven() {
-        SetError expected = new SetError("type", Optional.of("description"));
+        ImmutableSet<MessageProperty> props = ImmutableSet.of(MessageProperty.attachedMessages);
+
+        SetError expected = new SetError("type", Optional.of("description"), Optional.of(props));
 
         SetError setError = SetError.builder()
-            .type("type")
-            .description("description")
-            .build();
+                .type("type")
+                .description("description")
+                .properties(ImmutableSet.of(MessageProperty.attachedMessages))
+                .build();
 
         assertThat(setError).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void buildShouldMergePassedProperties() {
+        SetError result = SetError.builder()
+                .type("a type").description("a description")
+                .properties(ImmutableSet.of(MessageProperty.bcc))
+                .properties(ImmutableSet.of(MessageProperty.cc))
+                .build();
+
+        assertThat(result.getProperties()).contains(ImmutableSet.of(MessageProperty.bcc, MessageProperty.cc));
+    }
+
+    @Test
+    public void buildShouldDefaultToEmptyWhenPropertiesOmitted() {
+        SetError result = SetError.builder()
+                .type("a type").description("a description")
+                .build();
+
+        assertThat(result.getProperties()).isEmpty();
+    }
+
+    @Test
+    public void buildShouldDefaultToEmptyWhenPropertiesNull() {
+        SetError result = SetError.builder()
+                .type("a type").description("a description").properties(null)
+                .build();
+
+        assertThat(result.getProperties()).isPresent();
+        assertThat(result.getProperties().get()).isEmpty();
+    }
+
+    @Test
+    public void buildShouldBeIdempotentWhenNullPropertiesSet() {
+        ImmutableSet<MessageProperty> nonNullProperty = ImmutableSet.of(MessageProperty.from);
+        SetError result = SetError.builder()
+                .type("a type").description("a description")
+                .properties(nonNullProperty)
+                .properties(null)
+                .build();
+
+        assertThat(result.getProperties()).isPresent();
+        assertThat(result.getProperties().get()).isEqualTo(nonNullProperty);
     }
 }

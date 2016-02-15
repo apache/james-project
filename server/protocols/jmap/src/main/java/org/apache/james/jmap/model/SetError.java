@@ -19,14 +19,21 @@
 
 package org.apache.james.jmap.model;
 
-import java.util.Optional;
+import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import org.apache.james.util.streams.Collectors;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 @JsonDeserialize(builder = SetError.Builder.class)
 public class SetError {
@@ -40,6 +47,7 @@ public class SetError {
 
         private String type;
         private String description;
+        private Optional<ImmutableSet<MessageProperty>> properties = Optional.empty();
 
         private Builder() {
         }
@@ -54,18 +62,29 @@ public class SetError {
             return this;
         }
 
+        public Builder properties(Set<MessageProperty> properties) {
+            this.properties = Optional.of(Sets.union(
+                    this.properties.orElse(ImmutableSet.of()),
+                    Optional.ofNullable(properties).orElse(ImmutableSet.of()))
+                    .immutableCopy());
+            return this;
+        }
+
         public SetError build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(type), "'type' is mandatory");
-            return new SetError(type, Optional.ofNullable(description));
+            return new SetError(type, Optional.ofNullable(description), properties);
         }
     }
 
     private final String type;
     private final Optional<String> description;
+    private final Optional<ImmutableSet<MessageProperty>> properties;
 
-    @VisibleForTesting SetError(String type, Optional<String> description) {
+
+    @VisibleForTesting SetError(String type, Optional<String> description, Optional<ImmutableSet<MessageProperty>> properties) {
         this.type = type;
         this.description = description;
+        this.properties = properties;
     }
 
     @JsonSerialize
@@ -76,5 +95,10 @@ public class SetError {
     @JsonSerialize
     public Optional<String> getDescription() {
         return description;
+    }
+
+    @JsonSerialize
+    public Optional<ImmutableSet<MessageProperty>> getProperties() {
+        return properties;
     }
 }
