@@ -18,26 +18,26 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Serialise the email and pass it to an HTTP call
@@ -153,36 +153,33 @@ public class SerialiseToHTTP extends GenericMailet {
 
     private String httpPost(NameValuePair[] data) {
 
-        String response = null;
-        HttpClient client = new DefaultHttpClient();
-        HttpPost post = new HttpPost(url);
-        HttpParams params = new BasicHttpParams();
+        RequestBuilder requestBuilder = RequestBuilder.post(url);
+
         if( data.length>1 && data[1]!=null ) {
-            params.setParameter(data[1].getName(),data[1].getValue());
+            requestBuilder.addParameter(data[1].getName(),data[1].getValue());
             log( data[1].getName() + "::" + data[1].getValue() );
         }
-        post.setParams(params);
 
+        CloseableHttpClient client = HttpClientBuilder.create().build();
+        CloseableHttpResponse clientResponse = null;
         try {
-            HttpResponse clientResponse = client.execute(post);
+            clientResponse = client.execute(requestBuilder.build());
 
             if (clientResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 log("POST failed: " + clientResponse.getStatusLine());
-                response = clientResponse.getStatusLine().toString();
+                return clientResponse.getStatusLine().toString();
             }
-
+            return null;
         } catch (ClientProtocolException e) {
             log("Fatal protocol violation: " + e.getMessage());
-            response = "Fatal protocol violation: " + e.getMessage();
+            return "Fatal protocol violation: " + e.getMessage();
         } catch (IOException e) {
             log("Fatal transport error: " + e.getMessage());
-            response = "Fatal transport error: " + e.getMessage();
+            return "Fatal transport error: " + e.getMessage();
         } finally {
-            post.releaseConnection();
+            IOUtils.closeQuietly(clientResponse);
+            IOUtils.closeQuietly(client);
         }
-
-        client.getConnectionManager().shutdown();
-        return response;
     }
 
     private NameValuePair[] getNameValuePairs(String message) throws UnsupportedEncodingException {
