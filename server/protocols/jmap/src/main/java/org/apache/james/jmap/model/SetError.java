@@ -19,13 +19,11 @@
 
 package org.apache.james.jmap.model;
 
-import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
-
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
-import org.apache.james.util.streams.Collectors;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
