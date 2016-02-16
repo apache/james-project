@@ -53,10 +53,12 @@ import com.google.common.collect.Iterators;
  */
 public class ToRecipientFolder extends GenericMailet {
 
+    public static final String FOLDER = "folder";
+    public static final String CONSUME = "consume";
+
     private MailboxManager mailboxManager;
     private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
-    
     private String folder;
     private boolean consume;
 
@@ -95,8 +97,8 @@ public class ToRecipientFolder extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         super.init();
-        this.folder = getInitParameter("folder", "INBOX");
-        this.consume = getInitParameter("consume", false);
+        this.folder = getInitParameter(FOLDER, "INBOX");
+        this.consume = getInitParameter(CONSUME, false);
         sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, this.folder);
         sieveMailet.init(new MailetConfig() {
             
