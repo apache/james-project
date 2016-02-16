@@ -30,11 +30,13 @@ import org.apache.james.jmap.crypto.SignatureHandler;
 import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.utils.DefaultZonedDateTimeProvider;
+import org.apache.james.jmap.utils.MailSpool;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 public class JMAPCommonModule extends AbstractModule {
@@ -50,6 +52,8 @@ public class JMAPCommonModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenRepository.class).to(MemoryAccessTokenRepository.class);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
+
+        bind(MailSpool.class).in(Singleton.class);
     }
 
     @Provides
