@@ -55,9 +55,13 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
      */
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 
-        virtualHosting = configuration.getBoolean("enableVirtualHosting", false);
+        virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
 
         doConfigure(configuration);
+    }
+
+    protected boolean getDefaultVirtualHostingValue() {
+        return false;
     }
 
     protected void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {

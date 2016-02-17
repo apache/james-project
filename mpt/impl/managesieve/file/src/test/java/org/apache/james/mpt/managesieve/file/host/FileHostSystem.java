@@ -11,6 +11,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.file.SieveFileRepository;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 public class FileHostSystem extends JamesManageSieveHostSystem {

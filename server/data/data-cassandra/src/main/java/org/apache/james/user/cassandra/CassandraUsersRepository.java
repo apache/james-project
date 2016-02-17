@@ -60,11 +60,6 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public void setSession(Session session) {
         this.session = session;
     }
-
-    @Override
-    public boolean supportVirtualHosting() {
-        return true;
-    }
     
     @Override
     public User getUserByName(String name){
@@ -162,5 +157,10 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         if (!executed) {
             throw new UsersRepositoryException("User with username " + username + " already exist!");
         }
+    }
+
+    @Override
+    protected boolean getDefaultVirtualHostingValue() {
+        return true;
     }
 }
