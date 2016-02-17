@@ -34,7 +34,7 @@ import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
-import org.apache.james.tables.CassandraDomainsTable;
+import org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;

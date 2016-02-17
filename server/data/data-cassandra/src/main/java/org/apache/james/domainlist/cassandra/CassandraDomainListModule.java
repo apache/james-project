@@ -27,7 +27,7 @@ import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.tables.CassandraDomainsTable;
+import org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.google.common.collect.ImmutableList;

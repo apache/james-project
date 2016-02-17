@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.tables;
+package org.apache.james.domainlist.cassandra.tables;
 
 public interface CassandraDomainsTable {
     String TABLE_NAME = "domains";
