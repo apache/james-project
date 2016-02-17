@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap;
 
+import java.util.List;
+
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.methods.GetMailboxesMethod;
 import org.apache.james.jmap.methods.GetMessageListMethod;
@@ -30,10 +32,13 @@ import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.methods.SetMessagesCreationProcessor;
 import org.apache.james.jmap.methods.SetMessagesMethod;
+import org.apache.james.jmap.methods.SetMessagesProcessor;
 import org.apache.james.jmap.methods.SetMessagesUpdateProcessor;
 import org.apache.james.mailbox.cassandra.CassandraId;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
@@ -56,6 +61,14 @@ public class MethodsModule extends AbstractModule {
         methods.addBinding().to(new TypeLiteral<SetMessagesMethod<CassandraId>>(){});
         bind(SetMessagesUpdateProcessor.class).to(new TypeLiteral<SetMessagesUpdateProcessor<CassandraId>>(){});
         bind(SetMessagesCreationProcessor.class).to(new TypeLiteral<SetMessagesCreationProcessor<CassandraId>>(){});
+    }
+
+    @Provides
+    public List<SetMessagesProcessor<CassandraId>> setMessagesProcessors(
+            SetMessagesUpdateProcessor<CassandraId> messageUpdater,
+            SetMessagesCreationProcessor<CassandraId> messageCreator) {
+
+        return ImmutableList.of( messageUpdater, messageCreator);
     }
 
 }
