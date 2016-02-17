@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Professional support</title>
+ </properties>
+
+<body>
+
+  <section name="Professional support">
+
+    <p>Here is a list of companies which can provide you some support on James.</p>
+
+    <subsection name="Linagora">
+      <a href="https://www.linagora.com/ossa"><img src="images/linagora.png" /></a>
+      <p>We are an Open Source Software Company.</p>
+      <p>Our mission is to bring digital independency to our customers.</p>
+      <p>We are focused on large organizations both from private and public sector. We have set ourselves the goal of helping Governments to achieve their digital sovereignty.</p>
+      <p>Linagora employs 4 James commiters and 3 PMC members. We can offer professional services related to James: support, feature development or project integration.</p>
+    </subsection>
+  </section>
+
+</body>
+
+</document>
