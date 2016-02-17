@@ -44,6 +44,7 @@ import org.apache.james.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.core.MimeMessageInputStream;
 import org.apache.james.core.MimeMessageSource;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.JMSMailQueue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -91,8 +92,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(final ConnectionFactory connectionFactory, final String queuename, final Logger logger) {
-        this(connectionFactory, queuename, true, logger);
+    public ActiveMQMailQueue(final ConnectionFactory connectionFactory, final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, final String queuename, final Logger logger) {
+        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, logger);
     }
 
     /**
@@ -103,8 +104,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @param useBlob
      * @param logger
      */
-    public ActiveMQMailQueue(final ConnectionFactory connectionFactory, final String queuename, boolean useBlob, final Logger logger) {
-        super(connectionFactory, queuename, logger);
+    public ActiveMQMailQueue(final ConnectionFactory connectionFactory, final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, final String queuename, boolean useBlob, final Logger logger) {
+        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, logger);
         this.useBlob = useBlob;
     }
 
@@ -240,7 +241,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
     @Override
     protected MailQueueItem createMailQueueItem(Connection connection, Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         Mail mail = createMail(message);
-        return new ActiveMQMailQueueItem(mail, connection, session, consumer, message, logger);
+        ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, connection, session, consumer, message, logger);
+        return mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem);
     }
 
     @Override

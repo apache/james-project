@@ -23,6 +23,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.plugin.StatisticsBrokerPlugin;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.AbstractJMSMailQueueTest;
 import org.apache.james.queue.jms.JMSMailQueue;
 import org.junit.AfterClass;
@@ -71,9 +72,9 @@ public abstract class ActiveMQMailQueueTest extends AbstractJMSMailQueueTest {
     }
 
     @Override
-    protected JMSMailQueue createQueue(ConnectionFactory factory, String queueName) {
+    protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
         Logger log = LoggerFactory.getLogger(ActiveMQMailQueueTest.class);
-        return new ActiveMQMailQueue(factory, queueName, useBlobMessages(), log);
+        return new ActiveMQMailQueue(factory, mailQueueItemDecoratorFactory, queueName, useBlobMessages(), log);
     }
 
     protected boolean useBlobMessages() {

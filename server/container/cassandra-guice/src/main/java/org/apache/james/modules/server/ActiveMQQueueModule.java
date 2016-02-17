@@ -23,6 +23,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +47,17 @@ public class ActiveMQQueueModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public MailQueueFactory createActiveMailQueueFactory(ConnectionFactory connectionFactory, ActiveMQMailQueueFactory activeMQMailQueueFactory) {
+    public MailQueueFactory createActiveMailQueueFactory(ActiveMQMailQueueFactory activeMQMailQueueFactory) {
         activeMQMailQueueFactory.setUseJMX(true);
-        activeMQMailQueueFactory.setConnectionFactory(connectionFactory);
         activeMQMailQueueFactory.setLog(LOGGER);
         activeMQMailQueueFactory.init();
         return activeMQMailQueueFactory;
+    }
+    
+    @Provides
+    @Singleton
+    public MailQueueItemDecoratorFactory defaultMailQueueItemDecoratorFactory() {
+        return MailQueueItemDecoratorFactory.RAW_FACTORY;
     }
 
 }

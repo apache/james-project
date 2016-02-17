@@ -18,27 +18,11 @@
  ****************************************************************/
 package org.apache.james.queue.jms;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.james.core.MailImpl;
-import org.apache.james.protocols.smtp.MailAddressException;
-import org.apache.james.queue.api.MailQueue.MailQueueItem;
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.jms.ConnectionFactory;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
@@ -47,6 +31,25 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import javax.jms.ConnectionFactory;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.james.core.MailImpl;
+import org.apache.james.protocols.smtp.MailAddressException;
+import org.apache.james.queue.api.MailQueue.MailQueueItem;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic JMS test class. Extend this class and start the JMS broker in the super class,
@@ -63,16 +66,16 @@ public abstract class AbstractJMSMailQueueTest {
     protected ActiveMQConnectionFactory createConnectionFactory() {
         return new ActiveMQConnectionFactory("vm://localhost?create=false");
     }
-
-    protected JMSMailQueue createQueue(ConnectionFactory factory, String queueName) {
+    
+    protected JMSMailQueue createQueue(ConnectionFactory factory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName) {
         Logger log = LoggerFactory.getLogger(AbstractJMSMailQueueTest.class);
-        return new JMSMailQueue(factory, queueName, log);
+        return new JMSMailQueue(factory, mailQueueItemDecoratorFactory, queueName, log);
     }
 
     @Before
     public void setUp() throws Exception {
         ConnectionFactory connectionFactory = createConnectionFactory();
-        setQueue(createQueue(connectionFactory, QUEUE_NAME));
+        setQueue(createQueue(connectionFactory, MailQueueItemDecoratorFactory.RAW_FACTORY, QUEUE_NAME));
     }
 
     @Test
