@@ -17,20 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.modules.data;
 
-import org.apache.james.managesieve.api.SieveParser;
-import org.apache.james.managesieve.jsieve.Parser;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.sieve.cassandra.CassandraSieveRepository;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.file.SieveFileRepository;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-public class SieveModule extends AbstractModule {
+public class CassandraSieveRepositoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SieveParser.class).to(Parser.class);
-    }
+        bind(SieveRepository.class).to(CassandraSieveRepository.class);
 
+        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        cassandraDataDefinitions.addBinding().to(org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule.class);
+    }
 }
