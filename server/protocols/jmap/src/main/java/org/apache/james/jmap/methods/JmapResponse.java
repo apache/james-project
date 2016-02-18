@@ -26,6 +26,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
 
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 
@@ -153,7 +154,7 @@ public class JmapResponse {
     
     @Override
     public String toString() {
-        return Objects.toStringHelper(getClass())
+        return MoreObjects.toStringHelper(getClass())
                 .add("method", method)
                 .add("response", response)
                 .add("clientId", clientId)

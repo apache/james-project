@@ -20,6 +20,7 @@
 package org.apache.james.jmap.model.message;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 
 import java.util.Objects;
 
@@ -60,7 +61,7 @@ public class EMailer {
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("name", name)
             .add("address", address)
             .toString();

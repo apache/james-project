@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.Objects;
 import java.util.stream.Stream;

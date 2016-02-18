@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods;
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 
 public class ValidationResult {
 
@@ -85,7 +86,7 @@ public class ValidationResult {
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(getClass())
+        return MoreObjects.toStringHelper(getClass())
                 .add("property", property)
                 .add("errorMessage", errorMessage)
                 .toString();

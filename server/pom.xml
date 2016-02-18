@@ -167,7 +167,7 @@
         <geronimo-annotation-spec.version>1.0.1</geronimo-annotation-spec.version>
         <spring-osgi-extender.version>1.2.1</spring-osgi-extender.version>
         <org.osgi.core.version>5.0.0</org.osgi.core.version>
-        <guava.version>16.0</guava.version>
+        <guava.version>18.0</guava.version>
         <cucumber.version>1.2.3</cucumber.version>
 
         <!-- karaf dependencies -->

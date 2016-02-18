@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.elasticsearch.common.base.MoreObjects;
-
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 
 public class EMailer {
 

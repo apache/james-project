@@ -24,6 +24,7 @@ import java.io.Serializable;
 
 import org.apache.james.rrt.api.RecipientRewriteTable;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -113,7 +114,7 @@ public class MappingImpl implements Mapping, Serializable {
     
     @Override
     public String toString() {
-        return Objects.toStringHelper(getClass()).add("mapping", mapping).toString();
+        return MoreObjects.toStringHelper(getClass()).add("mapping", mapping).toString();
     }
     
 }

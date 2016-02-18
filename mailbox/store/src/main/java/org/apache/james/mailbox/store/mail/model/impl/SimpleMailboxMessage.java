@@ -32,7 +32,7 @@ import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.primitives.Ints;
 
 public class SimpleMailboxMessage<Id extends MailboxId> extends DelegatingMailboxMessage<Id> {
@@ -166,7 +166,7 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends DelegatingMailbo
     }
 
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("uid", this.uid)
             .add("mailboxId", this.mailboxId)
             .add("answered", this.answered)

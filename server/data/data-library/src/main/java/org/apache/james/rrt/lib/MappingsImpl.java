@@ -30,6 +30,7 @@ import org.apache.james.rrt.lib.Mapping.Type;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -234,6 +235,6 @@ public class MappingsImpl implements Mappings, Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(getClass()).add("mappings", mappings).toString();
+        return MoreObjects.toStringHelper(getClass()).add("mappings", mappings).toString();
     }
 }

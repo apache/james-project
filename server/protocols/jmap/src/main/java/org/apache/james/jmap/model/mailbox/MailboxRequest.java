@@ -27,6 +27,7 @@ import org.apache.commons.lang.NotImplementedException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -145,7 +146,7 @@ public class MailboxRequest {
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(getClass())
+        return MoreObjects.toStringHelper(getClass())
                 .add("id", id)
                 .add("name", name)
                 .add("parentId", parentId)

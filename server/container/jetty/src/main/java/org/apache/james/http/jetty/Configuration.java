@@ -24,6 +24,7 @@ import java.util.Optional;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -171,7 +172,7 @@ public class Configuration {
     
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(getClass())
+        return MoreObjects.toStringHelper(getClass())
                 .add("mappings", mappings)
                 .add("filters", filters)
                 .add("port", port)
