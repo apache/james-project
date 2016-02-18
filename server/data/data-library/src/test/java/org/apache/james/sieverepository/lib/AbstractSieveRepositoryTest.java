@@ -31,22 +31,24 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public abstract class AbstractSieveRepositoryTest {
 
-    private static final String USER = "test";
-    private static final String SCRIPT_NAME = "script";
-    private static final String SCRIPT_CONTENT = "\u0048\u0065\u006C\u006C\u006F World"; // test utf-8
+    protected static final String USER = "test";
+    protected static final String SCRIPT_NAME = "script";
+    protected static final String SCRIPT_CONTENT = "\u0048\u0065\u006C\u006C\u006F World"; // test utf-8
+
     private static final String OTHER_SCRIPT_NAME = "other_script";
     private static final String OTHER_SCRIPT_CONTENT = "Other script content";
     private static final long DEFAULT_QUOTA = Long.MAX_VALUE - 1L;
     private static final long USER_QUOTA = Long.MAX_VALUE / 2;
     private static final String UTF8_ENCODING = "UTF-8";
 
-    private SieveRepository sieveRepository;
+    protected SieveRepository sieveRepository;
 
     @Before
     public void setUp() throws Exception {
@@ -67,6 +69,20 @@ public abstract class AbstractSieveRepositoryTest {
     public void getScriptShouldReturnCorrectContent() throws Exception {
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         assertThat(getScriptContent(sieveRepository.getScript(USER, SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
+    }
+
+    @Test
+    public void getActivationDateForActiveScriptShouldReturnNonNullAndNonZeroResult() throws Exception {
+        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USER, SCRIPT_NAME);
+        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotNull();
+        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotEqualTo(new DateTime(0L));
+    }
+
+    @Test(expected = ScriptNotFoundException.class)
+    public void getActivationDateForActiveScriptShouldThrowOnMissingActiveScript() throws Exception {
+        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.getActivationDateForActiveScript(USER);
     }
 
     @Test
@@ -185,7 +201,7 @@ public abstract class AbstractSieveRepositoryTest {
     public void switchOffActiveScriptShouldWork() throws Exception {
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.setActive(USER, "");
+        sieveRepository.setActive(USER, SieveRepository.NO_SCRIPT_NAME);
         sieveRepository.getActive(USER);
     }
 
@@ -193,7 +209,7 @@ public abstract class AbstractSieveRepositoryTest {
     public void switchOffActiveScriptShouldNotThrow() throws Exception {
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.setActive(USER, "");
+        sieveRepository.setActive(USER, SieveRepository.NO_SCRIPT_NAME);
     }
 
     @Test(expected = ScriptNotFoundException.class)

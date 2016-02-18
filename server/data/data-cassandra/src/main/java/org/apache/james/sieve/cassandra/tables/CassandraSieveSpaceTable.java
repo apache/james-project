@@ -17,18 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.utils;
+package org.apache.james.sieve.cassandra.tables;
 
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+public interface CassandraSieveSpaceTable {
+    String TABLE_NAME = "sieve_space";
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-
-public class CassandraUtils {
-
-    public static Stream<Row> convertToStream(ResultSet resultSet) {
-        return StreamSupport.stream(resultSet.spliterator(), true);
-    }
-
+    String USER_NAME = "user_name";
+    String SPACE_USED = "space_used";
 }

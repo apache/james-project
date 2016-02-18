@@ -17,18 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.utils;
+package org.apache.james.sieve.cassandra.model;
 
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+public class ScriptContentAndActivation {
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
+    private final String content;
+    private final boolean activation;
 
-public class CassandraUtils {
-
-    public static Stream<Row> convertToStream(ResultSet resultSet) {
-        return StreamSupport.stream(resultSet.spliterator(), true);
+    public ScriptContentAndActivation(String content, boolean activation) {
+        this.content = content;
+        this.activation = activation;
     }
 
+    public String getContent() {
+        return content;
+    }
+
+    public boolean isActive() {
+        return activation;
+    }
 }

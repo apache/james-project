@@ -17,18 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.utils;
+package org.apache.james.sieve.cassandra.tables;
 
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+public interface CassandraSieveTable {
+    String TABLE_NAME = "sieve";
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-
-public class CassandraUtils {
-
-    public static Stream<Row> convertToStream(ResultSet resultSet) {
-        return StreamSupport.stream(resultSet.spliterator(), true);
-    }
-
+    String USER_NAME = "user_name";
+    String SCRIPT_NAME = "script_name";
+    String SCRIPT_CONTENT = "script_content";
+    String IS_ACTIVE = "is_active";
+    String DATE = "date";
+    String SIZE = "size";
 }

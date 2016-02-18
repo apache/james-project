@@ -37,6 +37,8 @@ import org.joda.time.DateTime;
  */
 public interface SieveRepository {
 
+    String NO_SCRIPT_NAME = "";
+
     void haveSpace(String user, String name, long size) throws QuotaExceededException, StorageException;
     
     /**
