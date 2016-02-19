@@ -73,7 +73,7 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.pptx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.presentationml.presentation", "slides.pptx").getTextualContent())
-            .isEqualTo("James is awesome\nIt manages attachments so well !\n");
+            .isEqualTo("James is awesome\nIt manages attachments so well !\n\n\n");
     }
 
     @Test
