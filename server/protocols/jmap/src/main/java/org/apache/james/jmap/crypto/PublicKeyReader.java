@@ -20,10 +20,13 @@ package org.apache.james.jmap.crypto;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.security.interfaces.RSAPublicKey;
+import java.security.PublicKey;
 import java.util.Optional;
 
-import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,21 +34,20 @@ public class PublicKeyReader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublicKeyReader.class);
 
-    Optional<RSAPublicKey> fromPEM(Optional<String> pemKey) {
+    Optional<PublicKey> fromPEM(Optional<String> pemKey) {
 
         return pemKey
-                .map(k -> new PEMReader(new StringReader(k)))
+                .map(k -> new PEMParser(new PemReader(new StringReader(k))))
                 .flatMap(this::publicKeyFrom);
     }
 
-    private Optional<RSAPublicKey> publicKeyFrom(PEMReader reader) {
+    private Optional<PublicKey> publicKeyFrom(PEMParser reader) {
         try {
             Object readPEM = reader.readObject();
-            RSAPublicKey rsaPublicKey = null;
-            if (readPEM instanceof RSAPublicKey) {
-                rsaPublicKey = (RSAPublicKey) readPEM;
+            if (readPEM instanceof SubjectPublicKeyInfo) {
+                return Optional.of(new JcaPEMKeyConverter().getPublicKey((SubjectPublicKeyInfo) readPEM));
             }
-            return Optional.ofNullable(rsaPublicKey);
+            return Optional.empty();
         } catch (IOException e) {
             LOGGER.warn("Error when reading the PEM file", e);
             return Optional.empty();
