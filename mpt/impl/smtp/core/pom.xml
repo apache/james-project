@@ -145,12 +145,16 @@
                     <artifactId>rest-assured</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>com.spotify</groupId>
-                    <artifactId>docker-client</artifactId>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.testcontainers</groupId>
+                    <artifactId>testcontainers</artifactId>
                 </dependency>
             </dependencies>
             <build>

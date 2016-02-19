@@ -31,13 +31,13 @@ import javax.inject.Inject;
 import org.apache.james.mpt.api.SmtpHostSystem;
 import org.apache.james.mpt.script.AbstractSimpleScriptedTestProtocol;
 import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
-import org.apache.james.mpt.smtp.utils.DockerRule;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+import org.testcontainers.containers.GenericContainer;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -53,8 +53,8 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
     public static final String PASSWORD = "secret";
 
     private final TemporaryFolder folder = new TemporaryFolder();
-    private final DockerRule fakeSmtp = new DockerRule("weave/rest-smtp-sink");
-
+    private final GenericContainer fakeSmtp = new GenericContainer("weave/rest-smtp-sink:latest");
+    
     @Rule
     public final RuleChain chain = RuleChain.outerRule(folder).around(fakeSmtp);
 
@@ -74,7 +74,7 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        InetAddress containerIp = InetAddresses.forString(fakeSmtp.getContainerIp());
+        InetAddress containerIp = InetAddresses.forString(fakeSmtp.getContainerInfo().getNetworkSettings().getIpAddress());
         dnsService.registerRecord("yopmail.com", new InetAddress[]{containerIp}, ImmutableList.of("yopmail.com"), ImmutableList.of());
         recipientRewriteTable.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
