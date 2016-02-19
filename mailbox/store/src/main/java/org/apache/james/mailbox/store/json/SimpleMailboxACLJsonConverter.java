@@ -48,12 +48,13 @@ public class SimpleMailboxACLJsonConverter {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     static {
-        objectMapper.addMixInAnnotations(SimpleMailboxACL.Rfc4314Rights.class, Rfc4314RightsMixIn.class);
-        SimpleModule module = new SimpleModule();
-        module.addAbstractTypeMapping(MailboxACL.MailboxACLEntryKey.class, SimpleMailboxACL.SimpleMailboxACLEntryKey.class);
-        module.addAbstractTypeMapping(MailboxACL.MailboxACLRights.class, SimpleMailboxACL.Rfc4314Rights.class);
-        module.addKeyDeserializer(MailboxACL.MailboxACLEntryKey.class, new ACLKeyDeserializer());
-        objectMapper.registerModule(module);
+        SimpleModule module = new SimpleModule()
+                .addAbstractTypeMapping(MailboxACL.MailboxACLEntryKey.class, SimpleMailboxACL.SimpleMailboxACLEntryKey.class)
+                .addAbstractTypeMapping(MailboxACL.MailboxACLRights.class, SimpleMailboxACL.Rfc4314Rights.class)
+                .addKeyDeserializer(MailboxACL.MailboxACLEntryKey.class, new ACLKeyDeserializer());
+        objectMapper
+            .addMixIn(SimpleMailboxACL.Rfc4314Rights.class, Rfc4314RightsMixIn.class)
+            .registerModule(module);
     }
 
     public static String toJson(MailboxACL acl) throws JsonProcessingException {
