@@ -70,6 +70,8 @@ public class EmbeddedElasticSearch extends ExternalResource {
     public void before() throws IOException {
         node = nodeBuilder().local(true)
             .settings(ImmutableSettings.builder()
+                .put("index.store.type", "memory")
+                .put("index.store.fs.memory.enabled", "true")
                 .put("path.data", folder.get().toAbsolutePath())
                 .put("script.disable_dynamic",true)
                 .build())
