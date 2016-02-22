@@ -51,24 +51,18 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-
 public class ElasticSearchIntegrationTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIntegrationTest.class);
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-
     @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
-    
+    public EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch();
+
     private StoreMailboxManager<InMemoryId> storeMailboxManager;
     private ElasticSearchListeningMessageSearchIndex<InMemoryId> elasticSearchListeningMessageSearchIndex;
     private Mailbox<InMemoryId> mailbox;

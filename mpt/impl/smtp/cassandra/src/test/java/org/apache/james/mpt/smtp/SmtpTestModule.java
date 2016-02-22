@@ -67,7 +67,7 @@ public class SmtpTestModule extends AbstractModule {
                 new CassandraRRTModule());
         cassandraClusterSingleton = CassandraCluster.create(cassandraModuleComposite);
 
-        embeddedElasticSearch = new EmbeddedElasticSearch(folder);
+        embeddedElasticSearch = new EmbeddedElasticSearch();
     }
 
     @Override

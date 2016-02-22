@@ -50,7 +50,7 @@ public abstract class JMAPAuthenticationTest {
     private static final ZonedDateTime afterExpirationDate = ZonedDateTime.parse("2011-12-03T10:30:31+01:00", DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
     private FixedDateZonedDateTimeProvider zonedDateTimeProvider = new FixedDateZonedDateTimeProvider();
     private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra, zonedDateTimeProvider);

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import org.apache.james.mpt.smtp.ForwardSmtpTest;
 import org.apache.onami.test.OnamiSuite;
 import org.apache.onami.test.annotation.GuiceModules;
 import org.junit.runner.RunWith;

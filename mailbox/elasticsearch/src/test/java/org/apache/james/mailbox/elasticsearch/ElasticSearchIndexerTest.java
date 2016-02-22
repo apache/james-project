@@ -31,18 +31,12 @@ import org.elasticsearch.node.Node;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-
 
 public class ElasticSearchIndexerTest {
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    
     @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
-    
+    public EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch();
+
     private Node node;
     private ElasticSearchIndexer testee;
 

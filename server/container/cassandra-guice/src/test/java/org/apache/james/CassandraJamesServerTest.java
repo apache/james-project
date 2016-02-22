@@ -63,7 +63,7 @@ public class CassandraJamesServerTest {
 
     private CassandraJamesServer server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
     private SocketChannel socketChannel;
 
     @Rule
