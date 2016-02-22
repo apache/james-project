@@ -16,30 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.send.exception;
 
-package org.apache.james.jmap.send;
-
-import javax.inject.Inject;
-
-import org.apache.james.queue.api.MailQueue;
+import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.mailet.Mail;
 
-import com.google.common.annotations.VisibleForTesting;
+public class MailboxRoleNotFoundException extends MailQueueException {
 
-public class MailSpool {
-
-    private final MailQueue queue;
-
-    @Inject
-    @VisibleForTesting MailSpool(MailQueueFactory queueFactory) {
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+    public MailboxRoleNotFoundException(Role role) {
+        super("Unable to find a mailbox with role " + role.name());
     }
 
-    public void send(Mail mail, MailMetadata metadata) throws MailQueueException {
-        mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, metadata.getMessageId().serialize());
-        mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, metadata.getUsername());
-        queue.enQueue(mail);
-    }
 }

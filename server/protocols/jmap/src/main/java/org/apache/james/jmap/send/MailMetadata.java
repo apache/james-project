@@ -19,27 +19,46 @@
 
 package org.apache.james.jmap.send;
 
-import javax.inject.Inject;
+import java.util.Objects;
 
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.mailet.Mail;
+import org.apache.james.jmap.model.MessageId;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
-public class MailSpool {
+public class MailMetadata {
+    public static final String MAIL_METADATA_MESSAGE_ID_ATTRIBUTE = "org.apache.james.jmap.send.MailMetaData.messageId";
+    public static final String MAIL_METADATA_USERNAME_ATTRIBUTE = "org.apache.james.jmap.send.MailMetaData.username";
 
-    private final MailQueue queue;
+    private final MessageId messageId;
+    private final String username;
 
-    @Inject
-    @VisibleForTesting MailSpool(MailQueueFactory queueFactory) {
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+    public MailMetadata(MessageId messageId, String username) {
+        Preconditions.checkNotNull(messageId);
+        Preconditions.checkNotNull(username);
+        this.messageId = messageId;
+        this.username = username;
     }
 
-    public void send(Mail mail, MailMetadata metadata) throws MailQueueException {
-        mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, metadata.getMessageId().serialize());
-        mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, metadata.getUsername());
-        queue.enQueue(mail);
+    public MessageId getMessageId() {
+        return messageId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MailMetadata) {
+            MailMetadata other = (MailMetadata) obj;
+            return Objects.equals(this.messageId, other.messageId)
+                && Objects.equals(this.username, other.username);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(messageId, username);
     }
 }

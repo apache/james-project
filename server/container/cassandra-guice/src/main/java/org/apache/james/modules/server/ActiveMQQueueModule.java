@@ -19,16 +19,20 @@
 
 package org.apache.james.modules.server;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import javax.jms.ConnectionFactory;
+
+import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
+import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.ConnectionFactory;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 
 public class ActiveMQQueueModule extends AbstractModule {
 
@@ -36,7 +40,7 @@ public class ActiveMQQueueModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
+        bind(MailQueueItemDecoratorFactory.class).to(new TypeLiteral<PostDequeueDecoratorFactory<CassandraId>>(){}).in(Singleton.class);
     }
 
     @Provides
@@ -53,11 +57,4 @@ public class ActiveMQQueueModule extends AbstractModule {
         activeMQMailQueueFactory.init();
         return activeMQMailQueueFactory;
     }
-    
-    @Provides
-    @Singleton
-    public MailQueueItemDecoratorFactory defaultMailQueueItemDecoratorFactory() {
-        return MailQueueItemDecoratorFactory.RAW_FACTORY;
-    }
-
 }
