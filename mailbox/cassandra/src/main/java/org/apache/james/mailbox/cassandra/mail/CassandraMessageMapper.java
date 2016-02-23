@@ -151,14 +151,18 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public void delete(Mailbox<CassandraId> mailbox, MailboxMessage<CassandraId> message) {
+        deleteUsingMailboxId(mailbox.getMailboxId(), message);
+    }
+
+    private void deleteUsingMailboxId(CassandraId mailboxId, MailboxMessage<CassandraId> message) {
         session.execute(
             QueryBuilder.delete()
                 .from(TABLE_NAME)
-                .where(eq(MAILBOX_ID, mailbox.getMailboxId().asUuid()))
+                .where(eq(MAILBOX_ID, mailboxId.asUuid()))
                 .and(eq(IMAP_UID, message.getUid())));
-        decrementCount(mailbox);
+        decrementCount(mailboxId);
         if (!message.isSeen()) {
-            decrementUnseen(mailbox);
+            decrementUnseen(mailboxId);
         }
     }
 
@@ -196,8 +200,10 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
     }
 
     @Override
-    public MessageMetaData move(Mailbox<CassandraId> mailbox, MailboxMessage<CassandraId> original) throws MailboxException {
-        throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");
+    public MessageMetaData move(Mailbox<CassandraId> destinationMailbox, MailboxMessage<CassandraId> original) throws MailboxException {
+        MessageMetaData messageMetaData = copy(destinationMailbox, original);
+        deleteUsingMailboxId(original.getMailboxId(), original);
+        return messageMetaData;
     }
 
     @Override
@@ -216,9 +222,9 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
         message.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
         MessageMetaData messageMetaData = save(mailbox, message);
         if (!message.isSeen()) {
-            incrementUnseen(mailbox);
+            incrementUnseen(mailbox.getMailboxId());
         }
-        incrementCount(mailbox);
+        incrementCount(mailbox.getMailboxId());
         return messageMetaData;
     }
 
@@ -243,9 +249,9 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
         original.setUid(uidProvider.nextUid(mailboxSession, mailbox));
         original.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
-        incrementCount(mailbox);
+        incrementCount(mailbox.getMailboxId());
         if(!original.isSeen()) {
-            incrementUnseen(mailbox);
+            incrementUnseen(mailbox.getMailboxId());
         }
         original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
         return save(mailbox, original);
@@ -256,24 +262,24 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
         return uidProvider.lastUid(mailboxSession, mailbox);
     }
 
-    private void decrementCount(Mailbox<CassandraId> mailbox) {
-        updateMailbox(mailbox, decr(CassandraMailboxCountersTable.COUNT));
+    private void decrementCount(CassandraId mailboxId) {
+        updateMailbox(mailboxId, decr(CassandraMailboxCountersTable.COUNT));
     }
 
-    private void incrementCount(Mailbox<CassandraId> mailbox) {
-        updateMailbox(mailbox, incr(CassandraMailboxCountersTable.COUNT));
+    private void incrementCount(CassandraId mailboxId) {
+        updateMailbox(mailboxId, incr(CassandraMailboxCountersTable.COUNT));
     }
 
-    private void decrementUnseen(Mailbox<CassandraId> mailbox) {
-        updateMailbox(mailbox, decr(CassandraMailboxCountersTable.UNSEEN));
+    private void decrementUnseen(CassandraId mailboxId) {
+        updateMailbox(mailboxId, decr(CassandraMailboxCountersTable.UNSEEN));
     }
 
-    private void incrementUnseen(Mailbox<CassandraId> mailbox) {
-        updateMailbox(mailbox, incr(CassandraMailboxCountersTable.UNSEEN));
+    private void incrementUnseen(CassandraId mailboxId) {
+        updateMailbox(mailboxId, incr(CassandraMailboxCountersTable.UNSEEN));
     }
 
-    private void updateMailbox(Mailbox<CassandraId> mailbox, Assignment operation) {
-        session.execute(update(CassandraMailboxCountersTable.TABLE_NAME).with(operation).where(eq(CassandraMailboxCountersTable.MAILBOX_ID, mailbox.getMailboxId().asUuid())));
+    private void updateMailbox(CassandraId mailboxId, Assignment operation) {
+        session.execute(update(CassandraMailboxCountersTable.TABLE_NAME).with(operation).where(eq(CassandraMailboxCountersTable.MAILBOX_ID, mailboxId.asUuid())));
     }
 
     private MailboxMessage<CassandraId> message(Row row) {
@@ -366,10 +372,10 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     private void manageUnseenMessageCounts(Mailbox<CassandraId> mailbox, Flags oldFlags, Flags newFlags) {
         if (oldFlags.contains(Flag.SEEN) && !newFlags.contains(Flag.SEEN)) {
-            incrementUnseen(mailbox);
+            incrementUnseen(mailbox.getMailboxId());
         }
         if (!oldFlags.contains(Flag.SEEN) && newFlags.contains(Flag.SEEN)) {
-            decrementUnseen(mailbox);
+            decrementUnseen(mailbox.getMailboxId());
         }
     }
 
