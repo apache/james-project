@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -32,7 +33,6 @@ import java.util.function.Function;
 
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.CreationMessage;
-import org.apache.james.jmap.model.Emailer;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -165,8 +165,8 @@ public class SetMessagesCreationProcessorTest {
     private SetMessagesRequest buildFakeCreationRequest() {
         return SetMessagesRequest.builder()
                 .create(ImmutableMap.of("anything-really", CreationMessage.builder()
-                    .from(Emailer.builder().name("alice").email("alice@example.com").build())
-                    .to(ImmutableList.of(Emailer.builder().name("bob").email("bob@example.com").build()))
+                    .from(DraftEmailer.builder().name("alice").email("alice@example.com").build())
+                    .to(ImmutableList.of(DraftEmailer.builder().name("bob").email("bob@example.com").build()))
                     .subject("Hey! ")
                     .mailboxIds(ImmutableList.of("mailboxId"))
                     .build()

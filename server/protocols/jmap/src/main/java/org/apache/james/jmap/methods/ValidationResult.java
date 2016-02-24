@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
+import java.util.Objects;
+
 import com.google.common.annotations.VisibleForTesting;
 
 public class ValidationResult {
@@ -66,4 +68,26 @@ public class ValidationResult {
         return errorMessage;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ValidationResult) {
+            ValidationResult otherEMailer = (ValidationResult) o;
+            return Objects.equals(property, otherEMailer.property)
+                    && Objects.equals(errorMessage, otherEMailer.errorMessage);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(property, errorMessage);
+    }
+
+    @Override
+    public String toString() {
+        return com.google.common.base.Objects.toStringHelper(getClass())
+                .add("property", property)
+                .add("errorMessage", errorMessage)
+                .toString();
+    }
 }

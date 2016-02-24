@@ -25,6 +25,7 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -68,10 +69,10 @@ public abstract class SetMessagesMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
-    private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
-    private JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra);
+    private final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
+    private final EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
+    private final JmapServer jmapServer = jmapServer(temporaryFolder, embeddedElasticSearch, cassandra);
     private String outboxId;
 
     protected abstract JmapServer jmapServer(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra);
@@ -742,5 +743,158 @@ public abstract class SetMessagesMethodTest {
                 .body(ARGUMENTS + ".list", hasSize(1))
                 .body(ARGUMENTS + ".list[0].subject", equalTo(messageSubject))
                 .log().ifValidationFails();
+    }
+
+    @Test
+    public void setMessagesShouldRejectWhenSendingMessageHasNoValidAddress() {
+        String messageCreationId = "user|inbox|1";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"MAILER-DEAMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com@example.com\"}]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+                .when()
+                .post("/jmap")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+
+                .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("no recipient address set"))
+                .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
+    @Test
+    public void setMessagesShouldRejectWhenSendingMessageHasMissingFrom() {
+        String messageCreationId = "user|inbox|1";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'from' address is mandatory"))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("from"))
+                .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
+    @Test
+    public void setMessagesShouldSucceedWhenSendingMessageWithOnlyFromAddress() {
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = "postmaster@example.com";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".created", aMapWithSize(1))
+                .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
+                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
+                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
+    }
+
+    @Test
+    public void setMessagesShouldRejectWhenSendingMessageHasMissingSubject() {
+        String messageCreationId = "user|inbox|1";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"MAILER-DEAMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("subject"))
+                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'subject' is missing"))
+                .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 }

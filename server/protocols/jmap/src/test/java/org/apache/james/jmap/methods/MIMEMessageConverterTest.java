@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
+import static org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.Date;
@@ -27,7 +28,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import org.apache.james.jmap.model.CreationMessage;
-import org.apache.james.jmap.model.Emailer;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.stream.Field;
@@ -43,8 +43,9 @@ public class MIMEMessageConverterTest {
 
         String matchingMessageId = "unique-message-id";
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
+                .from(DraftEmailer.builder().name("sender").build())
                 .inReplyToMessageId(matchingMessageId)
-                .mailboxIds(ImmutableList.of("Hey!"))
+                .mailboxIds(ImmutableList.of("dead-beef-1337"))
                 .subject("subject")
                 .build();
 
@@ -73,7 +74,7 @@ public class MIMEMessageConverterTest {
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("deadbeef-dead-beef-dead-beef"))
                 .subject("subject")
-                .from(Emailer.builder().email(joesEmail).name("joe").build())
+                .from(DraftEmailer.builder().email(joesEmail).name("joe").build())
                 .build();
 
         // When
@@ -81,7 +82,7 @@ public class MIMEMessageConverterTest {
                 "user|mailbox|1", testMessage));
 
         // Then
-        assertThat(result.getFrom()).extracting(Mailbox::getAddress).allMatch(f -> f.toString().equals(joesEmail));
+        assertThat(result.getFrom()).extracting(Mailbox::getAddress).allMatch(f -> f.equals(joesEmail));
         assertThat(result.getSender().getAddress()).isEqualTo(joesEmail);
     }
 
@@ -96,6 +97,7 @@ public class MIMEMessageConverterTest {
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
                 .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
                 .date(messageDate)
                 .build();
 
