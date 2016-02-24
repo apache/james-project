@@ -37,7 +37,7 @@ import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 public abstract class JPAMailboxManager extends StoreMailboxManager<JPAId> {
     
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
-            final Authenticator authenticator, final MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
+            final Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver);
     }
     

@@ -71,7 +71,7 @@ public class ProtocolSessionBuilder {
      * @param name not null
      * @param value not null
      */
-    public void setVariable(final String name, final String value) {
+    public void setVariable(String name, String value) {
         variables.put(name, value);
     }
     
@@ -97,7 +97,7 @@ public class ProtocolSessionBuilder {
      * @param reader not null
      * @return The ProtocolSession
      */
-    public ProtocolInteractor buildProtocolSession(final String scriptName, final Reader reader)
+    public ProtocolInteractor buildProtocolSession(String scriptName, Reader reader)
             throws Exception {
         ProtocolInteractor session = new ProtocolSession();
         addProtocolLines(scriptName, reader, session);

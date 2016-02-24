@@ -82,11 +82,11 @@ public class UpdatedFlags {
             }
         }
     }
-    private static boolean isChanged(final Flags original, final Flags updated, Flags.Flag flag) {
+    private static boolean isChanged(Flags original, Flags updated, Flags.Flag flag) {
         return original != null && updated != null && (original.contains(flag) ^ updated.contains(flag));
     }
 
-    private static boolean isChanged(final Flags original, final Flags updated, String userFlag) {
+    private static boolean isChanged(Flags original, Flags updated, String userFlag) {
         return original != null && updated != null && (original.contains(userFlag) ^ updated.contains(userFlag));
     }
 

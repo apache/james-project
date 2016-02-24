@@ -67,7 +67,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList("WITHIN", "ESEARCH", "SEARCHRES"));
     
-    public SearchProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public SearchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(SearchRequest.class, next, mailboxManager, factory);
     }
 
@@ -216,7 +216,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         }
     }
     
-    private long[] toArray(final Collection<Long> results) {
+    private long[] toArray(Collection<Long> results) {
         final Iterator<Long> it = results.iterator();
         final int length = results.size();
         long[] ids = new long[length];
@@ -236,7 +236,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
      * @return highestModSeq
      * @throws MailboxException
      */
-    private Long findHighestModSeq(final MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, final long currentHighest) throws MailboxException {
+    private Long findHighestModSeq(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, long currentHighest) throws MailboxException {
         Long highestModSeq = null;
         
         // Reverse loop over the ranges as its more likely that we find a match at the end
@@ -258,7 +258,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
 
-    private SearchQuery toQuery(final SearchKey key, final ImapSession session) throws MessageRangeException {
+    private SearchQuery toQuery(SearchKey key, ImapSession session) throws MessageRangeException {
         final SearchQuery result = new SearchQuery();
         final SelectedMailbox selected = session.getSelected();
         if (selected != null) {
@@ -269,7 +269,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         return result;
     }
 
-    private SearchQuery.Criterion toCriterion(final SearchKey key, final ImapSession session) throws MessageRangeException {
+    private SearchQuery.Criterion toCriterion(SearchKey key, ImapSession session) throws MessageRangeException {
         final int type = key.getType();
         final DayMonthYear date = key.getDate();
         switch (type) {
@@ -389,7 +389,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
      * @return crit
      * @throws MessageRangeException
      */
-    private Criterion sequence(IdRange[] sequenceNumbers, final ImapSession session, boolean msn) throws MessageRangeException {
+    private Criterion sequence(IdRange[] sequenceNumbers, ImapSession session, boolean msn) throws MessageRangeException {
         final List<SearchQuery.NumericRange> ranges = new ArrayList<SearchQuery.NumericRange>();
         final SelectedMailbox selected = session.getSelected();
         boolean useUids = !msn;
@@ -397,7 +397,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         // First of check if we have any messages in the mailbox
         // if not we don't need to go through all of this
         if (selected.existsCount() > 0) {
-            for (final IdRange range : sequenceNumbers) {
+            for (IdRange range : sequenceNumbers) {
                 long lowVal = range.getLowVal();
                 long highVal = range.getHighVal();
                 if (useUids) {
@@ -456,7 +456,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         return SearchQuery.uid(ranges.toArray(new SearchQuery.NumericRange[0]));
     }
 
-    private Criterion or(List<SearchKey> keys, final ImapSession session) throws MessageRangeException {
+    private Criterion or(List<SearchKey> keys, ImapSession session) throws MessageRangeException {
         final SearchKey keyOne = keys.get(0);
         final SearchKey keyTwo = keys.get(1);
         final Criterion criterionOne = toCriterion(keyOne, session);
@@ -464,16 +464,16 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         return SearchQuery.or(criterionOne, criterionTwo);
     }
 
-    private Criterion not(List<SearchKey> keys, final ImapSession session) throws MessageRangeException {
+    private Criterion not(List<SearchKey> keys, ImapSession session) throws MessageRangeException {
         final SearchKey key = keys.get(0);
         final Criterion criterion = toCriterion(key, session);
         return SearchQuery.not(criterion);
     }
 
-    private Criterion and(List<SearchKey> keys, final ImapSession session) throws MessageRangeException {
+    private Criterion and(List<SearchKey> keys, ImapSession session) throws MessageRangeException {
         final int size = keys.size();
         final List<Criterion> criteria = new ArrayList<Criterion>(size);
-        for (final SearchKey key : keys) {
+        for (SearchKey key : keys) {
             final Criterion criterion = toCriterion(key, session);
             criteria.add(criterion);
         }

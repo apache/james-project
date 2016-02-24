@@ -41,7 +41,7 @@ public class SpamAssassinHandlerTest {
     private Mail mockedMail;
     public final static String SPAMD_HOST = "localhost";
 
-    private SMTPSession setupMockedSMTPSession(final Mail mail) {
+    private SMTPSession setupMockedSMTPSession(Mail mail) {
         mockedMail = mail;
 
         return new BaseFakeSMTPSession() {

@@ -56,7 +56,7 @@ public class NetMatcher {
      * @param dnsServer
      *            the DNSService which will be used in this class
      */
-    public NetMatcher(final String[] nets, DNSService dnsServer) {
+    public NetMatcher(String[] nets, DNSService dnsServer) {
         this.dnsServer = dnsServer;
         initInetNetworks(nets);
     }
@@ -69,7 +69,7 @@ public class NetMatcher {
      * @param dnsServer
      *            the DNSService which will be used in this class
      */
-    public NetMatcher(final Collection<String> nets, DNSService dnsServer) {
+    public NetMatcher(Collection<String> nets, DNSService dnsServer) {
         this.dnsServer = dnsServer;
         initInetNetworks(nets);
     }
@@ -81,7 +81,7 @@ public class NetMatcher {
      *            the ipAddress or host name to check
      * @see #matchInetNetwork(InetAddress)
      */
-    public boolean matchInetNetwork(final String hostIP) {
+    public boolean matchInetNetwork(String hostIP) {
 
         InetAddress ip;
 
@@ -104,7 +104,7 @@ public class NetMatcher {
      *            InetAddress
      * @return true if match the network
      */
-    public boolean matchInetNetwork(final InetAddress ip) {
+    public boolean matchInetNetwork(InetAddress ip) {
 
         boolean sameNet = false;
 
@@ -137,7 +137,7 @@ public class NetMatcher {
      * @param nets
      *            a Collection which holds all networks
      */
-    private void initInetNetworks(final Collection<String> nets) {
+    private void initInetNetworks(Collection<String> nets) {
         initInetNetworks(nets.toArray(new String[nets.size()]));
     }
 
@@ -147,7 +147,7 @@ public class NetMatcher {
      * @param nets
      *            a String[] which holds all networks
      */
-    private void initInetNetworks(final String[] nets) {
+    private void initInetNetworks(String[] nets) {
 
         networks = new TreeSet<InetNetwork>(new Comparator<InetNetwork>() {
             public int compare(InetNetwork in1, InetNetwork in2) {

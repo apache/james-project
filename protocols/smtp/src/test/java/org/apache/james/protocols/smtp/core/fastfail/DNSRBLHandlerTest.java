@@ -113,7 +113,7 @@ public class DNSRBLHandlerTest {
     /**
      * Setup mocked smtpsession
      */
-    private void setupMockedSMTPSession(final MailAddress rcpt) {
+    private void setupMockedSMTPSession(MailAddress rcpt) {
         mockedSMTPSession = new BaseFakeSMTPSession() {
             HashMap<String,Object> sessionState = new HashMap<String,Object>();
             HashMap<String,Object> connectionState = new HashMap<String,Object>();

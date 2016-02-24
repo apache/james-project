@@ -41,10 +41,10 @@ public class FilePersistentStreamRepository extends AbstractFileRepository imple
 
 
     @Override
-    public synchronized InputStream get(final String key) {
+    public synchronized InputStream get(String key) {
         try {
             return getInputStream(key);
-        } catch (final IOException ioe) {
+        } catch (IOException ioe) {
             final String message = "Exception caught while retrieving a stream ";
             getLogger().warn(message, ioe);
             throw new RuntimeException(message + ": " + ioe);
@@ -53,11 +53,11 @@ public class FilePersistentStreamRepository extends AbstractFileRepository imple
 
 
     @Override
-    public synchronized OutputStream put(final String key) {
+    public synchronized OutputStream put(String key) {
         try {
             final OutputStream outputStream = getOutputStream(key);
             return new BufferedOutputStream(outputStream);
-        } catch (final IOException ioe) {
+        } catch (IOException ioe) {
             final String message = "Exception caught while storing a stream ";
             getLogger().warn(message, ioe);
             throw new RuntimeException(message + ": " + ioe);
@@ -70,7 +70,7 @@ public class FilePersistentStreamRepository extends AbstractFileRepository imple
      * @param key the key to get the size for
      * @return size the Size which belongs to the givens keys file
      */
-    public long getSize(final String key) {
+    public long getSize(String key) {
         try {
             return getFile(key).length();
         } catch (IOException e) {

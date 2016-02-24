@@ -26,7 +26,7 @@ import org.apache.james.mailbox.MailboxManager;
 
 public class SelectProcessor extends AbstractSelectionProcessor<SelectRequest> {
 
-    public SelectProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory statusResponseFactory) {
+    public SelectProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory) {
         super(SelectRequest.class, next, mailboxManager, statusResponseFactory, false);
     }
 

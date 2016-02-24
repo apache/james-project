@@ -70,7 +70,7 @@ public final class SimpleProperty implements Property {
      * @return true when namespaces and local names match,
      * false otherwise
      */
-    public boolean isNamed(final String namespace, final String localName) {
+    public boolean isNamed(String namespace, String localName) {
         return namespace.equals(this.namespace) && localName.equals(this.localName);
     }
     
@@ -80,7 +80,7 @@ public final class SimpleProperty implements Property {
      * @return true when this property is in the given namespace,
      * false otherwise
      */
-    public boolean isInSpace(final String namespace) {
+    public boolean isInSpace(String namespace) {
         return this.namespace.equals(namespace);
     }
 

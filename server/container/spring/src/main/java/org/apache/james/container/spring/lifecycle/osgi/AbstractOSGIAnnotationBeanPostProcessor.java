@@ -143,7 +143,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
      * @param beanName
      */
     @Override
-    public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (logger.isDebugEnabled())
             logger.debug("processing [" + bean.getClass().getName() + ", " + beanName + "]");
         // Catch FactoryBean created instances.
@@ -205,7 +205,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
     }
 
     @SuppressWarnings("rawtypes")
-    private FactoryBean getServiceImporter(final A s, final Method writeMethod, String beanName) throws Exception {
+    private FactoryBean getServiceImporter(A s, Method writeMethod, String beanName) throws Exception {
         // Invocations will block here, so although the ApplicationContext is
         // created nothing will
         // proceed until all the dependencies are satisfied.

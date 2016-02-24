@@ -43,7 +43,7 @@ public abstract class AbstractImapRequestHandler {
     protected final ImapProcessor processor;
     private final ImapEncoder encoder;
 
-    public AbstractImapRequestHandler(final ImapDecoder decoder, final ImapProcessor processor, final ImapEncoder encoder) {
+    public AbstractImapRequestHandler(ImapDecoder decoder, ImapProcessor processor, ImapEncoder encoder) {
         this.decoder = decoder;
         this.processor = processor;
         this.encoder = encoder;

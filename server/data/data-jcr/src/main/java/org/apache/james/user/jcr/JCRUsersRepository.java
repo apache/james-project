@@ -140,7 +140,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * @throws UsersRepositoryException
      *            If an error occurred
      */
-    public void updateUser(final User user) throws UsersRepositoryException {
+    public void updateUser(User user) throws UsersRepositoryException {
         if (user != null && user instanceof JCRUser) {
             final JCRUser jcrUser = (JCRUser) user;
             final String userName = jcrUser.getUserName();

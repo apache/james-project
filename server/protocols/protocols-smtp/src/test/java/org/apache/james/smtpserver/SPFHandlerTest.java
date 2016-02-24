@@ -121,7 +121,7 @@ public class SPFHandlerTest {
     /**
      * Setup mocked smtpsession
      */
-    private void setupMockedSMTPSession(final String ip, final String helo) {
+    private void setupMockedSMTPSession(String ip, final String helo) {
         mockedSMTPSession = new BaseFakeSMTPSession() {
 
             private final HashMap<String, Object> sstate = new HashMap<String, Object>();

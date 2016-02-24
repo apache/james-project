@@ -26,7 +26,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  */
 public class LogoutRequest extends AbstractImapRequest {
 
-    public LogoutRequest(final ImapCommand command, final String tag) {
+    public LogoutRequest(ImapCommand command, String tag) {
         super(tag, command);
     }
 

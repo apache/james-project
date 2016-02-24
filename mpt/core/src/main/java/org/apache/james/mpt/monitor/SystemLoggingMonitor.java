@@ -32,7 +32,7 @@ public final class SystemLoggingMonitor implements Monitor {
         this(false);
     }
 
-    public SystemLoggingMonitor(final boolean verbose) {
+    public SystemLoggingMonitor(boolean verbose) {
         this.verbose = verbose;
     }
 

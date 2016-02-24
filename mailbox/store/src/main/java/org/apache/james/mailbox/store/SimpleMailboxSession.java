@@ -60,13 +60,13 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     private final SessionType type;
 
     
-    public SimpleMailboxSession(final long sessionId, final String userName, final String password,
-            final Logger log, final List<Locale> localePreferences, char pathSeparator, SessionType type) {
+    public SimpleMailboxSession(long sessionId, String userName, String password,
+            final Logger log, List<Locale> localePreferences, char pathSeparator, SessionType type) {
         this(sessionId, userName, password, log, localePreferences, new ArrayList<String>(), null, pathSeparator, type);
     }
 
-    public SimpleMailboxSession(final long sessionId, final String userName, final String password,
-            final Logger log, final List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
+    public SimpleMailboxSession(long sessionId, String userName, String password,
+            final Logger log, List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.log = log;
         this.userName = userName;

@@ -630,7 +630,7 @@ public class MaildirFolder {
         return uidMap;
     }
 
-    private Map<Long, MaildirMessageName> readUidFile(MailboxSession session, final long from, final long to) throws MailboxException {
+    private Map<Long, MaildirMessageName> readUidFile(MailboxSession session, long from, long to) throws MailboxException {
         final Map<Long, MaildirMessageName> uidMap = new HashMap<Long, MaildirMessageName>();
 
         File uidList = uidFile;
@@ -743,7 +743,7 @@ public class MaildirFolder {
      * @return The uid of the message
      * @throws IOException
      */
-    public long appendMessage(final MailboxSession session, final String name) throws MailboxException {
+    public long appendMessage(MailboxSession session, final String name) throws MailboxException {
         return locker.executeWithLock(session, path, new LockAwareExecution<Long>() {
             
             @Override
@@ -817,7 +817,7 @@ public class MaildirFolder {
      * @param messageName
      * @throws MailboxException
      */
-    public void update(final MailboxSession session, final long uid, final String messageName) throws MailboxException {
+    public void update(MailboxSession session, final long uid, final String messageName) throws MailboxException {
         locker.executeWithLock(session, path, new LockAwareExecution<Void>() {
             
             @Override
@@ -926,7 +926,7 @@ public class MaildirFolder {
         return getRootFile().getAbsolutePath();
     }
     
-    public MailboxACL getACL(final MailboxSession session) throws MailboxException {
+    public MailboxACL getACL(MailboxSession session) throws MailboxException {
         if (acl == null) {
             acl = readACL(session);
         }
@@ -969,7 +969,7 @@ public class MaildirFolder {
         
     }
     
-    public void setACL(final MailboxSession session, final MailboxACL acl) throws MailboxException {
+    public void setACL(MailboxSession session, MailboxACL acl) throws MailboxException {
         MailboxACL old = this.acl;
         if (old != acl && (old == null || !old.equals(acl))) {
             /* change only if different */
@@ -979,7 +979,7 @@ public class MaildirFolder {
         
     }
 
-    private void saveACL(final MailboxACL acl, final MailboxSession session) throws MailboxException {
+    private void saveACL(final MailboxACL acl, MailboxSession session) throws MailboxException {
         // FIXME Do we need this locking?
         locker.executeWithLock(session, path, new LockAwareExecution<Void>() {
             

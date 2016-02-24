@@ -44,12 +44,12 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
     public final static String VALUE_PROPERTY =  "jamesMailbox:propertyValue";
     public final static String ORDER_PROPERTY =  "jamesMailbox:propertyOrder";
 
-    public JCRProperty(final Node node, final Logger logger) {
+    public JCRProperty(Node node, Logger logger) {
         this.node = node;
         this.logger = logger;
     }
 
-    public JCRProperty(final String namespace, final String localName, final String value, Logger logger) {
+    public JCRProperty(String namespace, String localName, String value, Logger logger) {
         this.namespace = namespace;
         this.localName = localName;
         this.value = value;

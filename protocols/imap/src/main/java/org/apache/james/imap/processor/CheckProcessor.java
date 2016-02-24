@@ -28,7 +28,7 @@ import org.apache.james.mailbox.MailboxManager;
 
 public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
 
-    public CheckProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public CheckProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(CheckRequest.class, next, mailboxManager, factory);
     }
 

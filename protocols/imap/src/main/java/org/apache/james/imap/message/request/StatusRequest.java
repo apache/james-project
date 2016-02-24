@@ -26,7 +26,7 @@ public class StatusRequest extends AbstractImapRequest {
 
     private final StatusDataItems statusDataItems;
 
-    public StatusRequest(final ImapCommand command, final String mailboxName, final StatusDataItems statusDataItems, final String tag) {
+    public StatusRequest(ImapCommand command, String mailboxName, StatusDataItems statusDataItems, String tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
         this.statusDataItems = statusDataItems;

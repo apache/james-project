@@ -29,7 +29,7 @@ import org.apache.james.imap.message.response.ExpungeResponse;
 public class ExpungeResponseEncoder extends AbstractChainedImapEncoder {
     public static final String EXPUNGE = "EXPUNGE";
 
-    public ExpungeResponseEncoder(final ImapEncoder next) {
+    public ExpungeResponseEncoder(ImapEncoder next) {
         super(next);
     }
 

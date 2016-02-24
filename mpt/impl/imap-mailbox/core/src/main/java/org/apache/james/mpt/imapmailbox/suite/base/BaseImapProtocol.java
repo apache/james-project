@@ -28,7 +28,7 @@ import org.junit.Before;
  */
 public class BaseImapProtocol extends AbstractSimpleScriptedTestProtocol implements ImapTestConstants {
 
-    public BaseImapProtocol(final HostSystem hostSystem) throws Exception {
+    public BaseImapProtocol(HostSystem hostSystem) throws Exception {
         super(hostSystem, USER, PASSWORD, "/org/apache/james/imap/scripts/");
     }
 

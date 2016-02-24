@@ -39,7 +39,7 @@ public interface SubscriptionMapper extends Mapper {
      * or null when the user is not subscribed to the given mailbox
      */
     Subscription findMailboxSubscriptionForUser(
-        final String user, final String mailbox) throws SubscriptionException;
+        final String user, String mailbox) throws SubscriptionException;
 
     /**
      * Saves the given subscription.

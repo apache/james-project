@@ -35,7 +35,7 @@ public class ContinuationResponseEncoder extends AbstractChainedImapEncoder {
 
     private final Localizer localizer;
 
-    public ContinuationResponseEncoder(ImapEncoder next, final Localizer localizer) {
+    public ContinuationResponseEncoder(ImapEncoder next, Localizer localizer) {
         super(next);
         this.localizer = localizer;
     }

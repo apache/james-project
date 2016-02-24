@@ -716,14 +716,14 @@ public class ClamAVScan extends GenericMailet {
      *
      * @param output A (possibly null) OutputStream
      */
-    private static void shutdownStream(final OutputStream output) {
+    private static void shutdownStream(OutputStream output) {
         if (null == output) {
             return;
         }
 
         try {
             output.close();
-        } catch (final IOException ignored) {
+        } catch (IOException ignored) {
         }
     }
 
@@ -733,14 +733,14 @@ public class ClamAVScan extends GenericMailet {
      *
      * @param socket A (possibly null) Socket
      */
-    private static void shutdownSocket(final Socket socket) {
+    private static void shutdownSocket(Socket socket) {
         if (null == socket) {
             return;
         }
 
         try {
             socket.close();
-        } catch (final IOException ioe) {
+        } catch (IOException ioe) {
         }
     }
 
@@ -750,14 +750,14 @@ public class ClamAVScan extends GenericMailet {
      *
      * @param output A (possibly null) Writer
      */
-    private void shutdownWriter(final Writer output) {
+    private void shutdownWriter(Writer output) {
         if (null == output) {
             return;
         }
 
         try {
             output.close();
-        } catch (final IOException ioe) {
+        } catch (IOException ioe) {
         }
     }
 
@@ -768,14 +768,14 @@ public class ClamAVScan extends GenericMailet {
      *
      * @param input A (possibly null) Reader
      */
-    private void shutdownReader(final Reader input) {
+    private void shutdownReader(Reader input) {
         if (null == input) {
             return;
         }
 
         try {
             input.close();
-        } catch (final IOException ioe) {
+        } catch (IOException ioe) {
         }
     }
 

@@ -48,7 +48,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
     private final int splitCount;
     private final Object lock = new Object();
 
-    public FileSystemBlobStrategy(final BlobTransferPolicy policy, final FileSystem fileSystem, int splitCount) {
+    public FileSystemBlobStrategy(BlobTransferPolicy policy, FileSystem fileSystem, int splitCount) {
         this.fileSystem = fileSystem;
         this.policy = policy;
         this.splitCount = splitCount;

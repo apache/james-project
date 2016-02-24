@@ -31,12 +31,12 @@ import java.io.ObjectStreamClass;
 public class ClassLoaderObjectInputStream extends ObjectInputStream {
     private final ClassLoader m_classLoader;
 
-    public ClassLoaderObjectInputStream(final ClassLoader classLoader, final InputStream inputStream) throws IOException {
+    public ClassLoaderObjectInputStream(ClassLoader classLoader, InputStream inputStream) throws IOException {
         super(inputStream);
         m_classLoader = classLoader;
     }
 
-    protected Class<?> resolveClass(final ObjectStreamClass objectStreamClass) throws IOException, ClassNotFoundException {
+    protected Class<?> resolveClass(ObjectStreamClass objectStreamClass) throws IOException, ClassNotFoundException {
         final Class<?> clazz = Class.forName(objectStreamClass.getName(), false, m_classLoader);
 
         if (null != clazz) {

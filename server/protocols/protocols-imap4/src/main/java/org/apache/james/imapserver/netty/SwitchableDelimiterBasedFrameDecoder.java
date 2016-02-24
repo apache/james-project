@@ -29,12 +29,12 @@ public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDec
 
 	private volatile boolean framingEnabled = true;
 
-	public SwitchableDelimiterBasedFrameDecoder(final int maxFrameLength, final boolean stripDelimiter, final ChannelBuffer... delimiters) {
+	public SwitchableDelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, ChannelBuffer... delimiters) {
 		super(maxFrameLength, stripDelimiter, delimiters);
 	}
 
 	@Override
-	public synchronized void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
+	public synchronized void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
 		if(this.framingEnabled) {
 			super.messageReceived(ctx, e);
 		} else {
@@ -47,7 +47,7 @@ public class SwitchableDelimiterBasedFrameDecoder extends DelimiterBasedFrameDec
 
 	}
 
-	public synchronized void disableFraming(final ChannelHandlerContext ctx) {
+	public synchronized void disableFraming(ChannelHandlerContext ctx) {
 		this.framingEnabled = false;
 		if(this.cumulation != null && this.cumulation.readable()) {
 			final ChannelBuffer spareBytes = this.cumulation.readBytes(this.cumulation.readableBytes());

@@ -34,14 +34,14 @@ public class ResponseEncoder implements Responder {
 
     private IOException failure;
 
-    public ResponseEncoder(final ImapEncoder encoder, final ImapResponseComposer composer, final ImapSession session) {
+    public ResponseEncoder(ImapEncoder encoder, ImapResponseComposer composer, ImapSession session) {
         super();
         this.encoder = encoder;
         this.composer = composer;
         this.session = session;
     }
 
-    public void respond(final ImapResponseMessage message) {
+    public void respond(ImapResponseMessage message) {
         try {
             encoder.encode(message, composer, session);
         } catch (IOException failure) {

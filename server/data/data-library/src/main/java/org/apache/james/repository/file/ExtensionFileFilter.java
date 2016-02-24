@@ -42,15 +42,15 @@ import java.io.FilenameFilter;
 public class ExtensionFileFilter implements FilenameFilter {
     private final String[] m_extensions;
 
-    public ExtensionFileFilter(final String[] extensions) {
+    public ExtensionFileFilter(String[] extensions) {
         m_extensions = extensions;
     }
 
-    public ExtensionFileFilter(final String extension) {
+    public ExtensionFileFilter(String extension) {
         m_extensions = new String[] { extension };
     }
 
-    public boolean accept(final File file, final String name) {
+    public boolean accept(File file, String name) {
         for (String m_extension : m_extensions) {
             if (name.endsWith(m_extension)) {
                 return true;

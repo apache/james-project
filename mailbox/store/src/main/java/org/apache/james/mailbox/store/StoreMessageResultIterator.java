@@ -190,7 +190,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
 
         private long modSeq = -1;
 
-        public UnloadedMessageResult(final MailboxMessage<Id> message, final MailboxException exception) {
+        public UnloadedMessageResult(MailboxMessage<Id> message, MailboxException exception) {
             super();
             internalDate = message.getInternalDate();
             size = message.getFullContentOctets();

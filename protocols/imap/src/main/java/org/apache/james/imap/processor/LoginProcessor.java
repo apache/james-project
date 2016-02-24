@@ -37,7 +37,7 @@ import org.apache.james.mailbox.MailboxManager;
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor{
 
     private final static List<String> LOGINDISABLED_CAPS = Collections.unmodifiableList(Arrays.asList("LOGINDISABLED"));
-    public LoginProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public LoginProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(LoginRequest.class, next, mailboxManager, factory);
     }
 

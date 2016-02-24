@@ -33,7 +33,7 @@ public class RecentResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
-    public boolean isAcceptable(final ImapMessage message) {
+    public boolean isAcceptable(ImapMessage message) {
         return (message instanceof RecentResponse);
     }
 

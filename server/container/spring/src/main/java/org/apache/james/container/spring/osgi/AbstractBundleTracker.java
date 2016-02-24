@@ -138,7 +138,7 @@ public abstract class AbstractBundleTracker implements BeanFactoryAware, BundleL
      * @return factory
      * @throws Exception
      */
-    private BeanFactory getBeanFactory(final BundleContext bundleContext) throws Exception {
+    private BeanFactory getBeanFactory(BundleContext bundleContext) throws Exception {
         final String filter = "(" + OsgiServicePropertiesResolver.BEAN_NAME_PROPERTY_KEY + "=" + bundleContext.getBundle().getSymbolicName() + ")";
         final ServiceReference<?>[] applicationContextRefs = bundleContext.getServiceReferences(ApplicationContext.class.getName(), filter);
         

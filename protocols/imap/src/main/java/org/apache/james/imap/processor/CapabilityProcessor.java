@@ -62,13 +62,13 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     private static final List<CapabilityImplementingProcessor> capabilities = new ArrayList<CapabilityImplementingProcessor>();
     private static final Set<String> disabledCaps = new HashSet<String>();
     
-    public CapabilityProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory, final List<CapabilityImplementingProcessor> capabilities, final Set<String> disabledCaps) {
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<CapabilityImplementingProcessor> capabilities, Set<String> disabledCaps) {
         this(next, mailboxManager, factory, disabledCaps);
         CapabilityProcessor.capabilities.addAll(capabilities);
 
     }
 
-    public CapabilityProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory,final Set<String> disabledCaps) {
+    public CapabilityProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, Set<String> disabledCaps) {
         super(CapabilityRequest.class, next, mailboxManager, factory);
         CapabilityProcessor.disabledCaps.addAll(disabledCaps);
         capabilities.add(this); 

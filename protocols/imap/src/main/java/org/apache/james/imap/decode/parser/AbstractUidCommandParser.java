@@ -28,7 +28,7 @@ import org.apache.james.protocols.imap.DecodingException;
 
 abstract class AbstractUidCommandParser extends AbstractImapCommandParser {
 
-    public AbstractUidCommandParser(final ImapCommand command) {
+    public AbstractUidCommandParser(ImapCommand command) {
         super(command);
     }
 

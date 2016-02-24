@@ -59,7 +59,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
      */
     public synchronized Mailbox<InMemoryId> findMailboxByPath(MailboxPath path) throws MailboxException, MailboxNotFoundException {
         Mailbox<InMemoryId> result = null;
-        for (final Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
+        for (Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
             MailboxPath mp = new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
             if (mp.equals(path)) {
                 result = mailbox;
@@ -79,7 +79,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     public List<Mailbox<InMemoryId>> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         final String regex = path.getName().replace("%", ".*");
         List<Mailbox<InMemoryId>> results = new ArrayList<Mailbox<InMemoryId>>();
-        for (final Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
+        for (Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
             if (mailboxMatchesRegex(mailbox, path, regex)) {
                 results.add(mailbox);
             }
@@ -118,7 +118,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     public boolean hasChildren(Mailbox<InMemoryId> mailbox, char delimiter) throws MailboxException,
             MailboxNotFoundException {
         String mailboxName = mailbox.getName() + delimiter;
-        for (final Mailbox<InMemoryId> box:mailboxesById.values()) {
+        for (Mailbox<InMemoryId> box:mailboxesById.values()) {
             if (box.getName().startsWith(mailboxName)) {
                 return true;
             }

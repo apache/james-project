@@ -171,7 +171,7 @@ public class SearchCommandParserCharsetTest {
                 true, "US-ASCII");
     }
 
-    private void checkUTF8Valid(byte[] term, final SearchKey key)
+    private void checkUTF8Valid(byte[] term, SearchKey key)
             throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(NioUtils.add(NioUtils.add(CHARSET,
@@ -181,7 +181,7 @@ public class SearchCommandParserCharsetTest {
         assertEquals(key, searchKey);
     }
 
-    private void checkValid(String input, final SearchKey key, boolean isFirst,
+    private void checkValid(String input, SearchKey key, boolean isFirst,
             String charset) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes(charset)),

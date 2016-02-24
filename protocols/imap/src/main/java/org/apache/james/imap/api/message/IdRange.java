@@ -129,7 +129,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange>{
      * @param ranges
      * @return mergedRanges
      */
-    public static List<IdRange> mergeRanges(final List<IdRange> ranges) {
+    public static List<IdRange> mergeRanges(List<IdRange> ranges) {
         List<IdRange> copy = new ArrayList<IdRange>(ranges);
         Collections.sort(copy);
 

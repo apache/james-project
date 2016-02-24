@@ -55,7 +55,7 @@ public interface MailboxListener {
      * @param event
      *            not null
      */
-    void event(final Event event);
+    void event(Event event);
 
     /**
      * A mailbox event.
@@ -65,7 +65,7 @@ public interface MailboxListener {
         private final MailboxSession session;
         private final MailboxPath path;
 
-        public Event(final MailboxSession session, final MailboxPath path) {
+        public Event(MailboxSession session, MailboxPath path) {
             this.session = session;
             this.path = path;
         }
@@ -100,7 +100,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
-        public MailboxDeletion(final MailboxSession session, MailboxPath path) {
+        public MailboxDeletion(MailboxSession session, MailboxPath path) {
             super(session, path);
         }
     }
@@ -114,7 +114,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
-        public MailboxAdded(final MailboxSession session, MailboxPath path) {
+        public MailboxAdded(MailboxSession session, MailboxPath path) {
             super(session, path);
         }
     }
@@ -128,7 +128,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
-        public MailboxRenamed(final MailboxSession session, MailboxPath path) {
+        public MailboxRenamed(MailboxSession session, MailboxPath path) {
             super(session, path);
         }
 

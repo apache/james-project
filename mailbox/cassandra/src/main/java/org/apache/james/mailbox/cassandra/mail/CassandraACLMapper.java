@@ -86,7 +86,7 @@ public class CassandraACLMapper {
         return deserializeACL(serializedACL);
     }
 
-    public void updateACL(final MailboxACL.MailboxACLCommand command) throws MailboxException {
+    public void updateACL(MailboxACL.MailboxACLCommand command) throws MailboxException {
         try {
             new FunctionRunnerWithRetry(maxRetry).execute(
                 () -> {

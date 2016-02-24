@@ -45,7 +45,7 @@ public class LazyMimeDescriptor implements MimeDescriptor{
     private final MessageResult result;
     private PropertyBuilder pbuilder;
     
-    public LazyMimeDescriptor(final MessageResult result, final Message message) {
+    public LazyMimeDescriptor(MessageResult result, Message message) {
         this.message = message;
         this.result = result;
     }

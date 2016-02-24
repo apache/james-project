@@ -136,7 +136,7 @@ public final class MailboxQuery {
      * @param pathDelimiter
      *            path delimiter to use
      */
-    public MailboxQuery(final MailboxPath base, final String expression, final char pathDelimiter) {
+    public MailboxQuery(MailboxPath base, String expression, char pathDelimiter) {
         super();
         this.base = base;
         if (base.getName() == null)

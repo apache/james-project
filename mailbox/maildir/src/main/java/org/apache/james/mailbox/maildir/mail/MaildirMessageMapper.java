@@ -170,7 +170,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper<MaildirId> {
      *      org.apache.james.mailbox.model.MessageRange)
      */
     @Override
-    public Iterator<UpdatedFlags> updateFlags(final Mailbox<MaildirId> mailbox, final FlagsUpdateCalculator flagsUpdateCalculator, final MessageRange set) throws MailboxException {
+    public Iterator<UpdatedFlags> updateFlags(Mailbox<MaildirId> mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();
         final MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
 

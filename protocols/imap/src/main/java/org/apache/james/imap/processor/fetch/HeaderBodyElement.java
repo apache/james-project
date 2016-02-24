@@ -34,7 +34,7 @@ import org.apache.james.mailbox.model.MessageResult;
  */
 public class HeaderBodyElement extends MimeBodyElement {
 
-    public HeaderBodyElement(final String name, final List<MessageResult.Header> headers) throws MailboxException {
+    public HeaderBodyElement(String name, List<MessageResult.Header> headers) throws MailboxException {
         super(name, headers);
     }
 

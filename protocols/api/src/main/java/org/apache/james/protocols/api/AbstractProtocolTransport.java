@@ -48,7 +48,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport{
     /**
      * @see org.apache.james.protocols.api.ProtocolTransport#writeResponse(org.apache.james.protocols.api.Response, org.apache.james.protocols.api.ProtocolSession)
      */
-    public final void writeResponse(Response response, final ProtocolSession session) {
+    public final void writeResponse(Response response, ProtocolSession session) {
         // if we already in asynchrnous mode we simply enqueue the response
         // we do this synchronously because we may have a dequeuer thread working on
         // isAsync and responses.
@@ -80,7 +80,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport{
      * 
      * @param session
      */
-    private  void writeQueuedResponses(final ProtocolSession session) {
+    private  void writeQueuedResponses(ProtocolSession session) {
         
         // dequeue Responses until non is left
         while (true) {

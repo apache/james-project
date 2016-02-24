@@ -51,7 +51,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
     @SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
 
-    public JCRSubscriptionMapper(final MailboxSessionJCRRepository repos, MailboxSession session, final int scaling) {
+    public JCRSubscriptionMapper(MailboxSessionJCRRepository repos, MailboxSession session, int scaling) {
         super(repos,session, scaling);
     }
 

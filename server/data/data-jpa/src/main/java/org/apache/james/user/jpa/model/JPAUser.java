@@ -87,7 +87,7 @@ public class JPAUser implements User {
     protected JPAUser() {
     }
 
-    public JPAUser(final String userName, String password, String alg) {
+    public JPAUser(String userName, String password, String alg) {
         super();
         this.name = userName;
         this.alg = alg;

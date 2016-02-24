@@ -26,7 +26,7 @@ public class EnableRequest extends AbstractImapRequest{
 
     private final List<String> capabilities;
 
-    public EnableRequest(final String tag, final ImapCommand command, List<String> capabilities) {
+    public EnableRequest(String tag, ImapCommand command, List<String> capabilities) {
         super(tag, command);
         this.capabilities = capabilities;
     }

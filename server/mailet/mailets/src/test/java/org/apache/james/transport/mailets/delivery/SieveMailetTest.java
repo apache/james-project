@@ -774,7 +774,7 @@ public class SieveMailetTest {
         verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
     }
 
-    private void prepareTestUsingScript(final String script) throws Exception {
+    private void prepareTestUsingScript(String script) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(sieveRepository.getActive("receiver")).thenReturn(ClassLoader.getSystemResourceAsStream(script));
         sieveMailet.init(fakeMailetConfig);

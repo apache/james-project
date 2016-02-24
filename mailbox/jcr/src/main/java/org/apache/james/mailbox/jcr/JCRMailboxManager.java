@@ -41,11 +41,11 @@ public class JCRMailboxManager extends StoreMailboxManager<JCRId> implements JCR
 
     private final Logger logger = LoggerFactory.getLogger(JCRMailboxManager.class);
     
-    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, final Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
+    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
 	    this(mapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
     }
 
-    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, final Authenticator authenticator, final MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
+    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver);
     }
 

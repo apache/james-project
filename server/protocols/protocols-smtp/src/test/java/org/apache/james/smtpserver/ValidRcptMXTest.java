@@ -41,7 +41,7 @@ public class ValidRcptMXTest {
     private final static String INVALID_MX = "mx." + INVALID_HOST;
     private final static String LOOPBACK = "127.0.0.1";
 
-    private SMTPSession setupMockedSMTPSession(final MailAddress rcpt) {
+    private SMTPSession setupMockedSMTPSession(MailAddress rcpt) {
         return new BaseFakeSMTPSession() {
 
             private final HashMap<String, Object> sstate = new HashMap<String, Object>();

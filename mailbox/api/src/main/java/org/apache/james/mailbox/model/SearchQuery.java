@@ -520,7 +520,7 @@ public class SearchQuery implements Serializable {
      *            false otherwise
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagSet(final Flag flag, final boolean isSet) {
+    public static final Criterion flagSet(Flag flag, boolean isSet) {
         final Criterion result;
         if (isSet) {
             result = flagIsSet(flag);
@@ -538,7 +538,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsSet(final Flag flag) {
+    public static final Criterion flagIsSet(Flag flag) {
         return new FlagCriterion(flag, BooleanOperator.set());
     }
 
@@ -550,7 +550,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsUnSet(final Flag flag) {
+    public static final Criterion flagIsUnSet(Flag flag) {
         return new FlagCriterion(flag, BooleanOperator.unset());
     }
 
@@ -564,7 +564,7 @@ public class SearchQuery implements Serializable {
      *            false otherwise
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagSet(final String flag, final boolean isSet) {
+    public static final Criterion flagSet(String flag, boolean isSet) {
         final Criterion result;
         if (isSet) {
             result = flagIsSet(flag);
@@ -582,7 +582,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsSet(final String flag) {
+    public static final Criterion flagIsSet(String flag) {
         return new CustomFlagCriterion(flag, BooleanOperator.set());
     }
 
@@ -594,7 +594,7 @@ public class SearchQuery implements Serializable {
      *            <code>Flag</code>, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion flagIsUnSet(final String flag) {
+    public static final Criterion flagIsUnSet(String flag) {
         return new CustomFlagCriterion(flag, BooleanOperator.unset());
     }
 
@@ -663,7 +663,7 @@ public class SearchQuery implements Serializable {
      * @param uids
      *            not null
      */
-    public void addRecentMessageUids(final Collection<Long> uids) {
+    public void addRecentMessageUids(Collection<Long> uids) {
         recentMessageUids.addAll(uids);
     }
 
@@ -715,13 +715,13 @@ public class SearchQuery implements Serializable {
 
         private final long highValue;
 
-        public NumericRange(final long value) {
+        public NumericRange(long value) {
             super();
             this.lowValue = value;
             this.highValue = value;
         }
 
-        public NumericRange(final long lowValue, final long highValue) {
+        public NumericRange(long lowValue, long highValue) {
             super();
             this.lowValue = lowValue;
             this.highValue = highValue;
@@ -815,7 +815,7 @@ public class SearchQuery implements Serializable {
 
         private final List<Criterion> criteria;
 
-        public ConjunctionCriterion(final Conjunction type, final List<Criterion> criteria) {
+        public ConjunctionCriterion(Conjunction type, List<Criterion> criteria) {
             super();
             this.type = type;
             this.criteria = criteria;
@@ -942,7 +942,7 @@ public class SearchQuery implements Serializable {
 
         private final ContainsOperator operator;
 
-        private TextCriterion(final String value, final Scope type) {
+        private TextCriterion(String value, Scope type) {
             super();
             this.operator = new ContainsOperator(value);
             this.type = type;
@@ -1027,7 +1027,7 @@ public class SearchQuery implements Serializable {
 
         private final String headerName;
 
-        private HeaderCriterion(final String headerName, final HeaderOperator operator) {
+        private HeaderCriterion(String headerName, HeaderOperator operator) {
             super();
             this.operator = operator;
             this.headerName = headerName;
@@ -1115,7 +1115,7 @@ public class SearchQuery implements Serializable {
 
         private final DateOperator operator;
 
-        public InternalDateCriterion(final DateOperator operator) {
+        public InternalDateCriterion(DateOperator operator) {
             super();
             this.operator = operator;
         }
@@ -1186,7 +1186,7 @@ public class SearchQuery implements Serializable {
 
         private final NumericOperator operator;
 
-        private ModSeqCriterion(final NumericOperator operator) {
+        private ModSeqCriterion(NumericOperator operator) {
             super();
             this.operator = operator;
         }
@@ -1253,7 +1253,7 @@ public class SearchQuery implements Serializable {
 
         private final NumericOperator operator;
 
-        private SizeCriterion(final NumericOperator operator) {
+        private SizeCriterion(NumericOperator operator) {
             super();
             this.operator = operator;
         }
@@ -1325,7 +1325,7 @@ public class SearchQuery implements Serializable {
 
         private final BooleanOperator operator;
 
-        private CustomFlagCriterion(final String flag, final BooleanOperator operator) {
+        private CustomFlagCriterion(String flag, BooleanOperator operator) {
             super();
             this.flag = flag;
             this.operator = operator;
@@ -1414,7 +1414,7 @@ public class SearchQuery implements Serializable {
         private final Flags flag;        
         private final BooleanOperator operator;
 
-        private FlagCriterion(final Flag flag, final BooleanOperator operator) {
+        private FlagCriterion(Flag flag, BooleanOperator operator) {
             super();
             this.flag = new Flags(flag);
             this.operator = operator;
@@ -1504,7 +1504,7 @@ public class SearchQuery implements Serializable {
 
         private final InOperator operator;
 
-        public UidCriterion(final NumericRange[] ranges) {
+        public UidCriterion(NumericRange[] ranges) {
             super();
             this.operator = new InOperator(ranges);
         }
@@ -1584,7 +1584,7 @@ public class SearchQuery implements Serializable {
 
         private final String address;
 
-        public AddressOperator(final String address) {
+        public AddressOperator(String address) {
             super();
             this.address = address;
         }
@@ -1654,7 +1654,7 @@ public class SearchQuery implements Serializable {
 
         private final String value;
 
-        public ContainsOperator(final String value) {
+        public ContainsOperator(String value) {
             super();
             this.value = value;
         }
@@ -1774,7 +1774,7 @@ public class SearchQuery implements Serializable {
 
         private final boolean set;
 
-        private BooleanOperator(final boolean set) {
+        private BooleanOperator(boolean set) {
             super();
             this.set = set;
         }
@@ -1849,7 +1849,7 @@ public class SearchQuery implements Serializable {
 
         private final NumericComparator type;
 
-        private NumericOperator(final long value, final NumericComparator type) {
+        private NumericOperator(long value, NumericComparator type) {
             super();
             this.value = value;
             this.type = type;
@@ -1943,7 +1943,7 @@ public class SearchQuery implements Serializable {
 
         private final DateResolution res;
 
-        public DateOperator(final DateComparator type, final Date date, final DateResolution res) {
+        public DateOperator(DateComparator type, Date date, DateResolution res) {
             super();
             this.type = type;
             this.date = date;
@@ -2029,7 +2029,7 @@ public class SearchQuery implements Serializable {
 
         private final NumericRange[] range;
 
-        public InOperator(final NumericRange[] range) {
+        public InOperator(NumericRange[] range) {
             super();
             this.range = range;
         }

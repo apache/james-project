@@ -66,7 +66,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
      *            not null
      * @return personal namespaces, not null
      */
-    private List<NamespaceResponse.Namespace> buildPersonalNamespaces(final MailboxSession mailboxSession, ImapSession session) {
+    private List<NamespaceResponse.Namespace> buildPersonalNamespaces(MailboxSession mailboxSession, ImapSession session) {
         final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<NamespaceResponse.Namespace>();
         String personal = "";
         if (session.supportMultipleNamespaces()) {
@@ -76,7 +76,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         return personalSpaces;
     }
 
-    private List<NamespaceResponse.Namespace> buildOtherUsersSpaces(final MailboxSession mailboxSession,  ImapSession session) {
+    private List<NamespaceResponse.Namespace> buildOtherUsersSpaces(MailboxSession mailboxSession,  ImapSession session) {
         final String otherUsersSpace = mailboxSession.getOtherUsersSpace();
         final List<NamespaceResponse.Namespace> otherUsersSpaces;
         if (session.supportMultipleNamespaces() == false || otherUsersSpace == null) {
@@ -88,7 +88,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         return otherUsersSpaces;
     }
 
-    private List<NamespaceResponse.Namespace> buildSharedNamespaces(final MailboxSession mailboxSession,  ImapSession session) {
+    private List<NamespaceResponse.Namespace> buildSharedNamespaces(MailboxSession mailboxSession,  ImapSession session) {
         List<NamespaceResponse.Namespace> sharedNamespaces = null;
         final Collection<String> sharedSpaces = mailboxSession.getSharedSpaces();
         if (session.supportMultipleNamespaces() && !sharedSpaces.isEmpty()) {

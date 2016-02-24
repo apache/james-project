@@ -25,7 +25,7 @@ public final class RecentResponse implements ImapResponseMessage {
 
     private final int numberFlaggedRecent;
 
-    public RecentResponse(final int numberFlaggedRecent) {
+    public RecentResponse(int numberFlaggedRecent) {
         super();
         this.numberFlaggedRecent = numberFlaggedRecent;
     }

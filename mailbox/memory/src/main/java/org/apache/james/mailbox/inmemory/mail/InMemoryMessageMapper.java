@@ -106,7 +106,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
             break;
         case FROM:
             results = new ArrayList<MailboxMessage<InMemoryId>>(getMembershipByUidForMailbox(mailbox).values());
-            for (final Iterator<MailboxMessage<InMemoryId>> it = results.iterator(); it.hasNext();) {
+            for (Iterator<MailboxMessage<InMemoryId>> it = results.iterator(); it.hasNext();) {
                 if (it.next().getUid() < set.getUidFrom()) {
                     it.remove();
                 }
@@ -114,7 +114,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
             break;
         case RANGE:
             results = new ArrayList<MailboxMessage<InMemoryId>>(getMembershipByUidForMailbox(mailbox).values());
-            for (final Iterator<MailboxMessage<InMemoryId>> it = results.iterator(); it.hasNext();) {
+            for (Iterator<MailboxMessage<InMemoryId>> it = results.iterator(); it.hasNext();) {
                 final long uid = it.next().getUid();
                 if (uid < set.getUidFrom() || uid > set.getUidTo()) {
                     it.remove();
@@ -170,7 +170,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
     }
 
     @Override
-    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox<InMemoryId> mailbox, MessageRange set)
+    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox<InMemoryId> mailbox, MessageRange set)
             throws MailboxException {
         final Map<Long, MessageMetaData> filteredResult = new HashMap<Long, MessageMetaData>();
 

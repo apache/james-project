@@ -61,7 +61,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
      */
     private final static ImapCommand CONDSTORE_COMMAND = ImapCommand.selectedStateCommand("Conditional STORE");
     
-    public StoreProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public StoreProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(StoreRequest.class, next, mailboxManager, factory);
     }
 

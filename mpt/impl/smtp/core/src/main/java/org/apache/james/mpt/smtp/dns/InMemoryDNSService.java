@@ -61,7 +61,7 @@ public class InMemoryDNSService implements DNSService {
     }
 
     @Override
-    public Collection<String> findMXRecords(final String hostname) throws TemporaryResolutionException {
+    public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
         return hostRecord(hostname).mxRecords;
     }
 

@@ -51,11 +51,11 @@ public final class ExternalSession implements Session {
 
     private final String shabang;
 
-    public ExternalSession(final SocketChannel socket, final Monitor monitor, String shabang) {
+    public ExternalSession(SocketChannel socket, Monitor monitor, String shabang) {
         this(socket, monitor, shabang, false);
     }
 
-    public ExternalSession(final SocketChannel socket, final Monitor monitor, String shabang, boolean debug) {
+    public ExternalSession(SocketChannel socket, Monitor monitor, String shabang, boolean debug) {
         super();
         this.socket = socket;
         this.monitor = monitor;

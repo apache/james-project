@@ -36,7 +36,7 @@ public class MailetLoaderBeanFactory extends AbstractLoaderBeanFactory<Mailet> i
     /**
      * @see org.apache.james.mailetcontainer.api.MailetLoader#getMailet(org.apache.mailet.MailetConfig)
      */
-    public Mailet getMailet(final MailetConfig config) throws MessagingException {
+    public Mailet getMailet(MailetConfig config) throws MessagingException {
         String mailetName = config.getMailetName();
 
         try {

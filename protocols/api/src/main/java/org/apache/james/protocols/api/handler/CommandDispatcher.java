@@ -148,7 +148,7 @@ public class CommandDispatcher<Session extends ProtocolSession> implements Exten
      * (non-Javadoc)
      * @see org.apache.james.protocols.api.handler.LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
      */
-    public Response onLine(final Session session, ByteBuffer line) {
+    public Response onLine(Session session, ByteBuffer line) {
         
         try {
             

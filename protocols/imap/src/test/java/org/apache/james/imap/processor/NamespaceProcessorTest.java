@@ -142,7 +142,7 @@ public class NamespaceProcessorTest {
         subject.doProcess(namespaceRequest, responderMock, imapSessionStub);
     }
 
-    private NamespaceResponse buildResponse(final List<NamespaceResponse.Namespace> sharedSpaces) {
+    private NamespaceResponse buildResponse(List<NamespaceResponse.Namespace> sharedSpaces) {
        
         final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<NamespaceResponse.Namespace>();
         personalSpaces.add(new NamespaceResponse.Namespace(PERSONAL_PREFIX, MailboxConstants.DEFAULT_DELIMITER));

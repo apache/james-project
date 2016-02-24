@@ -52,7 +52,7 @@ import org.apache.james.mailbox.model.MessageResultIterator;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
-    public FetchProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public FetchProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(FetchRequest.class, next, mailboxManager, factory);
     }
 
@@ -63,7 +63,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
      * org.apache.james.imap.api.ImapCommand,
      * org.apache.james.imap.api.process.ImapProcessor.Responder)
      */
-    protected void doProcess(FetchRequest request, final ImapSession session, String tag, ImapCommand command, final Responder responder) {
+    protected void doProcess(FetchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final boolean useUids = request.isUseUids();
         final IdRange[] idSet = request.getIdSet();
         final FetchData fetch = request.getFetch();
@@ -151,7 +151,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
      * @param responder
      * @throws MailboxException
      */
-    protected void processMessageRanges(final ImapSession session, final MessageManager mailbox, final List<MessageRange> ranges, final FetchData fetch, final boolean useUids, final MailboxSession mailboxSession, final Responder responder) throws MailboxException {
+    protected void processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder) throws MailboxException {
         final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder(session.getLog()));
         FetchGroup resultToFetch = getFetchGroup(fetch);
 
@@ -205,7 +205,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
         if (bodyElements != null) {
-            for (final BodyFetchElement element : bodyElements) {
+            for (BodyFetchElement element : bodyElements) {
                 final int sectionType = element.getSectionType();
                 final int[] path = element.getPath();
                 final boolean isBase = (path == null || path.length == 0);
@@ -237,7 +237,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         return result;
     }
 
-    private void addContent(FetchGroupImpl result, final int[] path, final boolean isBase, final int content) {
+    private void addContent(FetchGroupImpl result, int[] path, boolean isBase, int content) {
         if (isBase) {
             result.or(content);
         } else {

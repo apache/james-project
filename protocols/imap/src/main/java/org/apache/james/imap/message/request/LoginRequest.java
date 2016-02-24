@@ -29,7 +29,7 @@ public class LoginRequest extends AbstractImapRequest {
 
     private final String password;
 
-    public LoginRequest(final ImapCommand command, final String userid, final String password, String tag) {
+    public LoginRequest(ImapCommand command, String userid, String password, String tag) {
         super(tag, command);
         this.userid = userid;
         this.password = password;

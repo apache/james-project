@@ -61,7 +61,7 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
     private final SharedInputStream content;
 
-    public JPAStreamingMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, final PropertyBuilder propertyBuilder) throws MailboxException {
+    public JPAStreamingMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
         this.content = content;
 

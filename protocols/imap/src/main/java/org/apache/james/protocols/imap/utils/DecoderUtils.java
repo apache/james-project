@@ -64,7 +64,7 @@ public final class DecoderUtils {
 
     private static final int ALL_MONTH_BITS = JAN_BIT | FEB_BIT | MAR_BIT | APR_BIT | MAY_BIT | JUN_BIT | JUL_BIT | AUG_BIT | SEP_BIT | OCT_BIT | NOV_BIT | DEC_BIT;
 
-    public static void setFlag(final String flagString, final Flags flags) throws DecodingException{
+    public static void setFlag(String flagString, Flags flags) throws DecodingException{
         if (flagString.equalsIgnoreCase(MessageFlags.ANSWERED_ALL_CAPS)) {
             flags.add(Flags.Flag.ANSWERED);
         } else if (flagString.equalsIgnoreCase(MessageFlags.DELETED_ALL_CAPS)) {
@@ -102,41 +102,41 @@ public final class DecoderUtils {
      */
     public static Date decodeDateTime(CharSequence chars) throws DecodingException {
         if (isDateTime(chars)) {
-            final char dayHigh = chars.charAt(0);
-            final char dayLow = chars.charAt(1);
-            final int day = decodeFixedDay(dayHigh, dayLow);
+            char dayHigh = chars.charAt(0);
+            char dayLow = chars.charAt(1);
+            int day = decodeFixedDay(dayHigh, dayLow);
 
-            final char monthFirstChar = chars.charAt(3);
-            final char monthSecondChar = chars.charAt(4);
-            final char monthThirdChar = chars.charAt(5);
-            final int month = decodeMonth(monthFirstChar, monthSecondChar, monthThirdChar);
+            char monthFirstChar = chars.charAt(3);
+            char monthSecondChar = chars.charAt(4);
+            char monthThirdChar = chars.charAt(5);
+            int month = decodeMonth(monthFirstChar, monthSecondChar, monthThirdChar);
 
-            final char milleniumChar = chars.charAt(7);
-            final char centuryChar = chars.charAt(8);
-            final char decadeChar = chars.charAt(9);
-            final char yearChar = chars.charAt(10);
-            final int year = decodeYear(milleniumChar, centuryChar, decadeChar, yearChar);
+            char milleniumChar = chars.charAt(7);
+            char centuryChar = chars.charAt(8);
+            char decadeChar = chars.charAt(9);
+            char yearChar = chars.charAt(10);
+            int year = decodeYear(milleniumChar, centuryChar, decadeChar, yearChar);
 
-            final char zoneDeterminent = chars.charAt(21);
-            final char zoneDigitOne = chars.charAt(22);
-            final char zoneDigitTwo = chars.charAt(23);
-            final char zoneDigitThree = chars.charAt(24);
-            final char zoneDigitFour = chars.charAt(25);
-            final int offset = decodeZone(zoneDeterminent, zoneDigitOne, zoneDigitTwo, zoneDigitThree, zoneDigitFour);
+            char zoneDeterminent = chars.charAt(21);
+            char zoneDigitOne = chars.charAt(22);
+            char zoneDigitTwo = chars.charAt(23);
+            char zoneDigitThree = chars.charAt(24);
+            char zoneDigitFour = chars.charAt(25);
+            int offset = decodeZone(zoneDeterminent, zoneDigitOne, zoneDigitTwo, zoneDigitThree, zoneDigitFour);
 
-            final char hourHigh = chars.charAt(12);
-            final char hourLow = chars.charAt(13);
-            final int hour = applyHourOffset(offset, decodeNumber(hourHigh, hourLow));
+            char hourHigh = chars.charAt(12);
+            char hourLow = chars.charAt(13);
+            int hour = applyHourOffset(offset, decodeNumber(hourHigh, hourLow));
 
-            final char minuteHigh = chars.charAt(15);
-            final char minuteLow = chars.charAt(16);
-            final int minute = applyMinuteOffset(offset, decodeNumber(minuteHigh, minuteLow));
+            char minuteHigh = chars.charAt(15);
+            char minuteLow = chars.charAt(16);
+            int minute = applyMinuteOffset(offset, decodeNumber(minuteHigh, minuteLow));
 
-            final char secondHigh = chars.charAt(18);
-            final char secondLow = chars.charAt(19);
-            final int second = decodeNumber(secondHigh, secondLow);
+            char secondHigh = chars.charAt(18);
+            char secondLow = chars.charAt(19);
+            int second = decodeNumber(secondHigh, secondLow);
 
-            final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.US);
+            GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.US);
             calendar.clear();
             calendar.set(year, month, day, hour, minute, second);
             return calendar.getTime();
@@ -154,7 +154,7 @@ public final class DecoderUtils {
     }
 
     private static boolean isDateTime(CharSequence chars) {
-        final boolean result;
+        boolean result;
         if (chars == null) {
             result = false;
         } else if (chars.length() < 20) {
@@ -166,15 +166,15 @@ public final class DecoderUtils {
         return result;
     }
 
-    private static int applyMinuteOffset(final int offset, final int minutes) {
+    private static int applyMinuteOffset(int offset, int minutes) {
         return minutes - ((Math.abs(offset) % 100) * (offset == 0 ? 0 : offset > 0 ? 1 : -1));
     }
 
-    private static int applyHourOffset(final int offset, final int hours) {
+    private static int applyHourOffset(int offset, int hours) {
         return hours - (offset / 100);
     }
 
-    public static int decodeNumber(final char high, final char low) throws DecodingException {
+    public static int decodeNumber(char high, char low) throws DecodingException {
         return (10 * decodeDigit(high)) + decodeDigit(low);
     }
 
@@ -182,7 +182,7 @@ public final class DecoderUtils {
         if (isInvalidZone(zoneDeterminent, zoneDigitOne, zoneDigitTwo, zoneDigitThree, zoneDigitFour)) {
             throw createTimeZoneException(zoneDeterminent, zoneDigitOne, zoneDigitTwo, zoneDigitThree, zoneDigitFour);
         }
-        final int sign;
+        int sign;
         if (zoneDeterminent == '+') {
             sign = 1;
         } else if (zoneDeterminent == '-') {
@@ -232,7 +232,7 @@ public final class DecoderUtils {
      * @return {@link Calendar} year
      * @throws DecodingException
      */
-    public static int decodeYear(final char milleniumChar, final char centuryChar, final char decadeChar, final char yearChar) throws DecodingException {
+    public static int decodeYear(char milleniumChar, char centuryChar, char decadeChar, char yearChar) throws DecodingException {
         return (decodeDigit(milleniumChar) * 1000) + (decodeDigit(centuryChar) * 100) + (decodeDigit(decadeChar) * 10) + decodeDigit(yearChar);
     }
 
@@ -248,7 +248,7 @@ public final class DecoderUtils {
      * @return {@link Calendar} month (<code>JAN</code>=0)
      * @throws DecodingException
      */
-    public static int decodeMonth(final char monthFirstChar, final char monthSecondChar, final char monthThirdChar) throws DecodingException {
+    public static int decodeMonth(char monthFirstChar, char monthSecondChar, char monthThirdChar) throws DecodingException {
         final int result;
         // Bitwise magic! Eliminate possibility by three switches
         int possibleMonths = ALL_MONTH_BITS;
@@ -406,7 +406,7 @@ public final class DecoderUtils {
         return result;
     }
 
-    public static int decodeFixedDay(final char dayHigh, final char dayLow) throws DecodingException {
+    public static int decodeFixedDay(char dayHigh, char dayLow) throws DecodingException {
         int result = decodeDigit(dayLow);
         switch (dayHigh) {
         case '0':

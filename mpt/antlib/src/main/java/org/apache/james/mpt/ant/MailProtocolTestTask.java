@@ -240,7 +240,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
             scripts.add(new FileResource(script));
         }
         
-        for (final Iterator<?> it = scripts.iterator(); it.hasNext();) {
+        for (Iterator<?> it = scripts.iterator(); it.hasNext();) {
             final Resource resource = (Resource) it.next();
             try {
                 final Runner runner = new Runner();

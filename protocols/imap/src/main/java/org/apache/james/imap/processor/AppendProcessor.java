@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 
 public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
-    public AppendProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory statusResponseFactory) {
+    public AppendProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory) {
         super(AppendRequest.class, next, mailboxManager, statusResponseFactory);
     }
 
@@ -126,7 +126,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
 
-    private void appendToMailbox(final InputStream message, final Date datetime, final Flags flagsToBeSet, final ImapSession session, final String tag, final ImapCommand command, final MessageManager mailbox, Responder responder, final MailboxPath mailboxPath) {
+    private void appendToMailbox(InputStream message, Date datetime, Flags flagsToBeSet, ImapSession session, String tag, ImapCommand command, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
         try {
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
             final SelectedMailbox selectedMailbox = session.getSelected();

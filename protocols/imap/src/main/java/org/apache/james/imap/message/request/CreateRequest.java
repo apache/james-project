@@ -27,7 +27,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 public class CreateRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public CreateRequest(final ImapCommand command, final String mailboxName, final String tag) {
+    public CreateRequest(ImapCommand command, String mailboxName, String tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
     }

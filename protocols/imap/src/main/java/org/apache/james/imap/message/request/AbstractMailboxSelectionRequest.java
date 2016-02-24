@@ -37,7 +37,7 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
     private final IdRange[] knownUidSet;
     private final IdRange[] knownSequenceSet;
 
-    public AbstractMailboxSelectionRequest(final ImapCommand command, final String mailboxName, final boolean condstore, final Long lastKnownUidValidity, final Long knownModSeq, final IdRange[] uidSet, final IdRange[] knownUidSet, final IdRange[] knownSequenceSet, final String tag) {
+    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, IdRange[] uidSet, IdRange[] knownUidSet, IdRange[] knownSequenceSet, String tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
         this.condstore = condstore;

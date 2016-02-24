@@ -45,7 +45,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     private final boolean modSeqPermanent;
     private final MailboxACL acl;
 
-    public MailboxMetaData(final List<Long> recent, final Flags premanentFlags, final long uidValidity, final long nextUid, final long highestModSeq, final long messageCount, final long unseenCount, final Long firstUnseen, final boolean writeable, final boolean modSeqPermanent, MailboxACL acl) {
+    public MailboxMetaData(List<Long> recent, Flags premanentFlags, long uidValidity, long nextUid, long highestModSeq, long messageCount, long unseenCount, Long firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         super();
         if (recent == null) {
             this.recent = new ArrayList<Long>();

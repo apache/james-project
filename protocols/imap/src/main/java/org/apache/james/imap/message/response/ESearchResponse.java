@@ -36,7 +36,7 @@ public class ESearchResponse implements ImapResponseMessage{
     private final List<SearchResultOption> options;
     private final Long highestModSeq;
 
-    public ESearchResponse(final long minUid, final long maxUid, final long count, final IdRange[] all, final Long highestModSeq, String tag, final boolean useUid, final List<SearchResultOption> options) {
+    public ESearchResponse(long minUid, long maxUid, long count, IdRange[] all, Long highestModSeq, String tag, boolean useUid, List<SearchResultOption> options) {
         super();
         this.options = options;
         this.minUid = minUid;

@@ -45,7 +45,7 @@ public class XListProcessor extends ListProcessor implements CapabilityImplement
     private final MailboxTyper mailboxTyper;
 
     // some interface
-    public XListProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory, final MailboxTyper mailboxTyper) {
+    public XListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper) {
         super(next, mailboxManager, factory);
         this.mailboxTyper = mailboxTyper;
     }

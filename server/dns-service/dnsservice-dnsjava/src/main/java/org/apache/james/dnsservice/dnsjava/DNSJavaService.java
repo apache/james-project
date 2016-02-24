@@ -118,7 +118,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
     @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 
-        final boolean autodiscover = configuration.getBoolean("autodiscover", true);
+        boolean autodiscover = configuration.getBoolean("autodiscover", true);
 
         List<Name> sPaths = new ArrayList<Name>();
         if (autodiscover) {
@@ -164,7 +164,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, LogEnabled, 
             dnsServers.add("127.0.0.1");
         }
 
-        final boolean authoritative = configuration.getBoolean("authoritative", false);
+        boolean authoritative = configuration.getBoolean("authoritative", false);
         // TODO: Check to see if the credibility field is being used correctly.
         // From the
         // docs I don't think so

@@ -31,7 +31,7 @@ class MailboxUser {
 
     private final Set<String> subscriptions;
 
-    public MailboxUser(final String userName) {
+    public MailboxUser(String userName) {
         this.userName = userName;
         this.subscriptions = new HashSet<String>();
     }

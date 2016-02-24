@@ -71,7 +71,7 @@ public class ValidRcptHandlerTest {
         });
     }
 
-    private SMTPSession setupMockedSMTPSession(final SMTPConfiguration conf, final MailAddress rcpt,
+    private SMTPSession setupMockedSMTPSession(SMTPConfiguration conf, MailAddress rcpt,
                                                final boolean relayingAllowed) {
 
         return new BaseFakeSMTPSession() {

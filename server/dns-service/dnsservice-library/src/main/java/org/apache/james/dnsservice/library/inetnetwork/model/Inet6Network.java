@@ -50,7 +50,7 @@ public class Inet6Network implements InetNetwork {
     }
 
     @Override
-    public boolean contains(final InetAddress ip) {
+    public boolean contains(InetAddress ip) {
         if (!InetNetworkBuilder.isV6(ip.getHostAddress())) {
             return false;
         }
@@ -76,7 +76,7 @@ public class Inet6Network implements InetNetwork {
         return (obj != null) && (obj instanceof InetNetwork) && ((((Inet6Network) obj).network.equals(network)) && (((Inet6Network) obj).netmask.equals(netmask)));
     }
 
-    private static InetAddress maskIP(final InetAddress ip, Integer mask) {
+    private static InetAddress maskIP(InetAddress ip, Integer mask) {
         byte[] maskBytes = new byte[16];
         int i = 0;
         while (mask > 0) {
@@ -95,7 +95,7 @@ public class Inet6Network implements InetNetwork {
      * @param mask the byte[] represent the netmask
      * @return inetAddress the InetAddress generated of the passed arguments.
      */
-    private static InetAddress maskIP(final byte[] ip, final byte[] mask) {
+    private static InetAddress maskIP(byte[] ip, byte[] mask) {
         if (ip.length != mask.length) {
             throw new IllegalArgumentException("IP address and mask must be of the same length.");
         }

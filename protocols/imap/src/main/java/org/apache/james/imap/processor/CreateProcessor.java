@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
 
-    public CreateProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public CreateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(CreateRequest.class, next, mailboxManager, factory);
     }
 

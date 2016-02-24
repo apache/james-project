@@ -173,11 +173,11 @@ public class HumanReadableText {
 
     private final Object[] parameters;
 
-    public HumanReadableText(final String key, final String defaultValue) {
+    public HumanReadableText(String key, String defaultValue) {
         this(key, defaultValue, (Object[]) null);
     }
 
-    public HumanReadableText(final String key, final String defaultValue, final Object... parameters) {
+    public HumanReadableText(String key, String defaultValue, Object... parameters) {
         super();
         this.defaultValue = defaultValue;
         this.key = key;

@@ -114,7 +114,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     @Override
-    public void doConfigure(final HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
             String authRequiredString = configuration.getString("authRequired", "false").trim().toLowerCase();

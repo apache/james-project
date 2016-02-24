@@ -92,7 +92,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
     private final UidProvider<HBaseId> uidProvider;
     private final ModSeqProvider<HBaseId> modSeqProvider;
 
-    public HBaseMessageMapper(final MailboxSession session,
+    public HBaseMessageMapper(MailboxSession session,
             final UidProvider<HBaseId> uidProvider,
             ModSeqProvider<HBaseId> modSeqProvider, Configuration conf) {
         this.mailboxSession = session;
@@ -164,7 +164,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         return messageList;
     }
 
-    private List<MailboxMessage<HBaseId>> findMessagesInMailboxWithUID(Mailbox<HBaseId> mailbox, final long messageUid, final boolean flaggedForDelete) throws IOException {
+    private List<MailboxMessage<HBaseId>> findMessagesInMailboxWithUID(Mailbox<HBaseId> mailbox, long messageUid, boolean flaggedForDelete) throws IOException {
         List<MailboxMessage<HBaseId>> messageList = new ArrayList<MailboxMessage<HBaseId>>();
         HTable messages = new HTable(conf, MESSAGES_TABLE);
         Get get = new Get(messageRowKey(mailbox.getMailboxId(), messageUid));
@@ -188,7 +188,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         return messageList;
     }
 
-    private List<MailboxMessage<HBaseId>> findMessagesInMailboxAfterUID(Mailbox<HBaseId> mailbox, final long from, final int batchSize, final boolean flaggedForDelete) throws IOException {
+    private List<MailboxMessage<HBaseId>> findMessagesInMailboxAfterUID(Mailbox<HBaseId> mailbox, long from, int batchSize, boolean flaggedForDelete) throws IOException {
         List<MailboxMessage<HBaseId>> messageList = new ArrayList<MailboxMessage<HBaseId>>();
         HTable messages = new HTable(conf, MESSAGES_TABLE);
         // uids are stored in reverse so we need to search
@@ -218,7 +218,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         return messageList;
     }
 
-    private List<MailboxMessage<HBaseId>> findMessagesInMailboxBetweenUIDs(Mailbox<HBaseId> mailbox, final long from, final long to, final int batchSize, final boolean flaggedForDelete) throws IOException {
+    private List<MailboxMessage<HBaseId>> findMessagesInMailboxBetweenUIDs(Mailbox<HBaseId> mailbox, long from, long to, int batchSize, boolean flaggedForDelete) throws IOException {
         List<MailboxMessage<HBaseId>> messageList = new ArrayList<MailboxMessage<HBaseId>>();
         if (from > to) {
             return messageList;
@@ -494,7 +494,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
      * @see org.apache.james.mailbox.store.mail.MessageMapper#updateFlags(org.apache.james.mailbox.store.mail.model.Mailbox, javax.mail.Flags, boolean, boolean, org.apache.james.mailbox.MessageRange)
      */
     @Override
-    public Iterator<UpdatedFlags> updateFlags(final Mailbox<HBaseId> mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
+    public Iterator<UpdatedFlags> updateFlags(Mailbox<HBaseId> mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
 
         final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();
         Iterator<MailboxMessage<HBaseId>> messagesFound = findInMailbox(mailbox, set, FetchType.Metadata, -1);

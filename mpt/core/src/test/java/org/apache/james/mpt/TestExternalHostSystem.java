@@ -85,12 +85,12 @@ public class TestExternalHostSystem extends MockObjectTestCase {
         system.addUser(USER, PASSWORD);
     }
 
-    private Session newSession(final String shabang) throws Exception {
+    private Session newSession(String shabang) throws Exception {
         ExternalSessionFactory system = buildSystem(shabang);
         return system.newSession(continuation);
     }
 
-    private ExternalHostSystem buildSystem(final String shabang) {
+    private ExternalHostSystem buildSystem(String shabang) {
         return new ExternalHostSystem(SUPPORTED_FEATURES, "localhost", PORT ,
                 new NullMonitor(), shabang, userAdder);
     }

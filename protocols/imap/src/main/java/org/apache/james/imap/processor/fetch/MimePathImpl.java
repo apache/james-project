@@ -29,7 +29,7 @@ import org.apache.james.mailbox.model.MessageResult;
 final class MimePathImpl implements MessageResult.MimePath {
     private final int[] positions;
 
-    public MimePathImpl(final int[] positions) {
+    public MimePathImpl(int[] positions) {
         super();
         this.positions = positions;
     }

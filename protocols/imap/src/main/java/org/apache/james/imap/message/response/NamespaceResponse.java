@@ -33,7 +33,7 @@ public class NamespaceResponse implements ImapResponseMessage {
 
     private final List<Namespace> shared;
 
-    public NamespaceResponse(final List<Namespace> personal, final List<Namespace> users, final List<Namespace> shared) {
+    public NamespaceResponse(List<Namespace> personal, List<Namespace> users, List<Namespace> shared) {
         super();
         this.personal = personal;
         this.users = users;
@@ -75,7 +75,7 @@ public class NamespaceResponse implements ImapResponseMessage {
 
         private final char delimiter;
 
-        public Namespace(final String prefix, final char delimiter) {
+        public Namespace(String prefix, char delimiter) {
             super();
             this.prefix = prefix;
             this.delimiter = delimiter;

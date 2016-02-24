@@ -30,7 +30,7 @@ abstract public class AbstractImapRequest implements ImapRequest {
 
     private final ImapCommand command;
 
-    public AbstractImapRequest(final String tag, final ImapCommand command) {
+    public AbstractImapRequest(String tag, ImapCommand command) {
         this.tag = tag;
         this.command = command;
     }

@@ -381,7 +381,7 @@ public class SearchCommandParserSearchKeyTest {
     }
 
    
-    private void checkValid(String input, final SearchKey key) throws Exception {
+    private void checkValid(String input, SearchKey key) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),
                 new ByteArrayOutputStream());
@@ -733,7 +733,7 @@ public class SearchCommandParserSearchKeyTest {
         checkValid(number + "\r\n", key);
     }
 
-    private void checkInvalid(String input, final SearchKey key)
+    private void checkInvalid(String input, SearchKey key)
             throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),

@@ -54,14 +54,14 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     private boolean skipNextSpace;
 
-    public ImapResponseComposerImpl(final ImapResponseWriter writer, int bufferSize) {
+    public ImapResponseComposerImpl(ImapResponseWriter writer, int bufferSize) {
         skipNextSpace = false;
         usAscii = Charset.forName("US-ASCII");
         this.writer = writer;
         this.buffer = new FastByteArrayOutputStream(bufferSize);
     }
     
-    public ImapResponseComposerImpl(final ImapResponseWriter writer) {
+    public ImapResponseComposerImpl(ImapResponseWriter writer) {
         this(writer, DEFAULT_BUFFER_SIZE);
     }
 
@@ -140,7 +140,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
      * @see
      * org.apache.james.imap.encode.ImapResponseComposer#message(java.lang.String)
      */
-    public ImapResponseComposer message(final String message) throws IOException {
+    public ImapResponseComposer message(String message) throws IOException {
         if (message != null) {
             // TODO: consider message normalisation
             // TODO: CR/NFs in message must be replaced
@@ -152,7 +152,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         return this;
     }
 
-    private void responseCode(final String responseCode) throws IOException {
+    private void responseCode(String responseCode) throws IOException {
         if (responseCode != null && !"".equals(responseCode)) {
             writeASCII(" [");
             writeASCII(responseCode);
@@ -267,7 +267,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     }
 
 
-    private void writeASCII(final String string) throws IOException {
+    private void writeASCII(String string) throws IOException {
         buffer.write(string.getBytes(usAscii));
     }
 
@@ -283,7 +283,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     /**
      * @see org.apache.james.imap.encode.ImapResponseComposer#mailbox(java.lang.String)
      */
-    public ImapResponseComposer mailbox(final String mailboxName) throws IOException {
+    public ImapResponseComposer mailbox(String mailboxName) throws IOException {
         quote(CharsetUtil.encodeModifiedUTF7(mailboxName));
         return this;
     }
@@ -324,12 +324,12 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     }
 
 
-    private void closeBracket(final byte bracket) throws IOException {
+    private void closeBracket(byte bracket) throws IOException {
         buffer.write(bracket);
         clearSkipNextSpace();
     }
 
-    private void openBracket(final byte bracket) throws IOException {
+    private void openBracket(byte bracket) throws IOException {
         space();
         buffer.write(bracket);
         skipNextSpace();

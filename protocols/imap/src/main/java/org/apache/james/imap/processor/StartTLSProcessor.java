@@ -37,7 +37,7 @@ public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest>
     private final static List<String> STARTTLS_CAP = Collections.unmodifiableList(Arrays.asList(ImapConstants.SUPPORTS_STARTTLS));
     private final StatusResponseFactory factory;
 
-    public StartTLSProcessor(final ImapProcessor next, final StatusResponseFactory factory) {
+    public StartTLSProcessor(ImapProcessor next, StatusResponseFactory factory) {
         super(StartTLSRequest.class, next);
         this.factory = factory;
     }

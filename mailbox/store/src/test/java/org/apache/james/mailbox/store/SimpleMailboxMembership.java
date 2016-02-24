@@ -54,7 +54,7 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
     public boolean seen = false;
 
     public SimpleMailboxMembership(TestId mailboxId, long uid, long modSeq, Date internalDate, int size, 
-            Flags flags, byte[] body, final Map<String, String> headers) throws Exception {
+            Flags flags, byte[] body, Map<String, String> headers) throws Exception {
         super();
         this.mailboxId = mailboxId;
         this.uid = uid;

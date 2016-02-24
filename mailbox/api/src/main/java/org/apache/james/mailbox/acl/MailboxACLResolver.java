@@ -148,7 +148,7 @@ public interface MailboxACLResolver {
      *         of rights which can be set for the given identifier and resource.
      * @throws UnsupportedRightException
      */
-    MailboxACLRights[] listRights(final MailboxACLEntryKey key, final GroupMembershipResolver groupMembershipResolver, final String resourceOwner, final boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACLRights[] listRights(MailboxACLEntryKey key, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
     /**
      * Computes the rights which apply to the given user and resource. Global

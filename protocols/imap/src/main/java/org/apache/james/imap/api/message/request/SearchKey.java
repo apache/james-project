@@ -319,7 +319,7 @@ public final class SearchKey {
      *            <code>List</code> of {@link SearchKey}'s composing this key
      * @return <code>SearchKey</code>, not null
      */
-    public static SearchKey buildAnd(final List<SearchKey> keys) {
+    public static SearchKey buildAnd(List<SearchKey> keys) {
         return new SearchKey(TYPE_AND, null, keys, 0, null, null, null, -1, -1);
     }
 
@@ -344,7 +344,7 @@ public final class SearchKey {
 
     private final long modSeq;
 
-    private SearchKey(final int type, final DayMonthYear date, final List<SearchKey> keys, final long number, final String name, final String value, IdRange[] sequence, long seconds, long modSeq) {
+    private SearchKey(int type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, IdRange[] sequence, long seconds, long modSeq) {
         super();
         this.type = type;
         this.date = date;

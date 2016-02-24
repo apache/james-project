@@ -36,7 +36,7 @@ abstract public class AbstractChainedImapEncoder implements ImapEncoder {
 
     private final ImapEncoder next;
 
-    public AbstractChainedImapEncoder(final ImapEncoder next) {
+    public AbstractChainedImapEncoder(ImapEncoder next) {
         super();
         this.next = next;
     }
@@ -73,7 +73,7 @@ abstract public class AbstractChainedImapEncoder implements ImapEncoder {
      *            <code>ImapMessage</code>, not null
      * @return true if the given message is encodable by this encoder
      */
-    abstract protected boolean isAcceptable(final ImapMessage message);
+    abstract protected boolean isAcceptable(ImapMessage message);
 
     /**
      * Processes an acceptable message. Only messages passing

@@ -44,7 +44,7 @@ public class MimeBodyElement implements BodyElement {
     private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
 
-    public MimeBodyElement(final String name, final List<MessageResult.Header> headers) throws MailboxException {
+    public MimeBodyElement(String name, List<MessageResult.Header> headers) throws MailboxException {
         super();
         this.name = name;
         this.headers = headers;

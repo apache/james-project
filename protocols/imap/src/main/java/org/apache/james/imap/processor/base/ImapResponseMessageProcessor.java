@@ -25,7 +25,7 @@ import org.apache.james.imap.api.process.ImapSession;
 
 public class ImapResponseMessageProcessor extends AbstractChainedProcessor<ImapResponseMessage> {
 
-    public ImapResponseMessageProcessor(final ImapProcessor next) {
+    public ImapResponseMessageProcessor(ImapProcessor next) {
         super(ImapResponseMessage.class, next);
     }
 

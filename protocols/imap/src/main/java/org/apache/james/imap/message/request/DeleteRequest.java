@@ -27,7 +27,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 public class DeleteRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public DeleteRequest(final ImapCommand command, final String mailboxName, final String tag) {
+    public DeleteRequest(ImapCommand command, String mailboxName, String tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
     }

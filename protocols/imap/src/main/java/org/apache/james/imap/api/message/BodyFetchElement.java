@@ -67,7 +67,7 @@ public class BodyFetchElement {
 
     private final Collection<String> fieldNames;
 
-    public BodyFetchElement(final String name, final int sectionType, final int[] path, final Collection<String> fieldNames, Long firstOctet, Long numberOfOctets) {
+    public BodyFetchElement(String name, int sectionType, int[] path, Collection<String> fieldNames, Long firstOctet, Long numberOfOctets) {
         this.name = name;
         this.sectionType = sectionType;
         this.fieldNames = fieldNames;

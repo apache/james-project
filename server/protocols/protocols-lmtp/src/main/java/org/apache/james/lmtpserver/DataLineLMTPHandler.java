@@ -47,7 +47,7 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
 
 
     @Override
-    protected Response processExtensions(SMTPSession session, final Mail mail) {
+    protected Response processExtensions(SMTPSession session, Mail mail) {
         LMTPMultiResponse mResponse = null;
 
         // build a wrapper around the Mail

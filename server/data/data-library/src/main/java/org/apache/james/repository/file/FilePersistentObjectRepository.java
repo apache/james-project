@@ -44,7 +44,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
      * @see
      * org.apache.james.repository.api.ObjectRepository#get(java.lang.String)
      */
-    public synchronized Object get(final String key) {
+    public synchronized Object get(String key) {
         try {
             final InputStream inputStream = getInputStream(key);
 
@@ -61,7 +61,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
             } finally {
                 inputStream.close();
             }
-        } catch (final Throwable e) {
+        } catch (Throwable e) {
             throw new RuntimeException("Exception caught while retrieving an object, cause: " + e.toString());
         }
     }
@@ -71,7 +71,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
      * org.apache.james.repository.api.ObjectRepository#get(java.lang.String,
      * java.lang.ClassLoader)
      */
-    public synchronized Object get(final String key, final ClassLoader classLoader) {
+    public synchronized Object get(String key, ClassLoader classLoader) {
         try {
             final InputStream inputStream = getInputStream(key);
 
@@ -91,7 +91,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 stream.close();
                 inputStream.close();
             }
-        } catch (final Throwable e) {
+        } catch (Throwable e) {
             throw new RuntimeException("Exception caught while retrieving an object: " + e);
         }
 
@@ -102,7 +102,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
      * org.apache.james.repository.api.ObjectRepository#put(java.lang.String,
      * java.lang.Object)
      */
-    public synchronized void put(final String key, final Object value) {
+    public synchronized void put(String key, Object value) {
         try {
             final OutputStream outputStream = getOutputStream(key);
 
@@ -114,7 +114,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
             } finally {
                 outputStream.close();
             }
-        } catch (final Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Exception caught while storing an object: " + e);
         }
     }

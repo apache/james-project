@@ -68,7 +68,7 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends DelegatingMailbo
 
     public SimpleMailboxMessage(Date internalDate, long size, int bodyStartOctet,
                                 SharedInputStream content, Flags flags,
-                                PropertyBuilder propertyBuilder, final Id mailboxId) {
+                                PropertyBuilder propertyBuilder, Id mailboxId) {
         super(new SimpleMessage(
             content, size, internalDate, propertyBuilder.getSubType(),
             propertyBuilder.getMediaType(),

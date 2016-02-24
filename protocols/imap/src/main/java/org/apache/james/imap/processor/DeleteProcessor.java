@@ -34,7 +34,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
 
-    public DeleteProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public DeleteProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(DeleteRequest.class, next, mailboxManager, factory);
     }
 

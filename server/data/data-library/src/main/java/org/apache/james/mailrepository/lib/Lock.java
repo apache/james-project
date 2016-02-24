@@ -37,7 +37,7 @@ public class Lock {
      *            the Object on which to check the lock
      * @return true if the object is locked, false otherwise
      */
-    public boolean isLocked(final Object key) {
+    public boolean isLocked(Object key) {
         return (locks.get(key) != null);
     }
 
@@ -48,7 +48,7 @@ public class Lock {
      *            the Object on which to lock
      * @return true if the calling thread can lock, false otherwise
      */
-    public boolean canI(final Object key) {
+    public boolean canI(Object key) {
         Object o = locks.get(key);
 
         return null == o || o == this.getCallerId();
@@ -62,7 +62,7 @@ public class Lock {
      *            the Object on which to lock
      * @return true if the locking was successful, false otherwise
      */
-    public boolean lock(final Object key) {
+    public boolean lock(Object key) {
         Object theLock;
 
         synchronized (this) {
@@ -82,7 +82,7 @@ public class Lock {
      *            the Object on which the lock is held
      * @return true if the unlocking was successful, false otherwise
      */
-    public boolean unlock(final Object key) {
+    public boolean unlock(Object key) {
         Object theLock;
         synchronized (this) {
             theLock = locks.get(key);

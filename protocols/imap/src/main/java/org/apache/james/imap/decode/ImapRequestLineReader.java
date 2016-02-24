@@ -369,7 +369,7 @@ public abstract class ImapRequestLineReader {
      * @param charset
      *            , or null for <code>US-ASCII</code>
      */
-    public String consumeLiteral(final Charset charset) throws DecodingException {
+    public String consumeLiteral(Charset charset) throws DecodingException {
         if (charset == null) {
             return consumeLiteral(US_ASCII);
         } else {
@@ -441,7 +441,7 @@ public abstract class ImapRequestLineReader {
         return read(size, extraCRLF);
     }
 
-    private String decode(final Charset charset, final ByteBuffer buffer) throws DecodingException {
+    private String decode(Charset charset, ByteBuffer buffer) throws DecodingException {
         try {
             return charset.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(buffer).toString();
 
@@ -563,7 +563,7 @@ public abstract class ImapRequestLineReader {
         return readDigits(0, 0, true, stopOnParen);
     }
     
-    private long readDigits(int add, final long total, final boolean first, boolean stopOnParen
+    private long readDigits(int add, long total, boolean first, boolean stopOnParen
             ) throws DecodingException {
         final char next;
         if (first) {
@@ -863,12 +863,12 @@ public abstract class ImapRequestLineReader {
          * @param endOfInput
          *            is the input ended
          */
-        private CoderResult decodeByteBufferToCharacterBuffer(final boolean endOfInput) throws DecodingException {
+        private CoderResult decodeByteBufferToCharacterBuffer(boolean endOfInput) throws DecodingException {
             buffer.flip();
             return decodeMoreBytesToCharacterBuffer(endOfInput);
         }
 
-        private CoderResult decodeMoreBytesToCharacterBuffer(final boolean endOfInput) throws DecodingException {
+        private CoderResult decodeMoreBytesToCharacterBuffer(boolean endOfInput) throws DecodingException {
             final CoderResult coderResult = decoder.decode(buffer, charBuffer, endOfInput);
             if (coderResult.isOverflow()) {
                 upsizeCharBuffer();

@@ -36,7 +36,7 @@ public abstract class AbstractSubscriptionProcessor<M extends ImapRequest> exten
 
     private final SubscriptionManager subscriptionManager;
 
-    public AbstractSubscriptionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, final SubscriptionManager subscriptionManager, StatusResponseFactory factory) {
+    public AbstractSubscriptionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory) {
         super(acceptableClass, next, mailboxManager, factory);
         this.subscriptionManager = subscriptionManager;
     }

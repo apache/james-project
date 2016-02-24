@@ -55,7 +55,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
 	@SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
 
-    public JCRMailboxMapper(final MailboxSessionJCRRepository repos, MailboxSession session, final int scaling) {
+    public JCRMailboxMapper(MailboxSessionJCRRepository repos, MailboxSession session, int scaling) {
         super(repos, session, scaling);
     }
 

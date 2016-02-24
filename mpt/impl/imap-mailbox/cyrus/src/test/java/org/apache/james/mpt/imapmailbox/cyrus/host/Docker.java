@@ -68,7 +68,7 @@ public class Docker {
         return container;
     }
 
-    private void waitingForSocketToBeReady(final ContainerCreation container) {
+    private void waitingForSocketToBeReady(ContainerCreation container) {
         Awaitility
             .await()
             .atMost(30, TimeUnit.SECONDS)

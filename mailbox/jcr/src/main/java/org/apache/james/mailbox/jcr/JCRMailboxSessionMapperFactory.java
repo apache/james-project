@@ -45,11 +45,11 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory<
     private final UidProvider<JCRId> uidProvider;
     private final ModSeqProvider<JCRId> modSeqProvider;
 
-    public JCRMailboxSessionMapperFactory(final MailboxSessionJCRRepository repository, final UidProvider<JCRId> uidProvider, final ModSeqProvider<JCRId> modSeqProvider) {
+    public JCRMailboxSessionMapperFactory(MailboxSessionJCRRepository repository, UidProvider<JCRId> uidProvider, ModSeqProvider<JCRId> modSeqProvider) {
         this(repository, uidProvider, modSeqProvider, DEFAULT_SCALING, JCRMessageMapper.MESSAGE_SCALE_DAY);
     }
 
-    public JCRMailboxSessionMapperFactory(final MailboxSessionJCRRepository repository,  final UidProvider<JCRId> uidProvider, final ModSeqProvider<JCRId> modSeqProvider, final int scaling, final int messageScaling) {
+    public JCRMailboxSessionMapperFactory(MailboxSessionJCRRepository repository, UidProvider<JCRId> uidProvider, ModSeqProvider<JCRId> modSeqProvider, int scaling, int messageScaling) {
         this.repository = repository;
         this.scaling = scaling;
         this.messageScaling = messageScaling;

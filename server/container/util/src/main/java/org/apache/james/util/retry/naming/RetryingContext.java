@@ -75,7 +75,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      * @param logger
      * @throws NamingException
      */
-    public RetryingContext(final RetrySchedule schedule, final int maxRetries, final Logger logger)
+    public RetryingContext(RetrySchedule schedule, int maxRetries, Logger logger)
             throws NamingException {
         this(DEFAULT_EXCEPTION_CLASSES, schedule, maxRetries, logger);
     }
@@ -89,7 +89,7 @@ abstract public class RetryingContext implements Context, ExceptionRetryingProxy
      * @param logger
      * @throws NamingException
      */
-    public RetryingContext(final Class<?>[] exceptionClasses, final RetrySchedule schedule, final int maxRetries, final Logger logger)
+    public RetryingContext(Class<?>[] exceptionClasses, RetrySchedule schedule, int maxRetries, Logger logger)
             throws NamingException {
         this();
         _schedule = schedule;

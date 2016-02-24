@@ -39,7 +39,7 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
 
     private final Localizer localizer;
 
-    public StatusResponseEncoder(ImapEncoder next, final Localizer localizer) {
+    public StatusResponseEncoder(ImapEncoder next, Localizer localizer) {
         super(next);
         this.localizer = localizer;
     }

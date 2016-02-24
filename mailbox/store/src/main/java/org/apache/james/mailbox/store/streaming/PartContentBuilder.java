@@ -58,7 +58,7 @@ public class PartContentBuilder {
         empty = true;
     }
 
-    public void parse(final InputStream in) {
+    public void parse(InputStream in) {
         
         parser.setRecursionMode(RecursionMode.M_RECURSE);
         parser.parse(in);

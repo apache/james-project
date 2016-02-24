@@ -24,7 +24,7 @@ public class AuthenticateRequest extends AbstractImapRequest {
 
     private final String authType;
 
-    public AuthenticateRequest(final ImapCommand command, final String authType, final String tag) {
+    public AuthenticateRequest(ImapCommand command, String authType, String tag) {
         super(tag, command);
         this.authType = authType;
     }

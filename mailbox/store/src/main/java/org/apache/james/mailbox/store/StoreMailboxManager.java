@@ -119,7 +119,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
 
 
     @Inject
-    public StoreMailboxManager(MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory, final Authenticator authenticator, final MailboxPathLocker locker, final MailboxACLResolver aclResolver, final GroupMembershipResolver groupMembershipResolver) {
+    public StoreMailboxManager(MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         this.authenticator = authenticator;
         this.locker = locker;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -127,7 +127,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
         this.groupMembershipResolver = groupMembershipResolver;
     }
 
-    public StoreMailboxManager(MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory, final Authenticator authenticator, final MailboxACLResolver aclResolver, final GroupMembershipResolver groupMembershipResolver) {
+    public StoreMailboxManager(MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         this(mailboxSessionMapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
     }
 
@@ -361,7 +361,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
      * @param session
      * @throws MailboxException
      */
-    protected org.apache.james.mailbox.store.mail.model.Mailbox<Id> doCreateMailbox(MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
+    protected org.apache.james.mailbox.store.mail.model.Mailbox<Id> doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return new SimpleMailbox<Id>(mailboxPath, randomUidValidity());
     }
 
@@ -427,7 +427,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     }
 
     @Override
-    public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
+    public void deleteMailbox(final MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         session.getLog().info("deleteMailbox " + mailboxPath);
         final MailboxMapper<Id> mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
@@ -540,7 +540,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     }
 
     @Override
-    public List<MailboxMetaData> search(final MailboxQuery mailboxExpression, MailboxSession session)
+    public List<MailboxMetaData> search(MailboxQuery mailboxExpression, MailboxSession session)
             throws MailboxException {
         final char localWildcard = mailboxExpression.getLocalWildcard();
         final char freeWildcard = mailboxExpression.getFreeWildcard();
@@ -673,7 +673,7 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
         }
     }
 
-    public MailboxACL.MailboxACLRights[] listRigths(MailboxPath mailboxPath, final MailboxACL.MailboxACLEntryKey key, MailboxSession session) throws MailboxException {
+    public MailboxACL.MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACL.MailboxACLEntryKey key, MailboxSession session) throws MailboxException {
         final MailboxMapper<Id> mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox<Id> mailbox = mapper.findMailboxByPath(mailboxPath);
         return aclResolver.listRights(key, groupMembershipResolver, mailbox.getUser(), new GroupFolderResolver(session).isGroupFolder(mailbox));

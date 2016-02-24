@@ -33,7 +33,7 @@ public class CopyRequest extends AbstractImapRequest {
 
     private final boolean useUids;
 
-    public CopyRequest(final ImapCommand command, final IdRange[] idSet, final String mailboxName, final boolean useUids, final String tag) {
+    public CopyRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
         super(tag, command);
         this.idSet = idSet;
         this.mailboxName = mailboxName;

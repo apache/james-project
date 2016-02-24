@@ -58,7 +58,7 @@ public class DecodingException extends IOException {
      * @param s
      *            specific description suitable for logging, not null
      */
-    public DecodingException(final HumanReadableText key, final String s) {
+    public DecodingException(HumanReadableText key, String s) {
         super(s);
         this.key = key;
     }
@@ -73,7 +73,7 @@ public class DecodingException extends IOException {
      * @param t
      *            cause, not null
      */
-    public DecodingException(final HumanReadableText key, final String s, final Throwable t) {
+    public DecodingException(HumanReadableText key, String s, Throwable t) {
         super(s);
         this.key = key;
         this.t = t;

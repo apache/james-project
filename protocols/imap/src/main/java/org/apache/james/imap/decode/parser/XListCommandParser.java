@@ -33,7 +33,7 @@ public class XListCommandParser extends ListCommandParser {
     }
 
     @Override
-    protected ImapMessage createMessage(ImapCommand command, final String referenceName, final String mailboxPattern, final String tag) {
+    protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, String tag) {
         return new XListRequest(command, referenceName, mailboxPattern, tag);
     }
 }

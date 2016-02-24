@@ -29,7 +29,7 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 public class FlagsResponse implements ImapResponseMessage {
     private final Flags flags;
 
-    public FlagsResponse(final Flags flags) {
+    public FlagsResponse(Flags flags) {
         super();
         this.flags = flags;
     }

@@ -39,7 +39,7 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
 
     private StatusResponseFactory statusResponseFactory;
 
-    public AbstractImapCommandParser(final ImapCommand command) {
+    public AbstractImapCommandParser(ImapCommand command) {
         super();
         this.command = command;
     }

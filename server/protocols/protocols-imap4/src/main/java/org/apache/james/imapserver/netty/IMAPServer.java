@@ -88,7 +88,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     }
 
     @Override
-    public void doConfigure(final HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         
         super.doConfigure(configuration);
         

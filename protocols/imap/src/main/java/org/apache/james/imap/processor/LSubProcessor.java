@@ -46,7 +46,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
         super(LsubRequest.class, next, mailboxManager, subscriptionManager, factory);
     }
 
-    private void listSubscriptions(ImapSession session, Responder responder, final String referenceName, final String mailboxName) throws SubscriptionException, MailboxException {
+    private void listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) throws SubscriptionException, MailboxException {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final Collection<String> mailboxes = getSubscriptionManager().subscriptions(mailboxSession);
         // If the mailboxName is fully qualified, ignore the reference name.
@@ -67,12 +67,12 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
 
         final MailboxQuery expression = new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter());
         final Collection<String> mailboxResponses = new ArrayList<String>();
-        for (final String mailbox : mailboxes) {
+        for (String mailbox : mailboxes) {
             respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
         }
     }
 
-    private void respond(Responder responder, final MailboxQuery expression, final String mailboxName, final boolean originalSubscription, final Collection<String> mailboxes, final Collection<String> mailboxResponses, final char delimiter) {
+    private void respond(Responder responder, MailboxQuery expression, String mailboxName, boolean originalSubscription, Collection<String> mailboxes, Collection<String> mailboxResponses, char delimiter) {
         if (expression.isExpressionMatch(mailboxName)) {
             if (!mailboxResponses.contains(mailboxName)) {
                 final LSubResponse response = new LSubResponse(mailboxName, !originalSubscription, delimiter);
@@ -97,7 +97,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
      * @param referenceName
      *            IMAP reference name, possibly null
      */
-    private void respondWithHierarchyDelimiter(final Responder responder, final char delimiter) {
+    private void respondWithHierarchyDelimiter(Responder responder, char delimiter) {
         final LSubResponse response = new LSubResponse("", true, delimiter);
         responder.respond(response);
     }

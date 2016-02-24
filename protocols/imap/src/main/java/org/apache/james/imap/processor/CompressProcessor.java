@@ -36,7 +36,7 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
     private final StatusResponseFactory factory;
     private final static String COMPRESSED = "COMPRESSED";
 
-    public CompressProcessor(ImapProcessor next, final StatusResponseFactory factory) {
+    public CompressProcessor(ImapProcessor next, StatusResponseFactory factory) {
         super(CompressRequest.class, next);
         this.factory = factory;
     }

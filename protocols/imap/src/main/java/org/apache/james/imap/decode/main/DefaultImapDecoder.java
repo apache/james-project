@@ -46,11 +46,11 @@ public class DefaultImapDecoder implements ImapDecoder {
     private final static String INVALID_COMMAND_COUNT = "INVALID_COMMAND_COUNT";
     public final static int DEFAULT_MAX_INVALID_COMMANDS = 9;
 
-    public DefaultImapDecoder(final StatusResponseFactory responseFactory, final ImapCommandParserFactory imapCommands) {
+    public DefaultImapDecoder(StatusResponseFactory responseFactory, ImapCommandParserFactory imapCommands) {
         this(responseFactory, imapCommands, DEFAULT_MAX_INVALID_COMMANDS);
     }
 
-    public DefaultImapDecoder(final StatusResponseFactory responseFactory, final ImapCommandParserFactory imapCommands, int maxInvalidCommands) {
+    public DefaultImapDecoder(StatusResponseFactory responseFactory, ImapCommandParserFactory imapCommands, int maxInvalidCommands) {
         this.responseFactory = responseFactory;
         this.imapCommands = imapCommands;
         this.maxInvalidCommands = maxInvalidCommands;
@@ -77,7 +77,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         return message;
     }
 
-    private ImapMessage decodeCommandTagged(final ImapRequestLineReader request, final String tag, final ImapSession session) {
+    private ImapMessage decodeCommandTagged(ImapRequestLineReader request, String tag, ImapSession session) {
         ImapMessage message;
         if (session.getLog().isDebugEnabled()) {
             session.getLog().debug("Got <tag>: " + tag);
@@ -94,7 +94,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         return message;
     }
 
-    private ImapMessage unknownCommand(final String tag, final ImapSession session) {
+    private ImapMessage unknownCommand(String tag, ImapSession session) {
         ImapMessage message;
         Object c = session.getAttribute(INVALID_COMMAND_COUNT);
         int count = 0;
@@ -118,7 +118,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         return message;
     }
 
-    private ImapMessage decodeCommandNamed(final ImapRequestLineReader request, final String tag, String commandName, final ImapSession session) {
+    private ImapMessage decodeCommandNamed(ImapRequestLineReader request, String tag, String commandName, ImapSession session) {
         ImapMessage message;
         if (session.getLog().isDebugEnabled()) {
             session.getLog().debug("Got <command>: " + commandName);

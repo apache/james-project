@@ -22,7 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 
 public class CloseRequest extends AbstractImapRequest {
 
-    public CloseRequest(final ImapCommand command, final String tag) {
+    public CloseRequest(ImapCommand command, String tag) {
         super(tag, command);
     }
 }

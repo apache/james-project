@@ -45,7 +45,7 @@ import org.apache.james.mailbox.MailboxManager;
 public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor{
     private final static String PLAIN = "PLAIN";
     
-    public AuthenticateProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public AuthenticateProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(AuthenticateRequest.class, next, mailboxManager, factory);
     }
 

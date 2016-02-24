@@ -93,8 +93,8 @@ public class FetchCommandParserPartialFetchTest  {
         }
     }
 
-    private void check(String input, final IdRange[] idSet,
-            final boolean useUids, final FetchData data, final String tag) throws Exception {
+    private void check(String input, IdRange[] idSet,
+            boolean useUids, FetchData data, String tag) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),
                 new ByteArrayOutputStream());

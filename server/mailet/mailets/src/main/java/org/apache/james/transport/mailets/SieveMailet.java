@@ -131,8 +131,8 @@ public class SieveMailet extends SieveMailboxMailet implements Poster {
 
             final String scheme = url.substring(0, endOfScheme);
             if ("mailbox".equals(scheme)) {
-                final int startOfUser = endOfScheme + 3;
-                final int endOfUser = url.indexOf('@', startOfUser);
+                int startOfUser = endOfScheme + 3;
+                int endOfUser = url.indexOf('@', startOfUser);
                 if (endOfUser < 0) {
                     // TODO: When user missing, append to a default location
                     throw new MessagingException("Shared mailbox is not supported");
@@ -140,11 +140,11 @@ public class SieveMailet extends SieveMailboxMailet implements Poster {
                     // lowerCase the user - see
                     // https://issues.apache.org/jira/browse/JAMES-1369
                     String user = url.substring(startOfUser, endOfUser).toLowerCase();
-                    final int startOfHost = endOfUser + 1;
-                    final int endOfHost = url.indexOf('/', startOfHost);
-                    final String host = url.substring(startOfHost, endOfHost);
-                    final String urlPath;
-                    final int length = url.length();
+                    int startOfHost = endOfUser + 1;
+                    int endOfHost = url.indexOf('/', startOfHost);
+                    String host = url.substring(startOfHost, endOfHost);
+                    String urlPath;
+                    int length = url.length();
                     if (endOfHost + 1 == length) {
                         urlPath = this.folder;
                     } else {

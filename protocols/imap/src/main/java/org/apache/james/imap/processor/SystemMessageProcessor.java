@@ -36,7 +36,7 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
 
     private final MailboxManager mailboxManager;
 
-    public SystemMessageProcessor(ImapProcessor next, final MailboxManager mailboxManager) {
+    public SystemMessageProcessor(ImapProcessor next, MailboxManager mailboxManager) {
         super(SystemMessage.class, next);
         this.mailboxManager = mailboxManager;
     }

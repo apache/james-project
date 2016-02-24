@@ -176,7 +176,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             if (!ip.equals("0.0.0.0")) {
                 try {
                     ip = InetAddress.getByName(ip).getHostName();
-                } catch (final UnknownHostException unhe) {
+                } catch (UnknownHostException unhe) {
                     throw new ConfigurationException("Malformed bind parameter in configuration of service " + getServiceType(), unhe);
                 }
             }

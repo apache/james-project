@@ -49,7 +49,7 @@ public final class FetchResponse implements ImapResponseMessage {
 
     private final Long modSeq;
 
-    public FetchResponse(final int messageNumber, final Flags flags, final Long uid, final Long modSeq, final Date internalDate, final Long size, final Envelope envelope, final Structure body, final Structure bodystructure, List<BodyElement> elements) {
+    public FetchResponse(int messageNumber, Flags flags, Long uid, Long modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements) {
         super();
         this.messageNumber = messageNumber;
         this.flags = flags;

@@ -22,5 +22,5 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 
 public interface ImapDecoder {
-    ImapMessage decode(final ImapRequestLineReader request, ImapSession session);
+    ImapMessage decode(ImapRequestLineReader request, ImapSession session);
 }

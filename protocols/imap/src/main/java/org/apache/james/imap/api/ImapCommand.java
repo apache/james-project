@@ -24,19 +24,19 @@ package org.apache.james.imap.api;
  * interface should encpasulate all command specific processing.
  */
 public class ImapCommand {
-    public static ImapCommand nonAuthenticatedStateCommand(final String name) {
+    public static ImapCommand nonAuthenticatedStateCommand(String name) {
         return new ImapCommand(false, false, true, name);
     }
 
-    public static ImapCommand authenticatedStateCommand(final String name) {
+    public static ImapCommand authenticatedStateCommand(String name) {
         return new ImapCommand(true, true, false, name);
     }
 
-    public static ImapCommand selectedStateCommand(final String name) {
+    public static ImapCommand selectedStateCommand(String name) {
         return new ImapCommand(false, true, false, name);
     }
 
-    public static ImapCommand anyStateCommand(final String name) {
+    public static ImapCommand anyStateCommand(String name) {
         return new ImapCommand(true, true, true, name);
     }
 
@@ -48,7 +48,7 @@ public class ImapCommand {
 
     private final String name;
 
-    private ImapCommand(boolean validInAuthenticated, boolean validInSelected, boolean validInNonAuthenticated, final String name) {
+    private ImapCommand(boolean validInAuthenticated, boolean validInSelected, boolean validInNonAuthenticated, String name) {
         super();
         this.validInAuthenticated = validInAuthenticated;
         this.validInSelected = validInSelected;

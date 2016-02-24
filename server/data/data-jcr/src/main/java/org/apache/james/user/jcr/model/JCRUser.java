@@ -51,7 +51,7 @@ public class JCRUser implements User {
     private final String userName;
     private String hashedSaltedPassword;
 
-    public JCRUser(final String userName, String hashedSaltedPassword) {
+    public JCRUser(String userName, String hashedSaltedPassword) {
         super();
         this.userName = userName;
         this.hashedSaltedPassword = hashedSaltedPassword;

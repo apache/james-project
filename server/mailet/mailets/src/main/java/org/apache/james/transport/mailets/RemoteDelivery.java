@@ -1611,7 +1611,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
      * @return an Iterator over HostAddress instances, sorted by priority
      * @since v2.2.0a16-unstable
      */
-    private Iterator<HostAddress> getGatewaySMTPHostAddresses(final Collection<String> gatewayServers) {
+    private Iterator<HostAddress> getGatewaySMTPHostAddresses(Collection<String> gatewayServers) {
         Iterator<String> gateways = gatewayServers.iterator();
 
         return new MXHostAddressIterator(gateways, dnsServer, false, logAdapter);

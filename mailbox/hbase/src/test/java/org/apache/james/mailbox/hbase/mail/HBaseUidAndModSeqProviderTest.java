@@ -114,10 +114,10 @@ public class HBaseUidAndModSeqProviderTest {
         mailboxList.add(newBox);
         pathsList.add(path);
 
-        final long result = uidProvider.lastUid(null, newBox);
+        long result = uidProvider.lastUid(null, newBox);
         assertEquals(0, result);
         for (int i = 1; i < 10; i++) {
-            final long uid = uidProvider.nextUid(null, newBox);
+            long uid = uidProvider.nextUid(null, newBox);
             assertEquals(uid, uidProvider.lastUid(null, newBox));
         }
     }
@@ -128,8 +128,8 @@ public class HBaseUidAndModSeqProviderTest {
     @Test
     public void testNextUid() throws Exception {
         LOG.info("nextUid");
-        final HBaseMailbox mailbox = mailboxList.get(mailboxList.size() / 2);
-        final long lastUid = uidProvider.lastUid(null, mailbox);
+        HBaseMailbox mailbox = mailboxList.get(mailboxList.size() / 2);
+        long lastUid = uidProvider.lastUid(null, mailbox);
         long result;
         for (int i = (int) lastUid + 1; i < (lastUid + 10); i++) {
             result = uidProvider.nextUid(null, mailbox);
@@ -164,8 +164,8 @@ public class HBaseUidAndModSeqProviderTest {
     @Test
     public void testNextModSeq() throws Exception {
         LOG.info("nextModSeq");
-        final HBaseMailbox mailbox = mailboxList.get(mailboxList.size() / 2);
-        final long lastUid = modSeqProvider.highestModSeq(null, mailbox);
+        HBaseMailbox mailbox = mailboxList.get(mailboxList.size() / 2);
+        long lastUid = modSeqProvider.highestModSeq(null, mailbox);
         long result;
         for (int i = (int) lastUid + 1; i < (lastUid + 10); i++) {
             result = modSeqProvider.nextModSeq(null, mailbox);

@@ -364,7 +364,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * @see org.apache.james.mailbox.acl.MailboxACLResolver#listRightsDefault(boolean)
      */
     @Override
-    public MailboxACLRights[] listRights(final MailboxACLEntryKey queryKey, final GroupMembershipResolver groupMembershipResolver, final String resourceOwner, final boolean resourceOwnerIsGroup) throws UnsupportedRightException {
+    public MailboxACLRights[] listRights(MailboxACLEntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
         MailboxACL.MailboxACLRights[] positiveNegativePair = { SimpleMailboxACL.NO_RIGHTS, SimpleMailboxACL.NO_RIGHTS };
 
         MailboxACL userACL = resourceOwnerIsGroup ? groupGlobalACL : userGlobalACL;
@@ -419,7 +419,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * @param positiveNegativePair
      * @throws UnsupportedRightException
      */
-    private void resolveRights(MailboxACLEntryKey queryKey, GroupMembershipResolver groupMembershipResolver, final Map<MailboxACLEntryKey, MailboxACLRights> entries, String resourceOwner, boolean resourceOwnerIsGroup, MailboxACL.MailboxACLRights[] positiveNegativePair)
+    private void resolveRights(MailboxACLEntryKey queryKey, GroupMembershipResolver groupMembershipResolver, Map<MailboxACLEntryKey, MailboxACLRights> entries, String resourceOwner, boolean resourceOwnerIsGroup, MailboxACL.MailboxACLRights[] positiveNegativePair)
             throws UnsupportedRightException {
         if (entries != null) {
             for (Entry<MailboxACLEntryKey, MailboxACLRights> entry : entries.entrySet()) {

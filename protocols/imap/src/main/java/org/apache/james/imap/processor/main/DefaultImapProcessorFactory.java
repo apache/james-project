@@ -41,19 +41,19 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
  */
 public class DefaultImapProcessorFactory {
 
-    public static ImapProcessor createDefaultProcessor(final MailboxManager mailboxManager, final SubscriptionManager subscriptionManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
+    public static ImapProcessor createDefaultProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         return createXListSupportingProcessor(mailboxManager, subscriptionManager, null, quotaManager, quotaRootResolver, IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS, new HashSet<String>());
     }
 
-    public static ImapProcessor createDefaultProcessor(final MailboxManager mailboxManager, final SubscriptionManager subscriptionManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, long idleKeepAlive) {
+    public static ImapProcessor createDefaultProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, long idleKeepAlive) {
         return createXListSupportingProcessor(mailboxManager, subscriptionManager, null, quotaManager, quotaRootResolver, idleKeepAlive, new HashSet<String>());
     }
 
-    public static ImapProcessor createXListSupportingProcessor(final MailboxManager mailboxManager, final SubscriptionManager subscriptionManager, MailboxTyper mailboxTyper, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
+    public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxTyper mailboxTyper, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         return createXListSupportingProcessor(mailboxManager, subscriptionManager, mailboxTyper, quotaManager, quotaRootResolver, IdleProcessor.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS, new HashSet<String>());
     }
 
-    public static ImapProcessor createXListSupportingProcessor(final MailboxManager mailboxManager, final SubscriptionManager subscriptionManager, MailboxTyper mailboxTyper, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,  long idleKeepAlive, Set<String> disabledCaps) {
+    public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxTyper mailboxTyper, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,  long idleKeepAlive, Set<String> disabledCaps) {
         final StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         final UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
         final ImapProcessor imap4rev1Chain = DefaultProcessorChain.createDefaultChain(unknownRequestImapProcessor, mailboxManager, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, idleKeepAlive, TimeUnit.SECONDS, disabledCaps);

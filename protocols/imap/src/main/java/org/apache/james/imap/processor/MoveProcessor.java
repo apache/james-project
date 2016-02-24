@@ -25,7 +25,7 @@ public class MoveProcessor extends CopyProcessor implements CapabilityImplementi
 		super(MoveRequest.class, next, mailboxManager, factory);
 	}
 
-	protected List<MessageRange> process(final MailboxPath targetMailbox,
+	protected List<MessageRange> process(MailboxPath targetMailbox,
 			final SelectedMailbox currentMailbox,
 			final MailboxSession mailboxSession,
 			final MailboxManager mailboxManager, MessageRange messageSet)

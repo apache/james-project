@@ -35,7 +35,7 @@ public class DayMonthYear {
 
     private final int year;
 
-    public DayMonthYear(final int day, final int month, final int year) {
+    public DayMonthYear(int day, int month, int year) {
         super();
         this.day = day;
         this.month = month;

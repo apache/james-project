@@ -37,7 +37,7 @@ public class EncoderUtils {
      *            <code>Date</code>, not null
      * @return encoded IMAP <code>date-time</code>, not null
      */
-    public static String encodeDateTime(final Date date) {
+    public static String encodeDateTime(Date date) {
         final FastDateFormat format = FastDateFormat.getInstance("dd-MMM-yyyy HH:mm:ss Z", TimeZone.getTimeZone("GMT"), Locale.US);
         return format.format(date);
     }

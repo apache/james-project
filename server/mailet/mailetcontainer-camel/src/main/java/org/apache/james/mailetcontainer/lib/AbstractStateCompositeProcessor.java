@@ -163,7 +163,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
     @PostConstruct
     public void init() throws Exception {
         List<HierarchicalConfiguration> processorConfs = config.configurationsAt("processor");
-        for (final HierarchicalConfiguration processorConf : processorConfs) {
+        for (HierarchicalConfiguration processorConf : processorConfs) {
             String processorName = processorConf.getString("[@state]");
 
             // if the "child" processor has no jmx config we just use the one of

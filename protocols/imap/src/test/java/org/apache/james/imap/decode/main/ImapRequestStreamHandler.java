@@ -41,7 +41,7 @@ import org.slf4j.Logger;
  */
 public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
 
-    public ImapRequestStreamHandler(final ImapDecoder decoder, final ImapProcessor processor, final ImapEncoder encoder) {
+    public ImapRequestStreamHandler(ImapDecoder decoder, ImapProcessor processor, ImapEncoder encoder) {
         super(decoder, processor, encoder);
     }
 

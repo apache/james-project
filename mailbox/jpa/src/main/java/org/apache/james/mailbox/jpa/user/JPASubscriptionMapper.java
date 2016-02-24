@@ -34,7 +34,7 @@ import org.apache.james.mailbox.store.user.model.Subscription;
  */
 public class JPASubscriptionMapper extends JPATransactionalMapper implements SubscriptionMapper {
 
-    public JPASubscriptionMapper(final EntityManagerFactory entityManagerFactory) {
+    public JPASubscriptionMapper(EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
     }
 
@@ -42,7 +42,7 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
     /**
      * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
      */
-    public Subscription findMailboxSubscriptionForUser(final String user, final String mailbox) throws SubscriptionException {
+    public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
         try {
             return (Subscription) getEntityManager().createNamedQuery("findFindMailboxSubscriptionForUser")
             .setParameter("userParam", user).setParameter("mailboxParam", mailbox).getSingleResult();

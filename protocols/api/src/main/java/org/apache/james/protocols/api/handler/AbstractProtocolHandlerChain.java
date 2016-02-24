@@ -63,7 +63,7 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
             if (handler instanceof ExtensibleHandler) {
                 final ExtensibleHandler extensibleHandler = (ExtensibleHandler) handler;
                 final List<Class<?>> markerInterfaces = extensibleHandler.getMarkerInterfaces();
-                for (final Class<?> markerInterface : markerInterfaces) {
+                for (Class<?> markerInterface : markerInterfaces) {
                     final List<?> extensions = getHandlers(markerInterface);
                     extensibleHandler.wireExtensions(markerInterface, extensions);
                 }

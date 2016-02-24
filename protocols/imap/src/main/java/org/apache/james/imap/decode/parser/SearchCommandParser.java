@@ -176,7 +176,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return ImapRequestLineReader.cap(next);
     }
     
-    private SearchKey cc(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey cc(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsSpace(request);
         final String value = request.astring(charset);
@@ -184,7 +184,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey c(ImapSession session, ImapRequestLineReader request, final boolean isFirstToken, final Charset charset) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
+    private SearchKey c(ImapSession session, ImapRequestLineReader request, boolean isFirstToken, Charset charset) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'C':
@@ -196,7 +196,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey charset(ImapSession session, ImapRequestLineReader request, final boolean isFirstToken) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
+    private SearchKey charset(ImapSession session, ImapRequestLineReader request, boolean isFirstToken) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
         final SearchKey result;
         nextIsA(request);
         nextIsR(request);
@@ -256,7 +256,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey t(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey t(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'E':
@@ -268,7 +268,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey s(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey s(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'E':
@@ -357,7 +357,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey f(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey f(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'L':
@@ -409,7 +409,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey header(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey header(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsE(request);
         nextIsA(request);
@@ -450,7 +450,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey from(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey from(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsO(request);
         nextIsM(request);
@@ -623,7 +623,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey body(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey body(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsD(request);
         nextIsY(request);
@@ -707,7 +707,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey text(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey text(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsX(request);
         nextIsT(request);
@@ -731,7 +731,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return SearchKey.buildSequenceSet(range);
     }
 
-    private SearchKey to(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey to(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsSpace(request);
         final String value = request.astring(charset);
@@ -739,7 +739,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey subject(ImapRequestLineReader request, final Charset charset) throws DecodingException {
+    private SearchKey subject(ImapRequestLineReader request, Charset charset) throws DecodingException {
         final SearchKey result;
         nextIsB(request);
         nextIsJ(request);
@@ -877,7 +877,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         nextIs(request, 'V', 'v');
     }
 
-    private void nextIs(ImapRequestLineReader request, final char upper, final char lower) throws DecodingException {
+    private void nextIs(ImapRequestLineReader request, char upper, char lower) throws DecodingException {
         final char next = request.consume();
         if (next != upper && next != lower) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown search key");
@@ -904,7 +904,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private ImapMessage unsupportedCharset(final String tag, final ImapCommand command) {
+    private ImapMessage unsupportedCharset(String tag, ImapCommand command) {
         final StatusResponseFactory factory = getStatusResponseFactory();
         final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames());
         return factory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);

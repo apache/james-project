@@ -105,7 +105,7 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
     }
     
     public JCRMailboxMessage(JCRId mailboxUUID, Date internalDate, int size, Flags flags, SharedInputStream content,
-                             int bodyStartOctet, final PropertyBuilder propertyBuilder, Logger logger) {
+                             int bodyStartOctet, PropertyBuilder propertyBuilder, Logger logger) {
         super();
         this.mailboxUUID = mailboxUUID;
         this.internalDate = internalDate;
@@ -120,7 +120,7 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
         this.subType = propertyBuilder.getSubType();
         final List<Property> properties = propertyBuilder.toProperties();
         this.properties = new ArrayList<JCRProperty>(properties.size());
-        for (final Property property:properties) {
+        for (Property property:properties) {
             this.properties.add(new JCRProperty(property,logger));
         }
         
@@ -151,7 +151,7 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
         this.subType = message.getSubType();
         final List<Property> properties = pBuilder.toProperties();
         this.properties = new ArrayList<JCRProperty>(properties.size());
-        for (final Property property:properties) {
+        for (Property property:properties) {
             this.properties.add(new JCRProperty(property,  logger));
         }
     }

@@ -51,12 +51,12 @@ public class ScriptedUserAdder implements UserAdder {
      * @param host connect to this host
      * @param port connect to this port
      */
-    public ScriptedUserAdder(final String host, final int port)
+    public ScriptedUserAdder(String host, int port)
     {
         this(host, port, (String) null);
     }
     
-    public ScriptedUserAdder(final String host, final int port, final String script) {
+    public ScriptedUserAdder(String host, int port, String script) {
         this(host, port, script, new NullMonitor());
     }
     
@@ -66,11 +66,11 @@ public class ScriptedUserAdder implements UserAdder {
      * @param port connect to this port
      * @param monitor not null
      */
-    public ScriptedUserAdder(final String host, final int port, final Monitor monitor) {
+    public ScriptedUserAdder(String host, int port, Monitor monitor) {
         this(host, port, null, monitor);
     }
     
-    public ScriptedUserAdder(final String host, final int port, final String script, final Monitor monitor) {
+    public ScriptedUserAdder(String host, int port, String script, Monitor monitor) {
         this.host = host;
         this.port = port;
         this.script = script;
@@ -84,7 +84,7 @@ public class ScriptedUserAdder implements UserAdder {
      * @throws Exception upon failure
      * @throws NullPointerException when script has not been set
      */
-    public void addUser(final String user, final String password) throws Exception {
+    public void addUser(String user, String password) throws Exception {
         final StringReader reader = new StringReader(script);
         addUser(user, password, reader);
     }
@@ -96,7 +96,7 @@ public class ScriptedUserAdder implements UserAdder {
      * @param reader reader for script, not null
      * @throws Exception upon failure
      */
-    public void addUser(final String user, final String password, final Reader reader) throws Exception {
+    public void addUser(String user, String password, Reader reader) throws Exception {
         final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
         builder.setVariable(USER_VARIABLE_NAME, user);
         builder.setVariable(PASSWORD_VARIABLE_NAME, password);

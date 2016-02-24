@@ -57,7 +57,7 @@ public class AggregateMailetdocsReport extends AbstractMailetdocsReport {
         final DefaultDescriptorsExtractor extractor = new DefaultDescriptorsExtractor();
         if (project.isExecutionRoot()) {
             logProject(project);
-            for (final MavenProject subproject : reactorProjects) {
+            for (MavenProject subproject : reactorProjects) {
                 logSubproject(subproject);
                 extractor.extract(subproject, getLog());
             }
@@ -74,7 +74,7 @@ public class AggregateMailetdocsReport extends AbstractMailetdocsReport {
         }
     }
 
-    private void logSubproject(final MavenProject subproject) {
+    private void logSubproject(MavenProject subproject) {
         if (getLog().isDebugEnabled()) {
             getLog().debug("Adding descriptors in " + subproject.getName());
         }

@@ -23,7 +23,7 @@ import org.apache.james.imap.api.ImapCommand;
 public class UnsubscribeRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public UnsubscribeRequest(final ImapCommand command, final String mailboxName, final String tag) {
+    public UnsubscribeRequest(ImapCommand command, String mailboxName, String tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
     }

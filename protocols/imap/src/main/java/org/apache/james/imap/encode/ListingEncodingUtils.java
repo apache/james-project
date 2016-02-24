@@ -32,7 +32,7 @@ import org.apache.james.imap.message.response.AbstractListingResponse;
  */
 public class ListingEncodingUtils {
 
-    public static void encodeListingResponse(final String responseTypeName, final ImapResponseComposer composer, final AbstractListingResponse response) throws IOException {
+    public static void encodeListingResponse(String responseTypeName, ImapResponseComposer composer, AbstractListingResponse response) throws IOException {
         final List<String> attributes = getNameAttributes(response);
 
         final String name = response.getName();
@@ -42,7 +42,7 @@ public class ListingEncodingUtils {
         composer.message(responseTypeName);
         composer.openParen();
         if (attributes != null) {
-            for (final String attribute : attributes) {
+            for (String attribute : attributes) {
                 composer.message(attribute);
             }
         }
@@ -58,7 +58,7 @@ public class ListingEncodingUtils {
         composer.end();
     }
 
-    private static List<String> getNameAttributes(final AbstractListingResponse response) {
+    private static List<String> getNameAttributes(AbstractListingResponse response) {
         final List<String> attributes;
         if (response.isNameAttributed()) {
             attributes = new ArrayList<String>();

@@ -34,7 +34,7 @@ class ContentBodyElement implements BodyElement {
 
     protected final Content content;
 
-    public ContentBodyElement(final String name, final Content content) {
+    public ContentBodyElement(String name, Content content) {
         super();
         this.name = name;
         this.content = content;

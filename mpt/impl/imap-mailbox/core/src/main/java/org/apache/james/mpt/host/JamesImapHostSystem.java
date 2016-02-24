@@ -50,7 +50,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem {
         users = new HashSet<User>();
     }
 
-    public void configure(final ImapDecoder decoder, final ImapEncoder encoder,
+    public void configure(ImapDecoder decoder, ImapEncoder encoder,
             final ImapProcessor processor) {
         this.decoder = decoder;
         this.encoder = encoder;

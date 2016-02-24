@@ -38,7 +38,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
 
     private final StatusResponseFactory statusResponseFactory;
 
-    public ImapParserFactory(final StatusResponseFactory statusResponseFactory) {
+    public ImapParserFactory(StatusResponseFactory statusResponseFactory) {
         this.statusResponseFactory = statusResponseFactory;
         _imapCommands = new HashMap<String, Class<?>>();
 

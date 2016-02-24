@@ -42,12 +42,12 @@ public class MailetdocsReport extends AbstractMailetdocsReport {
      * without recursion.
      * @param project not null
      */
-    protected List<MailetMatcherDescriptor> buildDescriptors(final MavenProject project) {
+    protected List<MailetMatcherDescriptor> buildDescriptors(MavenProject project) {
         logProject(project);
         return new DefaultDescriptorsExtractor().extract(project, getLog()).descriptors();
     }
 
-    private void logProject(final MavenProject project) {
+    private void logProject(MavenProject project) {
         if (getLog().isDebugEnabled()) {
             getLog().debug("Building descriptors for " + project.getName());
         }

@@ -44,7 +44,7 @@ public abstract class AbstractListingResponse {
 
     private final MailboxType type;
 
-    public AbstractListingResponse(final boolean noInferiors, final boolean noSelect, final boolean marked, final boolean unmarked, boolean hasChildren, boolean hasNoChildren, final String name, final char hierarchyDelimiter, final MailboxType type) {
+    public AbstractListingResponse(boolean noInferiors, boolean noSelect, boolean marked, boolean unmarked, boolean hasChildren, boolean hasNoChildren, String name, char hierarchyDelimiter, MailboxType type) {
         super();
         this.noInferiors = noInferiors;
         this.noSelect = noSelect;

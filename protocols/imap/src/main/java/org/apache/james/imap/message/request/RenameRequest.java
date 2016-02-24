@@ -25,7 +25,7 @@ public class RenameRequest extends AbstractImapRequest {
 
     private final String newName;
 
-    public RenameRequest(final ImapCommand command, final String existingName, final String newName, final String tag) {
+    public RenameRequest(ImapCommand command, String existingName, String newName, String tag) {
         super(tag, command);
         this.existingName = existingName;
         this.newName = newName;

@@ -65,7 +65,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
 
     public OpenJPAMessageManager(MailboxSessionMapperFactory<JPAId> mapperFactory, 
     		MessageSearchIndex<JPAId> index, MailboxEventDispatcher<JPAId> dispatcher, 
-    		MailboxPathLocker locker, Mailbox<JPAId> mailbox, final AdvancedFeature f, 
+    		MailboxPathLocker locker, Mailbox<JPAId> mailbox, AdvancedFeature f, 
     		MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
     	

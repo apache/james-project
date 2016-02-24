@@ -110,7 +110,7 @@ public class MessageRange implements Iterable<Long>{
 
     private final long uidTo;
 
-    protected MessageRange(final Type type, final long uidFrom, final long uidTo) {
+    protected MessageRange(Type type, long uidFrom, long uidTo) {
         super();
         this.type = type;
         this.uidFrom = uidFrom;

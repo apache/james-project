@@ -35,7 +35,7 @@ public abstract class JPATransactionalMapper extends TransactionalMapper {
     protected EntityManagerFactory entityManagerFactory;
     protected EntityManager entityManager;
     
-    public JPATransactionalMapper(final EntityManagerFactory entityManagerFactory) {
+    public JPATransactionalMapper(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }
 

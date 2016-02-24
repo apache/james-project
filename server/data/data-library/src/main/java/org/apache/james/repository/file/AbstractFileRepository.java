@@ -97,7 +97,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
         try {
             directory = m_baseDirectory.getCanonicalFile();
-        } catch (final IOException ioe) {
+        } catch (IOException ioe) {
             throw new ConfigurationException("Unable to form canonical representation of " + m_baseDirectory);
         }
 
@@ -154,7 +154,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @throws ConfigurationException
      *             get thrown on invalid destintion syntax
      */
-    protected void setDestination(final String destination) throws ConfigurationException {
+    protected void setDestination(String destination) throws ConfigurationException {
 
         if (!destination.startsWith(FileSystem.FILE_PROTOCOL)) {
             throw new ConfigurationException("cannot handle destination " + destination);
@@ -181,12 +181,12 @@ public abstract class AbstractFileRepository implements Repository, Configurable
     }
 
     @Override
-    public Repository getChildRepository(final String childName) {
+    public Repository getChildRepository(String childName) {
         AbstractFileRepository child;
 
         try {
             child = createChildRepository();
-        } catch (final Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Cannot create child repository " + childName + " : " + e);
         }
 
@@ -195,13 +195,13 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
         try {
             child.setDestination(m_baseDirectory.getAbsolutePath() + File.pathSeparatorChar + childName + File.pathSeparator);
-        } catch (final ConfigurationException ce) {
+        } catch (ConfigurationException ce) {
             throw new RuntimeException("Cannot set destination for child child " + "repository " + childName + " : " + ce);
         }
 
         try {
             child.init();
-        } catch (final Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Cannot initialize child " + "repository " + childName + " : " + e);
         }
 
@@ -221,7 +221,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @throws IOException
      *             get thrown on IO error
      */
-    protected File getFile(final String key) throws IOException {
+    protected File getFile(String key) throws IOException {
         return new File(encode(key));
     }
 
@@ -234,7 +234,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @throws IOException
      *             get thrown on IO error
      */
-    protected InputStream getInputStream(final String key) throws IOException {
+    protected InputStream getInputStream(String key) throws IOException {
         // This was changed to SharedFileInputStream but reverted to
         // fix JAMES-559. Usign SharedFileInputStream should be a good
         // performance improvement, but more checks have to be done
@@ -252,7 +252,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @throws IOException
      *             get thrown on IO error
      */
-    protected OutputStream getOutputStream(final String key) throws IOException {
+    protected OutputStream getOutputStream(String key) throws IOException {
         return new FileOutputStream(getFile(key));
     }
 
@@ -264,7 +264,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @throws IOException 
      */
     
-    public synchronized boolean remove(final String key) {
+    public synchronized boolean remove(String key) {
         try {
             FileUtils.forceDelete(getFile(key));
             return true;
@@ -282,13 +282,13 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      *            the key which checked for
      * @return true if the repository contains the key
      */
-    public synchronized boolean containsKey(final String key) {
+    public synchronized boolean containsKey(String key) {
         try {
             final File file = getFile(key);
             if (DEBUG)
                 getLogger().debug("checking key " + key);
             return file.exists();
-        } catch (final Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Exception caught while searching " + "an object: " + e);
         }
     }
@@ -321,7 +321,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
      * @return result a unique String represent the Object which belongs to the
      *         key
      */
-    protected String encode(final String key) {
+    protected String encode(String key) {
         final byte[] bytes = key.getBytes();
         final char[] buffer = new char[bytes.length << 1];
 

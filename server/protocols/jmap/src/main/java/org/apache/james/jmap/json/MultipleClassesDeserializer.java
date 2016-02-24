@@ -52,7 +52,7 @@ public class MultipleClassesDeserializer extends StdDeserializer<Object> {
                 .orElseThrow(() -> new JsonMappingException("Can't map request to a known registered class"));
     }
 
-    private Object readValue(ObjectMapper mapper, final JsonNode root, Class<?> clazz) {
+    private Object readValue(ObjectMapper mapper, JsonNode root, Class<?> clazz) {
         try {
             return mapper.treeToValue(root, clazz);
         } catch (JsonProcessingException e) {

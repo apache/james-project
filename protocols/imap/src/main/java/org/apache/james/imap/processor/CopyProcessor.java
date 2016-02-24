@@ -43,11 +43,11 @@ import org.apache.james.mailbox.model.MessageRange;
 
 public class CopyProcessor extends AbstractMailboxProcessor<CopyRequest> {
 
-    public CopyProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public CopyProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         this(CopyRequest.class, next, mailboxManager, factory);
     }
 
-    protected CopyProcessor(final Class<? extends CopyRequest> acceptableClass, final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    protected CopyProcessor(Class<? extends CopyRequest> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(CopyRequest.class, next, mailboxManager, factory);
     }
 
@@ -58,7 +58,7 @@ public class CopyProcessor extends AbstractMailboxProcessor<CopyRequest> {
      * org.apache.james.imap.api.ImapCommand,
      * org.apache.james.imap.api.process.ImapProcessor.Responder)
      */
-    protected void doProcess(CopyRequest request, final ImapSession session, String tag, ImapCommand command, final Responder responder) {
+    protected void doProcess(CopyRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final MailboxPath targetMailbox = buildFullPath(session, request.getMailboxName());
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();
@@ -115,7 +115,7 @@ public class CopyProcessor extends AbstractMailboxProcessor<CopyRequest> {
         }
     }
 
-	protected List<MessageRange> process(final MailboxPath targetMailbox,
+	protected List<MessageRange> process(MailboxPath targetMailbox,
 			final SelectedMailbox currentMailbox,
 			final MailboxSession mailboxSession,
 			final MailboxManager mailboxManager, MessageRange messageSet)

@@ -49,7 +49,7 @@ public class JCRMessageManager extends StoreMessageManager<JCRId> {
     private final Logger log;
 
     public JCRMessageManager(MailboxSessionMapperFactory<JCRId> mapperFactory, MessageSearchIndex<JCRId> index, 
-            final MailboxEventDispatcher<JCRId> dispatcher, final MailboxPathLocker locker, final JCRMailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, final Logger log, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
+            final MailboxEventDispatcher<JCRId> dispatcher, MailboxPathLocker locker, JCRMailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, Logger log, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
         super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver);
         this.log = log;
     }

@@ -46,13 +46,13 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
     public final static String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
     private final static List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_ENABLE));
 
-    public EnableProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory, final List<PermitEnableCapabilityProcessor> capabilities) {
+    public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities) {
         this(next, mailboxManager, factory);
         EnableProcessor.capabilities.addAll(capabilities);
 
     }
 
-    public EnableProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public EnableProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(EnableRequest.class, next, mailboxManager, factory);
     }
 

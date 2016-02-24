@@ -44,7 +44,7 @@ public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
     private final MailboxPathLocker locker;
 
     @Inject
-    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, final MailboxPathLocker locker) {
+    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker) {
         super(mapperFactory,
             authenticator,
             locker,

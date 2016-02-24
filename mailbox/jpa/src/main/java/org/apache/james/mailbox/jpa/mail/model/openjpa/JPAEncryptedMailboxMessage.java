@@ -61,7 +61,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         @Factory("EncryptDecryptHelper.getDecrypted")
         @Lob private final byte[] header;
         
-        public JPAEncryptedMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, final PropertyBuilder propertyBuilder) throws MailboxException {
+        public JPAEncryptedMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
             super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
             try {
                 int headerEnd = bodyStartOctet;

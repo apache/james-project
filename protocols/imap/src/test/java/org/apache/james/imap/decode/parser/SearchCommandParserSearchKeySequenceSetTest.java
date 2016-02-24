@@ -101,7 +101,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
         checkValid(sequence, key);
     }
 
-    private void checkValid(String input, final SearchKey key) throws Exception {
+    private void checkValid(String input, SearchKey key) throws Exception {
         input = input + "\r\n";
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),

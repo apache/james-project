@@ -188,7 +188,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
     }
 
     @Override
-    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox<CassandraId> mailbox, MessageRange set) throws MailboxException {
+    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox<CassandraId> mailbox, MessageRange set) throws MailboxException {
         return CassandraUtils.convertToStream(session.execute(buildQuery(mailbox, set).and(eq(DELETED, true))))
             .map(this::message)
             .peek((message) -> delete(mailbox, message))

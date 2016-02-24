@@ -22,7 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 
 public class CapabilityRequest extends AbstractImapRequest {
 
-    public CapabilityRequest(final ImapCommand command, final String tag) {
+    public CapabilityRequest(ImapCommand command, String tag) {
         super(tag, command);
     }
 }

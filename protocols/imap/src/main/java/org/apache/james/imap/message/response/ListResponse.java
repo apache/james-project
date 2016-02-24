@@ -26,7 +26,7 @@ import org.apache.james.imap.api.process.MailboxType;
  */
 public final class ListResponse extends AbstractListingResponse implements ImapResponseMessage {
 
-    public ListResponse(final boolean noInferiors, final boolean noSelect, final boolean marked, final boolean unmarked, boolean hasChildren, boolean hasNoChildren, final String name, final char delimiter) {
+    public ListResponse(boolean noInferiors, boolean noSelect, boolean marked, boolean unmarked, boolean hasChildren, boolean hasNoChildren, String name, char delimiter) {
         super(noInferiors, noSelect, marked, unmarked, hasChildren, hasNoChildren, name, delimiter, MailboxType.OTHER);
     }
 }

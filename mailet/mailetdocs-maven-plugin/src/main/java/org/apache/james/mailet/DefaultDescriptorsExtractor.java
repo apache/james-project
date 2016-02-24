@@ -60,7 +60,7 @@ public class DefaultDescriptorsExtractor {
         return descriptors;
     }
 
-    public DefaultDescriptorsExtractor extract(final MavenProject project, final Log log) {
+    public DefaultDescriptorsExtractor extract(MavenProject project, Log log) {
         final JavaClass[] classes = javaClasses(project);
 
         final URLClassLoader classLoader = classLoader(project, log);
@@ -71,7 +71,7 @@ public class DefaultDescriptorsExtractor {
             final Class<?> mailetClass = classLoader.loadClass(MAILET_CLASS_NAME);
             final Class<?> matcherClass = classLoader.loadClass(MATCHER_CLASS_NAME);
 
-            for (final JavaClass nextClass : classes) {
+            for (JavaClass nextClass : classes) {
                 addDescriptor(log, classLoader, mailetClass, matcherClass, nextClass);
             }
         } catch (ClassNotFoundException e) {
@@ -124,7 +124,7 @@ public class DefaultDescriptorsExtractor {
     }
 
 
-    private void logInterfaces(Log log, final Class<?> klass,
+    private void logInterfaces(Log log, Class<?> klass,
             final List<Class<?>> allInterfaces) {
         if (log.isDebugEnabled()) {
             if (allInterfaces.size() > 0) {
@@ -140,7 +140,7 @@ public class DefaultDescriptorsExtractor {
 
 
     private MailetMatcherDescriptor describeMatcher(Log log,
-            final JavaClass nextClass, final String nameOfNextClass,
+            final JavaClass nextClass, String nameOfNextClass,
             final Class<?> klass) {
         
         final MailetMatcherDescriptor result = buildDescriptor(log, nextClass,
@@ -151,9 +151,9 @@ public class DefaultDescriptorsExtractor {
     }
 
 
-    private MailetMatcherDescriptor buildDescriptor(final Log log, final JavaClass nextClass,
-            final String nameOfClass, final Class<?> klass,
-            final String infoMethodName, final Type type) {
+    private MailetMatcherDescriptor buildDescriptor(Log log, JavaClass nextClass,
+            final String nameOfClass, Class<?> klass,
+            final String infoMethodName, Type type) {
         final MailetMatcherDescriptor result = new MailetMatcherDescriptor();
         result.setName(nextClass.getName());
         result.setFullyQualifiedName(nameOfClass);
@@ -183,7 +183,7 @@ public class DefaultDescriptorsExtractor {
     }
 
 
-    private void handleInfoLoadFailure(final Log log, final String nameOfClass,
+    private void handleInfoLoadFailure(Log log, String nameOfClass,
             final Type type, Exception e) {
         log.info("Cannot load " + type + " info for " + nameOfClass + ": " + e.getMessage());
         log.debug(e);
@@ -191,7 +191,7 @@ public class DefaultDescriptorsExtractor {
 
 
     private MailetMatcherDescriptor describeMailet(Log log,
-            final JavaClass nextClass, final String nameOfNextClass,
+            final JavaClass nextClass, String nameOfNextClass,
             final Class<?> klass) {
 
         final MailetMatcherDescriptor result = buildDescriptor(log, nextClass,
@@ -202,10 +202,10 @@ public class DefaultDescriptorsExtractor {
     }
 
 
-    private void logInterfacesImplemented(final Log log, final JavaClass nextClass) {
+    private void logInterfacesImplemented(Log log, JavaClass nextClass) {
         if (log.isDebugEnabled()) {
             final List<JavaClass> implementedInterfaces = getAllInterfacesQdox(nextClass);
-            for (final JavaClass implemented: implementedInterfaces) {
+            for (JavaClass implemented: implementedInterfaces) {
                 log.debug("Interface implemented: " + implemented);
             }
         }
@@ -274,7 +274,7 @@ public class DefaultDescriptorsExtractor {
             if (dependencies == null) {
                 log.debug("No project dependencies");
             } else {
-                for (final Artifact artifact: dependencies) {
+                for (Artifact artifact: dependencies) {
                     log.debug("DEP: " + artifact);
                 }
             }

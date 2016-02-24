@@ -77,7 +77,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
     /**
      * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
      */
-    protected void doConfigure(final HierarchicalConfiguration configuration) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         destination = configuration.getString("destination.[@URL]");
 

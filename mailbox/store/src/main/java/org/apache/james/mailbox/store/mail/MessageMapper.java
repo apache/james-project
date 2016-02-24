@@ -62,7 +62,7 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
      * @throws MailboxException
      */
     Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(
-            Mailbox<Id> mailbox, final MessageRange set)
+            Mailbox<Id> mailbox, MessageRange set)
             throws MailboxException;
 
     /**
@@ -137,7 +137,7 @@ public interface MessageMapper<Id extends MailboxId> extends Mapper {
      * @return updatedFlags
      * @throws MailboxException
      */
-    Iterator<UpdatedFlags> updateFlags(Mailbox<Id> mailbox, final FlagsUpdateCalculator flagsUpdateCalculator,
+    Iterator<UpdatedFlags> updateFlags(Mailbox<Id> mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException;
     
     /**

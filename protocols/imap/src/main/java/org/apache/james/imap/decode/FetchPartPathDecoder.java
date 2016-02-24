@@ -61,7 +61,7 @@ public class FetchPartPathDecoder {
     public FetchPartPathDecoder() {
     }
 
-    public int decode(final CharSequence sectionSpecification) throws DecodingException {
+    public int decode(CharSequence sectionSpecification) throws DecodingException {
         init();
         sectionType = decode(0, sectionSpecification);
         prunePath();
@@ -70,18 +70,18 @@ public class FetchPartPathDecoder {
 
     private void prunePath() {
         if (path != null) {
-            final int length = path.length;
+            int length = path.length;
             if (used < length) {
-                final int[] newPath = new int[used];
+                int[] newPath = new int[used];
                 System.arraycopy(path, 0, newPath, 0, used);
                 path = newPath;
             }
         }
     }
 
-    private int decode(final int at, final CharSequence sectionSpecification) throws DecodingException {
-        final int result;
-        final int length = sectionSpecification.length();
+    private int decode(int at, CharSequence sectionSpecification) throws DecodingException {
+        int result;
+        int length = sectionSpecification.length();
         if (at < length) {
             final char next = sectionSpecification.charAt(at);
             switch (next) {
@@ -168,113 +168,113 @@ public class FetchPartPathDecoder {
     }
 
     private void mustBeI(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char i = sectionSpecification.charAt(position);
+        char i = sectionSpecification.charAt(position);
         if (!(i == 'i' || i == 'I')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeM(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'm' || next == 'M')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeN(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'n' || next == 'N')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeO(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'o' || next == 'O')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeE(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'e' || next == 'E')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeA(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'a' || next == 'A')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeD(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'd' || next == 'D')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeR(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'r' || next == 'R')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeX(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'x' || next == 'X')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeT(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 't' || next == 'T')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeF(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'f' || next == 'F')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeL(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 'l' || next == 'L')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeS(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == 's' || next == 'S')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeDot(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == '.')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private void mustBeOpenParen(CharSequence sectionSpecification, int position) throws DecodingException {
-        final char next = sectionSpecification.charAt(position);
+        char next = sectionSpecification.charAt(position);
         if (!(next == '(')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
     }
 
     private int header(int at, CharSequence sectionSpecification) throws DecodingException {
-        final int result;
-        final int length = sectionSpecification.length();
+        int result;
+        int length = sectionSpecification.length();
         if (length > at + 5) {
             mustBeE(sectionSpecification, at + 1);
             mustBeA(sectionSpecification, at + 2);
@@ -294,8 +294,8 @@ public class FetchPartPathDecoder {
     }
 
     private int headerFields(int at, CharSequence sectionSpecification) throws DecodingException {
-        final int result;
-        final int length = sectionSpecification.length();
+        int result;
+        int length = sectionSpecification.length();
         if (length > at + 7) {
             mustBeDot(sectionSpecification, at);
             mustBeF(sectionSpecification, at + 1);
@@ -304,8 +304,8 @@ public class FetchPartPathDecoder {
             mustBeL(sectionSpecification, at + 4);
             mustBeD(sectionSpecification, at + 5);
             mustBeS(sectionSpecification, at + 6);
-            final char next = sectionSpecification.charAt(at + 7);
-            final int namesStartAt;
+            char next = sectionSpecification.charAt(at + 7);
+            int namesStartAt;
             switch (next) {
             case ' ':
                 result = HEADER_FIELDS;
@@ -334,19 +334,19 @@ public class FetchPartPathDecoder {
         return result;
     }
 
-    private void readHeaderNames(final int at, final CharSequence sectionSpecification) throws DecodingException {
+    private void readHeaderNames(int at, CharSequence sectionSpecification) throws DecodingException {
         names = new ArrayList<String>();
-        final int firstWordStart = skipSpaces(at, sectionSpecification);
+        int firstWordStart = skipSpaces(at, sectionSpecification);
         readHeaderNames(firstWordStart, firstWordStart, sectionSpecification);
     }
 
-    private void readHeaderNames(final int at, final int lastWordStart, final CharSequence sectionSpecification) throws DecodingException {
+    private void readHeaderNames(int at, int lastWordStart, CharSequence sectionSpecification) throws DecodingException {
         if (at < sectionSpecification.length()) {
             final char next = sectionSpecification.charAt(at);
             switch (next) {
             case ' ':
                 readName(lastWordStart, at, sectionSpecification);
-                final int nextWord = skipSpaces(at, sectionSpecification);
+                int nextWord = skipSpaces(at, sectionSpecification);
                 readHeaderNames(nextWord, nextWord, sectionSpecification);
                 break;
             case ')':
@@ -360,18 +360,18 @@ public class FetchPartPathDecoder {
         }
     }
 
-    private void readName(final int wordStart, final int wordFinish, final CharSequence sectionSpecification) {
+    private void readName(int wordStart, int wordFinish, CharSequence sectionSpecification) {
         if (wordStart <= wordFinish) {
-            final CharSequence word = sectionSpecification.subSequence(wordStart, wordFinish);
-            final String name = word.toString();
+            CharSequence word = sectionSpecification.subSequence(wordStart, wordFinish);
+            String name = word.toString();
             names.add(name);
         }
     }
 
-    private int skipSpaces(final int at, final CharSequence sectionSpecification) {
-        final int result;
+    private int skipSpaces(int at, CharSequence sectionSpecification) {
+        int result;
         if (at < sectionSpecification.length()) {
-            final char next = sectionSpecification.charAt(at);
+            char next = sectionSpecification.charAt(at);
             if (next == ' ') {
                 result = skipSpaces(at + 1, sectionSpecification);
             } else {
@@ -395,8 +395,8 @@ public class FetchPartPathDecoder {
         return TEXT;
     }
 
-    private int digit(final int at, final CharSequence sectionSpecification, int digit) throws DecodingException {
-        final int result;
+    private int digit(int at, CharSequence sectionSpecification, int digit) throws DecodingException {
+        int result;
         digit(digit);
         result = decode(at + 1, sectionSpecification);
         return result;
@@ -430,7 +430,7 @@ public class FetchPartPathDecoder {
         if (path == null) {
             path = new int[ARRAY_INITIAL_SIZE];
         } else {
-            final int length = path.length;
+            int length = path.length;
             if (used >= length) {
                 int[] newPath = new int[length + ARRAY_INCREMENT];
                 System.arraycopy(path, 0, newPath, 0, length);

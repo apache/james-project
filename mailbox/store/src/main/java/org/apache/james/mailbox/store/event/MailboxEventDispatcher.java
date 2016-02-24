@@ -64,7 +64,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * @param uids Sorted map with uids and message meta data
      * @param mailbox The mailbox
      */
-    public void expunged(final MailboxSession session,  Map<Long, MessageMetaData> uids, Mailbox<Id> mailbox) {
+    public void expunged(MailboxSession session,  Map<Long, MessageMetaData> uids, Mailbox<Id> mailbox) {
         listener.event(eventFactory.expunged(session, uids, mailbox));
     }
 
@@ -72,7 +72,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * Should get called when the message flags were update in a Mailbox. All
      * registered MailboxListener will get triggered then
      */
-    public void flagsUpdated(MailboxSession session, final List<Long> uids, final Mailbox<Id> mailbox, final List<UpdatedFlags> uflags) {
+    public void flagsUpdated(MailboxSession session, List<Long> uids, Mailbox<Id> mailbox, List<UpdatedFlags> uflags) {
         listener.event(eventFactory.flagsUpdated(session, uids, mailbox, uflags));
     }
 

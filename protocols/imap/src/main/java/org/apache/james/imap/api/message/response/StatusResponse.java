@@ -94,7 +94,7 @@ public interface StatusResponse extends ImapResponseMessage {
 
         private final String code;
 
-        Type(final String code) {
+        Type(String code) {
             this.code = code;
         }
 
@@ -324,20 +324,20 @@ public interface StatusResponse extends ImapResponseMessage {
         private final boolean useParens;
 
         @SuppressWarnings("unchecked")
-        private ResponseCode(final String code) {
+        private ResponseCode(String code) {
             this(code, Collections.EMPTY_LIST, NO_NUMBER, true);
         }
 
         @SuppressWarnings("unchecked")
-        private ResponseCode(final String code, final long number) {
+        private ResponseCode(String code, long number) {
             this(code, Collections.EMPTY_LIST, number, true);
         }
 
-        private ResponseCode(final String code, final Collection<String> parameters) {
+        private ResponseCode(String code, Collection<String> parameters) {
             this(code, parameters, NO_NUMBER, true);
         }
 
-        private ResponseCode(final String code, final Collection<String> parameters, final long number, final boolean useParens) {
+        private ResponseCode(String code, Collection<String> parameters, long number, boolean useParens) {
             super();
             this.useParens = useParens;
             this.code = code;

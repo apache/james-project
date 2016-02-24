@@ -64,7 +64,7 @@ public class DiscardProtocol {
     private volatile ServerSocketChannel socket;
     
 
-    public DiscardProtocol(final int port) {
+    public DiscardProtocol(int port) {
         super();
         this.port = port;
         queue = new LinkedList<Server>();

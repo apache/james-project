@@ -25,7 +25,7 @@ import org.apache.james.imap.api.process.MailboxType;
  * Values an IMAP4rev1 <code>LIST</code> response.
  */
 public final class LSubResponse extends AbstractListingResponse implements ImapResponseMessage {
-    public LSubResponse(final String name, final boolean noSelect, final char delimiter) {
+    public LSubResponse(String name, boolean noSelect, char delimiter) {
         super(false, noSelect, false, false, false, false, name, delimiter, MailboxType.OTHER);
     }
 }

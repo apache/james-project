@@ -46,7 +46,7 @@ import org.apache.james.mailbox.model.MailboxQuery;
 
 public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
-    public ListProcessor(final ImapProcessor next, final MailboxManager mailboxManager, final StatusResponseFactory factory) {
+    public ListProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(ListRequest.class, next, mailboxManager, factory);
     }
 
@@ -87,7 +87,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * @param command
      * @param responder
      */
-    protected final void doProcess(final String referenceName, final String mailboxName, final ImapSession session, final String tag, ImapCommand command, final Responder responder, final MailboxTyper mailboxTyper) {
+    protected final void doProcess(String referenceName, String mailboxName, ImapSession session, String tag, ImapCommand command, Responder responder, MailboxTyper mailboxTyper) {
         try {
             // Should the namespace section be returned or not?
             final boolean isRelative;
@@ -175,7 +175,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 results = getMailboxManager().search(new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter()), mailboxSession);
             }
 
-            for (final MailboxMetaData metaData : results) {
+            for (MailboxMetaData metaData : results) {
                 processResult(responder, isRelative, metaData, getMailboxType(session, mailboxTyper, metaData.getPath()));
             }
 
@@ -188,7 +188,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         }
     }
 
-    void processResult(final Responder responder, final boolean relative, final MailboxMetaData listResult, final MailboxType mailboxType) {
+    void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
         final char delimiter = listResult.getHierarchyDelimiter();
         final String mailboxName = mailboxName(relative, listResult.getPath(), delimiter);
 
@@ -235,7 +235,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         return result;
     }
 
-    protected boolean isAcceptable(final ImapMessage message) {
+    protected boolean isAcceptable(ImapMessage message) {
         return ListRequest.class.equals(message.getClass());
     }
 }

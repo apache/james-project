@@ -57,7 +57,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
         return "LMTP Service";
     }
 
-    public void doConfigure(final HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
 

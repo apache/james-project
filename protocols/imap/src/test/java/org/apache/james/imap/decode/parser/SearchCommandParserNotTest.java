@@ -128,7 +128,7 @@ public class SearchCommandParserNotTest {
         assertEquals("foo", keys.get(1).getValue()); 
     } 
 
-    private void checkValid(String input, final SearchKey key) throws Exception {
+    private void checkValid(String input, SearchKey key) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),
                 new ByteArrayOutputStream());

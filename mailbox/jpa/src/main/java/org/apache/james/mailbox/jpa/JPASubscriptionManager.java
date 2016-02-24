@@ -29,14 +29,14 @@ import org.apache.james.mailbox.store.user.model.Subscription;
  */
 public class JPASubscriptionManager extends StoreSubscriptionManager {
     
-    public JPASubscriptionManager(final JPAMailboxSessionMapperFactory mapperFactory) {
+    public JPASubscriptionManager(JPAMailboxSessionMapperFactory mapperFactory) {
         super(mapperFactory);
     }
     
     /**
      * @see org.apache.james.mailbox.store.StoreSubscriptionManager#createSubscription(org.apache.james.mailbox.MailboxSession, java.lang.String)
      */
-    protected Subscription createSubscription(final MailboxSession session, final String mailbox) {
+    protected Subscription createSubscription(MailboxSession session, String mailbox) {
         return new JPASubscription(session.getUser().getUserName(), mailbox);
     }
 }

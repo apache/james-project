@@ -466,7 +466,7 @@ public class ProtocolSession implements ProtocolInteractor {
 
         private final int sessionNumber;
 
-        public ContinuationElement(final int sessionNumber) throws Exception {
+        public ContinuationElement(int sessionNumber) throws Exception {
             this.sessionNumber = sessionNumber < 0 ? 0 : sessionNumber;
         }
 

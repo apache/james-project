@@ -72,7 +72,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
      * (non-Javadoc)
      * @see org.apache.james.protocols.smtp.core.DataLineFilter#onLine(org.apache.james.protocols.smtp.SMTPSession, java.nio.ByteBuffer, org.apache.james.protocols.api.handler.LineHandler)
      */
-    public Response onLine(final SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
+    public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
         MailEnvelopeImpl env = (MailEnvelopeImpl) session.getAttachment(DataCmdHandler.MAILENV, ProtocolSession.State.Transaction);
         OutputStream out = env.getMessageOutputStream();
         try {

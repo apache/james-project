@@ -271,7 +271,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public boolean hasChildren(final Mailbox<HBaseId> mailbox, final char c) throws MailboxException, MailboxNotFoundException {
+    public boolean hasChildren(Mailbox<HBaseId> mailbox, char c) throws MailboxException, MailboxNotFoundException {
         HTable mailboxes = null;
         ResultScanner scanner = null;
         try {

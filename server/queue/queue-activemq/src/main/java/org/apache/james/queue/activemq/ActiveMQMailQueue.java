@@ -92,7 +92,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(final ConnectionFactory connectionFactory, final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, final String queuename, final Logger logger) {
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, Logger logger) {
         this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, logger);
     }
 
@@ -104,7 +104,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @param useBlob
      * @param logger
      */
-    public ActiveMQMailQueue(final ConnectionFactory connectionFactory, final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, final String queuename, boolean useBlob, final Logger logger) {
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, Logger logger) {
         super(connectionFactory, mailQueueItemDecoratorFactory, queuename, logger);
         this.useBlob = useBlob;
     }

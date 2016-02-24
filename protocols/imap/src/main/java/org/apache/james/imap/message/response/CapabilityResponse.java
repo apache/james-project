@@ -37,7 +37,7 @@ public class CapabilityResponse implements ImapResponseMessage {
      * @param capabilities
      *            not null
      */
-    public CapabilityResponse(final Set<String> capabilities) {
+    public CapabilityResponse(Set<String> capabilities) {
         super();
         this.capabilities = capabilities;
     }

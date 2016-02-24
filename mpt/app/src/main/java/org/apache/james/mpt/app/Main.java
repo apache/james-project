@@ -51,8 +51,8 @@ public class Main {
     private static final char SHABANG_OPTION = 's';
     private static final char VERBOSE_OPTION = 'v';
 
-    public static final void main(final String[] args) throws Exception {
-        final Options options = buildOptions();
+    public static final void main(String[] args) throws Exception {
+        Options options = buildOptions();
         
         try {
             
@@ -69,13 +69,13 @@ public class Main {
     }
 
     private static void runCommand(CommandLine cmd) throws Exception {
-        final boolean verbose = Boolean.parseBoolean(cmd.getOptionValue(VERBOSE_OPTION, Boolean.toString(false)));
-        final File file = new File(cmd.getOptionValue(FILE_OPTION));
+        boolean verbose = Boolean.parseBoolean(cmd.getOptionValue(VERBOSE_OPTION, Boolean.toString(false)));
+        File file = new File(cmd.getOptionValue(FILE_OPTION));
         if (file.exists()) {
             try {
-                final int port = Integer.parseInt(cmd.getOptionValue(PORT_OPTION));    
-                final String host = cmd.getOptionValue(HOST_OPTION, "localhost");
-                final String shabang = cmd.getOptionValue(SHABANG_OPTION, null);
+                int port = Integer.parseInt(cmd.getOptionValue(PORT_OPTION));    
+                String host = cmd.getOptionValue(HOST_OPTION, "localhost");
+                String shabang = cmd.getOptionValue(SHABANG_OPTION, null);
                 RunScript runner = new RunScript(file, port, host, shabang, verbose);
                 runner.run();
                 
@@ -90,7 +90,7 @@ public class Main {
     }
 
     private static Options buildOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         
         addRunScriptOptions(options);
         
@@ -98,7 +98,7 @@ public class Main {
     }
 
     @SuppressWarnings("static-access")
-    private static void addRunScriptOptions(final Options options) {
+    private static void addRunScriptOptions(Options options) {
         // -f <file> runs this script
         options.addOption(OptionBuilder
                     .withArgName("file")

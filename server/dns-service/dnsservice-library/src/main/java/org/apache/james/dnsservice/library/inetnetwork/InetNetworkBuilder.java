@@ -175,7 +175,7 @@ public class InetNetworkBuilder {
      * @param netspec
      * @return addrMask the address/mask of the given argument
      */
-    private static String normalizeV4FromAsterisk(final String netspec) {
+    private static String normalizeV4FromAsterisk(String netspec) {
 
         String[] masks = { "0.0.0.0/0.0.0.0", "0.0.0/255.0.0.0", "0.0/255.255.0.0", "0/255.255.255.0" };
 
@@ -212,7 +212,7 @@ public class InetNetworkBuilder {
      *            the xxx.xxx.xxx.xxx/yyy format
      * @return addrMask the xxx.xxx.xxx.xxx/yyy.yyy.yyy.yyy format
      */
-    private static String normalizeV4FromCIDR(final String netspec) {
+    private static String normalizeV4FromCIDR(String netspec) {
 
         final int bits = 32 - Integer.parseInt(netspec.substring(netspec.indexOf('/') + 1));
 

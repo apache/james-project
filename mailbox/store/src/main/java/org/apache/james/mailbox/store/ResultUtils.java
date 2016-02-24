@@ -53,7 +53,7 @@ public class ResultUtils {
 
     static final Charset US_ASCII = Charset.forName("US-ASCII");
 
-    public static List<MessageResult.Header> createHeaders(final MailboxMessage<?> document) throws IOException {
+    public static List<MessageResult.Header> createHeaders(MailboxMessage<?> document) throws IOException {
         final List<MessageResult.Header> results = new ArrayList<MessageResult.Header>();
         MimeConfig config = MimeConfig.custom().setMaxLineLen(-1).setMaxHeaderLen(-1).build();
         final MimeStreamParser parser = new MimeStreamParser(config);
@@ -106,7 +106,7 @@ public class ResultUtils {
      * @return result
      * @throws MailboxException
      */
-    public static MessageResult loadMessageResult(final MailboxMessage<?> message, final FetchGroup fetchGroup) throws MailboxException {
+    public static MessageResult loadMessageResult(MailboxMessage<?> message, FetchGroup fetchGroup) throws MailboxException {
         try {
 
             MessageResultImpl messageResult = new MessageResultImpl(message);
@@ -141,7 +141,7 @@ public class ResultUtils {
 
     }
 
-    private static void addPartContent(final FetchGroup fetchGroup,
+    private static void addPartContent(FetchGroup fetchGroup,
                                        MailboxMessage<?> message, MessageResultImpl messageResult)
             throws MailboxException, IOException,
             MimeException {
@@ -176,7 +176,7 @@ public class ResultUtils {
         }
     }
 
-    private static PartContentBuilder build(int[] path, final MailboxMessage<?> message)
+    private static PartContentBuilder build(int[] path, MailboxMessage<?> message)
             throws IOException, MimeException {
         final InputStream stream = message.getFullContent();
         PartContentBuilder result = new PartContentBuilder();

@@ -36,7 +36,7 @@ public class SearchResponse implements ImapResponseMessage {
      * @param ids ids, not null
      * @param highestModSeq
      */
-    public SearchResponse(final long[] ids, Long highestModSeq) {
+    public SearchResponse(long[] ids, Long highestModSeq) {
         super();
         this.ids = ids;
         this.highestModSeq = highestModSeq;

@@ -45,8 +45,8 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
  */
 public class JPAMessageManager extends StoreMessageManager<JPAId> {
     
-    public JPAMessageManager(MailboxSessionMapperFactory<JPAId> mapperFactory, final MessageSearchIndex<JPAId> index, 
-    			final MailboxEventDispatcher<JPAId> dispatcher, final MailboxPathLocker locker, 
+    public JPAMessageManager(MailboxSessionMapperFactory<JPAId> mapperFactory, MessageSearchIndex<JPAId> index, 
+    			final MailboxEventDispatcher<JPAId> dispatcher, MailboxPathLocker locker, 
     			final Mailbox<JPAId> mailbox, MailboxACLResolver aclResolver, 
     			GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager,
                 QuotaRootResolver quotaRootResolver) throws MailboxException {
@@ -56,7 +56,7 @@ public class JPAMessageManager extends StoreMessageManager<JPAId> {
     }
     
     @Override
-    protected MailboxMessage<JPAId> createMessage(Date internalDate, final int size, int bodyStartOctet, final SharedInputStream content,
+    protected MailboxMessage<JPAId> createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content,
                                                   final Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
 
         return new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);

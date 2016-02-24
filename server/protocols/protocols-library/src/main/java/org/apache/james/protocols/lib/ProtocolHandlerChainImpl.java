@@ -90,9 +90,9 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
 
     private void wireExtensibleHandlers() throws WiringException {
         LinkedList<ExtensibleHandler> eHandlers = getHandlers(ExtensibleHandler.class);
-        for (final ExtensibleHandler extensibleHandler : eHandlers) {
+        for (ExtensibleHandler extensibleHandler : eHandlers) {
             final List<Class<?>> markerInterfaces = extensibleHandler.getMarkerInterfaces();
-            for (final Class<?> markerInterface : markerInterfaces) {
+            for (Class<?> markerInterface : markerInterfaces) {
                 final List<?> extensions = getHandlers(markerInterface);
                 // ok now time for try the wiring
                 extensibleHandler.wireExtensions(markerInterface, extensions);

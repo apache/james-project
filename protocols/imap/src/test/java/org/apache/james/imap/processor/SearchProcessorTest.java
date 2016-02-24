@@ -485,7 +485,7 @@ public class SearchProcessorTest {
         check(key, query);
     }
 
-    private void check(final SearchKey key, final SearchQuery query) throws Exception {        
+    private void check(SearchKey key, final SearchQuery query) throws Exception {        
         mockery.checking(new Expectations() {{
             allowing(session).getAttribute(
                     with(equal(SearchProcessor.SEARCH_MODSEQ))); will(returnValue(null));

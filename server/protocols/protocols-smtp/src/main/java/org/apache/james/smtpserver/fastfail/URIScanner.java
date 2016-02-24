@@ -187,7 +187,7 @@ public class URIScanner {
     static public HashSet<String> scanContentForDomains(HashSet<String> domains, CharSequence content) {
         HashSet<String> newDomains = new HashSet<String>();
         HashSet<String> hosts = scanContentForHosts(content);
-        for (final String host : hosts) {
+        for (String host : hosts) {
             final String domain = domainFromHost(host);
 
             if (null != domain) {

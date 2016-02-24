@@ -34,7 +34,7 @@ public final class ByteContent implements Content {
 
     private final long size;
 
-    public ByteContent(final byte[] contents) {
+    public ByteContent(byte[] contents) {
         this.contents = contents;
         size = contents.length;
     }

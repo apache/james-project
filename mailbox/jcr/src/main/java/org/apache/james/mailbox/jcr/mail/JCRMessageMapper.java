@@ -121,7 +121,7 @@ public class JCRMessageMapper extends AbstractMessageMapper<JCRId> implements JC
      *            {@link #MESSAGE_SCALE_MONTH}, {@link #MESSAGE_SCALE_NONE} or
      *            {@link #MESSAGE_SCALE_YEAR}
      */
-    public JCRMessageMapper(final MailboxSessionJCRRepository repository, MailboxSession mSession,
+    public JCRMessageMapper(MailboxSessionJCRRepository repository, MailboxSession mSession,
             UidProvider<JCRId> uidProvider, ModSeqProvider<JCRId> modSeqProvider, int scaleType) {
         super(mSession, uidProvider, modSeqProvider);
         this.repository = repository;
@@ -141,7 +141,7 @@ public class JCRMessageMapper extends AbstractMessageMapper<JCRId> implements JC
      * @param modSeqProvider
      *            {@link ModSeqProvider} to use
      */
-    public JCRMessageMapper(final MailboxSessionJCRRepository repos, MailboxSession session,
+    public JCRMessageMapper(MailboxSessionJCRRepository repos, MailboxSession session,
             UidProvider<JCRId> uidProvider, ModSeqProvider<JCRId> modSeqProvider) {
         this(repos, session, uidProvider, modSeqProvider, MESSAGE_SCALE_DAY);
     }

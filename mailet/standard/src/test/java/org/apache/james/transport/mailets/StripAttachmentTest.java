@@ -103,7 +103,7 @@ public class StripAttachmentTest {
         }
     }
 
-    public String toString(final InputStream is) throws IOException {
+    public String toString(InputStream is) throws IOException {
         final ByteArrayOutputStream sw = new ByteArrayOutputStream();
         final byte[] buffer = new byte[1024];
         int n;

@@ -48,7 +48,7 @@ public class TokenCollector extends Tokenizer {
      * @return this, not null
      * @throws IOException
      */
-    public TokenCollector collect(final Reader stream) throws IOException {
+    public TokenCollector collect(Reader stream) throws IOException {
         doTokenize(stream);
         return this;
     }

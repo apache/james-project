@@ -80,7 +80,7 @@ public class Runner {
      * of James, this method uses the {@link HostSystem} to simplify
      * testing. One mock instance is required per protocol session/connection.
      */
-    public void runSessions(final SessionFactory factory) throws Exception {
+    public void runSessions(SessionFactory factory) throws Exception {
         class SessionContinuation implements Continuation {
 
             public ProtocolSession session;

@@ -82,8 +82,8 @@ public class StoreCommandParserTest {
                 flags, false, "A01");
     }
     
-    private void check(String input, final IdRange[] idSet,final boolean silent,
-            final Boolean sign, final Flags flags, final boolean useUids, final String tag)
+    private void check(String input, IdRange[] idSet, boolean silent,
+            final Boolean sign, Flags flags, boolean useUids, String tag)
             throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),

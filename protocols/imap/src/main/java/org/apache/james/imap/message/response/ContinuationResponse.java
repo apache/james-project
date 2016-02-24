@@ -28,13 +28,13 @@ public class ContinuationResponse implements ImapResponseMessage {
 
     private final HumanReadableText textKey;
 
-    public ContinuationResponse(final String data) {
+    public ContinuationResponse(String data) {
         super();
         this.data = data;
         this.textKey = null;
     }
 
-    public ContinuationResponse(final HumanReadableText textKey) {
+    public ContinuationResponse(HumanReadableText textKey) {
         super();
         this.data = null;
         this.textKey = textKey;

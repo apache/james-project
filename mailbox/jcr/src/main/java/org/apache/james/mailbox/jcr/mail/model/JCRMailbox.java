@@ -60,7 +60,7 @@ public class JCRMailbox implements Mailbox<JCRId>, JCRImapConstants, Persistent{
     private long highestKnownModSeq;
     
     
-    public JCRMailbox( final MailboxPath path, final long uidValidity, Logger logger) {
+    public JCRMailbox( final MailboxPath path, long uidValidity, Logger logger) {
         this.name = path.getName();
         this.namespace = path.getNamespace();
         this.user = path.getUser();
@@ -68,7 +68,7 @@ public class JCRMailbox implements Mailbox<JCRId>, JCRImapConstants, Persistent{
         this.logger = logger;
     }
     
-    public JCRMailbox( final Node node, final Logger logger) {
+    public JCRMailbox( final Node node, Logger logger) {
         this.node = node;
         this.logger = logger;
     }

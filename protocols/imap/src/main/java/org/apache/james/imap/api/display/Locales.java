@@ -40,7 +40,7 @@ public class Locales {
     private final List<Locale> userPreferences;
     private final Locale clientPreference;
 
-    public Locales(final List<Locale> userPreferences, final Locale clientPreference) {
+    public Locales(List<Locale> userPreferences, Locale clientPreference) {
         super();
         this.userPreferences = userPreferences;
         this.clientPreference = clientPreference;

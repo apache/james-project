@@ -91,7 +91,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
 
     private int highestMsn = 0;
     
-    public SelectedMailboxImpl(final MailboxManager mailboxManager, final ImapSession session, final MailboxPath path) throws MailboxException {
+    public SelectedMailboxImpl(MailboxManager mailboxManager, ImapSession session, MailboxPath path) throws MailboxException {
         this.session = session;
         this.sessionId = ImapSessionUtils.getMailboxSession(session).getSessionId();
         this.mailboxManager = mailboxManager;
@@ -145,11 +145,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
      * 
      * @param uid
      */
-    private void expunge(final long uid) {
+    private void expunge(long uid) {
         final int msn = msn(uid);
         remove(msn, uid);
         final List<Integer> renumberMsns = new ArrayList<Integer>(msnToUid.tailMap(msn + 1).keySet());
-        for (final Integer msnInteger : renumberMsns) {
+        for (Integer msnInteger : renumberMsns) {
             int aMsn = msnInteger.intValue();
             long aUid = uid(aMsn);
             remove(aMsn, aUid);
@@ -271,7 +271,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener{
     }
 
     private void checkExpungedRecents() {
-        for (final long uid : expungedUids()) {
+        for (long uid : expungedUids()) {
             removeRecent(uid);
         }
     }

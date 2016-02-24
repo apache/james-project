@@ -69,7 +69,7 @@ public class ScriptBuilder {
 
     private String partialFetch = "";
 
-    public ScriptBuilder(final Client client) {
+    public ScriptBuilder(Client client) {
         super();
         this.client = client;
     }
@@ -162,7 +162,7 @@ public class ScriptBuilder {
         command("LOGIN " + user + " " + password);
     }
 
-    private void command(final String command) throws Exception {
+    private void command(String command) throws Exception {
         tag();
         write(command);
         lineEnd();
@@ -1080,7 +1080,7 @@ public class ScriptBuilder {
             return buffer.toString();
         }
 
-        private boolean add(final StringBuffer buffer, boolean first,
+        private boolean add(StringBuffer buffer, boolean first,
                 String atom) {
             if (atom != null) {
                 if (first) {
@@ -1224,7 +1224,7 @@ public class ScriptBuilder {
             lineEnd();
         }
 
-        private void writeRemaining(final ByteBuffer buffer) throws IOException {
+        private void writeRemaining(ByteBuffer buffer) throws IOException {
             while (buffer.hasRemaining()) {
                 sump.write(buffer);
             }
@@ -1481,7 +1481,7 @@ public class ScriptBuilder {
 
         private final InputStream delegate;
 
-        public IgnoreHeaderInputStream(final InputStream delegate) {
+        public IgnoreHeaderInputStream(InputStream delegate) {
             super();
             this.delegate = delegate;
         }

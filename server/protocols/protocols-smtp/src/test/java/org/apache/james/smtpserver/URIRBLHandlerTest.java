@@ -52,7 +52,7 @@ public class URIRBLHandlerTest {
     private static final String URISERVER = "multi.surbl.org.";
     private Mail mockedMail;
 
-    private SMTPSession setupMockedSMTPSession(final Mail mail) {
+    private SMTPSession setupMockedSMTPSession(Mail mail) {
         mockedMail = mail;
 
         return new BaseFakeSMTPSession() {
