@@ -51,6 +51,7 @@ import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
@@ -735,41 +736,29 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
 	}
 
 
-    /**
-     * @see org.apache.james.mailbox.store.AbstractStoreMessageManager#copy(org.apache.james.mailbox.model.MessageRange,
-     *      org.apache.james.mailbox.store.AbstractStoreMessageManager,
-     *      org.apache.james.mailbox.MailboxSession)
-     */
     private SortedMap<Long, MessageMetaData> copy(MessageRange set, StoreMessageManager<Id> to, MailboxSession session) throws MailboxException {
-        MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
+        Iterator<MailboxMessage<Id>> originalRows = retrieveOriginalRows(set, session);
+        return collectMetadata(to.copy(originalRows, session));
+    }
 
+    private SortedMap<Long, MessageMetaData> move(MessageRange set, StoreMessageManager<Id> to, MailboxSession session) throws MailboxException {
+        Iterator<MailboxMessage<Id>> originalRows = retrieveOriginalRows(set, session);
+        return collectMetadata(to.move(originalRows, session));
+    }
+
+    private Iterator<MailboxMessage<Id>> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {
+        MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
+        return messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
+    }
+
+    private SortedMap<Long, MessageMetaData> collectMetadata(Iterator<MessageMetaData> ids) {
         final SortedMap<Long, MessageMetaData> copiedMessages = new TreeMap<Long, MessageMetaData>();
-        Iterator<MailboxMessage<Id>> originalRows = messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
-        Iterator<MessageMetaData> ids = to.copy(originalRows, session);
         while (ids.hasNext()) {
             MessageMetaData data = ids.next();
             copiedMessages.put(data.getUid(), data);
         }
-
         return copiedMessages;
     }
-
-    private SortedMap<Long, MessageMetaData> move(MessageRange set,
-			final StoreMessageManager<Id> to, MailboxSession session) throws MailboxException {
-        MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
-
-        final SortedMap<Long, MessageMetaData> movedMessages = new TreeMap<Long, MessageMetaData>();
-        Iterator<MailboxMessage<Id>> originalRows = messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
-        Iterator<MessageMetaData> ids = to.move(originalRows, session);
-        while (ids.hasNext()) {
-            MessageMetaData data = ids.next();
-            movedMessages.put(data.getUid(), data);
-        }
-
-        return movedMessages;
-	}
-
-
     /**
      * Return the count of unseen messages
      * 

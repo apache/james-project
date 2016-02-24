@@ -1,0 +1,71 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.mailbox.store;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageRange;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+
+public class MessageBatcherTest {
+
+    private MessageBatcher.BatchedOperation incrementBatcher = new MessageBatcher.BatchedOperation() {
+        @Override
+        public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
+            return Lists.<MessageRange>newArrayList(MessageRange.range(messageRange.getUidFrom() + 1, messageRange.getUidTo() + 1));
+        }
+    };
+
+    @Test
+    public void batchMessagesShouldWorkOnSingleRangeMode() throws Exception {
+        MessageBatcher messageBatcher = new MessageBatcher(0);
+        
+        assertThat(messageBatcher.batchMessages(MessageRange.range(1, 10), incrementBatcher)).containsOnly(MessageRange.range(2, 11));
+    }
+
+    @Test
+    public void batchMessagesShouldWorkWithNonZeroBatchedSize() throws Exception {
+        MessageBatcher messageBatcher = new MessageBatcher(5);
+
+        assertThat(messageBatcher.batchMessages(MessageRange.range(1, 10), incrementBatcher)).containsOnly(MessageRange.range(2, 6), MessageRange.range(7, 11));
+    }
+
+    @Test(expected = MailboxException.class)
+    public void batchMessagesShouldPropagateExceptions() throws Exception {
+        MessageBatcher messageBatcher = new MessageBatcher(0);
+
+        messageBatcher.batchMessages(MessageRange.range(1, 10), new MessageBatcher.BatchedOperation() {
+            public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
+                throw new MailboxException();
+            }
+        });
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void messageBatcherShouldThrowOnNegativeBatchSize() throws Exception {
+        MessageBatcher messageBatcher = new MessageBatcher(-1);
+    }
+
+}

@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -99,9 +98,9 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
 
     private final static Random RANDOM = new Random();
 
-    private int copyBatchSize = 0;
+    private MessageBatcher copyBatcher;
 
-    private int moveBatchSize = 0;
+    private MessageBatcher moveBatcher;
 
     private final MailboxPathLocker locker;
 
@@ -148,11 +147,11 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
     }
 
     public void setCopyBatchSize(int copyBatchSize) {
-        this.copyBatchSize = copyBatchSize;
+        this.copyBatcher = new MessageBatcher(copyBatchSize);
     }
 
     public void setMoveBatchSize(int moveBatchSize) {
-        this.moveBatchSize = moveBatchSize;
+        this.moveBatcher = new MessageBatcher(moveBatchSize);
     }
 
     public void setFetchBatchSize(int fetchBatchSize) {
@@ -188,6 +187,12 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
             this.addGlobalListener((MailboxListener) quotaUpdater, null);
+        }
+        if (copyBatcher == null) {
+            copyBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
+        }
+        if (moveBatcher == null) {
+            moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
         }
     }
 
@@ -505,38 +510,28 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-        StoreMessageManager<Id> toMailbox = (StoreMessageManager<Id>) getMailbox(to, session);
-        StoreMessageManager<Id> fromMailbox = (StoreMessageManager<Id>) getMailbox(from, session);
+    public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
+        final StoreMessageManager<Id> toMailbox = (StoreMessageManager<Id>) getMailbox(to, session);
+        final StoreMessageManager<Id> fromMailbox = (StoreMessageManager<Id>) getMailbox(from, session);
 
-        if (copyBatchSize > 0) {
-            List<MessageRange> copiedRanges = new ArrayList<MessageRange>();
-            Iterator<MessageRange> ranges = set.split(copyBatchSize).iterator();
-            while (ranges.hasNext()) {
-                copiedRanges.addAll(fromMailbox.copyTo(ranges.next(), toMailbox, session));
+        return copyBatcher.batchMessages(set, new MessageBatcher.BatchedOperation() {
+            public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
+                return fromMailbox.copyTo(messageRange, toMailbox, session);
             }
-            return copiedRanges;
-        } else {
-            return fromMailbox.copyTo(set, toMailbox, session);
-        }
+        });
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-        StoreMessageManager<Id> toMailbox = (StoreMessageManager<Id>) getMailbox(to, session);
-        StoreMessageManager<Id> fromMailbox = (StoreMessageManager<Id>) getMailbox(from, session);
+    public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
+        final StoreMessageManager<Id> toMailbox = (StoreMessageManager<Id>) getMailbox(to, session);
+        final StoreMessageManager<Id> fromMailbox = (StoreMessageManager<Id>) getMailbox(from, session);
 
-        if (moveBatchSize > 0) {
-            List<MessageRange> movedRanges = new ArrayList<MessageRange>();
-            Iterator<MessageRange> ranges = set.split(moveBatchSize).iterator();
-            while (ranges.hasNext()) {
-                movedRanges.addAll(fromMailbox.moveTo(ranges.next(), toMailbox, session));
+        return moveBatcher.batchMessages(set, new MessageBatcher.BatchedOperation() {
+            public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
+                return fromMailbox.moveTo(messageRange, toMailbox, session);
             }
-            return movedRanges;
-        } else {
-            return fromMailbox.moveTo(set, toMailbox, session);
-        }
+        });
     }
 
     @Override
