@@ -29,8 +29,8 @@ import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.jmap.crypto.SignatureHandler;
 import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
+import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.DefaultZonedDateTimeProvider;
-import org.apache.james.jmap.utils.MailSpool;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 
 import com.google.common.collect.ImmutableList;
