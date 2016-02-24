@@ -142,7 +142,7 @@ public class GetMessagesMethod<Id extends MailboxId> implements Method {
 
         return Throwing
                 .function((MessageId messageId) -> {
-                     MailboxPath mailboxPath = messageId.getMailboxPath(mailboxSession);
+                     MailboxPath mailboxPath = messageId.getMailboxPath();
                      MessageMapper<Id> messageMapper = messageMapperFactory.getMessageMapper(mailboxSession);
                      Mailbox<Id> mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(mailboxPath);
                      return Pair.with(

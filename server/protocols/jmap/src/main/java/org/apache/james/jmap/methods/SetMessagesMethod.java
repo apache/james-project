@@ -112,7 +112,7 @@ public class SetMessagesMethod<Id extends MailboxId> implements Method {
             try {
                 Mailbox<Id> mailbox = mailboxMapperFactory
                         .getMailboxMapper(mailboxSession)
-                        .findMailboxByPath(messageId.getMailboxPath(mailboxSession));
+                        .findMailboxByPath(messageId.getMailboxPath());
 
                 MailboxMessage<Id> mailboxMessage = getMailboxMessage(messageMapper, messageId, mailbox);
 
