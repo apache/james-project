@@ -84,6 +84,9 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
  * implementations.
@@ -716,23 +719,23 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
         return copiedRows.iterator();
     }
 
-    private Iterator<MessageMetaData> move(Iterator<MailboxMessage<Id>> originalRows,
-			MailboxSession session) throws MailboxException {
+    private MoveResult move(Iterator<MailboxMessage<Id>> originalRows, MailboxSession session) throws MailboxException {
         final List<MessageMetaData> movedRows = new ArrayList<MessageMetaData>();
+        final List<MessageMetaData> originalRowsCopy = new ArrayList<MessageMetaData>();
         final MessageMapper<Id> messageMapper = mapperFactory.getMessageMapper(session);
 
         while (originalRows.hasNext()) {
             final MailboxMessage<Id> originalMessage = originalRows.next();
+            originalRowsCopy.add(new SimpleMessageMetaData(originalMessage));
             MessageMetaData data = messageMapper.execute(new Mapper.Transaction<MessageMetaData>() {
                 public MessageMetaData run() throws MailboxException {
                     return messageMapper.move(getMailboxEntity(), originalMessage);
-
                 }
 
             });
             movedRows.add(data);
         }
-        return movedRows.iterator();
+        return new MoveResult(movedRows.iterator(), originalRowsCopy.iterator());
 	}
 
 
@@ -743,7 +746,9 @@ public class StoreMessageManager<Id extends MailboxId> implements org.apache.jam
 
     private SortedMap<Long, MessageMetaData> move(MessageRange set, StoreMessageManager<Id> to, MailboxSession session) throws MailboxException {
         Iterator<MailboxMessage<Id>> originalRows = retrieveOriginalRows(set, session);
-        return collectMetadata(to.move(originalRows, session));
+        MoveResult moveResult = to.move(originalRows, session);
+        dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
+        return collectMetadata(moveResult.getMovedMessages());
     }
 
     private Iterator<MailboxMessage<Id>> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {
