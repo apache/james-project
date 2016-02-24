@@ -26,10 +26,9 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 /**
  * {@link ImapRequest} which request the move of messages
  */
-public class MoveRequest extends CopyRequest {
+public class MoveRequest extends AbstractMessageRangeRequest {
 
-	public MoveRequest(ImapCommand command, IdRange[] idSet,
-			String mailboxName, boolean useUids, String tag) {
+	public MoveRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
 		super(command, idSet, mailboxName, useUids, tag);
 	}
 

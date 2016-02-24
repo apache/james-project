@@ -1,6 +1,5 @@
 package org.apache.james.imap.processor;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,22 +15,26 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 
-public class MoveProcessor extends CopyProcessor implements CapabilityImplementingProcessor {
+public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> implements CapabilityImplementingProcessor {
 
-	private static final List<String> CAPS = Collections.unmodifiableList(Arrays.asList(ImapConstants.MOVE_COMMAND_NAME));
+	private static final List<String> CAPS = Collections.unmodifiableList(Collections.singletonList(ImapConstants.MOVE_COMMAND_NAME));
 
-	public MoveProcessor(ImapProcessor next, MailboxManager mailboxManager,
-			StatusResponseFactory factory) {
+	public MoveProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
 		super(MoveRequest.class, next, mailboxManager, factory);
 	}
 
-	protected List<MessageRange> process(MailboxPath targetMailbox,
-			final SelectedMailbox currentMailbox,
-			final MailboxSession mailboxSession,
-			final MailboxManager mailboxManager, MessageRange messageSet)
-			throws MailboxException {
+    @Override
+    protected List<MessageRange> process(MailboxPath targetMailbox,
+                                         SelectedMailbox currentMailbox,
+                                         MailboxSession mailboxSession,
+                                         MailboxManager mailboxManager, MessageRange messageSet) throws MailboxException {
 		return mailboxManager.moveMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
 	}
+
+    @Override
+    protected String getOperationName() {
+        return "Move";
+    }
 
     /**
     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor

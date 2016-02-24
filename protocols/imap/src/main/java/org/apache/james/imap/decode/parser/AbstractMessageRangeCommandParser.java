@@ -16,29 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.imap.decode.parser;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.message.request.CopyRequest;
+import org.apache.james.imap.message.request.AbstractMessageRangeRequest;
 import org.apache.james.protocols.imap.DecodingException;
 
-/**
- * Parse COPY commands
- */
-public class CopyCommandParser extends AbstractMessageRangeCommandParser {
+public abstract class AbstractMessageRangeCommandParser extends AbstractUidCommandParser {
 
-    public CopyCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.COPY_COMMAND_NAME));
+    public AbstractMessageRangeCommandParser(ImapCommand command) {
+        super(command);
     }
 
-    @Override
-    protected CopyRequest createRequest(ImapCommand command, String tag, boolean useUids, IdRange[] idSet, String mailboxName) {
-        return new CopyRequest(command, idSet, mailboxName, useUids, tag);
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
+        IdRange[] idSet = request.parseIdRange(session);
+        String mailboxName = request.mailbox();
+        request.eol();
+        return createRequest(command, tag, useUids, idSet, mailboxName);
     }
+
+    abstract protected AbstractMessageRangeRequest createRequest(ImapCommand command, String tag, boolean useUids, IdRange[] idSet, String mailboxName);
 
 }

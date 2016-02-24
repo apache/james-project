@@ -16,29 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imap.decode.parser;
+
+package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
-import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.message.request.CopyRequest;
-import org.apache.james.protocols.imap.DecodingException;
 
-/**
- * Parse COPY commands
- */
-public class CopyCommandParser extends AbstractMessageRangeCommandParser {
+public abstract class AbstractMessageRangeRequest extends AbstractImapRequest {
 
-    public CopyCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.COPY_COMMAND_NAME));
+    private final IdRange[] idSet;
+    private final String mailboxName;
+    private final boolean useUids;
+
+    public AbstractMessageRangeRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
+        super(tag, command);
+        this.idSet = idSet;
+        this.mailboxName = mailboxName;
+        this.useUids = useUids;
     }
 
-    @Override
-    protected CopyRequest createRequest(ImapCommand command, String tag, boolean useUids, IdRange[] idSet, String mailboxName) {
-        return new CopyRequest(command, idSet, mailboxName, useUids, tag);
+    public final IdRange[] getIdSet() {
+        return idSet;
     }
 
+    public final String getMailboxName() {
+        return mailboxName;
+    }
+
+    public final boolean isUseUids() {
+        return useUids;
+    }
 }
