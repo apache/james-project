@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.FieldParser;
@@ -86,7 +87,7 @@ public class MIMEMessageConverter {
         return message;
     }
 
-    private Header buildMimeHeaders(String creationId, CreationMessage newMessage) {
+    private Header buildMimeHeaders(CreationMessageId creationId, CreationMessage newMessage) {
         Header messageHeaders = new HeaderImpl();
 
         // add From: and Sender: headers
@@ -116,7 +117,7 @@ public class MIMEMessageConverter {
         // add Subject: header
         messageHeaders.addField(Fields.subject(newMessage.getSubject()));
         // set creation Id as MessageId: header
-        messageHeaders.addField(Fields.messageId(creationId));
+        messageHeaders.addField(Fields.messageId(creationId.getId()));
 
         // date(String fieldName, Date date, TimeZone zone)
         // note that date conversion probably lose milliseconds !

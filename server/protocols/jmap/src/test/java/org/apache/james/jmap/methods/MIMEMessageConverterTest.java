@@ -28,6 +28,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.stream.Field;
@@ -51,7 +52,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
-                "user|mailbox|1", messageHavingInReplyTo));
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo));
 
         // Then
         assertThat(result.getHeader().getFields("In-Reply-To")).extracting(Field::getBody)
@@ -62,7 +63,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldThrowWhenMessageIsNull() {
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        sut.convertToMime(new MessageWithId.CreationMessageEntry("any", null));
+        sut.convertToMime(new MessageWithId.CreationMessageEntry(CreationMessageId.of("any"), null));
     }
 
     @Test
@@ -79,7 +80,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
-                "user|mailbox|1", testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
         assertThat(result.getFrom()).extracting(Mailbox::getAddress).allMatch(f -> f.equals(joesEmail));
@@ -103,7 +104,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
-                "user|mailbox|1", testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
         assertThat(result.getDate()).isEqualToIgnoringMillis(Date.from(now));

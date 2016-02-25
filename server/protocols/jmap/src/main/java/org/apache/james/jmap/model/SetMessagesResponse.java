@@ -53,10 +53,10 @@ public class SetMessagesResponse implements Method.Response {
         private String accountId;
         private String oldState;
         private String newState;
-        private final ImmutableMap.Builder<String, Message> created;
+        private final ImmutableMap.Builder<CreationMessageId, Message> created;
         private final ImmutableList.Builder<MessageId> updated;
         private final ImmutableList.Builder<MessageId> destroyed;
-        private final ImmutableMap.Builder<String, SetError> notCreated;
+        private final ImmutableMap.Builder<CreationMessageId, SetError> notCreated;
         private final ImmutableMap.Builder<MessageId, SetError> notUpdated;
         private final ImmutableMap.Builder<MessageId, SetError> notDestroyed;
 
@@ -81,7 +81,7 @@ public class SetMessagesResponse implements Method.Response {
             throw new NotImplementedException();
         }
 
-        public Builder created(Map<String, Message> created) {
+        public Builder created(Map<CreationMessageId, Message> created) {
             this.created.putAll(created);
             return this;
         }
@@ -101,7 +101,7 @@ public class SetMessagesResponse implements Method.Response {
             return this;
         }
 
-        public Builder notCreated(Map<String, SetError> notCreated) {
+        public Builder notCreated(Map<CreationMessageId, SetError> notCreated) {
             this.notCreated.putAll(notCreated);
             return this;
         }
@@ -130,15 +130,15 @@ public class SetMessagesResponse implements Method.Response {
     private final String accountId;
     private final String oldState;
     private final String newState;
-    private final Map<String, Message> created;
+    private final Map<CreationMessageId, Message> created;
     private final List<MessageId> updated;
     private final List<MessageId> destroyed;
-    private final Map<String, SetError> notCreated;
+    private final Map<CreationMessageId, SetError> notCreated;
     private final Map<MessageId, SetError> notUpdated;
     private final Map<MessageId, SetError> notDestroyed;
 
-    @VisibleForTesting SetMessagesResponse(String accountId, String oldState, String newState, Map<String, Message> created, List<MessageId> updated, List<MessageId> destroyed,
-            Map<String, SetError> notCreated, Map<MessageId, SetError> notUpdated, Map<MessageId, SetError> notDestroyed) {
+    @VisibleForTesting SetMessagesResponse(String accountId, String oldState, String newState, Map<CreationMessageId, Message> created, List<MessageId> updated, List<MessageId> destroyed,
+            Map<CreationMessageId, SetError> notCreated, Map<MessageId, SetError> notUpdated, Map<MessageId, SetError> notDestroyed) {
         this.accountId = accountId;
         this.oldState = oldState;
         this.newState = newState;
@@ -166,7 +166,7 @@ public class SetMessagesResponse implements Method.Response {
     }
 
     @JsonSerialize
-    public Map<String, Message> getCreated() {
+    public Map<CreationMessageId, Message> getCreated() {
         return created;
     }
 
@@ -181,7 +181,7 @@ public class SetMessagesResponse implements Method.Response {
     }
 
     @JsonSerialize
-    public Map<String, SetError> getNotCreated() {
+    public Map<CreationMessageId, SetError> getNotCreated() {
         return notCreated;
     }
 

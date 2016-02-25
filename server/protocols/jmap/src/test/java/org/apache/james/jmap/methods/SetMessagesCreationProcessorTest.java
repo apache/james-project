@@ -33,6 +33,7 @@ import java.util.function.Function;
 
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -164,7 +165,7 @@ public class SetMessagesCreationProcessorTest {
 
     private SetMessagesRequest buildFakeCreationRequest() {
         return SetMessagesRequest.builder()
-                .create(ImmutableMap.of("anything-really", CreationMessage.builder()
+                .create(ImmutableMap.of(CreationMessageId.of("anything-really"), CreationMessage.builder()
                     .from(DraftEmailer.builder().name("alice").email("alice@example.com").build())
                     .to(ImmutableList.of(DraftEmailer.builder().name("bob").email("bob@example.com").build()))
                     .subject("Hey! ")

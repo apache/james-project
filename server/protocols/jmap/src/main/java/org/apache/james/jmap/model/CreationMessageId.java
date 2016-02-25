@@ -17,33 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.model;
 
-import org.apache.james.jmap.model.CreationMessage;
-import org.apache.james.jmap.model.CreationMessageId;
+import java.util.Objects;
 
-public class MessageWithId<T> {
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
 
-    private CreationMessageId creationId;
-    private T message;
+public class CreationMessageId {
 
-    public MessageWithId(CreationMessageId creationId, T message) {
-        this.creationId = creationId;
-        this.message = message;
+    public static CreationMessageId of(String creationMessageId) {
+        return new CreationMessageId(creationMessageId);
     }
 
-    public CreationMessageId getCreationId() {
-        return creationId;
+    private final String id;
+
+    private CreationMessageId(String id) {
+        Preconditions.checkNotNull(id);
+        Preconditions.checkArgument(!id.isEmpty());
+        this.id = id;
     }
 
-    public T getMessage() {
-        return message;
+    @JsonValue
+    public String getId() {
+        return id;
     }
 
-    public static class CreationMessageEntry extends MessageWithId<CreationMessage> {
-        public CreationMessageEntry(CreationMessageId creationId, CreationMessage message) {
-            super(creationId, message);
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof CreationMessageId) {
+            CreationMessageId other = (CreationMessageId) obj;
+            return Objects.equals(this.id, other.id);
         }
+        return false;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
