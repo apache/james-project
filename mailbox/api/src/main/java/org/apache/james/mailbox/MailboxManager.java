@@ -69,6 +69,13 @@ import org.slf4j.Logger;
 
 public interface MailboxManager extends RequestAware, MailboxListenerSupport {
 
+    enum Capabilities {
+        Basic,
+        Move
+    }
+
+    List<Capabilities> getSupportedCapabilities();
+
     /**
      * Return the delimiter to use for folders
      * 

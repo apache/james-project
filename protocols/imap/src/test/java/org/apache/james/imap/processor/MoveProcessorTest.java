@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -74,7 +75,20 @@ public class MoveProcessorTest {
         mockImapSession = mock(ImapSession.class);
         mockMailboxSession = mock(MailboxSession.class);
 
+        when(mockMailboxManager.getSupportedCapabilities()).thenReturn(Lists.newArrayList(MailboxManager.Capabilities.Move, MailboxManager.Capabilities.Basic));
         testee = new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory);
+        verify(mockMailboxManager).getSupportedCapabilities();
+    }
+
+    @Test
+    public void getImplementedCapabilitiesShouldContainMoveWhenSupportedByMailboxManager() {
+        assertThat(testee.getImplementedCapabilities(null)).containsExactly(ImapConstants.MOVE_COMMAND_NAME);
+    }
+
+    @Test
+    public void getImplementedCapabilitiesShouldNotContainMoveWhenUnSupportedByMailboxManager() {
+        when(mockMailboxManager.getSupportedCapabilities()).thenReturn(Lists.newArrayList(MailboxManager.Capabilities.Basic));
+        assertThat(new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory).getImplementedCapabilities(null)).isEmpty();
     }
 
     @Test

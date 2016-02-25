@@ -57,8 +57,14 @@ public class DefaultProcessorChain {
         final UnsubscribeProcessor unsubscribeProcessor = new UnsubscribeProcessor(closeProcessor, mailboxManager, subscriptionManager, statusResponseFactory);
         final SubscribeProcessor subscribeProcessor = new SubscribeProcessor(unsubscribeProcessor, mailboxManager, subscriptionManager, statusResponseFactory);
         final CopyProcessor copyProcessor = new CopyProcessor(subscribeProcessor, mailboxManager, statusResponseFactory);
-        final MoveProcessor moveProcessor = new MoveProcessor(copyProcessor, mailboxManager, statusResponseFactory);
-        final AuthenticateProcessor authenticateProcessor = new AuthenticateProcessor(moveProcessor, mailboxManager, statusResponseFactory);
+        AuthenticateProcessor authenticateProcessor;
+        if (mailboxManager.getSupportedCapabilities().contains(MailboxManager.Capabilities.Move)) {
+            final MoveProcessor moveProcessor = new MoveProcessor(copyProcessor, mailboxManager, statusResponseFactory);
+            authenticateProcessor = new AuthenticateProcessor(moveProcessor, mailboxManager, statusResponseFactory);
+            capabilityProcessor.addProcessor(moveProcessor);
+        } else {
+            authenticateProcessor = new AuthenticateProcessor(copyProcessor, mailboxManager, statusResponseFactory);
+        }
         final ExpungeProcessor expungeProcessor = new ExpungeProcessor(authenticateProcessor, mailboxManager, statusResponseFactory);
         final ExamineProcessor examineProcessor = new ExamineProcessor(expungeProcessor, mailboxManager, statusResponseFactory);
         final AppendProcessor appendProcessor = new AppendProcessor(examineProcessor, mailboxManager, statusResponseFactory);

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -35,6 +37,8 @@ import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+
+import com.google.common.collect.Lists;
 
 /**
  * Cassandra implementation of {@link StoreMailboxManager}
@@ -57,6 +61,11 @@ public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
     @Inject
     public void setMessageSearchIndex(MessageSearchIndex<CassandraId> index) {
         super.setMessageSearchIndex(index);
+    }
+
+    @Override
+    public List<Capabilities> getSupportedCapabilities() {
+        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move);
     }
 
     @Override

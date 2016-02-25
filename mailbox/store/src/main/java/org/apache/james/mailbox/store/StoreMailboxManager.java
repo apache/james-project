@@ -71,6 +71,8 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
 
+import com.google.common.collect.Lists;
+
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
  * {@link MailboxManager} implementation. If you plan to write your own {@link MailboxManager} its most times so easiest
@@ -194,6 +196,11 @@ public class StoreMailboxManager<Id extends MailboxId> implements MailboxManager
         if (moveBatcher == null) {
             moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
         }
+    }
+
+    @Override
+    public List<Capabilities> getSupportedCapabilities() {
+        return Lists.newArrayList(Capabilities.Basic);
     }
 
     /**

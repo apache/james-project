@@ -66,6 +66,8 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import com.google.common.collect.Lists;
+
 public class MailboxEventAnalyserTest {
 
     private static final long BASE_SESSION_ID = 99;
@@ -73,8 +75,12 @@ public class MailboxEventAnalyserTest {
     
     private MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
     private final MailboxManager mockManager = new MailboxManager() {
-        
-        
+
+        @Override
+        public List<Capabilities> getSupportedCapabilities() {
+            return Lists.newArrayList(Capabilities.Basic);
+        }
+
         public void removeListener(MailboxPath mailboxPath, MailboxListener listner, MailboxSession session) throws MailboxException {
             
         }
