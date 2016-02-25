@@ -16,6 +16,11 @@
 # specific language governing permissions and limitations      #
 # under the License.                                           #
 ################################################################
+
+C: a0 CAPABILITY
+S: \* CAPABILITY .* MOVE .*
+S: a0 OK CAPABILITY completed.
+
 C: a1 CREATE moved
 S: a1 OK CREATE completed.
 
