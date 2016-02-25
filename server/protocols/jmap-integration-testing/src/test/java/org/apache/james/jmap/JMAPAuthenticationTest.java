@@ -345,6 +345,22 @@ public abstract class JMAPAuthenticationTest {
     }
 
     @Test
+    public void getMustReturnEndpointsWhenValidUnkwnonUserJwtAuthorizationHeader() throws Exception {
+        String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzM3IiwibmFtZSI6Ik5ldyBVc2VyIn0.ci8U04EOWKpi_y"
+                + "faKs8fnCBcu1mWs8fvf-t9SDP2kkvDDfD-ya4sEGn4ueCp2dA2ndefZfVu_IfvdlVtxqzSf0tQ-dFKrIe-OtSKhI2otjWctLtk9A"
+                + "G7jpWkXoDgr5IOVmsqg37Zxc2bgkLkC5FJqV6oCp51TNQTH6zZbXIUeuGFbHj2-iJeX8sACKTQB0llwc6TFm7GYUF03rv4DfJjqp"
+                + "Kd0g8RdnlevSOjV-gGzvKEItugtexS5pgOZ2GYcvqEUDb9EnQR7Qe2EzPAX_FCJfGhlv7bDQlTgOHHAjqw2lD4-zeAznw-3wlYLS"
+                + "zhi4ivvPjT-y2T5wnnhzeeYOpYOQ";
+        
+        given()
+            .header("Authorization", "Bearer " + token)
+        .when()
+            .get("/authentication")
+        .then()
+            .statusCode(200);
+    }
+    
+    @Test
     public void getMustReturnBadCredentialsWhenInvalidJwtAuthorizationHeader() throws Exception {
         String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
                 "LXkJj24coSZkK13RfG25lpvmSl2MJ7N10KpBk9_-95EGYZdog-BDAn3PJzqVw52z-Bwjh4VOj1-j7cURu0cT4jXehhUrlCxS4n7QHZ" +
