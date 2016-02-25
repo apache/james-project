@@ -20,6 +20,7 @@
 package org.apache.james.http.jetty;
 
 import java.io.Closeable;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.function.BiConsumer;
 
@@ -35,6 +36,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
 
 public class JettyHttpServer implements Closeable {
     
@@ -61,10 +63,14 @@ public class JettyHttpServer implements Closeable {
 
     private ServletHandler buildServletHandler(Configuration configuration) {
         ServletHandler servletHandler = new ServletHandler();
+        
         BiConsumer<String, ServletHolder> addServletMapping = (path, servletHolder) -> servletHandler.addServletWithMapping(servletHolder, path);
-        BiConsumer<String, FilterHolder> addFilterMapping = (path, filterHolder) -> servletHandler.addFilterWithMapping(filterHolder, path, EnumSet.of(DispatcherType.REQUEST));
+        BiConsumer<String, Collection<FilterHolder>> addFilterMappings = 
+                (path, filterHolders) -> filterHolders.stream().forEachOrdered(
+                        filterHolder -> servletHandler.addFilterWithMapping(filterHolder, path, EnumSet.of(DispatcherType.REQUEST)));
+                
         Maps.transformEntries(configuration.getMappings(), this::toServletHolder).forEach(addServletMapping);
-        Maps.transformEntries(configuration.getFilters(), this::toFilterHolder).forEach(addFilterMapping);
+        Multimaps.transformEntries(configuration.getFilters(), this::toFilterHolder).asMap().forEach(addFilterMappings);
         return servletHandler;
     }
 

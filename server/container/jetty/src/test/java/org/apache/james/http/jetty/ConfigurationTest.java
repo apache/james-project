@@ -26,6 +26,8 @@ import javax.servlet.Servlet;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class ConfigurationTest {
 
     @Test
@@ -39,6 +41,7 @@ public class ConfigurationTest {
     public void shouldAllowWorkingDefinition() {
         Bad400 bad400 = new Bad400();
         SpyFilter spyFilter = new SpyFilter();
+        LambdaFilter anotherFilter = (req, resp, chain) -> chain.doFilter(req, resp);
         Configuration testee = Configuration
                 .builder()
                 .port(2000)
@@ -48,18 +51,19 @@ public class ConfigurationTest {
                 .with(bad400)
                 .filter("/123")
                 .with(CoolFilter.class)
+                .and(anotherFilter).only()
                 .filter("/456")
-                .with(spyFilter)
+                .with(spyFilter).only()
                 .build();
         assertThat(testee.getPort()).isPresent().contains(2000);
         assertThat(testee.getMappings())
             .hasSize(2)
             .containsEntry("/abc", Ok200.class)
             .containsEntry("/def", bad400);
-        assertThat(testee.getFilters())
+        assertThat(testee.getFilters().asMap())
             .hasSize(2)
-            .containsEntry("/123", CoolFilter.class)
-            .containsEntry("/456", spyFilter);
+            .containsEntry("/123", ImmutableList.of(CoolFilter.class, anotherFilter))
+            .containsEntry("/456", ImmutableList.of(spyFilter));
     }
 
     @Test

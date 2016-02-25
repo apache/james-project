@@ -57,7 +57,7 @@ public class JettyHttpServerFactoryTest {
                         .serve("/foo")
                         .with(Ok200.class)
                         .filter("/*")
-                        .with(SpyFilter.class)
+                        .with(SpyFilter.class).only()
                     .build());
     }
 

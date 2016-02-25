@@ -192,7 +192,7 @@ public class JettyHttpServerTest {
                 .serve("/foo")
                 .with(Ok200.class)
                 .filter("/foo")
-                .with(OverrideFilter.class)
+                .with(OverrideFilter.class).only()
                 .build())
         .start();
         
@@ -214,7 +214,7 @@ public class JettyHttpServerTest {
                                         .serve("/foo")
                                         .with(Ok200.class)
                                         .filter("/foo")
-                                        .with(spyFilter)
+                                        .with(spyFilter).only()
                                         .build())
                                 .start();
         

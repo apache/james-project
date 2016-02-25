@@ -30,6 +30,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.Configuration.Builder;
 import org.apache.james.http.jetty.JettyHttpServer;
+import org.apache.james.http.jetty.LambdaFilter;
 import org.apache.james.lifecycle.api.Configurable;
 
 import com.google.common.base.Throwables;
@@ -45,14 +46,20 @@ public class JMAPServer implements Configurable {
                        AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet,
                        AuthenticationFilter authenticationFilter) {
 
+        LambdaFilter provisionUserFilter = (req, resp, chain) -> chain.doFilter(req, resp);
         server = JettyHttpServer.create(
                 configurationBuilderFor(portConfiguration)
-                        .serve("/authentication").with(authenticationServlet)
-                        .filter("/authentication").with(new AllowAllCrossOriginRequests(
-                            bypass(authenticationFilter).on("POST").and("OPTIONS").only()))
-                        .serve("/jmap").with(jmapServlet)
-                        .filter("/jmap").with(new AllowAllCrossOriginRequests(
-                            bypass(authenticationFilter).on("OPTIONS").only()))
+                        .serve("/authentication")
+                            .with(authenticationServlet)
+                        .filter("/authentication")
+                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("POST").and("OPTIONS").only()))
+                            .only()
+                        .serve("/jmap")
+                            .with(jmapServlet)
+                        .filter("/jmap")
+                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
+                            .and(provisionUserFilter)
+                            .only()
                         .build());
     }
 

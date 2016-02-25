@@ -25,6 +25,7 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 
@@ -43,7 +44,7 @@ public class Configuration {
         private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, 65535);
 
         private final ImmutableMap.Builder<String, Object> mappings;
-        private final ImmutableMap.Builder<String, Object> filters;
+        private final ImmutableListMultimap.Builder<String, Object> filters;
         private Optional<Integer> port;
         
         public class ServletBinder {
@@ -73,22 +74,31 @@ public class Configuration {
                 this.filterUrl = filterUrl;
             }
             
-            public Configuration.Builder with(Filter filter) {
+            public FilterBinder with(Filter filter) {
                 Preconditions.checkNotNull(filter);
                 filters.put(filterUrl, filter);
+                return this;
+            }
+            
+            public FilterBinder and(Filter filter) {
+                return with(filter);
+            }
+
+            public FilterBinder with(Class<? extends Filter> filterClass) {
+                Preconditions.checkNotNull(filterClass);
+                filters.put(filterUrl, filterClass);
+                return this;
+            }
+
+            public Configuration.Builder only() {
                 return Builder.this;
             }
 
-            public Configuration.Builder with(Class<? extends Filter> filterClass) {
-                Preconditions.checkNotNull(filterClass);
-                filters.put(filterUrl, filterClass);
-                return Builder.this;
-            }
         }
         
         private Builder() {
             mappings = ImmutableMap.builder();
-            filters = ImmutableMap.builder();
+            filters = ImmutableListMultimap.builder();
             port = Optional.empty();
         }
         
@@ -121,10 +131,10 @@ public class Configuration {
     }
 
     private final ImmutableMap<String, Object> mappings;
-    private final ImmutableMap<String, Object> filters;
+    private final ImmutableListMultimap<String, Object> filters;
     private final Optional<Integer> port;
 
-    private Configuration(ImmutableMap<String, Object> mappings, ImmutableMap<String, Object> filters, Optional<Integer> port) {
+    private Configuration(ImmutableMap<String, Object> mappings, ImmutableListMultimap<String, Object> filters, Optional<Integer> port) {
         this.mappings = mappings;
         this.filters = filters;
         this.port = port;
@@ -134,7 +144,7 @@ public class Configuration {
         return mappings;
     }
 
-    public ImmutableMap<String, Object> getFilters() {
+    public ImmutableListMultimap<String, Object> getFilters() {
         return filters;
     }
 
