@@ -19,6 +19,7 @@
 package org.apache.james.jmap;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -41,6 +42,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
@@ -52,7 +54,7 @@ public class FirstUserConnectionFilter implements Filter {
     private final MailboxManager mailboxManager;
 
     @Inject
-    private FirstUserConnectionFilter(UsersRepository usersRepository, MailboxManager mailboxManager) {
+    @VisibleForTesting FirstUserConnectionFilter(UsersRepository usersRepository, MailboxManager mailboxManager) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
     }
@@ -63,8 +65,8 @@ public class FirstUserConnectionFilter implements Filter {
     
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        MailboxSession session = (MailboxSession) request.getAttribute(AuthenticationFilter.MAILBOX_SESSION);
-        createAccountIfNeeded(session);
+        Optional<MailboxSession> session = Optional.ofNullable((MailboxSession)request.getAttribute(AuthenticationFilter.MAILBOX_SESSION));
+        session.ifPresent(this::createAccountIfNeeded);
         chain.doFilter(request, response);
     }
     
