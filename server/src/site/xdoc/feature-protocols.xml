@@ -52,7 +52,10 @@
       client/server communication.</p>
       
       <p>More information on configuring the SMTP service can be found <a href="config-smtp-lmtp.html">here</a>.</p>
-    
+
+      <p>You can find further information about supported protocols and RFCs
+        <a href="http://james.apache.org/protocols/smtp.html">on the JAMES-PROTOCOLS project SMTP page</a>
+      </p>
     </subsection>
     
     <subsection name="IMAP4 Protocol">
@@ -66,7 +69,15 @@
       IMAP4 client connecting to the server.</p>
       
       <p>More information on configuring the IMAP4 service can be found <a href="config-imap4.html">here</a>.</p>
-    
+
+      <p>You can find further information about supported protocols and RFCs
+        <a href="http://james.apache.org/protocols/imap4.html">on the JAMES-PROTOCOLS project IMAP4 page</a>
+      </p>
+
+      <p>
+        Note that MOVE extension (RFC-6851) needs a MailboxManager implementing the move function. For now, this is only done with
+        the CassandraMailboxManager
+      </p>
     </subsection>
     
     <subsection name="POP3 Protocol">
@@ -80,7 +91,10 @@
       POP3 client connecting to the server.</p>
       
       <p>More information on configuring the POP3 service can be found <a href="config-pop3.html">here</a>.</p>
-    
+
+      <p>You can find further information about supported protocols and RFCs
+        <a href="http://james.apache.org/protocols/pop3.html">on the JAMES-PROTOCOLS project POP3 page</a>
+      </p>
     </subsection>
     
     <subsection name="FetchMail">
