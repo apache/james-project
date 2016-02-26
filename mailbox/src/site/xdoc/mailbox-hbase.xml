@@ -26,7 +26,8 @@
     <body>
 
         <section name="Mailbox HBase Responsibility">
-      This module provides a mailbox implementation for peristing mailboxes (messages, and subscriptions) in a HBase cluster. 
+          <p>This module provides a mailbox implementation for persisting mailboxes (messages, and subscriptions) in a HBase cluster.</p>
+          <p>It only supports the Basic capability.</p>
         </section>
         
         <section name="Overview">
@@ -68,8 +69,8 @@
                 </ul>
             </subsection>
             <subsection name="Misc">
-                <p>Message bodyes (more importantly big attachements) sent to many users are stored many times. There is no space sharing yet.</p>
-                <p>Message data and mssage meta-data (flags and properties) are stored in different column families 
+                <p>Message bodies (more importantly big attachements) sent to many users are stored many times. There is no space sharing yet.</p>
+                <p>Message data and message meta-data (flags and properties) are stored in different column families
                 so the column family optimization options can apply. Keep in mind that message data does not change, while meta-data does change.
                 </p>
             </subsection>
@@ -83,7 +84,7 @@
         </section>
         
         <section name="Mailbox HBase Classes">
-            <p>This is a onverview of the most important classes in the implementation. </p>
+            <p>This is a overview of the most important classes in the implementation. </p>
             <subsection name="HBaseMailboxManager">
                 <p> 
                     <strong>HBaseMailboxManager</strong> extends the  
@@ -105,7 +106,7 @@
                 <p>Message bodies can have varying sizes. Some have attachements of up to 25Mb, some even greater. 
                 There are practical limits to the size of a HBase column (see 
                     <a href="http://hbase.apache.org/book.html#supported.datatypes">http://hbase.apache.org/book.html#supported.datatypes</a>).
-                To adress this issue, the implementation splits the message into smaller chunks and saves each chunk into a separate column. 
+                To address this issue, the implementation splits the message into smaller chunks and saves each chunk into a separate column.
                 The columns have increasing integer names starting with 1 and there can be at most Long.MAX_VALUE chunks. 
                 </p>
                 <p>

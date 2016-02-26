@@ -44,7 +44,7 @@ Image is no more in line with trunk
   
     <subsection name="Store Mailbox Manager">
       <p>All public and protected methods that can be used by a Mailbox Manager implementations.</p>
-      <p>You need to instanciate the StoreMailboxManager with a mailboxSessionMapperFactory,
+      <p>You need to instantiate the StoreMailboxManager with a mailboxSessionMapperFactory,
          an authenticator, a uidProvider and a mailboxPathlocker.</p>
 <!-- 
 Image is no more in line with trunk
@@ -54,7 +54,7 @@ Image is no more in line with trunk
 
     <subsection name="Store Message Manager">
       <p>All public and protected methods that can be used by a Message Manager implementations.</p>
-      <p>You need to instanciate the StoreMessageManager with a messageSessionMapperFactory,
+      <p>You need to instantiate the StoreMessageManager with a messageSessionMapperFactory,
          a uidProvider, a mailboxEventDispatcher and a mailbox.</p>
 <!-- 
 Image is no more in line with trunk
@@ -64,7 +64,7 @@ Image is no more in line with trunk
 
     <subsection name="Store Subscription Manager">
       <p>All public and protected methods that can be used by a Subscription Manager implementations.</p>
-      <p>You need to instanciate the StoreSubscriptionManager with a subscriptionSessionMapperFactory.</p>
+      <p>You need to instantiate the StoreSubscriptionManager with a subscriptionSessionMapperFactory.</p>
 <!-- 
 Image is no more in line with trunk
       <p><img src="images/uml/org-apache-james-mailbox-store-subscriptionmanager.png"/></p>

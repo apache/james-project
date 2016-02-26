@@ -49,7 +49,15 @@
   
     <subsection name="Mailbox Manager">
       <p>The Mailbox Manager is responsible for session creation, operations on mailbox (create, delete, search)
-         and to return a Message Manager. It also allows to copy and list messages.</p>
+         and to return a Message Manager. It also allows to copy and list messages.
+      </p>
+
+        <ul>
+            Mailbox manager capabilities represents which operations a mailbox manager is able to support. For now the list is :
+            <li>Basic: supports all basic operations</li>
+            <li>Move: implements the move capability</li>
+        </ul>
+
 <!-- 
 Image is no more in line with trunk
       <p><img src="images/uml/org-apache-james-mailbox-api-mailboxmanager.png"/></p>

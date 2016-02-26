@@ -30,6 +30,7 @@
             <p>The default JCR provider used is 
                 <a hfre="http://jackrabbit.apache.org/">Apache Jackrabbit</a>.
             </p>
+            <p>It only supports the Basic capability.</p>
         </section>
 <!-- 
         <section name="Installation">

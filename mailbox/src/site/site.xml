@@ -45,6 +45,7 @@
     </menu>
     <menu name="Implementations">
       <item name="Mailbox Memory" href="/mailbox-memory.html" />
+      <item name="Mailbox Cassandra" href="/mailbox-cassandra.html" />
       <item name="Mailbox Maildir" href="/mailbox-maildir.html" />
       <item name="Mailbox JPA" href="/mailbox-jpa.html" />
       <item name="Mailbox JCR" href="/mailbox-jcr.html" />
@@ -52,7 +53,6 @@
     </menu>
     <menu name="Wiring">
       <item name="Spring" href="/mailbox-spring.html" />
-      <item name="Guice" href="/mailbox-guice.html" />
     </menu>  
      
     <menu name="References">

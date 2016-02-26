@@ -26,7 +26,8 @@
 <body>
 
   <section name="Mailbox Maildir Responsibility">
-      <p>This implementation stores messages using the popular <a href="http://en.wikipedia.org/wiki/Maildir">Maildir</a> format.</p> 
+      <p>This implementation stores messages using the popular <a href="http://en.wikipedia.org/wiki/Maildir">Maildir</a> format.</p>
+      <p>It only supports the Basic capability. This implementation do not support namespaces.</p>
   </section>
 <!-- 
   <section name="Mailbox Maildir Classes">

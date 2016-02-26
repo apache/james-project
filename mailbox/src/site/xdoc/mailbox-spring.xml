@@ -25,7 +25,7 @@
 
     <body>
         
-        <section name="Mailbox Spring Responsability">
+        <section name="Mailbox Spring Responsibility">
             <p>The Mailbox Spring module is designed to test the loading of mailbox implementations. </p>
         </section>
         

@@ -19,15 +19,22 @@
 -->
 <document>
 
-  <properties>
-     <title>Mailbox Guice</title>
-  </properties>
+    <properties>
+        <title>Mailbox Cassandra</title>
+    </properties>
 
-<body>
+    <body>
 
-  <section name="Mailbox Guice Responsability">
-  </section>
+        <section name="Mailbox Cassandra">
+            <p>This module provides a mailbox implementation for persisting mailboxes (messages, and subscriptions) in a Cassandra cluster.</p>
+            <p>It supports the Basic and Move capabilities.</p>
+        </section>
 
-</body>
+        <section name="Overview">
+            <p>The Cassandra implementation comes with a CassandraMailboxManager and a CassandraMessageManager for persisting users mailboxes.</p>
+            <p>This implementation also have a CurrentQuotaManager and a MaxQuotaManager, for storing users quotas in a Cassandra cluster.</p>
+        </section>
+
+    </body>
 
 </document>

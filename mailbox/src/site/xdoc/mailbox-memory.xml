@@ -27,6 +27,7 @@
 
         <section name="Mailbox Memory Responsibility">
             <p>Provides an in-memory mail store.</p>
+            <p>It only supports the Basic capability.</p>
         </section>
 <!-- 
         <section name="Mailbox Memory Classes">

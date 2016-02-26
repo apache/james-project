@@ -35,10 +35,11 @@
                 but you can roll your own by extending JPAMailboxManager and JPAMessageManager in the same way
                 as OpenJPAMailboxManager and OpenJPAMessageManager do. 
             </p>
+            <p>It only supports the Basic capability.</p>
         </section>
   
         <section name="Overview">
-            <p>The JPA implementation uses Java Persistenca API Annotations to map Java objects to data base tables. 
+            <p>The JPA implementation uses Java Persistence API Annotations to map Java objects to data base tables.
             The current implementation also supports features such as storing messages in an encrypted database and provide 
             on the fly encryption/decryption.
             </p>
