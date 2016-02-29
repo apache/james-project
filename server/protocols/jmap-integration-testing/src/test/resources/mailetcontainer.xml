@@ -35,29 +35,6 @@
             <mailet match="RelayLimit=30" class="Null"/>
             <!-- Hook on sievemanager@james.linagora.com
                  Mail send to this address will get interpreted with SIEVE Manage -->
-            <mailet match="RecipientIs=sievemanager@james.linagora.com" class="ToProcessor">
-                <processor>sieve-manager-check</processor>
-            </mailet>
-            <mailet match="HasMailAttribute=spamChecked" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <mailet match="All" class="SetMailAttribute">
-                <spamChecked>true</spamChecked>
-            </mailet>
-            <mailet match="SMTPAuthSuccessful" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <mailet match="InSpammerBlacklist=query.bondedsender.org." class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <!-- Check for delivery from a known spam server -->
-            <!-- This set of matchers/mailets redirect all emails from known -->
-            <!-- black holes, open relays, and spam servers to the spam processor -->
-            <!-- For this set to function properly, the spam processor must be configured. -->
-            <mailet match="InSpammerBlacklist=dnsbl.njabl.org." class="ToProcessor">
-                <processor>spam</processor>
-                <notice>550 Requested action not taken: rejected - see http://njabl.org/</notice>
-            </mailet>
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
@@ -65,9 +42,6 @@
 
         <processor state="error" enableJmx="false">
             <mailet match="All" class="Bounce"/>
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/error/</repositoryPath>
-            </mailet>
         </processor>
 
 
@@ -76,11 +50,6 @@
                 <name>X-UserIsAuth</name>
                 <value>true</value>
             </mailet>
-            <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
-                <name>X-WasSigned</name>
-                <value>true</value>
-            </mailet>
-            <mailet match="All" class="RecipientRewriteTable" />
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
@@ -110,18 +79,11 @@
             <mailet match="All" class="Bounce">
                 <attachment>none</attachment>
             </mailet>
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/address-error/</repositoryPath>
-            </mailet>
         </processor>
 
         <processor state="relay-denied" enableJmx="false">
             <mailet match="All" class="Bounce">
                 <attachment>none</attachment>
-            </mailet>
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
-                <notice>Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation</notice>
             </mailet>
         </processor>
 
@@ -131,33 +93,6 @@
             </mailet>
         </processor>
 
-        <processor state="sieve-manager-check" enableJmx="false">
-            <!-- Only local users can manage their scripts -->
-            <mailet match="RecipientIsLocal" class="ToProcessor">
-                <processor>sieve-manager</processor>
-            </mailet>
-            <!-- Notify other people about their failure -->
-            <mailet match="All" class="Bounce">
-                <inline>heads</inline>
-                <attachment>none</attachment>
-                <passThrough>false</passThrough>
-                <prefix>[REJECTED]</prefix>
-                <notice>
-                    You can't send messages to configure SIEVE on this serveur unless you are the official SIEVE manager.
-                </notice>
-            </mailet>
-            <mailet match="All" class="Null"/>
-        </processor>
-
-        <processor state="sieve-manager">
-            <mailet match="All" class="SetMailAttribute">
-                <org.apache.james.SMTPAuthUser>true</org.apache.james.SMTPAuthUser>
-            </mailet>
-            <mailet match="All" class="org.apache.james.transport.mailets.managesieve.ManageSieveMailet">
-                <helpURL>file:/root/james-server-app-3.0.0-beta5-SNAPSHOT/conf/managesieve.help.txt</helpURL>
-            </mailet>
-            <mailet match="All" class="Null"/>
-        </processor>
     </processors>
 
 </mailetcontainer>
