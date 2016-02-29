@@ -20,6 +20,7 @@
 package org.apache.james.mailetcontainer.impl.camel;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.camel.CamelContext;
@@ -71,6 +72,13 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
             getCamelContext().start();
         }
 
+    }
+
+    @PreDestroy
+    public void destroy() throws Exception {
+        if (getCamelContext().getStatus().isStarted()) {
+            getCamelContext().stop();
+        }
     }
 
     /**
