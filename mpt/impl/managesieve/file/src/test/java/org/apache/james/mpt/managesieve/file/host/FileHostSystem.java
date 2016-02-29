@@ -39,7 +39,7 @@ public class FileHostSystem extends JamesManageSieveHostSystem {
     }
 
     public FileHostSystem() throws Exception {
-        super(new MemoryUsersRepository(), createSieveRepository());
+        super(MemoryUsersRepository.withoutVirtualHosting(), createSieveRepository());
     }
 
     @Override

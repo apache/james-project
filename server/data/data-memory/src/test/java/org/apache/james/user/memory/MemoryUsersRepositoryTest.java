@@ -26,6 +26,6 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
-        return new MemoryUsersRepository();
+        return MemoryUsersRepository.withVirtualHosting();
     }
 }
