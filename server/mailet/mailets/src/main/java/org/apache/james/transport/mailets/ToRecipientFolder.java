@@ -53,12 +53,14 @@ import com.google.common.collect.Iterators;
  */
 public class ToRecipientFolder extends GenericMailet {
 
-    public static final String FOLDER_PARAMETER = "folder";
-    public static final String CONSUME_PARAMETER = "consume";
+    public static final String FOLDER = "folder";
+    public static final String CONSUME = "consume";
 
     private MailboxManager mailboxManager;
     private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
+    private String folder;
+    private boolean consume;
 
     @Inject
     public void setMailboxManager(@Named("mailboxmanager")MailboxManager mailboxManager) {
@@ -86,13 +88,18 @@ public class ToRecipientFolder extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         if (!mail.getState().equals(Mail.GHOST)) {
             sieveMailet.service(mail);
+            if (consume) {
+                mail.setState(Mail.GHOST);
+            }
         }
     }
 
     @Override
     public void init() throws MessagingException {
         super.init();
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, getInitParameter(FOLDER_PARAMETER, "INBOX"));
+        this.folder = getInitParameter(FOLDER, "INBOX");
+        this.consume = getInitParameter(CONSUME, false);
+        sieveMailet = new SieveMailet(usersRepository, mailboxManager, sieveRepository, this.folder);
         sieveMailet.init(new MailetConfig() {
             
             @Override
@@ -105,6 +112,7 @@ public class ToRecipientFolder extends GenericMailet {
                     return getMailetConfig().getInitParameter(name);
                 }
             }
+            
 
             @Override
             public Iterator<String> getInitParameterNames() {
@@ -123,8 +131,8 @@ public class ToRecipientFolder extends GenericMailet {
             }
 
         });
+        // Override the default value of "quiet"
         sieveMailet.setQuiet(getInitParameter("quiet", true));
-        sieveMailet.setConsume(getInitParameter(CONSUME_PARAMETER, false));
     }
 
     @Override
