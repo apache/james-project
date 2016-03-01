@@ -87,7 +87,7 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> {
         try {
             MessageMapper<Id> messageMapper = mailboxSessionMapperFactory.createMessageMapper(mailboxSession);
             Mailbox<Id> mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                    .findMailboxByPath(messageId.getMailboxPath(mailboxSession));
+                    .findMailboxByPath(messageId.getMailboxPath());
             Iterator<MailboxMessage<Id>> mailboxMessage = messageMapper.findInMailbox(
                     mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Metadata, LIMIT_BY_ONE);
             MailboxMessage<Id> messageWithUpdatedFlags = applyMessagePatch(messageId, mailboxMessage.next(), updateMessagePatch, builder);

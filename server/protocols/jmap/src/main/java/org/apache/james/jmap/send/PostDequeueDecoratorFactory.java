@@ -16,33 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.jms;
+
+package org.apache.james.jmap.send;
+
+import org.apache.james.queue.api.MailQueue.MailQueueItem;
 
 import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
 
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
+import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.library.AbstractMailQueueFactory;
 
-/**
- * {@link MailQueueFactory} implementation which use JMS
- */
-public class JMSMailQueueFactory extends AbstractMailQueueFactory {
+public class PostDequeueDecoratorFactory<Id extends MailboxId> implements MailQueueItemDecoratorFactory {
+    private final MailboxManager mailboxManager;
+    private final MessageMapperFactory<Id> messageMapperFactory;
+    private final MailboxMapperFactory<Id> mailboxMapperFactory;
 
-    protected ConnectionFactory connectionFactory;
-    protected MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
-    
     @Inject
-    public JMSMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
-        this.connectionFactory = connectionFactory;
-        this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+    public PostDequeueDecoratorFactory(MailboxManager mailboxManager,
+            MessageMapperFactory<Id> messageMapperFactory,
+            MailboxMapperFactory<Id> mailboxMapperFactory) {
+                this.mailboxManager = mailboxManager;
+                this.messageMapperFactory = messageMapperFactory;
+                this.mailboxMapperFactory = mailboxMapperFactory;
     }
 
     @Override
-    protected MailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, log);
+    public MailQueueItemDecorator decorate(MailQueueItem mailQueueItem) {
+        return new PostDequeueDecorator<Id>(mailQueueItem, mailboxManager, messageMapperFactory, mailboxMapperFactory);
     }
-    
+
 }

@@ -20,7 +20,6 @@ package org.apache.james.jmap.model;
 
 import java.util.Objects;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -67,7 +66,7 @@ public class MessageId {
         return uid;
     }
     
-    public MailboxPath getMailboxPath(MailboxSession mailboxSession) {
+    public MailboxPath getMailboxPath() {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxPath);
     }
     

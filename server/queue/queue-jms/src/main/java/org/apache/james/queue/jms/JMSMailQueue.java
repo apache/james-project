@@ -18,14 +18,19 @@
  ****************************************************************/
 package org.apache.james.queue.jms;
 
-import org.apache.james.core.MailImpl;
-import org.apache.james.core.MimeMessageCopyOnWriteProxy;
-import org.apache.james.queue.api.MailPrioritySupport;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.slf4j.Logger;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -41,19 +46,16 @@ import javax.jms.Session;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
-import java.util.concurrent.TimeUnit;
+
+import org.apache.james.core.MailImpl;
+import org.apache.james.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.queue.api.MailPrioritySupport;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.slf4j.Logger;
 
 /**
  * <p>
@@ -70,11 +72,13 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     protected final String queueName;
     protected final ConnectionFactory connectionFactory;
+    protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     protected final Logger logger;
     public final static String FORCE_DELIVERY = "FORCE_DELIVERY";
 
-    public JMSMailQueue(final ConnectionFactory connectionFactory, final String queueName, final Logger logger) {
+    public JMSMailQueue(final ConnectionFactory connectionFactory, final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, final String queueName, final Logger logger) {
         this.connectionFactory = connectionFactory;
+        this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
         this.logger = logger;
     }
@@ -472,7 +476,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      */
     protected MailQueueItem createMailQueueItem(Connection connection, Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         final Mail mail = createMail(message);
-        return new JMSMailQueueItem(mail, connection, session, consumer);
+        JMSMailQueueItem jmsMailQueueItem = new JMSMailQueueItem(mail, connection, session, consumer);
+        return mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem);
     }
 
     protected String getMessageSelector() {

@@ -17,13 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.utils;
+package org.apache.james.jmap.send;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.jmap.model.MessageId;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
@@ -55,7 +56,7 @@ public class MailSpoolTest {
     public void sendShouldEnQueueTheMail() throws Exception {
         FakeMail mail = new FakeMail();
 
-        mailSpool.send(mail);
+        mailSpool.send(mail, new MailMetadata(MessageId.of("a|b|1"), "user"));
 
         assertThat(myQueue.deQueue())
             .isNotNull()

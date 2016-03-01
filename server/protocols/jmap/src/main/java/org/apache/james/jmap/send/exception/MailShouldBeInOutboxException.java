@@ -16,33 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.jms;
+package org.apache.james.jmap.send.exception;
 
-import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.queue.api.MailQueue.MailQueueException;
 
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.library.AbstractMailQueueFactory;
+public class MailShouldBeInOutboxException extends MailQueueException {
 
-/**
- * {@link MailQueueFactory} implementation which use JMS
- */
-public class JMSMailQueueFactory extends AbstractMailQueueFactory {
-
-    protected ConnectionFactory connectionFactory;
-    protected MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
-    
-    @Inject
-    public JMSMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
-        this.connectionFactory = connectionFactory;
-        this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+    public MailShouldBeInOutboxException(MailboxPath mailboxPath) {
+        super("Mail to be sent should be in OUTBOX but is in " + mailboxPath.getName());
     }
 
-    @Override
-    protected MailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, log);
-    }
-    
 }

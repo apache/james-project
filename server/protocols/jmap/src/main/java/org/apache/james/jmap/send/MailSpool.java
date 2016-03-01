@@ -16,33 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.jms;
+
+package org.apache.james.jmap.send;
 
 import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
 
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.library.AbstractMailQueueFactory;
+import org.apache.mailet.Mail;
 
-/**
- * {@link MailQueueFactory} implementation which use JMS
- */
-public class JMSMailQueueFactory extends AbstractMailQueueFactory {
+import com.google.common.annotations.VisibleForTesting;
 
-    protected ConnectionFactory connectionFactory;
-    protected MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
-    
+public class MailSpool {
+
+    private final MailQueue queue;
+
     @Inject
-    public JMSMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
-        this.connectionFactory = connectionFactory;
-        this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+    @VisibleForTesting MailSpool(MailQueueFactory queueFactory) {
+        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
     }
 
-    @Override
-    protected MailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, log);
+    public void send(Mail mail, MailMetadata metadata) throws MailQueueException {
+        mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, metadata.getMessageId().serialize());
+        mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, metadata.getUsername());
+        queue.enQueue(mail);
     }
-    
 }

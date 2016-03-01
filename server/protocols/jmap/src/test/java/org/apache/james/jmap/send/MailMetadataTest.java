@@ -16,33 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.jms;
+package org.apache.james.jmap.send;
 
-import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
+import org.apache.james.jmap.model.MessageId;
+import org.junit.Test;
 
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.library.AbstractMailQueueFactory;
+public class MailMetadataTest {
 
-/**
- * {@link MailQueueFactory} implementation which use JMS
- */
-public class JMSMailQueueFactory extends AbstractMailQueueFactory {
+    private static final MessageId MESSAGE_ID = MessageId.of("username|path|0");
+    private static final String USERNAME = "username";
 
-    protected ConnectionFactory connectionFactory;
-    protected MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
-    
-    @Inject
-    public JMSMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
-        this.connectionFactory = connectionFactory;
-        this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+    @Test(expected=NullPointerException.class)
+    public void constructorShouldThrowWhenNullMessageId() {
+        new MailMetadata(null, USERNAME);
     }
 
-    @Override
-    protected MailQueue createMailQueue(String name) {
-        return new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, log);
+    @Test(expected=NullPointerException.class)
+    public void constructorShouldThrowWhenNullUsername() {
+        new MailMetadata(MESSAGE_ID, null);
     }
-    
 }

@@ -16,28 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.send.exception;
 
-package org.apache.james.jmap.utils;
-
-import javax.inject.Inject;
-
-import org.apache.james.queue.api.MailQueue;
+import org.apache.james.jmap.model.MessageId;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.mailet.Mail;
 
-import com.google.common.annotations.VisibleForTesting;
+public class MessageIdNotFoundException extends MailQueueException {
 
-public class MailSpool {
-
-    private final MailQueue queue;
-
-    @Inject
-    @VisibleForTesting MailSpool(MailQueueFactory queueFactory) {
-        queue = queueFactory.getQueue(MailQueueFactory.SPOOL);
+    public MessageIdNotFoundException(MessageId messageId) {
+        super("Unable to find a Mailbox Message matching: " + messageId.serialize());
     }
 
-    public void send(Mail mail) throws MailQueueException {
-        queue.enQueue(mail);
-    }
 }
