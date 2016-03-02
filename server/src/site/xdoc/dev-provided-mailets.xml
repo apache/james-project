@@ -597,6 +597,7 @@ Default is to not add a header.</li>
   &lt;consume&gt;false&lt;/consume&gt;
 &lt;/mailet&gt;
 </source>
+</subsection>
 
 <subsection name="ToRepository">
 <p>Places a copy of the message in the specified repository.</p>
