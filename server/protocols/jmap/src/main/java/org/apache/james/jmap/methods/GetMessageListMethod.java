@@ -39,7 +39,9 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -113,8 +115,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
     private GetMessageListResponse getMessageListResponse(GetMessageListRequest messageListRequest, ClientId clientId, MailboxSession mailboxSession) {
         GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
         try {
-
-            List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
+            List<MailboxPath> mailboxPaths = getUserPrivateMailboxes(mailboxSession);
             listRequestedMailboxes(messageListRequest, mailboxPaths, mailboxSession)
                 .stream()
                 .flatMap(mailboxPath -> listMessages(mailboxPath, mailboxSession, messageListRequest))
@@ -126,6 +127,17 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         } catch (MailboxException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    private List<MailboxPath> getUserPrivateMailboxes(MailboxSession mailboxSession) throws MailboxException {
+        MailboxQuery userMailboxesQuery = MailboxQuery
+                .builder(mailboxSession)
+                .privateUserMailboxes()
+                .build();
+        return mailboxManager.search(userMailboxesQuery, mailboxSession)
+                .stream()
+                .map(MailboxMetaData::getPath)
+                .collect(Collectors.toImmutableList());
     }
 
     private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, ClientId clientId, MailboxSession mailboxSession) {
