@@ -34,14 +34,13 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 public class JMAPModule extends AbstractModule {
+    private static final int DEFAULT_JMAP_PORT = 80;
 
     @Override
     protected void configure() {
         install(new JMAPCommonModule());
         install(new MethodsModule());
         bind(RequestHandler.class).in(Singleton.class);
-
-        bind(PortConfiguration.class).to(DefaultPortConfiguration.class).in(Singleton.class);
     }
 
     @Provides
@@ -52,6 +51,7 @@ public class JMAPModule extends AbstractModule {
                 .keystore(configuration.getString("tls.keystoreURL"))
                 .secret(configuration.getString("tls.secret"))
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
+                .port(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT))
                 .build();
     }
 

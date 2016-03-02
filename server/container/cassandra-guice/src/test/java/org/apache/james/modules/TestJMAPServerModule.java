@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.PortConfiguration;
 import org.apache.james.jmap.methods.GetMessageListMethod;
 
 import com.google.inject.AbstractModule;
@@ -53,7 +52,6 @@ public class TestJMAPServerModule extends AbstractModule{
 
     @Override
     protected void configure() {
-        bind(PortConfiguration.class).to(RandomPortConfiguration.class).in(Singleton.class);
         bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
     }
 
@@ -64,14 +62,7 @@ public class TestJMAPServerModule extends AbstractModule{
                 .keystore("keystore")
                 .secret("james72laBalle")
                 .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY))
+                .randomPort()
                 .build();
-    }
-    
-    private static class RandomPortConfiguration implements PortConfiguration {
-
-        @Override
-        public Optional<Integer> getPort() {
-            return Optional.empty();
-        }
     }
 }

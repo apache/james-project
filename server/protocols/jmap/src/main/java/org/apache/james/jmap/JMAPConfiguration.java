@@ -31,9 +31,10 @@ public class JMAPConfiguration {
     }
 
     public static class Builder {
-        public String keystore;
-        public String secret;
-        public Optional<String> jwtPublicKeyPem;
+        private String keystore;
+        private String secret;
+        private Optional<String> jwtPublicKeyPem;
+        private Optional<Integer> port = Optional.empty();
 
         private Builder() {
             jwtPublicKeyPem = Optional.empty();
@@ -55,21 +56,33 @@ public class JMAPConfiguration {
             return this;
         }
 
+        public Builder port(int port) {
+            this.port = Optional.of(port);
+            return this;
+        }
+
+        public Builder randomPort() {
+            this.port = Optional.empty();
+            return this;
+        }
+
         public JMAPConfiguration build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(keystore), "'keystore' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(secret), "'secret' is mandatory");
-            return new JMAPConfiguration(keystore, secret, jwtPublicKeyPem);
+            return new JMAPConfiguration(keystore, secret, jwtPublicKeyPem, port);
         }
     }
 
     private final String keystore;
     private final String secret;
     private final Optional<String> jwtPublicKeyPem;
+    private final Optional<Integer> port;
 
-    @VisibleForTesting JMAPConfiguration(String keystore, String secret, Optional<String> jwtPublicKeyPem) {
+    @VisibleForTesting JMAPConfiguration(String keystore, String secret, Optional<String> jwtPublicKeyPem, Optional<Integer> port) {
         this.keystore = keystore;
         this.secret = secret;
         this.jwtPublicKeyPem = jwtPublicKeyPem;
+        this.port = port;
     }
 
     public String getKeystore() {
@@ -82,5 +95,9 @@ public class JMAPConfiguration {
 
     public Optional<String> getJwtPublicKeyPem() {
         return jwtPublicKeyPem;
+    }
+
+    public Optional<Integer> getPort() {
+        return port;
     }
 }

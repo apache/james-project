@@ -28,7 +28,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.PortConfiguration;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.elasticsearch.ClientProvider;
@@ -79,11 +78,11 @@ public class SmtpTestModule extends AbstractModule {
         };
         Module elasticSearch = (binder) -> binder.bind(ClientProvider.class).toInstance(() -> embeddedElasticSearch.getNode().client());
         Module jmap = (binder) -> {
-            binder.bind(PortConfiguration.class).toInstance(Optional::empty);
             binder.bind(JMAPConfiguration.class).toInstance(
                     JMAPConfiguration.builder()
                     .keystore("keystore")
                     .secret("james72laBalle")
+                    .randomPort()
                     .build());
         };
         

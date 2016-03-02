@@ -41,12 +41,12 @@ public class JMAPServer implements Configurable {
     private final JettyHttpServer server;
 
     @Inject
-    private JMAPServer(PortConfiguration portConfiguration,
+    private JMAPServer(JMAPConfiguration jmapConfiguration,
                        AuthenticationServlet authenticationServlet, JMAPServlet jmapServlet,
                        AuthenticationFilter authenticationFilter, FirstUserConnectionFilter firstUserConnectionFilter) {
 
         server = JettyHttpServer.create(
-                configurationBuilderFor(portConfiguration)
+                configurationBuilderFor(jmapConfiguration)
                         .serve("/authentication")
                             .with(authenticationServlet)
                         .filter("/authentication")
@@ -61,10 +61,10 @@ public class JMAPServer implements Configurable {
                         .build());
     }
 
-    private Builder configurationBuilderFor(PortConfiguration portConfiguration) {
+    private Builder configurationBuilderFor(JMAPConfiguration jmapConfiguration) {
         Builder builder = Configuration.builder();
-        if (portConfiguration.getPort().isPresent()) {
-            builder.port(portConfiguration.getPort().get());
+        if (jmapConfiguration.getPort().isPresent()) {
+            builder.port(jmapConfiguration.getPort().get());
         } else {
             builder.randomPort();
         }

@@ -77,13 +77,27 @@ public class JMAPConfigurationTest {
     }
 
     @Test
-    public void buildShouldWork() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration("keystore", "secret", Optional.of("file://conf/jwt_publickey"));
+    public void buildShouldWorkWhenRandomPort() {
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration("keystore", "secret", Optional.of("file://conf/jwt_publickey"), Optional.empty());
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .keystore("keystore")
             .secret("secret")
             .jwtPublicKeyPem(Optional.of("file://conf/jwt_publickey"))
+            .randomPort()
+            .build();
+        assertThat(jmapConfiguration).isEqualToComparingFieldByField(expectedJMAPConfiguration);
+    }
+
+    @Test
+    public void buildShouldWorkWhenFixedPort() {
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration("keystore", "secret", Optional.of("file://conf/jwt_publickey"), Optional.of(80));
+
+        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+            .keystore("keystore")
+            .secret("secret")
+            .jwtPublicKeyPem(Optional.of("file://conf/jwt_publickey"))
+            .port(80)
             .build();
         assertThat(jmapConfiguration).isEqualToComparingFieldByField(expectedJMAPConfiguration);
     }
