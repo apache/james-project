@@ -246,15 +246,8 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public MessageMetaData copy(Mailbox<CassandraId> mailbox, MailboxMessage<CassandraId> original) throws MailboxException {
-
-        original.setUid(uidProvider.nextUid(mailboxSession, mailbox));
-        original.setModSeq(modSeqProvider.nextModSeq(mailboxSession, mailbox));
-        incrementCount(mailbox.getMailboxId());
-        if(!original.isSeen()) {
-            incrementUnseen(mailbox.getMailboxId());
-        }
         original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
-        return save(mailbox, original);
+        return add(mailbox, original);
     }
 
     @Override
