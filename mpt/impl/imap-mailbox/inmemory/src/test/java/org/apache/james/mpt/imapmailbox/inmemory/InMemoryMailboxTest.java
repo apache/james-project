@@ -27,6 +27,7 @@ import org.apache.james.mpt.imapmailbox.suite.FetchBodySection;
 import org.apache.james.mpt.imapmailbox.suite.FetchBodyStructure;
 import org.apache.james.mpt.imapmailbox.suite.FetchHeaders;
 import org.apache.james.mpt.imapmailbox.suite.Listing;
+import org.apache.james.mpt.imapmailbox.suite.Move;
 import org.apache.james.mpt.imapmailbox.suite.NonAuthenticatedState;
 import org.apache.james.mpt.imapmailbox.suite.PartialFetch;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
@@ -62,7 +63,8 @@ import org.junit.runners.Suite;
     SelectedInbox.class,
     SelectedState.class,
     UidSearch.class,
-    QuotaTest.class
+    QuotaTest.class,
+    Move.class
 })
 @GuiceModules({ InMemoryMailboxTestModule.class })
 public class InMemoryMailboxTest {

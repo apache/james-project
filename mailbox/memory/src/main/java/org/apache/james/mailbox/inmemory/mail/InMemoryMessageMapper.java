@@ -55,10 +55,14 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
     }
 
     private Map<Long, MailboxMessage<InMemoryId>> getMembershipByUidForMailbox(Mailbox<InMemoryId> mailbox) {
-        Map<Long, MailboxMessage<InMemoryId>> membershipByUid = mailboxByUid.get(mailbox.getMailboxId());
+        return getMembershipByUidForId(mailbox.getMailboxId());
+    }
+
+    private Map<Long, MailboxMessage<InMemoryId>> getMembershipByUidForId(InMemoryId id) {
+        Map<Long, MailboxMessage<InMemoryId>> membershipByUid = mailboxByUid.get(id);
         if (membershipByUid == null) {
             membershipByUid = new ConcurrentHashMap<Long, MailboxMessage<InMemoryId>>(INITIAL_SIZE);
-            mailboxByUid.put(mailbox.getMailboxId(), membershipByUid);
+            mailboxByUid.put(id, membershipByUid);
         }
         return membershipByUid;
     }
@@ -89,6 +93,15 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
      */
     public void delete(Mailbox<InMemoryId> mailbox, MailboxMessage<InMemoryId> message) throws MailboxException {
         getMembershipByUidForMailbox(mailbox).remove(message.getUid());
+    }
+
+    @Override
+    public MessageMetaData move(Mailbox<InMemoryId> mailbox, MailboxMessage<InMemoryId> original) throws MailboxException {
+        InMemoryId originalMailboxId = original.getMailboxId();
+        long uid = original.getUid();
+        MessageMetaData messageMetaData = copy(mailbox, original);
+        getMembershipByUidForId(originalMailboxId).remove(uid);
+        return messageMetaData;
     }
 
     /**
@@ -188,17 +201,6 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
 
     public void deleteAll() {
         mailboxByUid.clear();
-    }
-
-    /**
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#move(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
-    @Override
-    public MessageMetaData move(Mailbox<InMemoryId> mailbox, MailboxMessage<InMemoryId> original) throws MailboxException {
-        throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");
     }
 
     /**

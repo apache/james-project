@@ -89,7 +89,9 @@ public abstract class AbstractMessageMoveTest<Id extends MailboxId> {
 
         MessageMetaData messageMetaData = messageMapper.move(benwaWorkMailbox, message1);
 
-        assertThat(messageMetaData.getFlags()).isEqualTo(message1.createFlags());
+        Flags expectedFlags = message1.createFlags();
+        expectedFlags.add(Flags.Flag.RECENT);
+        assertThat(messageMetaData.getFlags()).isEqualTo(expectedFlags);
         assertThat(messageMetaData.getUid()).isEqualTo(messageMapper.getLastUid(benwaWorkMailbox));
         assertThat(messageMetaData.getModSeq()).isEqualTo(messageMapper.getHighestModSeq(benwaWorkMailbox));
     }
