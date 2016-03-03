@@ -69,6 +69,8 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.querybuilder.Select;
 import com.google.common.base.Throwables;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
@@ -167,10 +169,17 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     @Override
     public Iterator<MailboxMessage<CassandraId>> findInMailbox(Mailbox<CassandraId> mailbox, MessageRange set, FetchType ftype, int max) throws MailboxException {
-        return CassandraUtils.convertToStream(session.execute(buildQuery(mailbox, set, ftype)))
+        return CassandraUtils.convertToStream(session.execute(buildSelectQueryWithLimit(buildQuery(mailbox, set, ftype), max)))
             .map(row -> message(row, ftype))
             .sorted(Comparator.comparingLong(MailboxMessage::getUid))
             .iterator();
+    }
+
+    private Statement buildSelectQueryWithLimit(Select.Where selectStatement, int max) {
+        if (max <= 0) {
+            return selectStatement;
+        }
+        return selectStatement.limit(max);
     }
 
     @Override

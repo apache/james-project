@@ -44,7 +44,6 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
@@ -256,8 +255,6 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
         assertThat(retrievedMessageIterator).isEmpty();
     }
 
-    // No limit used for the moment
-    @Ignore
     @Test
     public void retrievingMessagesWithALimitShouldLimitTheNumberOfMessages() throws MailboxException {
         int limit = 2;
