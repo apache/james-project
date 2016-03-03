@@ -28,6 +28,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_OCTECTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_START_OCTET;
@@ -277,7 +278,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
         SimpleMailboxMessage<CassandraId> message =
             new SimpleMailboxMessage<>(
                 row.getDate(INTERNAL_DATE),
-                row.getInt(FULL_CONTENT_OCTETS),
+                row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
                 buildContent(row, fetchType),
                 getFlags(row),
@@ -469,6 +470,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
     private String[] retrieveFields(FetchType fetchType) {
         switch (fetchType) {
             case Body:
+                return BODY;
             case Full:
                 return FIELDS;
             case Headers:
@@ -483,10 +485,11 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
     private SharedByteArrayInputStream buildContent(Row row, FetchType fetchType) {
         switch (fetchType) {
             case Full:
-            case Body:
                 return new SharedByteArrayInputStream(getFullContent(row));
             case Headers:
                 return new SharedByteArrayInputStream(getFieldContent(HEADER_CONTENT, row));
+            case Body:
+                return new SharedByteArrayInputStream(getBodyContent(row));
             case Metadata:
                 return new SharedByteArrayInputStream(new byte[]{});
             default:
@@ -496,6 +499,10 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     private byte[] getFullContent(Row row) {
         return Bytes.concat(getFieldContent(HEADER_CONTENT, row), getFieldContent(BODY_CONTENT, row));
+    }
+
+    private byte[] getBodyContent(Row row) {
+        return Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], getFieldContent(BODY_CONTENT, row));
     }
 
     private byte[] getFieldContent(String field, Row row) {
