@@ -72,9 +72,9 @@ public abstract class SetMessagesMethodTest {
 
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
-    public static final String SECOND_NAME = "[1][0]";
-    public static final String SECOND_ARGUMENTS = "[1][1]";
-    public static final String USERS_DOMAIN = "domain.tld";
+    private static final String SECOND_NAME = "[1][0]";
+    private static final String SECOND_ARGUMENTS = "[1][1]";
+    private static final String USERS_DOMAIN = "domain.tld";
 
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
@@ -670,7 +670,7 @@ public abstract class SetMessagesMethodTest {
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DEAMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -828,7 +828,7 @@ public abstract class SetMessagesMethodTest {
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DEAMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com@example.com\"}]," +
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
@@ -984,7 +984,7 @@ public abstract class SetMessagesMethodTest {
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DEAMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -1015,7 +1015,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldPushMessageIntoRecipientUsersInbox() throws Exception {
+    public void setMessagesShouldDeliverMessageToRecipient() throws Exception {
         // Sender
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
         // Recipient
@@ -1056,10 +1056,10 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> messageHaveBeenDeliveredToRecipientsInbox(recipientToken));
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
     }
 
-    private boolean messageHaveBeenDeliveredToRecipientsInbox(AccessToken recipientToken) {
+    private boolean isAnyMessageFoundInRecipientsMailboxes(AccessToken recipientToken) {
         try {
             with()
                     .accept(ContentType.JSON)
