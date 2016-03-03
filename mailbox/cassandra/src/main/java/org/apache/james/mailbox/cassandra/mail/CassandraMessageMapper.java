@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.decr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.gte;
@@ -94,14 +93,11 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.Assignment;
-import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select.Where;
 import com.google.common.io.ByteStreams;
@@ -322,7 +318,7 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
 
     private MessageMetaData save(Mailbox<CassandraId> mailbox, MailboxMessage<CassandraId> message) throws MailboxException {
         try {
-            Insert query = insertInto(TABLE_NAME)
+            session.execute(insertInto(TABLE_NAME)
                 .value(MAILBOX_ID, mailbox.getMailboxId().asUuid())
                 .value(IMAP_UID, message.getUid())
                 .value(MOD_SEQ, message.getModSeq())
@@ -338,8 +334,8 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
                 .value(SEEN, message.isSeen())
                 .value(USER, message.createFlags().contains(Flag.USER))
                 .value(USER_FLAGS, userFlagsSet(message))
-                .value(BODY_CONTENT, bindMarker())
-                .value(HEADER_CONTENT, bindMarker())
+                .value(BODY_CONTENT, toByteBuffer(message.getBodyContent()))
+                .value(HEADER_CONTENT, toByteBuffer(message.getHeaderContent()))
                 .value(PROPERTIES, message.getProperties().stream()
                     .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
                         .newValue()
@@ -347,12 +343,8 @@ public class CassandraMessageMapper implements MessageMapper<CassandraId> {
                         .setString(Properties.NAME, x.getLocalName())
                         .setString(Properties.VALUE, x.getValue()))
                     .collect(Collectors.toList()))
-                .value(TEXTUAL_LINE_COUNT, message.getTextualLineCount());
-            PreparedStatement preparedStatement = session.prepare(query.toString());
+                .value(TEXTUAL_LINE_COUNT, message.getTextualLineCount()));
 
-
-            BoundStatement boundStatement = preparedStatement.bind(toByteBuffer(message.getBodyContent()), toByteBuffer(message.getHeaderContent()));
-            session.execute(boundStatement);
             return new SimpleMessageMetaData(message);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail", e);
