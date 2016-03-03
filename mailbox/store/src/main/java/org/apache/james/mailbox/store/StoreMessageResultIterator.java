@@ -82,7 +82,10 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
             headers = true;
             content -= FetchGroup.HEADERS;
         }
-        if ((content & FetchGroup.BODY_CONTENT) > 0) {
+        if (group.getPartContentDescriptors().size() > 0) {
+            full = true;
+        }
+        if ((content & FetchGroup.BODY_CONTENT ) > 0 ) {
             body = true;
             content -= FetchGroup.BODY_CONTENT;
         }

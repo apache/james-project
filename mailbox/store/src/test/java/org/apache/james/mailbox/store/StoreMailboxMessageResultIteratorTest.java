@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class StoreMailboxMessageResultIteratorTest {
     private final class TestFetchGroup implements FetchGroup {
         @Override
         public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return null;
+            return new HashSet<PartContentDescriptor>();
         }
 
         @Override
