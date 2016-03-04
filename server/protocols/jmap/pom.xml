@@ -273,6 +273,12 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>com.googlecode.thread-weaver</groupId>
+                    <artifactId>threadweaver</artifactId>
+                    <version>0.2</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>junit</groupId>
                     <artifactId>junit</artifactId>
                     <scope>test</scope>

@@ -37,6 +37,7 @@ import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
@@ -70,12 +71,15 @@ public class FirstUserConnectionFilter implements Filter {
         chain.doFilter(request, response);
     }
     
-    private void createAccountIfNeeded(MailboxSession session) {
+    @VisibleForTesting
+    void createAccountIfNeeded(MailboxSession session) {
         try {
             User user = session.getUser();
             if (needsAccountCreation(user)) {
                 createAccount(user);
             }
+        } catch (AlreadyExistInUsersRepositoryException e) {
+            // Ignore
         } catch (UsersRepositoryException|MailboxException e) {
             throw Throwables.propagate(e);
         }
