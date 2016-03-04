@@ -23,22 +23,46 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
+import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
+import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
+import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.SimpleMailboxSession;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+
+import com.google.testing.threadtester.AnnotatedTestRunner;
+import com.google.testing.threadtester.ThreadedAfter;
+import com.google.testing.threadtester.ThreadedBefore;
+import com.google.testing.threadtester.ThreadedMain;
+import com.google.testing.threadtester.ThreadedSecondary;
 
 public class FirstUserConnectionFilterTest {
 
     private FirstUserConnectionFilter sut;
     private InMemoryUsersRepository usersRepository;
+    private MailboxSession session;
+    private MailboxManager mailboxManager;
 
     @Before
     public void setup() {
@@ -57,5 +81,146 @@ public class FirstUserConnectionFilterTest {
         assertThat(usersRepository.list()).isEmpty();
     }
     
+    @ThreadedBefore
+    public void before() {
+        usersRepository = new InMemoryUsersRepository();
+        session = new SimpleMailboxSession(0, "username", null, null, null, ':', null);
+        mailboxManager = new FakeMailboxManager(session) ;
+        sut = new FirstUserConnectionFilter(usersRepository, mailboxManager);
+    }
+    
+    @ThreadedMain
+    public void mainThread() {
+        sut.createAccountIfNeeded(session);
+    }
+    
+    @ThreadedSecondary
+    public void secondThread() {
+        sut.createAccountIfNeeded(session);
+    }
+    
+    @ThreadedAfter
+    public void after() {
+        // Exception is thrown if test fails
+    }
+    
+    @Test
+    public void testConcurrentAccessToFilterShouldNotThrow() {
+        AnnotatedTestRunner runner = new AnnotatedTestRunner();
+        runner.runTests(this.getClass(), FirstUserConnectionFilter.class);
+    }
+    
+    private static class FakeMailboxManager implements MailboxManager {
+        private MailboxSession mailboxSession;
+
+        public FakeMailboxManager(MailboxSession mailboxSession) {
+            this.mailboxSession = mailboxSession;
+        }
+
+        @Override
+        public void startProcessingRequest(MailboxSession session) {
+        }
+
+        @Override
+        public void endProcessingRequest(MailboxSession session) {
+        }
+
+        @Override
+        public void addListener(MailboxPath mailboxPath, MailboxListener listener, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public void removeListener(MailboxPath mailboxPath, MailboxListener listner, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public void addGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public void removeGlobalListener(MailboxListener listner, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public char getDelimiter() {
+            return 0;
+        }
+
+        @Override
+        public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public void createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+        }
+
+        @Override
+        public void deleteMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public List<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+            return false;
+        }
+
+        @Override
+        public MailboxSession createSystemSession(String userName, Logger log) throws BadCredentialsException, MailboxException {
+            return mailboxSession;
+        }
+
+        @Override
+        public MailboxSession login(String userid, String passwd, Logger log) throws BadCredentialsException, MailboxException {
+            return null;
+        }
+
+        @Override
+        public void logout(MailboxSession session, boolean force) throws MailboxException {
+        }
+
+        @Override
+        public boolean hasRight(MailboxPath mailboxPath, MailboxACLRight right, MailboxSession session) throws MailboxException {
+            return false;
+        }
+
+        @Override
+        public MailboxACLRights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public MailboxACLRights[] listRigths(MailboxPath mailboxPath, MailboxACLEntryKey identifier, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public void setRights(MailboxPath mailboxPath, MailboxACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
+        }
+
+        @Override
+        public List<MailboxPath> list(MailboxSession session) throws MailboxException {
+            return null;
+        }
+        
+    }
 }
 

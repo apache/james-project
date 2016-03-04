@@ -27,6 +27,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LogEnabled;
+import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
@@ -106,7 +107,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, LogEna
             isValidUsername(username);
             doAddUser(username, password);
         } else {
-            throw new UsersRepositoryException("User with username " + username + " already exist!");
+            throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exists!");
         }
 
     }
