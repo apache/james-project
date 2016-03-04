@@ -56,6 +56,4 @@ public class FirstUserConnectionFilterTest {
         verify(chain).doFilter(request, response);
         assertThat(usersRepository.list()).isEmpty();
     }
-    
 }
-
