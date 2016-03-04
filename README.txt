@@ -97,26 +97,43 @@ This feature available for two configurations :
 Run James with Java 8 + Guice + Cassandra + ElasticSearch
 =========================================================
 
-* Requirements
+## Requirements
 Built artifacts should be in ./dockerfiles/run/guice/destination folder.
+If you haven't already:
+```bash
+$ docker build -t james/project dockerfiles/compilation/java-8
+$ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+  -v $PWD/dockerfiles/run/guice/destination:/destination \
+  -t james/project -s HEAD
+```
 
-* Howto ?
-You need a running cassandra in docker. To achieve this run :
+## Howto ?
+You need a running **cassandra** in docker. To achieve this run :
+```bash
 $ docker run -d --name=cassandra cassandra:2.2.3
+```
 
-You need a running ElasticSearch in docker. To achieve this run :
+You need a running **ElasticSearch** in docker. To achieve this run :
+```bash
 $ docker run -d --name=elasticsearch elasticsearch:1.5.2
+```
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
-Copy your TSL keys to destination/run/guice/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
+Copy your TLS keys to `destination/run/guice/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+```bash
 $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/destination/conf/keystore
+```
 
 Then we need to build james container :
+```bash
 $ docker build -t james_run dockerfiles/run/guice/
+```
 
 To run this container :
-$ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+```bash
+$ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+```
 
 Where :
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
