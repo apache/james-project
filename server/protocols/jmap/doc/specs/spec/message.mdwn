@@ -250,7 +250,6 @@ The *setMessages* method encompasses:
 - Creating a draft message
 <aside class="warning">Not implemented</aside>
 - Sending a message
-<aside class="warning">Not implemented</aside>
 - Changing the flags of a message (unread/flagged status)
 
 - Adding/removing a message to/from mailboxes (moving a message)
