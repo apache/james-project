@@ -65,7 +65,7 @@ public class MessageBatcherTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void messageBatcherShouldThrowOnNegativeBatchSize() throws Exception {
-        MessageBatcher messageBatcher = new MessageBatcher(-1);
+        new MessageBatcher(-1);
     }
 
 }

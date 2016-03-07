@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.msgpack.core.Preconditions;
 
 public class MessageBatcher {

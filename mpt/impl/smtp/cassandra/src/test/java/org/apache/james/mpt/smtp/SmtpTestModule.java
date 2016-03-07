@@ -19,7 +19,6 @@
 package org.apache.james.mpt.smtp;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.backends.cassandra.CassandraCluster;

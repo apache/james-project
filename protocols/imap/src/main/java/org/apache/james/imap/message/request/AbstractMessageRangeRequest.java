@@ -26,7 +26,6 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.IdRange;
 
 import com.google.common.base.Objects;
-import com.google.common.hash.HashCode;
 
 public abstract class AbstractMessageRangeRequest extends AbstractImapRequest {
 

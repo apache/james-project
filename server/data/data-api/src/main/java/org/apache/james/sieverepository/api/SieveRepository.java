@@ -21,7 +21,6 @@
 package org.apache.james.sieverepository.api;
 
 import java.io.InputStream;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.james.sieverepository.api.exception.DuplicateException;

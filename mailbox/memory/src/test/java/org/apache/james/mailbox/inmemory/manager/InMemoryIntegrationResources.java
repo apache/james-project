@@ -26,7 +26,6 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
@@ -34,7 +33,6 @@ import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -52,7 +50,6 @@ public class InMemoryIntegrationResources implements IntegrationResources {
     public MailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
         MockAuthenticator mockAuthenticator = new MockAuthenticator();
         mockAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
-        MailboxSessionMapperFactory<InMemoryId> factory = new InMemoryMailboxSessionMapperFactory();
         final StoreMailboxManager<InMemoryId> manager = new InMemoryMailboxManager(
             mockAuthenticator,
             new NoMailboxPathLocker(),
