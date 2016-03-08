@@ -53,8 +53,8 @@ fi
 
 if [ $? -eq 0 ]; then
    cp server/app/target/james-server-app-*-app.zip $DESTINATION
-   cp server/container/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.jar $DESTINATION
-   cp -r server/container/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.lib $DESTINATION
+   cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.jar $DESTINATION
+   cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice-*-SNAPSHOT.lib $DESTINATION
    cp server/container/cli/target/james-server-cli-*.jar $DESTINATION
    cp -r server/container/cli/target/james-server-cli-*.lib $DESTINATION
 fi
