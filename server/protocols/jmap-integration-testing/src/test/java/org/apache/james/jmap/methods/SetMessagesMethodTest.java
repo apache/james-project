@@ -936,6 +936,45 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessagesShouldSucceedWithHtmlBody() {
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = "postmaster@example.com";
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"htmlBody\": \"Hello <i>someone</i>, and thank <b>you</b> for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+        .when()
+                .post("/jmap")
+        .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".created", aMapWithSize(1))
+                .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
+                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
+                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
+    }
+
+    @Test
     public void setMessagesShouldMoveToSentWhenSendingMessageWithOnlyFromAddress() {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
         String sentMailboxId = getAllMailboxesIds(accessToken).stream()

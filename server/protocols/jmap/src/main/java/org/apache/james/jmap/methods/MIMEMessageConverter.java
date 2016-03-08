@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.methods;
 
-import static org.apache.james.jmap.model.CreationMessage.DraftEmailer;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
@@ -29,7 +27,9 @@ import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.CreationMessage;
+import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
@@ -42,9 +42,7 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
 import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
-import org.apache.james.mime4j.io.InputStreams;
 import org.apache.james.mime4j.message.BasicBodyFactory;
-import org.apache.james.mime4j.message.BodyFactory;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.HeaderImpl;
@@ -53,11 +51,12 @@ import org.apache.james.mime4j.stream.RawField;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
+import com.google.common.net.MediaType;
 
 public class MIMEMessageConverter {
 
     private final MessageBuilder messageBuilder;
-    private final BodyFactory bodyFactory;
+    private final BasicBodyFactory bodyFactory;
 
     public MIMEMessageConverter() {
         this.messageBuilder = new DefaultMessageBuilder();
@@ -125,6 +124,7 @@ public class MIMEMessageConverter {
                 Date.from(newMessage.getDate().toInstant()), TimeZone.getTimeZone(newMessage.getDate().getZone())
         ));
         newMessage.getInReplyToMessageId().ifPresent(addInReplyToHeader(messageHeaders::addField));
+        newMessage.getHtmlBody().ifPresent(x -> messageHeaders.addField(Fields.contentType(MediaType.HTML_UTF_8.toString())));
         return messageHeaders;
     }
 
@@ -137,13 +137,13 @@ public class MIMEMessageConverter {
     }
 
     private TextBody createTextBody(CreationMessage newMessage) {
-        try {
-            return bodyFactory.textBody(
-                    InputStreams.create(newMessage.getTextBody().orElse(""), Charsets.UTF_8),
-                    Charsets.UTF_8.name());
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
+        if (newMessage.getTextBody().isPresent() && newMessage.getHtmlBody().isPresent()) {
+            throw new NotImplementedException("Converter can't handle yet htmlBody and textBody in the same message");
         }
+        String body = newMessage.getHtmlBody()
+                        .orElse(newMessage.getTextBody()
+                                .orElse(""));
+        return bodyFactory.textBody(body, Charsets.UTF_8);
     }
 
     private Mailbox convertEmailToMimeHeader(DraftEmailer address) {
