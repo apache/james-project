@@ -58,9 +58,7 @@
         <module>karaf/features</module>
         <module>karaf/integration</module>
 
-        <module>container/guice/cassandra-guice</module>
-        <module>container/guice/memory-guice</module>
-        <module>container/guice/guice-common</module>
+        <module>container/guice</module>
         <module>container/cli</module>
         <module>container/core</module>
         <module>container/filesystem-api</module>
