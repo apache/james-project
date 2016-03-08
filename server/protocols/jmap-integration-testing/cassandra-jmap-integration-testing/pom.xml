@@ -22,10 +22,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>james-server</artifactId>
+        <artifactId>jmap-integration-testing</artifactId>
         <groupId>org.apache.james</groupId>
         <version>3.0.0-beta5-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>cassandra-jmap-integration-testing</artifactId>
