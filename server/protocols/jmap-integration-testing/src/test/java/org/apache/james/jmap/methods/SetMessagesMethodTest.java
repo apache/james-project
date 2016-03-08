@@ -1098,6 +1098,193 @@ public abstract class SetMessagesMethodTest {
         calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
     }
 
+    @Test
+    public void setMessagesShouldStripBccFromDeliveredEmail() throws Exception {
+        // Sender
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        // Recipient
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(recipientAddress, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, "inbox");
+        embeddedElasticSearch.awaitForElasticSearch();
+        AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
+
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + USERS_DOMAIN + "\"}]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        // Given
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", this.accessToken.serialize())
+                .body(requestBody)
+        // When
+        .when()
+                .post("/jmap");
+
+        // Then
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
+        with()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", recipientToken.serialize())
+            .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(SECOND_NAME, equalTo("messages"))
+            .body(SECOND_ARGUMENTS + ".list", hasSize(1)) 
+            .body(SECOND_ARGUMENTS + ".list[0].bcc", empty());
+    }
+
+    @Test
+    public void setMessagesShouldKeepBccInSentMailbox() throws Exception {
+        // Sender
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        String sentMailboxId = getAllMailboxesIds(accessToken).stream()
+                .filter(x -> x.get("role").equals("sent"))
+                .map(x -> x.get("id"))
+                .findFirst().get();
+
+        // Recipient
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(recipientAddress, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, "inbox");
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + USERS_DOMAIN + "\" }]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        // Given
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", this.accessToken.serialize())
+                .body(requestBody)
+        // When
+        .when()
+                .post("/jmap");
+
+        // Then
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        with()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", this.accessToken.serialize())
+            .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"bcc\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(SECOND_NAME, equalTo("messages"))
+            .body(SECOND_ARGUMENTS + ".list", hasSize(1)) 
+            .body(SECOND_ARGUMENTS + ".list[0].bcc", hasSize(1));
+    }
+
+    @Test
+    public void setMessagesShouldSendMessageToBcc() throws Exception {
+        // Sender
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        // Recipient
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(recipientAddress, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, "inbox");
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        String bccAddress = "bob" + "@" + USERS_DOMAIN;
+        jmapServer.serverProbe().addUser(bccAddress, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, bccAddress, "inbox");
+        embeddedElasticSearch.awaitForElasticSearch();
+        AccessToken bccToken = JmapAuthentication.authenticateJamesUser(bccAddress, password);
+
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
+                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"" + bccAddress + "\" }]," +
+                "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        // Given
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", this.accessToken.serialize())
+                .body(requestBody)
+        // When
+        .when()
+                .post("/jmap");
+
+        // Then
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
+        with()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", bccToken.serialize())
+            .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(SECOND_NAME, equalTo("messages"))
+            .body(SECOND_ARGUMENTS + ".list", hasSize(1)) 
+            .body(SECOND_ARGUMENTS + ".list[0].bcc", empty());
+    }
+
     private boolean isAnyMessageFoundInRecipientsMailboxes(AccessToken recipientToken) {
         try {
             with()
