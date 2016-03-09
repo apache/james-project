@@ -33,31 +33,6 @@
         <processor state="root" enableJmx="false">
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
-            <!-- Hook on sievemanager@james.linagora.com
-                 Mail send to this address will get interpreted with SIEVE Manage -->
-            <mailet match="RecipientIs=sievemanager@james.linagora.com" class="ToProcessor">
-                <processor>sieve-manager-check</processor>
-            </mailet>
-            <mailet match="HasMailAttribute=spamChecked" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <mailet match="All" class="SetMailAttribute">
-                <spamChecked>true</spamChecked>
-            </mailet>
-            <mailet match="SMTPAuthSuccessful" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <mailet match="InSpammerBlacklist=query.bondedsender.org." class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <!-- Check for delivery from a known spam server -->
-            <!-- This set of matchers/mailets redirect all emails from known -->
-            <!-- black holes, open relays, and spam servers to the spam processor -->
-            <!-- For this set to function properly, the spam processor must be configured. -->
-            <mailet match="InSpammerBlacklist=dnsbl.njabl.org." class="ToProcessor">
-                <processor>spam</processor>
-                <notice>550 Requested action not taken: rejected - see http://njabl.org/</notice>
-            </mailet>
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
@@ -74,10 +49,6 @@
         <processor state="transport" enableJmx="false">
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
-                <value>true</value>
-            </mailet>
-            <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
-                <name>X-WasSigned</name>
                 <value>true</value>
             </mailet>
             <mailet match="All" class="RemoveMimeHeader">
@@ -134,33 +105,6 @@
             </mailet>
         </processor>
 
-        <processor state="sieve-manager-check" enableJmx="false">
-            <!-- Only local users can manage their scripts -->
-            <mailet match="RecipientIsLocal" class="ToProcessor">
-                <processor>sieve-manager</processor>
-            </mailet>
-            <!-- Notify other people about their failure -->
-            <mailet match="All" class="Bounce">
-                <inline>heads</inline>
-                <attachment>none</attachment>
-                <passThrough>false</passThrough>
-                <prefix>[REJECTED]</prefix>
-                <notice>
-                    You can't send messages to configure SIEVE on this serveur unless you are the official SIEVE manager.
-                </notice>
-            </mailet>
-            <mailet match="All" class="Null"/>
-        </processor>
-
-        <processor state="sieve-manager">
-            <mailet match="All" class="SetMailAttribute">
-                <org.apache.james.SMTPAuthUser>true</org.apache.james.SMTPAuthUser>
-            </mailet>
-            <mailet match="All" class="org.apache.james.transport.mailets.managesieve.ManageSieveMailet">
-                <helpURL>file:/root/james-server-app-3.0.0-beta5-SNAPSHOT/conf/managesieve.help.txt</helpURL>
-            </mailet>
-            <mailet match="All" class="Null"/>
-        </processor>
     </processors>
 
 </mailetcontainer>
