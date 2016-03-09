@@ -23,15 +23,20 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.RequestHandler;
+import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.ConfigurationProvider;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class JMAPModule extends AbstractModule {
     private static final int DEFAULT_JMAP_PORT = 80;
@@ -41,6 +46,7 @@ public class JMAPModule extends AbstractModule {
         install(new JMAPCommonModule());
         install(new MethodsModule());
         bind(RequestHandler.class).in(Singleton.class);
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetConfigurationPrecondition.class);
     }
 
     @Provides
@@ -61,5 +67,33 @@ public class JMAPModule extends AbstractModule {
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
         return jwtPublickeyPemUrl.map(Throwing.function(url -> FileUtils.readFileToString(fileSystem.getFile(url))));
+    }
+
+    @Singleton
+    public static class MailetConfigurationPrecondition implements ConfigurationPerformer {
+
+        private final ConfigurationProvider configurationProvider;
+
+        @Inject
+        public MailetConfigurationPrecondition(ConfigurationProvider configurationProvider) {
+            this.configurationProvider = configurationProvider;
+        }
+
+        @Override
+        public void initModule() throws Exception {
+            Optional<HierarchicalConfiguration> removeMimeHeaderMailet = configurationProvider.getConfiguration("mailetcontainer")
+                .configurationAt("processors")
+                .configurationsAt("processor")
+                .stream()
+                .filter(processor -> processor.getString("[@state]").equals("transport"))
+                .flatMap(transport -> transport.configurationsAt("mailet").stream())
+                .filter(mailet -> mailet.getString("[@class]").equals("RemoveMimeHeader"))
+                .filter(mailet -> mailet.getString("[@match]").equals("All"))
+                .filter(mailet -> mailet.getProperty("name").equals("bcc"))
+                .findAny();
+            if (!removeMimeHeaderMailet.isPresent()) {
+                throw new ConfigurationException("Missing RemoveMimeHeader in mailets configuration (mailetcontainer -> processors -> transport). Should be configured to remove Bcc header");
+            }
+        }
     }
 }
