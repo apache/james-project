@@ -45,6 +45,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import com.google.common.net.MediaType;
+
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 @JsonDeserialize(builder = Message.Builder.class)
@@ -86,7 +88,8 @@ public class Message {
                 .size(im.getSize())
                 .date(getInternalDate(mailboxMessage, im))
                 .preview(getPreview(im))
-                .textBody(im.getBodyText().map(Strings::emptyToNull).orElse(null))
+                .textBody(getTextBody(im))
+                .htmlBody(getHtmlBody(im))
                 .build();
     }
 
@@ -153,6 +156,31 @@ public class Message {
     
     private static ZonedDateTime getInternalDate(MailboxMessage<? extends MailboxId> mailboxMessage, IndexableMessage im) {
         return ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), UTC_ZONE_ID);
+    }
+
+    private static String getTextBody(IndexableMessage im) {
+        if (isText(im) && !isHtml(im)) {
+            return im.getBodyText().map(Strings::emptyToNull).orElse(null);
+        }
+        return null;
+    }
+
+    private static String getHtmlBody(IndexableMessage im) {
+        if (isText(im) && isHtml(im)) {
+            return im.getBodyText().map(Strings::emptyToNull).orElse(null);
+        }
+        return null;
+    }
+
+    private static boolean isText(IndexableMessage im) {
+        return im.getMediaType() == null
+            || im.getMediaType().equals(MediaType.ANY_TEXT_TYPE.type());
+    }
+
+    private static boolean isHtml(IndexableMessage im) {
+        return isText(im)
+            && im.getSubType() != null
+            && im.getSubType().equals(MediaType.HTML_UTF_8.subtype());
     }
 
     @JsonPOJOBuilder(withPrefix = "")

@@ -173,11 +173,37 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(message -> message.getId().getUid(), Message::getSubject)
+            .extracting(message -> message.getId().getUid(), Message::getSubject, Message::getTextBody)
             .containsOnly(
-                    Tuple.tuple(message1Uid, "message 1 subject"), 
-                    Tuple.tuple(message2Uid, "message 2 subject"),
-                    Tuple.tuple(message3Uid, "(No subject)"));
+                    Tuple.tuple(message1Uid, "message 1 subject", Optional.of("my message")), 
+                    Tuple.tuple(message2Uid, "message 2 subject", Optional.of("my message")),
+                    Tuple.tuple(message3Uid, "(No subject)", Optional.of("my message")));
+    }
+    
+    @Test
+    public void processShouldFetchHtmlMessage() throws MailboxException {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+        Date now = new Date();
+        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
+                + "Subject: message 1 subject\r\n"
+                + "\r\n"
+                + "my <b>HTML</b> message").getBytes(Charsets.UTF_8));
+        long messageUid = inbox.appendMessage(messageContent, now, session, false, null);
+        
+        GetMessagesRequest request = GetMessagesRequest.builder()
+                .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, messageUid)))
+                .build();
+
+        GetMessagesMethod<InMemoryId> testee = new GetMessagesMethod<>(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
+        
+        assertThat(result).hasSize(1)
+            .extracting(JmapResponse::getResponse)
+            .hasOnlyElementsOfType(GetMessagesResponse.class)
+            .extracting(GetMessagesResponse.class::cast)
+            .flatExtracting(GetMessagesResponse::list)
+            .extracting(message -> message.getId().getUid(), Message::getTextBody, Message::getHtmlBody)
+            .containsOnly(Tuple.tuple(messageUid, Optional.empty(), Optional.of("my <b>HTML</b> message")));
     }
 
     @Test

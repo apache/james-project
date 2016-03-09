@@ -192,6 +192,37 @@ public abstract class GetMessagesMethodTest {
             .body(ARGUMENTS + ".list[0].headers", equalTo(ImmutableMap.of("subject", "my test subject")))
             .body(ARGUMENTS + ".list[0].date", equalTo("2014-10-30T14:12:00Z"));
     }
+
+    @Test
+    public void getMessagesShouldReturnMessageWhenHtmlMessage() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
+                new ByteArrayInputStream("Content-Type: text/html\r\nSubject: my test subject\r\n\r\nThis is a <b>HTML</b> mail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+        
+        embeddedElasticSearch.awaitForElasticSearch();
+        
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].id", equalTo(username + "|inbox|1"))
+            .body(ARGUMENTS + ".list[0].threadId", equalTo(username + "|inbox|1"))
+            .body(ARGUMENTS + ".list[0].subject", equalTo("my test subject"))
+            .body(ARGUMENTS + ".list[0].htmlBody", equalTo("This is a <b>HTML</b> mail"))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
+            .body(ARGUMENTS + ".list[0].preview", equalTo("This is a <b>HTML</b> mail"))
+            .body(ARGUMENTS + ".list[0].headers", equalTo(ImmutableMap.of("content-type", "text/html", "subject", "my test subject")))
+            .body(ARGUMENTS + ".list[0].date", equalTo("2014-10-30T14:12:00Z"));
+    }
     
     @Test
     public void getMessagesShouldReturnFilteredPropertiesMessagesWhenAsked() throws Exception {
