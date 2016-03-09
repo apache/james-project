@@ -1118,4 +1118,68 @@ public abstract class SetMessagesMethodTest {
         }
     }
 
+
+    @Test
+    public void setMessagesShouldSendAReadableHtmlMessage() throws Exception {
+        // Sender
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        // Recipient
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(recipientAddress, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, "inbox");
+        embeddedElasticSearch.awaitForElasticSearch();
+        AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
+
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        // Given
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", this.accessToken.serialize())
+                .body(requestBody)
+        // When
+        .when()
+                .post("/jmap");
+
+        // Then
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isHtmlMessageReceived(recipientToken));
+    }
+
+    private boolean isHtmlMessageReceived(AccessToken recipientToken) {
+        try {
+            with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", recipientToken.serialize())
+                .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"htmlBody\"]}, \"#0\"]]")
+            .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(SECOND_NAME, equalTo("messages"))
+                .body(SECOND_ARGUMENTS + ".list", hasSize(1))
+                .body(SECOND_ARGUMENTS + ".list[0].htmlBody", equalTo("Hello <b>someone</b>, and thank you for joining example.com!"))
+            ;
+            return true;
+        } catch(AssertionError e) {
+            return false;
+        }
+    }
 }
