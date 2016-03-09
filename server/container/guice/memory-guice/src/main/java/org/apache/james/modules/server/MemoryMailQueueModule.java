@@ -17,33 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules.server;
 
-import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.modules.data.MemoryDataModule;
-import org.apache.james.modules.mailbox.MemoryMailboxModule;
-import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.modules.server.MemoryMailQueueModule;
-import org.apache.james.modules.server.QuotaModule;
+import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.utils.GuiceGenericType;
 
-import com.google.inject.Module;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.util.Modules;
 
-public class MemoryJamesServerMain {
+public class MemoryMailQueueModule<Id extends MailboxId> extends AbstractModule {
 
-    private static final TypeLiteral<InMemoryId> inMemoryId = new TypeLiteral<InMemoryId>(){};
-    
-    public static final Module inMemoryServerModule = Modules.combine(
-        new MemoryDataModule(),
-        new MemoryMailboxModule(),
-        new QuotaModule(),
-        new MemoryMailQueueModule<>(inMemoryId));
+    private final GuiceGenericType<Id> guiceGenericType;
 
-    public static void main(String[] args) throws Exception {
-        new GuiceJamesServer<>(inMemoryId)
-            .combineWith(inMemoryServerModule, new JMXServerModule())
-            .start();
+    public MemoryMailQueueModule(TypeLiteral<Id> type) {
+        guiceGenericType = new GuiceGenericType<>(type);
     }
-
+    
+    @Override
+    protected void configure() {
+        bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
+        bind(MailQueueItemDecoratorFactory.class)
+            .to(guiceGenericType.newGenericType(PostDequeueDecoratorFactory.class))
+            .in(Singleton.class);
+    }
 }
