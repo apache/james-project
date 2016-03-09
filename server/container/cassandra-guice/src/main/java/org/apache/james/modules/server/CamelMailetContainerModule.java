@@ -56,7 +56,7 @@ public class CamelMailetContainerModule extends AbstractModule {
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(IMAPModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetModuleConfigurationPerformer.class);
     }
 
     @Provides
@@ -75,7 +75,7 @@ public class CamelMailetContainerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class IMAPModuleConfigurationPerformer implements ConfigurationPerformer {
+    public static class MailetModuleConfigurationPerformer implements ConfigurationPerformer {
 
         private final ConfigurationProvider configurationProvider;
         private final CamelCompositeProcessor camelCompositeProcessor;
@@ -83,7 +83,7 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final JamesMailetContext mailetContext;
 
         @Inject
-        public IMAPModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
+        public MailetModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
                                                 CamelCompositeProcessor camelCompositeProcessor,
                                                 JamesMailSpooler jamesMailSpooler,
                                                 JamesMailetContext mailetContext) {
