@@ -20,6 +20,8 @@ package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -32,14 +34,20 @@ import org.apache.james.filesystem.api.FileSystem;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class CassandraSessionModule extends AbstractModule {
 
+    private static final int DEFAULT_CONNECTION_MAX_RETRIES = 10;
+    private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
+
     @Override
     protected void configure() {
+        bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
     }
     
     @Provides
@@ -59,19 +67,33 @@ public class CassandraSessionModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Cluster provideCluster(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
+    Cluster provideCluster(FileSystem fileSystem, AsyncRetryExecutor executor) throws FileNotFoundException, ConfigurationException, ExecutionException, InterruptedException {
         PropertiesConfiguration configuration = getConfiguration(fileSystem);
-        
-        return ClusterWithKeyspaceCreatedFactory.clusterWithInitializedKeyspace(
-            ClusterFactory.createClusterForSingleServerWithoutPassWord(
-                configuration.getString("cassandra.ip"),
-                configuration.getInt("cassandra.port")),
-                configuration.getString("cassandra.keyspace"),
-                configuration.getInt("cassandra.replication.factor"));
+
+        return getRetryer(executor, configuration)
+                .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory.clusterWithInitializedKeyspace(
+                        ClusterFactory.createClusterForSingleServerWithoutPassWord(
+                                configuration.getString("cassandra.ip"),
+                                configuration.getInt("cassandra.port")),
+                        configuration.getString("cassandra.keyspace"),
+                        configuration.getInt("cassandra.replication.factor")))
+                .get();
+    }
+
+    private static AsyncRetryExecutor getRetryer(AsyncRetryExecutor executor, PropertiesConfiguration configuration) {
+        return executor.retryOn(NoHostAvailableException.class)
+                .withProportionalJitter()
+                .withMaxRetries(configuration.getInt("cassandra.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES))
+                .withMinDelay(configuration.getInt("cassandra.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY));
+    }
+
+    @Provides
+    private AsyncRetryExecutor provideAsyncRetryExecutor(ScheduledExecutorService scheduler) {
+        return new AsyncRetryExecutor(scheduler);
     }
 
     private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
         return new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "cassandra.properties"));
     }
-    
+
 }

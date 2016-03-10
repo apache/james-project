@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Singleton;
 
@@ -35,12 +36,17 @@ import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessa
 import org.apache.james.mailbox.store.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
+import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
+
+    private static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
+    private static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
 
     @Override
     protected void configure() {
@@ -50,15 +56,26 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected ClientProvider provideClientProvider(FileSystem fileSystem) throws ConfigurationException, FileNotFoundException {
+    protected ClientProvider provideClientProvider(FileSystem fileSystem, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
         PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "elasticsearch.properties"));
+
         ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getString("elasticsearch.masterHost"),
-            propertiesReader.getInt("elasticsearch.port"));
-        IndexCreationFactory.createIndex(clientProvider,
-            propertiesReader.getInt("elasticsearch.nb.shards"),
-            propertiesReader.getInt("elasticsearch.nb.replica"));
+                propertiesReader.getInt("elasticsearch.port"));
+        getRetryer(executor, propertiesReader)
+                .getWithRetry(ctx -> IndexCreationFactory.createIndex(clientProvider,
+                        propertiesReader.getInt("elasticsearch.nb.shards"),
+                        propertiesReader.getInt("elasticsearch.nb.replica")))
+                .get();
         NodeMappingFactory.applyMapping(clientProvider);
         return clientProvider;
+    }
+
+    private static AsyncRetryExecutor getRetryer(AsyncRetryExecutor executor, PropertiesConfiguration configuration) {
+        return executor
+                .withProportionalJitter()
+                .retryOn(NoNodeAvailableException.class)
+                .withMaxRetries(configuration.getInt("elasticsearch.retryConnection.maxRetries", DEFAULT_CONNECTION_MAX_RETRIES))
+                .withMinDelay(configuration.getInt("elasticsearch.retryConnection.minDelay", DEFAULT_CONNECTION_MIN_DELAY));
     }
 
 }

@@ -383,6 +383,10 @@
                     <scope>test</scope>
                 </dependency>
                 <dependency>
+                    <groupId>com.nurkiewicz.asyncretry</groupId>
+                    <artifactId>asyncretry</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>commons-daemon</groupId>
                     <artifactId>commons-daemon</artifactId>
                 </dependency>
