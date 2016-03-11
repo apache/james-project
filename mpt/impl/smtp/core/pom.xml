@@ -8,7 +8,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Apache James MPT SMTP</name>
+    <name>Apache James MPT SMTP Core</name>
 
     <artifactId>apache-james-mpt-smtp-core</artifactId>
     <packaging>jar</packaging>
