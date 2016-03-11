@@ -61,6 +61,9 @@
                 <name>X-WasSigned</name>
                 <value>true</value>
             </mailet>
+            <mailet match="All" class="RemoveMimeHeader">
+                <name>bcc</name>
+            </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
             <!-- <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
