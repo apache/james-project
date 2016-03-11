@@ -28,10 +28,12 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.RequestHandler;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -46,7 +48,9 @@ public class JMAPModule extends AbstractModule {
         install(new JMAPCommonModule());
         install(new MethodsModule());
         bind(RequestHandler.class).in(Singleton.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetConfigurationPrecondition.class);
+        Multibinder<ConfigurationPerformer> preconditions = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
+        preconditions.addBinding().to(MailetConfigurationPrecondition.class);
+        preconditions.addBinding().to(MoveCapabilityPrecondition.class);
     }
 
     @Provides
@@ -94,6 +98,23 @@ public class JMAPModule extends AbstractModule {
             if (!removeMimeHeaderMailet.isPresent()) {
                 throw new ConfigurationException("Missing RemoveMimeHeader in mailets configuration (mailetcontainer -> processors -> transport). Should be configured to remove Bcc header");
             }
+        }
+    }
+
+    @Singleton
+    public static class MoveCapabilityPrecondition implements ConfigurationPerformer {
+
+        private final MailboxManager mailboxManager;
+
+        @Inject
+        public MoveCapabilityPrecondition(MailboxManager mailboxManager) {
+            this.mailboxManager = mailboxManager;
+        }
+
+        @Override
+        public void initModule() throws Exception {
+            Preconditions.checkArgument(mailboxManager.getSupportedCapabilities().contains(MailboxManager.Capabilities.Move),
+                    "MOVE support in MailboxManager is required by JMAP Module");
         }
     }
 }

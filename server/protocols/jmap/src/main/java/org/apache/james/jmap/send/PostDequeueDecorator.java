@@ -127,10 +127,7 @@ public class PostDequeueDecorator<Id extends MailboxId> extends MailQueueItemDec
         ensureMailboxPathIsOutbox(outboxMailboxPath);
         MailboxPath sentMailboxPath = getSentMailboxPath(mailboxSession);
         
-        // MOVE is not implemented, so COPY and DELETE
-        mailboxManager.copyMessages(MessageRange.one(mailboxMessage.getUid()), outboxMailboxPath, sentMailboxPath, mailboxSession);
-        Mailbox<Id> outboxMailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(outboxMailboxPath);
-        messageMapperFactory.getMessageMapper(mailboxSession).delete(outboxMailbox, mailboxMessage);
+        mailboxManager.moveMessages(MessageRange.one(mailboxMessage.getUid()), outboxMailboxPath, sentMailboxPath, mailboxSession);
     }
 
     private void ensureMailboxPathIsOutbox(MailboxPath outboxMailboxPath) throws MailShouldBeInOutboxException {
