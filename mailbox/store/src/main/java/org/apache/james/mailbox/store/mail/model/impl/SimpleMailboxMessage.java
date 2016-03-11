@@ -44,6 +44,7 @@ public class SimpleMailboxMessage<Id extends MailboxId> extends DelegatingMailbo
         SharedByteArrayInputStream content = copyFullContent(original);
         int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
         PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
+        pBuilder.setTextualLineCount(original.getTextualLineCount());
         return new SimpleMailboxMessage<Id>(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId);
     }
 
