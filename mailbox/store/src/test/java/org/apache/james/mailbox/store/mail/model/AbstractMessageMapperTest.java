@@ -442,8 +442,16 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
         MailboxMessage<Id> message7 = SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6);
         messageMapper.copy(benwaInboxMailbox, message7);
         message7.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
-        MessageAssert.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message7.getUid()), MessageMapper.FetchType.Full, LIMIT).next())
-            .isEqualTo(message7, MessageMapper.FetchType.Full);
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isGreaterThan(message6.getUid());
+
+        MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox,
+            MessageRange.one(messageMapper.getLastUid(benwaInboxMailbox)),
+            MessageMapper.FetchType.Full,
+            LIMIT)
+            .next();
+
+        MessageAssert.assertThat(result).isEqualToWithoutUid(message7, MessageMapper.FetchType.Full);
+        assertThat(result.getUid()).isEqualTo(messageMapper.getLastUid(benwaInboxMailbox));
     }
     
     @Test

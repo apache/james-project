@@ -148,7 +148,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper<InMemoryId> {
         Collections.sort(results);
 
         if (max > 0 && results.size() > max) {
-            results = results.subList(0, max - 1);
+            results = results.subList(0, max);
         }
         return results.iterator();
     }

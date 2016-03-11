@@ -26,6 +26,8 @@ import org.assertj.core.api.AbstractAssert;
 import javax.mail.Flags;
 import java.io.IOException;
 
+import com.google.common.base.Objects;
+
 public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage<?>> {
 
     public MessageAssert(MailboxMessage<?> actual) {
@@ -36,45 +38,50 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage<
         return new MessageAssert(actual);
     }
 
-    public MessageAssert isEqualTo(MailboxMessage<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
+    public MessageAssert isEqualToWithoutUid(MailboxMessage<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
         isNotNull();
-        if (!equals(actual.getMailboxId(), expected.getMailboxId())) {
+        if (!Objects.equal(actual.getMailboxId(), expected.getMailboxId())) {
             failWithMessage("Expected Mailbox ID to be <%s> but was <%s>", expected.getMailboxId().toString(), actual.getMailboxId().toString());
         }
-        if (!equals(actual.getUid(), expected.getUid())) {
-            failWithMessage("Expected UID to be <%s> but was <%s>", expected.getUid(), actual.getUid());
-        }
-        if (!equals(actual.getInternalDate(), expected.getInternalDate())) {
+        if (!Objects.equal(actual.getInternalDate(), expected.getInternalDate())) {
             failWithMessage("Expected Internal Date to be <%s> but was <%s>", expected.getInternalDate(), actual.getInternalDate());
         }
-        if (!equals(actual.getBodyOctets(), expected.getBodyOctets())) {
+        if (!Objects.equal(actual.getBodyOctets(), expected.getBodyOctets())) {
             failWithMessage("Expected Body octet to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
         }
-        if (!equals(actual.getMediaType(), expected.getMediaType())) {
+        if (!Objects.equal(actual.getMediaType(), expected.getMediaType())) {
             failWithMessage("Expected Media type to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
         }
-        if (!equals(actual.getSubType(), expected.getSubType())) {
+        if (!Objects.equal(actual.getSubType(), expected.getSubType())) {
             failWithMessage("Expected Sub type to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
         }
         if (usedFetchType == MessageMapper.FetchType.Full) {
-            if (!equals(actual.getFullContentOctets(), expected.getFullContentOctets())) {
+            if (!Objects.equal(actual.getFullContentOctets(), expected.getFullContentOctets())) {
                 failWithMessage("Expected MailboxMessage size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());
             }
-            if (!equals(IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()))) {
+            if (!Objects.equal(IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()))) {
                 failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()));
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Headers) {
-            if (!equals(IOUtils.toString(actual.getHeaderContent()), IOUtils.toString(expected.getHeaderContent()))) {
+            if (!Objects.equal(IOUtils.toString(actual.getHeaderContent()), IOUtils.toString(expected.getHeaderContent()))) {
                 failWithMessage("Expected Header content to be <%s> but was <%s>", IOUtils.toString(actual.getHeaderContent()), IOUtils.toString(expected.getHeaderContent()));
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
-            if (!equals(IOUtils.toString(actual.getBodyContent()), IOUtils.toString(expected.getBodyContent()))) {
+            if (!Objects.equal(IOUtils.toString(actual.getBodyContent()), IOUtils.toString(expected.getBodyContent()))) {
                 failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(actual.getBodyContent()), IOUtils.toString(expected.getBodyContent()));
             }
         }
         return this;
+    }
+
+    public MessageAssert isEqualTo(MailboxMessage<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
+        isNotNull();
+        if (!Objects.equal(actual.getUid(), expected.getUid())) {
+            failWithMessage("Expected UID to be <%s> but was <%s>", expected.getUid(), actual.getUid());
+        }
+        return isEqualToWithoutUid(expected, usedFetchType);
     }
 
     public MessageAssert hasFlags(Flags flags) {
@@ -99,10 +106,4 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage<
         return this;
     }
 
-    private boolean equals(Object object1, Object object2) {
-        if ( object1 == null && object2 == null ) {
-            return true;
-        }
-        return ( object1 != null ) && object1.equals(object2);
-    }
 }
