@@ -33,6 +33,8 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
+import com.google.common.base.Objects;
+
 public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     
     private static final int INITIAL_SIZE = 128;
@@ -57,7 +59,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.mailbox.model.MailboxPath)
      */
-    public synchronized Mailbox<InMemoryId> findMailboxByPath(MailboxPath path) throws MailboxException, MailboxNotFoundException {
+    public synchronized Mailbox<InMemoryId> findMailboxByPath(MailboxPath path) throws MailboxException {
         Mailbox<InMemoryId> result = null;
         for (Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
             MailboxPath mp = new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
@@ -88,8 +90,8 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     }
 
     private boolean mailboxMatchesRegex(Mailbox<InMemoryId> mailbox, MailboxPath path, String regex) {
-        return mailbox.getNamespace().equals(path.getNamespace())
-            && mailbox.getUser().equals(path.getUser())
+        return Objects.equal(mailbox.getNamespace(), path.getNamespace())
+            && Objects.equal(mailbox.getUser(), path.getUser())
             && mailbox.getName().matches(regex);
     }
 
@@ -115,15 +117,19 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(org.apache.james.mailbox.store.mail.model.Mailbox, char)
      */
-    public boolean hasChildren(Mailbox<InMemoryId> mailbox, char delimiter) throws MailboxException,
-            MailboxNotFoundException {
+    public boolean hasChildren(Mailbox<InMemoryId> mailbox, char delimiter) throws MailboxException {
         String mailboxName = mailbox.getName() + delimiter;
         for (Mailbox<InMemoryId> box:mailboxesById.values()) {
-            if (box.getName().startsWith(mailboxName)) {
+            if (belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean belongsToSameUser(Mailbox<InMemoryId> mailbox, Mailbox<InMemoryId> otherMailbox) {
+        return Objects.equal(mailbox.getNamespace(), otherMailbox.getNamespace())
+            && Objects.equal(mailbox.getUser(), otherMailbox.getUser());
     }
 
     /**
