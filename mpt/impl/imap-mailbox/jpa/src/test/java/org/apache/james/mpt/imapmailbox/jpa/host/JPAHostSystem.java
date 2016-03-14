@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
 public class JPAHostSystem extends JamesImapHostSystem {
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT, Feature.USER_FLAGS_SUPPORT);
 
     public static JamesImapHostSystem build() throws Exception {
         return new JPAHostSystem();

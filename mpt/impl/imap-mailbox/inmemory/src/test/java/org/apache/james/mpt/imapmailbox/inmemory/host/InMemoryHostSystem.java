@@ -48,7 +48,10 @@ import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 
 public class InMemoryHostSystem extends JamesImapHostSystem {
 
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
+        Feature.MOVE_SUPPORT,
+        Feature.USER_FLAGS_SUPPORT,
+        Feature.QUOTA_SUPPORT);
 
     private InMemoryMailboxManager mailboxManager;
     private MockAuthenticator userManager;

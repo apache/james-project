@@ -28,7 +28,10 @@ import com.google.common.collect.ImmutableSet;
 public class ImapFeatures {
     
     public enum Feature {
-        NAMESPACE_SUPPORT
+        NAMESPACE_SUPPORT,
+        MOVE_SUPPORT,
+        USER_FLAGS_SUPPORT,
+        QUOTA_SUPPORT
     }
 
     public static ImapFeatures of(Feature... features) {

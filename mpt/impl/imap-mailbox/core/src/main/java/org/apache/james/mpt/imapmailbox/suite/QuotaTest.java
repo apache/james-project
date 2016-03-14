@@ -19,8 +19,10 @@
 
 package org.apache.james.mpt.imapmailbox.suite;
 
+import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedState;
+import org.junit.Assume;
 import org.junit.Test;
 
 import javax.inject.Inject;
@@ -37,6 +39,7 @@ public class QuotaTest extends BaseSelectedState {
 
     @Test
     public void testQuotaScript() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.QUOTA_SUPPORT));
         scriptTest("Quota", Locale.CANADA);
     }
 }
