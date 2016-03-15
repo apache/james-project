@@ -19,6 +19,7 @@
 package org.apache.james.modules.data;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.sieve.cassandra.CassandraSieveRepository;
@@ -28,6 +29,7 @@ public class CassandraSieveRepositoryModule extends AbstractModule {
     
     @Override
     public void configure() {
+        bind(CassandraSieveRepository.class).in(Scopes.SINGLETON);
         bind(SieveRepository.class).to(CassandraSieveRepository.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule.class);
