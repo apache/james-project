@@ -53,11 +53,11 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Persistent(optional = false, fetch = FetchType.LAZY)
     @Column(name = "MAIL_BYTES", length = 1048576000, nullable = false)
-    private final InputStream body;
+    private InputStream body;
 
     @Persistent(optional = false, fetch = FetchType.LAZY)
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
-    private final InputStream header;
+    private InputStream header;
 
     private final SharedInputStream content;
 

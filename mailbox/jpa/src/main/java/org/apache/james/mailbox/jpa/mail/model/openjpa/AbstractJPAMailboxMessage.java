@@ -214,27 +214,27 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId>
     /** The first body octet */
     @Basic(optional = false)
     @Column(name = "MAIL_BODY_START_OCTET", nullable = false)
-    private final int bodyStartOctet;
+    private int bodyStartOctet;
     
     /** Number of octets in the full document content */
     @Basic(optional = false)
     @Column(name = "MAIL_CONTENT_OCTETS_COUNT", nullable = false)
-    private final long contentOctets;
+    private long contentOctets;
     
     /** MIME media type */
     @Basic(optional = true)
     @Column(name = "MAIL_MIME_TYPE", nullable = true, length = 200)
-    private final String mediaType;
+    private String mediaType;
     
     /** MIME sub type */
     @Basic(optional = true)
     @Column(name = "MAIL_MIME_SUBTYPE", nullable = true, length = 200)
-    private final String subType;
+    private String subType;
     
     /** THE CRFL count when this document is textual, null otherwise */
     @Basic(optional = true)
     @Column(name = "MAIL_TEXTUAL_LINE_COUNT", nullable = true)
-    private final Long textualLineCount;
+    private Long textualLineCount;
     
 
     /** Meta data for this message */
@@ -242,13 +242,13 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId>
     @OrderBy("line")
     @ElementJoinColumns({@ElementJoinColumn(name="MAILBOX_ID", referencedColumnName="MAILBOX_ID"),
                 @ElementJoinColumn(name="MAIL_UID", referencedColumnName="MAIL_UID")})
-    private final List<JPAProperty> properties;
+    private List<JPAProperty> properties;
 
     @OneToMany(cascade = CascadeType.ALL, fetch=FetchType.EAGER, orphanRemoval = true)
     @OrderBy("id")
     @ElementJoinColumns({@ElementJoinColumn(name="MAILBOX_ID", referencedColumnName="MAILBOX_ID"),
     @ElementJoinColumn(name="MAIL_UID", referencedColumnName="MAIL_UID")})
-    private final List<JPAUserFlag> userFlags;
+    private List<JPAUserFlag> userFlags;
     
     public AbstractJPAMailboxMessage(JPAMailbox mailbox, Date internalDate, Flags flags, long contentOctets, int bodyStartOctet, PropertyBuilder propertyBuilder) {
         this.mailbox = mailbox;

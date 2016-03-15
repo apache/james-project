@@ -46,14 +46,14 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     /** We use a max length to represent 1gb data. Thats prolly overkill, but who knows */
     @Basic(optional = false, fetch = FetchType.LAZY)
     @Column(name = "MAIL_BYTES", length = 1048576000, nullable = false)
-    @Lob private final byte[] body;
+    @Lob private byte[] body;
 
 
     /** The value for the header field. Lazy loaded */
     /** We use a max length to represent 10mb data. Thats prolly overkill, but who knows */
     @Basic(optional = false, fetch = FetchType.LAZY)
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
-    @Lob private final byte[] header;
+    @Lob private byte[] header;
     
     public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size ,bodyStartOctet, propertyBuilder);
