@@ -83,7 +83,8 @@ public class InMemoryMailboxManagerTest extends AbstractMailboxManagerTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-        StoreMailboxManager<InMemoryId> mailboxManager = new InMemoryMailboxManager(new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        StoreMailboxManager<InMemoryId> mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
         mailboxManager.init();
         
         setMailboxManager(mailboxManager);

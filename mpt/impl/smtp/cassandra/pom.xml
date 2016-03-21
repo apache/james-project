@@ -159,6 +159,12 @@
                     <type>test-jar</type>
                 </dependency>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-guice-common</artifactId>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+                <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                     <version>18.0</version>

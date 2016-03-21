@@ -31,6 +31,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.elasticsearch.ClientProvider;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.modules.CommonServicesModule;
+import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.modules.ProtocolsModule;
 import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.mpt.api.SmtpHostSystem;
 import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
@@ -85,13 +88,17 @@ public class SmtpTestModule extends AbstractModule {
                     .build());
         };
         
-        install(Modules.override(CassandraJamesServerMain.defaultModule)
-            .with(Modules.combine(
-                new TestFilesystemModule(folder),
+        install(Modules
+                .override(
+                        CassandraJamesServerMain.cassandraServerModule,
+                        new CommonServicesModule<>(CassandraJamesServerMain.cassandraId),
+                        new ProtocolsModule<>(CassandraJamesServerMain.cassandraId),
+                        new MailetProcessingModule())
+            .with(new TestFilesystemModule(folder),
                 cassandra,
                 dns,
                 elasticSearch,
-                jmap)));
+                jmap));
     }
 
 

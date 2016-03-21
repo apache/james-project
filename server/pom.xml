@@ -58,7 +58,9 @@
         <module>karaf/features</module>
         <module>karaf/integration</module>
 
-        <module>container/cassandra-guice</module>
+        <module>container/guice/cassandra-guice</module>
+        <module>container/guice/memory-guice</module>
+        <module>container/guice/guice-common</module>
         <module>container/cli</module>
         <module>container/core</module>
         <module>container/filesystem-api</module>
@@ -92,7 +94,9 @@
         <module>protocols/fetchmail</module>
         <module>protocols/protocols-imap4</module>
         <module>protocols/jmap</module>
-        <module>protocols/jmap-integration-testing</module>
+        <module>protocols/jmap-integration-testing/cassandra-jmap-integration-testing</module>
+        <module>protocols/jmap-integration-testing/memory-jmap-integration-testing</module>
+        <module>protocols/jmap-integration-testing/jmap-integration-testing-common</module>
         <module>protocols/protocols-library</module>
         <module>protocols/protocols-lmtp</module>
         <module>protocols/protocols-managesieve</module>
@@ -217,6 +221,17 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-guice-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-guice-common</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -531,6 +546,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
+                <artifactId>james-server-data-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
                 <artifactId>james-server-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -552,6 +572,11 @@
                 <version>${project.version}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-memory-guice</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -561,6 +586,12 @@
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>james-server-jmap-integration-testing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-jmap-integration-testing</artifactId>
+                <type>test-jar</type>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -574,7 +605,6 @@
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mailbox-memory</artifactId>
                 <version>${mailbox.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
@@ -852,6 +882,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>4.0</version>
+            </dependency>
+	    <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>java-hamcrest</artifactId>
+                <version>2.0.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

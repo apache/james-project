@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.SubscriptionManager;
@@ -41,7 +43,8 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     private static final int INITIAL_SIZE = 32;
     
     protected SubscriptionMapperFactory mapperFactory;
-    
+
+    @Inject
     public StoreSubscriptionManager(SubscriptionMapperFactory mapperFactory) {
         this.mapperFactory = mapperFactory;
     }
