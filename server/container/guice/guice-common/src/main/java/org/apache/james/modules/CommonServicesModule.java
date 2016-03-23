@@ -30,6 +30,7 @@ import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.utils.ConfigurationProvider;
@@ -56,18 +57,19 @@ public class CommonServicesModule<Id extends MailboxId> extends AbstractModule {
         install(new ConfigurationProviderModule());
         install(new PreDestroyModule());
         install(new DNSServiceModule());
+        install(new AsyncTasksExecutorModule());
         
         bind(FileSystem.class).to(FileSystemImpl.class);
         bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
         TypeLiteral<GuiceServerProbe<Id>> serverProbe = guiceGenericType.newGenericType(GuiceServerProbe.class);
         bind(serverProbe).in(Singleton.class);
     }
-    
+
     @Provides @Singleton @Named(CONFIGURATION_PATH)
     public String configurationPath() {
         return FileSystem.FILE_PROTOCOL_AND_CONF;
     }
-    
+
     @Provides @Singleton
     public JamesDirectoriesProvider directories() throws MissingArgumentException {
         String rootDirectory = Optional

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch.events;
 
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+
 import java.util.Iterator;
 
 import javax.inject.Inject;
@@ -25,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
+import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -38,7 +41,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> extends ListeningMessageSearchIndex<Id> {
 
@@ -80,7 +82,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     @Override
     public void delete(MailboxSession session, Mailbox<Id> mailbox, MessageRange range) throws MailboxException {
         if (range.getType() == Type.ALL) {
-            indexer.deleteAllWithIdStarting(mailbox.getMailboxId() + ID_SEPARATOR);
+            indexer.deleteAllMatchingQuery(termQuery(JsonMessageConstants.MAILBOX_ID, mailbox.getMailboxId().serialize()));
         } else {
             range.forEach(messageId -> {
                 try {

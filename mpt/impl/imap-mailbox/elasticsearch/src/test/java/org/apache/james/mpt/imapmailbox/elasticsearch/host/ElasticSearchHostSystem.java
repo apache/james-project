@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.ClientProvider;
+import org.apache.james.mailbox.elasticsearch.DeleteByQueryPerformer;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
@@ -102,7 +104,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
         ElasticSearchListeningMessageSearchIndex<InMemoryId> searchIndex = new ElasticSearchListeningMessageSearchIndex<>(
             factory,
-            new ElasticSearchIndexer(clientProvider),
+            new ElasticSearchIndexer(clientProvider, new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor())),
             new ElasticSearchSearcher<>(clientProvider, new QueryConverter(new CriterionConverter())),
             new MessageToElasticSearchJson(new DefaultTextExtractor()));
 

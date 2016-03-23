@@ -88,7 +88,6 @@ public class JamesCapabilitiesServerTest {
                         bind(MailboxManager.class).toInstance(mailboxManager);
                     }
 
-                    @SuppressWarnings("unused")
                     @Provides
                     @Singleton
                     Session provideSession(CassandraModule cassandraModule) {

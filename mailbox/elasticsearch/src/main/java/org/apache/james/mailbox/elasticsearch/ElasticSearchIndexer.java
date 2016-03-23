@@ -20,11 +20,11 @@ package org.apache.james.mailbox.elasticsearch;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.QueryBuilder;
 
 import com.google.common.base.Preconditions;
 
@@ -34,10 +34,12 @@ public class ElasticSearchIndexer {
     public static final String MESSAGE_TYPE = "message";
     
     private final ClientProvider clientProvider;
+    private final DeleteByQueryPerformer deleteByQueryPerformer;
 
     @Inject
-    public ElasticSearchIndexer(ClientProvider clientProvider) {
+    public ElasticSearchIndexer(ClientProvider clientProvider, DeleteByQueryPerformer deleteByQueryPerformer) {
         this.clientProvider = clientProvider;
+        this.deleteByQueryPerformer = deleteByQueryPerformer;
     }
     
     public IndexResponse indexMessage(String id, String content) {
@@ -65,8 +67,8 @@ public class ElasticSearchIndexer {
         }
     }
     
-    public void deleteAllWithIdStarting(String idStart) {
-        throw new NotImplementedException();
+    public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
+        deleteByQueryPerformer.perform(queryBuilder);
     }
 
     private void checkArgument(String content) {

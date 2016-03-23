@@ -20,20 +20,24 @@
 package org.apache.james.mailbox.elasticsearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
+import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.common.collect.Lists;
 
 public class ElasticSearchIndexerTest {
 
@@ -45,11 +49,14 @@ public class ElasticSearchIndexerTest {
 
     private Node node;
     private ElasticSearchIndexer testee;
+    private DeleteByQueryPerformer deleteByQueryPerformer;
 
     @Before
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
-        testee = new ElasticSearchIndexer(new TestingClientProvider(node));
+        TestingClientProvider clientProvider = new TestingClientProvider(node);
+        deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor());
+        testee = new ElasticSearchIndexer(clientProvider, deleteByQueryPerformer);
     }
     
     @Test
@@ -113,16 +120,15 @@ public class ElasticSearchIndexerTest {
         testee.updateMessage("1", null);
     }
 
-    @Ignore
     @Test
-    public void deleteAllWithIdStarting() throws Exception {
+    public void deleteByQueryShouldWorkOnSingleMessage() throws Exception {
         String messageId = "1:2";
-        String content = "{\"message\": \"trying out Elasticsearch\"}";
+        String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
 
         testee.indexMessage(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
         
-        testee.deleteAllWithIdStarting("1:");
+        testee.deleteAllMatchingQuery(termQuery(JsonMessageConstants.MAILBOX_ID, "1"));
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
@@ -134,28 +140,25 @@ public class ElasticSearchIndexerTest {
         }
     }
 
-    @Ignore
     @Test
-    public void deleteAllWithIdStartingWhenMultipleMessages() throws Exception {
-        String messageId = "1:2";
-        String content = "{\"message\": \"trying out Elasticsearch\"}";
+    public void deleteByQueryShouldWorkWhenMultipleMessages() throws Exception {
+        String messageId = "1:1";
+        String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
         
         testee.indexMessage(messageId, content);
-        embeddedElasticSearch.awaitForElasticSearch();
         
         String messageId2 = "1:2";
-        String content2 = "{\"message\": \"trying out Elasticsearch 2\"}";
+        String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"mailboxId\":\"1\"}";
         
         testee.indexMessage(messageId2, content2);
-        embeddedElasticSearch.awaitForElasticSearch();
         
         String messageId3 = "2:3";
-        String content3 = "{\"message\": \"trying out Elasticsearch 3\"}";
+        String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
         
         testee.indexMessage(messageId3, content3);
         embeddedElasticSearch.awaitForElasticSearch();
-        
-        testee.deleteAllWithIdStarting("1:");
+
+        testee.deleteAllMatchingQuery(termQuery(JsonMessageConstants.MAILBOX_ID, "1"));
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {

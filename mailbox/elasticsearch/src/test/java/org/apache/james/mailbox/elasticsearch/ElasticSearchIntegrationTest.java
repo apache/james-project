@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.concurrent.Executors;
 
 import javax.mail.Flags;
 
@@ -167,7 +168,7 @@ public class ElasticSearchIntegrationTest {
         );
         MailboxSessionMapperFactory<InMemoryId> mapperFactory = new InMemoryMailboxSessionMapperFactory();
         elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex<>(mapperFactory,
-            new ElasticSearchIndexer(clientProvider),
+            new ElasticSearchIndexer(clientProvider, new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor())),
             new ElasticSearchSearcher<>(clientProvider, new QueryConverter(new CriterionConverter())),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
         storeMailboxManager = new StoreMailboxManager<>(
