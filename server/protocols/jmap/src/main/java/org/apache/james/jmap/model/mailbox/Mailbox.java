@@ -22,13 +22,14 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 
 @JsonDeserialize(builder = Mailbox.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
@@ -41,13 +42,11 @@ public class Mailbox {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private final static int MAX_SORT_ORDER = Double.valueOf(Math.pow(2, 31)).intValue();
-
         private String id;
         private String name;
         private String parentId;
         private Optional<Role> role;
-        private int sortOrder;
+        private SortOrder sortOrder;
         private boolean mustBeOnlyMailbox;
         private boolean mayReadItems;
         private boolean mayAddItems;
@@ -85,7 +84,7 @@ public class Mailbox {
             return this;
         }
 
-        public Builder sortOrder(int sortOrder) {
+        public Builder sortOrder(SortOrder sortOrder) {
             this.sortOrder = sortOrder;
             return this;
         }
@@ -148,8 +147,6 @@ public class Mailbox {
         public Mailbox build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(id), "'id' is mandatory");
-            Preconditions.checkState(sortOrder >= 0, "'sortOrder' must be positive");
-            Preconditions.checkState(sortOrder < MAX_SORT_ORDER, "'sortOrder' must be lesser than " + MAX_SORT_ORDER);
 
             return new Mailbox(id, name, Optional.ofNullable(parentId), role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
                     totalMessages, unreadMessages, totalThreads, unreadThreads);
@@ -160,7 +157,7 @@ public class Mailbox {
     private final String name;
     private final Optional<String> parentId;
     private final Optional<Role> role;
-    private final int sortOrder;
+    private final SortOrder sortOrder;
     private final boolean mustBeOnlyMailbox;
     private final boolean mayReadItems;
     private final boolean mayAddItems;
@@ -173,7 +170,7 @@ public class Mailbox {
     private final long totalThreads;
     private final long unreadThreads;
 
-    @VisibleForTesting Mailbox(String id, String name, Optional<String> parentId, Optional<Role> role, int sortOrder, boolean mustBeOnlyMailbox, 
+    @VisibleForTesting Mailbox(String id, String name, Optional<String> parentId, Optional<Role> role, SortOrder sortOrder, boolean mustBeOnlyMailbox,
             boolean mayReadItems, boolean mayAddItems, boolean mayRemoveItems, boolean mayCreateChild, boolean mayRename, boolean mayDelete,
             long totalMessages, long unreadMessages, long totalThreads, long unreadThreads) {
 
@@ -211,7 +208,7 @@ public class Mailbox {
         return role;
     }
 
-    public int getSortOrder() {
+    public SortOrder getSortOrder() {
         return sortOrder;
     }
 

@@ -18,33 +18,56 @@
  ****************************************************************/
 package org.apache.james.jmap.model.mailbox;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.util.Optional;
 
-public class SortOrder {
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
-    private static final int DEFAULT_SORT_ORDER = 1000;
-    private static final ImmutableMap<Role, Integer> defaultSortOrders =
-            ImmutableMap.<Role, Integer>builder()
-                .put(Role.INBOX, 10)
-                .put(Role.ARCHIVE, 20)
-                .put(Role.DRAFTS, 30)
-                .put(Role.OUTBOX, 40)
-                .put(Role.SENT, 50)
-                .put(Role.TRASH, 60)
-                .put(Role.SPAM, 70)
-                .put(Role.TEMPLATES, 80)
+public class SortOrder implements Comparable<SortOrder> {
+
+    private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.of(1000);
+    private static final ImmutableMap<Role, SortOrder> defaultSortOrders =
+            ImmutableMap.<Role, SortOrder>builder()
+                .put(Role.INBOX, SortOrder.of(10))
+                .put(Role.ARCHIVE, SortOrder.of(20))
+                .put(Role.DRAFTS, SortOrder.of(30))
+                .put(Role.OUTBOX, SortOrder.of(40))
+                .put(Role.SENT, SortOrder.of(50))
+                .put(Role.TRASH, SortOrder.of(60))
+                .put(Role.SPAM, SortOrder.of(70))
+                .put(Role.TEMPLATES, SortOrder.of(80))
                 .build();
 
-    private static Optional<Integer> getDefaultSortOrder(Role role) {
+    private static Optional<SortOrder> getDefaultSortOrder(Role role) {
         return Optional.ofNullable(defaultSortOrders.get(role));
     }
 
-    public static Integer getSortOrder(Optional<Role> role) {
+    public static SortOrder getSortOrder(Optional<Role> role) {
         return role
                 .map(SortOrder::getDefaultSortOrder)
                 .map(Optional::get)
                 .orElse(DEFAULT_SORT_ORDER);
+    }
+
+    public static SortOrder of(int sortOrder) {
+        Preconditions.checkArgument(sortOrder >= 0, "'sortOrder' must be positive");
+        return new SortOrder(sortOrder);
+    }
+
+    private final int sortOrder;
+
+    private SortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    @JsonValue
+    public int getSortOrder() {
+        return sortOrder;
+    }
+
+    @Override
+    public int compareTo(SortOrder o) {
+        return Integer.compare(sortOrder, o.sortOrder);
     }
 }

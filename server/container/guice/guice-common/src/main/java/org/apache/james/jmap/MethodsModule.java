@@ -28,6 +28,9 @@ import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.methods.SetMailboxesCreationProcessor;
+import org.apache.james.jmap.methods.SetMailboxesMethod;
+import org.apache.james.jmap.methods.SetMailboxesProcessor;
 import org.apache.james.jmap.methods.SetMessagesCreationProcessor;
 import org.apache.james.jmap.methods.SetMessagesDestructionProcessor;
 import org.apache.james.jmap.methods.SetMessagesMethod;
@@ -63,8 +66,13 @@ public class MethodsModule<Id extends MailboxId> extends AbstractModule {
         methods.addBinding().to(guiceGenericType.newGenericType(GetMessageListMethod.class));
         methods.addBinding().to(guiceGenericType.newGenericType(GetMessagesMethod.class));
         methods.addBinding().to(guiceGenericType.newGenericType(SetMessagesMethod.class));
+        methods.addBinding().to(guiceGenericType.newGenericType(SetMailboxesMethod.class));
 
-        Multibinder<SetMessagesProcessor<Id>> setMessagesProcessors = 
+        Multibinder<SetMailboxesProcessor<Id>> setMailboxesProcessor =
+            Multibinder.newSetBinder(binder(), guiceGenericType.newGenericType(SetMailboxesProcessor.class));
+        setMailboxesProcessor.addBinding().to(guiceGenericType.newGenericType(SetMailboxesCreationProcessor.class));
+
+        Multibinder<SetMessagesProcessor<Id>> setMessagesProcessors =
                 Multibinder.newSetBinder(binder(), guiceGenericType.newGenericType(SetMessagesProcessor.class));
         setMessagesProcessors.addBinding().to(guiceGenericType.newGenericType(SetMessagesUpdateProcessor.class));
         setMessagesProcessors.addBinding().to(guiceGenericType.newGenericType(SetMessagesCreationProcessor.class));
