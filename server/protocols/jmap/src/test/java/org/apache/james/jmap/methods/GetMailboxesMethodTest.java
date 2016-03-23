@@ -36,6 +36,7 @@ import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.Role;
+import org.apache.james.jmap.model.mailbox.SortOrder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -189,7 +190,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getSortOrder)
-                .containsOnly(10);
+                .containsOnly(SortOrder.of(10));
     }
 
     @Test
@@ -210,7 +211,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getSortOrder)
-                .containsOnly(1000);
+                .containsOnly(SortOrder.of(1000));
     }
 
     @Test
@@ -231,7 +232,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getSortOrder)
-                .containsOnly(10);
+                .containsOnly(SortOrder.of(10));
     }
 
     @Test
@@ -259,14 +260,14 @@ public class GetMailboxesMethodTest {
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getName, Mailbox::getSortOrder)
                 .containsExactly(
-                        Tuple.tuple("INBOX", 10),
-                        Tuple.tuple("ARCHIVE", 20),
-                        Tuple.tuple("DRAFTS", 30),
-                        Tuple.tuple("OUTBOX", 40),
-                        Tuple.tuple("SENT", 50),
-                        Tuple.tuple("TRASH", 60),
-                        Tuple.tuple("SPAM", 70),
-                        Tuple.tuple("TEMPLATES", 80));
+                        Tuple.tuple("INBOX", SortOrder.of(10)),
+                        Tuple.tuple("ARCHIVE", SortOrder.of(20)),
+                        Tuple.tuple("DRAFTS", SortOrder.of(30)),
+                        Tuple.tuple("OUTBOX", SortOrder.of(40)),
+                        Tuple.tuple("SENT", SortOrder.of(50)),
+                        Tuple.tuple("TRASH", SortOrder.of(60)),
+                        Tuple.tuple("SPAM", SortOrder.of(70)),
+                        Tuple.tuple("TEMPLATES", SortOrder.of(80)));
     }
 
     @Test

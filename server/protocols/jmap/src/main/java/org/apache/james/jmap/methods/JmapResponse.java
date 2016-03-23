@@ -26,6 +26,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
 
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 
 public class JmapResponse {
@@ -130,5 +131,34 @@ public class JmapResponse {
 
     public Optional<SimpleFilterProvider> getFilterProvider() {
         return filterProvider;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(method, clientId, response, properties, filterProvider);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof JmapResponse) {
+            JmapResponse that = (JmapResponse) object;
+            return Objects.equal(this.method, that.method)
+                    && Objects.equal(this.clientId, that.clientId)
+                    && Objects.equal(this.response, that.response)
+                    && Objects.equal(this.properties, that.properties)
+                    && Objects.equal(this.filterProvider, that.filterProvider);
+        }
+        return false;
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(getClass())
+                .add("method", method)
+                .add("response", response)
+                .add("clientId", clientId)
+                .add("properties", properties)
+                .add("filterProvider", filterProvider)
+                .toString();
     }
 }
