@@ -18,17 +18,41 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import com.google.common.base.Preconditions;
 
 public class ElasticSearchIndexer {
+
+    public static class UpdatedRepresentation {
+        private final String id;
+        private final String updatedDocumentPart;
+
+        public UpdatedRepresentation(String id, String updatedDocumentPart) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "Updated id must be specified " + id);
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(updatedDocumentPart), "Updated document must be specified");
+            this.id = id;
+            this.updatedDocumentPart = updatedDocumentPart;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getUpdatedDocumentPart() {
+            return updatedDocumentPart;
+        }
+    }
 
     public static final String MAILBOX_INDEX = "mailbox";
     public static final String MESSAGE_TYPE = "message";
@@ -51,12 +75,13 @@ public class ElasticSearchIndexer {
         }
     }
 
-    public UpdateResponse updateMessage(String id, String docUpdated) {
-        checkArgument(docUpdated);
+    public BulkResponse updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
+        Preconditions.checkNotNull(updatedDocumentParts);
         try (Client client = clientProvider.get()) {
-            return client.prepareUpdate(MAILBOX_INDEX, MESSAGE_TYPE, id)
-                .setDoc(docUpdated)
-                .get();
+            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+            updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(client.prepareUpdate(MAILBOX_INDEX, MESSAGE_TYPE, updatedDocumentPart.getId())
+                .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
+            return bulkRequestBuilder.get();
         }
     }
     

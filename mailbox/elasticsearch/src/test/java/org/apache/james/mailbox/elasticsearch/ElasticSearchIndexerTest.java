@@ -89,14 +89,14 @@ public class ElasticSearchIndexerTest {
     }
     
     @Test
-    public void updateMessage() throws Exception {
+    public void updateMessages() throws Exception {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.indexMessage(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.updateMessage(messageId, "{\"message\": \"mastering out Elasticsearch\"}");
+        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
@@ -115,16 +115,25 @@ public class ElasticSearchIndexerTest {
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
-    
+
     @Test(expected=IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenJsonIsNull() throws InterruptedException {
-        String messageId = "1:2";
-        String content = "{\"message\": \"trying out Elasticsearch\"}";
+        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation("1", null)));
+    }
 
-        testee.indexMessage(messageId, content);
-        embeddedElasticSearch.awaitForElasticSearch();
+    @Test(expected=IllegalArgumentException.class)
+    public void updateMessageShouldThrowWhenIdIsNull() throws InterruptedException {
+        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")));
+    }
 
-        testee.updateMessage("1", null);
+    @Test(expected=IllegalArgumentException.class)
+    public void updateMessageShouldThrowWhenJsonIsEmpty() throws InterruptedException {
+        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation("1", "")));
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void updateMessageShouldThrowWhenIdIsEmpty() throws InterruptedException {
+        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}")));
     }
 
     @Test

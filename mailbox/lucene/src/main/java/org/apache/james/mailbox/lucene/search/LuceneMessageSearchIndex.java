@@ -56,6 +56,7 @@ import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
 import org.apache.james.mailbox.model.SearchQuery.NumericOperator;
 import org.apache.james.mailbox.model.SearchQuery.NumericRange;
 import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -1204,15 +1205,22 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
     }
 
     /**
-     * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#update(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.model.MessageRange, javax.mail.Flags)
+     * @see ListeningMessageSearchIndex#update
      */
-    public void update(MailboxSession session, Mailbox<Id> mailbox, MessageRange range, Flags f, long modSeq) throws MailboxException {
+    @Override
+    public void update(MailboxSession session, Mailbox<Id> mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+        for (UpdatedFlags updatedFlags : updatedFlagsList) {
+            update(mailbox, updatedFlags.getUid(), updatedFlags.getNewFlags());
+        }
+    }
+
+    private void update(Mailbox<Id> mailbox, long uid, Flags f) throws MailboxException {
         IndexSearcher searcher = null;
         try {
             searcher = new IndexSearcher(IndexReader.open(writer, true));
             BooleanQuery query = new BooleanQuery();
             query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
-            query.add(createQuery(range), BooleanClause.Occur.MUST);
+            query.add(createQuery(MessageRange.one(uid)), BooleanClause.Occur.MUST);
             query.add( new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST);
 
             TopDocs docs = searcher.search(query, 100000);

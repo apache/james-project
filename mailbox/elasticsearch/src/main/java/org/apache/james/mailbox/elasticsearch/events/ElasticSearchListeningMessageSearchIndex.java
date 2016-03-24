@@ -21,9 +21,10 @@ package org.apache.james.mailbox.elasticsearch.events;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
@@ -34,6 +35,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
@@ -41,6 +43,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> extends ListeningMessageSearchIndex<Id> {
 
@@ -95,19 +99,28 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox<Id> mailbox, MessageRange range, Flags flags, long modseq) throws MailboxException {
-        range.forEach(messageId -> {
-            try {
-                indexer.updateMessage(
-                    indexIdFor(mailbox, messageId),
-                    messageToElasticSearchJson.getUpdatedJsonMessagePart(flags, modseq));
-            } catch (Exception e) {
-                LOGGER.error("Error when updating index for message " + messageId, e);
-            }
-        });
-
+    public void update(MailboxSession session, Mailbox<Id> mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+        try {
+            indexer.updateMessages(updatedFlagsList.stream()
+                .map(updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
+                .collect(Collectors.toList()));
+        } catch (Exception e) {
+            LOGGER.error("Error when updating index on mailbox {}", mailbox.getMailboxId().serialize(), e);
+        }
     }
-    
+
+    private ElasticSearchIndexer.UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox<Id> mailbox, UpdatedFlags updatedFlags) {
+        try {
+            return new ElasticSearchIndexer.UpdatedRepresentation(
+                indexIdFor(mailbox, updatedFlags.getUid()),
+                    messageToElasticSearchJson.getUpdatedJsonMessagePart(
+                        updatedFlags.getNewFlags(),
+                        updatedFlags.getModSeq()));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error while creating updatedDocumentParts", e);
+        }
+    }
+
     private String indexIdFor(Mailbox<Id> mailbox, long messageId) {
         return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(messageId));
     }

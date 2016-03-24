@@ -21,8 +21,6 @@ package org.apache.james.mailbox.store.search;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -79,12 +77,10 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                 if (event instanceof EventFactory.AddedImpl) {
                     EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
                     final Mailbox<Id> mailbox = added.getMailbox();
-                    Iterator<Long> uids = added.getUids().iterator();
 
-                    while (uids.hasNext()) {
-                        long next = uids.next();
+                    for (Long next : (Iterable<Long>) added.getUids()) {
                         Iterator<MailboxMessage<Id>> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, -1);
-                        while(messages.hasNext()) {
+                        while (messages.hasNext()) {
                             MailboxMessage<Id> message = messages.next();
                             try {
                                 add(session, mailbox, message);
@@ -110,14 +106,10 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                     EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
                     final Mailbox<Id> mailbox = flagsUpdated.getMailbox();
 
-                    Iterator<UpdatedFlags> flags = flagsUpdated.getUpdatedFlags().iterator();
-                    while(flags.hasNext()) {
-                        UpdatedFlags uFlags = flags.next();
-                        try {
-                            update(session, mailbox, MessageRange.one(uFlags.getUid()), uFlags.getNewFlags(), uFlags.getModSeq());
-                        } catch (MailboxException e) {
-                            session.getLog().debug("Unable to update flags for message " + uFlags.getUid() + " in index for mailbox " + mailbox, e);
-                        }
+                    try {
+                        update(session, mailbox, flagsUpdated.getUpdatedFlags());
+                    } catch (MailboxException e) {
+                        session.getLog().debug("Unable to update flags in index for mailbox " + mailbox, e);
                     }
                 }
             } else if (event instanceof EventFactory.MailboxDeletionImpl) {
@@ -131,18 +123,11 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
     }
 
     /**
-     * Never closed
-     */
-    public boolean isClosed() {
-        return false;
-    }
-
-    /**
      * Add the {@link MailboxMessage} for the given {@link Mailbox} to the index
      *
-     * @param session
-     * @param mailbox
-     * @param message
+     * @param session The mailbox session performing the message addition
+     * @param mailbox mailbox on which the message addition was performed
+     * @param message The added message
      * @throws MailboxException
      */
     public abstract void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException;
@@ -159,13 +144,12 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
     
     
     /**
-     * Update the {@link MessageRange} for the given {@link Mailbox} with the new {@link Flags} in the index
+     * Update the messages concerned by the updated flags list for the given {@link Mailbox}
      *
-     * @param session
-     * @param mailbox
-     * @param range
-     * @param flags
+     * @param session session that performed the update
+     * @param mailbox mailbox containing the updated messages
+     * @param updatedFlagsList list of flags that were updated
      * @throws MailboxException
      */
-    public abstract void update(MailboxSession session, Mailbox<Id> mailbox, MessageRange range, Flags flags, long modseq) throws MailboxException;
+    public abstract void update(MailboxSession session, Mailbox<Id> mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException;
 }
