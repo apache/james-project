@@ -36,7 +36,7 @@ import com.google.inject.TypeLiteral;
 public class CassandraJmapAuthenticationTest extends JMAPAuthenticationTest {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
 
     @Rule

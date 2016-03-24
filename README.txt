@@ -115,7 +115,7 @@ $ docker run -d --name=cassandra cassandra:2.2.3
 
 You need a running **ElasticSearch** in docker. To achieve this run :
 ```bash
-$ docker run -d --name=elasticsearch elasticsearch:1.5.2
+$ docker run -d --name=elasticsearch elasticsearch:2.2.1
 ```
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.

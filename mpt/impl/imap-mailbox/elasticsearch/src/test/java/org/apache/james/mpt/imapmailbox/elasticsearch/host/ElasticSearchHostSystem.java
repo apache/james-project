@@ -19,6 +19,10 @@
 
 package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -54,26 +58,15 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.MailboxCreationDelegate;
 
 import com.google.common.base.Throwables;
-import com.google.inject.Inject;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
-    
+
     private EmbeddedElasticSearch embeddedElasticSearch;
+    private Path tempDirectory;
     private StoreMailboxManager<InMemoryId> mailboxManager;
     private MockAuthenticator userManager;
-
-    @Inject
-    public ElasticSearchHostSystem() throws Throwable {
-        this.embeddedElasticSearch = new EmbeddedElasticSearch();
-        embeddedElasticSearch.before();
-        initFields();
-    }
-
-    public EmbeddedElasticSearch getEmbeddedElasticSearch() {
-        return embeddedElasticSearch;
-    }
 
     public boolean addUser(String user, String password) throws Exception {
         userManager.addUser(user, password);
@@ -81,11 +74,22 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    protected void resetData() throws Exception {
-        embeddedElasticSearch.after();
-        this.embeddedElasticSearch = new EmbeddedElasticSearch();
+    public void beforeTest() throws Exception {
+        this.tempDirectory = Files.createTempDirectory("elasticsearch");
+        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory);
         embeddedElasticSearch.before();
         initFields();
+    }
+
+    @Override
+    public void afterTest() throws Exception {
+        embeddedElasticSearch.after();
+        FileUtils.deleteDirectory(tempDirectory.toFile());
+    }
+
+    @Override
+    protected void resetData() throws Exception {
+
     }
 
     private void initFields() {
@@ -114,11 +118,11 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             throw Throwables.propagate(e);
         }
 
-        final ImapProcessor defaultImapProcessorFactory = 
-                DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, 
-                        new StoreSubscriptionManager(factory), 
-                        new NoQuotaManager(), 
-                        new DefaultQuotaRootResolver(factory));
+        final ImapProcessor defaultImapProcessorFactory =
+            DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
+                new StoreSubscriptionManager(factory),
+                new NoQuotaManager(),
+                new DefaultQuotaRootResolver(factory));
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             defaultImapProcessorFactory);
@@ -135,5 +139,5 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     public boolean supports(Feature... features) {
         return SUPPORTED_FEATURES.supports(features);
     }
-    
+
 }

@@ -18,16 +18,15 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch;
 
+import javax.inject.Inject;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.QueryBuilders;
 
 import com.google.common.base.Preconditions;
-
-import javax.inject.Inject;
 
 public class ElasticSearchIndexer {
 
@@ -66,13 +65,8 @@ public class ElasticSearchIndexer {
         }
     }
     
-    public DeleteByQueryResponse deleteAllWithIdStarting(String idStart) {
-        try (Client client = clientProvider.get()) {
-            return client.prepareDeleteByQuery(MAILBOX_INDEX)
-                .setTypes(MESSAGE_TYPE)
-                .setQuery(QueryBuilders.prefixQuery("_id", idStart))
-                .get();
-        }
+    public void deleteAllWithIdStarting(String idStart) {
+        throw new NotImplementedException();
     }
 
     private void checkArgument(String content) {

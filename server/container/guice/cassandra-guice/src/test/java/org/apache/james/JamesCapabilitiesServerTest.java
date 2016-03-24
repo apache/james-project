@@ -45,7 +45,7 @@ public class JamesCapabilitiesServerTest {
 
     private GuiceJamesServer<CassandraId> server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);

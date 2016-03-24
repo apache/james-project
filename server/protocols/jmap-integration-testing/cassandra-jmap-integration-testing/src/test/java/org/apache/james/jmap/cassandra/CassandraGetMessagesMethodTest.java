@@ -35,7 +35,7 @@ import com.google.inject.TypeLiteral;
 public class CassandraGetMessagesMethodTest extends GetMessagesMethodTest {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
 
     @Rule

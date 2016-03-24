@@ -17,21 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch.query;
+package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
+import org.junit.rules.TemporaryFolder;
 
-import org.apache.james.mailbox.model.SearchQuery;
+public class PublicTemporaryFolder extends TemporaryFolder {
 
-public class FilteredQueryCollector {
-
-    public static Collector<FilteredQueryRepresentation, ?, FilteredQueryRepresentation> 
-        collector(SearchQuery.Conjunction type) {
-        
-        return Collectors.reducing(
-                FilteredQueryRepresentation.empty(),
-                (x, y) -> x.combine(type, y));
+    @Override
+    public void before() throws Throwable {
+        super.before();
     }
 
+    @Override
+    public void after() {
+        super.after();
+    }
 }

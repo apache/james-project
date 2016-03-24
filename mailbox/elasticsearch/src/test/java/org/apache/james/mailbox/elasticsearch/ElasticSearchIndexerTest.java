@@ -29,13 +29,19 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TemporaryFolder;
 
 public class ElasticSearchIndexerTest {
 
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder);
+
     @Rule
-    public EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch();
+    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     private Node node;
     private ElasticSearchIndexer testee;
@@ -106,7 +112,8 @@ public class ElasticSearchIndexerTest {
 
         testee.updateMessage("1", null);
     }
-    
+
+    @Ignore
     @Test
     public void deleteAllWithIdStarting() throws Exception {
         String messageId = "1:2";
@@ -126,7 +133,8 @@ public class ElasticSearchIndexerTest {
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
         }
     }
-    
+
+    @Ignore
     @Test
     public void deleteAllWithIdStartingWhenMultipleMessages() throws Exception {
         String messageId = "1:2";

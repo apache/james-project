@@ -18,9 +18,14 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+
+import com.google.common.base.Throwables;
 
 public class ClientProviderImpl implements ClientProvider {
 
@@ -31,10 +36,13 @@ public class ClientProviderImpl implements ClientProvider {
         this.host = host;
         this.port = port;
     }
-    
-    @SuppressWarnings("resource")
+
     public Client get() {
-        return new TransportClient()
-            .addTransportAddress(new InetSocketTransportAddress(host, port));
+        try {
+            return TransportClient.builder().build()
+                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

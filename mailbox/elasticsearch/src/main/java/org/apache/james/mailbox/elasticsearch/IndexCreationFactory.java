@@ -19,25 +19,24 @@
 
 package org.apache.james.mailbox.elasticsearch;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
 import java.io.IOException;
+import java.util.Optional;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
 public class IndexCreationFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
+    private static final int DEFAULT_NB_SHARDS = 1;
+    private static final int DEFAULT_NB_REPLICA = 0;
 
     public static ClientProvider createIndex(ClientProvider clientProvider, int nbShards, int nbReplica) {
         try {
-            return createIndex(clientProvider, normalSettings(nbShards, nbReplica));
+            return createIndex(clientProvider, generateSetting(nbShards, nbReplica));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
             return clientProvider;
@@ -46,14 +45,14 @@ public class IndexCreationFactory {
 
     public static ClientProvider createIndex(ClientProvider clientProvider) {
         try {
-            return createIndex(clientProvider, settingForInMemory());
+            return createIndex(clientProvider, generateSetting(DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
             return clientProvider;
         }
     }
 
-    private static ClientProvider createIndex(ClientProvider clientProvider, XContentBuilder settings) {
+    private static ClientProvider createIndex(ClientProvider clientProvider, Settings settings) {
         try {
             try (Client client = clientProvider.get()) {
                 client.admin()
@@ -69,22 +68,11 @@ public class IndexCreationFactory {
         return clientProvider;
     }
 
-    public static XContentBuilder settingForInMemory() throws IOException {
-        return generateSetting(1, 0, Optional.of(jsonBuilder().startObject().field("type", "memory").endObject()));
-    }
-
-    public static XContentBuilder normalSettings(int nbShards, int nbReplica) throws IOException{
-        return generateSetting(nbShards, nbReplica, Optional.empty());
-    }
-
-    private static XContentBuilder generateSetting(int nbShards, int nbReplica, Optional<XContentBuilder> store) throws IOException {
-        XContentBuilder contentBuilder = jsonBuilder().startObject()
-            .field("number_of_shards", nbShards)
-            .field("number_of_replicas", nbReplica);
-        if (store.isPresent()) {
-            contentBuilder.field("store", store.get());
-        }
-        return contentBuilder.endObject();
+    private static Settings generateSetting(int nbShards, int nbReplica) throws IOException {
+        return Settings.builder()
+            .put("number_of_shards", nbShards)
+            .put("number_of_replicas", nbReplica)
+            .build();
     }
 
 }

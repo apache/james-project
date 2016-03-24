@@ -19,32 +19,38 @@
 
 package org.apache.james.mailbox.elasticsearch.query;
 
-import org.apache.james.mailbox.elasticsearch.json.HeaderCollection;
-import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
-import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.model.SearchQuery.Criterion;
-import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
-
-import javax.mail.Flags;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
 
-import static org.elasticsearch.index.query.FilterBuilders.existsFilter;
-import static org.elasticsearch.index.query.FilterBuilders.rangeFilter;
-import static org.elasticsearch.index.query.FilterBuilders.termFilter;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import javax.mail.Flags;
+
+import org.apache.james.mailbox.elasticsearch.json.HeaderCollection;
+import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
+import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.SearchQuery.Criterion;
+import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 public class CriterionConverter {
 
-    private final Map<Class<?>, Function<SearchQuery.Criterion, FilteredQueryRepresentation>> criterionConverterMap;
-    private final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, FilteredQueryRepresentation>> headerOperatorConverterMap;
+    private final Map<Class<?>, Function<SearchQuery.Criterion, QueryBuilder>> criterionConverterMap;
+    private final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
 
     public CriterionConverter() {
         criterionConverterMap = new HashMap<>();
@@ -58,40 +64,36 @@ public class CriterionConverter {
         registerCriterionConverter(SearchQuery.FlagCriterion.class, this::convertFlag);
         registerCriterionConverter(SearchQuery.UidCriterion.class, this::convertUid);
         registerCriterionConverter(SearchQuery.ConjunctionCriterion.class, this::convertConjunction);
-        registerCriterionConverter(SearchQuery.InternalDateCriterion.class, this::convertInternalDate);
         registerCriterionConverter(SearchQuery.HeaderCriterion.class, this::convertHeader);
         registerCriterionConverter(SearchQuery.TextCriterion.class, this::convertTextCriterion);
         
-        registerCriterionConverter(
-            SearchQuery.AllCriterion.class, 
-            criterion -> FilteredQueryRepresentation.fromQuery(matchAllQuery()));
+        registerCriterionConverter(SearchQuery.AllCriterion.class,
+            criterion -> matchAllQuery());
         
-        registerCriterionConverter(
-            SearchQuery.ModSeqCriterion.class,
+        registerCriterionConverter(SearchQuery.ModSeqCriterion.class,
             criterion -> createNumericFilter(JsonMessageConstants.MODSEQ, criterion.getOperator()));
         
-        registerCriterionConverter(
-            SearchQuery.SizeCriterion.class,
+        registerCriterionConverter(SearchQuery.SizeCriterion.class,
             criterion -> createNumericFilter(JsonMessageConstants.SIZE, criterion.getOperator()));
         
-        registerCriterionConverter(
-            SearchQuery.CustomFlagCriterion.class,
-            criterion -> FilteredQueryRepresentation.fromFilter(
-                    termFilter(JsonMessageConstants.USER_FLAGS, criterion.getFlag())));
+        registerCriterionConverter(SearchQuery.CustomFlagCriterion.class,
+            criterion -> termsQuery(JsonMessageConstants.USER_FLAGS, criterion.getFlag()));
+
+        registerCriterionConverter(SearchQuery.InternalDateCriterion.class,
+            criterion -> dateRangeFilter(JsonMessageConstants.DATE, criterion.getOperator()));
     }
     
     @SuppressWarnings("unchecked")
-    private <T extends Criterion> void registerCriterionConverter(Class<T> type, Function<T, FilteredQueryRepresentation> f) {
-        criterionConverterMap.put(type, (Function<Criterion, FilteredQueryRepresentation>) f);
+    private <T extends Criterion> void registerCriterionConverter(Class<T> type, Function<T, QueryBuilder> f) {
+        criterionConverterMap.put(type, (Function<Criterion, QueryBuilder>) f);
     }
     
     private void registerHeaderOperatorConverters() {
 
         registerHeaderOperatorConverter(
             SearchQuery.ExistsOperator.class,
-            (headerName, operator) -> FilteredQueryRepresentation.fromFilter(
-                existsFilter(JsonMessageConstants.HEADERS + "." + headerName))
-        );
+            (headerName, operator) ->
+                existsQuery(JsonMessageConstants.HEADERS + "." + headerName));
         
         registerHeaderOperatorConverter(
             SearchQuery.AddressOperator.class,
@@ -103,126 +105,135 @@ public class CriterionConverter {
         
         registerHeaderOperatorConverter(
             SearchQuery.ContainsOperator.class,
-            (headerName, operator) -> FilteredQueryRepresentation.fromQuery(
-                matchQuery(JsonMessageConstants.HEADERS + "." + headerName,
-                    operator.getValue())));
+            (headerName, operator) -> matchQuery(JsonMessageConstants.HEADERS + "." + headerName,
+                    operator.getValue()));
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, FilteredQueryRepresentation> f) {
-        headerOperatorConverterMap.put(type, (BiFunction<String, HeaderOperator, FilteredQueryRepresentation>) f);
+    private <T extends HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, QueryBuilder> f) {
+        headerOperatorConverterMap.put(type, (BiFunction<String, HeaderOperator, QueryBuilder>) f);
     }
 
-    public FilteredQueryRepresentation convertCriterion(SearchQuery.Criterion criterion) {
+    public QueryBuilder convertCriterion(SearchQuery.Criterion criterion) {
         return criterionConverterMap.get(criterion.getClass()).apply(criterion);
     }
 
 
-    private FilteredQueryRepresentation convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
+    private QueryBuilder convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
         case BODY:
-            return FilteredQueryRepresentation.fromQuery(
-                matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()));
+            return matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue());
         case FULL:
-            return FilteredQueryRepresentation.fromQuery(
-                boolQuery()
+            return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
-                        textCriterion.getOperator().getValue())));
+                        textCriterion.getOperator().getValue()));
         }
         throw new RuntimeException("Unknown SCOPE for text criterion");
     }
 
-    private FilteredQueryRepresentation convertInternalDate(SearchQuery.InternalDateCriterion dateCriterion) {
-        SearchQuery.DateOperator dateOperator = dateCriterion.getOperator();
-        return dateRangeFilter(JsonMessageConstants.DATE, dateOperator);
+    private QueryBuilder dateRangeFilter(String field, SearchQuery.DateOperator dateOperator) {
+        return boolQuery().filter(
+            convertDateOperator(field,
+                dateOperator.getType(),
+                DateResolutionFormater.DATE_TIME_FOMATTER.format(
+                    DateResolutionFormater.computeLowerDate(
+                        DateResolutionFormater.convertDateToZonedDateTime(dateOperator.getDate()),
+                        dateOperator.getDateResultion())),
+                DateResolutionFormater.DATE_TIME_FOMATTER.format(
+                    DateResolutionFormater.computeUpperDate(
+                        DateResolutionFormater.convertDateToZonedDateTime(dateOperator.getDate()),
+                        dateOperator.getDateResultion()))));
     }
 
-    private FilteredQueryRepresentation dateRangeFilter(String field, SearchQuery.DateOperator dateOperator) {
-        SearchQuery.DateResolution dateResolution = dateOperator.getDateResultion();
-        String lowDateString = DateResolutionFormater.DATE_TIME_FOMATTER.format(DateResolutionFormater.computeLowerDate(DateResolutionFormater.convertDateToZonedDateTime(dateOperator.getDate()), dateResolution));
-        String upDateString = DateResolutionFormater.DATE_TIME_FOMATTER.format(
-            DateResolutionFormater.computeUpperDate(
-                DateResolutionFormater.convertDateToZonedDateTime(dateOperator.getDate()),
-                dateResolution));
-        return convertDateOperatorToFiteredQuery(field, dateOperator, lowDateString, upDateString);
+    private BoolQueryBuilder convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
+        return convertToBoolQuery(criterion.getCriteria().stream().map(this::convertCriterion),
+            convertConjunctionType(criterion.getType()));
     }
 
-    private FilteredQueryRepresentation convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
-        return criterion.getCriteria().stream()
-            .map(this::convertCriterion)
-            .collect(FilteredQueryCollector.collector(criterion.getType()));
+    private BiFunction<BoolQueryBuilder, QueryBuilder, BoolQueryBuilder> convertConjunctionType(SearchQuery.Conjunction type) {
+        switch (type) {
+            case AND:
+                return BoolQueryBuilder::must;
+            case OR:
+                return BoolQueryBuilder::should;
+            case NOR:
+                return BoolQueryBuilder::mustNot;
+            default:
+                throw new RuntimeException("Unexpected conjunction criteria " + type);
+        }
     }
 
-    private FilteredQueryRepresentation convertFlag(SearchQuery.FlagCriterion flagCriterion) {
+    private BoolQueryBuilder convertToBoolQuery(Stream<QueryBuilder> stream, BiFunction<BoolQueryBuilder, QueryBuilder, BoolQueryBuilder> addCriterionToBoolQuery) {
+        return stream.collect(Collector.of(QueryBuilders::boolQuery,
+                addCriterionToBoolQuery::apply,
+                addCriterionToBoolQuery::apply));
+    }
+
+    private QueryBuilder convertFlag(SearchQuery.FlagCriterion flagCriterion) {
         SearchQuery.BooleanOperator operator = flagCriterion.getOperator();
         Flags.Flag flag = flagCriterion.getFlag();
         if (flag.equals(Flags.Flag.DELETED) ) {
-            return FilteredQueryRepresentation.fromFilter(termFilter(JsonMessageConstants.IS_DELETED, operator.isSet()));
+            return boolQuery().filter(termQuery(JsonMessageConstants.IS_DELETED, operator.isSet()));
         }
         if (flag.equals(Flags.Flag.ANSWERED) ) {
-            return FilteredQueryRepresentation.fromFilter(
-                termFilter(JsonMessageConstants.IS_ANSWERED, operator.isSet()));
+            return boolQuery().filter(termQuery(JsonMessageConstants.IS_ANSWERED, operator.isSet()));
         }
         if (flag.equals(Flags.Flag.DRAFT) ) {
-            return FilteredQueryRepresentation.fromFilter(
-                termFilter(JsonMessageConstants.IS_DRAFT, operator.isSet()));
+            return boolQuery().filter(termQuery(JsonMessageConstants.IS_DRAFT, operator.isSet()));
         }
         if (flag.equals(Flags.Flag.SEEN) ) {
-            return FilteredQueryRepresentation.fromFilter(
-                termFilter(JsonMessageConstants.IS_UNREAD, !operator.isSet()));
+            return boolQuery().filter(termQuery(JsonMessageConstants.IS_UNREAD, !operator.isSet()));
         }
         if (flag.equals(Flags.Flag.RECENT) ) {
-            return FilteredQueryRepresentation.fromFilter(
-                termFilter(JsonMessageConstants.IS_RECENT, operator.isSet()));
+            return boolQuery().filter(termQuery(JsonMessageConstants.IS_RECENT, operator.isSet()));
         }
         if (flag.equals(Flags.Flag.FLAGGED) ) {
-            return FilteredQueryRepresentation.fromFilter(
-                termFilter(JsonMessageConstants.IS_FLAGGED, operator.isSet()));
+            return boolQuery().filter(termQuery(JsonMessageConstants.IS_FLAGGED, operator.isSet()));
         }
         throw new RuntimeException("Unknown flag used in Flag search criterion");
     }
 
-    private FilteredQueryRepresentation createNumericFilter(String fieldName, SearchQuery.NumericOperator operator) {
+    private QueryBuilder createNumericFilter(String fieldName, SearchQuery.NumericOperator operator) {
         switch (operator.getType()) {
         case EQUALS:
-            return FilteredQueryRepresentation.fromFilter(
-                rangeFilter(fieldName).gte(operator.getValue()).lte(operator.getValue()));
+            return boolQuery().filter(rangeQuery(fieldName).gte(operator.getValue()).lte(operator.getValue()));
         case GREATER_THAN:
-            return FilteredQueryRepresentation.fromFilter(rangeFilter(fieldName).gte(operator.getValue()));
+            return boolQuery().filter(rangeQuery(fieldName).gte(operator.getValue()));
         case LESS_THAN:
-            return FilteredQueryRepresentation.fromFilter(rangeFilter(fieldName).lte(operator.getValue()));
+            return boolQuery().filter(rangeQuery(fieldName).lte(operator.getValue()));
         default:
             throw new RuntimeException("A non existing numeric operator was triggered");
         }
     }
 
-    private FilteredQueryRepresentation convertUid(SearchQuery.UidCriterion uidCriterion) {
+    private BoolQueryBuilder convertUid(SearchQuery.UidCriterion uidCriterion) {
         if (uidCriterion.getOperator().getRange().length == 0) {
-            return FilteredQueryRepresentation.empty();
+            return boolQuery();
         }
-        return Arrays.stream(uidCriterion.getOperator().getRange())
-            .map(this::uidRangeFilter)
-            .collect(FilteredQueryCollector.collector(SearchQuery.Conjunction.OR));
+        return boolQuery().filter(
+            convertToBoolQuery(
+                Arrays.stream(uidCriterion.getOperator().getRange())
+                    .map(this::uidRangeFilter), BoolQueryBuilder::should));
     }
 
-    private FilteredQueryRepresentation uidRangeFilter(SearchQuery.NumericRange numericRange) {
-        return FilteredQueryRepresentation.fromFilter(
-            rangeFilter(JsonMessageConstants.ID)
+    private QueryBuilder uidRangeFilter(SearchQuery.NumericRange numericRange) {
+        return rangeQuery(JsonMessageConstants.ID)
                 .lte(numericRange.getHighValue())
-                .gte(numericRange.getLowValue()));
+                .gte(numericRange.getLowValue());
     }
 
-    private FilteredQueryRepresentation convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
+    private QueryBuilder convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
         return headerOperatorConverterMap.get(headerCriterion.getOperator().getClass())
             .apply(
                 headerCriterion.getHeaderName().toLowerCase(),
                 headerCriterion.getOperator());
     }
 
-    private FilteredQueryRepresentation manageAddressFields(String headerName, String value) {
-        return FilteredQueryRepresentation.fromQuery(
-            nestedQuery(getFieldNameFromHeaderName(headerName), boolQuery().should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value)).should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))));
+    private QueryBuilder manageAddressFields(String headerName, String value) {
+        return nestedQuery(getFieldNameFromHeaderName(headerName), boolQuery()
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value)));
     }
 
     private String getFieldNameFromHeaderName(String headerName) {
@@ -239,17 +250,14 @@ public class CriterionConverter {
         throw new RuntimeException("Header not recognized as Addess Header : " + headerName);
     }
 
-    private FilteredQueryRepresentation convertDateOperatorToFiteredQuery(String field, SearchQuery.DateOperator dateOperator, String lowDateString, String upDateString) {
-        switch (dateOperator.getType()) {
+    private QueryBuilder convertDateOperator(String field, SearchQuery.DateComparator dateComparator, String lowDateString, String upDateString) {
+        switch (dateComparator) {
         case BEFORE:
-            return FilteredQueryRepresentation.fromFilter(
-                rangeFilter(field).lte(upDateString));
+            return rangeQuery(field).lte(upDateString);
         case AFTER:
-            return FilteredQueryRepresentation.fromFilter(
-                rangeFilter(field).gte(lowDateString));
+            return rangeQuery(field).gte(lowDateString);
         case ON:
-            return FilteredQueryRepresentation.fromFilter(
-                rangeFilter(field).lte(upDateString).gte(lowDateString));
+            return rangeQuery(field).lte(upDateString).gte(lowDateString);
         }
         throw new RuntimeException("Unknown date operator");
     }
