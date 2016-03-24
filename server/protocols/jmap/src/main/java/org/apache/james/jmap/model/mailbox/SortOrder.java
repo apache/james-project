@@ -21,6 +21,7 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -69,5 +70,23 @@ public class SortOrder implements Comparable<SortOrder> {
     @Override
     public int compareTo(SortOrder o) {
         return Integer.compare(sortOrder, o.sortOrder);
+    }
+    
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(getClass()).add("order", sortOrder).toString();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof SortOrder) {
+            return sortOrder == ((SortOrder)obj).sortOrder;
+        }
+        return super.equals(obj);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(sortOrder);
     }
 }
