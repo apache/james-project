@@ -65,7 +65,7 @@ public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move);
+        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move, Capabilities.UserFlags);
     }
 
     @Override

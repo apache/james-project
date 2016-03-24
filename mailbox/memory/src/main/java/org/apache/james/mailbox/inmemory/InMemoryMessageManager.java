@@ -1,0 +1,30 @@
+package org.apache.james.mailbox.inmemory;
+
+import javax.mail.Flags;
+
+import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.acl.GroupMembershipResolver;
+import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+
+public class InMemoryMessageManager extends StoreMessageManager<InMemoryId> {
+
+    public InMemoryMessageManager(MessageMapperFactory<InMemoryId> mapperFactory, MessageSearchIndex<InMemoryId> index, MailboxEventDispatcher<InMemoryId> dispatcher, MailboxPathLocker locker, Mailbox<InMemoryId> mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
+        super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver);
+    }
+
+    @Override
+    protected Flags getPermanentFlags(MailboxSession session) {
+        Flags permanentFlags = new Flags(super.getPermanentFlags(session));
+        permanentFlags.add(Flags.Flag.USER);
+        return permanentFlags;
+    }
+}

@@ -23,11 +23,15 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.google.common.collect.Lists;
 
@@ -40,6 +44,19 @@ public class InMemoryMailboxManager extends StoreMailboxManager<InMemoryId> {
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move);
+        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move, Capabilities.UserFlags);
+    }
+
+    @Override
+    protected StoreMessageManager<InMemoryId> createMessageManager(Mailbox<InMemoryId> mailbox, MailboxSession session) throws MailboxException {
+        return new InMemoryMessageManager(getMapperFactory(),
+            getMessageSearchIndex(),
+            getEventDispatcher(),
+            getLocker(),
+            mailbox,
+            getAclResolver(),
+            getGroupMembershipResolver(),
+            getQuotaManager(),
+            getQuotaRootResolver());
     }
 }
