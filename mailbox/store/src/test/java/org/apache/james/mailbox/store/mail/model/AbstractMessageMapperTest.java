@@ -444,7 +444,7 @@ public abstract class AbstractMessageMapperTest<Id extends MailboxId> {
         message7.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
         assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isGreaterThan(message6.getUid());
 
-        MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox,
+        MailboxMessage<Id> result = messageMapper.findInMailbox(benwaInboxMailbox,
             MessageRange.one(messageMapper.getLastUid(benwaInboxMailbox)),
             MessageMapper.FetchType.Full,
             LIMIT)
