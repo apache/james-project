@@ -37,21 +37,8 @@
 
     <modules>
         <module>guice-common</module>
+        <module>cassandra-guice</module>
+        <module>memory-guice</module>
     </modules>
-
-    <profiles>
-        <profile>
-            <id>cassandra</id>
-            <modules>
-                <module>cassandra-guice</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>inmemory</id>
-            <modules>
-                <module>memory-guice</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>
 
