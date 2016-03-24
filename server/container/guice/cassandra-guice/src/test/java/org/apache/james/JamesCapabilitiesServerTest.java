@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
@@ -34,53 +35,30 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
+import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
-import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.util.Modules;
 
 public class JamesCapabilitiesServerTest {
 
-    private CassandraJamesServer server;
+    private GuiceJamesServer<CassandraId> server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch();
 
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
-    private Module createModule(MailboxManager mailboxManager) {
-        return Modules.override(CassandraJamesServerMain.defaultModule)
-                .with(new TestElasticSearchModule(embeddedElasticSearch),
-                        new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
-                        new AbstractModule() {
-                    
-                    @Override
-                    protected void configure() {
-                        bind(MailboxManager.class).toInstance(mailboxManager);
-                    }
-                    
-                    @Provides
-                    @Singleton
-                    com.datastax.driver.core.Session provideSession(CassandraModule cassandraModule) {
-                        CassandraCluster cassandra = CassandraCluster.create(cassandraModule);
-                        return cassandra.getConf();
-                    }
-
-                });
-    }
-
     @Test(expected=IllegalArgumentException.class)
     public void startShouldFailWhenNoMoveCapability() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedCapabilities())
             .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Basic));
-        server = new CassandraJamesServer(createModule(mailboxManager));
-        
+        server = createCassandraJamesServer(mailboxManager);
+
         server.start();
-        
+
         // In case of non-failure
         server.stop();
     }
@@ -90,10 +68,33 @@ public class JamesCapabilitiesServerTest {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedCapabilities())
             .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Move));
-        server = new CassandraJamesServer(createModule(mailboxManager));
-        
+        server = createCassandraJamesServer(mailboxManager);
+
         server.start();
-        
+
         server.stop();
+    }
+
+    private GuiceJamesServer<CassandraId> createCassandraJamesServer(final MailboxManager mailboxManager) {
+        return new GuiceJamesServer<>(CassandraJamesServerMain.cassandraId)
+            .combineWith(CassandraJamesServerMain.cassandraServerModule)
+            .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
+                new TestFilesystemModule(temporaryFolder),
+                new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
+                new AbstractModule() {
+
+                    @Override
+                    protected void configure() {
+                        bind(MailboxManager.class).toInstance(mailboxManager);
+                    }
+
+                    @SuppressWarnings("unused")
+                    @Provides
+                    @Singleton
+                    Session provideSession(CassandraModule cassandraModule) {
+                        CassandraCluster cassandra = CassandraCluster.create(cassandraModule);
+                        return cassandra.getConf();
+                    }
+                });
     }
 }
