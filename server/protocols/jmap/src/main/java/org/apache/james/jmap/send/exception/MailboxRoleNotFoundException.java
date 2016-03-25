@@ -24,7 +24,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueException;
 public class MailboxRoleNotFoundException extends MailQueueException {
 
     public MailboxRoleNotFoundException(Role role) {
-        super("Unable to find a mailbox with role " + role.name());
+        super("Unable to find a mailbox with role " + role.serialize());
     }
 
 }

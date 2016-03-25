@@ -54,4 +54,9 @@ public class RoleTest {
         }
     }
 
+    @Test
+    public void fromShouldReturnSomethingWhenXPrefixedRole() {
+        assertThat(Role.from("x-client-specific-role")).isEqualTo(Optional.of(new Role("x-client-specific-role")));
+    }
+
 }
