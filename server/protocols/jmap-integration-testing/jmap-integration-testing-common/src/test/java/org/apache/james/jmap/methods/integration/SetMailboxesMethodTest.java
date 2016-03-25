@@ -97,7 +97,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(NAME, equalTo("mailboxes"))
+            .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", hasKey("create-id01"));
     }
 }

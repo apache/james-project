@@ -36,7 +36,7 @@ import com.google.common.base.Preconditions;
 public class SetMailboxesMethod<Id extends MailboxId> implements Method {
 
     private static final Request.Name METHOD_NAME = Request.name("setMailboxes");
-    @VisibleForTesting static final Response.Name RESPONSE_NAME = Response.name("mailboxes");
+    @VisibleForTesting static final Response.Name RESPONSE_NAME = Response.name("mailboxesSet");
 
     private final Set<SetMailboxesProcessor<Id>> processors;
 
@@ -52,7 +52,7 @@ public class SetMailboxesMethod<Id extends MailboxId> implements Method {
 
     @Override
     public Class<? extends JmapRequest> requestType() {
-        return org.apache.james.jmap.model.SetMailboxesRequest.class;
+        return SetMailboxesRequest.class;
     }
 
     @Override
