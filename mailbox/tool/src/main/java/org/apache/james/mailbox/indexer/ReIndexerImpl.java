@@ -97,7 +97,7 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
         MailboxRegistration mailboxRegistration = new MailboxRegistration(path);
         LOGGER.info("Intend to reindex {}",path);
         Mailbox<Id> mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
-        messageSearchIndex.delete(mailboxSession, mailbox, MessageRange.all());
+        messageSearchIndex.deleteAll(mailboxSession, mailbox);
         mailboxManager.addListener(path, mailboxRegistration, mailboxSession);
         try {
             handleMailboxIndexingIterations(mailboxSession,

@@ -1301,10 +1301,21 @@ public class LuceneMessageSearchIndex<Id extends MailboxId> extends ListeningMes
             return NumericRangeQuery.newLongRange(UID_FIELD, 0L, Long.MAX_VALUE, true, true);
         }
     }
-    /**
-     * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#delete(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.model.MessageRange)
-     */
-    public void delete(MailboxSession session, Mailbox<Id> mailbox, MessageRange range) throws MailboxException {
+
+    @Override
+    public void delete(MailboxSession session, Mailbox<Id> mailbox, List<Long> expungedUids) throws MailboxException {
+        Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
+        for (MessageRange messageRange : messageRanges) {
+            delete(mailbox, messageRange);
+        }
+    }
+
+    @Override
+    public void deleteAll(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException {
+        delete(mailbox, MessageRange.all());
+    }
+
+    public void delete(Mailbox<Id> mailbox, MessageRange range) throws MailboxException {
         BooleanQuery query = new BooleanQuery();
         query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
         query.add(createQuery(range), BooleanClause.Occur.MUST);

@@ -24,7 +24,6 @@ import javax.inject.Inject;
 
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Strings;
@@ -85,15 +84,16 @@ public class ElasticSearchIndexer {
         }
     }
     
-    public DeleteResponse deleteMessage(String id) {
+    public BulkResponse deleteMessages(List<String> ids) {
         try (Client client = clientProvider.get()) {
-            return client.prepareDelete(MAILBOX_INDEX, MESSAGE_TYPE, id)
-                .get();
+            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+            ids.forEach(id -> bulkRequestBuilder.add(client.prepareDelete(MAILBOX_INDEX, MESSAGE_TYPE, id)));
+            return bulkRequestBuilder.get();
         }
     }
     
-    public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
-        deleteByQueryPerformer.perform(queryBuilder);
+    public Void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
+        return deleteByQueryPerformer.perform(queryBuilder);
     }
 
     private void checkArgument(String content) {

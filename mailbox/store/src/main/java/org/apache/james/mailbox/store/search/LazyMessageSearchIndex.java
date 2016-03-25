@@ -64,8 +64,13 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox<Id> mailbox, MessageRange range) throws MailboxException {
-        index.delete(session, mailbox, range);
+    public void delete(MailboxSession session, Mailbox<Id> mailbox, List<Long> expungedUids) throws MailboxException {
+        index.delete(session, mailbox, expungedUids);
+    }
+
+    @Override
+    public void deleteAll(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException {
+        index.deleteAll(session, mailbox);
     }
 
     /**

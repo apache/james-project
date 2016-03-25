@@ -117,7 +117,7 @@ public class ReIndexerImplTest {
         verify(mailboxManager).addListener(eq(INBOX), any(MailboxListener.class), any(MailboxSession.class));
         verify(mailboxManager).removeListener(eq(INBOX), any(MailboxListener.class), any(MailboxSession.class));
         verify(messageSearchIndex).add(any(MailboxSession.class), eq(mailbox), eq(message));
-        verify(messageSearchIndex).delete(any(MailboxSession.class), eq(mailbox), eq(MessageRange.all()));
+        verify(messageSearchIndex).deleteAll(any(MailboxSession.class), eq(mailbox));
         verifyNoMoreInteractions(mailboxMapper, mailboxSessionMapperFactory, messageSearchIndex, messageMapper, mailboxMapper);
     }
 }

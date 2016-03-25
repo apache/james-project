@@ -32,8 +32,6 @@ import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -84,17 +82,25 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox<Id> mailbox, MessageRange range) throws MailboxException {
-        if (range.getType() == Type.ALL) {
-            indexer.deleteAllMatchingQuery(termQuery(JsonMessageConstants.MAILBOX_ID, mailbox.getMailboxId().serialize()));
-        } else {
-            range.forEach(messageId -> {
-                try {
-                    indexer.deleteMessage(indexIdFor(mailbox, messageId));
-                } catch (Exception e) {
-                    LOGGER.error("Error when deleting index for message " + messageId, e);
-                }
-            });
+    public void delete(MailboxSession session, Mailbox<Id> mailbox, List<Long> expungedUids) throws MailboxException {
+        try {
+            indexer.deleteMessages(expungedUids.stream()
+                .map(uid ->  indexIdFor(mailbox, uid))
+                .collect(Collectors.toList()));
+        } catch (Exception e) {
+            LOGGER.error("Error when deleting messages {} in mailbox {} from index", mailbox.getMailboxId().serialize(), expungedUids, e);
+        }
+    }
+
+    @Override
+    public void deleteAll(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException {
+        try {
+            indexer.deleteAllMatchingQuery(
+                termQuery(
+                    JsonMessageConstants.MAILBOX_ID,
+                    mailbox.getMailboxId().serialize()));
+        } catch (Exception e) {
+            LOGGER.error("Error when deleting all messages in mailbox {}", mailbox.getMailboxId().serialize(), e);
         }
     }
 
