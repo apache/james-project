@@ -19,9 +19,12 @@
 
 package org.apache.james.jmap.model;
 
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -52,6 +55,22 @@ public class SetMailboxesRequest implements JmapRequest {
         public Builder create(MailboxCreationId creationId, MailboxRequest mailbox) {
             create.put(creationId, mailbox);
             return this;
+        }
+        
+        public Builder accountId(String accountId) {
+            throw new NotImplementedException();
+        }
+        
+        public Builder ifInState(String state) {
+            throw new NotImplementedException();
+        }
+        
+        public Builder update(Map<String, Mailbox> updates) {
+            throw new NotImplementedException();
+        }
+        
+        public Builder destroy(List<String> deletions) {
+            throw new NotImplementedException();
         }
 
         public SetMailboxesRequest build() {

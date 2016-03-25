@@ -22,6 +22,8 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang.NotImplementedException;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -40,7 +42,7 @@ public class MailboxRequest {
 
         private Optional<String> id;
         private String name;
-        private String parentId;
+        private Optional<String> parentId;
         private Optional<Role> role;
         private Optional<SortOrder> sortOrder;
 
@@ -48,6 +50,7 @@ public class MailboxRequest {
             id = Optional.empty();
             role = Optional.empty();
             sortOrder = Optional.empty();
+            parentId = Optional.empty();
         }
 
         public Builder id(String id) {
@@ -63,24 +66,25 @@ public class MailboxRequest {
         }
 
         public Builder parentId(String parentId) {
-            this.parentId = parentId;
+            Preconditions.checkNotNull(parentId);
+            this.parentId = Optional.of(parentId);
             return this;
         }
 
-        public Builder role(Optional<Role> role) {
-            this.role = role;
-            return this;
+        public Builder role(Role role) {
+            Preconditions.checkNotNull(role);
+            throw new NotImplementedException();
         }
 
         public Builder sortOrder(SortOrder sortOrder) {
-            this.sortOrder = Optional.of(sortOrder);
-            return this;
+            Preconditions.checkNotNull(sortOrder);
+            throw new NotImplementedException();
         }
 
 
         public MailboxRequest build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
-            return new MailboxRequest(id, name, Optional.ofNullable(parentId), role, sortOrder);
+            return new MailboxRequest(id, name, parentId, role, sortOrder);
         }
     }
 
@@ -144,6 +148,8 @@ public class MailboxRequest {
         return com.google.common.base.Objects.toStringHelper(getClass())
                 .add("id", id)
                 .add("name", name)
+                .add("parentId", parentId)
+                .add("role", role)
                 .add("sortOrder", sortOrder)
                 .toString();
     }
