@@ -36,7 +36,7 @@ Received: from arcas.apache.org (HELO arcas.apache.org) (140.211.11.28)
     by apache.org (qpsmtpd/0.29) with ESMTP; Fri, 15 May 2015 06:36:00 +0000
 Date: Fri, 15 May 2015 06:35:59 +0000 (UTC)
 From: "Eric Charles (JIRA)" <mailet-api@james.apache.org>
-To: mailet-api@james.apache.org
+To: "zzz" <mailet-api@james.apache.org>
 Cc: any@any.com
 Bcc: any@any.com
 Message-ID: <JIRA.12825882.1430301328000.124152.1431671759942@Atlassian.JIRA>

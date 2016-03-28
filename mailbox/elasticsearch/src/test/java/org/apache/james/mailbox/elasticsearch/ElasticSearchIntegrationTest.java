@@ -50,7 +50,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -63,8 +62,8 @@ import com.google.common.collect.Lists;
 public class ElasticSearchIntegrationTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIntegrationTest.class);
-    public static final int BATCH_SIZE = 1;
-    public static final int SEARCH_SIZE = 1;
+    private static final int BATCH_SIZE = 1;
+    private static final int SEARCH_SIZE = 1;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder);
@@ -576,6 +575,128 @@ public class ElasticSearchIntegrationTest {
         searchQuery.andCriteria(SearchQuery.mailContains("root mailing list"));
         assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(1L, 6L);
+    }
+
+    @Test
+    public void sortOnCcShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxCc)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3L, 5L, 4L, 2L);
+        // 2 : No cc
+        // 3 : Cc : abc@abc.org
+        // 4 : zzz@bcd.org
+        // 5 : any@any.com
+    }
+
+    @Test
+    public void sortOnFromShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxFrom)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3L, 2L, 4L, 5L);
+        // 2 : jira2@apache.org
+        // 3 : jira1@apache.org
+        // 4 : jira@apache.org
+        // 5 : mailet-api@james.apache.org
+    }
+
+    @Test
+    public void sortOnToShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.MailboxTo)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(5L, 2L, 3L, 4L);
+        // 2 : server-dev@james.apache.org
+        // 3 : server-dev@james.apache.org
+        // 4 : server-dev@james.apache.org
+        // 5 : mailet-api@james.apache.org
+    }
+
+    @Test
+    public void sortOnSubjectShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.BaseSubject)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(4L, 3L, 2L, 5L);
+        // 2 : [jira] [Created] (MAILBOX-234) Convert Message into JSON
+        // 3 : [jira] [Closed] (MAILBOX-217) We should index attachment in elastic search
+        // 4 : [jira] [Closed] (MAILBOX-11) MailboxQuery ignore namespace
+        // 5 : [jira] [Resolved] (MAILET-94) James Mailet should use latest version of other James subprojects
+    }
+
+    @Test
+    public void sortOnSizeShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Size)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(2L, 3L, 5L, 4L);
+        // 2 : 3210 o
+        // 3 : 3647 o
+        // 4 : 4360 o
+        // 5 : 3653 o
+    }
+
+    @Test
+    public void sortOnDisplayFromShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayFrom)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(4L, 3L, 5L, 2L);
+        // 2 : Tellier Benoit (JIRA)
+        // 3 : efij
+        // 4 : abcd
+        // 5 : Eric Charles (JIRA)
+    }
+
+    @Test
+    public void sortOnDisplayToShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.DisplayTo)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3L, 2L, 4L, 5L);
+        // 2 : abc
+        // 3 : aaa
+        // 4 : server
+        // 5 : zzz
+    }
+
+    @Test
+    public void sortOnSentDateShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.SentDate)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(5L, 4L, 2L, 3L);
+        // 2 : 4 Jun 2015 09:23:37
+        // 3 : 4 Jun 2015 09:27:37
+        // 4 : 2 Jun 2015 08:16:19
+        // 5 : 15 May 2015 06:35:59
+    }
+
+    @Test
+    public void sortOnIdShouldWork() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 5L)};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        searchQuery.setSorts(Lists.newArrayList(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Uid)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(2L, 3L, 4L, 5L);
     }
 
 }

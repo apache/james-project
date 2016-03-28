@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.elasticsearch;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
 import java.io.IOException;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ public class IndexCreationFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
     private static final int DEFAULT_NB_SHARDS = 1;
     private static final int DEFAULT_NB_REPLICA = 0;
+    public static final String CASE_INSENSITIVE = "case_insensitive";
 
     public static ClientProvider createIndex(ClientProvider clientProvider, int nbShards, int nbReplica) {
         try {
@@ -46,7 +49,7 @@ public class IndexCreationFactory {
         return createIndex(clientProvider, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
     }
 
-    private static ClientProvider createIndex(ClientProvider clientProvider, Settings settings) {
+    private static ClientProvider createIndex(ClientProvider clientProvider, XContentBuilder settings) {
         try {
             try (Client client = clientProvider.get()) {
                 client.admin()
@@ -62,11 +65,22 @@ public class IndexCreationFactory {
         return clientProvider;
     }
 
-    private static Settings generateSetting(int nbShards, int nbReplica) throws IOException {
-        return Settings.builder()
-            .put("number_of_shards", nbShards)
-            .put("number_of_replicas", nbReplica)
-            .build();
+    private static XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {
+        return jsonBuilder()
+            .startObject()
+                .field("number_of_shards", nbShards)
+                .field("number_of_replicas", nbReplica)
+                .startObject("analysis")
+                    .startObject("analyzer")
+                        .startObject(CASE_INSENSITIVE)
+                            .field("tokenizer", "keyword")
+                            .startArray("filter")
+                                .value("lowercase")
+                            .endArray()
+                        .endObject()
+                    .endObject()
+                .endObject()
+            .endObject();
     }
 
 }

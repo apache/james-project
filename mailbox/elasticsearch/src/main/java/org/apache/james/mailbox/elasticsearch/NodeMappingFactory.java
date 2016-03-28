@@ -41,6 +41,9 @@ public class NodeMappingFactory {
     public static final String DATE = "date";
     public static final String FORMAT = "format";
     public static final String NESTED = "nested";
+    public static final String FIELDS = "fields";
+    public static final String RAW = "raw";
+    public static final String ANALYZER = "analyzer";
 
     public static ClientProvider applyMapping(ClientProvider clientProvider) {
         return applyMapping(clientProvider, getMappingContent());
@@ -118,10 +121,26 @@ public class NodeMappingFactory {
                                 .startObject(PROPERTIES)
                                     .startObject(JsonMessageConstants.EMailer.NAME)
                                         .field(TYPE, STRING)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                     .startObject(JsonMessageConstants.EMailer.ADDRESS)
                                         .field(TYPE, STRING)
                                         .field(INDEX, NOT_ANALYZED)
+                                    .endObject()
+                                .endObject()
+                            .endObject()
+
+                            .startObject(JsonMessageConstants.SUBJECT)
+                                .field(TYPE, STRING)
+                                .startObject(FIELDS)
+                                    .startObject(RAW)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
                                     .endObject()
                                 .endObject()
                             .endObject()
@@ -131,6 +150,12 @@ public class NodeMappingFactory {
                                 .startObject(PROPERTIES)
                                     .startObject(JsonMessageConstants.EMailer.NAME)
                                         .field(TYPE, STRING)
+                                        .startObject(FIELDS)
+                                            .startObject(RAW)
+                                                .field(TYPE, STRING)
+                                                .field(ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
+                                            .endObject()
+                                        .endObject()
                                     .endObject()
                                     .startObject(JsonMessageConstants.EMailer.ADDRESS)
                                         .field(TYPE, STRING)
