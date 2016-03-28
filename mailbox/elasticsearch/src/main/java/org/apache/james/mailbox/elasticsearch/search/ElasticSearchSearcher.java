@@ -79,6 +79,7 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
                 client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
                     .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
                     .setScroll(TIMEOUT)
+                    .setFetchSource(JsonMessageConstants.ID, "")
                     .setQuery(queryConverter.from(searchQuery, mailbox.getMailboxId().serialize()))
                     .setSize(size),
                 (searchBuilder, sort) -> searchBuilder.addSort(SortConverter.convertSort(sort)),
