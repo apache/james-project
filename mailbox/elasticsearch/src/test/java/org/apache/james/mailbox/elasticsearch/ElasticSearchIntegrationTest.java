@@ -32,6 +32,7 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
+import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
@@ -173,7 +174,7 @@ public class ElasticSearchIntegrationTest {
             new ElasticSearchIndexer(clientProvider, new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
             new ElasticSearchSearcher<>(clientProvider, new QueryConverter(new CriterionConverter()), SEARCH_SIZE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
-        storeMailboxManager = new StoreMailboxManager<>(
+        storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
             new MockAuthenticator(),
             new JVMMailboxPathLocker(),
@@ -271,7 +272,6 @@ public class ElasticSearchIntegrationTest {
             .containsOnly(6L);
     }
 
-    @Ignore("This test will fail as Memory mailbox has no support for user defined flags. This test will return two message instead of one => mapping issue")
     @Test
     public void flagIsSetShouldReturnUidsOfMessageContainingAGivenUserFlag() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();
@@ -280,13 +280,12 @@ public class ElasticSearchIntegrationTest {
             .containsOnly(8L);
     }
 
-    @Ignore("This test will fail as Memory mailbox has no support for user defined flags. This test will return two message instead of one => mapping issue")
     @Test
     public void userFlagsShouldBeMatchedExactly() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.flagIsSet("Hello bonjour"));
         assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(8L);
+            .isEmpty();
     }
 
     @Test
@@ -339,13 +338,12 @@ public class ElasticSearchIntegrationTest {
             .containsOnly(1L, 2L, 3L, 4L, 5L, 7L, 8L, 9L);
     }
 
-    @Ignore("This test will fail as Memory mailbox has no support for user defined flags. This test will return two message instead of one => mapping issue")
     @Test
     public void flagIsUnSetShouldReturnUidsOfMessageNotContainingAGivenUserFlag() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.flagIsUnSet("Hello"));
         assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(8L);
+            .containsOnly(1L, 2L, 3L, 4L, 5L, 6L, 7L,  9L);
     }
 
     @Test

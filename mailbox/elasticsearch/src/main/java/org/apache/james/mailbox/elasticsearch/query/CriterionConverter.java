@@ -26,7 +26,6 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -66,6 +65,7 @@ public class CriterionConverter {
         registerCriterionConverter(SearchQuery.ConjunctionCriterion.class, this::convertConjunction);
         registerCriterionConverter(SearchQuery.HeaderCriterion.class, this::convertHeader);
         registerCriterionConverter(SearchQuery.TextCriterion.class, this::convertTextCriterion);
+        registerCriterionConverter(SearchQuery.CustomFlagCriterion.class, this::convertCustomFlagCriterion);
         
         registerCriterionConverter(SearchQuery.AllCriterion.class,
             criterion -> matchAllQuery());
@@ -75,9 +75,6 @@ public class CriterionConverter {
         
         registerCriterionConverter(SearchQuery.SizeCriterion.class,
             criterion -> createNumericFilter(JsonMessageConstants.SIZE, criterion.getOperator()));
-        
-        registerCriterionConverter(SearchQuery.CustomFlagCriterion.class,
-            criterion -> termsQuery(JsonMessageConstants.USER_FLAGS, criterion.getFlag()));
 
         registerCriterionConverter(SearchQuery.InternalDateCriterion.class,
             criterion -> dateRangeFilter(JsonMessageConstants.DATE, criterion.getOperator()));
@@ -118,6 +115,14 @@ public class CriterionConverter {
         return criterionConverterMap.get(criterion.getClass()).apply(criterion);
     }
 
+    private QueryBuilder convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
+        QueryBuilder termQueryBuilder = termQuery(JsonMessageConstants.USER_FLAGS, criterion.getFlag());
+        if (criterion.getOperator().isSet()) {
+            return termQueryBuilder;
+        } else {
+            return boolQuery().mustNot(termQueryBuilder);
+        }
+    }
 
     private QueryBuilder convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
