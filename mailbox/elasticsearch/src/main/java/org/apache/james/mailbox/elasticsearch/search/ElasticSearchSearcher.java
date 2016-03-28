@@ -46,14 +46,22 @@ import org.slf4j.LoggerFactory;
 public class ElasticSearchSearcher<Id extends MailboxId> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
+    private static final TimeValue TIMEOUT = new TimeValue(60000);
+    public static final int DEFAULT_SIZE = 100;
 
     private final ClientProvider clientProvider;
     private final QueryConverter queryConverter;
+    private final int size;
 
     @Inject
     public ElasticSearchSearcher(ClientProvider clientProvider, QueryConverter queryConverter) {
+        this(clientProvider, queryConverter, DEFAULT_SIZE);
+    }
+
+    public ElasticSearchSearcher(ClientProvider clientProvider, QueryConverter queryConverter, int size) {
         this.clientProvider = clientProvider;
         this.queryConverter = queryConverter;
+        this.size = size;
     }
 
     public Iterator<Long> search(Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
@@ -70,9 +78,9 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
             .reduce(
                 client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
                     .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
-                    .setScroll(new TimeValue(60000))
+                    .setScroll(TIMEOUT)
                     .setQuery(queryConverter.from(searchQuery, mailbox.getMailboxId().serialize()))
-                    .setSize(100),
+                    .setSize(size),
                 (searchBuilder, sort) -> searchBuilder.addSort(SortConverter.convertSort(sort)),
                 (partialResult1, partialResult2) -> partialResult1);
     }

@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 
 public class ElasticSearchIndexerTest {
 
+    public static final int MINIMUM_BATCH_SIZE = 1;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder);
 
@@ -55,7 +56,7 @@ public class ElasticSearchIndexerTest {
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
-        deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor());
+        deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE);
         testee = new ElasticSearchIndexer(clientProvider, deleteByQueryPerformer);
     }
     

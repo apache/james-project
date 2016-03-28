@@ -62,6 +62,8 @@ import com.google.common.collect.Lists;
 public class ElasticSearchIntegrationTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIntegrationTest.class);
+    public static final int BATCH_SIZE = 1;
+    public static final int SEARCH_SIZE = 1;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder);
@@ -168,8 +170,8 @@ public class ElasticSearchIntegrationTest {
         );
         MailboxSessionMapperFactory<InMemoryId> mapperFactory = new InMemoryMailboxSessionMapperFactory();
         elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex<>(mapperFactory,
-            new ElasticSearchIndexer(clientProvider, new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor())),
-            new ElasticSearchSearcher<>(clientProvider, new QueryConverter(new CriterionConverter())),
+            new ElasticSearchIndexer(clientProvider, new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
+            new ElasticSearchSearcher<>(clientProvider, new QueryConverter(new CriterionConverter()), SEARCH_SIZE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
         storeMailboxManager = new StoreMailboxManager<>(
             mapperFactory,
