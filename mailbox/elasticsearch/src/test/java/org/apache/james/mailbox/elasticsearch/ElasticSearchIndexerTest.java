@@ -29,6 +29,7 @@ import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.junit.Before;
@@ -41,7 +42,7 @@ import com.google.common.collect.Lists;
 
 public class ElasticSearchIndexerTest {
 
-    public static final int MINIMUM_BATCH_SIZE = 1;
+    private static final int MINIMUM_BATCH_SIZE = 1;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch= new EmbeddedElasticSearch(temporaryFolder);
 
@@ -50,13 +51,18 @@ public class ElasticSearchIndexerTest {
 
     private Node node;
     private ElasticSearchIndexer testee;
-    private DeleteByQueryPerformer deleteByQueryPerformer;
 
     @Before
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
-        deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE);
+        DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE) {
+            @Override
+            public Void perform(QueryBuilder queryBuilder) {
+                doDeleteByQuery(queryBuilder);
+                return null;
+            }
+        };
         testee = new ElasticSearchIndexer(clientProvider, deleteByQueryPerformer);
     }
     
