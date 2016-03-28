@@ -52,6 +52,24 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
+    public void calculateUpperDateShouldReturnDateUpToTheNextMonthUsingMonthUnit() throws ParseException {
+        assertThat(
+            ISO_OFFSET_DATE_TIME.format(
+                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Month)
+            )
+        ).isEqualTo("2014-02-01T00:00:00Z");
+    }
+
+    @Test
+    public void calculateUpperDateShouldReturnDateUpToTheNextYearUsingYearUnit() throws ParseException {
+        assertThat(
+            ISO_OFFSET_DATE_TIME.format(
+                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Year)
+            )
+        ).isEqualTo("2015-01-01T00:00:00Z");
+    }
+
+    @Test
     public void calculateUpperDateShouldReturnDateUpToTheNextDayUsingDayUnit() throws ParseException {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(

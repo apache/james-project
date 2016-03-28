@@ -34,11 +34,18 @@ public class DateResolutionFormater {
     public static DateTimeFormatter DATE_TIME_FOMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
     public static ZonedDateTime computeUpperDate(ZonedDateTime date, SearchQuery.DateResolution resolution) {
-        return date.truncatedTo(convertDateResolutionField(resolution)).plus(1,convertDateResolutionField(resolution));
+        return computeLowerDate(date, resolution).plus(1, convertDateResolutionField(resolution));
     }
 
     public static ZonedDateTime computeLowerDate(ZonedDateTime date, SearchQuery.DateResolution resolution) {
-        return date.truncatedTo(convertDateResolutionField(resolution));
+        switch (resolution) {
+            case Year:
+                return date.truncatedTo(ChronoUnit.DAYS).withDayOfYear(1);
+            case Month:
+                return date.truncatedTo(ChronoUnit.DAYS).withDayOfMonth(1);
+            default:
+                return date.truncatedTo(convertDateResolutionField(resolution));
+        }
     }
 
     private static TemporalUnit convertDateResolutionField(SearchQuery.DateResolution resolution) {
