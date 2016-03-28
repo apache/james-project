@@ -21,7 +21,10 @@ package org.apache.james.mailbox.elasticsearch.search;
 
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import javax.inject.Inject;
 
 import org.apache.james.mailbox.elasticsearch.ClientProvider;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
@@ -40,8 +43,6 @@ import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-
 public class ElasticSearchSearcher<Id extends MailboxId> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
@@ -57,9 +58,9 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
 
     public Iterator<Long> search(Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
         try (Client client = clientProvider.get()) {
-            return transformResponseToUidIterator(getSearchRequestBuilder(client, mailbox, searchQuery)
-                .get()
-            );
+            return new ScrollIterable(client, getSearchRequestBuilder(client, mailbox, searchQuery)).stream()
+                .flatMap(this::transformResponseToUidStream)
+                .iterator();
         }
     }
 
@@ -76,13 +77,11 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
                 (partialResult1, partialResult2) -> partialResult1);
     }
 
-    private Iterator<Long> transformResponseToUidIterator(SearchResponse searchResponse) {
+    private Stream<Long> transformResponseToUidStream(SearchResponse searchResponse) {
         return StreamSupport.stream(searchResponse.getHits().spliterator(), false)
             .map(this::extractUidFromHit)
             .filter(Optional::isPresent)
-            .map(Optional::get)
-            .iterator();
-
+            .map(Optional::get);
     }
 
     private Optional<Long> extractUidFromHit(SearchHit hit) {

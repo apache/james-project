@@ -43,12 +43,16 @@ public class NodeMappingFactory {
     public static final String NESTED = "nested";
 
     public static ClientProvider applyMapping(ClientProvider clientProvider) {
+        return applyMapping(clientProvider, getMappingContent());
+    }
+
+    public static ClientProvider applyMapping(ClientProvider clientProvider, XContentBuilder mappingsSources) {
         try (Client client = clientProvider.get()) {
             client.admin()
                 .indices()
                 .preparePutMapping(ElasticSearchIndexer.MAILBOX_INDEX)
                 .setType(ElasticSearchIndexer.MESSAGE_TYPE)
-                .setSource(getMappingContent())
+                .setSource(mappingsSources)
                 .execute()
                 .actionGet();
         }
