@@ -184,6 +184,13 @@ public class ElasticSearchIntegrationTest {
     }
 
     @Test
+    public void emptySearchQueryShouldReturnAllUids() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L);
+    }
+
+    @Test
     public void allShouldReturnAllUids() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.all());
@@ -443,12 +450,37 @@ public class ElasticSearchIntegrationTest {
     }
 
     @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecified() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.address(SearchQuery.AddressType.Cc, "any@any.com"));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(5L);
+    }
+
+    @Test
+    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecified() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.address(SearchQuery.AddressType.Bcc, "no@no.com"));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(9L);
+    }
+
+    @Test
     public void uidShouldreturnExistingUidsOnTheGivenRanges() throws Exception {
         SearchQuery searchQuery = new SearchQuery();
         SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 4L), new SearchQuery.NumericRange(6L, 7L)};
         searchQuery.andCriteria(SearchQuery.uid(numericRanges));
         assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(2L, 3L, 4L, 6L, 7L);
+    }
+
+    @Test
+    public void uidShouldreturnEveryThing() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        SearchQuery.NumericRange[] numericRanges = {};
+        searchQuery.andCriteria(SearchQuery.uid(numericRanges));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L);
     }
 
     @Test
@@ -469,6 +501,18 @@ public class ElasticSearchIntegrationTest {
                 SearchQuery.modSeqGreaterThan(6L)));
         assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(6L, 8L, 9L);
+    }
+
+    @Test
+    public void orShouldReturnResultsMatchinganyRequests() throws Exception {
+        SearchQuery.NumericRange[] numericRanges = {new SearchQuery.NumericRange(2L, 4L)};
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(
+            SearchQuery.or(
+                SearchQuery.uid(numericRanges),
+                SearchQuery.modSeqGreaterThan(6L)));
+        assertThat(elasticSearchListeningMessageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(2L, 3L, 4L, 6L, 7L, 8L, 9L);
     }
 
     @Test

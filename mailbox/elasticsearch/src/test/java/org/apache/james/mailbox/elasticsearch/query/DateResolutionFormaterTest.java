@@ -43,6 +43,15 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
+    public void calculateUpperDateShouldReturnDateUpToTheNextHourUsingHourUnit() throws ParseException {
+        assertThat(
+            ISO_OFFSET_DATE_TIME.format(
+                DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Hour)
+            )
+        ).isEqualTo("2014-01-02T16:00:00Z");
+    }
+
+    @Test
     public void calculateUpperDateShouldReturnDateUpToTheNextDayUsingDayUnit() throws ParseException {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(

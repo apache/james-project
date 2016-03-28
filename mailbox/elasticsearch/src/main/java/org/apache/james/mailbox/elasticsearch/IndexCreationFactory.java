@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.elasticsearch;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -44,12 +43,7 @@ public class IndexCreationFactory {
     }
 
     public static ClientProvider createIndex(ClientProvider clientProvider) {
-        try {
-            return createIndex(clientProvider, generateSetting(DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA));
-        } catch (IOException e) {
-            LOGGER.error("Error while creating index : ", e);
-            return clientProvider;
-        }
+        return createIndex(clientProvider, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
     }
 
     private static ClientProvider createIndex(ClientProvider clientProvider, Settings settings) {

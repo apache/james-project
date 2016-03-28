@@ -39,6 +39,8 @@ From: Guillaume Genty <ggenty@waycom.net>
 Organization: Waycom
 MIME-Version: 1.0
 To: <frnog@frnog.org>
+Cc: no@no.com
+Bcc: no@no.com
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: WCM-HV1-EXCH1.wcmnoc.local (2002:c3d6:f04a::c3d6:f04a) To
