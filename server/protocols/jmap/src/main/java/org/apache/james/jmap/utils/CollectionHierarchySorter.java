@@ -19,36 +19,46 @@
 
 package org.apache.james.jmap.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 
 import com.google.common.collect.Lists;
 
-public class MailboxHierarchySorter {
+public class CollectionHierarchySorter<T, Id> {
 
-    public List<Mailbox> sortFromRootToLeaf(List<Mailbox> mailboxes) throws CycleDetectedException {
+    private final Function<T, Id> index;
+    private final Function<T, Optional<Id>> parentId;
 
-        Map<String, Mailbox> mapOfMailboxesById = indexMailboxesById(mailboxes);
+    public CollectionHierarchySorter(Function<T, Id> index,
+                                  Function<T, Optional<Id>> parentId) {
+        this.index = index;
+        this.parentId = parentId;
+    }
 
-        DependencyGraph<Mailbox> graph = new DependencyGraph<>(m ->
-                m.getParentId().map(mapOfMailboxesById::get));
+    public List<T> sortFromRootToLeaf(Collection<T> elements) throws CycleDetectedException {
 
-        mailboxes.stream().forEach(graph::registerItem);
+        Map<Id, T> mapOfElementsById = indexElementsById(elements);
+
+        DependencyGraph<T> graph = new DependencyGraph<>(m ->
+                parentId.apply(m).map(mapOfElementsById::get));
+
+        elements.stream().forEach(graph::registerItem);
 
         return graph.getBuildChain().collect(Collectors.toList());
     }
 
-    private Map<String, Mailbox> indexMailboxesById(List<Mailbox> mailboxes) {
-        return mailboxes.stream()
-                .collect(Collectors.toMap(Mailbox::getId, Function.identity()));
+    private Map<Id, T> indexElementsById(Collection<T> elements) {
+        return elements.stream()
+                .collect(Collectors.toMap(index, Function.identity()));
     }
 
-    public List<Mailbox> sortFromLeafToRoot(List<Mailbox> mailboxes) throws CycleDetectedException {
-        return Lists.reverse(sortFromRootToLeaf(mailboxes));
+    public List<T> sortFromLeafToRoot(Collection<T> elements) throws CycleDetectedException {
+        return Lists.reverse(sortFromRootToLeaf(elements));
     }
 }
