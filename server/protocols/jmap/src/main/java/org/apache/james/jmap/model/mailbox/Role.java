@@ -31,6 +31,8 @@ import com.google.common.collect.ImmutableList;
 
 public class Role {
 
+    public static final String USER_DEFINED_ROLE_PREFIX = "x-";
+    
     public static final Role INBOX = new Role("inbox");
     public static final Role ARCHIVE = new Role("archive");
     public static final Role DRAFTS = new Role("drafts");
@@ -42,8 +44,8 @@ public class Role {
     
     private static final Map<String, Role> ROLES = 
             ImmutableList.<Role>of(INBOX, ARCHIVE, DRAFTS, OUTBOX, SENT, TRASH, SPAM, TEMPLATES)
-            .stream()
-            .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.ENGLISH), Function.identity()));
+                .stream()
+                .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.ENGLISH), Function.identity()));
     
     private final String name;
 
@@ -61,7 +63,7 @@ public class Role {
     }
 
     private static Optional<Role> tryBuildCustomRole(String name) {
-        if (name.startsWith("x-")) {
+        if (name.startsWith(USER_DEFINED_ROLE_PREFIX)) {
             return Optional.of(new Role(name));
         }
         return Optional.empty();
