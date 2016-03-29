@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.model.mailbox.MailboxRequest;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -44,5 +47,20 @@ public class SetMailboxesRequestTest {
     @Test(expected=NotImplementedException.class)
     public void builderShouldThrowWhenDestroy() {
         SetMailboxesRequest.builder().destroy(ImmutableList.of());
+    }
+    
+    @Test
+    public void builderShouldWork() {
+        MailboxCreationId creationId = MailboxCreationId.of("creationId");
+        MailboxRequest mailboxRequest = MailboxRequest.builder()
+            .name("mailboxRequest")
+            .build();
+        SetMailboxesRequest expected = new SetMailboxesRequest(ImmutableMap.of(creationId, mailboxRequest));
+        
+        SetMailboxesRequest actual = SetMailboxesRequest.builder()
+            .create(creationId, mailboxRequest)
+            .build();
+        
+        assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 }

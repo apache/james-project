@@ -29,6 +29,7 @@ import org.apache.james.jmap.model.mailbox.MailboxRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 @JsonDeserialize(builder = SetMailboxesRequest.Builder.class)
@@ -80,7 +81,8 @@ public class SetMailboxesRequest implements JmapRequest {
 
     private final ImmutableMap<MailboxCreationId, MailboxRequest> create;
 
-    private SetMailboxesRequest(ImmutableMap<MailboxCreationId, MailboxRequest> create) {
+    @VisibleForTesting
+    SetMailboxesRequest(ImmutableMap<MailboxCreationId, MailboxRequest> create) {
         this.create = create;
     }
 
