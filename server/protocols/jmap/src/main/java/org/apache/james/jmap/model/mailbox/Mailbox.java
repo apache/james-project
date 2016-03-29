@@ -44,7 +44,7 @@ public class Mailbox {
 
         private String id;
         private String name;
-        private String parentId;
+        private Optional<String> parentId;
         private Optional<Role> role;
         private SortOrder sortOrder;
         private boolean mustBeOnlyMailbox;
@@ -60,6 +60,7 @@ public class Mailbox {
         private long unreadThreads;
 
         private Builder() {
+            parentId = Optional.empty();
         }
 
         public Builder id(String id) {
@@ -75,7 +76,7 @@ public class Mailbox {
         }
 
         public Builder parentId(String parentId) {
-            this.parentId = parentId;
+            this.parentId = Optional.ofNullable(parentId);
             return this;
         }
 
@@ -148,7 +149,7 @@ public class Mailbox {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(id), "'id' is mandatory");
 
-            return new Mailbox(id, name, Optional.ofNullable(parentId), role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
+            return new Mailbox(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
                     totalMessages, unreadMessages, totalThreads, unreadThreads);
         }
     }
