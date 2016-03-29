@@ -105,7 +105,7 @@ public class GetMailboxesMethod<Id extends MailboxId> implements Method {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .filter(filterMailboxesById(mailboxesRequest.getIds()))
-                .sorted((m1, m2) -> Integer.compare(m1.getSortOrder(), m2.getSortOrder()))
+                .sorted((m1, m2) -> m1.getSortOrder().compareTo(m2.getSortOrder()))
                 .forEach(mailbox -> builder.add(mailbox));
             return builder.build();
         } catch (MailboxException e) {

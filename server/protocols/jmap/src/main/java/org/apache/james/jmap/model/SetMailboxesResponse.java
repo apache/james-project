@@ -16,15 +16,46 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.send.exception;
+package org.apache.james.jmap.model;
 
-import org.apache.james.jmap.model.mailbox.Role;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.mailbox.Mailbox;
 
-public class MailboxRoleNotFoundException extends MailQueueException {
+import com.google.common.collect.ImmutableMap;
 
-    public MailboxRoleNotFoundException(Role role) {
-        super("Unable to find a mailbox with role " + role.serialize());
+public class SetMailboxesResponse implements Method.Response {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private ImmutableMap.Builder<MailboxCreationId, Mailbox> created;
+
+        private Builder() {
+            created = ImmutableMap.builder();
+        }
+
+        public Builder creation(MailboxCreationId creationId, Mailbox mailbox) {
+            created.put(creationId, mailbox);
+            return this;
+        }
+
+        public SetMailboxesResponse build() {
+            return new SetMailboxesResponse(created.build());
+        }
+
+    }
+
+    private final ImmutableMap<MailboxCreationId, Mailbox> created;
+
+    private SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created) {
+        this.created = created;
+    }
+
+    public ImmutableMap<MailboxCreationId, Mailbox> getCreated() {
+        return created;
     }
 
 }

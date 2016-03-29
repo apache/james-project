@@ -16,15 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.send.exception;
 
-import org.apache.james.jmap.model.mailbox.Role;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
+package org.apache.james.jmap.methods;
 
-public class MailboxRoleNotFoundException extends MailQueueException {
+import org.apache.james.jmap.model.SetMailboxesRequest;
+import org.apache.james.jmap.model.SetMailboxesResponse;
+import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-    public MailboxRoleNotFoundException(Role role) {
-        super("Unable to find a mailbox with role " + role.serialize());
+public class SetMailboxesCreationProcessor<Id extends MailboxId> implements SetMailboxesProcessor<Id> {
+
+    public SetMailboxesResponse process(SetMailboxesRequest request) {
+        SetMailboxesResponse.Builder builder = SetMailboxesResponse.builder();
+        request.getCreate().entrySet().stream()
+            .forEach(entry -> builder.creation(
+                entry.getKey(),
+                Mailbox.builder().name(entry.getValue().getName()).id("serverId").build()));
+        return builder.build();
     }
 
 }

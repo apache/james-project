@@ -16,15 +16,41 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.send.exception;
+package org.apache.james.jmap.model.mailbox;
 
-import org.apache.james.jmap.model.mailbox.Role;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class MailboxRoleNotFoundException extends MailQueueException {
+import java.util.TreeSet;
 
-    public MailboxRoleNotFoundException(Role role) {
-        super("Unable to find a mailbox with role " + role.serialize());
+import org.junit.Test;
+
+public class SortOrderTest {
+
+    @Test
+    public void sortOrderShouldNotBeNegative() {
+        assertThatThrownBy(() -> SortOrder.of(-1)).isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    public void sortOrderShouldSupportZero() {
+        assertThat(SortOrder.of(0).getSortOrder()).isEqualTo(0);
+    }
+
+    @Test
+    public void sortOrderShouldSupportPositiveInteger() {
+        assertThat(SortOrder.of(4).getSortOrder()).isEqualTo(4);
+    }
+
+    @Test
+    public void sortOrderShouldBeComparable() {
+        TreeSet<SortOrder> sortedSet = new TreeSet<>();
+        SortOrder _66 = SortOrder.of(66);
+        SortOrder _4 = SortOrder.of(4);
+        SortOrder _5 = SortOrder.of(5);
+        sortedSet.add(_66);
+        sortedSet.add(_4);
+        sortedSet.add(_5);
+        assertThat(sortedSet).containsExactly(_4, _5, _66);
+    }
 }

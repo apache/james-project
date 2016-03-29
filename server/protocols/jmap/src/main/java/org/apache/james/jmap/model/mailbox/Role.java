@@ -19,38 +19,77 @@
 package org.apache.james.jmap.model.mailbox;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
-public enum Role {
+public class Role {
 
-    INBOX("inbox"),
-    ARCHIVE("archive"),
-    DRAFTS("drafts"),
-    OUTBOX("outbox"),
-    SENT("sent"),
-    TRASH("trash"),
-    SPAM("spam"),
-    TEMPLATES("templates");
-
+    public static final String USER_DEFINED_ROLE_PREFIX = "x-";
+    
+    public static final Role INBOX = new Role("inbox");
+    public static final Role ARCHIVE = new Role("archive");
+    public static final Role DRAFTS = new Role("drafts");
+    public static final Role OUTBOX = new Role("outbox");
+    public static final Role SENT = new Role("sent");
+    public static final Role TRASH = new Role("trash");
+    public static final Role SPAM = new Role("spam");
+    public static final Role TEMPLATES = new Role("templates");
+    
+    private static final Map<String, Role> ROLES = 
+            ImmutableList.<Role>of(INBOX, ARCHIVE, DRAFTS, OUTBOX, SENT, TRASH, SPAM, TEMPLATES)
+                .stream()
+                .collect(Collectors.toMap((Role x) -> x.name.toLowerCase(Locale.ENGLISH), Function.identity()));
+    
     private final String name;
 
-    Role(String name) {
+    @VisibleForTesting Role(String name) {
         this.name = name;
     }
 
     public static Optional<Role> from(String name) {
-        for (Role role : values()) {
-            if (role.serialize().equals(name.toLowerCase(Locale.ENGLISH))) {
-                return Optional.of(role);
-            }
+        Optional<Role> predefinedRole = Optional.ofNullable(ROLES.get(name.toLowerCase(Locale.ENGLISH)));
+        if (predefinedRole.isPresent()) {
+            return predefinedRole;
+        } else {
+            return tryBuildCustomRole(name);
+        }
+    }
+
+    private static Optional<Role> tryBuildCustomRole(String name) {
+        if (name.startsWith(USER_DEFINED_ROLE_PREFIX)) {
+            return Optional.of(new Role(name));
         }
         return Optional.empty();
     }
-
+    
     @JsonValue
     public String serialize() {
         return name;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof Role) {
+            Role that = (Role) object;
+            return Objects.equal(this.name, that.name);
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("name", name).toString();
     }
 }

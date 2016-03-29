@@ -16,15 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.send.exception;
 
-import org.apache.james.jmap.model.mailbox.Role;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
+package org.apache.james.jmap.memory;
 
-public class MailboxRoleNotFoundException extends MailQueueException {
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
+import org.apache.james.jmap.servers.MemoryJmapServerModule;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
-    public MailboxRoleNotFoundException(Role role) {
-        super("Unable to find a mailbox with role " + role.serialize());
+import com.google.inject.TypeLiteral;
+
+public class MemorySetMailboxesMethodTest extends SetMailboxesMethodTest {
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Override
+    protected GuiceJamesServer<?> createJmapServer() {
+        return new GuiceJamesServer<>(new TypeLiteral<InMemoryId>(){})
+                    .combineWith(MemoryJamesServerMain.inMemoryServerModule)
+                    .overrideWith(new MemoryJmapServerModule(temporaryFolder));
     }
-
+    
+    @Override
+    protected void await() {
+    }
 }
