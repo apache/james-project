@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 import org.junit.Test;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -44,8 +45,8 @@ public class DependencyGraphTest {
         Commit c = new Commit("C", b);
 
         DependencyGraph<Commit> graph = new DependencyGraph<>(Commit::getParent);
-        Set<Commit> mailboxes = ImmutableSet.of(b, a, c);
-        mailboxes.stream().forEach(graph::registerItem);
+        Stream.of(b, a, c)
+            .forEach(graph::registerItem);
 
         // When
         Stream<Commit> orderedMailboxes = graph.getBuildChain();
@@ -83,9 +84,9 @@ public class DependencyGraphTest {
         Commit d = new Commit("D");
         Commit e = new Commit("E", d);
         Commit f = new Commit("F", d);
-        List<Commit> input = ImmutableList.of(b, a, e, d, f, c);
         DependencyGraph<Commit> testee = new DependencyGraph<>(Commit::getParent);
-        input.stream().forEach(testee::registerItem);
+        Stream.of(b, a, e, d, f, c)
+            .forEach(testee::registerItem);
 
         //When
         Stream<Commit> actual = testee.getBuildChain();
@@ -104,9 +105,9 @@ public class DependencyGraphTest {
         Commit e = new Commit("E", b);
         Commit f = new Commit("F", c);
         Commit g = new Commit("G", e);
-        List<Commit> input = ImmutableList.of(b, a, e, g, d, f, c);
         DependencyGraph<Commit> testee = new DependencyGraph<>(Commit::getParent);
-        input.stream().forEach(testee::registerItem);
+        Stream.of(b, a, e, g, d, f, c)
+            .forEach(testee::registerItem);
 
         //When
         Stream<Commit> actual = testee.getBuildChain();
@@ -114,11 +115,47 @@ public class DependencyGraphTest {
         //Then
         assertThat(actual).extracting(Commit::getMessage).containsExactly("A", "B", "C", "E", "D", "F", "G");
     }
+    
+    @Test(expected=CycleDetectedException.class)
+    public void getBuildChainOnTreeWithLoopShouldFail() {
+        //Given
+        Commit a = new Commit("A");
+        Commit b = new Commit("B", a);
+        a.setParent(b);
+        DependencyGraph<Commit> testee = new DependencyGraph<>(Commit::getParent);
+        Stream.of(a, b)
+            .forEach(testee::registerItem);
+
+        //When
+        testee.getBuildChain();
+    }
+    
+    @Test(expected=CycleDetectedException.class)
+    public void getBuildChainOnTreeWithComplexLoopShouldFail() {
+        // a - b
+        // c - d - e - f
+        // |___________|
+        //Given
+        Commit a = new Commit("A");
+        Commit b = new Commit("B", a);
+        
+        Commit c = new Commit("C");
+        Commit d = new Commit("D", c);
+        Commit e = new Commit("E", d);
+        Commit f = new Commit("F", e);
+        c.setParent(f);
+        DependencyGraph<Commit> testee = new DependencyGraph<>(Commit::getParent);
+        Stream.of(a, b, c, d, e, f)
+            .forEach(testee::registerItem);
+
+        //When
+        testee.getBuildChain();
+    }
 
 
     private static class Commit {
         private final String message;
-        private final Optional<Commit> parent;
+        private Optional<Commit> parent;
 
         @VisibleForTesting
         Commit(String message) {
@@ -134,6 +171,10 @@ public class DependencyGraphTest {
 
         public Optional<Commit> getParent() {
             return parent;
+        }
+        
+        public void setParent(Commit parent) {
+            this.parent = Optional.of(parent);
         }
 
         public String getMessage() {

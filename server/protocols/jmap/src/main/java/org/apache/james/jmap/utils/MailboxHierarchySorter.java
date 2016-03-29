@@ -25,12 +25,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 
 import com.google.common.collect.Lists;
 
 public class MailboxHierarchySorter {
 
-    public List<Mailbox> sortFromRootToLeaf(List<Mailbox> mailboxes) {
+    public List<Mailbox> sortFromRootToLeaf(List<Mailbox> mailboxes) throws CycleDetectedException {
 
         Map<String, Mailbox> mapOfMailboxesById = indexMailboxesById(mailboxes);
 
@@ -47,7 +48,7 @@ public class MailboxHierarchySorter {
                 .collect(Collectors.toMap(Mailbox::getId, Function.identity()));
     }
 
-    public List<Mailbox> sortFromLeafToRoot(List<Mailbox> mailboxes) {
+    public List<Mailbox> sortFromLeafToRoot(List<Mailbox> mailboxes) throws CycleDetectedException {
         return Lists.reverse(sortFromRootToLeaf(mailboxes));
     }
 }

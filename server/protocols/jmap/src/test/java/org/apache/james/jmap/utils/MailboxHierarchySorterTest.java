@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -73,6 +74,17 @@ public class MailboxHierarchySorterTest {
         assertThat(result).containsExactly("A", "B", "C");
     }
 
+    @Test(expected=CycleDetectedException.class)
+    public void sortFromRootToLeafWithLoopShouldThrow() {
+        Mailbox a = Mailbox.builder().name("A").id("A").parentId("B").build();
+        Mailbox b = Mailbox.builder().name("B").id("B").parentId("A").build();
+
+        MailboxHierarchySorter sut = new MailboxHierarchySorter();
+        ImmutableList<Mailbox> input = ImmutableList.of(a, b);
+
+        sut.sortFromRootToLeaf(input);
+    }
+
     @Test
     public void sortFromLeafToRootShouldReturnOrderedMailbox() {
         //Given
@@ -112,5 +124,16 @@ public class MailboxHierarchySorterTest {
                 .collect(Collectors.toList());
 
         assertThat(result).containsExactly("C", "B", "A");
+    }
+
+    @Test(expected=CycleDetectedException.class)
+    public void sortFromLeafToRootWithLoopShouldThrow() {
+        Mailbox a = Mailbox.builder().name("A").id("A").parentId("B").build();
+        Mailbox b = Mailbox.builder().name("B").id("B").parentId("A").build();
+
+        MailboxHierarchySorter sut = new MailboxHierarchySorter();
+        ImmutableList<Mailbox> input = ImmutableList.of(a, b);
+
+        sut.sortFromLeafToRoot(input);
     }
 }

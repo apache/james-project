@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.james.util.streams.Iterators;
+import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.builder.DirectedGraphBuilder;
@@ -45,12 +46,24 @@ public class DependencyGraph<T> {
                 .map(parentNode -> builder.addEdge(parentNode, item));
     }
 
-    public Stream<T> getBuildChain() {
+    public Stream<T> getBuildChain() throws CycleDetectedException {
         DefaultDirectedGraph<T, DefaultEdge> graph = builder.build();
+        ensureNoCycle(graph);
         return Iterators.toStream(new TopologicalOrderIterator<>(graph));
+    }
+
+    private void ensureNoCycle(DefaultDirectedGraph<T, DefaultEdge> graph) throws CycleDetectedException {
+        CycleDetector<T, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
+        if (cycleDetector.detectCycles()) {
+            throw new CycleDetectedException();
+        }
     }
 
     public String toString() {
         return builder.build().toString();
+    }
+    
+    public static class CycleDetectedException extends RuntimeException {
+        
     }
 }
