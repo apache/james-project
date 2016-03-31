@@ -23,49 +23,60 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.james.jmap.model.MailboxCreationId;
+import java.util.Optional;
+
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
-import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
+import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SetMailboxesCreationProcessorTest {
+public class SetMailboxesUpdateProcessorTest {
 
-    private MailboxUtils<TestId> mailboxUtils;
-    private SetMailboxesCreationProcessor<TestId> sut;
+    private MailboxManager mockedMailboxManager;
+    private MailboxUtils<TestId> mockedMailboxUtils;
+    private MailboxSession mockedMailboxSession;
+    private SetMailboxesUpdateProcessor<TestId> sut;
 
     @Before
     @SuppressWarnings("unchecked")
     public void setup() {
-        mailboxUtils = mock(MailboxUtils.class);
-        sut = new SetMailboxesCreationProcessor<>(mock(MailboxManager.class), mailboxUtils);
+        mockedMailboxManager = mock(MailboxManager.class);
+        mockedMailboxUtils = mock(MailboxUtils.class);
+        mockedMailboxSession = mock(MailboxSession.class);
+        sut = new SetMailboxesUpdateProcessor<>(mockedMailboxUtils, mockedMailboxManager);
     }
 
     @Test
-    public void processShouldReturnNotCreatedWhenMailboxExceptionOccured() throws Exception {
-        String parentId = "parentId";
-        MailboxCreationId mailboxCreationId = MailboxCreationId.of("1");
+    public void processShouldReturnNotUpdatedWhenMailboxExceptionOccured() throws Exception {
+        // Given
+        String mailboxId = "1";
+        String newParentId = "newParentId";
+        MailboxPath newParentMailboxPath = new MailboxPath("#private", "user", "newParentName");
         SetMailboxesRequest request = SetMailboxesRequest.builder()
-                .create(mailboxCreationId, MailboxCreateRequest.builder().name("name").parentId(parentId).build())
+                .update(mailboxId, MailboxUpdateRequest.builder().parentId(newParentId).build())
                 .build();
-
-        MailboxSession mailboxSession = mock(MailboxSession.class);
-        when(mailboxUtils.getMailboxNameFromId(parentId, mailboxSession))
+        Mailbox mailbox = Mailbox.builder().id(mailboxId).name("name").build();
+        when(mockedMailboxUtils.mailboxFromMailboxId(mailboxId, mockedMailboxSession))
+            .thenReturn(Optional.of(mailbox));
+        when(mockedMailboxUtils.mailboxPathFromMailboxId(newParentId, mockedMailboxSession))
+            .thenReturn(Optional.of(newParentMailboxPath));
+        when(mockedMailboxUtils.hasChildren(mailboxId, mockedMailboxSession))
             .thenThrow(new MailboxException());
 
-        SetMailboxesResponse setMailboxesResponse = sut.process(request, mailboxSession);
-        assertThat(setMailboxesResponse.getCreated()).isEmpty();
-        assertThat(setMailboxesResponse.getNotCreated()).containsEntry(mailboxCreationId, 
-                SetError.builder()
-                    .type("anErrorOccurred")
-                    .description("An error occurred when creating the mailbox '1'")
-                    .build());
+        // When
+        SetMailboxesResponse setMailboxesResponse = sut.process(request, mockedMailboxSession);
+
+        // Then
+        assertThat(setMailboxesResponse.getUpdated()).isEmpty();
+        assertThat(setMailboxesResponse.getNotUpdated()).containsEntry(mailboxId, SetError.builder().type("anErrorOccurred").description("An error occurred when updating the mailbox").build());
     }
 }

@@ -21,7 +21,9 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.jmap.model.mailbox.MailboxRequest;
+import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
+import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -39,25 +41,28 @@ public class SetMailboxesRequestTest {
         SetMailboxesRequest.builder().ifInState("1");
     }
 
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenUpdate() {
-        SetMailboxesRequest.builder().update(ImmutableMap.of());
-    }
-    
     @Test
-    public void builderShouldWork() {
+    public void builderShouldWork() throws MailboxException {
+        //Given
         MailboxCreationId creationId = MailboxCreationId.of("creationId");
-        MailboxRequest mailboxRequest = MailboxRequest.builder()
+        String mailboxId = "mailboxId";
+        MailboxCreateRequest mailboxRequest = MailboxCreateRequest.builder()
             .name("mailboxRequest")
             .build();
         ImmutableList<String> destroy = ImmutableList.of("destroyId");
-        SetMailboxesRequest expected = new SetMailboxesRequest(ImmutableMap.of(creationId, mailboxRequest), destroy);
-        
+        MailboxUpdateRequest mailboxUpdateRequest = MailboxUpdateRequest.builder()
+            .name("mailboxUpdateRequest")
+            .build();
+        SetMailboxesRequest expected = new SetMailboxesRequest(ImmutableMap.of(creationId, mailboxRequest), ImmutableMap.of(mailboxId, mailboxUpdateRequest), destroy);
+
+        //When
         SetMailboxesRequest actual = SetMailboxesRequest.builder()
             .create(creationId, mailboxRequest)
+            .update(mailboxId, mailboxUpdateRequest)
             .destroy(destroy)
             .build();
-        
+
+        //Then
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 }

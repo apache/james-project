@@ -24,53 +24,53 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 
-public class MailboxRequestTest {
+public class MailboxCreateRequestTest {
 
     @Test
     public void builderShouldThrowOnNullRole() {
-        assertThatThrownBy(() -> MailboxRequest.builder().role(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().role(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void builderShouldThrowWhenRoleDefine() {
-        assertThatThrownBy(() -> MailboxRequest.builder().role(Role.ARCHIVE)).isInstanceOf(NotImplementedException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().role(Role.ARCHIVE)).isInstanceOf(NotImplementedException.class);
     }
 
     @Test
     public void builderShouldThrowOnNullId() {
-        assertThatThrownBy(() -> MailboxRequest.builder().id(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().id(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void builderShouldThrowOnNullSortOrder() {
-        assertThatThrownBy(() -> MailboxRequest.builder().sortOrder(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().sortOrder(null)).isInstanceOf(NullPointerException.class);
     }
     
     @Test
     public void builderShouldThrowOnSortOrderDefine() {
-        assertThatThrownBy(() -> MailboxRequest.builder().sortOrder(SortOrder.of(123))).isInstanceOf(NotImplementedException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().sortOrder(SortOrder.of(123))).isInstanceOf(NotImplementedException.class);
     }    
 
     @Test
     public void builderShouldThrowOnNullParentId() {
-        assertThatThrownBy(() -> MailboxRequest.builder().parentId(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().parentId(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void builderShouldThrowOnNullName() {
-        assertThatThrownBy(() -> MailboxRequest.builder().name(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().name(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void builderShouldRequireName() {
-        assertThatThrownBy(() -> MailboxRequest.builder().build())
+        assertThatThrownBy(() -> MailboxCreateRequest.builder().build())
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("name");
     }
 
     @Test
     public void builderShouldBuildWhenName() {
-        MailboxRequest request = MailboxRequest.builder().name("foo").build();
+        MailboxCreateRequest request = MailboxCreateRequest.builder().name("foo").build();
         assertThat(request.getName()).isEqualTo("foo");
         assertThat(request.getId()).isEmpty();
         assertThat(request.getParentId()).isEmpty();

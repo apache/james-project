@@ -31,8 +31,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-@JsonDeserialize(builder = MailboxRequest.Builder.class)
-public class MailboxRequest {
+@JsonDeserialize(builder = MailboxCreateRequest.Builder.class)
+public class MailboxCreateRequest {
 
     public static Builder builder() {
         return new Builder();
@@ -83,9 +83,9 @@ public class MailboxRequest {
         }
 
 
-        public MailboxRequest build() {
+        public MailboxCreateRequest build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
-            return new MailboxRequest(id, name, parentId, role, sortOrder);
+            return new MailboxCreateRequest(id, name, parentId, role, sortOrder);
         }
     }
 
@@ -96,7 +96,7 @@ public class MailboxRequest {
     private final Optional<SortOrder> sortOrder;
 
     @VisibleForTesting
-    MailboxRequest(Optional<String> id, String name, Optional<String> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
+    MailboxCreateRequest(Optional<String> id, String name, Optional<String> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
 
         this.id = id;
         this.name = name;
@@ -128,8 +128,8 @@ public class MailboxRequest {
 
     @Override
     public final boolean equals(Object obj) {
-        if (obj instanceof MailboxRequest) {
-            MailboxRequest other = (MailboxRequest) obj;
+        if (obj instanceof MailboxCreateRequest) {
+            MailboxCreateRequest other = (MailboxCreateRequest) obj;
             return Objects.equals(this.id, other.id)
                 && Objects.equals(this.name, other.name)
                 && Objects.equals(this.parentId, other.parentId)

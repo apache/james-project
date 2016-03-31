@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.james.jmap.methods.Method;
@@ -37,14 +38,18 @@ public class SetMailboxesResponse implements Method.Response {
     public static class Builder {
 
         private final ImmutableMap.Builder<MailboxCreationId, Mailbox> created;
-        private final ImmutableMap.Builder<MailboxCreationId, SetError> notCreated;
+        private final ImmutableList.Builder<String> updated;
         private final ImmutableList.Builder<String> destroyed;
+        private final ImmutableMap.Builder<MailboxCreationId, SetError> notCreated;
+        private final ImmutableMap.Builder<String, SetError> notUpdated;
         private final ImmutableMap.Builder<String, SetError> notDestroyed;
 
         private Builder() {
             created = ImmutableMap.builder();
-            notCreated = ImmutableMap.builder();
+            updated = ImmutableList.builder();
             destroyed = ImmutableList.builder();
+            notCreated = ImmutableMap.builder();
+            notUpdated = ImmutableMap.builder();
             notDestroyed = ImmutableMap.builder();
         }
 
@@ -58,6 +63,26 @@ public class SetMailboxesResponse implements Method.Response {
             return this;
         }
 
+        public Builder updated(String mailboxId) {
+            updated.add(mailboxId);
+            return this;
+        }
+        
+        public Builder updated(List<String> mailboxIds) {
+            updated.addAll(mailboxIds);
+            return this;
+        }
+        
+        public Builder destroyed(String mailboxId) {
+            destroyed.add(mailboxId);
+            return this;
+        }
+        
+        public Builder destroyed(ImmutableList<String> destroyed) {
+            this.destroyed.addAll(destroyed);
+            return this;
+        }
+        
         public Builder notCreated(Map<MailboxCreationId, SetError> notCreated) {
             this.notCreated.putAll(notCreated);
             return this;
@@ -67,14 +92,14 @@ public class SetMailboxesResponse implements Method.Response {
             this.notCreated.put(mailboxCreationId, setError);
             return this;
         }
-
-        public Builder destroyed(String mailboxId) {
-            destroyed.add(mailboxId);
+        
+        public Builder notUpdated(String mailboxId, SetError setError) {
+            notUpdated.put(mailboxId, setError);
             return this;
         }
-
-        public Builder destroyed(ImmutableList<String> destroyed) {
-            this.destroyed.addAll(destroyed);
+        
+        public Builder notUpdated(Map<String, SetError> notUpdated) {
+            this.notUpdated.putAll(notUpdated);
             return this;
         }
 
@@ -89,19 +114,25 @@ public class SetMailboxesResponse implements Method.Response {
         }
 
         public SetMailboxesResponse build() {
-            return new SetMailboxesResponse(created.build(), notCreated.build(), destroyed.build(), notDestroyed.build());
+            return new SetMailboxesResponse(created.build(), updated.build(), destroyed.build(), notCreated.build(), notUpdated.build(), notDestroyed.build());
         }
     }
 
     private final ImmutableMap<MailboxCreationId, Mailbox> created;
-    private final ImmutableMap<MailboxCreationId, SetError> notCreated;
+    private final ImmutableList<String> updated;
     private final ImmutableList<String> destroyed;
+    private final ImmutableMap<MailboxCreationId, SetError> notCreated;
+    private final ImmutableMap<String, SetError> notUpdated;
     private final ImmutableMap<String, SetError> notDestroyed;
 
-    @VisibleForTesting SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created, ImmutableMap<MailboxCreationId, SetError> notCreated, ImmutableList<String> destroyed, ImmutableMap<String, SetError> notDestroyed) {
+    @VisibleForTesting
+    SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created, ImmutableList<String> updated, ImmutableList<String> destroyed,
+            ImmutableMap<MailboxCreationId, SetError> notCreated, ImmutableMap<String, SetError> notUpdated, ImmutableMap<String, SetError> notDestroyed) {
         this.created = created;
-        this.notCreated = notCreated;
+        this.updated = updated;
         this.destroyed = destroyed;
+        this.notCreated = notCreated;
+        this.notUpdated = notUpdated;
         this.notDestroyed = notDestroyed;
     }
 
@@ -109,14 +140,22 @@ public class SetMailboxesResponse implements Method.Response {
         return created;
     }
 
-    public Map<MailboxCreationId, SetError> getNotCreated() {
-        return notCreated;
+    public ImmutableList<String> getUpdated() {
+        return updated;
     }
 
     public ImmutableList<String> getDestroyed() {
         return destroyed;
     }
+    
+    public Map<MailboxCreationId, SetError> getNotCreated() {
+        return notCreated;
+    }
 
+    public ImmutableMap<String, SetError> getNotUpdated() {
+        return notUpdated;
+    }
+    
     public ImmutableMap<String, SetError> getNotDestroyed() {
         return notDestroyed;
     }
@@ -124,8 +163,10 @@ public class SetMailboxesResponse implements Method.Response {
     public SetMailboxesResponse.Builder mergeInto(SetMailboxesResponse.Builder responseBuilder) {
         return responseBuilder
             .created(getCreated())
-            .notCreated(getNotCreated())
+            .updated(getUpdated())
             .destroyed(getDestroyed())
+            .notCreated(getNotCreated())
+            .notUpdated(getNotUpdated())
             .notDestroyed(getNotDestroyed());
     }
 
@@ -139,8 +180,10 @@ public class SetMailboxesResponse implements Method.Response {
         if (obj instanceof SetMailboxesResponse) {
             SetMailboxesResponse other = (SetMailboxesResponse) obj;
             return Objects.equal(this.created, other.created)
-                && Objects.equal(this.notCreated, other.notCreated)
+                && Objects.equal(this.updated, other.updated)
                 && Objects.equal(this.destroyed, other.destroyed)
+                && Objects.equal(this.notCreated, other.notCreated)
+                && Objects.equal(this.notUpdated, other.notUpdated)
                 && Objects.equal(this.notDestroyed, other.notDestroyed);
         }
         return false;

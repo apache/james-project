@@ -32,7 +32,7 @@ import org.apache.james.jmap.model.MailboxCreationId;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
-import org.apache.james.jmap.model.mailbox.MailboxRequest;
+import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.store.TestId;
 import org.junit.Test;
@@ -90,7 +90,7 @@ public class SetMailboxesMethodTest {
     @Test
     public void processShouldCallCreatorProcessorWhenCreationRequest() {
         MailboxCreationId creationId = MailboxCreationId.of("create-id01");
-        MailboxRequest fooFolder = MailboxRequest.builder().name("fooFolder").build();
+        MailboxCreateRequest fooFolder = MailboxCreateRequest.builder().name("fooFolder").build();
         SetMailboxesRequest creationRequest = SetMailboxesRequest.builder().create(creationId, fooFolder).build();
 
         Mailbox createdfooFolder = Mailbox.builder().name("fooFolder").id("fooId").build();

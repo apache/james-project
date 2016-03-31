@@ -39,7 +39,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 public class MailboxUtils<Id extends MailboxId> {
 
@@ -147,5 +149,12 @@ public class MailboxUtils<Id extends MailboxId> {
                 .map(Throwing.function(mailbox -> 
                     mailboxMapperFactory.getMailboxMapper(mailboxSession).hasChildren(mailbox, mailboxSession.getPathDelimiter())))
                 .orElse(false);
+    }
+
+    public Optional<MailboxPath> mailboxPathFromMailboxId(String mailboxId, MailboxSession mailboxSession) {
+        Preconditions.checkState(!Strings.isNullOrEmpty(mailboxId), "'mailboxId' is mandatory");
+        Preconditions.checkState(mailboxSession != null, "'mailboxId' is mandatory");
+        return mailboxFromMailboxId(mailboxId, mailboxSession)
+                .map(mailbox -> getMailboxPath(mailbox, mailboxSession));
     }
 }
