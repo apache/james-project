@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -98,5 +99,21 @@ public class SetError {
     @JsonSerialize
     public Optional<ImmutableSet<MessageProperty>> getProperties() {
         return properties;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof SetError) {
+            SetError other = (SetError) obj;
+            return Objects.equal(this.type, other.type)
+                && Objects.equal(this.description, other.description)
+                && Objects.equal(this.properties, other.properties);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(type, description, properties);
     }
 }

@@ -103,7 +103,7 @@ public class SetMailboxesMethodTest {
         MailboxSession session = mock(MailboxSession.class);
         @SuppressWarnings("unchecked")
         SetMailboxesProcessor<TestId> creatorProcessor = mock(SetMailboxesProcessor.class);
-        when(creatorProcessor.process(creationRequest)).thenReturn(creationResponse);
+        when(creatorProcessor.process(creationRequest, session)).thenReturn(creationResponse);
 
         Stream<JmapResponse> actual =
             new SetMailboxesMethod<>(ImmutableSet.of(creatorProcessor))

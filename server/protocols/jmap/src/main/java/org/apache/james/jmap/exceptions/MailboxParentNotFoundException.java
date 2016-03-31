@@ -17,15 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.exceptions;
 
-import org.apache.james.jmap.model.SetMailboxesRequest;
-import org.apache.james.jmap.model.SetMailboxesResponse;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+public class MailboxParentNotFoundException extends RuntimeException {
 
-public interface SetMailboxesProcessor<Id extends MailboxId> {
+    private final String parentId;
 
-    SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession);
+    public MailboxParentNotFoundException(String parentId) {
+        super(String.format("The parent mailbox '%s' was not found.", parentId));
+        this.parentId = parentId;
+    }
 
+    public String getParentId() {
+        return parentId;
+    }
 }

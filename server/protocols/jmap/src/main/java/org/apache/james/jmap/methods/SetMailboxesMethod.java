@@ -63,7 +63,7 @@ public class SetMailboxesMethod<Id extends MailboxId> implements Method {
         Preconditions.checkArgument(request instanceof SetMailboxesRequest);
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
         return processors.stream()
-            .map(processor -> processor.process(setMailboxesRequest))
+            .map(processor -> processor.process(setMailboxesRequest, mailboxSession))
             .map(response -> toJmapResponse(clientId, response));
     }
 

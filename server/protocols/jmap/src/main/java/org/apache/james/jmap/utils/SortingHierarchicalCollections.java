@@ -30,12 +30,12 @@ import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 
 import com.google.common.collect.Lists;
 
-public class CollectionHierarchySorter<T, Id> {
+public class SortingHierarchicalCollections<T, Id> {
 
     private final Function<T, Id> index;
     private final Function<T, Optional<Id>> parentId;
 
-    public CollectionHierarchySorter(Function<T, Id> index,
+    public SortingHierarchicalCollections(Function<T, Id> index,
                                   Function<T, Optional<Id>> parentId) {
         this.index = index;
         this.parentId = parentId;

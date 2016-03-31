@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.model;
 
+import java.util.Map;
+
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 
@@ -31,10 +33,12 @@ public class SetMailboxesResponse implements Method.Response {
 
     public static class Builder {
 
-        private ImmutableMap.Builder<MailboxCreationId, Mailbox> created;
+        private final ImmutableMap.Builder<MailboxCreationId, Mailbox> created;
+        private final ImmutableMap.Builder<MailboxCreationId, SetError> notCreated;
 
         private Builder() {
             created = ImmutableMap.builder();
+            notCreated = ImmutableMap.builder();
         }
 
         public Builder creation(MailboxCreationId creationId, Mailbox mailbox) {
@@ -42,20 +46,35 @@ public class SetMailboxesResponse implements Method.Response {
             return this;
         }
 
+        public Builder notCreated(Map<MailboxCreationId, SetError> notCreated) {
+            this.notCreated.putAll(notCreated);
+            return this;
+        }
+
+        public Builder notCreated(MailboxCreationId mailboxCreationId, SetError setError) {
+            this.notCreated.put(mailboxCreationId, setError);
+            return this;
+        }
+
         public SetMailboxesResponse build() {
-            return new SetMailboxesResponse(created.build());
+            return new SetMailboxesResponse(created.build(), notCreated.build());
         }
 
     }
 
     private final ImmutableMap<MailboxCreationId, Mailbox> created;
+    private final ImmutableMap<MailboxCreationId, SetError> notCreated;
 
-    private SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created) {
+    private SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created, ImmutableMap<MailboxCreationId, SetError> notCreated) {
         this.created = created;
+        this.notCreated = notCreated;
     }
 
     public ImmutableMap<MailboxCreationId, Mailbox> getCreated() {
         return created;
     }
 
+    public Map<MailboxCreationId, SetError> getNotCreated() {
+        return notCreated;
+    }
 }

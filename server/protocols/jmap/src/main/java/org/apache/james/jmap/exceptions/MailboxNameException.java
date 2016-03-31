@@ -17,15 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods;
+package org.apache.james.jmap.exceptions;
 
-import org.apache.james.jmap.model.SetMailboxesRequest;
-import org.apache.james.jmap.model.SetMailboxesResponse;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+public class MailboxNameException extends RuntimeException {
 
-public interface SetMailboxesProcessor<Id extends MailboxId> {
-
-    SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession);
-
+    public MailboxNameException(String message) {
+        super(message);
+    }
 }
