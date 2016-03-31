@@ -37,6 +37,7 @@ import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
+import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -69,6 +70,7 @@ public class GetMailboxesMethodTest {
     private GetMailboxesMethod<InMemoryId> getMailboxesMethod;
     private ClientId clientId;
     private InMemoryMailboxSessionMapperFactory mailboxMapperFactory;
+    private MailboxUtils<InMemoryId> mailboxUtils;
 
     @Before
     public void setup() throws Exception {
@@ -78,8 +80,9 @@ public class GetMailboxesMethodTest {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         mailboxManager = new StoreMailboxManager<>(mailboxMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver);
         mailboxManager.init();
+        mailboxUtils = new MailboxUtils<>(mailboxManager, mailboxMapperFactory);
 
-        getMailboxesMethod = new GetMailboxesMethod<>(mailboxManager, mailboxMapperFactory);
+        getMailboxesMethod = new GetMailboxesMethod<>(mailboxManager, mailboxUtils);
     }
 
     @Test
@@ -107,7 +110,7 @@ public class GetMailboxesMethodTest {
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
         when(mockedMailboxManager.getMailbox(any(), any()))
             .thenThrow(new MailboxException());
-        GetMailboxesMethod<InMemoryId> testee = new GetMailboxesMethod<>(mockedMailboxManager, mailboxMapperFactory);
+        GetMailboxesMethod<InMemoryId> testee = new GetMailboxesMethod<>(mockedMailboxManager, mailboxUtils);
         
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
