@@ -44,21 +44,18 @@ public class SetMailboxesRequestTest {
         SetMailboxesRequest.builder().update(ImmutableMap.of());
     }
     
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenDestroy() {
-        SetMailboxesRequest.builder().destroy(ImmutableList.of());
-    }
-    
     @Test
     public void builderShouldWork() {
         MailboxCreationId creationId = MailboxCreationId.of("creationId");
         MailboxRequest mailboxRequest = MailboxRequest.builder()
             .name("mailboxRequest")
             .build();
-        SetMailboxesRequest expected = new SetMailboxesRequest(ImmutableMap.of(creationId, mailboxRequest));
+        ImmutableList<String> destroy = ImmutableList.of("destroyId");
+        SetMailboxesRequest expected = new SetMailboxesRequest(ImmutableMap.of(creationId, mailboxRequest), destroy);
         
         SetMailboxesRequest actual = SetMailboxesRequest.builder()
             .create(creationId, mailboxRequest)
+            .destroy(destroy)
             .build();
         
         assertThat(actual).isEqualToComparingFieldByField(expected);

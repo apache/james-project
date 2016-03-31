@@ -37,6 +37,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.store.TestId;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class SetMailboxesMethodTest {
@@ -112,4 +113,27 @@ public class SetMailboxesMethodTest {
         assertThat(actual).contains(jmapResponse);
     }
 
+    @Test
+    public void processShouldCallDestructorProcessorWhenCreationRequest() {
+        ImmutableList<String> deletions = ImmutableList.of("1");
+        SetMailboxesRequest destructionRequest = SetMailboxesRequest.builder().destroy(deletions).build();
+
+        SetMailboxesResponse destructionResponse = SetMailboxesResponse.builder().destroyed(deletions).build();
+        JmapResponse jmapResponse = JmapResponse.builder()
+            .response(destructionResponse)
+            .clientId(ClientId.of("clientId"))
+            .responseName(SetMailboxesMethod.RESPONSE_NAME)
+            .build();
+
+        MailboxSession session = mock(MailboxSession.class);
+        @SuppressWarnings("unchecked")
+        SetMailboxesProcessor<TestId> destructorProcessor = mock(SetMailboxesProcessor.class);
+        when(destructorProcessor.process(destructionRequest, session)).thenReturn(destructionResponse);
+
+        Stream<JmapResponse> actual =
+            new SetMailboxesMethod<>(ImmutableSet.of(destructorProcessor))
+                    .process(destructionRequest, ClientId.of("clientId"), session);
+
+        assertThat(actual).contains(jmapResponse);
+    }
 }

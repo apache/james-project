@@ -30,6 +30,7 @@ import org.apache.james.jmap.model.mailbox.MailboxRequest;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 @JsonDeserialize(builder = SetMailboxesRequest.Builder.class)
@@ -42,10 +43,12 @@ public class SetMailboxesRequest implements JmapRequest {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private ImmutableMap.Builder<MailboxCreationId, MailboxRequest> create;
+        private final ImmutableMap.Builder<MailboxCreationId, MailboxRequest> create;
+        private final ImmutableList.Builder<String> destroy;
 
         private Builder() {
             create = ImmutableMap.builder();
+            destroy = ImmutableList.builder();
         }
 
         public Builder create(Map<MailboxCreationId, MailboxRequest> requests) {
@@ -71,22 +74,29 @@ public class SetMailboxesRequest implements JmapRequest {
         }
         
         public Builder destroy(List<String> deletions) {
-            throw new NotImplementedException();
+            destroy.addAll(deletions);
+            return this;
         }
 
         public SetMailboxesRequest build() {
-            return new SetMailboxesRequest(create.build());
+            return new SetMailboxesRequest(create.build(), destroy.build());
         }
     }
 
     private final ImmutableMap<MailboxCreationId, MailboxRequest> create;
+    private final ImmutableList<String> destroy;
 
     @VisibleForTesting
-    SetMailboxesRequest(ImmutableMap<MailboxCreationId, MailboxRequest> create) {
+    SetMailboxesRequest(ImmutableMap<MailboxCreationId, MailboxRequest> create, ImmutableList<String> destroy) {
         this.create = create;
+        this.destroy = destroy;
     }
 
     public ImmutableMap<MailboxCreationId, MailboxRequest> getCreate() {
         return create;
+    }
+
+    public ImmutableList<String> getDestroy() {
+        return destroy;
     }
 }
