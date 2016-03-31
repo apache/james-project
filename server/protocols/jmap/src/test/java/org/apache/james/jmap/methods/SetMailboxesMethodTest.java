@@ -93,7 +93,7 @@ public class SetMailboxesMethodTest {
         SetMailboxesRequest creationRequest = SetMailboxesRequest.builder().create(creationId, fooFolder).build();
 
         Mailbox createdfooFolder = Mailbox.builder().name("fooFolder").id("fooId").build();
-        SetMailboxesResponse creationResponse = SetMailboxesResponse.builder().creation(creationId, createdfooFolder).build();
+        SetMailboxesResponse creationResponse = SetMailboxesResponse.builder().created(creationId, createdfooFolder).build();
         JmapResponse jmapResponse = JmapResponse.builder()
             .response(creationResponse)
             .clientId(ClientId.of("clientId"))

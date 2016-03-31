@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 public class SetMailboxesResponse implements Method.Response {
@@ -41,8 +42,13 @@ public class SetMailboxesResponse implements Method.Response {
             notCreated = ImmutableMap.builder();
         }
 
-        public Builder creation(MailboxCreationId creationId, Mailbox mailbox) {
+        public Builder created(MailboxCreationId creationId, Mailbox mailbox) {
             created.put(creationId, mailbox);
+            return this;
+        }
+
+        public Builder created(ImmutableMap<MailboxCreationId, Mailbox> created) {
+            this.created.putAll(created);
             return this;
         }
 
@@ -59,7 +65,6 @@ public class SetMailboxesResponse implements Method.Response {
         public SetMailboxesResponse build() {
             return new SetMailboxesResponse(created.build(), notCreated.build());
         }
-
     }
 
     private final ImmutableMap<MailboxCreationId, Mailbox> created;
@@ -76,5 +81,24 @@ public class SetMailboxesResponse implements Method.Response {
 
     public Map<MailboxCreationId, SetError> getNotCreated() {
         return notCreated;
+    }
+
+    public SetMailboxesResponse.Builder mergeInto(SetMailboxesResponse.Builder responseBuilder) {
+        return responseBuilder
+            .created(getCreated());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(created);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof SetMailboxesResponse) {
+            SetMailboxesResponse other = (SetMailboxesResponse) obj;
+            return Objects.equal(this.created, other.created);
+        }
+        return false;
     }
 }

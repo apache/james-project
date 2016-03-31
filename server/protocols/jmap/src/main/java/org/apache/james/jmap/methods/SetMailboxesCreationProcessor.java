@@ -98,7 +98,7 @@ public class SetMailboxesCreationProcessor<Id extends MailboxId> implements SetM
             mailboxManager.createMailbox(mailboxPath, mailboxSession);
             Optional<Mailbox> mailbox = mailboxUtils.mailboxFromMailboxPath(mailboxPath, mailboxSession);
             if (mailbox.isPresent()) {
-                builder.creation(mailboxCreationId, mailbox.get());
+                builder.created(mailboxCreationId, mailbox.get());
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());
             } else {
                 builder.notCreated(mailboxCreationId, SetError.builder()

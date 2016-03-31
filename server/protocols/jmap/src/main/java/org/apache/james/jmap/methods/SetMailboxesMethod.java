@@ -62,16 +62,20 @@ public class SetMailboxesMethod<Id extends MailboxId> implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof SetMailboxesRequest);
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
-        return processors.stream()
-            .map(processor -> processor.process(setMailboxesRequest, mailboxSession))
-            .map(response -> toJmapResponse(clientId, response));
+        return Stream.of(
+                JmapResponse.builder().clientId(clientId)
+                .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
+                .responseName(RESPONSE_NAME)
+                .build());
     }
 
-    private JmapResponse toJmapResponse(ClientId clientId, SetMailboxesResponse response) {
-        return JmapResponse.builder()
-                .clientId(clientId)
-                .responseName(RESPONSE_NAME)
-                .response(response)
+    private SetMailboxesResponse setMailboxesResponse(SetMailboxesRequest request, MailboxSession mailboxSession) {
+        return processors.stream()
+                .map(processor -> processor.process(request, mailboxSession))
+                .reduce(SetMailboxesResponse.builder(),
+                        (builder, resp) -> resp.mergeInto(builder) ,
+                        (builder1, builder2) -> builder2.build().mergeInto(builder1)
+                )
                 .build();
     }
 }
