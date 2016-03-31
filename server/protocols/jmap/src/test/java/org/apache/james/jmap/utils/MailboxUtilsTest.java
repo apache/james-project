@@ -43,6 +43,7 @@ public class MailboxUtilsTest {
     private MailboxManager mailboxManager;
     private MailboxMapperFactory<InMemoryId> mailboxMapperFactory;
     private MailboxSession mailboxSession;
+    private String user;
     private MailboxUtils<InMemoryId> sut;
 
     @Before
@@ -50,13 +51,14 @@ public class MailboxUtilsTest {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
         mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        mailboxSession = mailboxManager.login("user@domain.org", "pass", LOGGER);
+        user = "user@domain.org";
+        mailboxSession = mailboxManager.login(user, "pass", LOGGER);
         sut = new MailboxUtils<>(mailboxManager, mailboxMapperFactory);
     }
 
     @Test
     public void mailboxFromMailboxPathShouldReturnNotEmptyWhenMailboxExists() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "mailbox");
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         Optional<Mailbox> optionalMailbox = sut.mailboxFromMailboxPath(mailboxPath, mailboxSession);
@@ -67,7 +69,7 @@ public class MailboxUtilsTest {
 
     @Test
     public void mailboxFromMailboxPathShouldReturnEmptyWhenMailboxDoesntExist() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "mailbox");
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
 
         Optional<Mailbox> optionalMailbox = sut.mailboxFromMailboxPath(mailboxPath, mailboxSession);
         assertThat(optionalMailbox).isEmpty();
@@ -76,7 +78,7 @@ public class MailboxUtilsTest {
     @Test
     public void getNameShouldReturnMailboxNameWhenRootMailbox() throws Exception {
         String expected = "mailbox";
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", expected);
+        MailboxPath mailboxPath = new MailboxPath("#private", user, expected);
 
         String name = sut.getName(mailboxPath, mailboxSession);
         assertThat(name).isEqualTo(expected);
@@ -85,7 +87,7 @@ public class MailboxUtilsTest {
     @Test
     public void getNameShouldReturnMailboxNameWhenChildMailbox() throws Exception {
         String expected = "mailbox";
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "inbox." + expected);
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox." + expected);
 
         String name = sut.getName(mailboxPath, mailboxSession);
         assertThat(name).isEqualTo(expected);
@@ -94,7 +96,7 @@ public class MailboxUtilsTest {
     @Test
     public void getNameShouldReturnMailboxNameWhenChildOfChildMailbox() throws Exception {
         String expected = "mailbox";
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "inbox.children." + expected);
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.children." + expected);
 
         String name = sut.getName(mailboxPath, mailboxSession);
         assertThat(name).isEqualTo(expected);
@@ -103,7 +105,7 @@ public class MailboxUtilsTest {
     @Test
     public void getMailboxNameFromIdShouldReturnNotEmptyWhenMailboxExists() throws Exception {
         String expected = "mailbox";
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", expected);
+        MailboxPath mailboxPath = new MailboxPath("#private", user, expected);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
             .findMailboxByPath(mailboxPath)
@@ -123,7 +125,7 @@ public class MailboxUtilsTest {
 
     @Test
     public void getParentIdFromMailboxPathShouldReturNullWhenRootMailbox() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "mailbox");
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         String id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
@@ -132,13 +134,13 @@ public class MailboxUtilsTest {
 
     @Test
     public void getParentIdFromMailboxPathShouldReturnParentIdWhenChildMailbox() throws Exception {
-        MailboxPath parentMailboxPath = new MailboxPath("#private", "user", "inbox");
+        MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox");
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
         InMemoryId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
                 .findMailboxByPath(parentMailboxPath)
                 .getMailboxId();
 
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "inbox.mailbox");
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         String id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
@@ -147,10 +149,10 @@ public class MailboxUtilsTest {
 
     @Test
     public void getParentIdFromMailboxPathShouldReturnParentIdWhenChildOfChildMailbox() throws Exception {
-        MailboxPath mailboxPath = new MailboxPath("#private", "user", "inbox.children.mailbox");
-        mailboxManager.createMailbox(new MailboxPath("#private", "user", "inbox"), mailboxSession);
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.children.mailbox");
+        mailboxManager.createMailbox(new MailboxPath("#private", user, "inbox"), mailboxSession);
 
-        MailboxPath parentMailboxPath = new MailboxPath("#private", "user", "inbox.children");
+        MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox.children");
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
         InMemoryId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
                 .findMailboxByPath(parentMailboxPath)
@@ -160,5 +162,117 @@ public class MailboxUtilsTest {
 
         String id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
         assertThat(id).isEqualTo(parentId.serialize());
+    }
+
+    @Test
+    public void mailboxFromMailboxIdShouldReturnPresentWhenExists() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "myBox");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(mailboxPath)
+                .getMailboxId();
+
+        Optional<Mailbox> mailbox = sut.mailboxFromMailboxId(mailboxId.serialize(), mailboxSession);
+        assertThat(mailbox).isPresent();
+        assertThat(mailbox.get().getId()).isEqualTo(mailboxId.serialize());
+    }
+
+    @Test
+    public void mailboxFromMailboxIdShouldReturnAbsentWhenDoesntExist() throws Exception {
+        Optional<Mailbox> mailbox = sut.mailboxFromMailboxId("123", mailboxSession);
+        assertThat(mailbox).isEmpty();
+    }
+
+    @Test
+    public void getMailboxPathShouldReturnThePathWhenRootMailbox() throws Exception {
+        MailboxPath expected = new MailboxPath("#private", user, "myBox");
+        mailboxManager.createMailbox(expected, mailboxSession);
+        InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(expected)
+                .getMailboxId();
+
+        Mailbox mailbox = Mailbox.builder()
+                .id(mailboxId.serialize())
+                .name("myBox")
+                .build();
+
+        MailboxPath mailboxPath = sut.getMailboxPath(mailbox, mailboxSession);
+        assertThat(mailboxPath).isEqualTo(expected);
+    }
+
+    @Test
+    public void getMailboxPathShouldReturnThePathWhenChildMailbox() throws Exception {
+        MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox");
+        mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
+        InMemoryId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(parentMailboxPath)
+                .getMailboxId();
+
+        MailboxPath expected = new MailboxPath("#private", user, "inbox.myBox");
+        mailboxManager.createMailbox(expected, mailboxSession);
+        InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(expected)
+                .getMailboxId();
+
+        Mailbox mailbox = Mailbox.builder()
+                .id(mailboxId.serialize())
+                .name("myBox")
+                .parentId(parentId.serialize())
+                .build();
+
+        MailboxPath mailboxPath = sut.getMailboxPath(mailbox, mailboxSession);
+        assertThat(mailboxPath).isEqualTo(expected);
+    }
+
+    @Test
+    public void getMailboxPathShouldReturnThePathWhenChildOfChildMailbox() throws Exception {
+        MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox");
+        mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
+
+        MailboxPath childMailboxPath = new MailboxPath("#private", user, "inbox.child");
+        mailboxManager.createMailbox(childMailboxPath, mailboxSession);
+        InMemoryId childId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(childMailboxPath)
+                .getMailboxId();
+
+        MailboxPath expected = new MailboxPath("#private", user, "inbox.child.myBox");
+        mailboxManager.createMailbox(expected, mailboxSession);
+        InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(expected)
+                .getMailboxId();
+
+        Mailbox mailbox = Mailbox.builder()
+                .id(mailboxId.serialize())
+                .name("myBox")
+                .parentId(childId.serialize())
+                .build();
+
+        MailboxPath mailboxPath = sut.getMailboxPath(mailbox, mailboxSession);
+        assertThat(mailboxPath).isEqualTo(expected);
+    }
+
+    @Test
+    public void hasChildrenShouldReturnFalseWhenNoChild() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "myBox");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(mailboxPath)
+                .getMailboxId();
+
+        assertThat(sut.hasChildren(mailboxId.serialize(), mailboxSession)).isFalse();
+    }
+
+    @Test
+    public void hasChildrenShouldReturnTrueWhenHasAChild() throws Exception {
+        MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox");
+        mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
+        InMemoryId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(parentMailboxPath)
+                .getMailboxId();
+
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.myBox");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+
+        assertThat(sut.hasChildren(parentId.serialize(), mailboxSession)).isTrue();
     }
 }

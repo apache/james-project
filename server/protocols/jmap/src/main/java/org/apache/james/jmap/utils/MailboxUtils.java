@@ -37,6 +37,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
@@ -115,5 +116,36 @@ public class MailboxUtils<Id extends MailboxId> {
         }
         MailboxPath parent = levels.get(levels.size() - 2);
         return getMailboxId(parent, mailboxSession);
+    }
+
+    public Optional<Mailbox> mailboxFromMailboxId(String mailboxId, MailboxSession mailboxSession) {
+        try {
+            return getMailboxFromId(mailboxId, mailboxSession)
+                .flatMap(jamesMailbox ->
+                    mailboxFromMailboxPath(new MailboxPath(jamesMailbox.getNamespace(), mailboxSession.getUser().getUserName(), jamesMailbox.getName()), 
+                            mailboxSession)
+                );
+        } catch (MailboxException e) {
+            return Optional.empty();
+        }
+    }
+
+    public MailboxPath getMailboxPath(Mailbox mailbox, MailboxSession mailboxSession) {
+        return new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), getMailboxName(mailbox, mailboxSession));
+    }
+
+    private String getMailboxName(Mailbox mailbox, MailboxSession mailboxSession) {
+        if (mailbox.getParentId().isPresent()) {
+            return getMailboxName(mailboxFromMailboxId(mailbox.getParentId().get(), mailboxSession).get(), mailboxSession) +
+                    mailboxSession.getPathDelimiter() + mailbox.getName();
+        }
+        return mailbox.getName();
+    }
+
+    public boolean hasChildren(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
+        return getMailboxFromId(mailboxId, mailboxSession)
+                .map(Throwing.function(mailbox -> 
+                    mailboxMapperFactory.getMailboxMapper(mailboxSession).hasChildren(mailbox, mailboxSession.getPathDelimiter())))
+                .orElse(false);
     }
 }
