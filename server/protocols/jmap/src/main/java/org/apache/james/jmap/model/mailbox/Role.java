@@ -68,7 +68,11 @@ public class Role {
         }
         return Optional.empty();
     }
-    
+
+    public boolean isSystemRole() {
+        return ROLES.containsKey(name.toLowerCase(Locale.ENGLISH));
+    }
+
     @JsonValue
     public String serialize() {
         return name;
