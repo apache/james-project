@@ -45,21 +45,19 @@ public class NodeMappingFactory {
     public static final String RAW = "raw";
     public static final String ANALYZER = "analyzer";
 
-    public static ClientProvider applyMapping(ClientProvider clientProvider) {
-        return applyMapping(clientProvider, getMappingContent());
+    public static Client applyMapping(Client client) {
+        return applyMapping(client, getMappingContent());
     }
 
-    public static ClientProvider applyMapping(ClientProvider clientProvider, XContentBuilder mappingsSources) {
-        try (Client client = clientProvider.get()) {
-            client.admin()
-                .indices()
-                .preparePutMapping(ElasticSearchIndexer.MAILBOX_INDEX)
-                .setType(ElasticSearchIndexer.MESSAGE_TYPE)
-                .setSource(mappingsSources)
-                .execute()
-                .actionGet();
-        }
-        return clientProvider;
+    public static Client applyMapping(Client client, XContentBuilder mappingsSources) {
+        client.admin()
+            .indices()
+            .preparePutMapping(ElasticSearchIndexer.MAILBOX_INDEX)
+            .setType(ElasticSearchIndexer.MESSAGE_TYPE)
+            .setSource(mappingsSources)
+            .execute()
+            .actionGet();
+        return client;
     }
 
     private static XContentBuilder getMappingContent() {

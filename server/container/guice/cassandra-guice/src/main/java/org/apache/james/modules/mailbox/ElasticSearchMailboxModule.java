@@ -36,6 +36,7 @@ import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessa
 import org.apache.james.mailbox.store.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 
 import com.google.inject.AbstractModule;
@@ -56,18 +57,18 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected ClientProvider provideClientProvider(FileSystem fileSystem, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
+    protected Client provideClientProvider(FileSystem fileSystem, AsyncRetryExecutor executor) throws ConfigurationException, FileNotFoundException, ExecutionException, InterruptedException {
         PropertiesConfiguration propertiesReader = new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "elasticsearch.properties"));
 
         ClientProvider clientProvider = new ClientProviderImpl(propertiesReader.getString("elasticsearch.masterHost"),
                 propertiesReader.getInt("elasticsearch.port"));
-        getRetryer(executor, propertiesReader)
-                .getWithRetry(ctx -> IndexCreationFactory.createIndex(clientProvider,
-                        propertiesReader.getInt("elasticsearch.nb.shards"),
-                        propertiesReader.getInt("elasticsearch.nb.replica")))
-                .get();
-        NodeMappingFactory.applyMapping(clientProvider);
-        return clientProvider;
+        Client client = getRetryer(executor, propertiesReader)
+                .getWithRetry(ctx -> clientProvider.get()).get();
+        IndexCreationFactory.createIndex(client,
+            propertiesReader.getInt("elasticsearch.nb.shards"),
+            propertiesReader.getInt("elasticsearch.nb.replica"));
+        NodeMappingFactory.applyMapping(client);
+        return client;
     }
 
     private static AsyncRetryExecutor getRetryer(AsyncRetryExecutor executor, PropertiesConfiguration configuration) {

@@ -40,18 +40,18 @@ public class DeleteByQueryPerformer {
     public static final int DEFAULT_BATCH_SIZE = 100;
     public static final TimeValue TIMEOUT = new TimeValue(60000);
 
-    private final ClientProvider clientProvider;
+    private final Client client;
     private final ExecutorService executor;
     private final int batchSize;
 
     @Inject
-    public DeleteByQueryPerformer(ClientProvider clientProvider, @Named("AsyncExecutor") ExecutorService executor) {
-        this(clientProvider, executor, DEFAULT_BATCH_SIZE);
+    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor) {
+        this(client, executor, DEFAULT_BATCH_SIZE);
     }
 
     @VisibleForTesting
-    DeleteByQueryPerformer(ClientProvider clientProvider, @Named("AsyncExecutor") ExecutorService executor, int batchSize) {
-        this.clientProvider = clientProvider;
+    DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize) {
+        this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
     }
@@ -62,17 +62,15 @@ public class DeleteByQueryPerformer {
     }
 
     protected void doDeleteByQuery(QueryBuilder queryBuilder) {
-        try (Client client = clientProvider.get()) {
-            new ScrollIterable(client,
-                client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
-                    .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
-                    .setScroll(TIMEOUT)
-                    .setNoFields()
-                    .setQuery(queryBuilder)
-                    .setSize(batchSize))
-                .stream()
-                .forEach(searchResponse -> deleteRetrievedIds(client, searchResponse));
-        }
+        new ScrollIterable(client,
+            client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
+                .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
+                .setScroll(TIMEOUT)
+                .setNoFields()
+                .setQuery(queryBuilder)
+                .setSize(batchSize))
+            .stream()
+            .forEach(searchResponse -> deleteRetrievedIds(client, searchResponse));
     }
 
     private ListenableActionFuture<BulkResponse> deleteRetrievedIds(Client client, SearchResponse searchResponse) {

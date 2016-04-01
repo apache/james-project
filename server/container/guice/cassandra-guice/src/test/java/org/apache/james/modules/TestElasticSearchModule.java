@@ -21,11 +21,11 @@ package org.apache.james.modules;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import org.apache.james.mailbox.elasticsearch.ClientProvider;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
+import org.elasticsearch.client.Client;
 
 import javax.inject.Singleton;
 
@@ -44,9 +44,9 @@ public class TestElasticSearchModule extends AbstractModule{
 
     @Provides
     @Singleton
-    protected ClientProvider provideClientProvider() {
+    protected Client provideClientProvider() {
         return NodeMappingFactory.applyMapping(
-            IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()))
+            IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get())
         );
     }
 }

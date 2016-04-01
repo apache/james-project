@@ -26,7 +26,6 @@ import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.elasticsearch.ClientProvider;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
@@ -49,27 +48,25 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
     private static final TimeValue TIMEOUT = new TimeValue(60000);
     public static final int DEFAULT_SIZE = 100;
 
-    private final ClientProvider clientProvider;
+    private final Client client;
     private final QueryConverter queryConverter;
     private final int size;
 
     @Inject
-    public ElasticSearchSearcher(ClientProvider clientProvider, QueryConverter queryConverter) {
-        this(clientProvider, queryConverter, DEFAULT_SIZE);
+    public ElasticSearchSearcher(Client client, QueryConverter queryConverter) {
+        this(client, queryConverter, DEFAULT_SIZE);
     }
 
-    public ElasticSearchSearcher(ClientProvider clientProvider, QueryConverter queryConverter, int size) {
-        this.clientProvider = clientProvider;
+    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size) {
+        this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;
     }
 
     public Iterator<Long> search(Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
-        try (Client client = clientProvider.get()) {
-            return new ScrollIterable(client, getSearchRequestBuilder(client, mailbox, searchQuery)).stream()
-                .flatMap(this::transformResponseToUidStream)
-                .iterator();
-        }
+        return new ScrollIterable(client, getSearchRequestBuilder(client, mailbox, searchQuery)).stream()
+            .flatMap(this::transformResponseToUidStream)
+            .iterator();
     }
 
     private SearchRequestBuilder getSearchRequestBuilder(Client client, Mailbox<Id> mailbox, SearchQuery searchQuery) {

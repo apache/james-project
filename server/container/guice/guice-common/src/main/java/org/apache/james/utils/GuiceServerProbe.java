@@ -45,6 +45,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
@@ -64,15 +65,18 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
     private final DomainList domainList;
     private final UsersRepository usersRepository;
     private final SieveRepository sieveRepository;
+    private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory<Id> mailboxMapperFactory,
-                             DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository) {
+                             DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository,
+                             RecipientRewriteTable recipientRewriteTable) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.domainList = domainList;
         this.usersRepository = usersRepository;
         this.sieveRepository = sieveRepository;
+        this.recipientRewriteTable = recipientRewriteTable;
     }
 
     @Override
@@ -121,17 +125,17 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
 
     @Override
     public Map<String, Mappings> listMappings() throws Exception {
-        throw new NotImplementedException();
+        return recipientRewriteTable.getAllMappings();
     }
 
     @Override
     public void addAddressMapping(String user, String domain, String toAddress) throws Exception {
-        throw new NotImplementedException();
+        recipientRewriteTable.addAddressMapping(user, domain, toAddress);
     }
 
     @Override
     public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception {
-        throw new NotImplementedException();
+        recipientRewriteTable.removeAddressMapping(user, domain, fromAddress);
     }
 
     @Override
@@ -141,12 +145,12 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
 
     @Override
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        throw new NotImplementedException();
+        recipientRewriteTable.addRegexMapping(user, domain, regex);
     }
 
     @Override
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        throw new NotImplementedException();
+        recipientRewriteTable.removeRegexMapping(user, domain, regex);
     }
 
     @Override

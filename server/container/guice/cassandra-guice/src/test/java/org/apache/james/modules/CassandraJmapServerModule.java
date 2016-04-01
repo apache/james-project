@@ -17,16 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.servers;
+package org.apache.james.modules;
+
+import java.io.File;
+import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
-import org.apache.james.modules.TestElasticSearchModule;
-import org.apache.james.modules.TestFilesystemModule;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.rules.TemporaryFolder;
 
 import com.datastax.driver.core.Session;
@@ -36,22 +36,25 @@ import com.google.inject.Provides;
 public class CassandraJmapServerModule extends AbstractModule {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
-    private final TemporaryFolder temporaryFolder;
+    private final Supplier<File> fileSupplier;
     private final EmbeddedElasticSearch embeddedElasticSearch;
     private final EmbeddedCassandra cassandra;
 
-    public CassandraJmapServerModule(TemporaryFolder temporaryFolder, 
-            EmbeddedElasticSearch embeddedElasticSearch, 
-            EmbeddedCassandra cassandra) {
-                this.temporaryFolder = temporaryFolder;
-                this.embeddedElasticSearch = embeddedElasticSearch;
-                this.cassandra = cassandra;
+    public CassandraJmapServerModule(Supplier<File> fileSupplier, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
+        this.fileSupplier = fileSupplier;
+        this.embeddedElasticSearch = embeddedElasticSearch;
+        this.cassandra = cassandra;
     }
+
+    public CassandraJmapServerModule(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, EmbeddedCassandra cassandra) {
+        this(temporaryFolder::getRoot, embeddedElasticSearch, cassandra);
+    }
+
 
     @Override
     protected void configure() {
         install(new TestElasticSearchModule(embeddedElasticSearch));
-        install(new TestFilesystemModule(temporaryFolder));
+        install(new TestFilesystemModule(fileSupplier));
         install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
         bind(EmbeddedCassandra.class).toInstance(cassandra);
     }

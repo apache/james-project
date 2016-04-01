@@ -36,33 +36,31 @@ public class IndexCreationFactory {
     private static final int DEFAULT_NB_REPLICA = 0;
     public static final String CASE_INSENSITIVE = "case_insensitive";
 
-    public static ClientProvider createIndex(ClientProvider clientProvider, int nbShards, int nbReplica) {
+    public static Client createIndex(Client client, int nbShards, int nbReplica) {
         try {
-            return createIndex(clientProvider, generateSetting(nbShards, nbReplica));
+            return createIndex(client, generateSetting(nbShards, nbReplica));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
-            return clientProvider;
+            return client;
         }
     }
 
-    public static ClientProvider createIndex(ClientProvider clientProvider) {
-        return createIndex(clientProvider, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
+    public static Client createIndex(Client client) {
+        return createIndex(client, DEFAULT_NB_SHARDS, DEFAULT_NB_REPLICA);
     }
 
-    private static ClientProvider createIndex(ClientProvider clientProvider, XContentBuilder settings) {
+    private static Client createIndex(Client client, XContentBuilder settings) {
         try {
-            try (Client client = clientProvider.get()) {
                 client.admin()
                     .indices()
                     .prepareCreate(ElasticSearchIndexer.MAILBOX_INDEX)
                     .setSettings(settings)
                     .execute()
                     .actionGet();
-            }
         } catch (IndexAlreadyExistsException exception) {
             LOGGER.info("Index [" + ElasticSearchIndexer.MAILBOX_INDEX + "] already exist");
         }
-        return clientProvider;
+        return client;
     }
 
     private static XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {

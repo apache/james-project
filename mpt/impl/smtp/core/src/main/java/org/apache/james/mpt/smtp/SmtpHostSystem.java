@@ -17,8 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.api;
+package org.apache.james.mpt.smtp;
+
+import org.apache.james.mpt.api.HostSystem;
+import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
 
 public interface SmtpHostSystem extends HostSystem {
+
+    void addAddressMapping(String user, String domain, String address) throws Exception;
+
+    InMemoryDNSService getInMemoryDnsService();
 
 }

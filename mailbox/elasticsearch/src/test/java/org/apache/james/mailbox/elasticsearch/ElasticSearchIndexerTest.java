@@ -56,14 +56,14 @@ public class ElasticSearchIndexerTest {
     public void setup() throws IOException {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
-        DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider, Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE) {
+        DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(), Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE) {
             @Override
             public Void perform(QueryBuilder queryBuilder) {
                 doDeleteByQuery(queryBuilder);
                 return null;
             }
         };
-        testee = new ElasticSearchIndexer(clientProvider, deleteByQueryPerformer);
+        testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer);
     }
     
     @Test

@@ -56,40 +56,34 @@ public class ElasticSearchIndexer {
     public static final String MAILBOX_INDEX = "mailbox";
     public static final String MESSAGE_TYPE = "message";
     
-    private final ClientProvider clientProvider;
+    private final Client client;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
 
     @Inject
-    public ElasticSearchIndexer(ClientProvider clientProvider, DeleteByQueryPerformer deleteByQueryPerformer) {
-        this.clientProvider = clientProvider;
+    public ElasticSearchIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer) {
+        this.client = client;
         this.deleteByQueryPerformer = deleteByQueryPerformer;
     }
     
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
-        try (Client client = clientProvider.get()) {
-            return client.prepareIndex(MAILBOX_INDEX, MESSAGE_TYPE, id)
-                .setSource(content)
-                .get();
-        }
+        return client.prepareIndex(MAILBOX_INDEX, MESSAGE_TYPE, id)
+            .setSource(content)
+            .get();
     }
 
     public BulkResponse updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
         Preconditions.checkNotNull(updatedDocumentParts);
-        try (Client client = clientProvider.get()) {
-            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-            updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(client.prepareUpdate(MAILBOX_INDEX, MESSAGE_TYPE, updatedDocumentPart.getId())
-                .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
-            return bulkRequestBuilder.get();
-        }
+        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+        updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(client.prepareUpdate(MAILBOX_INDEX, MESSAGE_TYPE, updatedDocumentPart.getId())
+            .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
+        return bulkRequestBuilder.get();
     }
-    
+
     public BulkResponse deleteMessages(List<String> ids) {
-        try (Client client = clientProvider.get()) {
-            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-            ids.forEach(id -> bulkRequestBuilder.add(client.prepareDelete(MAILBOX_INDEX, MESSAGE_TYPE, id)));
-            return bulkRequestBuilder.get();
-        }
+        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+        ids.forEach(id -> bulkRequestBuilder.add(client.prepareDelete(MAILBOX_INDEX, MESSAGE_TYPE, id)));
+        return bulkRequestBuilder.get();
     }
     
     public Void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
