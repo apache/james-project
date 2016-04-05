@@ -17,51 +17,42 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model;
+package org.apache.james.jmap.api.vacation;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.jmap.api.vacation.Vacation;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Preconditions;
 
-@JsonDeserialize(builder = VacationResponse.Builder.class)
-public class VacationResponse {
+public class Vacation {
+
+    public static final String ID = "singleton";
+    public static final boolean DEFAULT_DISABLED = false;
 
     public static Builder builder() {
         return new Builder();
     }
 
-    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private String id;
-        private boolean isEnabled;
+        private Optional<Boolean> isEnabled = Optional.empty();
         private Optional<ZonedDateTime> fromDate = Optional.empty();
         private Optional<ZonedDateTime> toDate = Optional.empty();
-        private String textBody;
+        private String textBody = "";
 
-        public Builder id(String id) {
-            this.id = id;
-            return this;
-        }
-
-        @JsonProperty("isEnabled")
         public Builder enabled(boolean enabled) {
-            isEnabled = enabled;
+            isEnabled = Optional.of(enabled);
             return this;
         }
 
         public Builder fromDate(Optional<ZonedDateTime> fromDate) {
+            Preconditions.checkNotNull(fromDate);
             this.fromDate = fromDate;
             return this;
         }
 
         public Builder toDate(Optional<ZonedDateTime> toDate) {
+            Preconditions.checkNotNull(toDate);
             this.toDate = toDate;
             return this;
         }
@@ -71,40 +62,33 @@ public class VacationResponse {
             return this;
         }
 
-        public Builder fromVacation(Vacation vacation) {
-            this.id = Vacation.ID;
-            this.isEnabled = vacation.isEnabled();
+        public Builder copy(Vacation vacation) {
+            this.textBody = vacation.getTextBody();
             this.fromDate = vacation.getFromDate();
             this.toDate = vacation.getToDate();
-            this.textBody = vacation.getTextBody();
+            this.isEnabled = Optional.of(vacation.isEnabled());
             return this;
         }
 
-        public VacationResponse build() {
-            Preconditions.checkState(textBody != null, "textBody property of vacationResponse object should not be null");
-            return new VacationResponse(id, isEnabled, fromDate, toDate, textBody);
+        public Vacation build() {
+            Preconditions.checkNotNull(textBody);
+            return new Vacation(isEnabled.orElse(DEFAULT_DISABLED), fromDate, toDate, textBody);
         }
     }
 
-    private final String id;
     private final boolean isEnabled;
     private final Optional<ZonedDateTime> fromDate;
     private final Optional<ZonedDateTime> toDate;
     private final String textBody;
 
-    private VacationResponse(String id, boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate, String textBody) {
-        this.id = id;
+    private Vacation(boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate, String textBody) {
         this.isEnabled = isEnabled;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.textBody = textBody;
     }
 
-    public String getId() {
-        return id;
-    }
 
-    @JsonProperty("isEnabled")
     public boolean isEnabled() {
         return isEnabled;
     }
@@ -123,21 +107,20 @@ public class VacationResponse {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        VacationResponse that = (VacationResponse) o;
+        Vacation vacation = (Vacation) o;
 
-        return Objects.equals(this.id, that.id)
-            && Objects.equals(this.isEnabled, that.isEnabled)
-            && Objects.equals(this.fromDate, that.fromDate)
-            && Objects.equals(this.toDate, that.toDate)
-            && Objects.equals(this.textBody, that.textBody);
+        return Objects.equals(this.isEnabled, vacation.isEnabled) &&
+            Objects.equals(this.fromDate, vacation.fromDate) &&
+            Objects.equals(this.toDate, vacation.toDate) &&
+            Objects.equals(this.textBody, vacation.textBody);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, isEnabled, fromDate, toDate, textBody);
+        return Objects.hash(isEnabled, fromDate, toDate, textBody);
     }
+
 }
