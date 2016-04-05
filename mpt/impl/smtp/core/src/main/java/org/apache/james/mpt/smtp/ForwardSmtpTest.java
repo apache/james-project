@@ -30,7 +30,6 @@ import javax.inject.Inject;
 
 import org.apache.james.mpt.script.AbstractSimpleScriptedTestProtocol;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -76,7 +75,6 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
     }
 
-    @Ignore("Due to chaotic initialisation of Guice project, DomainList is not initialized when RemoteDelivery is initialized. Hence a NullPointer exception is thrown on default domain location")
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
         scriptTest("helo", Locale.US);
