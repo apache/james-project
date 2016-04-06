@@ -17,35 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules.data;
 
-import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.modules.data.MemoryDataJmapModule;
-import org.apache.james.modules.data.MemoryDataModule;
-import org.apache.james.modules.mailbox.MemoryMailboxModule;
-import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.modules.server.MemoryMailQueueModule;
-import org.apache.james.modules.server.QuotaModule;
+import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
+import org.apache.james.jmap.memory.vacation.MemoryVacationRepository;
 
-import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
-import com.google.inject.util.Modules;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
-public class MemoryJamesServerMain {
+public class MemoryDataJmapModule extends AbstractModule {
 
-    public static final TypeLiteral<InMemoryId> inMemoryId = new TypeLiteral<InMemoryId>(){};
-    
-    public static final Module inMemoryServerModule = Modules.combine(
-        new MemoryDataModule(),
-        new MemoryDataJmapModule(),
-        new MemoryMailboxModule(),
-        new QuotaModule(),
-        new MemoryMailQueueModule<>(inMemoryId));
+    @Override
+    protected void configure() {
+        bind(MemoryAccessTokenRepository.class).in(Scopes.SINGLETON);
+        bind(AccessTokenRepository.class).to(MemoryAccessTokenRepository.class);
 
-    public static void main(String[] args) throws Exception {
-        new GuiceJamesServer<>(inMemoryId)
-            .combineWith(inMemoryServerModule, new JMXServerModule())
-            .start();
+        bind(MemoryVacationRepository.class).in(Scopes.SINGLETON);
+        bind(VacationRepository.class).to(MemoryVacationRepository.class);
     }
-
 }
