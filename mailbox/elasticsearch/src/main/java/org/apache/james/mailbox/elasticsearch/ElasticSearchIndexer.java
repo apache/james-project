@@ -86,8 +86,8 @@ public class ElasticSearchIndexer {
         return bulkRequestBuilder.get();
     }
     
-    public Void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
-        return deleteByQueryPerformer.perform(queryBuilder);
+    public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
+        deleteByQueryPerformer.perform(queryBuilder);
     }
 
     private void checkArgument(String content) {

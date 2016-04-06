@@ -58,9 +58,8 @@ public class ElasticSearchIndexerTest {
         TestingClientProvider clientProvider = new TestingClientProvider(node);
         DeleteByQueryPerformer deleteByQueryPerformer = new DeleteByQueryPerformer(clientProvider.get(), Executors.newSingleThreadExecutor(), MINIMUM_BATCH_SIZE) {
             @Override
-            public Void perform(QueryBuilder queryBuilder) {
+            public void perform(QueryBuilder queryBuilder) {
                 doDeleteByQuery(queryBuilder);
-                return null;
             }
         };
         testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer);

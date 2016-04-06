@@ -56,9 +56,8 @@ public class DeleteByQueryPerformer {
         this.batchSize = batchSize;
     }
 
-    public Void perform(QueryBuilder queryBuilder) {
+    public void perform(QueryBuilder queryBuilder) {
         executor.execute(() -> doDeleteByQuery(queryBuilder));
-        return null;
     }
 
     protected void doDeleteByQuery(QueryBuilder queryBuilder) {

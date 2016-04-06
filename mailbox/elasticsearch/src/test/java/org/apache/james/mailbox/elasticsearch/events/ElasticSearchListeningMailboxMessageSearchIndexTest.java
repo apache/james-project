@@ -40,6 +40,7 @@ import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -237,8 +238,8 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         expectLastCall();
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
 
-        expect(indexer.deleteAllMatchingQuery(anyObject(QueryBuilder.class)))
-            .andReturn(null);
+        indexer.deleteAllMatchingQuery(anyObject(QueryBuilder.class));
+        EasyMock.expectLastCall();
 
         control.replay();
         testee.deleteAll(session, mailbox);
@@ -256,8 +257,8 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         expectLastCall();
         expect(mailbox.getMailboxId()).andReturn(mailboxId).times(2);
 
-        expect(indexer.deleteAllMatchingQuery(anyObject(QueryBuilder.class)))
-            .andThrow(new ElasticsearchException(""));
+        indexer.deleteAllMatchingQuery(anyObject(QueryBuilder.class));
+        EasyMock.expectLastCall().andThrow(new ElasticsearchException(""));
 
         control.replay();
         testee.deleteAll(session, mailbox);
