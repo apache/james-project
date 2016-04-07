@@ -22,12 +22,18 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+
+import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.Vacation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,12 +77,115 @@ public abstract class GetVacationResponseTest {
     }
 
     @Test
-    public void getVacationResponseIsNotImplementedYet() {
+    public void getVacationResponseShouldReturnDefaultValue() {
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getVacationResponse\", {\"accountId\": \"1\"}, \"#0\"]]")
+            .body("[[" +
+                "\"getVacationResponse\", " +
+                "{}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponse"))
+            .body(ARGUMENTS + ".accountId", equalTo(USER))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
+            .body(ARGUMENTS + ".list[0].fromDate", nullValue())
+            .body(ARGUMENTS + ".list[0].toDate", nullValue())
+            .body(ARGUMENTS + ".list[0].isEnabled", equalTo(false))
+            .body(ARGUMENTS + ".list[0].textBody", equalTo(""));
+    }
+
+    @Test
+    public void getVacationResponseShouldReturnStoredValue() {
+        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+            Vacation.builder()
+                .enabled(true)
+                .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00Z")))
+                .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00Z")))
+                .textBody("Test explaining my vacations")
+                .build());
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                "\"getVacationResponse\", " +
+                "{}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponse"))
+            .body(ARGUMENTS + ".accountId", equalTo(USER))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
+            .body(ARGUMENTS + ".list[0].fromDate", equalTo("2014-09-30T14:10:00Z"))
+            .body(ARGUMENTS + ".list[0].toDate", equalTo("2014-10-30T14:10:00Z"))
+            .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
+            .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"));
+    }
+
+    @Test
+    public void getVacationResponseShouldReturnStoredValueWithNonDefaultTimezone() {
+        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+            Vacation.builder()
+                .enabled(true)
+                .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
+                .toDate(Optional.of(ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00")))
+                .textBody("Test explaining my vacations")
+                .build());
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                "\"getVacationResponse\", " +
+                "{}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponse"))
+            .body(ARGUMENTS + ".accountId", equalTo(USER))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
+            .body(ARGUMENTS + ".list[0].fromDate", equalTo("2014-09-30T14:10:00+02:00"))
+            .body(ARGUMENTS + ".list[0].toDate", equalTo("2016-04-15T11:56:32.224+07:00"))
+            .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
+            .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"));
+    }
+
+    @Test
+    public void accountIdIsNotSupported() {
+        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+            Vacation.builder()
+                .enabled(true)
+                .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
+                .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00+02:00")))
+                .textBody("Test explaining my vacations")
+                .build());
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                "\"getVacationResponse\", " +
+                "{\"accountId\":\"1\"}, " +
+                "\"#0\"" +
+                "]]")
         .when()
             .post("/jmap")
         .then()

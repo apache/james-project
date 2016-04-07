@@ -21,14 +21,30 @@ package org.apache.james.jmap.methods;
 
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.NotImplementedException;
+import javax.inject.Inject;
+
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetVacationRequest;
+import org.apache.james.jmap.model.GetVacationResponse;
+import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
+
+import com.google.common.base.Preconditions;
 
 public class GetVacationResponseMethod implements Method {
 
     public static final Request.Name METHOD_NAME = Request.name("getVacationResponse");
+    public static final Response.Name RESPONSE_NAME = Response.name("vacationResponse");
+
+    private final VacationRepository vacationRepository;
+
+    @Inject
+    public GetVacationResponseMethod(VacationRepository vacationRepository) {
+        this.vacationRepository = vacationRepository;
+    }
 
     @Override
     public Request.Name requestHandled() {
@@ -42,6 +58,25 @@ public class GetVacationResponseMethod implements Method {
 
     @Override
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
-        throw new NotImplementedException();
+        Preconditions.checkNotNull(request);
+        Preconditions.checkNotNull(clientId);
+        Preconditions.checkNotNull(mailboxSession);
+        Preconditions.checkArgument(request instanceof GetVacationRequest);
+
+        return Stream.of(JmapResponse.builder()
+            .clientId(clientId)
+            .responseName(RESPONSE_NAME)
+            .response(process(mailboxSession))
+            .build());
+    }
+
+    private GetVacationResponse process(MailboxSession mailboxSession) {
+        Vacation vacation = vacationRepository.retrieveVacation(AccountId.fromString(mailboxSession.getUser().getUserName())).join();
+        return GetVacationResponse.builder()
+            .accountId(mailboxSession.getUser().getUserName())
+            .vacationResponse(VacationResponse.builder()
+                .fromVacation(vacation)
+                .build())
+            .build();
     }
 }

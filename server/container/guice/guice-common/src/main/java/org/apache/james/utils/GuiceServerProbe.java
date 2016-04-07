@@ -33,6 +33,9 @@ import javax.mail.Flags;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.adapter.mailbox.SerializableQuota;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -66,17 +69,19 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
     private final UsersRepository usersRepository;
     private final SieveRepository sieveRepository;
     private final RecipientRewriteTable recipientRewriteTable;
+    private final VacationRepository vacationRepository;
 
     @Inject
     private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory<Id> mailboxMapperFactory,
                              DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository,
-                             RecipientRewriteTable recipientRewriteTable) {
+                             RecipientRewriteTable recipientRewriteTable, VacationRepository vacationRepository) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.domainList = domainList;
         this.usersRepository = usersRepository;
         this.sieveRepository = sieveRepository;
         this.recipientRewriteTable = recipientRewriteTable;
+        this.vacationRepository = vacationRepository;
     }
 
     @Override
@@ -344,5 +349,10 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
     @Override
     public void removeSieveQuota(String user) throws Exception {
         sieveRepository.removeQuota(user);
+    }
+
+    @Override
+    public void modifyVacation(AccountId accountId, Vacation vacation) {
+        vacationRepository.modifyVacation(accountId, vacation).join();
     }
 }
