@@ -21,8 +21,6 @@ package org.apache.james.modules.server;
 
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.jsieve.Parser;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.file.SieveFileRepository;
 
 import com.google.inject.AbstractModule;
 

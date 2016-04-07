@@ -20,7 +20,6 @@
 package org.apache.james.mpt.managesieve.cassandra.host;
 
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraSieveDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveRepository;

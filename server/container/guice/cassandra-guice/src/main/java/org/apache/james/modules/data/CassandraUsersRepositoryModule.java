@@ -19,7 +19,6 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;

@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Date;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
