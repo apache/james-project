@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -68,5 +69,22 @@ public class ErrorResponse implements Method.Response {
 
     public Optional<String> getDescription() {
         return description;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ErrorResponse that = (ErrorResponse) o;
+
+        return Objects.equals(this.type, that.type)
+            && Objects.equals(this.description, that.description);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, description);
     }
 }
