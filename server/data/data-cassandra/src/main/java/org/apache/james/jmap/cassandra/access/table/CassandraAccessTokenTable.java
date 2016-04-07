@@ -17,14 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.access;
+package org.apache.james.jmap.cassandra.access.table;
 
-import org.apache.james.jmap.api.access.AbstractAccessTokenRepositoryTest;
+public interface CassandraAccessTokenTable {
 
-public class MemoryAccessTokenRepositoryTest extends AbstractAccessTokenRepositoryTest {
+    String TABLE_NAME = "access_token";
 
-    protected MemoryAccessTokenRepository createAccessTokenRepository() {
-        return new MemoryAccessTokenRepository(TTL_IN_MS);
-    }
+    String TOKEN = "access_token";
+    String USERNAME = "username";
 
 }

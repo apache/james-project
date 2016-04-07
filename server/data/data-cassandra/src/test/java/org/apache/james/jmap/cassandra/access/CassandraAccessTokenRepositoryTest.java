@@ -17,14 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.access;
+package org.apache.james.jmap.cassandra.access;
 
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.jmap.api.access.AbstractAccessTokenRepositoryTest;
+import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.junit.After;
 
-public class MemoryAccessTokenRepositoryTest extends AbstractAccessTokenRepositoryTest {
+public class CassandraAccessTokenRepositoryTest extends AbstractAccessTokenRepositoryTest {
 
-    protected MemoryAccessTokenRepository createAccessTokenRepository() {
-        return new MemoryAccessTokenRepository(TTL_IN_MS);
+    private CassandraCluster cassandra;
+
+    @Override
+    protected AccessTokenRepository createAccessTokenRepository() {
+        cassandra = CassandraCluster.create(new CassandraAccessModule());
+        return new CassandraAccessTokenRepository(cassandra.getConf(), TTL_IN_MS);
     }
 
+    @After
+    public void tearDown() {
+        cassandra.clearAllTables();
+    }
 }

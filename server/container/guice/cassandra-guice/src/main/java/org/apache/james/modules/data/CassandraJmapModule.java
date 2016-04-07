@@ -17,14 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.access;
+package org.apache.james.modules.data;
 
-import org.apache.james.jmap.api.access.AbstractAccessTokenRepositoryTest;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
+import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 
-public class MemoryAccessTokenRepositoryTest extends AbstractAccessTokenRepositoryTest {
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-    protected MemoryAccessTokenRepository createAccessTokenRepository() {
-        return new MemoryAccessTokenRepository(TTL_IN_MS);
+public class CassandraJmapModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(AccessTokenRepository.class).to(CassandraAccessTokenRepository.class);
+
+        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        cassandraDataDefinitions.addBinding().to(CassandraAccessModule.class);
     }
-
 }

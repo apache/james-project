@@ -28,7 +28,6 @@ import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.jmap.crypto.SignatureHandler;
 import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
-import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.DefaultZonedDateTimeProvider;
@@ -51,7 +50,6 @@ public class JMAPCommonModule extends AbstractModule {
         bind(ContinuationTokenManager.class).to(SignedContinuationTokenManager.class);
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
-        bind(AccessTokenRepository.class).to(MemoryAccessTokenRepository.class);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
 
         bind(MailSpool.class).in(Singleton.class);
