@@ -22,11 +22,17 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+
+import java.time.ZonedDateTime;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.Vacation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,14 +76,180 @@ public abstract class SetVacationResponseTest {
     }
 
     @Test
-    public void setVacationResponseIsNotImplementedYet() {
-        String bodyRequest = "[[\"setVacationResponse\", " +
-            "{\"accountId\": \"1\", " +
-            "\"update\":{\"idVacation\" : {" +
-                "\"id\": \"1\"," +
-                "\"isEnabled\": \"true\"," +
-                "\"textBody\": \"Message explaining my wonderful vacations\"" +
-            "}}}, \"#0\"]]";
+    public void setVacationResponseShouldReturnErrorOnMalformedRequestStructure() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"update\":{" +
+                    "\"idVacation\" : {" +
+                        "\"id\": \"1\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("update field should just contain one entry with key \"singleton\""));
+    }
+
+    @Test
+    public void setVacationResponseShouldContainAnErrorWhenInvalidId() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"1\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponseSet"))
+            .body(ARGUMENTS + ".notUpdated.singleton.type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".notUpdated.singleton.description", equalTo("There is one VacationResponse object per account, with id set to \"singleton\" and not to 1"));
+    }
+
+    @Test
+    public void setVacationResponseShouldReturnCorrectAnswerUponValidVacationResponse() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"," +
+                        "\"fromDate\":\"2014-09-30T14:10:00Z[GMT]\"," +
+                        "\"toDate\":\"2014-10-30T14:10:00Z[GMT]\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponseSet"))
+            .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
+
+        Vacation vacation = jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER));
+        assertThat(vacation.getTextBody()).isEqualTo("Message explaining my wonderful vacations");
+        assertThat(vacation.isEnabled()).isTrue();
+        assertThat(vacation.getFromDate()).contains(ZonedDateTime.parse("2014-09-30T14:10:00Z[GMT]"));
+        assertThat(vacation.getToDate()).contains(ZonedDateTime.parse("2014-10-30T14:10:00Z[GMT]"));
+    }
+
+    @Test
+    public void nullTextBodyShouldBeRejected() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": null" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", containsString("textBody property of vacationResponse object should not be null"));
+    }
+
+    @Test
+    public void noTextBodyShouldBeRejected() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isEnabled\": \"true\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", containsString("textBody property of vacationResponse object should not be null"));
+    }
+
+    @Test
+    public void accountIdIsNotSupported() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"accountId\": \"1\"," +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"," +
+                        "\"fromDate\":\"2014-09-30T14:10:00Z\"," +
+                        "\"toDate\":\"2014-10-30T14:10:00Z\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)

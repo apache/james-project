@@ -41,4 +41,6 @@ public interface ExtendedServerProbe<Id extends MailboxId> extends ServerProbe {
     Mailbox<Id> getMailbox(String namespace, String user, String name);
 
     void modifyVacation(AccountId accountId, Vacation vacation);
+
+    Vacation retrieveVacation(AccountId accountId);
 }

@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.jmap.api.vacation.Vacation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -119,6 +120,11 @@ public class VacationResponse {
 
     public String getTextBody() {
         return textBody;
+    }
+
+    @JsonIgnore
+    public boolean isValid() {
+        return id.equals(Vacation.ID);
     }
 
     @Override
