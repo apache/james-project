@@ -26,8 +26,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -35,6 +38,45 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 public class FakeMail implements Mail {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private String fileName;
+        private List<MailAddress> recipients = new ArrayList<MailAddress>();
+        private MailAddress sender;
+
+        public Builder fileName(String fileName) {
+            this.fileName = fileName;
+            return this;
+        }
+
+        public Builder recipients(List<MailAddress> recipients) {
+            this.recipients.addAll(recipients);
+            return this;
+        }
+
+        public Builder recipient(MailAddress recipient) {
+            this.recipients.add(recipient);
+            return this;
+        }
+
+        public Builder sender(MailAddress sender) {
+            this.sender = sender;
+            return this;
+        }
+
+        public FakeMail build() throws MessagingException {
+            FakeMail mail = new FakeMail();
+            mail.setMessage(new MimeMessage(Session.getInstance(new Properties()) ,ClassLoader.getSystemResourceAsStream(fileName)));
+            mail.setSender(sender);
+            mail.setRecipients(recipients);
+            return mail;
+        }
+    }
 
     private MimeMessage msg = null;
 
