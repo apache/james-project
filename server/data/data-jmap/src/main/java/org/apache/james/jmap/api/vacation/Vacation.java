@@ -105,6 +105,21 @@ public class Vacation {
         return textBody;
     }
 
+    public boolean isActiveAtDate(ZonedDateTime instant) {
+        Preconditions.checkNotNull(instant);
+        return isEnabled
+            && isAfterOrEqualToFromDate(instant)
+            && isBeforeOrEqualToToDate(instant);
+    }
+
+    private Boolean isAfterOrEqualToFromDate(ZonedDateTime instant) {
+        return fromDate.map(date -> date.isBefore(instant) || date.equals(instant)).orElse(true);
+    }
+
+    private Boolean isBeforeOrEqualToToDate(ZonedDateTime instant) {
+        return toDate.map(date -> date.isAfter(instant) || date.equals(instant)).orElse(true);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
