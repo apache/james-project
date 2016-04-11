@@ -17,29 +17,44 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>james-server</artifactId>
+        <groupId>org.apache.james</groupId>
+        <version>3.0.0-beta5-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.apache.james</groupId>
-        <artifactId>james-server-guice</artifactId>
-        <version>3.0.0-beta5-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
-
-    <artifactId>james-server-cassandra-guice</artifactId>
+    <artifactId>james-server-data-jmap-cassandra</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Cassandra - guice injection</name>
-    <description>An advanced email server - Cassandra backend with guice injection</description>
-
-    <properties>
-        <cassandra.includes>empty</cassandra.includes>
-    </properties>
+    <name>Apache James :: Server :: Data :: JMAP :: Cassandra persistance</name>
 
     <profiles>
+        <profile>
+            <id>noTest</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>disable-build-for-older-jdk</id>
             <activation>
@@ -137,48 +152,17 @@
             <build>
                 <plugins>
                     <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-dependency-plugin</artifactId>
-                      <executions>
-                        <execution>
-                          <id>copy-dependencies</id>
-                          <phase>package</phase>
-                          <goals>
-                            <goal>copy-dependencies</goal>
-                          </goals>
-                          <configuration>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}.lib</outputDirectory>
-                          </configuration>
-                        </execution>
-                      </executions>
-                    </plugin>
-                    <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-jar-plugin</artifactId>
-                      <executions>
-                          <execution>
-                              <id>default-jar</id>
-                              <goals>
-                                  <goal>jar</goal>
-                              </goals>
-                              <configuration>
-                                  <archive>
-                                      <manifest>
-                                          <addClasspath>true</addClasspath>
-                                          <classpathPrefix>${project.build.finalName}.lib/</classpathPrefix>
-                                          <mainClass>org.apache.james.CassandraJamesServerMain</mainClass>
-                                          <useUniqueVersions>false</useUniqueVersions>
-                                      </manifest>
-                                  </archive>
-                              </configuration>
-                          </execution>
-                          <execution>
-                              <id>test-jar</id>
-                              <goals>
-                                  <goal>test-jar</goal>
-                              </goals>
-                          </execution>
-                      </executions>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>fully.qualified.MainClass</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -194,62 +178,35 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>apache-james-backends-cassandra</artifactId>
-                    <type>test-jar</type>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-cassandra</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-cassandra</artifactId>
+                    <artifactId>apache-james-backends-cassandra</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
-                    <type>test-jar</type>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>apache-james-mailbox-tika</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-data-cassandra</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-data-jmap-cassandra</artifactId>
+                    <artifactId>james-server-data-jmap</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-guice-common</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>james-server-guice-common</artifactId>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-data-jmap</artifactId>
+                    <scope>test</scope>
                     <type>test-jar</type>
-                    <scope>test</scope>
                 </dependency>
                 <dependency>
-                    <groupId>com.jayway.awaitility</groupId>
-                    <artifactId>awaitility</artifactId>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>com.jayway.restassured</groupId>
-                    <artifactId>rest-assured</artifactId>
-                    <scope>test</scope>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
                 </dependency>
-                 <dependency>
-                    <groupId>com.nurkiewicz.asyncretry</groupId>
-                    <artifactId>asyncretry</artifactId>
+                <dependency>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.assertj</groupId>
@@ -268,13 +225,16 @@
                     <artifactId>mockito-core</artifactId>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                    <scope>test</scope>
+                </dependency>
             </dependencies>
-        </profile>
-        <profile>
-            <id>cassandra</id>
-            <properties>
-                <cassandra.includes>**/*.java</cassandra.includes>
-            </properties>
         </profile>
         <profile>
             <id>disable-animal-sniffer</id>
@@ -298,26 +258,5 @@
         </profile>
     </profiles>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                   <excludes>
-                       <exclude>**/suite/*.java</exclude>
-                       <exclude>**/suite/**/*.java</exclude>
-                   </excludes>
-                   <includes>
-                       <include>${cassandra.includes}</include>
-                   </includes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
 </project>

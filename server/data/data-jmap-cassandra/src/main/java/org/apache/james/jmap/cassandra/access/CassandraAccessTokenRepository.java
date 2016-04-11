@@ -32,11 +32,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
-import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;

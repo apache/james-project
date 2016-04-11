@@ -25,12 +25,14 @@ import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraJmapModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(CassandraAccessTokenRepository.class).in(Scopes.SINGLETON);
         bind(AccessTokenRepository.class).to(CassandraAccessTokenRepository.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);

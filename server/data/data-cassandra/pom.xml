@@ -178,16 +178,6 @@
                     <artifactId>james-server-data-api</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-data-jmap</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-data-jmap</artifactId>
-                    <scope>test</scope>
-                    <type>test-jar</type>
-                </dependency>
-                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>james-server-data-library</artifactId>
                 </dependency>
