@@ -28,7 +28,6 @@ import javax.inject.Singleton;
 import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
@@ -44,14 +43,12 @@ public class MemoryAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public void addToken(String username, AccessToken accessToken) throws AccessTokenAlreadyStored{
+    public void addToken(String username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
         Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
         synchronized (tokensExpirationDates) {
-            if (tokensExpirationDates.putIfAbsent(accessToken, username) != null) {
-                throw new AccessTokenAlreadyStored(accessToken);
-            }
+            tokensExpirationDates.put(accessToken, username);
         }
     }
 

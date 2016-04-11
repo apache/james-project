@@ -19,14 +19,13 @@
 
 package org.apache.james.jmap.api.access;
 
-import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 public interface AccessTokenRepository {
 
     String TOKEN_EXPIRATION_IN_MS = "tokenExpirationInMs";
     
-    void addToken(String username, AccessToken accessToken) throws AccessTokenAlreadyStored;
+    void addToken(String username, AccessToken accessToken);
 
     void removeToken(AccessToken accessToken);
 

@@ -48,7 +48,7 @@ public class AccessToken {
         return token.toString();
     }
 
-    public UUID getToken() {
+    public UUID asUUID() {
         return token;
     }
 

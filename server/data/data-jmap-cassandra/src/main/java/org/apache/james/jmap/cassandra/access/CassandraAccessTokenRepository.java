@@ -24,7 +24,6 @@ import javax.inject.Named;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.datastax.driver.core.Session;
@@ -40,14 +39,12 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public void addToken(String username, AccessToken accessToken) throws AccessTokenAlreadyStored {
+    public void addToken(String username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
         Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
 
-        if (!cassandraAccessTokenDAO.addToken(username, accessToken).join()) {
-            throw new AccessTokenAlreadyStored(accessToken);
-        }
+        cassandraAccessTokenDAO.addToken(username, accessToken).join();
     }
 
     @Override

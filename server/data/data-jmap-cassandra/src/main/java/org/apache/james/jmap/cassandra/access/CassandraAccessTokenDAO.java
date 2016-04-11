@@ -56,7 +56,6 @@ public class CassandraAccessTokenDAO {
             .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
 
         this.insertStatement = session.prepare(insertInto(CassandraAccessTokenTable.TABLE_NAME)
-            .ifNotExists()
             .value(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))
             .value(CassandraAccessTokenTable.USERNAME, bindMarker(CassandraAccessTokenTable.USERNAME))
             .using(ttl(bindMarker(TTL))));
@@ -66,21 +65,21 @@ public class CassandraAccessTokenDAO {
             .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
     }
 
-    public CompletableFuture<Boolean> addToken(String username, AccessToken accessToken) {
-        return cassandraAsyncExecutor.executeReturnApplied(insertStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.getToken())
+    public CompletableFuture<Void> addToken(String username, AccessToken accessToken) {
+        return cassandraAsyncExecutor.executeVoid(insertStatement.bind()
+            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID())
             .setString(CassandraAccessTokenTable.USERNAME, username)
             .setInt(TTL, durationInSeconds));
     }
 
     public CompletableFuture<Void> removeToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeVoid(removeStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.getToken()));
+            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()));
     }
 
     public CompletableFuture<Optional<String>> getUsernameFromToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeSingleRow(selectStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.getToken()))
+            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
             .thenApply(optional -> optional.map(row -> row.getString(CassandraAccessTokenTable.USERNAME)));
     }
 }

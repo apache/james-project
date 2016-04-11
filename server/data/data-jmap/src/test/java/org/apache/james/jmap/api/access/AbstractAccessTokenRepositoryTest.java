@@ -22,7 +22,6 @@ package org.apache.james.jmap.api.access;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,12 +57,6 @@ public abstract class AbstractAccessTokenRepositoryTest {
         accessTokenRepository.addToken(USERNAME, TOKEN);
         accessTokenRepository.removeToken(TOKEN);
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN)).isInstanceOf(InvalidAccessToken.class);
-    }
-
-    @Test
-    public void addTokenMustThrowWhenTokenIsAlreadyStored() throws Exception {
-        accessTokenRepository.addToken(USERNAME, TOKEN);
-        assertThatThrownBy(() -> accessTokenRepository.addToken(USERNAME, TOKEN)).isInstanceOf(AccessTokenAlreadyStored.class);
     }
 
     @Test
