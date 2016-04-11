@@ -19,57 +19,24 @@
 
 package org.apache.james.jmap.cassandra.access;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
-
-import java.util.Optional;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
-import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.AccessTokenAlreadyStored;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
-import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 
 public class CassandraAccessTokenRepository implements AccessTokenRepository {
 
-    private static final String TTL = "ttl";
-
-    private final Session session;
-    private final PreparedStatement removeStatement;
-    private final PreparedStatement insertStatement;
-    private final PreparedStatement selectStatement;
-    private final int durationInSeconds;
+    private final CassandraAccessTokenDAO cassandraAccessTokenDAO;
 
     @Inject
     public CassandraAccessTokenRepository(Session session, @Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
-        this.session = session;
-        this.durationInSeconds = (int) (durationInMilliseconds / 1000);
-
-        this.removeStatement = this.session.prepare(delete()
-            .from(CassandraAccessTokenTable.TABLE_NAME)
-            .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
-
-        this.insertStatement = this.session.prepare(insertInto(CassandraAccessTokenTable.TABLE_NAME)
-            .ifNotExists()
-            .value(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))
-            .value(CassandraAccessTokenTable.USERNAME, bindMarker(CassandraAccessTokenTable.USERNAME))
-            .using(ttl(bindMarker(TTL))));
-
-        this.selectStatement = this.session.prepare(select()
-            .from(CassandraAccessTokenTable.TABLE_NAME)
-            .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
+        this.cassandraAccessTokenDAO = new CassandraAccessTokenDAO(session, durationInMilliseconds);
     }
 
     @Override
@@ -78,14 +45,7 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
         Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
 
-        boolean applied = session.execute(insertStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.getToken())
-            .setString(CassandraAccessTokenTable.USERNAME, username)
-            .setInt(TTL, durationInSeconds))
-            .one()
-            .getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
-
-        if (!applied) {
+        if (!cassandraAccessTokenDAO.addToken(username, accessToken).join()) {
             throw new AccessTokenAlreadyStored(accessToken);
         }
     }
@@ -94,20 +54,15 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     public void removeToken(AccessToken accessToken) {
         Preconditions.checkNotNull(accessToken);
 
-        session.execute(removeStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.getToken()));
+        cassandraAccessTokenDAO.removeToken(accessToken).join();
     }
 
     @Override
     public String getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
 
-        return Optional.ofNullable(
-            session.execute(
-                selectStatement.bind()
-                    .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.getToken()))
-                .one())
-            .map(row -> row.getString(CassandraAccessTokenTable.USERNAME))
+        return cassandraAccessTokenDAO.getUsernameFromToken(accessToken)
+            .join()
             .orElseThrow(() -> new InvalidAccessToken(accessToken));
     }
 }
