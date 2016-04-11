@@ -35,6 +35,7 @@ import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.google.common.primitives.Ints;
 
 public class CassandraAccessTokenDAO {
 
@@ -48,7 +49,7 @@ public class CassandraAccessTokenDAO {
 
     public CassandraAccessTokenDAO(Session session, long durationInMilliseconds) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.durationInSeconds = (int) (durationInMilliseconds / 1000);
+        this.durationInSeconds = Ints.checkedCast(durationInMilliseconds / 1000);
 
         this.removeStatement = session.prepare(delete()
             .from(CassandraAccessTokenTable.TABLE_NAME)
