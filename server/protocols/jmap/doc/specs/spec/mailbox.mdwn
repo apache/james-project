@@ -196,15 +196,21 @@ The following errors may be returned instead of the `mailboxUpdates` response:
 `cannotCalculateChanges`: Returned if the server cannot calculate the changes from the state string given by the client. Usually due to the client's state being too old. The client MUST invalidate its Mailbox cache. The error object MUST also include a `newState: String` property with the current state for the type.
 
 ### setMailboxes
-<aside class="warning">
-Not implemented
+<aside class="notice">
+The mailbox name property should not contain the special '.' (dot) character. 
 </aside>
 
 Mailboxes can be created, updated and destroyed using the *setMailboxes* method. The method takes the following arguments:
 
 - **accountId**: `String|null`
+  <aside class="warning">
+  Not implemented
+  </aside>
   The id of the account to use for this call. If `null`, defaults to the primary account.
 - **ifInState**: `String|null`
+  <aside class="warning">
+  Not implemented
+  </aside>
   This is a state string as returned by the *getMailboxes* method. If supplied, the string must match the current state, otherwise the method will be aborted and a `stateMismatch` error returned.
 - **create**: `String[Mailbox]|null`
   A map of *creation id* (an arbitrary string set by the client) to Mailbox objects. If `null`, no objects will be created.
@@ -218,6 +224,9 @@ Each create, update or destroy is considered an atomic unit. The server MAY comm
 If a create, update or destroy is rejected, the appropriate error should be added to the notCreated/notUpdated/notDestroyed property of the response and the server MUST continue to the next create/update/destroy. It does not terminate the method.
 
 ####  Creating mailboxes
+<aside class="notice">
+Only Name, Role & ParentId properties are supported.
+</aside>
 
 The properties of the Mailbox object submitted for creation MUST conform to the following conditions:
 
@@ -233,6 +242,9 @@ If any of the properties are invalid, the server MUST reject the create with an 
 There may be a maximum number of mailboxes allowed on the server. If this is reached, any attempt at creation will be rejected with a `maxQuotaReached` error.
 
 ####  Updating mailboxes
+<aside class="notice">
+Due to cycle detection, mailboxes with child cannot be updated. 
+</aside>
 
 If the *id* given does not correspond to a Mailbox in the given account, the update MUST be rejected with a `notFound` error.
 
@@ -240,6 +252,9 @@ All properties being updated must be of the correct type, not immutable or serve
 
 - The *name* property MUST be valid UTF-8, between 1 and 256 bytes in size.
 - The *parentId* property MUST be either `null` or be a valid id for *another* mailbox that is **not a descendant** of this mailbox, and for which the `mayCreateChild` property is `true`.
+  <aside class="notice">
+  Only Name, Role & ParentId properties are supported.
+  </aside>
 - These properties are immutable or may only be set by the server:
   - id
   - role
