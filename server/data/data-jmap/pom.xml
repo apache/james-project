@@ -182,6 +182,10 @@
                     <artifactId>guava</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>com.jason-goodwin</groupId>
+                    <artifactId>better-monads</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-collections4</artifactId>
                 </dependency>

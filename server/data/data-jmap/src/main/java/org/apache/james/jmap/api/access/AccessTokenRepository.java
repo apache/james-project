@@ -19,16 +19,20 @@
 
 package org.apache.james.jmap.api.access;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
+
+import com.jasongoodwin.monads.Try;
 
 public interface AccessTokenRepository {
 
     String TOKEN_EXPIRATION_IN_MS = "tokenExpirationInMs";
     
-    void addToken(String username, AccessToken accessToken);
+    CompletableFuture<Void> addToken(String username, AccessToken accessToken);
 
-    void removeToken(AccessToken accessToken);
+    CompletableFuture<Void> removeToken(AccessToken accessToken);
 
-    String getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
+    CompletableFuture<Try<String>> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
 
 }

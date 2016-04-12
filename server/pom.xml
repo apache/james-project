@@ -891,6 +891,11 @@
                 <version>${geronimo-activation-spec.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.jason-goodwin</groupId>
+                <artifactId>better-monads</artifactId>
+                <version>0.4.0</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-daemon</groupId>
                 <artifactId>commons-daemon</artifactId>
                 <version>${commons-daemon.version}</version>

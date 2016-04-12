@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.cassandra.access;
 
+import java.util.concurrent.CompletableFuture;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -28,6 +30,7 @@ import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
+import com.jasongoodwin.monads.Try;
 
 public class CassandraAccessTokenRepository implements AccessTokenRepository {
 
@@ -39,27 +42,29 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public void addToken(String username, AccessToken accessToken) {
+    public CompletableFuture<Void> addToken(String username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
         Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
 
-        cassandraAccessTokenDAO.addToken(username, accessToken).join();
+        return cassandraAccessTokenDAO.addToken(username, accessToken);
     }
 
     @Override
-    public void removeToken(AccessToken accessToken) {
+    public CompletableFuture<Void> removeToken(AccessToken accessToken) {
         Preconditions.checkNotNull(accessToken);
 
-        cassandraAccessTokenDAO.removeToken(accessToken).join();
+        return cassandraAccessTokenDAO.removeToken(accessToken);
     }
 
     @Override
-    public String getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
+    public CompletableFuture<Try<String>> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.getUsernameFromToken(accessToken)
-            .join()
-            .orElseThrow(() -> new InvalidAccessToken(accessToken));
+            .thenApply(
+                optional -> Try.ofFailable(
+                    () -> optional.orElseThrow(
+                        () -> new InvalidAccessToken(accessToken))));
     }
 }
