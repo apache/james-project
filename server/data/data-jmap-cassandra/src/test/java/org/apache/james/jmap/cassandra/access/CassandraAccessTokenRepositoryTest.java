@@ -31,7 +31,7 @@ public class CassandraAccessTokenRepositoryTest extends AbstractAccessTokenRepos
     @Override
     protected AccessTokenRepository createAccessTokenRepository() {
         cassandra = CassandraCluster.create(new CassandraAccessModule());
-        return new CassandraAccessTokenRepository(cassandra.getConf(), TTL_IN_MS);
+        return new CassandraAccessTokenRepository(new CassandraAccessTokenDAO(cassandra.getConf(), TTL_IN_MS));
     }
 
     @After

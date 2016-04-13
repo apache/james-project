@@ -22,23 +22,20 @@ package org.apache.james.jmap.cassandra.access;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
-import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
-import com.jasongoodwin.monads.Try;
 
 public class CassandraAccessTokenRepository implements AccessTokenRepository {
 
     private final CassandraAccessTokenDAO cassandraAccessTokenDAO;
 
     @Inject
-    public CassandraAccessTokenRepository(Session session, @Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
-        this.cassandraAccessTokenDAO = new CassandraAccessTokenDAO(session, durationInMilliseconds);
+    public CassandraAccessTokenRepository(CassandraAccessTokenDAO cassandraAccessTokenDAO) {
+        this.cassandraAccessTokenDAO = cassandraAccessTokenDAO;
     }
 
     @Override
@@ -58,13 +55,11 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public CompletableFuture<Try<String>> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
+    public CompletableFuture<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.getUsernameFromToken(accessToken)
             .thenApply(
-                optional -> Try.ofFailable(
-                    () -> optional.orElseThrow(
-                        () -> new InvalidAccessToken(accessToken))));
+                optional -> optional.<InvalidAccessToken>orElseThrow(() -> new InvalidAccessToken(accessToken)));
     }
 }

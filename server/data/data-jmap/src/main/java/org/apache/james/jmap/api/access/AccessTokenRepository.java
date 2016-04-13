@@ -23,8 +23,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
-import com.jasongoodwin.monads.Try;
-
 public interface AccessTokenRepository {
 
     String TOKEN_EXPIRATION_IN_MS = "tokenExpirationInMs";
@@ -33,6 +31,6 @@ public interface AccessTokenRepository {
 
     CompletableFuture<Void> removeToken(AccessToken accessToken);
 
-    CompletableFuture<Try<String>> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
+    CompletableFuture<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
 
 }

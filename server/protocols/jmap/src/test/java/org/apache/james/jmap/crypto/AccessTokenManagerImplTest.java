@@ -52,7 +52,7 @@ public class AccessTokenManagerImplTest {
     @Test
     public void grantShouldStoreATokenOnUsername() throws Exception {
         AccessToken token = accessTokenManager.grantAccessToken("username");
-        assertThat(accessTokenRepository.getUsernameFromToken(token).join().get()).isEqualTo("username");
+        assertThat(accessTokenRepository.getUsernameFromToken(token).join()).isEqualTo("username");
     }
     
     @Test(expected=NullPointerException.class)

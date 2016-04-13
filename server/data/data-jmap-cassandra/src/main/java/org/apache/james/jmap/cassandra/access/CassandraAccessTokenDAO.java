@@ -25,9 +25,14 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+import static org.apache.james.jmap.api.access.AccessTokenRepository.TOKEN_EXPIRATION_IN_MS;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -47,9 +52,10 @@ public class CassandraAccessTokenDAO {
     private final PreparedStatement selectStatement;
     private final int durationInSeconds;
 
-    public CassandraAccessTokenDAO(Session session, long durationInMilliseconds) {
+    @Inject
+    public CassandraAccessTokenDAO(Session session, @Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.durationInSeconds = Ints.checkedCast(durationInMilliseconds / 1000);
+        this.durationInSeconds = Ints.checkedCast(TimeUnit.MILLISECONDS.toSeconds(durationInMilliseconds));
 
         this.removeStatement = session.prepare(delete()
             .from(CassandraAccessTokenTable.TABLE_NAME)
