@@ -36,15 +36,19 @@ public class SetMailboxesResponseTest {
                 .id("1")
                 .name("myBox")
                 .build());
+        ImmutableList<String> updated = ImmutableList.of("2");
+        ImmutableList<String> destroyed = ImmutableList.of("3");
         ImmutableMap<MailboxCreationId, SetError> notCreated = ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type("created").build());
-        ImmutableList<String> destroyed = ImmutableList.of("2");
-        ImmutableMap<String, SetError> notDestroyed  = ImmutableMap.of("2", SetError.builder().type("destroyed").build());
-        SetMailboxesResponse expected = new SetMailboxesResponse(created, notCreated, destroyed, notDestroyed);
+        ImmutableMap<String, SetError> notUpdated = ImmutableMap.of("4", SetError.builder().type("updated").build());
+        ImmutableMap<String, SetError> notDestroyed  = ImmutableMap.of("5", SetError.builder().type("destroyed").build());
+        SetMailboxesResponse expected = new SetMailboxesResponse(created, updated, destroyed, notCreated, notUpdated, notDestroyed);
 
         SetMailboxesResponse setMessagesResponse = SetMailboxesResponse.builder()
             .created(created)
+            .updated(updated)
             .destroyed(destroyed)
             .notCreated(notCreated)
+            .notUpdated(notUpdated)
             .notDestroyed(notDestroyed)
             .build();
 

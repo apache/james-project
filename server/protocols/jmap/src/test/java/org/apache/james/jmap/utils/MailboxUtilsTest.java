@@ -184,6 +184,45 @@ public class MailboxUtilsTest {
     }
 
     @Test
+    public void mailboxPathFromMailboxIdShouldReturnPresentWhenExists() throws Exception {
+        MailboxPath mailboxPath = new MailboxPath("#private", user, "myBox");
+        mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        InMemoryId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+                .findMailboxByPath(mailboxPath)
+                .getMailboxId();
+
+        Optional<MailboxPath> actual = sut.mailboxPathFromMailboxId(mailboxId.serialize(), mailboxSession);
+        assertThat(actual).isPresent();
+        assertThat(actual.get()).isEqualTo(mailboxPath);
+    }
+
+    @Test
+    public void mailboxPathFromMailboxIdShouldReturnAbsentWhenDoesntExist() throws Exception {
+        Optional<MailboxPath> mailboxPath = sut.mailboxPathFromMailboxId("123", mailboxSession);
+        assertThat(mailboxPath).isEmpty();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void mailboxPathFromMailboxIdShouldThrowWhenNullMailboxId() throws Exception {
+        sut.mailboxPathFromMailboxId(null, mailboxSession);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void mailboxPathFromMailboxIdShouldThrowWhenNullMailboxSession() throws Exception {
+        sut.mailboxPathFromMailboxId("A", null);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void mailboxPathFromMailboxIdShouldThrowWhenNullMailboxSessionAndMailboxId() throws Exception {
+        sut.mailboxPathFromMailboxId(null, null);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void mailboxPathFromMailboxIdShouldReturnAbsentWhenEmptyMailboxId() throws Exception {
+        sut.mailboxPathFromMailboxId("", mailboxSession);
+    }
+
+    @Test
     public void getMailboxPathShouldReturnThePathWhenRootMailbox() throws Exception {
         MailboxPath expected = new MailboxPath("#private", user, "myBox");
         mailboxManager.createMailbox(expected, mailboxSession);

@@ -32,7 +32,7 @@ import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
-import org.apache.james.jmap.model.mailbox.MailboxRequest;
+import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.utils.SortingHierarchicalCollections;
 import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
 import org.apache.james.jmap.utils.MailboxUtils;
@@ -53,7 +53,7 @@ public class SetMailboxesCreationProcessor<Id extends MailboxId> implements SetM
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMailboxesCreationProcessor.class);
 
     private final MailboxManager mailboxManager;
-    private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxRequest>, String> sortingHierarchicalCollections;
+    private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, String> sortingHierarchicalCollections;
     private final MailboxUtils<Id> mailboxUtils;
 
     @Inject
@@ -90,7 +90,7 @@ public class SetMailboxesCreationProcessor<Id extends MailboxId> implements SetM
                         .build()));
     }
 
-    private void createMailbox(MailboxCreationId mailboxCreationId, MailboxRequest mailboxRequest, MailboxSession mailboxSession,
+    private void createMailbox(MailboxCreationId mailboxCreationId, MailboxCreateRequest mailboxRequest, MailboxSession mailboxSession,
             Map<MailboxCreationId, String> creationIdsToCreatedMailboxId, SetMailboxesResponse.Builder builder) {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
@@ -127,7 +127,7 @@ public class SetMailboxesCreationProcessor<Id extends MailboxId> implements SetM
         }
     }
 
-    private void ensureValidMailboxName(MailboxRequest mailboxRequest, MailboxSession mailboxSession) {
+    private void ensureValidMailboxName(MailboxCreateRequest mailboxRequest, MailboxSession mailboxSession) {
         String name = mailboxRequest.getName();
         char pathDelimiter = mailboxSession.getPathDelimiter();
         if (name.contains(String.valueOf(pathDelimiter))) {
@@ -135,7 +135,7 @@ public class SetMailboxesCreationProcessor<Id extends MailboxId> implements SetM
         }
     }
 
-    private MailboxPath getMailboxPath(MailboxRequest mailboxRequest, Map<MailboxCreationId, String> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
+    private MailboxPath getMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, String> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
         if (mailboxRequest.getParentId().isPresent()) {
             String parentId = mailboxRequest.getParentId().get();
             String parentName = mailboxUtils.getMailboxNameFromId(parentId, mailboxSession)
