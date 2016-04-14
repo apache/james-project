@@ -1441,4 +1441,39 @@ public abstract class SetMailboxesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].name", equalTo("mySecondBox"));
     }
+
+    @Test
+    public void setMailboxesShouldReturnNotUpdatedWhenRenamingSystemMailbox() {
+
+        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox("#private", username, "inbox");
+        String mailboxId = mailbox.getMailboxId().serialize();
+
+        String requestBody =
+                "[" +
+                    "  [ \"setMailboxes\"," +
+                    "    {" +
+                    "      \"update\": {" +
+                    "        \"" + mailboxId + "\" : {" +
+                    "          \"name\" : \"renamed\"" +
+                    "        }" +
+                    "      }" +
+                    "    }," +
+                    "    \"#0\"" +
+                    "  ]" +
+                    "]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxId), Matchers.allOf(
+                    hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                    hasEntry(equalTo("description"), equalTo("Cannot update a system mailbox.")))));
+    }
 }

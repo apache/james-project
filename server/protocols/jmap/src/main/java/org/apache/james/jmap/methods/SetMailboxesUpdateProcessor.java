@@ -26,12 +26,14 @@ import javax.inject.Inject;
 import org.apache.james.jmap.exceptions.MailboxHasChildException;
 import org.apache.james.jmap.exceptions.MailboxNameException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
+import org.apache.james.jmap.exceptions.SystemMailboxNotUpdatableException;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.SetMailboxesResponse.Builder;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
+import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -71,10 +73,14 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
         try {
             validateMailboxName(updateRequest, mailboxSession);
             Mailbox mailbox = getMailbox(mailboxId, mailboxSession);
+            checkRole(mailbox.getRole());
             validateParent(mailbox, updateRequest, mailboxSession);
 
             updateMailbox(mailbox, updateRequest, mailboxSession);
             responseBuilder.updated(mailboxId);
+
+        } catch (SystemMailboxNotUpdatableException e) {
+            notUpdated(mailboxId, "invalidArguments", "Cannot update a system mailbox.", responseBuilder);
         } catch (MailboxNameException e) {
             notUpdated(mailboxId, "invalidArguments", 
                     e.getMessage(), responseBuilder);
@@ -93,6 +99,12 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
         } catch (MailboxException e) {
             notUpdated(mailboxId, "anErrorOccurred", 
                     "An error occurred when updating the mailbox", responseBuilder);
+        }
+   }
+
+    private void checkRole(Optional<Role> role) throws SystemMailboxNotUpdatableException {
+        if (role.map(Role::isSystemRole).orElse(false)) {
+            throw new SystemMailboxNotUpdatableException();
         }
     }
 

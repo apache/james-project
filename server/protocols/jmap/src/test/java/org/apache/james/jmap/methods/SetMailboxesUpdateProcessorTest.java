@@ -64,7 +64,7 @@ public class SetMailboxesUpdateProcessorTest {
         SetMailboxesRequest request = SetMailboxesRequest.builder()
                 .update(mailboxId, MailboxUpdateRequest.builder().parentId(newParentId).build())
                 .build();
-        Mailbox mailbox = Mailbox.builder().id(mailboxId).name("name").build();
+        Mailbox mailbox = Mailbox.builder().id(mailboxId).name("name").role(Optional.empty()).build();
         when(mockedMailboxUtils.mailboxFromMailboxId(mailboxId, mockedMailboxSession))
             .thenReturn(Optional.of(mailbox));
         when(mockedMailboxUtils.mailboxPathFromMailboxId(newParentId, mockedMailboxSession))
