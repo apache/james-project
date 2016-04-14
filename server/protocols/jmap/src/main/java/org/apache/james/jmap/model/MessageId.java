@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 
 public class MessageId {
@@ -93,8 +94,8 @@ public class MessageId {
     
     @Override
     public String toString() {
-        return com.google.common.base.Objects
-                .toStringHelper(getClass())
+        return MoreObjects
+                .toStringHelper(this)
                 .add("username", username)
                 .add("mailboxPath", mailboxPath)
                 .add("uid", uid)

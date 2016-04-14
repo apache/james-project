@@ -120,7 +120,7 @@ public class KarafLiveTestSupport {
         final ServiceTracker tracker = new ServiceTracker(bundleContext, clazz, null);
         tracker.open(true);
         try {
-            final Stopwatch stopwatch = new Stopwatch().start();
+            final Stopwatch stopwatch = Stopwatch.createStarted();
             final int expectedCount = 1;
 
             while (true) {
