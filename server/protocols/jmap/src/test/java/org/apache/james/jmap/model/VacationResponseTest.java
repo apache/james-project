@@ -32,6 +32,7 @@ public class VacationResponseTest {
     public static final String MESSAGE = "A message explaining I am in vacation";
     public static final ZonedDateTime FROM_DATE = ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]");
     public static final ZonedDateTime TO_DATE = ZonedDateTime.parse("2016-04-16T11:56:32.224+07:00[Asia/Vientiane]");
+    public static final String SUBJECT = "subject";
 
     @Test
     public void vacationResponseBuilderShouldBeConstructedWithTheRightInformation() {
@@ -41,6 +42,7 @@ public class VacationResponseTest {
             .fromDate(Optional.of(FROM_DATE))
             .toDate(Optional.of(TO_DATE))
             .textBody(MESSAGE)
+            .subject(Optional.of(SUBJECT))
             .build();
 
         assertThat(vacationResponse.getId()).isEqualTo(IDENTIFIER);
@@ -48,6 +50,7 @@ public class VacationResponseTest {
         assertThat(vacationResponse.getTextBody()).isEqualTo(MESSAGE);
         assertThat(vacationResponse.getFromDate()).contains(FROM_DATE);
         assertThat(vacationResponse.getToDate()).contains(TO_DATE);
+        assertThat(vacationResponse.getSubject()).contains(SUBJECT);
     }
 
     @Test(expected = IllegalStateException.class)

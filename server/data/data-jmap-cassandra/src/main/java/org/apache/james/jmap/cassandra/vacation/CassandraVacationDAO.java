@@ -61,7 +61,8 @@ public class CassandraVacationDAO {
             .value(CassandraVacationTable.IS_ENABLED, bindMarker(CassandraVacationTable.IS_ENABLED))
             .value(CassandraVacationTable.FROM_DATE, bindMarker(CassandraVacationTable.FROM_DATE))
             .value(CassandraVacationTable.TO_DATE, bindMarker(CassandraVacationTable.TO_DATE))
-            .value(CassandraVacationTable.TEXT, bindMarker(CassandraVacationTable.TEXT)));
+            .value(CassandraVacationTable.TEXT, bindMarker(CassandraVacationTable.TEXT))
+            .value(CassandraVacationTable.SUBJECT, bindMarker(CassandraVacationTable.SUBJECT)));
 
         this.readStatement = session.prepare(select()
             .from(CassandraVacationTable.TABLE_NAME)
@@ -76,7 +77,8 @@ public class CassandraVacationDAO {
                 .setBool(CassandraVacationTable.IS_ENABLED, vacation.isEnabled())
                 .setUDTValue(CassandraVacationTable.FROM_DATE, convertToUDTValue(vacation.getFromDate()))
                 .setUDTValue(CassandraVacationTable.TO_DATE, convertToUDTValue(vacation.getToDate()))
-                .setString(CassandraVacationTable.TEXT, vacation.getTextBody()));
+                .setString(CassandraVacationTable.TEXT, vacation.getTextBody())
+                .setString(CassandraVacationTable.SUBJECT, vacation.getSubject().orElse(null)));
     }
 
     public CompletableFuture<Optional<Vacation>> retrieveVacation(AccountId accountId) {
@@ -87,6 +89,7 @@ public class CassandraVacationDAO {
                 .fromDate(retrieveDate(row, CassandraVacationTable.FROM_DATE))
                 .toDate(retrieveDate(row, CassandraVacationTable.TO_DATE))
                 .textBody(row.getString(CassandraVacationTable.TEXT))
+                .subject(Optional.ofNullable(row.getString(CassandraVacationTable.SUBJECT)))
                 .build()));
     }
 

@@ -49,6 +49,7 @@ public abstract class GetVacationResponseTest {
     private static final String USERS_DOMAIN = "domain.tld";
     public static final String USER = "username@" + USERS_DOMAIN;
     public static final String PASSWORD = "password";
+    public static final String SUBJECT = "subject";
 
     protected abstract GuiceJamesServer createJmapServer();
 
@@ -98,7 +99,8 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].fromDate", nullValue())
             .body(ARGUMENTS + ".list[0].toDate", nullValue())
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(false))
-            .body(ARGUMENTS + ".list[0].textBody", equalTo(""));
+            .body(ARGUMENTS + ".list[0].textBody", equalTo(""))
+            .body(ARGUMENTS + ".list[0].subject", nullValue());
     }
 
     @Test
@@ -109,6 +111,7 @@ public abstract class GetVacationResponseTest {
                 .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00Z")))
                 .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00Z")))
                 .textBody("Test explaining my vacations")
+                .subject(Optional.of(SUBJECT))
                 .build());
 
         given()
@@ -131,7 +134,8 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].fromDate", equalTo("2014-09-30T14:10:00Z"))
             .body(ARGUMENTS + ".list[0].toDate", equalTo("2014-10-30T14:10:00Z"))
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
-            .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"));
+            .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"))
+            .body(ARGUMENTS + ".list[0].subject", equalTo(SUBJECT));
     }
 
     @Test

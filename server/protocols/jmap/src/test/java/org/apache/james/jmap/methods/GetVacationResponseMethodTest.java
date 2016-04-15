@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -81,6 +82,7 @@ public class GetVacationResponseMethodTest {
         Vacation vacation = Vacation.builder()
             .enabled(true)
             .textBody("I am in vacation")
+            .subject(Optional.of("subject"))
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
         when(mailboxSession.getUser()).thenReturn(user);

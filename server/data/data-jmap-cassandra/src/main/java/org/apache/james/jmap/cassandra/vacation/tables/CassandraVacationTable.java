@@ -27,5 +27,6 @@ public interface CassandraVacationTable {
     String TO_DATE = "to_date";
     String IS_ENABLED = "is_enabled";
     String TEXT = "text";
+    String SUBJECT = "subject";
 
 }

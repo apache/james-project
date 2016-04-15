@@ -48,6 +48,7 @@ public abstract class SetVacationResponseTest {
     private static final String USERS_DOMAIN = "domain.tld";
     public static final String USER = "username@" + USERS_DOMAIN;
     public static final String PASSWORD = "password";
+    public static final String SUBJECT = "subject";
 
     protected abstract GuiceJamesServer createJmapServer();
 
@@ -146,7 +147,8 @@ public abstract class SetVacationResponseTest {
                         "\"isEnabled\": \"true\"," +
                         "\"textBody\": \"Message explaining my wonderful vacations\"," +
                         "\"fromDate\":\"2014-09-30T14:10:00Z[GMT]\"," +
-                        "\"toDate\":\"2014-10-30T14:10:00Z[GMT]\"" +
+                        "\"toDate\":\"2014-10-30T14:10:00Z[GMT]\"," +
+                        "\"subject\":\"" + SUBJECT + "\"" +
                     "}" +
                 "}" +
             "}, " +
@@ -170,6 +172,7 @@ public abstract class SetVacationResponseTest {
         assertThat(vacation.isEnabled()).isTrue();
         assertThat(vacation.getFromDate()).contains(ZonedDateTime.parse("2014-09-30T14:10:00Z[GMT]"));
         assertThat(vacation.getToDate()).contains(ZonedDateTime.parse("2014-10-30T14:10:00Z[GMT]"));
+        assertThat(vacation.getSubject()).contains(SUBJECT);
     }
 
     @Test

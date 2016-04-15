@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -67,6 +68,7 @@ public class SetVacationResponseMethodTest {
             return null;
         }
     };
+    public static final String SUBJECT = "subject";
 
     private SetVacationResponseMethod testee;
     private VacationRepository vacationRepository;
@@ -178,11 +180,13 @@ public class SetVacationResponseMethodTest {
                     .id(Vacation.ID)
                     .enabled(false)
                     .textBody(TEXT_BODY)
+                    .subject(Optional.of(SUBJECT))
                     .build()))
             .build();
         Vacation vacation = Vacation.builder()
             .enabled(false)
             .textBody(TEXT_BODY)
+            .subject(Optional.of(SUBJECT))
             .build();
         AccountId accountId = AccountId.fromString(USERNAME);
 

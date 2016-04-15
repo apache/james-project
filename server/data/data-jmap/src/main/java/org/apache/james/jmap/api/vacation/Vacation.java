@@ -38,6 +38,7 @@ public class Vacation {
         private Optional<Boolean> isEnabled = Optional.empty();
         private Optional<ZonedDateTime> fromDate = Optional.empty();
         private Optional<ZonedDateTime> toDate = Optional.empty();
+        private Optional<String> subject = Optional.empty();
         private String textBody = "";
 
         public Builder enabled(boolean enabled) {
@@ -62,30 +63,38 @@ public class Vacation {
             return this;
         }
 
+        public Builder subject(Optional<String> subject) {
+            this.subject = subject;
+            return this;
+        }
+
         public Builder copy(Vacation vacation) {
             this.textBody = vacation.getTextBody();
             this.fromDate = vacation.getFromDate();
             this.toDate = vacation.getToDate();
             this.isEnabled = Optional.of(vacation.isEnabled());
+            this.subject = vacation.getSubject();
             return this;
         }
 
         public Vacation build() {
             Preconditions.checkNotNull(textBody);
-            return new Vacation(isEnabled.orElse(DEFAULT_DISABLED), fromDate, toDate, textBody);
+            return new Vacation(isEnabled.orElse(DEFAULT_DISABLED), fromDate, toDate, textBody, subject);
         }
     }
 
     private final boolean isEnabled;
     private final Optional<ZonedDateTime> fromDate;
     private final Optional<ZonedDateTime> toDate;
+    private final Optional<String> subject;
     private final String textBody;
 
-    private Vacation(boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate, String textBody) {
+    private Vacation(boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate, String textBody, Optional<String> subject) {
         this.isEnabled = isEnabled;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.textBody = textBody;
+        this.subject = subject;
     }
 
 
@@ -103,6 +112,10 @@ public class Vacation {
 
     public String getTextBody() {
         return textBody;
+    }
+
+    public Optional<String> getSubject() {
+        return subject;
     }
 
     public boolean isActiveAtDate(ZonedDateTime instant) {
@@ -130,12 +143,13 @@ public class Vacation {
         return Objects.equals(this.isEnabled, vacation.isEnabled) &&
             Objects.equals(this.fromDate, vacation.fromDate) &&
             Objects.equals(this.toDate, vacation.toDate) &&
-            Objects.equals(this.textBody, vacation.textBody);
+            Objects.equals(this.textBody, vacation.textBody) &&
+            Objects.equals(this.subject, vacation.subject);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isEnabled, fromDate, toDate, textBody);
+        return Objects.hash(isEnabled, fromDate, toDate, textBody, subject);
     }
 
 }

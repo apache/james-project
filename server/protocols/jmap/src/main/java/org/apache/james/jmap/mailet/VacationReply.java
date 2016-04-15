@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mailet;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -27,6 +28,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -42,6 +45,7 @@ public class VacationReply {
         private final Mail originalMail;
         private MailAddress mailRecipient;
         private String reason;
+        private Optional<String> subject = Optional.empty();
 
         private Builder(Mail originalMail) {
             Preconditions.checkNotNull(originalMail, "Origin mail shall not be null");
@@ -60,6 +64,11 @@ public class VacationReply {
             return this;
         }
 
+        public Builder subject(Optional<String> subject) {
+            this.subject = subject;
+            return this;
+        }
+
         public VacationReply build() throws MessagingException {
             Preconditions.checkState(mailRecipient != null, "Original recipient address should not be null");
             Preconditions.checkState(originalMail.getSender() != null, "Original sender address should not be null");
@@ -69,6 +78,7 @@ public class VacationReply {
 
         private MimeMessage generateMimeMessage() throws MessagingException {
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(NOT_REPLY_TO_ALL);
+            subject.ifPresent(Throwing.consumer(subjectString -> reply.setHeader("subject", subjectString)));
             reply.setText(reason);
             reply.setHeader("from", mailRecipient.toString());
             reply.setHeader("to", originalMail.getSender().toString());

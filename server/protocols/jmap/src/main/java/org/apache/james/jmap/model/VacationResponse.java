@@ -47,6 +47,7 @@ public class VacationResponse {
         private boolean isEnabled;
         private Optional<ZonedDateTime> fromDate = Optional.empty();
         private Optional<ZonedDateTime> toDate = Optional.empty();
+        private Optional<String> subject = Optional.empty();
         private String textBody;
 
         public Builder id(String id) {
@@ -77,18 +78,24 @@ public class VacationResponse {
             return this;
         }
 
+        public Builder subject(Optional<String> subject) {
+            this.subject = subject;
+            return this;
+        }
+
         public Builder fromVacation(Vacation vacation) {
             this.id = Vacation.ID;
             this.isEnabled = vacation.isEnabled();
             this.fromDate = vacation.getFromDate();
             this.toDate = vacation.getToDate();
             this.textBody = vacation.getTextBody();
+            this.subject = vacation.getSubject();
             return this;
         }
 
         public VacationResponse build() {
             Preconditions.checkState(textBody != null, "textBody property of vacationResponse object should not be null");
-            return new VacationResponse(id, isEnabled, fromDate, toDate, textBody);
+            return new VacationResponse(id, isEnabled, fromDate, toDate, textBody, subject);
         }
     }
 
@@ -96,14 +103,17 @@ public class VacationResponse {
     private final boolean isEnabled;
     private final Optional<ZonedDateTime> fromDate;
     private final Optional<ZonedDateTime> toDate;
+    private final Optional<String> subject;
     private final String textBody;
 
-    private VacationResponse(String id, boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate, String textBody) {
+    private VacationResponse(String id, boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate,
+                             String textBody, Optional<String> subject) {
         this.id = id;
         this.isEnabled = isEnabled;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.textBody = textBody;
+        this.subject = subject;
     }
 
     public String getId() {
@@ -129,6 +139,10 @@ public class VacationResponse {
         return textBody;
     }
 
+    public Optional<String> getSubject() {
+        return subject;
+    }
+
     @JsonIgnore
     public boolean isValid() {
         return id.equals(Vacation.ID);
@@ -146,11 +160,12 @@ public class VacationResponse {
             && Objects.equals(this.isEnabled, that.isEnabled)
             && Objects.equals(this.fromDate, that.fromDate)
             && Objects.equals(this.toDate, that.toDate)
-            && Objects.equals(this.textBody, that.textBody);
+            && Objects.equals(this.textBody, that.textBody)
+            && Objects.equals(this.subject, that.subject);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, isEnabled, fromDate, toDate, textBody);
+        return Objects.hash(id, isEnabled, fromDate, toDate, textBody, subject);
     }
 }
