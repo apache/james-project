@@ -24,13 +24,10 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.modules.CassandraJmapServerModule;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.inject.TypeLiteral;
 
 public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
 
@@ -45,7 +42,7 @@ public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
 
     @Override
     protected GuiceJamesServer<?> createJmapServer() {
-        return new GuiceJamesServer<>(new TypeLiteral<CassandraId>(){})
+        return new GuiceJamesServer<>(CassandraJamesServerMain.cassandraId)
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }

@@ -25,11 +25,8 @@ import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
 import org.apache.james.jmap.utils.ZonedDateTimeProvider;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.inject.TypeLiteral;
 
 public class MemoryJmapAuthenticationTest extends JMAPAuthenticationTest {
 
@@ -38,7 +35,7 @@ public class MemoryJmapAuthenticationTest extends JMAPAuthenticationTest {
 
     @Override
     protected GuiceJamesServer<?> createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
-        return new GuiceJamesServer<>(new TypeLiteral<InMemoryId>(){})
+        return new GuiceJamesServer<>(MemoryJamesServerMain.inMemoryId)
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder),
                              (binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));

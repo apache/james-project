@@ -32,7 +32,7 @@ import com.google.inject.util.Modules;
 
 public class MemoryJamesServerMain {
 
-    private static final TypeLiteral<InMemoryId> inMemoryId = new TypeLiteral<InMemoryId>(){};
+    public static final TypeLiteral<InMemoryId> inMemoryId = new TypeLiteral<InMemoryId>(){};
     
     public static final Module inMemoryServerModule = Modules.combine(
         new MemoryDataModule(),

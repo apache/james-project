@@ -23,11 +23,8 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.GetMessagesMethodTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-
-import com.google.inject.TypeLiteral;
 
 public class MemoryGetMessagesMethodTest extends GetMessagesMethodTest {
 
@@ -36,7 +33,7 @@ public class MemoryGetMessagesMethodTest extends GetMessagesMethodTest {
 
     @Override
     protected GuiceJamesServer<?> createJmapServer() {
-        return new GuiceJamesServer<>(new TypeLiteral<InMemoryId>(){})
+        return new GuiceJamesServer<>(MemoryJamesServerMain.inMemoryId)
                     .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                     .overrideWith(new MemoryJmapServerModule(temporaryFolder));
     }
