@@ -171,4 +171,15 @@ public class CassandraUidAndModSeqProviderTest {
         assertThat(nbValues).isEqualTo(nbEntries);
     }
     
+    @Test
+    public void nextUidShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
+        SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
+        int nbEntries = 1000;
+        long nbValues = LongStream.range(0, nbEntries)
+            .parallel()
+            .map(Throwing.longUnaryOperator(x -> uidProvider.nextUid(null, mailbox)))
+            .distinct()
+            .count();
+        assertThat(nbValues).isEqualTo(nbEntries);
+    }
 }
