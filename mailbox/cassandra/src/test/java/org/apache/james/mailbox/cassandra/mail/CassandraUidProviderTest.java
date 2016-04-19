@@ -21,8 +21,6 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -30,7 +28,7 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
@@ -39,20 +37,16 @@ import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
 
-/**
- * Unit tests for UidProvider and ModSeqProvider.
- * 
- */
-public class CassandraUidAndModSeqProviderTest {
+public class CassandraUidProviderTest {
 
     private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
         new CassandraMailboxModule(),
-        new CassandraUidAndModSeqModule()));
+        new CassandraUidModule()));
+    
     private static final int MAX_RETRY = 100;
     
     private CassandraUidProvider uidProvider;
-    private CassandraModSeqProvider modSeqProvider;
     private CassandraMailboxMapper mapper;
     private SimpleMailbox<CassandraId> mailbox;
 
@@ -60,7 +54,6 @@ public class CassandraUidAndModSeqProviderTest {
     public void setUpClass() throws Exception {
         CASSANDRA.ensureAllTables();
         uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
-        modSeqProvider = new CassandraModSeqProvider(CASSANDRA.getConf());
         mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox<>(path, 1234);
@@ -74,7 +67,7 @@ public class CassandraUidAndModSeqProviderTest {
 
     @Test
     public void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
-    	int nbEntries = 100;
+        int nbEntries = 100;
         long result = uidProvider.lastUid(null, mailbox);
         assertEquals(0, result);
         LongStream.range(0, nbEntries)
@@ -87,7 +80,7 @@ public class CassandraUidAndModSeqProviderTest {
 
     @Test
     public void nextUidShouldIncrementValueByOne() throws Exception {
-    	int nbEntries = 100;
+        int nbEntries = 100;
         long lastUid = uidProvider.lastUid(null, mailbox);
         LongStream.range(lastUid + 1, lastUid + nbEntries)
             .forEach(Throwing.longConsumer(value -> {
@@ -97,42 +90,6 @@ public class CassandraUidAndModSeqProviderTest {
             );
     }
 
-    @Test
-    public void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
-    	int nbEntries = 100;
-        long result = modSeqProvider.highestModSeq(null, mailbox);
-        assertEquals(0, result);
-        LongStream.range(0, nbEntries)
-            .forEach(Throwing.longConsumer(value -> {
-                        long uid = modSeqProvider.nextModSeq(null, mailbox);
-                        assertThat(uid).isEqualTo(modSeqProvider.highestModSeq(null, mailbox));
-                })
-            );
-    }
-
-    @Test
-    public void nextModSeqShouldIncrementValueByOne() throws Exception {
-    	int nbEntries = 100;
-    	long lastUid = modSeqProvider.highestModSeq(null, mailbox);
-        LongStream.range(lastUid + 1, lastUid + nbEntries)
-            .forEach(Throwing.longConsumer(value -> {
-                        long result = modSeqProvider.nextModSeq(null, mailbox);
-                        assertThat(value).isEqualTo(result);
-                })
-            );
-    }
-
-    @Test
-    public void nextModSeqShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
-        int nbEntries = 100;
-        long nbValues = LongStream.range(0, nbEntries)
-            .parallel()
-            .map(Throwing.longUnaryOperator(x -> modSeqProvider.nextModSeq(null, mailbox)))
-            .distinct()
-            .count();
-        assertThat(nbValues).isEqualTo(nbEntries);
-    }
-    
     @Test
     public void nextUidShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
         int nbEntries = 100;

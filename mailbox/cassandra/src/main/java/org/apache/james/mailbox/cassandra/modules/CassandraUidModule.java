@@ -19,39 +19,34 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import org.apache.james.backends.cassandra.components.CassandraIndex;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable;
+import static com.datastax.driver.core.DataType.bigint;
+import static com.datastax.driver.core.DataType.timeuuid;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.timeuuid;
+import org.apache.james.backends.cassandra.components.CassandraIndex;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable;
 
-public class CassandraUidAndModSeqModule implements CassandraModule {
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+
+public class CassandraUidModule implements CassandraModule {
 
     private final List<CassandraTable> tables;
     private final List<CassandraIndex> index;
     private final List<CassandraType> types;
 
-    public CassandraUidAndModSeqModule() {
+    public CassandraUidModule() {
         tables = Arrays.asList(
             new CassandraTable(CassandraMessageUidTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageUidTable.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraMessageUidTable.MAILBOX_ID, timeuuid())
-                    .addColumn(CassandraMessageUidTable.NEXT_UID, bigint())),
-            new CassandraTable(CassandraMessageModseqTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMessageModseqTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
-                    .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint())));
+                    .addColumn(CassandraMessageUidTable.NEXT_UID, bigint())));
         index = Collections.emptyList();
         types = Collections.emptyList();
     }

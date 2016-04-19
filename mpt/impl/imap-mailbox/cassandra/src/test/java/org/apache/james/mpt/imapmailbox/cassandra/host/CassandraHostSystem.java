@@ -36,7 +36,8 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -69,7 +70,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraMailboxModule(),
             new CassandraMessageModule(),
             new CassandraMailboxCounterModule(),
-            new CassandraUidAndModSeqModule(),
+            new CassandraUidModule(),
+            new CassandraModSeqModule(),
             new CassandraSubscriptionModule(),
             new CassandraQuotaModule());
         cassandraClusterSingleton = CassandraCluster.create(mailboxModule);

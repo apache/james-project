@@ -29,7 +29,8 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -48,7 +49,8 @@ public class CassandraMailboxManagerTest extends AbstractMailboxManagerTest {
         new CassandraMailboxModule(),
         new CassandraMessageModule(),
         new CassandraMailboxCounterModule(),
-        new CassandraUidAndModSeqModule(),
+        new CassandraUidModule(),
+        new CassandraModSeqModule(),
         new CassandraSubscriptionModule()));
 
     /**

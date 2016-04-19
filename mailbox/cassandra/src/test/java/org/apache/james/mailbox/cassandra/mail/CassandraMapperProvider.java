@@ -8,7 +8,8 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -22,7 +23,8 @@ public class CassandraMapperProvider implements MapperProvider<CassandraId> {
         new CassandraMailboxModule(),
         new CassandraMessageModule(),
         new CassandraMailboxCounterModule(),
-        new CassandraUidAndModSeqModule()));
+        new CassandraModSeqModule(),
+        new CassandraUidModule()));
 
     @Override
     public MailboxMapper<CassandraId> createMailboxMapper() throws MailboxException {
