@@ -26,7 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.api.ContinuationTokenManager;
 import org.apache.james.jmap.model.ContinuationToken;
-import org.apache.james.jmap.utils.ZonedDateTimeProvider;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
 

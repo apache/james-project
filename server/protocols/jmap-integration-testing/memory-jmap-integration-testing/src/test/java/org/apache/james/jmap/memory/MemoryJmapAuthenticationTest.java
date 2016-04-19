@@ -24,7 +24,7 @@ import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.apache.james.jmap.utils.ZonedDateTimeProvider;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 

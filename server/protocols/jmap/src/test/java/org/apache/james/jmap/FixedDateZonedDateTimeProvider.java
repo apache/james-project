@@ -21,7 +21,7 @@ package org.apache.james.jmap;
 
 import java.time.ZonedDateTime;
 
-import org.apache.james.jmap.utils.ZonedDateTimeProvider;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 
 public class FixedDateZonedDateTimeProvider implements ZonedDateTimeProvider {
 

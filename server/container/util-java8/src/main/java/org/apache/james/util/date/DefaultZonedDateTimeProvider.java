@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.utils;
+package org.apache.james.util.date;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
