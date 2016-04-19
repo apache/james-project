@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.LongConsumer;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -33,14 +32,13 @@ import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidAndModSeqModule;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
+import com.github.fge.lambdas.Throwing;
 
 /**
  * Unit tests for UidProvider and ModSeqProvider.
@@ -113,7 +111,7 @@ public class CassandraUidAndModSeqProviderTest {
         long result = uidProvider.lastUid(null, newBox);
         assertEquals(0, result);
         LongStream.range(1, 10)
-            .forEach(propagateException(value -> {
+            .forEach(Throwing.longConsumer(value -> {
                         long uid = uidProvider.nextUid(null, newBox);
                         assertThat(uid).isEqualTo(uidProvider.lastUid(null, newBox));
                 })
@@ -125,7 +123,7 @@ public class CassandraUidAndModSeqProviderTest {
         SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
         long lastUid = uidProvider.lastUid(null, mailbox);
         LongStream.range(lastUid + 1, lastUid + 10)
-            .forEach(propagateException(value -> {
+            .forEach(Throwing.longConsumer(value -> {
                         long result = uidProvider.nextUid(null, mailbox);
                         assertThat(value).isEqualTo(result);
                 })
@@ -143,7 +141,7 @@ public class CassandraUidAndModSeqProviderTest {
         long result = modSeqProvider.highestModSeq(null, newBox);
         assertEquals(0, result);
         LongStream.range(1, 10)
-            .forEach(propagateException(value -> {
+            .forEach(Throwing.longConsumer(value -> {
                         long uid = modSeqProvider.nextModSeq(null, newBox);
                         assertThat(uid).isEqualTo(modSeqProvider.highestModSeq(null, newBox));
                 })
@@ -155,7 +153,7 @@ public class CassandraUidAndModSeqProviderTest {
         SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
         long lastUid = modSeqProvider.highestModSeq(null, mailbox);
         LongStream.range(lastUid + 1, lastUid + 10)
-            .forEach(propagateException(value -> {
+            .forEach(Throwing.longConsumer(value -> {
                         long result = modSeqProvider.nextModSeq(null, mailbox);
                         assertThat(value).isEqualTo(result);
                 })
@@ -169,7 +167,7 @@ public class CassandraUidAndModSeqProviderTest {
         final AtomicLong previousValue = new AtomicLong();
         LongStream.range(lastUid + 1, lastUid + 10)
             .parallel()
-            .forEach(propagateException(value -> {
+            .forEach(Throwing.longConsumer(value -> {
                         long result = modSeqProvider.nextModSeq(null, mailbox);
                         assertThat(result).isGreaterThan(previousValue.get());
                         previousValue.set(result);
@@ -177,18 +175,4 @@ public class CassandraUidAndModSeqProviderTest {
             );
     }
     
-    @FunctionalInterface
-    private interface ConsumerThatThrowsMailboxException<T> {
-        void apply(T arg) throws MailboxException;
-    }
-    
-    private LongConsumer propagateException(ConsumerThatThrowsMailboxException<Long> function) {
-        return (value) -> {
-            try {
-                function.apply(value);
-            } catch (MailboxException e) {
-                Throwables.propagate(e);
-            }
-        };
-    }
 }
