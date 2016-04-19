@@ -80,25 +80,40 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
             responseBuilder.updated(mailboxId);
 
         } catch (SystemMailboxNotUpdatableException e) {
-            notUpdated(mailboxId, "invalidArguments", "Cannot update a system mailbox.", responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Cannot update a system mailbox.")
+                    .build());
         } catch (MailboxNameException e) {
-            notUpdated(mailboxId, "invalidArguments", 
-                    e.getMessage(), responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description(e.getMessage())
+                    .build());
         } catch (MailboxNotFoundException e) {
-            notUpdated(mailboxId, "notFound", 
-                    String.format("The mailbox '%s' was not found", mailboxId), responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("notFound")
+                    .description(String.format("The mailbox '%s' was not found", mailboxId))
+                    .build());
         } catch (MailboxParentNotFoundException e) {
-            notUpdated(mailboxId, "notFound", 
-                    String.format("The parent mailbox '%s' was not found.", e.getParentId()), responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("notFound")
+                    .description(String.format("The parent mailbox '%s' was not found.", e.getParentId()))
+                    .build());
         } catch (MailboxHasChildException e) {
-            notUpdated(mailboxId, "invalidArguments", 
-                    "Cannot update a parent mailbox.", responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Cannot update a parent mailbox.")
+                    .build());
         } catch (MailboxExistsException e) {
-            notUpdated(mailboxId, "invalidArguments", 
-                    "Cannot rename a mailbox to an already existing mailbox.", responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Cannot rename a mailbox to an already existing mailbox.")
+                    .build());
         } catch (MailboxException e) {
-            notUpdated(mailboxId, "anErrorOccurred", 
-                    "An error occurred when updating the mailbox", responseBuilder);
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type( "anErrorOccurred")
+                    .description("An error occurred when updating the mailbox")
+                    .build());
         }
    }
 
@@ -106,13 +121,6 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
         if (role.map(Role::isSystemRole).orElse(false)) {
             throw new SystemMailboxNotUpdatableException();
         }
-    }
-
-    private Builder notUpdated(String mailboxId, String type, String message, Builder responseBuilder) {
-        return responseBuilder.notUpdated(mailboxId, SetError.builder()
-                .type(type)
-                .description(message)
-                .build());
     }
 
     private Mailbox getMailbox(String mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {
