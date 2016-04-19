@@ -49,17 +49,12 @@ public class CassandraUidAndModSeqProviderTest {
         new CassandraAclModule(),
         new CassandraMailboxModule(),
         new CassandraUidAndModSeqModule()));
-    private static final int NAMESPACES = 5;
-    private static final int USERS = 5;
-    private static final int MAILBOX_NO = 5;
     private static final int MAX_RETRY = 100;
-    private static final char SEPARATOR = '%';
     
     private CassandraUidProvider uidProvider;
     private CassandraModSeqProvider modSeqProvider;
     private CassandraMailboxMapper mapper;
-    private List<SimpleMailbox<CassandraId>> mailboxList;
-    private List<MailboxPath> pathsList;
+    private SimpleMailbox<CassandraId> mailbox;
 
     @Before
     public void setUpClass() throws Exception {
@@ -67,10 +62,9 @@ public class CassandraUidAndModSeqProviderTest {
         uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
         modSeqProvider = new CassandraModSeqProvider(CASSANDRA.getConf());
         mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
-        fillMailboxList();
-        for (SimpleMailbox<CassandraId> mailbox : mailboxList) {
-            mapper.save(mailbox);
-        }
+        MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
+        mailbox = new SimpleMailbox<>(path, 1234);
+        mapper.save(mailbox);
     }
     
     @After
@@ -78,50 +72,24 @@ public class CassandraUidAndModSeqProviderTest {
         CASSANDRA.clearAllTables();
     }
 
-    private void fillMailboxList() {
-        mailboxList = new ArrayList<>();
-        pathsList = new ArrayList<>();
-        MailboxPath path;
-        String name;
-        for (int i = 0; i < NAMESPACES; i++) {
-            for (int j = 0; j < USERS; j++) {
-                for (int k = 0; k < MAILBOX_NO; k++) {
-                    if (j == 3) {
-                        name = "test" + SEPARATOR + "subbox" + k;
-                    } else {
-                        name = "mailbox" + k;
-                    }
-                    path = new MailboxPath("namespace" + i, "user" + j, name);
-                    pathsList.add(path);
-                    mailboxList.add(new SimpleMailbox<>(path, 13));
-                }
-            }
-        }
-    }
-
     @Test
     public void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
-        MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
-        SimpleMailbox<CassandraId> newBox = new SimpleMailbox<>(path, 1234);
-        mapper.save(newBox);
-        mailboxList.add(newBox);
-        pathsList.add(path);
-
-        long result = uidProvider.lastUid(null, newBox);
+    	int nbEntries = 100;
+        long result = uidProvider.lastUid(null, mailbox);
         assertEquals(0, result);
-        LongStream.range(1, 10)
+        LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        long uid = uidProvider.nextUid(null, newBox);
-                        assertThat(uid).isEqualTo(uidProvider.lastUid(null, newBox));
+                        long uid = uidProvider.nextUid(null, mailbox);
+                        assertThat(uid).isEqualTo(uidProvider.lastUid(null, mailbox));
                 })
             );
     }
 
     @Test
     public void nextUidShouldIncrementValueByOne() throws Exception {
-        SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
+    	int nbEntries = 100;
         long lastUid = uidProvider.lastUid(null, mailbox);
-        LongStream.range(lastUid + 1, lastUid + 10)
+        LongStream.range(lastUid + 1, lastUid + nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                         long result = uidProvider.nextUid(null, mailbox);
                         assertThat(value).isEqualTo(result);
@@ -131,27 +99,22 @@ public class CassandraUidAndModSeqProviderTest {
 
     @Test
     public void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
-        MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
-        SimpleMailbox<CassandraId> newBox = new SimpleMailbox<>(path, 1234);
-        mapper.save(newBox);
-        mailboxList.add(newBox);
-        pathsList.add(path);
-
-        long result = modSeqProvider.highestModSeq(null, newBox);
+    	int nbEntries = 100;
+        long result = modSeqProvider.highestModSeq(null, mailbox);
         assertEquals(0, result);
-        LongStream.range(1, 10)
+        LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        long uid = modSeqProvider.nextModSeq(null, newBox);
-                        assertThat(uid).isEqualTo(modSeqProvider.highestModSeq(null, newBox));
+                        long uid = modSeqProvider.nextModSeq(null, mailbox);
+                        assertThat(uid).isEqualTo(modSeqProvider.highestModSeq(null, mailbox));
                 })
             );
     }
 
     @Test
     public void nextModSeqShouldIncrementValueByOne() throws Exception {
-        SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
-        long lastUid = modSeqProvider.highestModSeq(null, mailbox);
-        LongStream.range(lastUid + 1, lastUid + 10)
+    	int nbEntries = 100;
+    	long lastUid = modSeqProvider.highestModSeq(null, mailbox);
+        LongStream.range(lastUid + 1, lastUid + nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                         long result = modSeqProvider.nextModSeq(null, mailbox);
                         assertThat(value).isEqualTo(result);
@@ -161,8 +124,7 @@ public class CassandraUidAndModSeqProviderTest {
 
     @Test
     public void nextModSeqShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
-        SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
-        int nbEntries = 1000;
+        int nbEntries = 100;
         long nbValues = LongStream.range(0, nbEntries)
             .parallel()
             .map(Throwing.longUnaryOperator(x -> modSeqProvider.nextModSeq(null, mailbox)))
@@ -173,8 +135,7 @@ public class CassandraUidAndModSeqProviderTest {
     
     @Test
     public void nextUidShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
-        SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
-        int nbEntries = 1000;
+        int nbEntries = 100;
         long nbValues = LongStream.range(0, nbEntries)
             .parallel()
             .map(Throwing.longUnaryOperator(x -> uidProvider.nextUid(null, mailbox)))
