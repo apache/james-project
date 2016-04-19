@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -161,18 +160,15 @@ public class CassandraUidAndModSeqProviderTest {
     }
 
     @Test
-    public void nextModSeqShouldIncrementValueWhenParallelCalls() throws Exception {
+    public void nextModSeqShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
         SimpleMailbox<CassandraId> mailbox = mailboxList.get(mailboxList.size() / 2);
-        long lastUid = modSeqProvider.highestModSeq(null, mailbox);
-        final AtomicLong previousValue = new AtomicLong();
-        LongStream.range(lastUid + 1, lastUid + 10)
+        int nbEntries = 1000;
+        long nbValues = LongStream.range(0, nbEntries)
             .parallel()
-            .forEach(Throwing.longConsumer(value -> {
-                        long result = modSeqProvider.nextModSeq(null, mailbox);
-                        assertThat(result).isGreaterThan(previousValue.get());
-                        previousValue.set(result);
-                })
-            );
+            .map(Throwing.longUnaryOperator(x -> modSeqProvider.nextModSeq(null, mailbox)))
+            .distinct()
+            .count();
+        assertThat(nbValues).isEqualTo(nbEntries);
     }
     
 }
