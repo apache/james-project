@@ -11,6 +11,7 @@ S: 250 2.1.0 Sender <matthieu@yopmail.com> OK
 S: 250 2.1.5 Recipient <bob@mydomain.tld> OK
 S: 354 Ok Send data ending with <CRLF>.<CRLF>
 C: subject: test
-C: test
+C:
+C: content
 C: .
 S: 250 2.6.0 Message received

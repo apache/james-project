@@ -87,6 +87,7 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
         .then()
             .statusCode(200)
             .body("[0].from", equalTo("matthieu@yopmail.com"))
-            .body("[0].subject", equalTo("test"));
+            .body("[0].subject", equalTo("test"))
+            .body("[0].text", equalTo("content"));
     }
 }
