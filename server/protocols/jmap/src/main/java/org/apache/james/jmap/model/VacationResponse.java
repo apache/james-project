@@ -24,11 +24,14 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.json.OptionalZonedDateTimeDeserializer;
+import org.apache.james.jmap.json.OptionalZonedDateTimeSerializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 
 @JsonDeserialize(builder = VacationResponse.Builder.class)
@@ -57,11 +60,13 @@ public class VacationResponse {
             return this;
         }
 
+        @JsonDeserialize(using = OptionalZonedDateTimeDeserializer.class)
         public Builder fromDate(Optional<ZonedDateTime> fromDate) {
             this.fromDate = fromDate;
             return this;
         }
 
+        @JsonDeserialize(using = OptionalZonedDateTimeDeserializer.class)
         public Builder toDate(Optional<ZonedDateTime> toDate) {
             this.toDate = toDate;
             return this;
@@ -110,10 +115,12 @@ public class VacationResponse {
         return isEnabled;
     }
 
+    @JsonSerialize(using = OptionalZonedDateTimeSerializer.class)
     public Optional<ZonedDateTime> getFromDate() {
         return fromDate;
     }
 
+    @JsonSerialize(using = OptionalZonedDateTimeSerializer.class)
     public Optional<ZonedDateTime> getToDate() {
         return toDate;
     }

@@ -173,6 +173,43 @@ public abstract class SetVacationResponseTest {
     }
 
     @Test
+    public void setVacationResponseShouldHandleNamedTimeZone() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"," +
+                        "\"fromDate\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\"," +
+                        "\"toDate\":\"2016-04-07T02:01+07:00[Asia/Vientiane]\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+            .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponseSet"))
+            .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
+
+        Vacation vacation = jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER));
+        assertThat(vacation.getTextBody()).isEqualTo("Message explaining my wonderful vacations");
+        assertThat(vacation.isEnabled()).isTrue();
+        assertThat(vacation.getFromDate()).contains(ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"));
+        assertThat(vacation.getToDate()).contains(ZonedDateTime.parse("2016-04-07T02:01+07:00[Asia/Vientiane]"));
+    }
+
+    @Test
     public void nullTextBodyShouldBeRejected() {
         String bodyRequest = "[[" +
             "\"setVacationResponse\", " +

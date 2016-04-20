@@ -140,7 +140,7 @@ public abstract class GetVacationResponseTest {
             Vacation.builder()
                 .enabled(true)
                 .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
-                .toDate(Optional.of(ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00")))
+                .toDate(Optional.of(ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]")))
                 .textBody("Test explaining my vacations")
                 .build());
 
@@ -162,7 +162,7 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
             .body(ARGUMENTS + ".list[0].fromDate", equalTo("2014-09-30T14:10:00+02:00"))
-            .body(ARGUMENTS + ".list[0].toDate", equalTo("2016-04-15T11:56:32.224+07:00"))
+            .body(ARGUMENTS + ".list[0].toDate", equalTo("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]"))
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
             .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"));
     }
