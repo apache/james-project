@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.model.ClientId;
@@ -45,10 +46,12 @@ public class SetVacationResponseMethod implements Method {
     public static final String INVALID_ARGUMENT_DESCRIPTION = "update field should just contain one entry with key \"singleton\"";
 
     private final VacationRepository vacationRepository;
+    private final NotificationRegistry notificationRegistry;
 
     @Inject
-    public SetVacationResponseMethod(VacationRepository vacationRepository) {
+    public SetVacationResponseMethod(VacationRepository vacationRepository, NotificationRegistry notificationRegistry) {
         this.vacationRepository = vacationRepository;
+        this.notificationRegistry = notificationRegistry;
     }
 
     @Override
@@ -90,6 +93,7 @@ public class SetVacationResponseMethod implements Method {
     private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
             vacationRepository.modifyVacation(accountId, convertToVacation(vacationResponse)).join();
+            notificationRegistry.flush(accountId);
             return Stream.of(JmapResponse.builder()
                 .clientId(clientId)
                 .responseName(RESPONSE_NAME)

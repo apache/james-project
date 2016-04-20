@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.model.ClientId;
@@ -74,13 +75,15 @@ public class SetVacationResponseMethodTest {
     private VacationRepository vacationRepository;
     private ClientId clientId;
     private MailboxSession mailboxSession;
+    private NotificationRegistry notificationRegistry;
 
     @Before
     public void setUp() {
         clientId = mock(ClientId.class);
         mailboxSession = mock(MailboxSession.class);
         vacationRepository = mock(VacationRepository.class);
-        testee = new SetVacationResponseMethod(vacationRepository);
+        notificationRegistry = mock(NotificationRegistry.class);
+        testee = new SetVacationResponseMethod(vacationRepository, notificationRegistry);
     }
 
     @Test(expected = NullPointerException.class)
@@ -119,7 +122,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository);
+        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
     }
 
     @Test
@@ -142,7 +145,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository);
+        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
     }
 
     @Test
@@ -170,7 +173,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository);
+        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
     }
 
     @Test
@@ -205,7 +208,8 @@ public class SetVacationResponseMethodTest {
         assertThat(result).containsExactly(expected);
 
         verify(vacationRepository).modifyVacation(accountId, vacation);
-        verifyNoMoreInteractions(vacationRepository);
+        verify(notificationRegistry).flush(accountId);
+        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
     }
 
     @Test
@@ -232,7 +236,7 @@ public class SetVacationResponseMethodTest {
                 .build())
             .build();
         assertThat(result).containsExactly(expected);
-        verifyNoMoreInteractions(vacationRepository);
+        verifyNoMoreInteractions(vacationRepository, notificationRegistry);
     }
 
 }
