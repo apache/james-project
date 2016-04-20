@@ -21,9 +21,12 @@ package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
+import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistry;
+import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistryModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraVacationModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraVacationRepository;
 
@@ -42,8 +45,12 @@ public class CassandraJmapModule extends AbstractModule {
         bind(CassandraVacationRepository.class).in(Scopes.SINGLETON);
         bind(VacationRepository.class).to(CassandraVacationRepository.class);
 
+        bind(CassandraNotificationRegistry.class).in(Scopes.SINGLETON);
+        bind(NotificationRegistry.class).to(CassandraNotificationRegistry.class);
+
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(CassandraAccessModule.class);
         cassandraDataDefinitions.addBinding().to(CassandraVacationModule.class);
+        cassandraDataDefinitions.addBinding().to(CassandraNotificationRegistryModule.class);
     }
 }
