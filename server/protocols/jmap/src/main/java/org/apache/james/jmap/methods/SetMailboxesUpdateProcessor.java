@@ -130,11 +130,26 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
 
     private void validateMailboxName(MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxNameException {
         char pathDelimiter = mailboxSession.getPathDelimiter();
-        if (updateRequest.getName()
-                .filter(name -> name.contains(String.valueOf(pathDelimiter)))
-                .isPresent()) {
+
+        if (nameContainsPathDelimiter(updateRequest, pathDelimiter)) {
             throw new MailboxNameException(String.format("The mailbox '%s' contains an illegal character: '%c'", updateRequest.getName().get(), pathDelimiter));
         }
+        if (nameMatchesSystemMailbox(updateRequest)) {
+            throw new MailboxNameException(String.format("The mailbox '%s' is a system mailbox.", updateRequest.getName().get()));
+        }
+    }
+
+    private boolean nameMatchesSystemMailbox(MailboxUpdateRequest updateRequest) {
+        return updateRequest.getName()
+                .flatMap(Role::from)
+                .filter(Role::isSystemRole)
+                .isPresent();
+    }
+
+    private boolean nameContainsPathDelimiter(MailboxUpdateRequest updateRequest, char pathDelimiter) {
+        return updateRequest.getName()
+                .filter(name -> name.contains(String.valueOf(pathDelimiter)))
+                .isPresent() ;
     }
 
     private void validateParent(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException, MailboxHasChildException {

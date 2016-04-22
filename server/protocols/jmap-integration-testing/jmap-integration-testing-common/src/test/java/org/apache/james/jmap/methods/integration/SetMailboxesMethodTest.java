@@ -1476,4 +1476,40 @@ public abstract class SetMailboxesMethodTest {
                     hasEntry(equalTo("type"), equalTo("invalidArguments")),
                     hasEntry(equalTo("description"), equalTo("Cannot update a system mailbox.")))));
     }
+
+    @Test
+    public void setMailboxesShouldReturnNotUpdatedWhenRenameToSystemMailboxName() {
+
+        jmapServer.serverProbe().createMailbox("#private", username, "myBox");
+        Mailbox<?> mailboxMyBox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
+        String mailboxIdMyBox = mailboxMyBox.getMailboxId().serialize();
+
+        String requestBody =
+                "[" +
+                    "  [ \"setMailboxes\"," +
+                    "    {" +
+                    "      \"update\": {" +
+                    "        \"" + mailboxIdMyBox + "\" : {" +
+                    "          \"name\" : \"outbox\"" +
+                    "        }" +
+                    "      }" +
+                    "    }," +
+                    "    \"#0\"" +
+                    "  ]" +
+                    "]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxIdMyBox), Matchers.allOf(
+                    hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                    hasEntry(equalTo("description"), equalTo("The mailbox 'outbox' is a system mailbox.")))));
+    }
 }
