@@ -26,7 +26,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.exceptions.MailboxHasChildException;
-import org.apache.james.jmap.exceptions.SystemMailboxException;
+import org.apache.james.jmap.exceptions.SystemMailboxNotUpdatableException;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
@@ -103,7 +103,7 @@ public class SetMailboxesDestructionProcessor<Id extends MailboxId> implements S
                     .type("mailboxHasChild")
                     .description(String.format("The mailbox '%s' has a child.", entry.getKey()))
                     .build());
-        } catch (SystemMailboxException e) {
+        } catch (SystemMailboxNotUpdatableException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
                     .type("invalidArguments")
                     .description(String.format("The mailbox '%s' is a system mailbox.", entry.getKey()))
@@ -118,7 +118,7 @@ public class SetMailboxesDestructionProcessor<Id extends MailboxId> implements S
         }
     }
 
-    private void preconditions(Mailbox mailbox, MailboxSession mailboxSession) throws MailboxHasChildException, SystemMailboxException, MailboxException {
+    private void preconditions(Mailbox mailbox, MailboxSession mailboxSession) throws MailboxHasChildException, SystemMailboxNotUpdatableException, MailboxException {
         checkForChild(mailbox.getId(), mailboxSession);
         checkRole(mailbox.getRole());
     }
@@ -129,9 +129,9 @@ public class SetMailboxesDestructionProcessor<Id extends MailboxId> implements S
         }
     }
 
-    private void checkRole(Optional<Role> role) throws SystemMailboxException {
+    private void checkRole(Optional<Role> role) throws SystemMailboxNotUpdatableException {
         if (role.map(Role::isSystemRole).orElse(false)) {
-            throw new SystemMailboxException();
+            throw new SystemMailboxNotUpdatableException();
         }
     }
 

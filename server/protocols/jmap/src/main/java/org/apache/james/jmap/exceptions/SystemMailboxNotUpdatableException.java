@@ -19,5 +19,5 @@
 
 package org.apache.james.jmap.exceptions;
 
-public class SystemMailboxException extends Exception {
+public class SystemMailboxNotUpdatableException extends RuntimeException {
 }

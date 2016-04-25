@@ -26,12 +26,14 @@ import javax.inject.Inject;
 import org.apache.james.jmap.exceptions.MailboxHasChildException;
 import org.apache.james.jmap.exceptions.MailboxNameException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
+import org.apache.james.jmap.exceptions.SystemMailboxNotUpdatableException;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.SetMailboxesResponse.Builder;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
+import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -71,36 +73,54 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
         try {
             validateMailboxName(updateRequest, mailboxSession);
             Mailbox mailbox = getMailbox(mailboxId, mailboxSession);
+            checkRole(mailbox.getRole());
             validateParent(mailbox, updateRequest, mailboxSession);
 
             updateMailbox(mailbox, updateRequest, mailboxSession);
             responseBuilder.updated(mailboxId);
-        } catch (MailboxNameException e) {
-            notUpdated(mailboxId, "invalidArguments", 
-                    e.getMessage(), responseBuilder);
-        } catch (MailboxNotFoundException e) {
-            notUpdated(mailboxId, "notFound", 
-                    String.format("The mailbox '%s' was not found", mailboxId), responseBuilder);
-        } catch (MailboxParentNotFoundException e) {
-            notUpdated(mailboxId, "notFound", 
-                    String.format("The parent mailbox '%s' was not found.", e.getParentId()), responseBuilder);
-        } catch (MailboxHasChildException e) {
-            notUpdated(mailboxId, "invalidArguments", 
-                    "Cannot update a parent mailbox.", responseBuilder);
-        } catch (MailboxExistsException e) {
-            notUpdated(mailboxId, "invalidArguments", 
-                    "Cannot rename a mailbox to an already existing mailbox.", responseBuilder);
-        } catch (MailboxException e) {
-            notUpdated(mailboxId, "anErrorOccurred", 
-                    "An error occurred when updating the mailbox", responseBuilder);
-        }
-    }
 
-    private Builder notUpdated(String mailboxId, String type, String message, Builder responseBuilder) {
-        return responseBuilder.notUpdated(mailboxId, SetError.builder()
-                .type(type)
-                .description(message)
-                .build());
+        } catch (SystemMailboxNotUpdatableException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Cannot update a system mailbox.")
+                    .build());
+        } catch (MailboxNameException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description(e.getMessage())
+                    .build());
+        } catch (MailboxNotFoundException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("notFound")
+                    .description(String.format("The mailbox '%s' was not found", mailboxId))
+                    .build());
+        } catch (MailboxParentNotFoundException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("notFound")
+                    .description(String.format("The parent mailbox '%s' was not found.", e.getParentId()))
+                    .build());
+        } catch (MailboxHasChildException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Cannot update a parent mailbox.")
+                    .build());
+        } catch (MailboxExistsException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type("invalidArguments")
+                    .description("Cannot rename a mailbox to an already existing mailbox.")
+                    .build());
+        } catch (MailboxException e) {
+            responseBuilder.notUpdated(mailboxId, SetError.builder()
+                    .type( "anErrorOccurred")
+                    .description("An error occurred when updating the mailbox")
+                    .build());
+        }
+   }
+
+    private void checkRole(Optional<Role> role) throws SystemMailboxNotUpdatableException {
+        if (role.map(Role::isSystemRole).orElse(false)) {
+            throw new SystemMailboxNotUpdatableException();
+        }
     }
 
     private Mailbox getMailbox(String mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {
@@ -110,11 +130,26 @@ public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMai
 
     private void validateMailboxName(MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxNameException {
         char pathDelimiter = mailboxSession.getPathDelimiter();
-        if (updateRequest.getName()
-                .filter(name -> name.contains(String.valueOf(pathDelimiter)))
-                .isPresent()) {
+
+        if (nameContainsPathDelimiter(updateRequest, pathDelimiter)) {
             throw new MailboxNameException(String.format("The mailbox '%s' contains an illegal character: '%c'", updateRequest.getName().get(), pathDelimiter));
         }
+        if (nameMatchesSystemMailbox(updateRequest)) {
+            throw new MailboxNameException(String.format("The mailbox '%s' is a system mailbox.", updateRequest.getName().get()));
+        }
+    }
+
+    private boolean nameMatchesSystemMailbox(MailboxUpdateRequest updateRequest) {
+        return updateRequest.getName()
+                .flatMap(Role::from)
+                .filter(Role::isSystemRole)
+                .isPresent();
+    }
+
+    private boolean nameContainsPathDelimiter(MailboxUpdateRequest updateRequest, char pathDelimiter) {
+        return updateRequest.getName()
+                .filter(name -> name.contains(String.valueOf(pathDelimiter)))
+                .isPresent() ;
     }
 
     private void validateParent(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException, MailboxHasChildException {
