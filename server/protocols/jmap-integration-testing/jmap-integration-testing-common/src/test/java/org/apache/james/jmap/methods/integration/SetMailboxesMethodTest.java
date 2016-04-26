@@ -1512,4 +1512,47 @@ public abstract class SetMailboxesMethodTest {
                     hasEntry(equalTo("type"), equalTo("invalidArguments")),
                     hasEntry(equalTo("description"), equalTo("The mailbox 'outbox' is a system mailbox.")))));
     }
+
+    @Test
+    public void setMailboxesShouldReturnNotUpdatedErrorWhenMovingMailboxTriggersNameConflict() {
+
+        jmapServer.serverProbe().createMailbox("#private", username, "A");
+        Mailbox<?> mailboxRootA = jmapServer.serverProbe().getMailbox("#private", username, "A");
+        String mailboxRootAId = mailboxRootA.getMailboxId().serialize();
+
+        jmapServer.serverProbe().createMailbox("#private", username, "A.B");
+        jmapServer.serverProbe().createMailbox("#private", username, "A.C");
+
+        jmapServer.serverProbe().createMailbox("#private", username, "A.B.C");
+        Mailbox<?> mailboxChildToMoveC = jmapServer.serverProbe().getMailbox("#private", username, "A.B.C");
+        String mailboxChildToMoveCId = mailboxChildToMoveC.getMailboxId().serialize();
+
+        String requestBody =
+              "[" +
+                  "  [ \"setMailboxes\"," +
+                  "    {" +
+                  "      \"update\": {" +
+                  "        \"" + mailboxChildToMoveCId + "\" : {" +
+                  "          \"parentId\" : \"" + mailboxRootAId + "\"" +
+                  "        }" +
+                  "      }" +
+                  "    }," +
+                  "    \"#0\"" +
+                  "  ]" +
+                  "]";
+
+      given()
+          .accept(ContentType.JSON)
+          .contentType(ContentType.JSON)
+          .header("Authorization", this.accessToken.serialize())
+          .body(requestBody)
+      .when()
+          .post("/jmap")
+      .then()
+          .statusCode(200)
+          .body(NAME, equalTo("mailboxesSet"))
+          .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxChildToMoveCId), Matchers.allOf(
+                  hasEntry(equalTo("type"), equalTo("invalidArguments")),
+                  hasEntry(equalTo("description"), equalTo("Cannot rename a mailbox to an already existing mailbox.")))));
+    }
 }
