@@ -51,7 +51,8 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.lifecycle.api.LogEnabled;
-import org.apache.james.mailetcontainer.api.MailProcessor;
+import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.HostAddress;
@@ -75,15 +76,15 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
 
     private UsersRepository localusers;
 
-    private MailProcessor processorList;
+    private MailQueue rootMailQueue;
 
     private DomainList domains;
 
     private MailAddress postmaster;
 
     @Inject
-    public void setMailProcessor(MailProcessor processorList) {
-        this.processorList = processorList;
+    public void retrieveRootMailQueue(MailQueueFactory mailQueueFactory) {
+        this.rootMailQueue = mailQueueFactory.getQueue(MailQueueFactory.SPOOL);
     }
 
     @Inject
@@ -402,12 +403,9 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
         sendMail(sender, recipients, message, Mail.DEFAULT);
     }
 
-    /**
-     * TODO: Should we use the MailProcessorList or the MailQueue here ?
-     */
     @Override
     public void sendMail(Mail mail) throws MessagingException {
-        processorList.service(mail);
+        rootMailQueue.enQueue(mail);
     }
 
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {

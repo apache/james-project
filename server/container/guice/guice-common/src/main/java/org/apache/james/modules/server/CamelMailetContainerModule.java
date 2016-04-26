@@ -32,6 +32,7 @@ import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.mailetcontainer.impl.JamesMailetContext;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
@@ -66,14 +67,14 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private MailetContext provideMailetContext(MailProcessor processorList,
+    private MailetContext provideMailetContext(MailQueueFactory mailQueueFactory,
                                                     DNSService dns,
                                                     UsersRepository localusers,
                                                     DomainList domains) {
         JamesMailetContext jamesMailetContext = new JamesMailetContext();
         jamesMailetContext.setLog(MAILET_LOGGER);
         jamesMailetContext.setDNSService(dns);
-        jamesMailetContext.setMailProcessor(processorList);
+        jamesMailetContext.retrieveRootMailQueue(mailQueueFactory);
         jamesMailetContext.setUsersRepository(localusers);
         jamesMailetContext.setDomainList(domains);
         return jamesMailetContext;
@@ -110,7 +111,6 @@ public class CamelMailetContainerModule extends AbstractModule {
                 jamesMailSpooler.init();
                 mailetContext.setLog(MAILET_LOGGER);
                 mailetContext.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("context"));
-                mailetContext.setMailProcessor(camelCompositeProcessor);
             } catch (Exception e) {
                 Throwables.propagate(e);
             }
