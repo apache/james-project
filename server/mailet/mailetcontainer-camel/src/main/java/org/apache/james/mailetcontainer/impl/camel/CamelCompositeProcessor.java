@@ -108,6 +108,7 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
             processor.setMailetLoader(mailetLoader);
             processor.setMatcherLoader(matcherLoader);
             processor.configure(config);
+            processor.setRootMailProcessor(this);
             processor.init();
             return processor;
         } catch (Exception e) {

@@ -62,6 +62,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     private MailetContext mailetContext;
     private MatcherLoader matcherLoader;
+    private MailProcessor rootMailProcessor;
     private final List<MailetProcessorListener> listeners = Collections.synchronizedList(new ArrayList<MailetProcessorListener>());
     private JMXStateMailetProcessorListener jmxListener;
     private boolean enableJmx = true;
@@ -73,6 +74,10 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     public void setMatcherLoader(MatcherLoader matcherLoader) {
         this.matcherLoader = matcherLoader;
+    }
+
+    public void setRootMailProcessor(MailProcessor rootMailProcessor) {
+        this.rootMailProcessor = rootMailProcessor;
     }
 
     @Inject
@@ -157,7 +162,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * @throws MessagingException
      */
     protected void toProcessor(Mail mail) throws MessagingException {
-        mailetContext.sendMail(mail);
+        rootMailProcessor.service(mail);
     }
 
     protected Logger getLogger() {
