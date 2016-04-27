@@ -24,6 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
+import javax.mail.MessagingException;
+
+import org.apache.james.core.MailImpl;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -77,7 +80,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
 
         @Override
         public void enQueue(Mail mail) throws MailQueueException {
-            mailItems.addFirst(new MemoryMailQueueItem(mail));
+            try {
+                mailItems.addFirst(new MemoryMailQueueItem(new MailImpl(mail)));
+            } catch (MessagingException e) {
+                throw new MailQueueException("Error while copying mail " + mail.getName(), e);
+            }
         }
 
         @Override

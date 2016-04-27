@@ -45,6 +45,8 @@ public class MemoryMailQueueFactoryTest {
 
     public static final String KEY = "key";
     public static final String BIS = "bis";
+    public static final String NAME_1 = "Name1";
+    public static final String NAME_2 = "Name2";
 
     private MemoryMailQueueFactory memoryMailQueueFactory;
     private ExecutorService executorService;
@@ -88,24 +90,28 @@ public class MemoryMailQueueFactoryTest {
     @Test
     public void dequeueShouldWork() throws Exception{
         Mail mail = new FakeMail();
+        mail.setName(NAME_1);
         memoryMailQueueFactory.getQueue(KEY).enQueue(mail);
-        assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail()).isEqualTo(mail);
+        assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail().getName()).startsWith(NAME_1);
     }
 
     @Test
     public void dequeueShouldWorkWithMultipleMessages() throws Exception{
         Mail mail1 = new FakeMail();
         Mail mail2 = new FakeMail();
+        mail1.setName(NAME_1);
+        mail2.setName(NAME_2);
         memoryMailQueueFactory.getQueue(KEY).enQueue(mail1);
         memoryMailQueueFactory.getQueue(KEY).enQueue(mail2);
-        assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail()).isEqualTo(mail2);
-        assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail()).isEqualTo(mail1);
+        assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail().getName()).startsWith(NAME_2);
+        assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail().getName()).startsWith(NAME_1);
     }
 
     @Test(timeout = 20000)
     public void deQueueShouldWaitForAMailToBeEnqueued() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         Mail mail = new FakeMail();
+        mail.setName(NAME_1);
         executorService.submit(() -> {
             try {
                 latch.await();
@@ -117,6 +123,6 @@ public class MemoryMailQueueFactoryTest {
         Future<MailQueueItem> tryDequeue = executorService.submit(() -> memoryMailQueueFactory.getQueue(KEY).deQueue());
         assertThatThrownBy(() -> tryDequeue.get(100, TimeUnit.MILLISECONDS)).isInstanceOf(TimeoutException.class);
         latch.countDown();
-        assertThat(tryDequeue.get().getMail()).isEqualTo(mail);
+        assertThat(tryDequeue.get().getMail().getName()).startsWith(NAME_1);
     }
 }
