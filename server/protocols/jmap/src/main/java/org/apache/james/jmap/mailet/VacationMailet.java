@@ -45,7 +45,7 @@ public class VacationMailet extends GenericMailet {
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
 
     @Inject
-    VacationMailet(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider, AutomaticallySentMailDetector automaticallySentMailDetector) {
+    public VacationMailet(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider, AutomaticallySentMailDetector automaticallySentMailDetector) {
         this.vacationRepository = vacationRepository;
         this.zonedDateTimeProvider = zonedDateTimeProvider;
         this.automaticallySentMailDetector = automaticallySentMailDetector;

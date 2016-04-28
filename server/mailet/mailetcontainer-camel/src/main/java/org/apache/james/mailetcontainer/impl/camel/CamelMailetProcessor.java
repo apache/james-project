@@ -42,6 +42,8 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * {@link org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor} implementation which use Camel DSL for
  * the {@link Matcher} / {@link Mailet} routing
@@ -53,6 +55,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
     private ProducerTemplate producerTemplate;
 
     private final UseLatestAggregationStrategy aggr = new UseLatestAggregationStrategy();
+    private List<MatcherMailetPair> pairs;
 
     /**
      * @see
@@ -79,6 +82,10 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
      */
     public void setCamelContext(CamelContext context) {
         this.context = context;
+    }
+
+    public List<MatcherMailetPair> getPairs() {
+        return ImmutableList.copyOf(pairs);
     }
 
     /**
@@ -109,6 +116,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
      */
     protected void setupRouting(List<MatcherMailetPair> pairs) throws MessagingException {
         try {
+            this.pairs = pairs;
             context.addRoutes(new MailetContainerRouteBuilder(pairs));
         } catch (Exception e) {
             throw new MessagingException("Unable to setup routing for MailetMatcherPairs", e);

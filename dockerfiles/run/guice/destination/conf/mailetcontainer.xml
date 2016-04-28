@@ -84,6 +84,7 @@
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <!--
             <mailet match="HostIsLocal" class="ToProcessor">

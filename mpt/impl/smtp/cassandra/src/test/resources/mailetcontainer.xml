@@ -67,6 +67,7 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="All" class="RecipientRewriteTable" />
             <!-- <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
