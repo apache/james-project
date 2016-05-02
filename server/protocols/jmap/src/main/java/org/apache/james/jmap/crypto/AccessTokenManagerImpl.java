@@ -20,7 +20,6 @@
 package org.apache.james.jmap.crypto;
 
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
