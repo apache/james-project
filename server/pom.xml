@@ -169,7 +169,7 @@
         <spring-osgi-extender.version>1.2.1</spring-osgi-extender.version>
         <org.osgi.core.version>5.0.0</org.osgi.core.version>
         <guava.version>18.0</guava.version>
-        <cucumber.version>1.2.3</cucumber.version>
+        <cucumber.version>1.2.4</cucumber.version>
 
         <!-- karaf dependencies -->
         <exam.version>2.6.0</exam.version>
