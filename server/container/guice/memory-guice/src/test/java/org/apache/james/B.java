@@ -19,27 +19,28 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.methods.GetMessageListMethod;
-import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.modules.TestFilesystemModule;
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import javax.inject.Inject;
 
-import com.google.inject.TypeLiteral;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.lifecycle.api.Configurable;
 
-public class MemoryJamesServerTest extends AbstractJamesServerTest<InMemoryId> {
+public class B implements Configurable {
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private final A a;
+    @SuppressWarnings("unused")
+    private final C c;
+
+    @Inject
+    private B(A a, C c) {
+        this.a = a;
+        this.c = c;
+    }
 
     @Override
-    protected GuiceJamesServer<InMemoryId> createJamesServer() {
-        return new GuiceJamesServer<>(new TypeLiteral<InMemoryId>(){})
-                .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                .overrideWith(new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
-                        new TestModule());
+    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        System.out.println("Configure B");
+        System.out.println(a.getDomain());
     }
-    
+
 }
