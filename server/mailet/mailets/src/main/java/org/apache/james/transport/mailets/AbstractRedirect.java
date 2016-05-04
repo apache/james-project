@@ -1025,6 +1025,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             setIsReply(newMail, isReply(originalMail), originalMail);
 
             newMail.getMessage().saveChanges();
+            newMail.removeAllAttributes();
 
             if (keepMessageId) {
                 setMessageId(newMail, originalMail);
