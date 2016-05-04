@@ -19,6 +19,11 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
+import java.util.List;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -28,56 +33,51 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
 /**
  * Generic purpose tests for your implementation MailboxMapper.
  * 
  * You then just need to instantiate your mailbox mapper and an IdGenerator.
  */
-public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
+public abstract class AbstractMailboxMapperTest {
     
     private final static char DELIMITER = ':';
     private final static char WILDCARD = '%';
     private final static long UID_VALIDITY = 42;
 
-    private MapperProvider<Id> mapperProvider;
+    private MapperProvider mapperProvider;
     
-    private MailboxMapper<Id> mailboxMapper;
+    private MailboxMapper mailboxMapper;
 
     private MailboxPath benwaInboxPath;
-    private SimpleMailbox<Id> benwaInboxMailbox;
+    private SimpleMailbox benwaInboxMailbox;
     private MailboxPath benwaWorkPath;
-    private SimpleMailbox<Id> benwaWorkMailbox;
+    private SimpleMailbox benwaWorkMailbox;
     private MailboxPath benwaWorkTodoPath;
-    private SimpleMailbox<Id> benwaWorkTodoMailbox;
+    private SimpleMailbox benwaWorkTodoMailbox;
     private MailboxPath benwaPersoPath;
-    private SimpleMailbox<Id> benwaPersoMailbox;
+    private SimpleMailbox benwaPersoMailbox;
     private MailboxPath benwaWorkDonePath;
-    private SimpleMailbox<Id> benwaWorkDoneMailbox;
+    private SimpleMailbox benwaWorkDoneMailbox;
     private MailboxPath bobInboxPath;
-    private SimpleMailbox<Id> bobyMailbox;
+    private SimpleMailbox bobyMailbox;
     private MailboxPath bobyMailboxPath;
-    private SimpleMailbox<Id> bobInboxMailbox;
+    private SimpleMailbox bobInboxMailbox;
     private MailboxPath esnDevGroupInboxPath;
-    private SimpleMailbox<Id> esnDevGroupInboxMailbox;
+    private SimpleMailbox esnDevGroupInboxMailbox;
     private MailboxPath esnDevGroupHublinPath;
-    private SimpleMailbox<Id> esnDevGroupHublinMailbox;
+    private SimpleMailbox esnDevGroupHublinMailbox;
     private MailboxPath esnDevGroupJamesPath;
-    private SimpleMailbox<Id> esnDevGroupJamesMailbox;
+    private SimpleMailbox esnDevGroupJamesMailbox;
     private MailboxPath obmTeamGroupInboxPath;
-    private SimpleMailbox<Id> obmTeamGroupInboxMailbox;
+    private SimpleMailbox obmTeamGroupInboxMailbox;
     private MailboxPath obmTeamGroupOPushPath;
-    private SimpleMailbox<Id> obmTeamGroupOPushMailbox;
+    private SimpleMailbox obmTeamGroupOPushMailbox;
     private MailboxPath obmTeamGroupRoundCubePath;
-    private SimpleMailbox<Id> obmTeamGroupRoundCubeMailbox;
+    private SimpleMailbox obmTeamGroupRoundCubeMailbox;
     private MailboxPath bobDifferentNamespacePath;
-    private SimpleMailbox<Id> bobDifferentNamespaceMailbox;
+    private SimpleMailbox bobDifferentNamespaceMailbox;
 
-    public AbstractMailboxMapperTest(MapperProvider<Id> mapperProvider) {
+    public AbstractMailboxMapperTest(MapperProvider mapperProvider) {
         this.mapperProvider = mapperProvider;
 
         benwaInboxPath = new MailboxPath("#private", "benwa", "INBOX");
@@ -139,11 +139,10 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(esnDevGroupInboxPath)).isEqualTo(esnDevGroupInboxMailbox);
     }
     
-    @SuppressWarnings("unchecked")
     @Test
     public void listShouldRetrieveAllMailbox() throws MailboxException {
         saveAll();
-        List<Mailbox<Id>> mailboxes = mailboxMapper.list();
+        List<Mailbox> mailboxes = mailboxMapper.list();
         assertThat(mailboxes).contains(benwaInboxMailbox, benwaWorkMailbox, benwaWorkTodoMailbox, benwaPersoMailbox, benwaWorkDoneMailbox, bobInboxMailbox, esnDevGroupInboxMailbox, esnDevGroupHublinMailbox,
             esnDevGroupJamesMailbox, obmTeamGroupInboxMailbox, obmTeamGroupOPushMailbox, obmTeamGroupRoundCubeMailbox);
     }
@@ -178,7 +177,6 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         assertThat(mailboxMapper.hasChildren(bobInboxMailbox, '.')).isFalse();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPathLikeShouldBeLimitedToUserAndNamespace() throws MailboxException {
         saveAll();
@@ -208,7 +206,6 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         mailboxMapper.findMailboxByPath(esnDevGroupJamesPath);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPathLikeWithChildRegexShouldRetrieveChildren() throws MailboxException {
         saveAll();
@@ -216,7 +213,6 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         assertThat(mailboxMapper.findMailboxWithPathLike(regexPath)).containsOnly(benwaWorkMailbox, benwaWorkTodoMailbox, benwaWorkDoneMailbox);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPathLikeWithNullUserWithChildRegexShouldRetrieveChildren() throws MailboxException {
         saveAll();
@@ -224,7 +220,6 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         assertThat(mailboxMapper.findMailboxWithPathLike(regexPath)).contains(obmTeamGroupInboxMailbox, obmTeamGroupOPushMailbox, obmTeamGroupRoundCubeMailbox);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPathLikeWithRegexShouldRetrieveCorrespondingMailbox() throws MailboxException {
         saveAll();
@@ -232,7 +227,6 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         assertThat(mailboxMapper.findMailboxWithPathLike(regexPath)).containsOnly(benwaInboxMailbox);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPathLikeWithNullUserWithRegexShouldRetrieveCorrespondingMailbox() throws MailboxException {
         saveAll();
@@ -264,8 +258,8 @@ public abstract class AbstractMailboxMapperTest<Id extends MailboxId> {
         mailboxMapper.save(bobInboxMailbox);
     }
 
-    private SimpleMailbox<Id> createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox<Id> mailbox = new SimpleMailbox<Id>(mailboxPath, UID_VALIDITY);
+    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
+        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());
         return mailbox;
     }

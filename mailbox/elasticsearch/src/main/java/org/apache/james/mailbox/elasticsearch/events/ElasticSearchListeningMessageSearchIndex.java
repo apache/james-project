@@ -36,7 +36,6 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.slf4j.Logger;
@@ -44,18 +43,18 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> extends ListeningMessageSearchIndex<Id> {
+public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchListeningMessageSearchIndex.class);
     private final static String ID_SEPARATOR = ":";
     
     private final ElasticSearchIndexer indexer;
-    private final ElasticSearchSearcher<Id> searcher;
+    private final ElasticSearchSearcher searcher;
     private final MessageToElasticSearchJson messageToElasticSearchJson;
 
     @Inject
-    public ElasticSearchListeningMessageSearchIndex(MessageMapperFactory<Id> factory, ElasticSearchIndexer indexer,
-        ElasticSearchSearcher<Id> searcher, MessageToElasticSearchJson messageToElasticSearchJson) {
+    public ElasticSearchListeningMessageSearchIndex(MessageMapperFactory factory, ElasticSearchIndexer indexer,
+        ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson) {
         super(factory);
         this.indexer = indexer;
         this.messageToElasticSearchJson = messageToElasticSearchJson;
@@ -68,12 +67,12 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
-    public Iterator<Long> search(MailboxSession session, Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
+    public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         return searcher.search(mailbox, searchQuery);
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException {
+    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws MailboxException {
         try {
             indexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message));
         } catch (Exception e) {
@@ -82,7 +81,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox<Id> mailbox, List<Long> expungedUids) throws MailboxException {
+    public void delete(MailboxSession session, Mailbox mailbox, List<Long> expungedUids) throws MailboxException {
         try {
             indexer.deleteMessages(expungedUids.stream()
                 .map(uid ->  indexIdFor(mailbox, uid))
@@ -93,7 +92,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException {
+    public void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
             indexer.deleteAllMatchingQuery(
                 termQuery(
@@ -105,7 +104,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox<Id> mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
         try {
             indexer.updateMessages(updatedFlagsList.stream()
                 .map(updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
@@ -115,7 +114,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
         }
     }
 
-    private ElasticSearchIndexer.UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox<Id> mailbox, UpdatedFlags updatedFlags) {
+    private ElasticSearchIndexer.UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) {
         try {
             return new ElasticSearchIndexer.UpdatedRepresentation(
                 indexIdFor(mailbox, updatedFlags.getUid()),
@@ -127,7 +126,7 @@ public class ElasticSearchListeningMessageSearchIndex<Id extends MailboxId> exte
         }
     }
 
-    private String indexIdFor(Mailbox<Id> mailbox, long messageId) {
+    private String indexIdFor(Mailbox mailbox, long messageId) {
         return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(messageId));
     }
     

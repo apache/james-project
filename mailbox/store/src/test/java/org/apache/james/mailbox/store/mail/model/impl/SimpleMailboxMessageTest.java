@@ -43,8 +43,8 @@ public class SimpleMailboxMessageTest {
     private static final String MESSAGE_CONTENT_SPECIAL_CHAR = "Simple message content with special characters: \"'(§è!çà$*`";
     public static final TestId TEST_ID = TestId.of(1L);
     public static final int BODY_START_OCTET = 0;
-    private SimpleMailboxMessage<TestId> MESSAGE;
-    private SimpleMailboxMessage<TestId> MESSAGE_SPECIAL_CHAR;
+    private SimpleMailboxMessage MESSAGE;
+    private SimpleMailboxMessage MESSAGE_SPECIAL_CHAR;
 
     @Before
     public void setUp() {
@@ -100,7 +100,7 @@ public class SimpleMailboxMessageTest {
         propertyBuilder.setTextualLineCount(textualLineCount);
         propertyBuilder.setMediaType(text);
         propertyBuilder.setSubType(plain);
-        SimpleMailboxMessage<TestId> original = new SimpleMailboxMessage<TestId>(new Date(),
+        SimpleMailboxMessage original = new SimpleMailboxMessage(new Date(),
             MESSAGE_CONTENT.length(),
             BODY_START_OCTET,
             new SharedByteArrayInputStream(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET)),
@@ -108,7 +108,7 @@ public class SimpleMailboxMessageTest {
             propertyBuilder,
             TEST_ID);
 
-        SimpleMailboxMessage<TestId> copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
+        SimpleMailboxMessage copy = SimpleMailboxMessage.copy(TestId.of(1337), original);
 
         assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "message", "mailboxId").isNotSameAs(original);
         assertThat(copy.getMessage()).usingComparator(new FieldByFieldComparator()).isEqualTo(original.getMessage());
@@ -118,8 +118,8 @@ public class SimpleMailboxMessageTest {
 
     }
 
-    private static SimpleMailboxMessage<TestId> buildMessage(String content) {
-        return new SimpleMailboxMessage<TestId>(Calendar.getInstance().getTime(),
+    private static SimpleMailboxMessage buildMessage(String content) {
+        return new SimpleMailboxMessage(Calendar.getInstance().getTime(),
             content.length(), BODY_START_OCTET, new SharedByteArrayInputStream(
                     content.getBytes(MESSAGE_CHARSET)), new Flags(),
             new PropertyBuilder(), TEST_ID);

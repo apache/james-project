@@ -32,8 +32,8 @@ public class MemoryGetMailboxesMethodTest extends GetMailboxesMethodTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJamesServer<?> createJmapServer() {
-        return new GuiceJamesServer<>(MemoryJamesServerMain.inMemoryId)
+    protected GuiceJamesServer createJmapServer() {
+        return new GuiceJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder));
     }

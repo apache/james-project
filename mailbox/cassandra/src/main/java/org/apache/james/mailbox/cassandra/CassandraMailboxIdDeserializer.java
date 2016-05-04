@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.util.UUID;
+
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 
-import java.util.UUID;
-
-public class CassandraMailboxIdDeserializer implements MailboxIdDeserializer<CassandraId> {
+public class CassandraMailboxIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public CassandraId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {

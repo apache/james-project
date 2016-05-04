@@ -19,10 +19,9 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.store.mail.model.AbstractMessageMapperTest;
 
-public class InMemoryMessageMapperTest extends AbstractMessageMapperTest<InMemoryId> {
+public class InMemoryMessageMapperTest extends AbstractMessageMapperTest {
 
     public InMemoryMessageMapperTest() {
         super(new InMemoryMapperProvider());

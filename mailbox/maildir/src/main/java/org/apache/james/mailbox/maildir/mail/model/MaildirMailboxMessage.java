@@ -30,7 +30,7 @@ import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public class MaildirMailboxMessage extends DelegatingMailboxMessage<MaildirId> {
+public class MaildirMailboxMessage extends DelegatingMailboxMessage {
 
     private boolean answered;
     private boolean deleted;
@@ -38,12 +38,12 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage<MaildirId> {
     private boolean flagged;
     private boolean recent;
     private boolean seen;
-    private final Mailbox<MaildirId> mailbox;
+    private final Mailbox mailbox;
     private long uid;
     protected boolean newMessage;
     private long modSeq;
     
-    public MaildirMailboxMessage(Mailbox<MaildirId> mailbox, long uid, MaildirMessageName messageName) throws IOException {
+    public MaildirMailboxMessage(Mailbox mailbox, long uid, MaildirMessageName messageName) throws IOException {
         super(new MaildirMessage(messageName));
 
         this.mailbox = mailbox;
@@ -70,7 +70,7 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage<MaildirId> {
     
     @Override
     public MaildirId getMailboxId() {
-        return mailbox.getMailboxId();
+        return (MaildirId) mailbox.getMailboxId();
     }
 
     @Override

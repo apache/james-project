@@ -26,14 +26,14 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * {@link Comparator} which wraps an other {@link Comparator} and reverse it
  *
  */
-public class ReverseComparator implements Comparator<MailboxMessage<?>>{
+public class ReverseComparator implements Comparator<MailboxMessage>{
 
-    private final Comparator<MailboxMessage<?>> comparator;
-    public ReverseComparator(Comparator<MailboxMessage<?>> comparator) {
+    private final Comparator<MailboxMessage> comparator;
+    public ReverseComparator(Comparator<MailboxMessage> comparator) {
         this.comparator = comparator;
     }
     @Override
-    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
+    public int compare(MailboxMessage o1, MailboxMessage o2) {
         return comparator.compare(o2, o1);
     }
 

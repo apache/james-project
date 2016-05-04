@@ -25,14 +25,14 @@ import javax.mail.Flags;
  * plus body content. In the case of multipart documents, this body content
  * has internal structure described by the meta-data.
  */
-public interface MailboxMessage<Id extends MailboxId> extends Message, Comparable<MailboxMessage<Id>> {
+public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
 
     /**
      * Return the mailbox id of the linked mailbox
      * 
      * @return mailboxId
      */
-    Id getMailboxId();
+    MailboxId getMailboxId();
 
     /**
      * Return the uid

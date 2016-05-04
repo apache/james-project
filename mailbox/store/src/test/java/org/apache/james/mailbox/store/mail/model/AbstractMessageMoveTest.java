@@ -39,22 +39,22 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public abstract class AbstractMessageMoveTest<Id extends MailboxId> {
+public abstract class AbstractMessageMoveTest {
 
     private final static char DELIMITER = ':';
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     public static final int UID_VALIDITY = 42;
 
-    private MapperProvider<Id> mapperProvider;
-    private MessageMapper<Id> messageMapper;
+    private MapperProvider mapperProvider;
+    private MessageMapper messageMapper;
 
-    private SimpleMailbox<Id> benwaInboxMailbox;
-    private SimpleMailbox<Id> benwaWorkMailbox;
+    private SimpleMailbox benwaInboxMailbox;
+    private SimpleMailbox benwaWorkMailbox;
 
-    private SimpleMailboxMessage<Id> message1;
+    private SimpleMailboxMessage message1;
 
-    public AbstractMessageMoveTest(MapperProvider<Id> mapperProvider) {
+    public AbstractMessageMoveTest(MapperProvider mapperProvider) {
         this.mapperProvider = mapperProvider;
     }
 
@@ -130,18 +130,18 @@ public abstract class AbstractMessageMoveTest<Id extends MailboxId> {
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaWorkMailbox)).isEqualTo(0);
     }
 
-    private SimpleMailbox<Id> createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox<Id> mailbox = new SimpleMailbox<Id>(mailboxPath, UID_VALIDITY);
-        Id id = mapperProvider.generateId();
+    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
+        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+        MailboxId id = mapperProvider.generateId();
         mailbox.setMailboxId(id);
         return mailbox;
     }
 
-    private MailboxMessage<Id> retrieveMessageFromStorage(Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException {
+    private MailboxMessage retrieveMessageFromStorage(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         return messageMapper.findInMailbox(mailbox, MessageRange.one(message.getUid()), FetchType.Metadata, LIMIT).next();
     }
     
-    private SimpleMailboxMessage<Id> createMessage(Mailbox<Id> mailbox, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage<Id>(new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId());
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+        return new SimpleMailboxMessage(new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId());
     }
 }

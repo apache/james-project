@@ -30,19 +30,19 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * return <> 0
  *
  */
-public class CombinedComparator implements Comparator<MailboxMessage<?>>{
+public class CombinedComparator implements Comparator<MailboxMessage>{
 
-    private final Comparator<MailboxMessage<?>>[] comparators;
-    public CombinedComparator(Comparator<MailboxMessage<?>>[] comparators) {
+    private final Comparator<MailboxMessage>[] comparators;
+    public CombinedComparator(Comparator<MailboxMessage>[] comparators) {
         if(comparators == null || comparators.length < 1) {
             throw new IllegalArgumentException();
         }
         this.comparators = comparators;
     }
     @Override
-    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
+    public int compare(MailboxMessage o1, MailboxMessage o2) {
         int i = 0;
-        for (Comparator<MailboxMessage<?>> comparator : comparators) {
+        for (Comparator<MailboxMessage> comparator : comparators) {
             i = comparator.compare(o1, o2);
             if (i != 0) {
                 break;
@@ -52,11 +52,11 @@ public class CombinedComparator implements Comparator<MailboxMessage<?>>{
     }
     
     @SuppressWarnings("unchecked")
-    public static Comparator<MailboxMessage<?>> create(List<Sort> sorts) {
-        List<Comparator<?>> comps = new ArrayList<Comparator<?>>();
+    public static Comparator<MailboxMessage> create(List<Sort> sorts) {
+        List<Comparator<MailboxMessage>> comps = new ArrayList<Comparator<MailboxMessage>>();
         for (Sort sort : sorts) {
             boolean reverse = sort.isReverse();
-            Comparator<MailboxMessage<?>> comparator = null;
+            Comparator<MailboxMessage> comparator = null;
 
             switch (sort.getSortClause()) {
                 case Arrival:

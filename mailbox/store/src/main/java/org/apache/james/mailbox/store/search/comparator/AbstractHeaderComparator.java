@@ -29,13 +29,13 @@ import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 
-public abstract class AbstractHeaderComparator implements Comparator<MailboxMessage<?>>{
+public abstract class AbstractHeaderComparator implements Comparator<MailboxMessage>{
 
     public final static String FROM ="from";
     public final static String TO ="to";
     public final static String CC ="cc";
 
-    protected String getHeaderValue(String headerName, MailboxMessage<?> message) {
+    protected String getHeaderValue(String headerName, MailboxMessage message) {
         try {
             final List<Header> headers = ResultUtils.createHeaders(message);
             for (Header header : headers) {

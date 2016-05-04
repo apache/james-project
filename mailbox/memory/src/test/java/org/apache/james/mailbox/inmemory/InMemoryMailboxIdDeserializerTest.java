@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.inmemory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class InMemoryMailboxIdDeserializerTest {
 
@@ -32,7 +32,7 @@ public class InMemoryMailboxIdDeserializerTest {
     private static final String MALFORMED_SERIALIZED_ID = "aEZ";
     private static final InMemoryId IN_MEMORY_ID = InMemoryId.of(Long.valueOf(SERIALIZED_ID));
 
-    private MailboxIdDeserializer<InMemoryId> mailboxIdDeserializer;
+    private MailboxIdDeserializer mailboxIdDeserializer;
 
     @Before
     public void setUp() {

@@ -10,7 +10,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
-public class InMemoryMapperProvider implements MapperProvider<InMemoryId> {
+public class InMemoryMapperProvider implements MapperProvider {
 
     private final Random random;
 
@@ -19,12 +19,12 @@ public class InMemoryMapperProvider implements MapperProvider<InMemoryId> {
     }
 
     @Override
-    public MailboxMapper<InMemoryId> createMailboxMapper() throws MailboxException {
+    public MailboxMapper createMailboxMapper() throws MailboxException {
         return new InMemoryMailboxSessionMapperFactory().createMailboxMapper(new MockMailboxSession("user"));
     }
 
     @Override
-    public MessageMapper<InMemoryId> createMessageMapper() throws MailboxException {
+    public MessageMapper createMessageMapper() throws MailboxException {
         return new InMemoryMailboxSessionMapperFactory().createMessageMapper(new MockMailboxSession("user"));
     }
 

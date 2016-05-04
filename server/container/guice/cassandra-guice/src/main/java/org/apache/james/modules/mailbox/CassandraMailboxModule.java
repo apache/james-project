@@ -25,7 +25,6 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraSubscriptionManager;
@@ -39,14 +38,12 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.MailboxManagerDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 
@@ -54,13 +51,11 @@ public class CassandraMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(new TypeLiteral<MessageMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<MailboxMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
+        bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<MailboxSessionMapperFactory<CassandraId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<MailboxSessionMapperFactory<? extends MailboxId>>(){}).to(CassandraMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<ModSeqProvider<CassandraId>>(){}).to(new TypeLiteral<CassandraModSeqProvider>(){});
-        bind(new TypeLiteral<UidProvider<CassandraId>>(){}).to(new TypeLiteral<CassandraUidProvider>(){});
+        bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
+        bind(ModSeqProvider.class).to(CassandraModSeqProvider.class);
+        bind(UidProvider.class).to(CassandraUidProvider.class);
 
         bind(SubscriptionManager.class).to(CassandraSubscriptionManager.class);
         bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);

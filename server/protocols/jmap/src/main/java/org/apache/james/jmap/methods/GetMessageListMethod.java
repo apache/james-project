@@ -49,7 +49,6 @@ import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.streams.Collectors;
 import org.slf4j.Logger;
@@ -63,7 +62,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class GetMessageListMethod<Id extends MailboxId> implements Method {
+public class GetMessageListMethod implements Method {
 
     public static final String MAXIMUM_LIMIT = "maximumLimit";
     public static final int DEFAULT_MAXIMUM_LIMIT = 256;
@@ -74,13 +73,13 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
     private static final int NO_LIMIT = -1;
 
     private final MailboxManager mailboxManager;
-    private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final int maximumLimit;
-    private final GetMessagesMethod<Id> getMessagesMethod;
+    private final GetMessagesMethod getMessagesMethod;
 
     @Inject
-    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod<Id> getMessagesMethod) {
+    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
+            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod) {
 
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -166,7 +165,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         return limit.orElse(maximumLimit);
     }
 
-    private Comparator<MailboxMessage<Id>> comparatorFor(GetMessageListRequest messageListRequest) {
+    private Comparator<MailboxMessage> comparatorFor(GetMessageListRequest messageListRequest) {
         return SortToComparatorConvertor.comparatorFor(messageListRequest.getSort());
     }
 
@@ -186,7 +185,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         return mailboxSessionMapperFactory.createMailboxMapper(session).list()
                 .stream()
                 .filter(mailbox -> mailboxIdSet.contains(mailbox.getMailboxId().serialize()))
-                .map(mailbox -> new StoreMailboxPath<>(mailbox))
+                .map(mailbox -> new StoreMailboxPath(mailbox))
                 .collect(Collectors.toImmutableSet());
     }
     
@@ -199,11 +198,11 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private List<MailboxMessage<Id>> getMessages(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    private List<MailboxMessage> getMessages(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.all());
         try {
-            MessageMapper<Id> messageMapper = mailboxSessionMapperFactory.getMessageMapper(mailboxSession);
+            MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(mailboxSession);
             Optional<MessageManager> messageManager = getMessageManager(mailboxPath, mailboxSession);
             return ImmutableList.copyOf(messageManager.get().search(searchQuery, mailboxSession))
                     .stream()
@@ -215,7 +214,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private MailboxMessage<Id> getMessage(MailboxPath mailboxPath, MailboxSession mailboxSession, MessageMapper<Id> messageMapper, long messageId) throws MailboxException {
+    private MailboxMessage getMessage(MailboxPath mailboxPath, MailboxSession mailboxSession, MessageMapper messageMapper, long messageId) throws MailboxException {
         try {
             return ImmutableList.copyOf(messageMapper.findInMailbox(
                         getMailbox(mailboxPath, mailboxSession).get(), 
@@ -231,7 +230,7 @@ public class GetMessageListMethod<Id extends MailboxId> implements Method {
         }
     }
 
-    private Optional<Mailbox<Id>> getMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    private Optional<Mailbox> getMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
             return Optional.of(mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
                     .findMailboxByPath(mailboxPath));

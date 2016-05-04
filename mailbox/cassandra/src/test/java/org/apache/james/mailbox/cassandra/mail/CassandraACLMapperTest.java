@@ -49,7 +49,7 @@ public class CassandraACLMapperTest {
 
     private CassandraACLMapper cassandraACLMapper;
     private CassandraCluster cassandra;
-    private SimpleMailbox<CassandraId> mailbox;
+    private SimpleMailbox mailbox;
     private int uidValidity;
     private int maxRetry;
     private ExecutorService executor;
@@ -59,7 +59,7 @@ public class CassandraACLMapperTest {
         cassandra = CassandraCluster.create(new CassandraAclModule());
         cassandra.ensureAllTables();
         uidValidity = 10;
-        mailbox = new SimpleMailbox<>(new MailboxPath("#private", "benwa@linagora.com", "INBOX"), uidValidity);
+        mailbox = new SimpleMailbox(new MailboxPath("#private", "benwa@linagora.com", "INBOX"), uidValidity);
         mailbox.setMailboxId(CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b")));
         maxRetry = 100;
         cassandraACLMapper = new CassandraACLMapper(mailbox, cassandra.getConf(), maxRetry);
@@ -84,14 +84,14 @@ public class CassandraACLMapperTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void creatingACLMapperWithNoMailboxIdShouldFail() {
-        new CassandraACLMapper(new SimpleMailbox<>(new MailboxPath("#private", "user", "name"), uidValidity), cassandra.getConf(), maxRetry);
+        new CassandraACLMapper(new SimpleMailbox(new MailboxPath("#private", "user", "name"), uidValidity), cassandra.getConf(), maxRetry);
     }
 
     @Test
     public void retrieveACLWhenPresentInBaseShouldReturnCorrespondingACL() throws Exception {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, mailbox.getMailboxId().asUuid())
+                .value(CassandraACLTable.ID, ((CassandraId) mailbox.getMailboxId()).asUuid())
                 .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":64}}")
                 .value(CassandraACLTable.VERSION, 1)
         );
@@ -107,7 +107,7 @@ public class CassandraACLMapperTest {
     public void retrieveACLWhenInvalidInBaseShouldReturnEmptyACL() throws Exception {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, mailbox.getMailboxId().asUuid())
+                .value(CassandraACLTable.ID, ((CassandraId) mailbox.getMailboxId()).asUuid())
                 .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":invalid}}")
                 .value(CassandraACLTable.VERSION, 1)
         );
@@ -167,7 +167,7 @@ public class CassandraACLMapperTest {
     public void updateInvalidACLShouldBeBasedOnEmptyACL() throws Exception {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
-                .value(CassandraACLTable.ID, mailbox.getMailboxId().asUuid())
+                .value(CassandraACLTable.ID, ((CassandraId) mailbox.getMailboxId()).asUuid())
                 .value(CassandraACLTable.ACL, "{\"entries\":{\"bob\":invalid}}")
                 .value(CassandraACLTable.VERSION, 1)
         );

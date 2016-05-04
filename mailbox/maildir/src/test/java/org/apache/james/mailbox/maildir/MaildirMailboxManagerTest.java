@@ -60,7 +60,7 @@ public class MaildirMailboxManagerTest {
             MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-            StoreMailboxManager<MaildirId> manager = new StoreMailboxManager<MaildirId>(mf, null, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+            StoreMailboxManager manager = new StoreMailboxManager(mf, null, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
             manager.init();
             setMailboxManager(manager);
         }

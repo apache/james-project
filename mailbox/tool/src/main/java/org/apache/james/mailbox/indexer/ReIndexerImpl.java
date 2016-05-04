@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.indexer;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -34,15 +36,13 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 
 /**
  * Note about live re-indexation handling :
@@ -56,18 +56,18 @@ import java.util.List;
  *  Why only care about updates and deletions ? Additions are already handled by the indexer that behaves normaly. We
  *  should just "adapt" our indexed value to the latest value, if any. The normal indexer will take care of new stuff.
  */
-public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
+public class ReIndexerImpl implements ReIndexer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerImpl.class);
     public static final int NO_LIMIT = 0;
 
     private final MailboxManager mailboxManager;
-    private final ListeningMessageSearchIndex<Id> messageSearchIndex;
-    private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final ListeningMessageSearchIndex messageSearchIndex;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     public ReIndexerImpl(MailboxManager mailboxManager,
-                         ListeningMessageSearchIndex<Id> messageSearchIndex,
-                         MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory) {
+                         ListeningMessageSearchIndex messageSearchIndex,
+                         MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.mailboxManager = mailboxManager;
         this.messageSearchIndex = messageSearchIndex;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -96,7 +96,7 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
     private void reIndex(MailboxPath path, MailboxSession mailboxSession) throws MailboxException {
         MailboxRegistration mailboxRegistration = new MailboxRegistration(path);
         LOGGER.info("Intend to reindex {}",path);
-        Mailbox<Id> mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
+        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
         messageSearchIndex.deleteAll(mailboxSession, mailbox);
         mailboxManager.addListener(path, mailboxRegistration, mailboxSession);
         try {
@@ -127,9 +127,9 @@ public class ReIndexerImpl<Id extends MailboxId> implements ReIndexer {
         }
     }
 
-    private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox<Id> mailbox, Iterator<MailboxMessage<Id>> iterator) throws MailboxException {
+    private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox mailbox, Iterator<MailboxMessage> iterator) throws MailboxException {
         while (iterator.hasNext()) {
-            MailboxMessage<Id> message = iterator.next();
+            MailboxMessage message = iterator.next();
             ImpactingMessageEvent impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));
             if (impactingMessageEvent == null) {
                 messageSearchIndex.add(mailboxSession, mailbox, message);

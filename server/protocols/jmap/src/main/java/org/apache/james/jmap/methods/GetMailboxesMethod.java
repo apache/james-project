@@ -38,7 +38,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxQuery;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -47,16 +46,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class GetMailboxesMethod<Id extends MailboxId> implements Method {
+public class GetMailboxesMethod implements Method {
 
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMailboxes");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("mailboxes");
 
     private final MailboxManager mailboxManager; 
-    private final MailboxUtils<Id> mailboxUtils;
+    private final MailboxUtils mailboxUtils;
 
     @Inject
-    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxUtils<Id> mailboxUtils) {
+    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxUtils mailboxUtils) {
         this.mailboxManager = mailboxManager;
         this.mailboxUtils = mailboxUtils;
     }

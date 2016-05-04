@@ -58,35 +58,33 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     private IMocksControl control;
 
     private ElasticSearchIndexer indexer;
-    private ElasticSearchListeningMessageSearchIndex<TestId> testee;
+    private ElasticSearchListeningMessageSearchIndex testee;
     
     @Before
-    @SuppressWarnings("unchecked")
     public void setup() throws JsonProcessingException {
         control = createControl();
 
-        MessageMapperFactory<TestId> mapperFactory = control.createMock(MessageMapperFactory.class);
+        MessageMapperFactory mapperFactory = control.createMock(MessageMapperFactory.class);
         MessageToElasticSearchJson messageToElasticSearchJson = control.createMock(MessageToElasticSearchJson.class);
-        ElasticSearchSearcher<TestId> elasticSearchSearcher = control.createMock(ElasticSearchSearcher.class);
+        ElasticSearchSearcher elasticSearchSearcher = control.createMock(ElasticSearchSearcher.class);
 
         indexer = control.createMock(ElasticSearchIndexer.class);
 
         expect(messageToElasticSearchJson.convertToJson(anyObject(MailboxMessage.class))).andReturn("json content").anyTimes();
         expect(messageToElasticSearchJson.getUpdatedJsonMessagePart(anyObject(Flags.class), anyLong())).andReturn("json updated content").anyTimes();
 
-        testee = new ElasticSearchListeningMessageSearchIndex<>(mapperFactory, indexer, elasticSearchSearcher, messageToElasticSearchJson);
+        testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, indexer, elasticSearchSearcher, messageToElasticSearchJson);
     }
     
     @Test
-    @SuppressWarnings("unchecked")
     public void addShouldIndex() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
-        MailboxMessage<TestId> message = mockedMessage(messageId);
+        MailboxMessage message = mockedMessage(messageId);
         
         IndexResponse expectedIndexResponse = control.createMock(IndexResponse.class);
         expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageId), anyString()))
@@ -97,22 +95,20 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         control.verify();
     }
 
-    @SuppressWarnings("unchecked")
-    private MailboxMessage<TestId> mockedMessage(long messageId) throws IOException {
-        MailboxMessage<TestId> message = control.createMock(MailboxMessage.class);
+    private MailboxMessage mockedMessage(long messageId) throws IOException {
+        MailboxMessage message = control.createMock(MailboxMessage.class);
         expect(message.getUid()).andReturn(messageId).anyTimes();
         return message;
     }
     
     @Test
-    @SuppressWarnings("unchecked")
     public void addShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
-        MailboxMessage<TestId> message = mockedMessage(messageId);
+        MailboxMessage message = mockedMessage(messageId);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
         
         expect(indexer.indexMessage(eq(mailboxId.serialize() + ":" + messageId), anyString()))
@@ -127,7 +123,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     @SuppressWarnings("unchecked")
     public void deleteShouldWork() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
@@ -145,7 +141,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     @SuppressWarnings("unchecked")
     public void deleteShouldWorkWhenMultipleMessageIds() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         long messageId1 = 1;
         long messageId2 = 2;
         long messageId3 = 3;
@@ -167,7 +163,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     @SuppressWarnings("unchecked")
     public void deleteShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId).times(2);
@@ -185,7 +181,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void updateShouldWork() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
 
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
 
         Flags flags = new Flags();
         long messageId = 1;
@@ -209,7 +205,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void updateShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
 
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         Flags flags = new Flags();
         long messageId = 1;
         UpdatedFlags updatedFlags = new UpdatedFlags(messageId, MODSEQ, flags, flags);
@@ -227,11 +223,10 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void deleteAllShouldWork() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
 
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
 
         TestId mailboxId = TestId.of(12);
 
@@ -247,11 +242,10 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void deleteAllShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
 
-        Mailbox<TestId> mailbox = control.createMock(Mailbox.class);
+        Mailbox mailbox = control.createMock(Mailbox.class);
         TestId mailboxId = TestId.of(12);
 
         expectLastCall();

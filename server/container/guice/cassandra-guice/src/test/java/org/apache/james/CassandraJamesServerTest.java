@@ -22,7 +22,6 @@ package org.apache.james;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.jmap.methods.GetMessageListMethod;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
@@ -35,9 +34,8 @@ import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 
-public class CassandraJamesServerTest extends AbstractJamesServerTest<CassandraId> {
+public class CassandraJamesServerTest extends AbstractJamesServerTest {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
@@ -46,8 +44,8 @@ public class CassandraJamesServerTest extends AbstractJamesServerTest<CassandraI
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer<CassandraId> createJamesServer() {
-        return new GuiceJamesServer<>(new TypeLiteral<CassandraId>(){})
+    protected GuiceJamesServer createJamesServer() {
+        return new GuiceJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                         new TestFilesystemModule(temporaryFolder),

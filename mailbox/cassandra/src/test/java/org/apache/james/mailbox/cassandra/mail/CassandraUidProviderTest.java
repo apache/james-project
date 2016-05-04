@@ -25,7 +25,6 @@ import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
@@ -48,7 +47,7 @@ public class CassandraUidProviderTest {
     
     private CassandraUidProvider uidProvider;
     private CassandraMailboxMapper mapper;
-    private SimpleMailbox<CassandraId> mailbox;
+    private SimpleMailbox mailbox;
 
     @Before
     public void setUpClass() throws Exception {
@@ -56,7 +55,7 @@ public class CassandraUidProviderTest {
         uidProvider = new CassandraUidProvider(CASSANDRA.getConf());
         mapper = new CassandraMailboxMapper(CASSANDRA.getConf(), CASSANDRA.getTypesProvider(), MAX_RETRY);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
-        mailbox = new SimpleMailbox<>(path, 1234);
+        mailbox = new SimpleMailbox(path, 1234);
         mapper.save(mailbox);
     }
     

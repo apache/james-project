@@ -29,18 +29,18 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public class InMemoryUidProvider implements UidProvider<InMemoryId>{
+public class InMemoryUidProvider implements UidProvider{
 
     private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<InMemoryId, AtomicLong>();
     
     @Override
-    public long nextUid(MailboxSession session, Mailbox<InMemoryId> mailbox) throws MailboxException {
-        return getLast(mailbox.getMailboxId()).incrementAndGet();
+    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return getLast((InMemoryId) mailbox.getMailboxId()).incrementAndGet();
     }
 
     @Override
-    public long lastUid(MailboxSession session, Mailbox<InMemoryId> mailbox) throws MailboxException {
-        return getLast(mailbox.getMailboxId()).get();
+    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return getLast((InMemoryId) mailbox.getMailboxId()).get();
     }
     
     private AtomicLong getLast(InMemoryId id) {

@@ -22,7 +22,7 @@ import javax.mail.Flags;
 
 public class FlagsBuilder {
 
-    public static Flags createFlags(MailboxMessage<?> mailboxMessage, String[] userFlags) {
+    public static Flags createFlags(MailboxMessage mailboxMessage, String[] userFlags) {
         final Flags flags = new Flags();
 
         if (mailboxMessage.isAnswered()) {

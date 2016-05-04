@@ -50,7 +50,7 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.slf4j.Logger;
 
-public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstants, Persistent {
+public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Persistent {
 
     private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
     
@@ -673,7 +673,7 @@ public class JCRMailboxMessage implements MailboxMessage<JCRId>, JCRImapConstant
     }
 
     @Override
-    public int compareTo(MailboxMessage<JCRId> other) {
+    public int compareTo(MailboxMessage other) {
         return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
 }

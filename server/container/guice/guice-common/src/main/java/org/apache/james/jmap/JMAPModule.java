@@ -31,7 +31,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
 
@@ -43,21 +42,15 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
-public class JMAPModule<Id extends MailboxId> extends AbstractModule {
+public class JMAPModule extends AbstractModule {
     private static final int DEFAULT_JMAP_PORT = 80;
-    private final TypeLiteral<Id> type;
-
-    public JMAPModule(TypeLiteral<Id> type) {
-        this.type = type;
-    }
 
     @Override
     protected void configure() {
         install(new JMAPCommonModule());
-        install(new MethodsModule<Id>(type));
+        install(new MethodsModule());
         bind(RequestHandler.class).in(Singleton.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetConfigurationPrecondition.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MoveCapabilityPrecondition.class);

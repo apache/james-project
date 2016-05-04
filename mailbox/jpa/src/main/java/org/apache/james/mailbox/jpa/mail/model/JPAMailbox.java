@@ -59,7 +59,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
     @NamedQuery(name="findLastUid",
         query="SELECT mailbox.lastUid FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
 })
-public class JPAMailbox implements Mailbox<JPAId> {
+public class JPAMailbox implements Mailbox {
     
     private static final String TAB = " ";
 

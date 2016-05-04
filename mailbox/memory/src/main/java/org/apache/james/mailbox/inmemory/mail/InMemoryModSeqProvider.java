@@ -29,18 +29,18 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public class InMemoryModSeqProvider implements ModSeqProvider<InMemoryId>{
+public class InMemoryModSeqProvider implements ModSeqProvider {
     private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<InMemoryId, AtomicLong>();
 
     @Override
-    public long nextModSeq(MailboxSession session, Mailbox<InMemoryId> mailbox) throws MailboxException {
-        return getHighest(mailbox.getMailboxId()).incrementAndGet();
+    public long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return getHighest((InMemoryId) mailbox.getMailboxId()).incrementAndGet();
 
     }
 
     @Override
-    public long highestModSeq(MailboxSession session, Mailbox<InMemoryId> mailbox) throws MailboxException {
-        return getHighest(mailbox.getMailboxId()).get();
+    public long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return getHighest((InMemoryId) mailbox.getMailboxId()).get();
     }
     private AtomicLong getHighest(InMemoryId id) {
         AtomicLong uid = map.get(id);

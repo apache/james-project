@@ -24,7 +24,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
@@ -33,7 +32,7 @@ import org.apache.james.mailbox.store.transaction.Mapper;
  * to the end of the request.
  *
  */
-public interface MailboxMapper<Id extends MailboxId> extends Mapper {
+public interface MailboxMapper extends Mapper {
     
     /**
      * Save the give {@link Mailbox} to the underlying storage
@@ -41,7 +40,7 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @param mailbox
      * @throws MailboxException
      */
-    void save(Mailbox<Id> mailbox) throws MailboxException;
+    void save(Mailbox mailbox) throws MailboxException;
     
     /**
      * Delete the given {@link Mailbox} from the underlying storage
@@ -49,7 +48,7 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @param mailbox
      * @throws MailboxException
      */
-    void delete(Mailbox<Id> mailbox) throws MailboxException;
+    void delete(Mailbox mailbox) throws MailboxException;
 
   
     /**
@@ -60,7 +59,7 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @throws MailboxException
      * @throws MailboxNotFoundException
      */
-    Mailbox<Id> findMailboxByPath(MailboxPath mailboxName)
+    Mailbox findMailboxByPath(MailboxPath mailboxName)
             throws MailboxException, MailboxNotFoundException;
 
     /**
@@ -70,7 +69,7 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @return mailboxList
      * @throws MailboxException
      */
-    List<Mailbox<Id>> findMailboxWithPathLike(MailboxPath mailboxPath)
+    List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
             throws MailboxException;
 
     /**
@@ -82,7 +81,7 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @throws MailboxException
      * @throws MailboxNotFoundException
      */
-    boolean hasChildren(Mailbox<Id> mailbox, char delimiter)
+    boolean hasChildren(Mailbox mailbox, char delimiter)
             throws MailboxException, MailboxNotFoundException;
 
     /**
@@ -91,7 +90,7 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @param mailbox Mailbox for whom we want to update ACL
      * @param mailboxACLCommand Update to perform
      */
-    void updateACL(Mailbox<Id> mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException;
+    void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException;
 
     /**
      * Return a unmodifable {@link List} of all {@link Mailbox} 
@@ -99,5 +98,5 @@ public interface MailboxMapper<Id extends MailboxId> extends Mapper {
      * @return mailboxList
      * @throws MailboxException 
      */
-    List<Mailbox<Id>> list() throws MailboxException;
+    List<Mailbox> list() throws MailboxException;
 }

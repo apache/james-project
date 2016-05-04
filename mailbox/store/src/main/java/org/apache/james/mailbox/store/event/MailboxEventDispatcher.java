@@ -28,20 +28,19 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 /**
  * Helper class to dispatch {@link org.apache.james.mailbox.MailboxListener.Event}'s to registerend MailboxListener
  */
-public class MailboxEventDispatcher<Id extends MailboxId> {
+public class MailboxEventDispatcher {
 
     private final MailboxListener listener;
-    private final EventFactory<Id> eventFactory;
+    private final EventFactory eventFactory;
 
     public MailboxEventDispatcher(MailboxListener listener) {
         this.listener = listener;
-        this.eventFactory = new EventFactory<Id>();
+        this.eventFactory = new EventFactory();
     }
 
     /**
@@ -52,7 +51,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * @param uids Sorted map with uids and message meta data
      * @param mailbox The mailbox
      */
-    public void added(MailboxSession session, SortedMap<Long, MessageMetaData> uids, Mailbox<Id> mailbox) {
+    public void added(MailboxSession session, SortedMap<Long, MessageMetaData> uids, Mailbox mailbox) {
         listener.event(eventFactory.added(session, uids, mailbox));
     }
 
@@ -64,7 +63,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * @param uids Sorted map with uids and message meta data
      * @param mailbox The mailbox
      */
-    public void expunged(MailboxSession session,  Map<Long, MessageMetaData> uids, Mailbox<Id> mailbox) {
+    public void expunged(MailboxSession session,  Map<Long, MessageMetaData> uids, Mailbox mailbox) {
         listener.event(eventFactory.expunged(session, uids, mailbox));
     }
 
@@ -72,7 +71,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * Should get called when the message flags were update in a Mailbox. All
      * registered MailboxListener will get triggered then
      */
-    public void flagsUpdated(MailboxSession session, List<Long> uids, Mailbox<Id> mailbox, List<UpdatedFlags> uflags) {
+    public void flagsUpdated(MailboxSession session, List<Long> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
         listener.event(eventFactory.flagsUpdated(session, uids, mailbox, uflags));
     }
 
@@ -80,7 +79,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * Should get called when a Mailbox was renamed. All registered
      * MailboxListener will get triggered then
      */
-    public void mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox<Id> to) {
+    public void mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
         listener.event(eventFactory.mailboxRenamed(session, from, to));
     }
 
@@ -88,7 +87,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * Should get called when a Mailbox was deleted. All registered
      * MailboxListener will get triggered then
      */
-    public void mailboxDeleted(MailboxSession session, Mailbox<Id> mailbox) {
+    public void mailboxDeleted(MailboxSession session, Mailbox mailbox) {
         listener.event(eventFactory.mailboxDeleted(session, mailbox));
     }
 
@@ -96,7 +95,7 @@ public class MailboxEventDispatcher<Id extends MailboxId> {
      * Should get called when a Mailbox was added. All registered
      * MailboxListener will get triggered then
      */
-    public void mailboxAdded(MailboxSession session, Mailbox<Id> mailbox) {
+    public void mailboxAdded(MailboxSession session, Mailbox mailbox) {
         listener.event(eventFactory.mailboxAdded(session, mailbox));
     }
 

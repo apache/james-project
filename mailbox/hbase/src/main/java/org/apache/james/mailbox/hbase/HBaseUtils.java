@@ -91,7 +91,7 @@ public class HBaseUtils {
      * @param result a result of a HBase Get operation 
      * @return a Mailbox object
      */
-    public static Mailbox<HBaseId> mailboxFromResult(Result result) {
+    public static Mailbox mailboxFromResult(Result result) {
         NavigableMap<byte[], byte[]> rawMailbox = result.getFamilyMap(MAILBOX_CF);
         //TODO: should we test for null values?
         MailboxPath path = new MailboxPath(Bytes.toString(rawMailbox.get(MAILBOX_NAMESPACE)),
@@ -145,7 +145,7 @@ public class HBaseUtils {
      * @param message
      * @return a put that contains all metadata information.
      */
-    public static Put metadataToPut(MailboxMessage<HBaseId> message) {
+    public static Put metadataToPut(MailboxMessage message) {
         Put put = new Put(messageRowKey(message));
         // we store the message uid and mailbox uid in the row key
         // store the meta data
@@ -203,8 +203,8 @@ public class HBaseUtils {
      * @param message message to get row key from
      * @return rowkey byte array that can be used with HBase API
      */
-    public static byte[] messageRowKey(MailboxMessage<HBaseId> message) {
-        return messageRowKey(message.getMailboxId(), message.getUid());
+    public static byte[] messageRowKey(MailboxMessage message) {
+        return messageRowKey((HBaseId) message.getMailboxId(), message.getUid());
     }
 
     /**
@@ -240,7 +240,7 @@ public class HBaseUtils {
      * @param result the result object containing message data
      * @return a HBaseMailboxMessage instance with message metadata.
      */
-    public static MailboxMessage<HBaseId> messageMetaFromResult(Configuration conf, Result result) {
+    public static MailboxMessage messageMetaFromResult(Configuration conf, Result result) {
         HBaseMailboxMessage message = null;
         Flags flags = new Flags();
         List<Property> propList = new ArrayList<Property>();
@@ -328,7 +328,7 @@ public class HBaseUtils {
      * @param flags
      * @return a put object with 
      */
-    public static Put flagsToPut(MailboxMessage<HBaseId> message, Flags flags) {
+    public static Put flagsToPut(MailboxMessage message, Flags flags) {
         Put put = new Put(messageRowKey(message));
         //system flags
         if (flags.contains(Flag.ANSWERED)) {
@@ -376,7 +376,7 @@ public class HBaseUtils {
         return put;
     }
 
-    public static Delete flagsToDelete(MailboxMessage<HBaseId> message, Flags flags) {
+    public static Delete flagsToDelete(MailboxMessage message, Flags flags) {
         Delete delete = new Delete(messageRowKey(message));
         //we mark for delete flags that are not present (they will be Put'ed)
         if (flags.contains(Flag.ANSWERED)) {

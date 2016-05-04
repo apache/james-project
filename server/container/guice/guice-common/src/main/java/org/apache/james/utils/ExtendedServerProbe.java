@@ -31,14 +31,13 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-public interface ExtendedServerProbe<Id extends MailboxId> extends ServerProbe {
+public interface ExtendedServerProbe extends ServerProbe {
 
     void appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags) 
             throws BadCredentialsException, MailboxException;
 
-    Mailbox<Id> getMailbox(String namespace, String user, String name);
+    Mailbox getMailbox(String namespace, String user, String name);
 
     void modifyVacation(AccountId accountId, Vacation vacation);
 

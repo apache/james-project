@@ -46,7 +46,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
@@ -66,11 +65,11 @@ public class GetMailboxesMethodTest {
     private static final String USERNAME = "username@domain.tld";
     private static final String USERNAME2 = "username2@domain.tld";
 
-    private StoreMailboxManager<InMemoryId> mailboxManager;
-    private GetMailboxesMethod<InMemoryId> getMailboxesMethod;
+    private StoreMailboxManager mailboxManager;
+    private GetMailboxesMethod getMailboxesMethod;
     private ClientId clientId;
     private InMemoryMailboxSessionMapperFactory mailboxMapperFactory;
-    private MailboxUtils<InMemoryId> mailboxUtils;
+    private MailboxUtils mailboxUtils;
 
     @Before
     public void setup() throws Exception {
@@ -78,11 +77,11 @@ public class GetMailboxesMethodTest {
         mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        mailboxManager = new StoreMailboxManager<>(mailboxMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver);
+        mailboxManager = new StoreMailboxManager(mailboxMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver);
         mailboxManager.init();
-        mailboxUtils = new MailboxUtils<>(mailboxManager, mailboxMapperFactory);
+        mailboxUtils = new MailboxUtils(mailboxManager, mailboxMapperFactory);
 
-        getMailboxesMethod = new GetMailboxesMethod<>(mailboxManager, mailboxUtils);
+        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxUtils);
     }
 
     @Test
@@ -110,7 +109,7 @@ public class GetMailboxesMethodTest {
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
         when(mockedMailboxManager.getMailbox(any(), any()))
             .thenThrow(new MailboxException());
-        GetMailboxesMethod<InMemoryId> testee = new GetMailboxesMethod<>(mockedMailboxManager, mailboxUtils);
+        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxUtils);
         
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();

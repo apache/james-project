@@ -29,7 +29,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -38,13 +37,12 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * notified about message changes. This will then allow to update the underlying index.
  * 
  *
- * @param <Id>
  */
-public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implements MessageSearchIndex<Id>, MailboxListener {
+public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener {
 
-    private final MessageMapperFactory<Id> factory;
+    private final MessageMapperFactory factory;
 
-    public ListeningMessageSearchIndex(MessageMapperFactory<Id> factory) {
+    public ListeningMessageSearchIndex(MessageMapperFactory factory) {
         this.factory = factory;
     }
 
@@ -58,7 +56,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
      * 
      * @return factory
      */
-    protected MessageMapperFactory<Id> getFactory() {
+    protected MessageMapperFactory getFactory() {
         return factory;
     }
     
@@ -67,7 +65,6 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
      * Process the {@link org.apache.james.mailbox.MailboxListener.Event} and update the index if
      * something relevant is received
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void event(Event event) {
         final MailboxSession session = event.getSession();
@@ -76,12 +73,12 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
             if (event instanceof MessageEvent) {
                 if (event instanceof EventFactory.AddedImpl) {
                     EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
-                    final Mailbox<Id> mailbox = added.getMailbox();
+                    final Mailbox mailbox = added.getMailbox();
 
                     for (Long next : (Iterable<Long>) added.getUids()) {
-                        Iterator<MailboxMessage<Id>> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, -1);
+                        Iterator<MailboxMessage> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, -1);
                         while (messages.hasNext()) {
-                            MailboxMessage<Id> message = messages.next();
+                            MailboxMessage message = messages.next();
                             try {
                                 add(session, mailbox, message);
                             } catch (MailboxException e) {
@@ -99,7 +96,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
                     }
                 } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
                     EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
-                    final Mailbox<Id> mailbox = flagsUpdated.getMailbox();
+                    final Mailbox mailbox = flagsUpdated.getMailbox();
 
                     try {
                         update(session, mailbox, flagsUpdated.getUpdatedFlags());
@@ -124,7 +121,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
      * @param message The added message
      * @throws MailboxException
      */
-    public abstract void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException;
+    public abstract void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws MailboxException;
 
     /**
      * Delete the concerned UIDs for the given {@link Mailbox} from the index
@@ -134,7 +131,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
      * @param expungedUids UIDS to be deleted
      * @throws MailboxException
      */
-    public abstract void delete(MailboxSession session, Mailbox<Id> mailbox, List<Long> expungedUids) throws MailboxException;
+    public abstract void delete(MailboxSession session, Mailbox mailbox, List<Long> expungedUids) throws MailboxException;
 
     /**
      * Delete the messages contained in the given {@link Mailbox} from the index
@@ -143,7 +140,7 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
      * @param mailbox mailbox on which the expunge was performed
      * @throws MailboxException
      */
-    public abstract void deleteAll(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    public abstract void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException;
     
     /**
      * Update the messages concerned by the updated flags list for the given {@link Mailbox}
@@ -153,5 +150,5 @@ public abstract class ListeningMessageSearchIndex<Id extends MailboxId> implemen
      * @param updatedFlagsList list of flags that were updated
      * @throws MailboxException
      */
-    public abstract void update(MailboxSession session, Mailbox<Id> mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException;
+    public abstract void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException;
 }

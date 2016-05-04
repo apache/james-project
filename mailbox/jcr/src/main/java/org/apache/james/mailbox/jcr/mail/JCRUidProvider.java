@@ -25,13 +25,12 @@ import javax.jcr.Session;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.MailboxSessionJCRRepository;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.store.mail.AbstractLockingUidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public class JCRUidProvider extends AbstractLockingUidProvider<JCRId> {
+public class JCRUidProvider extends AbstractLockingUidProvider {
 
     private final MailboxSessionJCRRepository repository;
 
@@ -41,7 +40,7 @@ public class JCRUidProvider extends AbstractLockingUidProvider<JCRId> {
     }
 
     @Override
-    public long lastUid(MailboxSession mailboxSession, Mailbox<JCRId> mailbox) throws MailboxException {
+    public long lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
         try {
             Session s = repository.login(mailboxSession);
             Node node = s.getNodeByIdentifier(mailbox.getMailboxId().serialize());
@@ -53,7 +52,7 @@ public class JCRUidProvider extends AbstractLockingUidProvider<JCRId> {
     }
 
     @Override
-    protected long lockedNextUid(MailboxSession session, Mailbox<JCRId> mailbox) throws MailboxException {
+    protected long lockedNextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
             Session s = repository.login(session);
             Node node = s.getNodeByIdentifier(mailbox.getMailboxId().serialize());

@@ -4,21 +4,19 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 /**
  * Caches the MailboxPath -> Mailbox mapping
  * 
- * @param <Id>
  */
-public interface MailboxByPathCache<Id extends MailboxId> {
+public interface MailboxByPathCache {
 
-	Mailbox<Id> findMailboxByPath(MailboxPath mailboxName,
-								  MailboxMapper<Id> underlying) throws MailboxNotFoundException,
+	Mailbox findMailboxByPath(MailboxPath mailboxName,
+								  MailboxMapper underlying) throws MailboxNotFoundException,
 			MailboxException;
 
-	void invalidate(Mailbox<Id> mailbox);
+	void invalidate(Mailbox mailbox);
 	
 	void invalidate(MailboxPath mailboxPath);
 

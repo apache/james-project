@@ -38,7 +38,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * Message UidProvider for HBase.
  * 
  */
-public class HBaseUidProvider implements UidProvider<HBaseId> {
+public class HBaseUidProvider implements UidProvider {
 
     /** Link to the HBase Configuration object and specific mailbox names */
     private final Configuration conf;
@@ -55,11 +55,12 @@ public class HBaseUidProvider implements UidProvider<HBaseId> {
      * @throws MailboxException 
      */
     @Override
-    public long lastUid(MailboxSession session, Mailbox<HBaseId> mailbox) throws MailboxException {
+    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         HTable mailboxes = null;
+        HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
         try {
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
-            Get get = new Get(mailbox.getMailboxId().toBytes());
+            Get get = new Get(mailboxId.toBytes());
             get.addColumn(MAILBOX_CF, MAILBOX_LASTUID);
             get.setMaxVersions(1);
             Result result = mailboxes.get(get);
@@ -91,11 +92,12 @@ public class HBaseUidProvider implements UidProvider<HBaseId> {
      * @throws MailboxException 
      */
     @Override
-    public long nextUid(MailboxSession session, Mailbox<HBaseId> mailbox) throws MailboxException {
+    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         HTable mailboxes = null;
+        HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
         try {
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
-            long newValue = mailboxes.incrementColumnValue(mailbox.getMailboxId().toBytes(), MAILBOX_CF, MAILBOX_LASTUID, 1);
+            long newValue = mailboxes.incrementColumnValue(mailboxId.toBytes(), MAILBOX_CF, MAILBOX_LASTUID, 1);
             mailboxes.close();
             return newValue;
         } catch (IOException e) {

@@ -19,30 +19,29 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Multimap;
-import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
-import org.apache.james.mime4j.MimeException;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
+import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mime4j.MimeException;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Multimap;
+
 public class IndexableMessage {
 
-    public static IndexableMessage from(MailboxMessage<? extends MailboxId> message, TextExtractor textExtractor, ZoneId zoneId) {
+    public static IndexableMessage from(MailboxMessage message, TextExtractor textExtractor, ZoneId zoneId) {
         Preconditions.checkNotNull(message.getMailboxId());
         IndexableMessage indexableMessage = new IndexableMessage();
         try {
@@ -73,7 +72,7 @@ public class IndexableMessage {
         this.sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
     }
 
-    private void copyMessageFields(MailboxMessage<? extends MailboxId> message, ZoneId zoneId) {
+    private void copyMessageFields(MailboxMessage message, ZoneId zoneId) {
         this.id = message.getUid();
         this.mailboxId = message.getMailboxId().serialize();
         this.modSeq = message.getModSeq();
@@ -91,7 +90,7 @@ public class IndexableMessage {
         this.properties = message.getProperties();
     }
 
-    private static ZonedDateTime getSanitizedInternalDate(MailboxMessage<? extends MailboxId> message, ZoneId zoneId) {
+    private static ZonedDateTime getSanitizedInternalDate(MailboxMessage message, ZoneId zoneId) {
         if (message.getInternalDate() == null) {
             return ZonedDateTime.now();
         }

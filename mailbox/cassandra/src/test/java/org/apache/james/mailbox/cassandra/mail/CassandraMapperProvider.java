@@ -16,7 +16,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
-public class CassandraMapperProvider implements MapperProvider<CassandraId> {
+public class CassandraMapperProvider implements MapperProvider {
 
     private static final CassandraCluster cassandra = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
@@ -27,7 +27,7 @@ public class CassandraMapperProvider implements MapperProvider<CassandraId> {
         new CassandraUidModule()));
 
     @Override
-    public MailboxMapper<CassandraId> createMailboxMapper() throws MailboxException {
+    public MailboxMapper createMailboxMapper() throws MailboxException {
         return new CassandraMailboxSessionMapperFactory(
             new CassandraUidProvider(cassandra.getConf()),
             new CassandraModSeqProvider(cassandra.getConf()),
@@ -37,7 +37,7 @@ public class CassandraMapperProvider implements MapperProvider<CassandraId> {
     }
 
     @Override
-    public MessageMapper<CassandraId> createMessageMapper() throws MailboxException {
+    public MessageMapper createMessageMapper() throws MailboxException {
         return new CassandraMailboxSessionMapperFactory(
             new CassandraUidProvider(cassandra.getConf()),
             new CassandraModSeqProvider(cassandra.getConf()),

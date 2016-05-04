@@ -19,34 +19,34 @@
 
 package org.apache.james.mailbox.store.json.event;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.IOException;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.json.SimpleMailboxACLJsonConverter;
 import org.apache.james.mailbox.store.json.event.dto.MailboxDataTransferObject;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class MailboxConverter<Id extends MailboxId> {
+public class MailboxConverter {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MailboxConverter.class);
 
-    private final MailboxIdDeserializer<Id> mailboxIdDeserializer;
+    private final MailboxIdDeserializer mailboxIdDeserializer;
 
-    public MailboxConverter(MailboxIdDeserializer<Id> mailboxIdDeserializer) {
+    public MailboxConverter(MailboxIdDeserializer mailboxIdDeserializer) {
         this.mailboxIdDeserializer = mailboxIdDeserializer;
     }
 
-    public Mailbox<Id> retrieveMailbox(MailboxDataTransferObject mailboxDataTransferObject) {
-        SimpleMailbox<Id> mailbox = new SimpleMailbox<Id>(new MailboxPath(mailboxDataTransferObject.getNamespace(),
+    public Mailbox retrieveMailbox(MailboxDataTransferObject mailboxDataTransferObject) {
+        SimpleMailbox mailbox = new SimpleMailbox(new MailboxPath(mailboxDataTransferObject.getNamespace(),
             mailboxDataTransferObject.getUser(),
             mailboxDataTransferObject.getName()),
             mailboxDataTransferObject.getUidValidity());
@@ -61,7 +61,7 @@ public class MailboxConverter<Id extends MailboxId> {
         return mailbox;
     }
 
-    public MailboxDataTransferObject convertMailboxDataTransferObject(Mailbox<Id> mailbox) {
+    public MailboxDataTransferObject convertMailboxDataTransferObject(Mailbox mailbox) {
         return MailboxDataTransferObject.builder()
             .serializedMailboxId(mailbox.getMailboxId().serialize())
             .namespace(mailbox.getNamespace())
@@ -72,16 +72,15 @@ public class MailboxConverter<Id extends MailboxId> {
             .build();
     }
 
-    @SuppressWarnings("unchecked")
     public MailboxDataTransferObject extractMailboxDataTransferObject(MailboxListener.Event event) {
         if (event instanceof EventFactory.MailboxAware) {
-            return convertMailboxDataTransferObject(((EventFactory.MailboxAware<Id>) event).getMailbox());
+            return convertMailboxDataTransferObject(((EventFactory.MailboxAware) event).getMailbox());
         } else {
             throw new RuntimeException("Unsupported event class : " + event.getClass().getCanonicalName());
         }
     }
 
-    private String getSerializedACL(Mailbox<Id> mailbox) {
+    private String getSerializedACL(Mailbox mailbox) {
         try {
             return SimpleMailboxACLJsonConverter.toJson(mailbox.getACL());
         } catch (JsonProcessingException e) {

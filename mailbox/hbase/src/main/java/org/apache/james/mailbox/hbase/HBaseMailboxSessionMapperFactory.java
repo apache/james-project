@@ -53,11 +53,11 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * HBase implementation of {@link MailboxSessionMapperFactory}
  *
  */
-public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactory<HBaseId> {
+public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
 
     private final Configuration conf;
-    private final UidProvider<HBaseId> uidProvider;
-    private final ModSeqProvider<HBaseId> modSeqProvider;
+    private final UidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
 
     /**
      * Creates  the necessary tables in HBase if they do not exist.
@@ -69,7 +69,7 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
      * @throws ZooKeeperConnectionException
      * @throws IOException
      */
-    public HBaseMailboxSessionMapperFactory(Configuration conf, UidProvider<HBaseId> uidProvider, ModSeqProvider<HBaseId> modSeqProvider) {
+    public HBaseMailboxSessionMapperFactory(Configuration conf, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         this.conf = conf;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -126,12 +126,12 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
     }
 
     @Override
-    public MessageMapper<HBaseId> createMessageMapper(MailboxSession session) throws MailboxException {
+    public MessageMapper createMessageMapper(MailboxSession session) throws MailboxException {
         return new HBaseMessageMapper(session, uidProvider, modSeqProvider, this.conf);
     }
 
     @Override
-    public MailboxMapper<HBaseId> createMailboxMapper(MailboxSession session) throws MailboxException {
+    public MailboxMapper createMailboxMapper(MailboxSession session) throws MailboxException {
         return new HBaseMailboxMapper(this.conf);
     }
 
@@ -152,7 +152,7 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
      * Returns the ModSeqProvider used.
      * @return The used modSeqProvider
      */
-    public ModSeqProvider<HBaseId> getModSeqProvider() {
+    public ModSeqProvider getModSeqProvider() {
         return modSeqProvider;
     }
 
@@ -160,7 +160,7 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
      * Returns the UidProvider that generates UID's for mailboxes.
      * @return The provider that generates UID's for mailboxes
      */
-    public UidProvider<HBaseId> getUidProvider() {
+    public UidProvider getUidProvider() {
         return uidProvider;
     }
 }

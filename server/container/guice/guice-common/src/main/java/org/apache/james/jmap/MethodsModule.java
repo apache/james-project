@@ -40,22 +40,13 @@ import org.apache.james.jmap.methods.SetMessagesMethod;
 import org.apache.james.jmap.methods.SetMessagesProcessor;
 import org.apache.james.jmap.methods.SetMessagesUpdateProcessor;
 import org.apache.james.jmap.methods.SetVacationResponseMethod;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
-import org.apache.james.utils.GuiceGenericType;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
-public class MethodsModule<Id extends MailboxId> extends AbstractModule {
-
-    private final GuiceGenericType<Id> guiceGenericType;
-
-    public MethodsModule(TypeLiteral<Id> type) {
-        this.guiceGenericType = new GuiceGenericType<>(type);
-    }
+public class MethodsModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -66,25 +57,25 @@ public class MethodsModule<Id extends MailboxId> extends AbstractModule {
         bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
-        methods.addBinding().to(guiceGenericType.newGenericType(GetMailboxesMethod.class));
-        methods.addBinding().to(guiceGenericType.newGenericType(GetMessageListMethod.class));
-        methods.addBinding().to(guiceGenericType.newGenericType(GetMessagesMethod.class));
-        methods.addBinding().to(guiceGenericType.newGenericType(SetMessagesMethod.class));
-        methods.addBinding().to(guiceGenericType.newGenericType(SetMailboxesMethod.class));
-        methods.addBinding().to(guiceGenericType.newGenericType(GetVacationResponseMethod.class));
-        methods.addBinding().to(guiceGenericType.newGenericType(SetVacationResponseMethod.class));
+        methods.addBinding().to(GetMailboxesMethod.class);
+        methods.addBinding().to(GetMessageListMethod.class);
+        methods.addBinding().to(GetMessagesMethod.class);
+        methods.addBinding().to(SetMessagesMethod.class);
+        methods.addBinding().to(SetMailboxesMethod.class);
+        methods.addBinding().to(GetVacationResponseMethod.class);
+        methods.addBinding().to(SetVacationResponseMethod.class);
 
-        Multibinder<SetMailboxesProcessor<Id>> setMailboxesProcessor =
-            Multibinder.newSetBinder(binder(), guiceGenericType.newGenericType(SetMailboxesProcessor.class));
-        setMailboxesProcessor.addBinding().to(guiceGenericType.newGenericType(SetMailboxesCreationProcessor.class));
-        setMailboxesProcessor.addBinding().to(guiceGenericType.newGenericType(SetMailboxesUpdateProcessor.class));
-        setMailboxesProcessor.addBinding().to(guiceGenericType.newGenericType(SetMailboxesDestructionProcessor.class));
+        Multibinder<SetMailboxesProcessor> setMailboxesProcessor =
+            Multibinder.newSetBinder(binder(), SetMailboxesProcessor.class);
+        setMailboxesProcessor.addBinding().to(SetMailboxesCreationProcessor.class);
+        setMailboxesProcessor.addBinding().to(SetMailboxesUpdateProcessor.class);
+        setMailboxesProcessor.addBinding().to(SetMailboxesDestructionProcessor.class);
 
-        Multibinder<SetMessagesProcessor<Id>> setMessagesProcessors =
-                Multibinder.newSetBinder(binder(), guiceGenericType.newGenericType(SetMessagesProcessor.class));
-        setMessagesProcessors.addBinding().to(guiceGenericType.newGenericType(SetMessagesUpdateProcessor.class));
-        setMessagesProcessors.addBinding().to(guiceGenericType.newGenericType(SetMessagesCreationProcessor.class));
-        setMessagesProcessors.addBinding().to(guiceGenericType.newGenericType(SetMessagesDestructionProcessor.class));
+        Multibinder<SetMessagesProcessor> setMessagesProcessors =
+                Multibinder.newSetBinder(binder(), SetMessagesProcessor.class);
+        setMessagesProcessors.addBinding().to(SetMessagesUpdateProcessor.class);
+        setMessagesProcessors.addBinding().to(SetMessagesCreationProcessor.class);
+        setMessagesProcessors.addBinding().to(SetMessagesDestructionProcessor.class);
     }
 
 }

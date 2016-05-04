@@ -41,20 +41,19 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
-public class SetMailboxesUpdateProcessor<Id extends MailboxId> implements SetMailboxesProcessor<Id> {
+public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
 
-    private final MailboxUtils<Id> mailboxUtils;
+    private final MailboxUtils mailboxUtils;
     private final MailboxManager mailboxManager;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesUpdateProcessor(MailboxUtils<Id> mailboxUtils, MailboxManager mailboxManager) {
+    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager) {
         this.mailboxUtils = mailboxUtils;
         this.mailboxManager = mailboxManager;
     }

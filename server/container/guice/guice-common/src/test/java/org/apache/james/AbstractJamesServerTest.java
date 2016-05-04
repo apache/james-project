@@ -29,7 +29,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +37,7 @@ import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
-public abstract class AbstractJamesServerTest<Id extends MailboxId> {
+public abstract class AbstractJamesServerTest {
 
     private static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
     private static final int IMAP_PORT_SSL = 1993;
@@ -46,7 +45,7 @@ public abstract class AbstractJamesServerTest<Id extends MailboxId> {
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
 
-    private GuiceJamesServer<Id> server;
+    private GuiceJamesServer server;
     private SocketChannel socketChannel;
 
     @Before
@@ -59,7 +58,7 @@ public abstract class AbstractJamesServerTest<Id extends MailboxId> {
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
     }
 
-    protected abstract GuiceJamesServer<Id> createJamesServer();
+    protected abstract GuiceJamesServer createJamesServer();
 
     @After
     public void tearDown() throws Exception {

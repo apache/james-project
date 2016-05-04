@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.inmemory;
 
 import java.util.List;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -35,10 +36,10 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.google.common.collect.Lists;
 
-public class InMemoryMailboxManager extends StoreMailboxManager<InMemoryId> {
+public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Inject
-    public InMemoryMailboxManager(MailboxSessionMapperFactory<InMemoryId> mailboxSessionMapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver);
     }
 
@@ -48,7 +49,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager<InMemoryId> {
     }
 
     @Override
-    protected StoreMessageManager<InMemoryId> createMessageManager(Mailbox<InMemoryId> mailbox, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
         return new InMemoryMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),

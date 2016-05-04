@@ -6,22 +6,20 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 /**
  * A MailboxMapper implementation that uses a MailboxByPathCache to cache the information
  * from the underlying MailboxMapper
  * 
- * @param <Id>
  */
 
-public class CachingMailboxMapper<Id extends MailboxId> implements MailboxMapper<Id> {
+public class CachingMailboxMapper implements MailboxMapper {
 
-	private final MailboxMapper<Id> underlying;
-	private final MailboxByPathCache<Id> cache;
+	private final MailboxMapper underlying;
+	private final MailboxByPathCache cache;
 
-	public CachingMailboxMapper(MailboxMapper<Id> underlying, MailboxByPathCache<Id> cache) {
+	public CachingMailboxMapper(MailboxMapper underlying, MailboxByPathCache cache) {
 		this.underlying = underlying;
 		this.cache = cache;
 	}
@@ -37,19 +35,19 @@ public class CachingMailboxMapper<Id extends MailboxId> implements MailboxMapper
 	}
 
 	@Override
-	public void save(Mailbox<Id> mailbox) throws MailboxException {
+	public void save(Mailbox mailbox) throws MailboxException {
 		invalidate(mailbox);
 		underlying.save(mailbox);
 	}
 
 	@Override
-	public void delete(Mailbox<Id> mailbox) throws MailboxException {
+	public void delete(Mailbox mailbox) throws MailboxException {
 		invalidate(mailbox);
 		underlying.delete(mailbox);
 	}
 
 	@Override
-	public Mailbox<Id> findMailboxByPath(MailboxPath mailboxName)
+	public Mailbox findMailboxByPath(MailboxPath mailboxName)
 			throws MailboxException, MailboxNotFoundException {
 		try {
 			return cache.findMailboxByPath(mailboxName, underlying);
@@ -60,31 +58,31 @@ public class CachingMailboxMapper<Id extends MailboxId> implements MailboxMapper
 	}
 
 	@Override
-	public List<Mailbox<Id>> findMailboxWithPathLike(MailboxPath mailboxPath)
+	public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
 			throws MailboxException {
 		// TODO possible to meaningfully cache it?
 		return underlying.findMailboxWithPathLike(mailboxPath);
 	}
 
 	@Override
-	public boolean hasChildren(Mailbox<Id> mailbox, char delimiter)
+	public boolean hasChildren(Mailbox mailbox, char delimiter)
 			throws MailboxException, MailboxNotFoundException {
 		// TODO possible to meaningfully cache it?
 		return underlying.hasChildren(mailbox, delimiter);
 	}
 
 	@Override
-	public List<Mailbox<Id>> list() throws MailboxException {
+	public List<Mailbox> list() throws MailboxException {
 		// TODO possible to meaningfully cache it? is it used at all?
 		return underlying.list();
 	}
 
 	@Override
-	public void updateACL(Mailbox<Id> mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
+	public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
 		mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
 	}
 
-	private void invalidate(Mailbox<Id> mailbox) {
+	private void invalidate(Mailbox mailbox) {
 		cache.invalidate(mailbox);
 	}
 

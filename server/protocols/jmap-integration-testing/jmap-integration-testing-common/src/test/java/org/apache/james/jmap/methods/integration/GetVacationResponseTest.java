@@ -22,9 +22,9 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.IsNull.nullValue;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -50,12 +50,12 @@ public abstract class GetVacationResponseTest {
     public static final String USER = "username@" + USERS_DOMAIN;
     public static final String PASSWORD = "password";
 
-    protected abstract GuiceJamesServer<?> createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
-    private GuiceJamesServer<?> jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

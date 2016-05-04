@@ -129,10 +129,10 @@ public class ZooUidProviderTest {
 	    private static final int ZOO_TEST_PORT = 3123;
 	    private final RetryPolicy retryPolicy = new RetryOneTime(1);
 	    private CuratorFramework client;
-	    private ZooUidProvider<UUIDId> uuidProvider;
-	    private ZooUidProvider<LongId> longProvider;
-	    private SimpleMailbox<UUIDId> mailboxUUID;
-	    private SimpleMailbox<LongId> mailboxLong;
+	    private ZooUidProvider uuidProvider;
+	    private ZooUidProvider longProvider;
+	    private SimpleMailbox mailboxUUID;
+	    private SimpleMailbox mailboxLong;
 	    private UUID randomUUID = UUID.randomUUID();
 	
 	    @Before
@@ -141,13 +141,13 @@ public class ZooUidProviderTest {
 	        client = CuratorFrameworkFactory.builder().connectString("localhost:" + ZOO_TEST_PORT).retryPolicy(retryPolicy).
 	                namespace("JAMES").build();
 	        client.start();
-	        uuidProvider = new ZooUidProvider<UUIDId>(client, retryPolicy);
-	        longProvider = new ZooUidProvider<LongId>(client, retryPolicy);
+	        uuidProvider = new ZooUidProvider(client, retryPolicy);
+	        longProvider = new ZooUidProvider(client, retryPolicy);
 	        MailboxPath path1 = new MailboxPath("namespacetest", "namespaceuser", "UUID");
 	        MailboxPath path2 = new MailboxPath("namespacetest", "namespaceuser", "Long");
-	        mailboxUUID = new SimpleMailbox<UUIDId>(path1, 1L);
+	        mailboxUUID = new SimpleMailbox(path1, 1L);
 	        mailboxUUID.setMailboxId(UUIDId.of(randomUUID));
-	        mailboxLong = new SimpleMailbox<LongId>(path2, 2L);
+	        mailboxLong = new SimpleMailbox(path2, 2L);
 	        mailboxLong.setMailboxId(new LongId(123L));
 	    }
 	

@@ -30,7 +30,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -51,7 +50,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     private static final String MAILDIR_HOME = "target/Maildir";
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of();
     
-    private final StoreMailboxManager<MaildirId> mailboxManager;
+    private final StoreMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
     private final MaildirMailboxSessionMapperFactory mailboxSessionMapperFactory;
     
@@ -69,7 +68,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-        mailboxManager = new StoreMailboxManager<MaildirId>(mailboxSessionMapperFactory, userManager, locker, aclResolver, groupMembershipResolver);
+        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, userManager, locker, aclResolver, groupMembershipResolver);
         mailboxManager.init();
 
         final ImapProcessor defaultImapProcessorFactory = 

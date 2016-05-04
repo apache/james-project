@@ -30,7 +30,7 @@ public class JCRMailboxIdDeserializerTest {
     private static final String SERIALIZED_ID = "some_string";
     private static final JCRId JCR_ID = JCRId.of(SERIALIZED_ID);
 
-    private MailboxIdDeserializer<JCRId> mailboxIdDeserializer;
+    private MailboxIdDeserializer mailboxIdDeserializer;
 
     @Before
     public void setUp() {

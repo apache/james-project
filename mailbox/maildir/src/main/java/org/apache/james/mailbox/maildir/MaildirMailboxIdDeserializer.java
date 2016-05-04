@@ -22,7 +22,7 @@ package org.apache.james.mailbox.maildir;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 
-public class MaildirMailboxIdDeserializer implements MailboxIdDeserializer<MaildirId> {
+public class MaildirMailboxIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public MaildirId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {

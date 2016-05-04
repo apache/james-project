@@ -37,7 +37,7 @@ import org.apache.james.mailbox.store.transaction.TransactionalMapper;
  * HBase implementation of {@link StoreMailboxManager}
  * 
  */
-public class HBaseMailboxManager extends StoreMailboxManager<HBaseId> {
+public class HBaseMailboxManager extends StoreMailboxManager {
 
     public HBaseMailboxManager(HBaseMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
         super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver);
@@ -48,7 +48,7 @@ public class HBaseMailboxManager extends StoreMailboxManager<HBaseId> {
     }
 
     @Override
-    protected Mailbox<HBaseId> doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return new HBaseMailbox(mailboxPath, randomUidValidity());
     }
 
@@ -79,7 +79,7 @@ public class HBaseMailboxManager extends StoreMailboxManager<HBaseId> {
     }
 
     @Override
-    protected StoreMessageManager<HBaseId> createMessageManager(Mailbox<HBaseId> mailboxRow, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) throws MailboxException {
         return new HBaseMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),

@@ -20,16 +20,15 @@
 package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
@@ -37,21 +36,20 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class DefaultQuotaRootResolverTest {
 
     public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "benwa", "INBOX");
-    public static final SimpleMailbox<TestId> MAILBOX = new SimpleMailbox<TestId>(MAILBOX_PATH, 10);
+    public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
     public static final MailboxPath PATH_LIKE = new MailboxPath("#private", "benwa", "%");
     public static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("#private", "benwa", "test");
-    public static final SimpleMailbox<TestId> MAILBOX_2 = new SimpleMailbox<TestId>(MAILBOX_PATH_2, 10);
+    public static final SimpleMailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, 10);
     public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("#private&benwa");
 
     private DefaultQuotaRootResolver testee;
-    private MailboxSessionMapperFactory<TestId> mockedFactory;
+    private MailboxSessionMapperFactory mockedFactory;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         mockedFactory = mock(MailboxSessionMapperFactory.class);
@@ -73,19 +71,18 @@ public class DefaultQuotaRootResolverTest {
         testee.getQuotaRoot(new MailboxPath("#private", "ben&wa", "INBOX"));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void retrieveAssociatedMailboxesShouldWork() throws Exception {
-        final MailboxMapper<TestId> mockedMapper = (MailboxMapper<TestId>) mock(MailboxMapper.class);
-        when(mockedFactory.getMailboxMapper(null)).thenAnswer(new Answer<MailboxMapper<TestId>>() {
+        final MailboxMapper mockedMapper = mock(MailboxMapper.class);
+        when(mockedFactory.getMailboxMapper(null)).thenAnswer(new Answer<MailboxMapper>() {
             @Override
-            public MailboxMapper<TestId> answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public MailboxMapper answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return mockedMapper;
             }
         });
-        when(mockedMapper.findMailboxWithPathLike(PATH_LIKE)).thenAnswer(new Answer<List<SimpleMailbox<TestId>>>() {
+        when(mockedMapper.findMailboxWithPathLike(PATH_LIKE)).thenAnswer(new Answer<List<SimpleMailbox>>() {
             @Override
-            public List<SimpleMailbox<TestId>> answer(InvocationOnMock invocationOnMock) throws Throwable {
+            public List<SimpleMailbox> answer(InvocationOnMock invocationOnMock) throws Throwable {
                 return Lists.newArrayList(MAILBOX, MAILBOX_2);
             }
         });

@@ -19,7 +19,10 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -47,7 +50,7 @@ import org.junit.runner.RunWith;
 @RunWith(JMock.class)
 public class MailboxEventDispatcherTest {
 
-    MailboxEventDispatcher<TestId> dispatcher;
+    MailboxEventDispatcher dispatcher;
 
     EventCollector collector;
 
@@ -65,7 +68,7 @@ public class MailboxEventDispatcherTest {
 
     private  Mockery mockery = new JUnit4Mockery();
 
-    private Mailbox<TestId> mailbox = new Mailbox<TestId>() {
+    private Mailbox mailbox = new Mailbox() {
 
         @Override
         public TestId getMailboxId() {
@@ -120,7 +123,7 @@ public class MailboxEventDispatcherTest {
     public void setUp() throws Exception {
         collector = new EventCollector();
 
-        dispatcher = new MailboxEventDispatcher<TestId>(collector);
+        dispatcher = new MailboxEventDispatcher(collector);
         result = mockery.mock(MessageResult.class);
         mockery.checking(new Expectations() {{
             allowing(result).getUid();will(returnValue(23L));

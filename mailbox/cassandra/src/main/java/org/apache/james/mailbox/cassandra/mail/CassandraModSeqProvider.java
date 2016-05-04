@@ -29,13 +29,14 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTab
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable.TABLE_NAME;
 
 import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.CassandraId;
-import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -47,7 +48,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.base.Throwables;
 
-public class CassandraModSeqProvider implements ModSeqProvider<CassandraId> {
+public class CassandraModSeqProvider implements ModSeqProvider {
 
     private static final int DEFAULT_MAX_RETRY = 100000;
     private static final Logger LOG = LoggerFactory.getLogger(CassandraModSeqProvider.class);
@@ -67,8 +68,9 @@ public class CassandraModSeqProvider implements ModSeqProvider<CassandraId> {
     }
 
     @Override
-    public long nextModSeq(MailboxSession mailboxSession, Mailbox<CassandraId> mailbox) throws MailboxException {
-        if (findHighestModSeq(mailboxSession, mailbox).isFirst()) {
+    public long nextModSeq(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        if (findHighestModSeq(mailboxSession, mailboxId).isFirst()) {
             Optional<ModSeq> optional = tryInsertModSeq(mailbox, FIRST_MODSEQ);
             if (optional.isPresent()) {
                 return optional.get().getValue();
@@ -79,7 +81,7 @@ public class CassandraModSeqProvider implements ModSeqProvider<CassandraId> {
             return runner.executeAndRetrieveObject(
                         () -> {
                             try {
-                                return tryUpdateModSeq(mailbox, findHighestModSeq(mailboxSession, mailbox))
+                                return tryUpdateModSeq(mailboxId, findHighestModSeq(mailboxSession, mailboxId))
                                         .map(ModSeq::getValue);
                             } catch (Exception exception) {
                                 LOG.error("Can not retrieve next ModSeq", exception);
@@ -92,15 +94,15 @@ public class CassandraModSeqProvider implements ModSeqProvider<CassandraId> {
     }
 
     @Override
-    public long highestModSeq(MailboxSession mailboxSession, Mailbox<CassandraId> mailbox) throws MailboxException {
-        return findHighestModSeq(mailboxSession, mailbox).getValue();
+    public long highestModSeq(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
+        return findHighestModSeq(mailboxSession, (CassandraId) mailbox.getMailboxId()).getValue();
     }
     
-    private ModSeq findHighestModSeq(MailboxSession mailboxSession, Mailbox<CassandraId> mailbox) throws MailboxException {
+    private ModSeq findHighestModSeq(MailboxSession mailboxSession, CassandraId mailboxId) throws MailboxException {
         ResultSet result = session.execute(
                 select(NEXT_MODSEQ)
                     .from(TABLE_NAME)
-                    .where(eq(MAILBOX_ID, mailbox.getMailboxId().asUuid())));
+                    .where(eq(MAILBOX_ID, mailboxId.asUuid())));
         if (result.isExhausted()) {
             return FIRST_MODSEQ;
         } else {
@@ -108,22 +110,23 @@ public class CassandraModSeqProvider implements ModSeqProvider<CassandraId> {
         }
     }
 
-    private Optional<ModSeq> tryInsertModSeq(Mailbox<CassandraId> mailbox, ModSeq modSeq) {
+    private Optional<ModSeq> tryInsertModSeq(Mailbox mailbox, ModSeq modSeq) {
         ModSeq nextModSeq = modSeq.next();
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return transactionalStatementToOptionalModSeq(nextModSeq,
                 insertInto(TABLE_NAME)
                     .value(NEXT_MODSEQ, nextModSeq.getValue())
-                    .value(MAILBOX_ID, mailbox.getMailboxId().asUuid())
+                    .value(MAILBOX_ID, mailboxId.asUuid())
                     .ifNotExists());
     }
     
-    private Optional<ModSeq> tryUpdateModSeq(Mailbox<CassandraId> mailbox, ModSeq modSeq) {
+    private Optional<ModSeq> tryUpdateModSeq(CassandraId mailboxId, ModSeq modSeq) {
         ModSeq nextModSeq = modSeq.next();
         return transactionalStatementToOptionalModSeq(nextModSeq,
                 update(TABLE_NAME)
                     .onlyIf(eq(NEXT_MODSEQ, modSeq.getValue()))
                     .with(set(NEXT_MODSEQ, nextModSeq.getValue()))
-                    .where(eq(MAILBOX_ID, mailbox.getMailboxId().asUuid())));
+                    .where(eq(MAILBOX_ID, mailboxId.asUuid())));
     }
 
     private Optional<ModSeq> transactionalStatementToOptionalModSeq(ModSeq modSeq, BuiltStatement statement) {

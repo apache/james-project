@@ -22,7 +22,7 @@ package org.apache.james.mailbox.inmemory;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 
-public class InMemoryMailboxIdDeserializer implements MailboxIdDeserializer<InMemoryId> {
+public class InMemoryMailboxIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public InMemoryId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {

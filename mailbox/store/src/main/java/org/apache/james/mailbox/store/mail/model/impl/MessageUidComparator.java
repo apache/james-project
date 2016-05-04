@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model.impl;
 
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-
 import java.util.Comparator;
 
-public class MessageUidComparator implements Comparator<MailboxMessage<?>> {
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+
+public class MessageUidComparator implements Comparator<MailboxMessage> {
 
     @Override
-    public int compare(MailboxMessage<?> m1, MailboxMessage<?> m2) {
+    public int compare(MailboxMessage m1, MailboxMessage m2) {
         return Long.valueOf(m1.getUid()).compareTo(m2.getUid());
     }
 }

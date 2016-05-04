@@ -33,7 +33,6 @@ import org.apache.james.mailbox.elasticsearch.query.SortConverter;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -42,7 +41,7 @@ import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ElasticSearchSearcher<Id extends MailboxId> {
+public class ElasticSearchSearcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = new TimeValue(60000);
@@ -63,13 +62,13 @@ public class ElasticSearchSearcher<Id extends MailboxId> {
         this.size = size;
     }
 
-    public Iterator<Long> search(Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
+    public Iterator<Long> search(Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         return new ScrollIterable(client, getSearchRequestBuilder(client, mailbox, searchQuery)).stream()
             .flatMap(this::transformResponseToUidStream)
             .iterator();
     }
 
-    private SearchRequestBuilder getSearchRequestBuilder(Client client, Mailbox<Id> mailbox, SearchQuery searchQuery) {
+    private SearchRequestBuilder getSearchRequestBuilder(Client client, Mailbox mailbox, SearchQuery searchQuery) {
         return searchQuery.getSorts()
             .stream()
             .reduce(

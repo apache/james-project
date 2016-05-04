@@ -20,12 +20,10 @@
 package org.apache.james.mailbox.inmemory.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.QuotaRootImpl;
@@ -39,9 +37,8 @@ public class InMemoryCurrentQuotaManagerTest {
     public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("benwa");
 
     private InMemoryCurrentQuotaManager testee;
-    private CurrentQuotaCalculator<InMemoryId> mockedCurrentQuotaCalculator;
+    private CurrentQuotaCalculator mockedCurrentQuotaCalculator;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         mockedCurrentQuotaCalculator = mock(CurrentQuotaCalculator.class);

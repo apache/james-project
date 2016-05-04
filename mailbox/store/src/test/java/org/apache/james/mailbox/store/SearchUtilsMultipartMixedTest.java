@@ -19,7 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -107,7 +108,7 @@ public class SearchUtilsMultipartMixedTest {
             + "  Than both your poets can in praise devise.\r\n"
             + "\r\n--2.50290787509--\r\n" + "\r\n--1729--\r\n";
 
-    MailboxMessage<TestId> row;
+    MailboxMessage row;
 
 
     Collection<Long> recent;

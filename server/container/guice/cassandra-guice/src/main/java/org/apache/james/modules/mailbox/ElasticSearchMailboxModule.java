@@ -27,7 +27,6 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.ClientProvider;
 import org.apache.james.mailbox.elasticsearch.ClientProviderImpl;
 import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
@@ -41,7 +40,6 @@ import org.elasticsearch.client.transport.NoNodeAvailableException;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
@@ -51,7 +49,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(new TypeLiteral<MessageSearchIndex<CassandraId>>(){}).to(new TypeLiteral<ElasticSearchListeningMessageSearchIndex<CassandraId>>() {});
+        bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(TextExtractor.class).to(TikaTextExtractor.class);
     }
 

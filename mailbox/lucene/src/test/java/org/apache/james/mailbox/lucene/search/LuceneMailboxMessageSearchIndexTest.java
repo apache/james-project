@@ -36,10 +36,10 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
+import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.SimpleMailboxMembership;
 import org.apache.james.mailbox.store.TestId;
@@ -50,7 +50,7 @@ import org.junit.Test;
 
 public class LuceneMailboxMessageSearchIndexTest {
 
-	private LuceneMessageSearchIndex<TestId> index;
+	private LuceneMessageSearchIndex index;
     
     private SimpleMailbox mailbox = new SimpleMailbox(0);
     private SimpleMailbox mailbox2 = new SimpleMailbox(1);
@@ -75,7 +75,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     
     @Before
     public void setUp() throws Exception {
-        index = new LuceneMessageSearchIndex<TestId>(null, new RAMDirectory(), true, useLenient());
+        index = new LuceneMessageSearchIndex(null, new RAMDirectory(), true, useLenient());
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<String, String>();
         headersSubject.put("Subject", "test (fwd)");
@@ -702,7 +702,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         assertFalse(it4.hasNext());
     }
     
-    private final class SimpleMailbox implements Mailbox<TestId> {
+    private final class SimpleMailbox implements Mailbox {
         private final TestId id;
 
         public SimpleMailbox(long id) {

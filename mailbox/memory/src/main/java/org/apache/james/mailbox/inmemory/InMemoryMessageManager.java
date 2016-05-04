@@ -15,9 +15,9 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
-public class InMemoryMessageManager extends StoreMessageManager<InMemoryId> {
+public class InMemoryMessageManager extends StoreMessageManager {
 
-    public InMemoryMessageManager(MessageMapperFactory<InMemoryId> mapperFactory, MessageSearchIndex<InMemoryId> index, MailboxEventDispatcher<InMemoryId> dispatcher, MailboxPathLocker locker, Mailbox<InMemoryId> mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
+    public InMemoryMessageManager(MessageMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
         super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver);
     }
 

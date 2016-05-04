@@ -19,6 +19,13 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.mail.Flags;
+import javax.mail.util.SharedByteArrayInputStream;
+
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.TestId;
@@ -26,13 +33,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MetadataMapAssertTest {
 
@@ -43,11 +43,11 @@ public class MetadataMapAssertTest {
     private static final String BODY_STRING = "body\\n.\\n";
     private static final TestId MAILBOX_ID = TestId.of(12L);
 
-    private SimpleMailboxMessage<TestId> message1;
+    private SimpleMailboxMessage message1;
 
     @Before
     public void setUp() {
-        message1 = new SimpleMailboxMessage<TestId>(DATE, HEADER_STRING.length() + BODY_STRING.length(),
+        message1 = new SimpleMailboxMessage(DATE, HEADER_STRING.length() + BODY_STRING.length(),
             HEADER_STRING.length(), new SharedByteArrayInputStream((HEADER_STRING + BODY_STRING).getBytes()), new Flags(), new PropertyBuilder(), MAILBOX_ID);
         message1.setUid(UID);
         message1.setModSeq(MODSEQ);

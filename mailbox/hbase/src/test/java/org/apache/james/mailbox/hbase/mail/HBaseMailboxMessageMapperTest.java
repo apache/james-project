@@ -18,32 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase.mail;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
-import org.apache.james.mailbox.hbase.HBaseId;
-import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
-import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
-import javax.mail.util.SharedByteArrayInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-
 import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
 import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
@@ -57,6 +31,32 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+
+import javax.mail.Flags;
+import javax.mail.internet.SharedInputStream;
+import javax.mail.util.SharedByteArrayInputStream;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
+import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
+import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Unit tests for HBaseMessageMapper.
  *
@@ -69,8 +69,8 @@ public class HBaseMailboxMessageMapperTest {
     private static HBaseModSeqProvider modSeqProvider;
     private static HBaseMessageMapper messageMapper;
     private static final List<MailboxPath> MBOX_PATHS = new ArrayList<MailboxPath>();
-    private static final List<Mailbox<HBaseId>> MBOXES = new ArrayList<Mailbox<HBaseId>>();
-    private static final List<MailboxMessage<HBaseId>> MESSAGE_NO = new ArrayList<MailboxMessage<HBaseId>>();
+    private static final List<Mailbox> MBOXES = new ArrayList<Mailbox>();
+    private static final List<MailboxMessage> MESSAGE_NO = new ArrayList<MailboxMessage>();
     private static final int COUNT = 5;
     private static Configuration conf;
     /*
@@ -99,7 +99,7 @@ public class HBaseMailboxMessageMapperTest {
         generateTestData();
         final MailboxSession session = new MockMailboxSession("ieugen");
         messageMapper = new HBaseMessageMapper(session, uidProvider, modSeqProvider, conf);
-        for (MailboxMessage<HBaseId> message : MESSAGE_NO) {
+        for (MailboxMessage message : MESSAGE_NO) {
             messageMapper.add(MBOXES.get(1), message);
         }
     }
@@ -136,12 +136,12 @@ public class HBaseMailboxMessageMapperTest {
         propBuilder.setSubType("html");
         propBuilder.setTextualLineCount(2L);
 
-        SimpleMailboxMessage<HBaseId> myMsg;
+        SimpleMailboxMessage myMsg;
         final Flags flags = new Flags(Flags.Flag.RECENT);
         final Date today = new Date();
 
         for (int i = 0; i < COUNT * 2; i++) {
-            myMsg = new SimpleMailboxMessage<HBaseId>(today, messageTemplate.length,
+            myMsg = new SimpleMailboxMessage(today, messageTemplate.length,
                     messageTemplate.length - 20, content, flags, propBuilder,
                     MBOXES.get(1).getMailboxId());
             if (i == COUNT * 2 - 1) {

@@ -62,7 +62,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * Data access management for mailbox.
  *
  */
-public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements MailboxMapper<HBaseId> {
+public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements MailboxMapper {
 
     /**
      * Link to the HBase Configuration object and specific mailbox names
@@ -74,7 +74,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public Mailbox<HBaseId> findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
+    public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
         HTable mailboxes = null;
         ResultScanner scanner = null;
         try {
@@ -125,7 +125,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public List<Mailbox<HBaseId>> findMailboxWithPathLike(MailboxPath mailboxPath) throws MailboxException {
+    public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath) throws MailboxException {
         HTable mailboxes = null;
         ResultScanner scanner = null;
         try {
@@ -166,7 +166,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             scan.setFilter(filters);
             scanner = mailboxes.getScanner(scan);
             
-            List<Mailbox<HBaseId>> mailboxList = new ArrayList<Mailbox<HBaseId>>();
+            List<Mailbox> mailboxList = new ArrayList<Mailbox>();
             
             for (Result result : scanner) {
                 mailboxList.add(mailboxFromResult(result));
@@ -187,7 +187,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public List<Mailbox<HBaseId>> list() throws MailboxException {
+    public List<Mailbox> list() throws MailboxException {
         HTable mailboxes = null;
         ResultScanner scanner = null;
         //TODO: possible performance isssues, we are creating an object from all the rows in HBase mailbox table
@@ -198,11 +198,11 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             scan.setCaching(mailboxes.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
             scanner = mailboxes.getScanner(scan);
-            List<Mailbox<HBaseId>> mailboxList = new ArrayList<Mailbox<HBaseId>>();
+            List<Mailbox> mailboxList = new ArrayList<Mailbox>();
             
             Result result;
             while ((result = scanner.next()) != null) {
-                Mailbox<HBaseId> mlbx = mailboxFromResult(result);
+                Mailbox mlbx = mailboxFromResult(result);
                 mailboxList.add(mlbx);
             }
             return mailboxList;
@@ -225,7 +225,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public void save(Mailbox<HBaseId> mlbx) throws MailboxException {
+    public void save(Mailbox mlbx) throws MailboxException {
         //TODO: maybe switch to checkAndPut for transactions
         HTable mailboxes = null;
         try {
@@ -249,13 +249,14 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public void delete(Mailbox<HBaseId> mlbx) throws MailboxException {
+    public void delete(Mailbox mlbx) throws MailboxException {
         //TODO: maybe switch to checkAndDelete
         HTable mailboxes = null;
+        HBaseId mailboxId = (HBaseId) mlbx.getMailboxId();
         try {
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
             //TODO: delete all maessages from this mailbox
-            Delete delete = new Delete(mlbx.getMailboxId().toBytes());
+            Delete delete = new Delete(mailboxId.toBytes());
             mailboxes.delete(delete);
         } catch (IOException ex) {
             throw new MailboxException("IOException in HBase cluster during delete()", ex);
@@ -271,7 +272,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
     
     @Override
-    public boolean hasChildren(Mailbox<HBaseId> mailbox, char c) throws MailboxException, MailboxNotFoundException {
+    public boolean hasChildren(Mailbox mailbox, char c) throws MailboxException, MailboxNotFoundException {
         HTable mailboxes = null;
         ResultScanner scanner = null;
         try {
@@ -385,7 +386,7 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
     }
 
     @Override
-    public void updateACL(Mailbox<HBaseId> mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
+    public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
     }
 }

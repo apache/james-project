@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import java.util.Map;
+
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.assertj.core.api.AbstractAssert;
-
-import java.util.Map;
 
 public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<Long, MessageMetaData>> {
 
@@ -41,7 +41,6 @@ public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<Lon
         return this;
     }
 
-    @SuppressWarnings("rawtypes") 
     public MetadataMapAssert containsMetadataForMessages(MailboxMessage... messages) {
         for(MailboxMessage message : messages) {
             if (actual.get(message.getUid()).getUid() != message.getUid()) {

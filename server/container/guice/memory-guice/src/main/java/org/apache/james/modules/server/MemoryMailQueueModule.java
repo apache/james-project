@@ -20,28 +20,17 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.utils.GuiceGenericType;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 
-public class MemoryMailQueueModule<Id extends MailboxId> extends AbstractModule {
+public class MemoryMailQueueModule extends AbstractModule {
 
-    private final GuiceGenericType<Id> guiceGenericType;
-
-    public MemoryMailQueueModule(TypeLiteral<Id> type) {
-        guiceGenericType = new GuiceGenericType<>(type);
-    }
-    
     @Override
     protected void configure() {
         bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
-        bind(MailQueueItemDecoratorFactory.class)
-            .to(guiceGenericType.newGenericType(PostDequeueDecoratorFactory.class))
-            .in(Singleton.class);
+        bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Singleton.class);
     }
 }

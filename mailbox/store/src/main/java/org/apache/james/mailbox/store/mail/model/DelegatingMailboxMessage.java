@@ -27,7 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 
-public abstract class DelegatingMailboxMessage<Id extends MailboxId> implements MailboxMessage<Id> {
+public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
     private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
     
@@ -38,7 +38,7 @@ public abstract class DelegatingMailboxMessage<Id extends MailboxId> implements 
     }
 
     @Override
-    public int compareTo(MailboxMessage<Id> other) {
+    public int compareTo(MailboxMessage other) {
         return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
 

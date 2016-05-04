@@ -46,7 +46,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -74,7 +73,7 @@ public class POP3ServerTest {
     private POP3Client pop3Client = null;
     protected MockFileSystem fileSystem;
     protected MockProtocolHandlerLoader protocolHandlerChain;
-    private StoreMailboxManager<InMemoryId> mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private final byte[] content = ("Return-path: return@test.com\r\n"
             + "Content-Transfer-Encoding: plain\r\n"
             + "Subject: test\r\n\r\n"
@@ -713,7 +712,7 @@ public class POP3ServerTest {
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        mailboxManager = new StoreMailboxManager<InMemoryId>(factory, new Authenticator() {
+        mailboxManager = new StoreMailboxManager(factory, new Authenticator() {
     
             @Override
             public boolean isAuthentic(String userid, CharSequence passwd) {

@@ -30,7 +30,6 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.MailImpl;
 import org.apache.james.jmap.model.Emailer;
 import org.apache.james.jmap.model.Message;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -42,13 +41,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class MailFactory<Id extends MailboxId> {
+public class MailFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailFactory.class);
     
     @VisibleForTesting MailFactory() {
     }
 
-    public Mail build(MailboxMessage<Id> mailboxMessage, Message jmapMessage) throws MessagingException, IOException {
+    public Mail build(MailboxMessage mailboxMessage, Message jmapMessage) throws MessagingException, IOException {
         MailAddress sender = jmapMessage.getFrom()
                 .map(this::emailerToMailAddress)
                 .orElseThrow(() -> new RuntimeException("Sender is mandatory"));

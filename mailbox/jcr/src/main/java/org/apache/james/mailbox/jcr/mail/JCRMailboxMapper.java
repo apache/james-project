@@ -37,7 +37,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.jcr.AbstractJCRScalingMapper;
-import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.MailboxSessionJCRRepository;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -50,7 +49,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * 
  * 
  */
-public class JCRMailboxMapper extends AbstractJCRScalingMapper implements MailboxMapper<JCRId> {
+public class JCRMailboxMapper extends AbstractJCRScalingMapper implements MailboxMapper {
 
 	@SuppressWarnings("deprecation")
     private static final String XPATH_LANGUAGE = Query.XPATH;
@@ -66,7 +65,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * org.apache.james.mailbox.store.mail.MailboxMapper#delete(org.apache.james
      * .imap.store.mail.model.Mailbox)
      */
-    public void delete(Mailbox<JCRId> mailbox) throws MailboxException {
+    public void delete(Mailbox mailbox) throws MailboxException {
         try {
             Node node = getSession().getNodeByIdentifier(((JCRMailbox) mailbox).getMailboxId().serialize());
                    
@@ -83,7 +82,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * (non-Javadoc)
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.imap.api.MailboxPath)
      */
-    public Mailbox<JCRId> findMailboxByPath(MailboxPath path) throws MailboxException, MailboxNotFoundException {
+    public Mailbox findMailboxByPath(MailboxPath path) throws MailboxException, MailboxNotFoundException {
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
             String user = path.getUser();
@@ -114,8 +113,8 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * (non-Javadoc)
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.imap.api.MailboxPath)
      */
-    public List<Mailbox<JCRId>> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
-        List<Mailbox<JCRId>> mailboxList = new ArrayList<Mailbox<JCRId>>();
+    public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
+        List<Mailbox> mailboxList = new ArrayList<Mailbox>();
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
             String user = path.getUser();
@@ -147,7 +146,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.
      * imap.store.mail.model.Mailbox)
      */
-    public void save(Mailbox<JCRId> mailbox) throws MailboxException {
+    public void save(Mailbox mailbox) throws MailboxException {
         
         try {
             final JCRMailbox jcrMailbox = (JCRMailbox)mailbox;
@@ -191,7 +190,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(org.apache.james.
      * imap.store.mail.model.Mailbox)
      */
-    public boolean hasChildren(Mailbox<JCRId> mailbox, char delimiter)
+    public boolean hasChildren(Mailbox mailbox, char delimiter)
             throws MailboxException, MailboxNotFoundException {
         try {
             String name = Text.escapeIllegalXpathSearchChars(mailbox.getName());
@@ -220,9 +219,9 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
      * (non-Javadoc)
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
-    public List<Mailbox<JCRId>> list() throws MailboxException {
+    public List<Mailbox> list() throws MailboxException {
         try {
-            List<Mailbox<JCRId>> mList = new ArrayList<Mailbox<JCRId>>();
+            List<Mailbox> mList = new ArrayList<Mailbox>();
             QueryManager manager = getSession().getWorkspace().getQueryManager();
 
             String queryString = "/jcr:root/" + MAILBOXES_PATH + "//element(*,jamesMailbox:mailbox)";
@@ -238,7 +237,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     }
 
     @Override
-    public void updateACL(Mailbox<JCRId> mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
+    public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException {
         mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
     }
 }

@@ -40,11 +40,11 @@ public class InMemoryMailboxMapperTest {
     private MailboxPath user2OtherBoxPath;
     private MailboxPath user1OtherNamespacePath;
 
-    private Mailbox<InMemoryId> user1Inbox;
-    private Mailbox<InMemoryId> user1SubMailbox1;
-    private Mailbox<InMemoryId> user1SubMailbox2;
+    private Mailbox user1Inbox;
+    private Mailbox user1SubMailbox1;
+    private Mailbox user1SubMailbox2;
 
-    private MailboxMapper<InMemoryId> mapper;
+    private MailboxMapper mapper;
 
     @Before
     public void setUp() throws MailboxException {
@@ -53,32 +53,29 @@ public class InMemoryMailboxMapperTest {
         user1SubMailbox2Path = new MailboxPath("#private", "user1", "INBOX.sub2");
         user2OtherBoxPath = new MailboxPath("#private", "user2", "other.user");
         user1OtherNamespacePath = new MailboxPath("#namspace", "user1", "other.namespace");
-        user1Inbox = new SimpleMailbox<InMemoryId>(user1InboxPath, UID_VALIDITY);
-        user1SubMailbox1 = new SimpleMailbox<InMemoryId>(user1SubMailbox1Path, UID_VALIDITY);
-        user1SubMailbox2 = new SimpleMailbox<InMemoryId>(user1SubMailbox2Path, UID_VALIDITY);
+        user1Inbox = new SimpleMailbox(user1InboxPath, UID_VALIDITY);
+        user1SubMailbox1 = new SimpleMailbox(user1SubMailbox1Path, UID_VALIDITY);
+        user1SubMailbox2 = new SimpleMailbox(user1SubMailbox2Path, UID_VALIDITY);
         mapper = new InMemoryMailboxSessionMapperFactory().createMailboxMapper(new MockMailboxSession("user"));
         mapper.save(user1Inbox);
         mapper.save(user1SubMailbox1);
         mapper.save(user1SubMailbox2);
-        mapper.save(new SimpleMailbox<InMemoryId>(user2OtherBoxPath, UID_VALIDITY));
-        mapper.save(new SimpleMailbox<InMemoryId>(user1OtherNamespacePath, UID_VALIDITY));
+        mapper.save(new SimpleMailbox(user2OtherBoxPath, UID_VALIDITY));
+        mapper.save(new SimpleMailbox(user1OtherNamespacePath, UID_VALIDITY));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPatchLikeOnAllMaillboxesShouldReturnMailboxesBelongingToThisNamespaceAndUser() throws MailboxException{
         assertThat(mapper.findMailboxWithPathLike(new MailboxPath("#private", "user1", "%")))
             .containsOnly(user1Inbox, user1SubMailbox1, user1SubMailbox2);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPatchLikeBasedOnInboxShouldReturnItsChildren() throws MailboxException{
         assertThat(mapper.findMailboxWithPathLike(new MailboxPath("#private", "user1", "INBOX.%")))
             .containsOnly(user1SubMailbox1, user1SubMailbox2);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void findMailboxWithPatchLikeBasedOnAStringShouldReturnMailboxesStartingWithThisString() throws MailboxException{
         assertThat(mapper.findMailboxWithPathLike(new MailboxPath("#private", "user1", "IN%")))

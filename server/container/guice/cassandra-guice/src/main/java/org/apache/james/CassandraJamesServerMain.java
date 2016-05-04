@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
@@ -33,12 +32,10 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.QuotaModule;
 
 import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
 public class CassandraJamesServerMain {
 
-    public static final TypeLiteral<CassandraId> cassandraId = new TypeLiteral<CassandraId>(){};
     public static final Module cassandraServerModule = Modules.combine(
         new CassandraUsersRepositoryModule(),
         new CassandraDomainListModule(),
@@ -49,12 +46,11 @@ public class CassandraJamesServerMain {
         new CassandraSessionModule(),
         new ElasticSearchMailboxModule(),
         new QuotaModule(),
-        new ActiveMQQueueModule<>(cassandraId));
+        new ActiveMQQueueModule());
 
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer<CassandraId> server = 
-                new GuiceJamesServer<>(cassandraId)
+        GuiceJamesServer server = new GuiceJamesServer()
                     .combineWith(cassandraServerModule, new JMXServerModule());
         server.start();
     }

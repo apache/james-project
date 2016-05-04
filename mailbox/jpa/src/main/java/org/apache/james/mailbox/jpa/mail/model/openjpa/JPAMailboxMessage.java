@@ -73,7 +73,7 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     /**
      * Create a copy of the given message
      */
-    public JPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> message) throws MailboxException{
+    public JPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage message) throws MailboxException{
         super(mailbox, uid, modSeq, message);
         try {
             this.body = IOUtils.toByteArray(message.getBodyContent());

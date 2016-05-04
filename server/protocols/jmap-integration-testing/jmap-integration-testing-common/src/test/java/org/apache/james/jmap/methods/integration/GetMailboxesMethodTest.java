@@ -53,11 +53,11 @@ public abstract class GetMailboxesMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    protected abstract GuiceJamesServer<?> createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     private AccessToken accessToken;
     private String username;
-    private GuiceJamesServer<?> jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {
@@ -116,8 +116,8 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
 
-        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
-        Mailbox<?> mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        Mailbox mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
 
         String mailboxId = mailbox.getMailboxId().serialize();
         String mailboxId2 = mailbox2.getMailboxId().serialize();
@@ -142,7 +142,7 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
 
-        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
 
         String mailboxId = mailbox.getMailboxId().serialize();
 
@@ -182,8 +182,8 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
 
-        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
-        Mailbox<?> mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
+        Mailbox mailbox2 = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "myMailbox");
 
         String mailboxId = mailbox.getMailboxId().serialize();
         String mailboxId2 = mailbox2.getMailboxId().serialize();

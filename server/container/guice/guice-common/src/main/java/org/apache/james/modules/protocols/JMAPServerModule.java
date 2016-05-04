@@ -26,7 +26,6 @@ import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -35,20 +34,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
-public class JMAPServerModule<Id extends MailboxId> extends AbstractModule {
-
-    private final TypeLiteral<Id> type;
-
-    public JMAPServerModule(TypeLiteral<Id> type) {
-        this.type = type;
-    }
+public class JMAPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPModule<Id>(type));
+        install(new JMAPModule());
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JMAPModuleConfigurationPerformer.class);
     }
 

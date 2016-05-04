@@ -77,7 +77,7 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
     /**
      * Create a copy of the given message
      */
-    public JPAStreamingMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> message) throws MailboxException {
+    public JPAStreamingMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage message) throws MailboxException {
         super(mailbox, uid, modSeq, message);
         try {
             this.content = new SharedByteArrayInputStream(IOUtils.toByteArray(message.getFullContent()));

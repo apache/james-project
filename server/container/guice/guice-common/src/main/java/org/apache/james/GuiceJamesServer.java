@@ -23,13 +23,11 @@ import java.util.Arrays;
 import javax.annotation.PreDestroy;
 
 import org.apache.james.jmap.JMAPServer;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.modules.CommonServicesModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.ProtocolsModule;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.apache.james.utils.ExtendedServerProbe;
-import org.apache.james.utils.GuiceGenericType;
 import org.apache.james.utils.GuiceServerProbe;
 import org.apache.onami.lifecycle.core.Stager;
 
@@ -41,42 +39,38 @@ import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
-public class GuiceJamesServer<Id extends MailboxId> {
+public class GuiceJamesServer {
 
-    private final TypeLiteral<Id> type;
     private final Module module;
-    private final GuiceGenericType<Id> guiceGenericType;
     private Stager<PreDestroy> preDestroy;
-    private GuiceServerProbe<Id> serverProbe;
+    private GuiceServerProbe serverProbe;
     private int jmapPort;
 
     
-    public GuiceJamesServer(TypeLiteral<Id> type) {
-        this(type, Modules.combine(
-                        new CommonServicesModule<>(type),
-                        new ProtocolsModule<>(type),
+    public GuiceJamesServer() {
+        this(Modules.combine(
+                        new CommonServicesModule(),
+                        new ProtocolsModule(),
                         new MailetProcessingModule()));
     }
 
-    private GuiceJamesServer(TypeLiteral<Id> type, Module module) {
-        this.type = type;
-        this.guiceGenericType = new GuiceGenericType<>(type);
+    private GuiceJamesServer(Module module) {
         this.module = module;
     }
     
-    public GuiceJamesServer<Id> combineWith(Module... modules) {
-        return new GuiceJamesServer<>(type, Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+    public GuiceJamesServer combineWith(Module... modules) {
+        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
     }
     
-    public GuiceJamesServer<Id> overrideWith(Module... overrides) {
-        return new GuiceJamesServer<>(type, Modules.override(module).with(overrides));
+    public GuiceJamesServer overrideWith(Module... overrides) {
+        return new GuiceJamesServer(Modules.override(module).with(overrides));
     }
     
     public void start() throws Exception {
         Injector injector = Guice.createInjector(module);
         injector.getInstance(ConfigurationsPerformer.class).initModules();
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
-        serverProbe = injector.getInstance(Key.get(guiceGenericType.newGenericType(GuiceServerProbe.class)));
+        serverProbe = injector.getInstance(GuiceServerProbe.class);
         jmapPort = injector.getInstance(JMAPServer.class).getPort();
     }
 
@@ -84,7 +78,7 @@ public class GuiceJamesServer<Id extends MailboxId> {
         preDestroy.stage();
     }
 
-    public ExtendedServerProbe<Id> serverProbe() {
+    public ExtendedServerProbe serverProbe() {
         return serverProbe;
     }
 

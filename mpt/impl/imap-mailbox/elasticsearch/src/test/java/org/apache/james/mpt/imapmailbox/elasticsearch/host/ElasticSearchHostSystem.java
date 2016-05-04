@@ -44,7 +44,6 @@ import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
@@ -67,7 +66,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private EmbeddedElasticSearch embeddedElasticSearch;
     private Path tempDirectory;
-    private StoreMailboxManager<InMemoryId> mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private MockAuthenticator userManager;
 
     public boolean addUser(String user, String password) throws Exception {
@@ -102,16 +101,16 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         userManager = new MockAuthenticator();
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
 
-        ElasticSearchListeningMessageSearchIndex<InMemoryId> searchIndex = new ElasticSearchListeningMessageSearchIndex<>(
+        ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
             factory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor())),
-            new ElasticSearchSearcher<>(client, new QueryConverter(new CriterionConverter())),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter())),
             new MessageToElasticSearchJson(new DefaultTextExtractor()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-        mailboxManager = new StoreMailboxManager<>(factory, userManager, aclResolver, groupMembershipResolver);
+        mailboxManager = new StoreMailboxManager(factory, userManager, aclResolver, groupMembershipResolver);
         mailboxManager.setMessageSearchIndex(searchIndex);
 
         try {

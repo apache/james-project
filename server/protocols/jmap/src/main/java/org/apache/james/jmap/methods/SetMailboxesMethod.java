@@ -28,20 +28,19 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-public class SetMailboxesMethod<Id extends MailboxId> implements Method {
+public class SetMailboxesMethod implements Method {
 
     private static final Request.Name METHOD_NAME = Request.name("setMailboxes");
     @VisibleForTesting static final Response.Name RESPONSE_NAME = Response.name("mailboxesSet");
 
-    private final Set<SetMailboxesProcessor<Id>> processors;
+    private final Set<SetMailboxesProcessor> processors;
 
     @Inject
-    public SetMailboxesMethod(Set<SetMailboxesProcessor<Id>> processors) {
+    public SetMailboxesMethod(Set<SetMailboxesProcessor> processors) {
         this.processors = processors;
     }
 

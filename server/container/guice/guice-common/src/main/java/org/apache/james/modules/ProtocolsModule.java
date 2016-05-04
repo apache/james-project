@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules;
 
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
@@ -28,19 +27,12 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 
-public class ProtocolsModule<Id extends MailboxId> extends AbstractModule {
-
-    private final TypeLiteral<Id> type;
-
-    public ProtocolsModule(TypeLiteral<Id> type) {
-        this.type = type;
-    }
+public class ProtocolsModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPServerModule<>(type));
+        install(new JMAPServerModule());
         install(new IMAPServerModule());
         install(new ProtocolHandlerModule());
         install(new POP3ServerModule());

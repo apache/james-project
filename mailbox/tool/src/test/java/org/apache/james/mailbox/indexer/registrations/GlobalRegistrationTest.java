@@ -21,15 +21,15 @@ package org.apache.james.mailbox.indexer.registrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Optional;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Optional;
 
 public class GlobalRegistrationTest {
 
@@ -37,15 +37,15 @@ public class GlobalRegistrationTest {
     public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
     public static final MailboxPath NEW_PATH = new MailboxPath("#private", "btellier@apache.org", "INBOX.new");
     public static final int UID_VALIDITY = 45;
-    public static final SimpleMailbox<TestId> MAILBOX = new SimpleMailbox<TestId>(INBOX, UID_VALIDITY);
-    public static final SimpleMailbox<TestId> NEW_MAILBOX = new SimpleMailbox<TestId>(NEW_PATH, UID_VALIDITY);
+    public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
+    public static final SimpleMailbox NEW_MAILBOX = new SimpleMailbox(NEW_PATH, UID_VALIDITY);
 
     private GlobalRegistration globalRegistration;
-    private EventFactory<TestId> eventFactory;
+    private EventFactory eventFactory;
 
     @Before
     public void setUp() {
-        eventFactory = new EventFactory<TestId>();
+        eventFactory = new EventFactory();
         globalRegistration = new GlobalRegistration();
     }
 

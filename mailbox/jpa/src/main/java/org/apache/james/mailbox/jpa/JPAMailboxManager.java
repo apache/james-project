@@ -34,7 +34,7 @@ import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 /**
  * JPA implementation of {@link StoreMailboxManager}
  */
-public abstract class JPAMailboxManager extends StoreMailboxManager<JPAId> {
+public abstract class JPAMailboxManager extends StoreMailboxManager {
     
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
             final Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
@@ -42,7 +42,7 @@ public abstract class JPAMailboxManager extends StoreMailboxManager<JPAId> {
     }
     
     @Override
-    protected Mailbox<JPAId> doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
+    protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
         return  new JPAMailbox(path, randomUidValidity());
     }
 

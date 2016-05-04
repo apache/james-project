@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.store.json;
 
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.TestIdDeserializer;
 import org.apache.james.mailbox.store.event.EventSerializer;
 import org.apache.james.mailbox.store.json.event.EventConverter;
@@ -29,8 +28,8 @@ public class MailboxMessagePackEventSerializerTest extends EventSerializerTest {
 
     @Override
     EventSerializer createSerializer() {
-        return new MessagePackEventSerializer<TestId>(
-            new EventConverter<TestId>(
-                new MailboxConverter<TestId>(new TestIdDeserializer())));
+        return new MessagePackEventSerializer(
+            new EventConverter(
+                new MailboxConverter(new TestIdDeserializer())));
     }
 }

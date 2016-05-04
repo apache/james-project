@@ -30,7 +30,6 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -41,10 +40,10 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
 
     public static final String SEPARATOR = "&"; // Character illegal for mailbox naming in regard of RFC 3501 section 5.1
 
-    private final MailboxSessionMapperFactory<? extends MailboxId> factory;
+    private final MailboxSessionMapperFactory factory;
 
     @Inject
-    public DefaultQuotaRootResolver(MailboxSessionMapperFactory<? extends MailboxId> factory) {
+    public DefaultQuotaRootResolver(MailboxSessionMapperFactory factory) {
         this.factory = factory;
     }
 
@@ -69,9 +68,9 @@ public class DefaultQuotaRootResolver implements QuotaRootResolver {
         String namespace = parts.get(0);
         String user = parts.get(1);
         return Lists.transform(factory.getMailboxMapper(mailboxSession).findMailboxWithPathLike(new MailboxPath(namespace, user, "%")),
-            new Function<Mailbox<? extends MailboxId>, MailboxPath>() {
+            new Function<Mailbox, MailboxPath>() {
                 @Override
-                public MailboxPath apply(Mailbox<? extends MailboxId> idMailbox) {
+                public MailboxPath apply(Mailbox idMailbox) {
                     return new MailboxPath(idMailbox.getNamespace(), idMailbox.getUser(), idMailbox.getName());
                 }
             });

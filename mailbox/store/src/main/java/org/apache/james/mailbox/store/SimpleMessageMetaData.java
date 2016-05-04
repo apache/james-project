@@ -42,7 +42,7 @@ public class SimpleMessageMetaData implements MessageMetaData{
         this.internalDate = internalDate;
     }
     
-    public SimpleMessageMetaData(MailboxMessage<?> message) {
+    public SimpleMessageMetaData(MailboxMessage message) {
         this(message.getUid(), message.getModSeq(), message.createFlags(), message.getFullContentOctets(), message.getInternalDate());
     }
     

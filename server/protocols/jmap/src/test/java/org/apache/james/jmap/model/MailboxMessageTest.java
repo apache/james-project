@@ -233,7 +233,7 @@ public class MailboxMessageTest {
 
     @Test
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
-        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
+        MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 0,
                 0,
@@ -255,7 +255,7 @@ public class MailboxMessageTest {
         flags.add(Flag.ANSWERED);
         flags.add(Flag.FLAGGED);
         flags.add(Flag.DRAFT);
-        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
+        MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 0,
                 0,
@@ -281,7 +281,7 @@ public class MailboxMessageTest {
                 + "Reply-To: \"user to reply to\" <user.reply.to@domain>\n"
                 + "In-Reply-To: <SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>\n"
                 + "Other-header: other header value";
-        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
+        MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 headers.length(),
                 headers.length(),
@@ -333,7 +333,7 @@ public class MailboxMessageTest {
         String headers = "Subject: test subject\n";
         String body = "Mail body";
         String mail = headers + "\n" + body;
-        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
+        MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 mail.length(),
                 headers.length(),
@@ -381,7 +381,7 @@ public class MailboxMessageTest {
         assertThat(body300.length()).isEqualTo(300);
         assertThat(expectedPreview.length()).isEqualTo(256);
         String mail = headers + "\n" + body300;
-        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
+        MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 mail.length(),
                 headers.length(),
@@ -397,7 +397,7 @@ public class MailboxMessageTest {
     
     @Test(expected=NotImplementedException.class)
     public void attachmentsShouldNotBeHandledForNow() throws Exception {
-        MailboxMessage<TestId> testMail = new SimpleMailboxMessage<>(
+        MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 0,
                 0,

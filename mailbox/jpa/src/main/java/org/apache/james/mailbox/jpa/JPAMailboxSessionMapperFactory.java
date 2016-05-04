@@ -36,13 +36,13 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * JPA implementation of {@link MailboxSessionMapperFactory}
  *
  */
-public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory<JPAId> {
+public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
 
     private final EntityManagerFactory entityManagerFactory;
-    private final UidProvider<JPAId> uidProvider;
-    private final ModSeqProvider<JPAId> modSeqProvider;
+    private final UidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
 
-    public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, UidProvider<JPAId> uidProvider, ModSeqProvider<JPAId> modSeqProvider) {
+    public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         this.entityManagerFactory = entityManagerFactory;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -50,12 +50,12 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory<
     }
     
     @Override
-    public MailboxMapper<JPAId> createMailboxMapper(MailboxSession session) {
+    public MailboxMapper createMailboxMapper(MailboxSession session) {
         return new JPAMailboxMapper(entityManagerFactory);
     }
 
     @Override
-    public MessageMapper<JPAId> createMessageMapper(MailboxSession session) {
+    public MessageMapper createMessageMapper(MailboxSession session) {
         return new JPAMessageMapper(session, uidProvider, modSeqProvider, entityManagerFactory);
     }
 

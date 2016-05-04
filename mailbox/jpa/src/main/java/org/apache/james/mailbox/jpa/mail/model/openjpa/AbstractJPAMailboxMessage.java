@@ -45,8 +45,8 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageId;
@@ -106,7 +106,7 @@ import org.apache.openjpa.persistence.jdbc.Index;
             query="DELETE FROM MailboxMessage message")
 })
 @MappedSuperclass
-public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId> {
+public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
     private static final String TOSTRING_SEPARATOR = " ";
@@ -278,7 +278,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId>
      * @param modSeq new modSeq
      * @param original message to be copied, not null
      */
-    public AbstractJPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage<?> original) throws MailboxException {
+    public AbstractJPAMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage original) throws MailboxException {
         super();
         this.mailbox = mailbox;
         this.uid = uid;
@@ -555,7 +555,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage<JPAId>
     }
 
     @Override
-    public int compareTo(MailboxMessage<JPAId> other) {
+    public int compareTo(MailboxMessage other) {
         return MESSAGE_UID_COMPARATOR.compare(this, other);
     }
 

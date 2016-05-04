@@ -19,26 +19,27 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import java.io.IOException;
+
+import javax.mail.Flags;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.assertj.core.api.AbstractAssert;
 
-import javax.mail.Flags;
-import java.io.IOException;
-
 import com.google.common.base.Objects;
 
-public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage<?>> {
+public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage> {
 
-    public MessageAssert(MailboxMessage<?> actual) {
+    public MessageAssert(MailboxMessage actual) {
         super(actual, MessageAssert.class);
     }
 
-    public static MessageAssert assertThat(MailboxMessage<?> actual) {
+    public static MessageAssert assertThat(MailboxMessage actual) {
         return new MessageAssert(actual);
     }
 
-    public MessageAssert isEqualToWithoutUid(MailboxMessage<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
+    public MessageAssert isEqualToWithoutUid(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
         isNotNull();
         if (!Objects.equal(actual.getMailboxId(), expected.getMailboxId())) {
             failWithMessage("Expected Mailbox ID to be <%s> but was <%s>", expected.getMailboxId().toString(), actual.getMailboxId().toString());
@@ -76,7 +77,7 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage<
         return this;
     }
 
-    public MessageAssert isEqualTo(MailboxMessage<?> expected, MessageMapper.FetchType usedFetchType) throws IOException {
+    public MessageAssert isEqualTo(MailboxMessage expected, MessageMapper.FetchType usedFetchType) throws IOException {
         isNotNull();
         if (!Objects.equal(actual.getUid(), expected.getUid())) {
             failWithMessage("Expected UID to be <%s> but was <%s>", expected.getUid(), actual.getUid());

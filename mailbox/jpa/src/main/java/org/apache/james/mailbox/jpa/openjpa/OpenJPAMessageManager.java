@@ -28,15 +28,14 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMessageManager;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -55,17 +54,17 @@ public class OpenJPAMessageManager extends JPAMessageManager {
         Encryption
     }
     
-    public OpenJPAMessageManager(MailboxSessionMapperFactory<JPAId> mapperFactory, 
-    		MessageSearchIndex<JPAId> index,MailboxEventDispatcher<JPAId> dispatcher, 
-    		MailboxPathLocker locker, Mailbox<JPAId> mailbox, MailboxACLResolver aclResolver, 
+    public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory, 
+    		MessageSearchIndex index,MailboxEventDispatcher dispatcher, 
+    		MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, 
     		GroupMembershipResolver groupMembershipResolver,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
         this(mapperFactory, index, dispatcher, locker,  mailbox, AdvancedFeature.None, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver);
     }
 
-    public OpenJPAMessageManager(MailboxSessionMapperFactory<JPAId> mapperFactory, 
-    		MessageSearchIndex<JPAId> index, MailboxEventDispatcher<JPAId> dispatcher, 
-    		MailboxPathLocker locker, Mailbox<JPAId> mailbox, AdvancedFeature f, 
+    public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory, 
+    		MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
+    		MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f, 
     		MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
     	
@@ -74,7 +73,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     }
 
     @Override
-    protected MailboxMessage<JPAId> createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException {
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException {
         int headerEnd = bodyStartOctet -2;
         if (headerEnd < 0) {
             headerEnd = 0;

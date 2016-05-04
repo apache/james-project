@@ -25,18 +25,16 @@ import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
-import org.apache.james.mpt.smtp.SmtpHostSystem;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
+import org.apache.james.mpt.smtp.SmtpHostSystem;
 import org.apache.james.mpt.smtp.dns.InMemoryDNSService;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.inject.TypeLiteral;
 
 public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory implements SmtpHostSystem {
 
@@ -44,7 +42,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     private EmbeddedCassandra embeddedCassandra;
     private EmbeddedElasticSearch embeddedElasticSearch;
 
-    private GuiceJamesServer<CassandraId> jamesServer;
+    private GuiceJamesServer jamesServer;
     private InMemoryDNSService inMemoryDNSService;
 
 
@@ -106,8 +104,8 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         return inMemoryDNSService;
     }
 
-    protected GuiceJamesServer<CassandraId> createJamesServer() {
-        return new GuiceJamesServer<>(new TypeLiteral<CassandraId>(){})
+    protected GuiceJamesServer createJamesServer() {
+        return new GuiceJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new CassandraJmapServerModule(folder::getRoot, embeddedElasticSearch, embeddedCassandra),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));

@@ -28,7 +28,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
@@ -89,7 +88,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         perUserMaxQuotaManager.setDefaultMaxStorage(5L * 1024L * 1024L * 1024L);
 
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator<InMemoryId>(mailboxManager.getMapperFactory(), quotaRootResolver),
+            new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver),
             mailboxManager);
 
         StoreQuotaManager quotaManager = new StoreQuotaManager();

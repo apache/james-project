@@ -38,24 +38,23 @@ import org.apache.james.jmap.utils.SortingHierarchicalCollections;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
-public class SetMailboxesDestructionProcessor<Id extends MailboxId> implements SetMailboxesProcessor<Id> {
+public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMailboxesDestructionProcessor.class);
 
     private final MailboxManager mailboxManager;
     private final SortingHierarchicalCollections<Map.Entry<String, Mailbox>, String> sortingHierarchicalCollections;
-    private final MailboxUtils<Id> mailboxUtils;
+    private final MailboxUtils mailboxUtils;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, MailboxUtils<Id> mailboxUtils) {
+    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils) {
         this.mailboxManager = mailboxManager;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<>(

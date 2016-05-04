@@ -42,9 +42,9 @@ public class MailboxMessageResultImplTest {
     public void initNames() throws Exception
     {
         Date dateAB = new Date();
-        MailboxMessage<TestId> msgA = buildMessage(100, dateAB);
-        MailboxMessage<TestId> msgB = buildMessage(100, dateAB);
-        MailboxMessage<TestId> msgC = buildMessage(200, new Date());
+        MailboxMessage msgA = buildMessage(100, dateAB);
+        MailboxMessage msgB = buildMessage(100, dateAB);
+        MailboxMessage msgC = buildMessage(200, new Date());
         
         msgResultA = new MessageResultImpl(msgA);
         msgResultACopy = new MessageResultImpl(msgA);
@@ -53,7 +53,7 @@ public class MailboxMessageResultImplTest {
     }
 
 
-    private MailboxMessage<TestId> buildMessage(int uid, Date aDate) throws Exception {
+    private MailboxMessage buildMessage(int uid, Date aDate) throws Exception {
         MessageBuilder builder = new MessageBuilder();
         builder.uid = uid;
         builder.internalDate = aDate;

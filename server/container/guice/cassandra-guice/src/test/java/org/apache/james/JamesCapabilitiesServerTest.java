@@ -25,7 +25,6 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
@@ -43,7 +42,7 @@ import com.google.inject.Singleton;
 
 public class JamesCapabilitiesServerTest {
 
-    private GuiceJamesServer<CassandraId> server;
+    private GuiceJamesServer server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
@@ -75,8 +74,8 @@ public class JamesCapabilitiesServerTest {
         server.stop();
     }
 
-    private GuiceJamesServer<CassandraId> createCassandraJamesServer(final MailboxManager mailboxManager) {
-        return new GuiceJamesServer<>(CassandraJamesServerMain.cassandraId)
+    private GuiceJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) {
+        return new GuiceJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                 new TestFilesystemModule(temporaryFolder),

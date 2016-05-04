@@ -32,9 +32,9 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -43,11 +43,11 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 /**
  * Abstract base class which should be used from JPA implementations.
  */
-public class JPAMessageManager extends StoreMessageManager<JPAId> {
+public class JPAMessageManager extends StoreMessageManager {
     
-    public JPAMessageManager(MailboxSessionMapperFactory<JPAId> mapperFactory, MessageSearchIndex<JPAId> index, 
-    			final MailboxEventDispatcher<JPAId> dispatcher, MailboxPathLocker locker, 
-    			final Mailbox<JPAId> mailbox, MailboxACLResolver aclResolver, 
+    public JPAMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, 
+    			final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, 
+    			final Mailbox mailbox, MailboxACLResolver aclResolver, 
     			GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager,
                 QuotaRootResolver quotaRootResolver) throws MailboxException {
     	
@@ -56,7 +56,7 @@ public class JPAMessageManager extends StoreMessageManager<JPAId> {
     }
     
     @Override
-    protected MailboxMessage<JPAId> createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content,
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content,
                                                   final Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
 
         return new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);

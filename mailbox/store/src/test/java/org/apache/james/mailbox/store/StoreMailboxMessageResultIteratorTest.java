@@ -60,7 +60,7 @@ public class StoreMailboxMessageResultIteratorTest {
         }
     }
 
-    private final class TestMessageMapper implements MessageMapper<TestId> {
+    private final class TestMessageMapper implements MessageMapper {
         
 
         private final MessageRange messageRange;
@@ -80,14 +80,14 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public Iterator<MailboxMessage<TestId>> findInMailbox(Mailbox<TestId> mailbox, MessageRange set,
+        public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set,
                                                               org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
                 throws MailboxException {
             
             long start = set.getUidFrom();
             long end = Math.min(start + limit, set.getUidTo());
 
-            List<MailboxMessage<TestId>> messages = new ArrayList<MailboxMessage<TestId>>();
+            List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
             
             for (long uid: MessageRange.range(start, end)) {
                 if (messageRange.includes(uid)) {
@@ -97,75 +97,75 @@ public class StoreMailboxMessageResultIteratorTest {
             return messages.iterator();
         }
 
-        private SimpleMailboxMessage<TestId> createMessage(long uid) {
-            SimpleMailboxMessage<TestId> message = new SimpleMailboxMessage<TestId>(null, 0, 0, new SharedByteArrayInputStream(
+        private SimpleMailboxMessage createMessage(long uid) {
+            SimpleMailboxMessage message = new SimpleMailboxMessage(null, 0, 0, new SharedByteArrayInputStream(
                     "".getBytes()), new Flags(), new PropertyBuilder(), TestId.of(1L));
             message.setUid(uid);
             return message;
         }
 
         @Override
-        public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox<TestId> mailbox, MessageRange set)
+        public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
                 throws MailboxException {
             throw new UnsupportedOperationException();
 
         }
 
         @Override
-        public long countMessagesInMailbox(Mailbox<TestId> mailbox) throws MailboxException {
+        public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
 
         }
 
         @Override
-        public long countUnseenMessagesInMailbox(Mailbox<TestId> mailbox) throws MailboxException {
+        public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void delete(Mailbox<TestId> mailbox, MailboxMessage<TestId> message) throws MailboxException {
+        public void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Long findFirstUnseenMessageUid(Mailbox<TestId> mailbox) throws MailboxException {
+        public Long findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<Long> findRecentMessageUidsInMailbox(Mailbox<TestId> mailbox) throws MailboxException {
-            throw new UnsupportedOperationException();
-
-        }
-
-        @Override
-        public MessageMetaData add(Mailbox<TestId> mailbox, MailboxMessage<TestId> message) throws MailboxException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Iterator<UpdatedFlags> updateFlags(Mailbox<TestId> mailbox, FlagsUpdateCalculator calculator, MessageRange set) throws MailboxException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public MessageMetaData copy(Mailbox<TestId> mailbox, MailboxMessage<TestId> original) throws MailboxException {
+        public List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
 
         }
 
         @Override
-        public long getLastUid(Mailbox<TestId> mailbox) throws MailboxException {
+        public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public long getHighestModSeq(Mailbox<TestId> mailbox) throws MailboxException {
+        public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator calculator, MessageRange set) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MessageMetaData move(Mailbox<TestId> mailbox, MailboxMessage<TestId> original) throws MailboxException {
+        public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
+            throw new UnsupportedOperationException();
+
+        }
+
+        @Override
+        public long getLastUid(Mailbox mailbox) throws MailboxException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
             throw new UnsupportedOperationException();
 
         }
@@ -175,7 +175,7 @@ public class StoreMailboxMessageResultIteratorTest {
     public void testBatching() {
         MessageRange range = MessageRange.range(1, 10);
         int batchSize = 3;
-        StoreMessageResultIterator<TestId> it = new StoreMessageResultIterator<TestId>(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
+        StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
 
         assertThat(it).extracting(new Extractor<MessageResult, Long>(){
             @Override
@@ -189,7 +189,7 @@ public class StoreMailboxMessageResultIteratorTest {
     public void nextShouldReturnFirstElement() {
         MessageRange range = MessageRange.one(1);
         int batchSize = 42;
-        StoreMessageResultIterator<TestId> iterator = new StoreMessageResultIterator<TestId>(new TestMessageMapper(range), null, range, batchSize, new TestFetchGroup());
+        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(range), null, range, batchSize, new TestFetchGroup());
         assertThat(iterator.next()).isNotNull();
     }
     
@@ -198,7 +198,7 @@ public class StoreMailboxMessageResultIteratorTest {
         MessageRange messages = MessageRange.one(1);
         MessageRange findRange = MessageRange.one(2);
         int batchSize = 42;
-        StoreMessageResultIterator<TestId> iterator = new StoreMessageResultIterator<TestId>(new TestMessageMapper(messages), null, findRange, batchSize, new TestFetchGroup());
+        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, new TestFetchGroup());
         iterator.next();
     }
     
@@ -207,7 +207,7 @@ public class StoreMailboxMessageResultIteratorTest {
         MessageRange messages = MessageRange.one(1);
         MessageRange findRange = MessageRange.one(2);
         int batchSize = 42;
-        StoreMessageResultIterator<TestId> iterator = new StoreMessageResultIterator<TestId>(new TestMessageMapper(messages), null, findRange, batchSize, new TestFetchGroup());
+        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, new TestFetchGroup());
         assertThat(iterator.hasNext()).isFalse();
     }
 }

@@ -44,7 +44,7 @@ import com.google.common.collect.Lists;
  * Cassandra implementation of {@link StoreMailboxManager}
  */
 @Singleton
-public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
+public class CassandraMailboxManager extends StoreMailboxManager {
     private final MailboxPathLocker locker;
 
     @Inject
@@ -59,7 +59,7 @@ public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
 
     @Override
     @Inject
-    public void setMessageSearchIndex(MessageSearchIndex<CassandraId> index) {
+    public void setMessageSearchIndex(MessageSearchIndex index) {
         super.setMessageSearchIndex(index);
     }
 
@@ -69,14 +69,14 @@ public class CassandraMailboxManager extends StoreMailboxManager<CassandraId> {
     }
 
     @Override
-    protected Mailbox<CassandraId> doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        SimpleMailbox<CassandraId> cassandraMailbox = new SimpleMailbox<>(mailboxPath, randomUidValidity());
+    protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        SimpleMailbox cassandraMailbox = new SimpleMailbox(mailboxPath, randomUidValidity());
         cassandraMailbox.setACL(SimpleMailboxACL.EMPTY);
         return cassandraMailbox;
     }
 
     @Override
-    protected StoreMessageManager<CassandraId> createMessageManager(Mailbox<CassandraId> mailboxRow, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) throws MailboxException {
         return new CassandraMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),

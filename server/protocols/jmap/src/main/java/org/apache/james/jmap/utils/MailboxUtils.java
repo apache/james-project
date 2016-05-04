@@ -33,7 +33,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,17 +42,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
-public class MailboxUtils<Id extends MailboxId> {
+public class MailboxUtils {
 
     private static final boolean DONT_RESET_RECENT = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtils.class);
 
     private final MailboxManager mailboxManager;
-    private final MailboxMapperFactory<Id> mailboxMapperFactory;
+    private final MailboxMapperFactory mailboxMapperFactory;
 
     @Inject
     @VisibleForTesting
-    public MailboxUtils(MailboxManager mailboxManager, MailboxMapperFactory<Id> mailboxMapperFactory) {
+    public MailboxUtils(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory) {
         this.mailboxManager = mailboxManager;
         this.mailboxMapperFactory = mailboxMapperFactory;
     }
@@ -104,7 +103,7 @@ public class MailboxUtils<Id extends MailboxId> {
                 .map(org.apache.james.mailbox.store.mail.model.Mailbox::getName);
     }
 
-    private Optional<org.apache.james.mailbox.store.mail.model.Mailbox<Id>> getMailboxFromId(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
+    private Optional<org.apache.james.mailbox.store.mail.model.Mailbox> getMailboxFromId(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return mailboxMapperFactory.getMailboxMapper(mailboxSession)
                 .list().stream()
                 .filter(mailbox -> mailbox.getMailboxId().serialize().equals(mailboxId))

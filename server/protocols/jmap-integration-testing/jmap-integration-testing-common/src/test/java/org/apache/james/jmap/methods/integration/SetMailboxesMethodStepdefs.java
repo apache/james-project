@@ -53,7 +53,7 @@ public class SetMailboxesMethodStepdefs {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    public GuiceJamesServer<?> jmapServer;
+    public GuiceJamesServer jmapServer;
     public Runnable awaitMethod = () -> {};
 
     private AccessToken accessToken;
@@ -102,7 +102,7 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
     public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
-        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox("#private", username, actualMailboxName);
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, actualMailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -128,9 +128,9 @@ public class SetMailboxesMethodStepdefs {
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
-        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox("#private", username, actualMailboxPath);
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, actualMailboxPath);
         String mailboxId = mailbox.getMailboxId().serialize();
-        Mailbox<?> parent = jmapServer.serverProbe().getMailbox("#private", username, newParentMailboxPath);
+        Mailbox parent = jmapServer.serverProbe().getMailbox("#private", username, newParentMailboxPath);
         String parentId = parent.getMailboxId().serialize();
 
         String requestBody =
@@ -157,7 +157,7 @@ public class SetMailboxesMethodStepdefs {
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
-        Mailbox<?> mailbox = jmapServer.serverProbe().getMailbox("#private", username, mailboxName);
+        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         given()
             .accept(ContentType.JSON)

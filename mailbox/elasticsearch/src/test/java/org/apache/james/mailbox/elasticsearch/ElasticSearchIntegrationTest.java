@@ -32,14 +32,12 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -48,6 +46,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.elasticsearch.client.Client;
 import org.junit.Before;
@@ -73,20 +72,19 @@ public class ElasticSearchIntegrationTest {
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
 
-    private StoreMailboxManager<InMemoryId> storeMailboxManager;
-    private ElasticSearchListeningMessageSearchIndex<InMemoryId> elasticSearchListeningMessageSearchIndex;
-    private Mailbox<InMemoryId> mailbox;
+    private StoreMailboxManager storeMailboxManager;
+    private ElasticSearchListeningMessageSearchIndex elasticSearchListeningMessageSearchIndex;
+    private Mailbox mailbox;
     private MailboxSession session;
 
     @Before
-    @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         initializeMailboxManager();
 
         session = storeMailboxManager.createSystemSession("benwa", LOGGER);
 
         storeMailboxManager.createMailbox(new MailboxPath("#private", "benwa", "INBOX"), session);
-        StoreMessageManager<InMemoryId> messageManager = (StoreMessageManager<InMemoryId>) storeMailboxManager.getMailbox(new MailboxPath("#private", "benwa", "INBOX"), session);
+        StoreMessageManager messageManager = (StoreMessageManager) storeMailboxManager.getMailbox(new MailboxPath("#private", "benwa", "INBOX"), session);
         mailbox = messageManager.getMailboxEntity();
 
         // sentDate: Wed, 3 Jun 2015 09:05:46 +0000
@@ -169,10 +167,10 @@ public class ElasticSearchIntegrationTest {
         Client client = NodeMappingFactory.applyMapping(
             IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get())
         );
-        MailboxSessionMapperFactory<InMemoryId> mapperFactory = new InMemoryMailboxSessionMapperFactory();
-        elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex<>(mapperFactory,
+        MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
-            new ElasticSearchSearcher<>(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,

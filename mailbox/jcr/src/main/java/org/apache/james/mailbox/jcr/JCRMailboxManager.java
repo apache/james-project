@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * JCR implementation of a MailboxManager
  * 
  */
-public class JCRMailboxManager extends StoreMailboxManager<JCRId> implements JCRImapConstants {
+public class JCRMailboxManager extends StoreMailboxManager implements JCRImapConstants {
 
     private final Logger logger = LoggerFactory.getLogger(JCRMailboxManager.class);
     
@@ -51,7 +51,7 @@ public class JCRMailboxManager extends StoreMailboxManager<JCRId> implements JCR
 
     
     @Override
-    protected StoreMessageManager<JCRId> createMessageManager(Mailbox<JCRId> mailboxEntity, MailboxSession session) throws MailboxException{
+    protected StoreMessageManager createMessageManager(Mailbox mailboxEntity, MailboxSession session) throws MailboxException{
         return new JCRMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),
@@ -65,7 +65,7 @@ public class JCRMailboxManager extends StoreMailboxManager<JCRId> implements JCR
     }
 
     @Override
-    protected Mailbox<JCRId> doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
+    protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
         return new org.apache.james.mailbox.jcr.mail.model.JCRMailbox(path, randomUidValidity(), logger);
     }
 

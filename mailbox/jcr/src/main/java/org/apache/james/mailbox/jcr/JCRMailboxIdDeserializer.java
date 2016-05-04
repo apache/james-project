@@ -21,7 +21,7 @@ package org.apache.james.mailbox.jcr;
 
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 
-public class JCRMailboxIdDeserializer implements MailboxIdDeserializer<JCRId> {
+public class JCRMailboxIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public JCRId deserialize(String serializedMailboxId) {

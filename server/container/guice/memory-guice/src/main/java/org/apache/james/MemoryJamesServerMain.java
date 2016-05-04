@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
@@ -28,22 +27,19 @@ import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.QuotaModule;
 
 import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
 public class MemoryJamesServerMain {
 
-    public static final TypeLiteral<InMemoryId> inMemoryId = new TypeLiteral<InMemoryId>(){};
-    
     public static final Module inMemoryServerModule = Modules.combine(
         new MemoryDataModule(),
         new MemoryDataJmapModule(),
         new MemoryMailboxModule(),
         new QuotaModule(),
-        new MemoryMailQueueModule<>(inMemoryId));
+        new MemoryMailQueueModule());
 
     public static void main(String[] args) throws Exception {
-        new GuiceJamesServer<>(inMemoryId)
+        new GuiceJamesServer()
             .combineWith(inMemoryServerModule, new JMXServerModule())
             .start();
     }

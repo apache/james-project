@@ -30,7 +30,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
@@ -44,7 +43,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
@@ -54,7 +52,6 @@ import org.apache.james.modules.Names;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 
 public class MemoryMailboxModule extends AbstractModule {
@@ -62,13 +59,11 @@ public class MemoryMailboxModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        bind(new TypeLiteral<MessageMapperFactory<InMemoryId>>(){}).to(InMemoryMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<MailboxMapperFactory<InMemoryId>>(){}).to(InMemoryMailboxSessionMapperFactory.class);
+        bind(MessageMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<MailboxSessionMapperFactory<InMemoryId>>(){}).to(InMemoryMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<MailboxSessionMapperFactory<? extends MailboxId>>(){}).to(InMemoryMailboxSessionMapperFactory.class);
-        bind(new TypeLiteral<ModSeqProvider<InMemoryId>>(){}).to(new TypeLiteral<InMemoryModSeqProvider>(){});
-        bind(new TypeLiteral<UidProvider<InMemoryId>>(){}).to(new TypeLiteral<InMemoryUidProvider>(){});
+        bind(MailboxSessionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
+        bind(ModSeqProvider.class).to(InMemoryModSeqProvider.class);
+        bind(UidProvider.class).to(InMemoryUidProvider.class);
 
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(SubscriptionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
@@ -79,12 +74,12 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
 
-        bind(new TypeLiteral<MessageSearchIndex<InMemoryId>>(){}).to(new TypeLiteral<SimpleMessageSearchIndex<InMemoryId>>() {});
+        bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class);
         bind(TextExtractor.class).to(TikaTextExtractor.class);
 
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
-        bind(new TypeLiteral<InMemoryModSeqProvider>(){}).in(Scopes.SINGLETON);
-        bind(new TypeLiteral<InMemoryUidProvider>(){}).in(Scopes.SINGLETON);
+        bind(InMemoryModSeqProvider.class).in(Scopes.SINGLETON);
+        bind(InMemoryUidProvider.class).in(Scopes.SINGLETON);
         bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
         bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);

@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -32,7 +31,6 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +41,7 @@ public class QuotaCheckerTest {
 
     public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("benwa");
     public static final MailboxPath MAILBOX_PATH = new MailboxPath("#private", "benwa", "INBOX");
-    public static final SimpleMailbox<TestId> MAILBOX = new SimpleMailbox<TestId>(MAILBOX_PATH, 10);
+    public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
 
     private QuotaRootResolver mockedQuotaRootResolver;
     private QuotaManager mockedQuotaManager;
@@ -74,7 +72,7 @@ public class QuotaCheckerTest {
                 return QuotaImpl.quota(100, 1000);
             }
         });
-        QuotaChecker<TestId> quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(0, 0)).isTrue();
     }
 
@@ -98,7 +96,7 @@ public class QuotaCheckerTest {
                 return QuotaImpl.quota(100, 1000);
             }
         });
-        QuotaChecker<TestId> quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(89, 899)).isTrue();
     }
 
@@ -122,13 +120,13 @@ public class QuotaCheckerTest {
                 return QuotaImpl.quota(100, 1000);
             }
         });
-        QuotaChecker<TestId> quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+        QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         assertThat(quotaChecker.tryAddition(90, 900)).isTrue();
     }
 
     @Test(expected = OverQuotaException.class)
     public void quotaCheckerShouldThrowOnExceededMessages() throws MailboxException {
-        QuotaChecker<TestId> quotaChecker;
+        QuotaChecker quotaChecker;
         try {
             when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
                 @Override
@@ -148,7 +146,7 @@ public class QuotaCheckerTest {
                     return QuotaImpl.quota(100, 1000);
                 }
             });
-            quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+            quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         } catch(Exception e) {
             fail("Exception caught : ", e);
             return;
@@ -158,7 +156,7 @@ public class QuotaCheckerTest {
 
     @Test(expected = OverQuotaException.class)
     public void quotaCheckerShouldThrowOnExceededStorage() throws MailboxException {
-        QuotaChecker<TestId> quotaChecker;
+        QuotaChecker quotaChecker;
         try {
             when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
                 @Override
@@ -178,7 +176,7 @@ public class QuotaCheckerTest {
                     return QuotaImpl.quota(100, 1000);
                 }
             });
-            quotaChecker = new QuotaChecker<TestId>(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
+            quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
         } catch(Exception e) {
             fail("Exception caught : ", e);
             return;

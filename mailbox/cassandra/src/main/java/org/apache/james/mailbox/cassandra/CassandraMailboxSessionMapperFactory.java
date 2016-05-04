@@ -19,8 +19,9 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import javax.inject.Inject;
+
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMapper;
@@ -37,17 +38,17 @@ import com.datastax.driver.core.Session;
  * Cassandra implementation of {@link MailboxSessionMapperFactory}
  * 
  */
-public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory<CassandraId> {
+public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
     private static final int DEFAULT_MAX_RETRY = 1000;
 
     private final Session session;
-    private final UidProvider<CassandraId> uidProvider;
-    private final ModSeqProvider<CassandraId> modSeqProvider;
+    private final UidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
     private final CassandraTypesProvider typesProvider;
     private int maxRetry;
 
     @Inject
-    public CassandraMailboxSessionMapperFactory(UidProvider<CassandraId> uidProvider, ModSeqProvider<CassandraId> modSeqProvider, Session session, CassandraTypesProvider typesProvider) {
+    public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, Session session, CassandraTypesProvider typesProvider) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.session = session;
@@ -65,7 +66,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     @Override
-    public MailboxMapper<CassandraId> createMailboxMapper(MailboxSession mailboxSession) {
+    public MailboxMapper createMailboxMapper(MailboxSession mailboxSession) {
         return new CassandraMailboxMapper(session, typesProvider, maxRetry);
     }
 
@@ -74,11 +75,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         return new CassandraSubscriptionMapper(session);
     }
 
-    public ModSeqProvider<CassandraId> getModSeqProvider() {
+    public ModSeqProvider getModSeqProvider() {
         return modSeqProvider;
     }
 
-    public UidProvider<CassandraId> getUidProvider() {
+    public UidProvider getUidProvider() {
         return uidProvider;
     }
 

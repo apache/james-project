@@ -37,7 +37,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
@@ -47,17 +46,17 @@ import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PostDequeueDecorator<Id extends MailboxId> extends MailQueueItemDecorator {
+public class PostDequeueDecorator extends MailQueueItemDecorator {
     private static final Logger LOG = LoggerFactory.getLogger(PostDequeueDecorator.class);
 
     private final MailboxManager mailboxManager;
-    private final MessageMapperFactory<Id> messageMapperFactory;
-    private final MailboxMapperFactory<Id> mailboxMapperFactory;
+    private final MessageMapperFactory messageMapperFactory;
+    private final MailboxMapperFactory mailboxMapperFactory;
 
     public PostDequeueDecorator(MailQueueItem mailQueueItem,
             MailboxManager mailboxManager,
-            MessageMapperFactory<Id> messageMapperFactory,
-            MailboxMapperFactory<Id> mailboxMapperFactory) {
+            MessageMapperFactory messageMapperFactory,
+            MailboxMapperFactory mailboxMapperFactory) {
         super(mailQueueItem);
         this.mailboxManager = mailboxManager;
         this.messageMapperFactory = messageMapperFactory;
@@ -77,7 +76,7 @@ public class PostDequeueDecorator<Id extends MailboxId> extends MailQueueItemDec
             String username = (String) getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
             try {
                 MailboxSession mailboxSession = mailboxManager.createSystemSession(username, LOG);
-                Pair<MailboxMessage<Id>, MailboxPath> mailboxMessageAndMailboxPath = getMailboxMessageAndMailboxPath(messageId, mailboxSession);
+                Pair<MailboxMessage, MailboxPath> mailboxMessageAndMailboxPath = getMailboxMessageAndMailboxPath(messageId, mailboxSession);
                 moveFromOutboxToSent(mailboxMessageAndMailboxPath, mailboxSession);
             } catch (MailboxException e) {
                 throw new MailQueueException(e.getMessage(), e);
@@ -109,11 +108,11 @@ public class PostDequeueDecorator<Id extends MailboxId> extends MailQueueItemDec
         return (username != null && username instanceof String);
     }
 
-    public Pair<MailboxMessage<Id>, MailboxPath> getMailboxMessageAndMailboxPath(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
+    public Pair<MailboxMessage, MailboxPath> getMailboxMessageAndMailboxPath(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
         MailboxPath mailboxPath = messageId.getMailboxPath();
-        MessageMapper<Id> messageMapper = messageMapperFactory.getMessageMapper(mailboxSession);
-        Mailbox<Id> mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(mailboxPath);
-        Iterator<MailboxMessage<Id>> resultIterator = messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Full, 1);
+        MessageMapper messageMapper = messageMapperFactory.getMessageMapper(mailboxSession);
+        Mailbox mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(mailboxPath);
+        Iterator<MailboxMessage> resultIterator = messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Full, 1);
         if (resultIterator.hasNext()) {
             return Pair.with(resultIterator.next(), mailboxPath);
         } else {
@@ -121,8 +120,8 @@ public class PostDequeueDecorator<Id extends MailboxId> extends MailQueueItemDec
         }
     }
 
-    private void moveFromOutboxToSent(Pair<MailboxMessage<Id>, MailboxPath> mailboxMessageAndMailboxPath, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
-        MailboxMessage<Id> mailboxMessage = mailboxMessageAndMailboxPath.getValue0();
+    private void moveFromOutboxToSent(Pair<MailboxMessage, MailboxPath> mailboxMessageAndMailboxPath, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
+        MailboxMessage mailboxMessage = mailboxMessageAndMailboxPath.getValue0();
         MailboxPath outboxMailboxPath = mailboxMessageAndMailboxPath.getValue1();
         ensureMailboxPathIsOutbox(outboxMailboxPath);
         MailboxPath sentMailboxPath = getSentMailboxPath(mailboxSession);

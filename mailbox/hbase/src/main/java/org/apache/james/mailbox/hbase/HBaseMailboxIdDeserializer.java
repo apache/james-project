@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.hbase;
 
-import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
-import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 import java.util.UUID;
 
-public class HBaseMailboxIdDeserializer implements MailboxIdDeserializer<HBaseId> {
+import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
+import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
+
+public class HBaseMailboxIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public HBaseId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {

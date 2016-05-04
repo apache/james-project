@@ -47,7 +47,6 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -59,12 +58,12 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerProbe<Id> {
+public class GuiceServerProbe implements ExtendedServerProbe {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceServerProbe.class);
 
     private final MailboxManager mailboxManager;
-    private final MailboxMapperFactory<Id> mailboxMapperFactory;
+    private final MailboxMapperFactory mailboxMapperFactory;
     private final DomainList domainList;
     private final UsersRepository usersRepository;
     private final SieveRepository sieveRepository;
@@ -72,7 +71,7 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
     private final VacationRepository vacationRepository;
 
     @Inject
-    private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory<Id> mailboxMapperFactory,
+    private GuiceServerProbe(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
                              DomainList domainList, UsersRepository usersRepository, SieveRepository sieveRepository,
                              RecipientRewriteTable recipientRewriteTable, VacationRepository vacationRepository) {
         this.mailboxManager = mailboxManager;
@@ -183,11 +182,11 @@ public class GuiceServerProbe<Id extends MailboxId> implements ExtendedServerPro
     }
 
     @Override
-    public Mailbox<Id> getMailbox(String namespace, String user, String name) {
+    public Mailbox getMailbox(String namespace, String user, String name) {
         MailboxSession mailboxSession = null;
         try {
             mailboxSession = mailboxManager.createSystemSession(user, LOGGER);
-            MailboxMapper<Id> mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
+            MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
             return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name));
         } catch (MailboxException e) {
             throw Throwables.propagate(e);

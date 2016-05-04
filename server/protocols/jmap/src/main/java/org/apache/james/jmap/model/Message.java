@@ -28,15 +28,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.model.message.EMailer;
 import org.apache.james.jmap.model.message.IndexableMessage;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -46,8 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
-
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 @JsonDeserialize(builder = Message.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
@@ -61,7 +59,7 @@ public class Message {
         return new Builder();
     }
 
-    public static Message fromMailboxMessage(MailboxMessage<? extends MailboxId> mailboxMessage,
+    public static Message fromMailboxMessage(MailboxMessage mailboxMessage,
             Function<Long, MessageId> uidToMessageId) {
         IndexableMessage im = IndexableMessage.from(mailboxMessage, new DefaultTextExtractor(), UTC_ZONE_ID);
         if (im.getHasAttachment()) {
@@ -154,7 +152,7 @@ public class Message {
         return String.join(MULTIVALUED_HEADERS_SEPARATOR, iterable);
     }
     
-    private static ZonedDateTime getInternalDate(MailboxMessage<? extends MailboxId> mailboxMessage, IndexableMessage im) {
+    private static ZonedDateTime getInternalDate(MailboxMessage mailboxMessage, IndexableMessage im) {
         return ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), UTC_ZONE_ID);
     }
 

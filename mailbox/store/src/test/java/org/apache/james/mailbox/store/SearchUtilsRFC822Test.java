@@ -19,7 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class SearchUtilsRFC822Test {
             + "It has " + RHUBARD + ".\r\n" + "It has " + CUSTARD + ".\r\n"
             + "It needs naught else.\r\n";
 
-    MailboxMessage<TestId> row;
+    MailboxMessage row;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     Collection<Long> recent;

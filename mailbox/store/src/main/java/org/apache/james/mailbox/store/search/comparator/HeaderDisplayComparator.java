@@ -26,12 +26,12 @@ import org.apache.james.mailbox.store.search.SearchUtil;
 public class HeaderDisplayComparator extends AbstractHeaderComparator{
 
 
-    private final static Comparator<MailboxMessage<?>> FROM_COMPARATOR = new HeaderDisplayComparator(FROM);
-    private final static Comparator<MailboxMessage<?>> REVERSE_FROM_COMPARATOR = new ReverseComparator(FROM_COMPARATOR);
+    private final static Comparator<MailboxMessage> FROM_COMPARATOR = new HeaderDisplayComparator(FROM);
+    private final static Comparator<MailboxMessage> REVERSE_FROM_COMPARATOR = new ReverseComparator(FROM_COMPARATOR);
 
 
-    private final static Comparator<MailboxMessage<?>> TO_COMPARATOR = new HeaderDisplayComparator(TO);
-    private final static Comparator<MailboxMessage<?>> REVERSE_TO_COMPARATOR = new ReverseComparator(TO_COMPARATOR);
+    private final static Comparator<MailboxMessage> TO_COMPARATOR = new HeaderDisplayComparator(TO);
+    private final static Comparator<MailboxMessage> REVERSE_TO_COMPARATOR = new ReverseComparator(TO_COMPARATOR);
 
     
     private final String headerName;
@@ -41,14 +41,14 @@ public class HeaderDisplayComparator extends AbstractHeaderComparator{
     }
     
     @Override
-    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
+    public int compare(MailboxMessage o1, MailboxMessage o2) {
         String display1 = SearchUtil.getDisplayAddress(getHeaderValue(headerName, o1));
         String display2 = SearchUtil.getDisplayAddress(getHeaderValue(headerName, o2));
         return display1.compareToIgnoreCase(display2);
     }
 
     
-    public static Comparator<MailboxMessage<?>> from(boolean reverse) {
+    public static Comparator<MailboxMessage> from(boolean reverse) {
         if (reverse) {
             return REVERSE_FROM_COMPARATOR;
         } else {
@@ -57,7 +57,7 @@ public class HeaderDisplayComparator extends AbstractHeaderComparator{
     }
 
     
-    public static Comparator<MailboxMessage<?>> to(boolean reverse) {
+    public static Comparator<MailboxMessage> to(boolean reverse) {
         if (reverse) {
             return REVERSE_TO_COMPARATOR;
         } else {

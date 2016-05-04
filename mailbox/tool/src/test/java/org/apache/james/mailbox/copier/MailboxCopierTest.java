@@ -33,7 +33,6 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -101,10 +100,10 @@ public class MailboxCopierTest {
     @Test
     public void testMailboxCopy() throws MailboxException, IOException {
     	 if (srcMemMailboxManager instanceof StoreMailboxManager) {
-             ((StoreMailboxManager<?>) srcMemMailboxManager).init();
+             ((StoreMailboxManager) srcMemMailboxManager).init();
          }
          if (dstMemMailboxManager instanceof StoreMailboxManager) {
-             ((StoreMailboxManager<?>) dstMemMailboxManager).init();
+             ((StoreMailboxManager) dstMemMailboxManager).init();
          }
     
         srcMemMailboxManager = new MockMailboxManager(srcMemMailboxManager).getMockMailboxManager();
@@ -156,7 +155,7 @@ public class MailboxCopierTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-        return new StoreMailboxManager<InMemoryId>(
+        return new StoreMailboxManager(
             new InMemoryMailboxSessionMapperFactory(), 
             new Authenticator() {
                 public boolean isAuthentic(String userid, CharSequence passwd) {

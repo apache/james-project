@@ -32,20 +32,18 @@ import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SetMailboxesCreationProcessorTest {
 
-    private MailboxUtils<TestId> mailboxUtils;
-    private SetMailboxesCreationProcessor<TestId> sut;
+    private MailboxUtils mailboxUtils;
+    private SetMailboxesCreationProcessor sut;
 
     @Before
-    @SuppressWarnings("unchecked")
     public void setup() {
         mailboxUtils = mock(MailboxUtils.class);
-        sut = new SetMailboxesCreationProcessor<>(mock(MailboxManager.class), mailboxUtils);
+        sut = new SetMailboxesCreationProcessor(mock(MailboxManager.class), mailboxUtils);
     }
 
     @Test

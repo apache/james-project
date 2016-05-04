@@ -42,13 +42,13 @@ import com.google.common.collect.ImmutableSet;
 
 public class MailFactoryTest {
 
-    private MailFactory<TestId> testee;
-    private MailboxMessage<TestId> mailboxMessage;
+    private MailFactory testee;
+    private MailboxMessage mailboxMessage;
     private Message jmapMessage;
 
     @Before
     public void init() {
-        testee = new MailFactory<TestId>();
+        testee = new MailFactory();
         String headers = "From: me@example.com\n"
                 + "To: 1@example.com\n"
                 + "Cc: 2@example.com, 3@example.com\n"
@@ -60,7 +60,7 @@ public class MailFactoryTest {
         propertyBuilder.setMediaType("plain");
         propertyBuilder.setSubType("text");
         propertyBuilder.setTextualLineCount(18L);
-        mailboxMessage = new SimpleMailboxMessage<>(
+        mailboxMessage = new SimpleMailboxMessage(
                 new Date(),
                 content.length(),
                 headers.length(),

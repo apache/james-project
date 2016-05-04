@@ -21,16 +21,16 @@ package org.apache.james.mailbox.store.mail.model;
 
 import org.assertj.core.api.AbstractAssert;
 
-public class MailboxAssert extends AbstractAssert<MailboxAssert, Mailbox<?>> {
-    public MailboxAssert(Mailbox<?> actual) {
+public class MailboxAssert extends AbstractAssert<MailboxAssert, Mailbox> {
+    public MailboxAssert(Mailbox actual) {
         super(actual, MailboxAssert.class);
     }
 
-    public static MailboxAssert assertThat(Mailbox<?> actual) {
+    public static MailboxAssert assertThat(Mailbox actual) {
         return new MailboxAssert(actual);
     }
 
-    public MailboxAssert isEqualTo(Mailbox<?> expected) {
+    public MailboxAssert isEqualTo(Mailbox expected) {
         isNotNull();
         if (!equals(actual.getMailboxId(), expected.getMailboxId())) {
             failWithMessage("Expected UUID to be <%s> but was <%s>", expected.getMailboxId(), actual.getMailboxId());

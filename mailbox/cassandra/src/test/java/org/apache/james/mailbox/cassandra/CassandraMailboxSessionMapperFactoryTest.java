@@ -63,7 +63,7 @@ public class CassandraMailboxSessionMapperFactoryTest {
         LOG.info("createMessageMapper");
         MailboxSession session = null;
         CassandraMailboxSessionMapperFactory instance = new CassandraMailboxSessionMapperFactory(null, null, null, null);
-        MessageMapper<CassandraId> messageMapper = instance.createMessageMapper(session);
+        MessageMapper messageMapper = instance.createMessageMapper(session);
         assertNotNull(messageMapper);
         assertTrue(messageMapper instanceof MessageMapper);
     }
@@ -77,7 +77,7 @@ public class CassandraMailboxSessionMapperFactoryTest {
         LOG.info("createMailboxMapper");
         MailboxSession session = null;
         CassandraMailboxSessionMapperFactory instance = new CassandraMailboxSessionMapperFactory(null, null, null, null);
-        MailboxMapper<CassandraId> mailboxMapper = instance.createMailboxMapper(session);
+        MailboxMapper mailboxMapper = instance.createMailboxMapper(session);
         assertNotNull(mailboxMapper);
         assertTrue(mailboxMapper instanceof MailboxMapper);
     }
@@ -103,9 +103,9 @@ public class CassandraMailboxSessionMapperFactoryTest {
     @Test
     public void testGetModSeqProvider() {
         LOG.info("getModSeqProvider");
-        ModSeqProvider<CassandraId> expResult = new CassandraModSeqProvider(CLUSTER.getConf());
+        ModSeqProvider expResult = new CassandraModSeqProvider(CLUSTER.getConf());
         CassandraMailboxSessionMapperFactory instance = new CassandraMailboxSessionMapperFactory(null, expResult, null, null);
-        ModSeqProvider<CassandraId> result = instance.getModSeqProvider();
+        ModSeqProvider result = instance.getModSeqProvider();
         assertEquals(expResult, result);
     }
 
@@ -116,9 +116,9 @@ public class CassandraMailboxSessionMapperFactoryTest {
     @Test
     public void testGetUidProvider() {
         LOG.info("getUidProvider");
-        UidProvider<CassandraId> expResult = new CassandraUidProvider(CLUSTER.getConf());
+        UidProvider expResult = new CassandraUidProvider(CLUSTER.getConf());
         CassandraMailboxSessionMapperFactory instance = new CassandraMailboxSessionMapperFactory((CassandraUidProvider) expResult, null, null, null);
-        UidProvider<CassandraId> result = instance.getUidProvider();
+        UidProvider result = instance.getUidProvider();
         assertEquals(expResult, result);
     }
 }

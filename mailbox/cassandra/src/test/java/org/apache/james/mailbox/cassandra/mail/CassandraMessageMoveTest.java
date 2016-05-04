@@ -19,10 +19,9 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.store.mail.model.AbstractMessageMoveTest;
 
-public class CassandraMessageMoveTest extends AbstractMessageMoveTest<CassandraId> {
+public class CassandraMessageMoveTest extends AbstractMessageMoveTest {
 
     public CassandraMessageMoveTest() {
         super(new CassandraMapperProvider());

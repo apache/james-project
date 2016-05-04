@@ -20,9 +20,8 @@ package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-public interface MessageMapperFactory<Id extends MailboxId> {
+public interface MessageMapperFactory {
 
     /**
      * Create a {@link MessageMapper} instance of return the one which exists for the {@link MailboxSession} already
@@ -30,6 +29,6 @@ public interface MessageMapperFactory<Id extends MailboxId> {
      * @param session
      * @return mapper
      */
-    MessageMapper<Id> getMessageMapper(MailboxSession session) throws MailboxException;
+    MessageMapper getMessageMapper(MailboxSession session) throws MailboxException;
         
 }

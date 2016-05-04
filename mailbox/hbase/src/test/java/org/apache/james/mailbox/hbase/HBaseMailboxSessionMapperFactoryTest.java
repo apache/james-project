@@ -18,10 +18,25 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase;
 
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_BODY_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.james.mailbox.MailboxSession;
-import static org.apache.james.mailbox.hbase.HBaseNames.*;
 import org.apache.james.mailbox.hbase.mail.HBaseModSeqProvider;
 import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -29,7 +44,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -74,7 +88,7 @@ public class HBaseMailboxSessionMapperFactoryTest {
         LOG.info("createMessageMapper");
         MailboxSession session = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null);
-        MessageMapper<HBaseId> messageMapper = instance.createMessageMapper(session);
+        MessageMapper messageMapper = instance.createMessageMapper(session);
         assertNotNull(messageMapper);
         assertTrue(messageMapper instanceof MessageMapper);
     }
@@ -88,7 +102,7 @@ public class HBaseMailboxSessionMapperFactoryTest {
         LOG.info("createMailboxMapper");
         MailboxSession session = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null);
-        MailboxMapper<HBaseId> mailboxMapper = instance.createMailboxMapper(session);
+        MailboxMapper mailboxMapper = instance.createMailboxMapper(session);
         assertNotNull(mailboxMapper);
         assertTrue(mailboxMapper instanceof MailboxMapper);
     }
@@ -114,9 +128,9 @@ public class HBaseMailboxSessionMapperFactoryTest {
     @Test
     public void testGetModSeqProvider() {
         LOG.info("getModSeqProvider");
-        ModSeqProvider<HBaseId> expResult = new HBaseModSeqProvider(conf);
+        ModSeqProvider expResult = new HBaseModSeqProvider(conf);
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, expResult);
-        ModSeqProvider<HBaseId> result = instance.getModSeqProvider();
+        ModSeqProvider result = instance.getModSeqProvider();
         assertEquals(expResult, result);
     }
 
@@ -126,9 +140,9 @@ public class HBaseMailboxSessionMapperFactoryTest {
     @Test
     public void testGetUidProvider() {
         LOG.info("getUidProvider");
-        UidProvider<HBaseId> expResult = new HBaseUidProvider(conf);
+        UidProvider expResult = new HBaseUidProvider(conf);
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, expResult, null);
-        UidProvider<HBaseId> result = instance.getUidProvider();
+        UidProvider result = instance.getUidProvider();
         assertEquals(expResult, result);
     }
 }

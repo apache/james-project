@@ -25,13 +25,12 @@ import javax.jcr.Session;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.MailboxSessionJCRRepository;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.store.mail.AbstractLockingModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public class JCRModSeqProvider extends AbstractLockingModSeqProvider<JCRId>{
+public class JCRModSeqProvider extends AbstractLockingModSeqProvider{
 
     private final MailboxSessionJCRRepository repository;
 
@@ -41,7 +40,7 @@ public class JCRModSeqProvider extends AbstractLockingModSeqProvider<JCRId>{
     }
 
     @Override
-    public long highestModSeq(MailboxSession session, Mailbox<JCRId> mailbox) throws MailboxException {
+    public long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
             Session s = repository.login(session);
             Node node = s.getNodeByIdentifier(mailbox.getMailboxId().serialize());
@@ -52,7 +51,7 @@ public class JCRModSeqProvider extends AbstractLockingModSeqProvider<JCRId>{
     }
 
     @Override
-    protected long lockedNextModSeq(MailboxSession session, Mailbox<JCRId> mailbox) throws MailboxException {
+    protected long lockedNextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
             Session s = repository.login(session);
             Node node = s.getNodeByIdentifier(mailbox.getMailboxId().serialize());

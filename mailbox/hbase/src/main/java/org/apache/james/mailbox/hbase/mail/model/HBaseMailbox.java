@@ -31,7 +31,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * implementations.
  * 
  */
-public class HBaseMailbox implements Mailbox<HBaseId> {
+public class HBaseMailbox implements Mailbox {
 
     private static final String TAB = " ";
     /** The value for the mailboxId field */

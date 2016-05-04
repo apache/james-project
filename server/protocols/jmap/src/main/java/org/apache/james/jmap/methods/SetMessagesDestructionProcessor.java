@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,25 +43,25 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 
-public class SetMessagesDestructionProcessor<Id extends MailboxId> implements SetMessagesProcessor<Id> {
+public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
     private static final int LIMIT_BY_ONE = 1;
 
-    private final MailboxMapperFactory<Id> mailboxMapperFactory;
-    private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final MailboxMapperFactory mailboxMapperFactory;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     @Inject
     @VisibleForTesting
-    SetMessagesDestructionProcessor(MailboxMapperFactory<Id> mailboxMapperFactory,
-                                           MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory) {
+    SetMessagesDestructionProcessor(MailboxMapperFactory mailboxMapperFactory,
+                                           MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        MessageMapper<Id> messageMapper;
+        MessageMapper messageMapper;
         try {
             messageMapper = mailboxSessionMapperFactory.createMessageMapper(mailboxSession);
         } catch (MailboxException e) {
@@ -74,14 +73,14 @@ public class SetMessagesDestructionProcessor<Id extends MailboxId> implements Se
                 .build();
     }
 
-    private Function<? super MessageId, SetMessagesResponse> delete(MessageMapper<Id> messageMapper, MailboxSession mailboxSession) {
+    private Function<? super MessageId, SetMessagesResponse> delete(MessageMapper messageMapper, MailboxSession mailboxSession) {
         return (messageId) -> {
             try {
-                Mailbox<Id> mailbox = mailboxMapperFactory
+                Mailbox mailbox = mailboxMapperFactory
                         .getMailboxMapper(mailboxSession)
                         .findMailboxByPath(messageId.getMailboxPath());
 
-                MailboxMessage<Id> mailboxMessage = getMailboxMessage(messageMapper, messageId, mailbox);
+                MailboxMessage mailboxMessage = getMailboxMessage(messageMapper, messageId, mailbox);
 
                 messageMapper.delete(mailbox, mailboxMessage);
                 return SetMessagesResponse.builder().destroyed(messageId).build();
@@ -104,10 +103,10 @@ public class SetMessagesDestructionProcessor<Id extends MailboxId> implements Se
         };
     }
 
-    private MailboxMessage<Id> getMailboxMessage(MessageMapper<Id> messageMapper, MessageId messageId, Mailbox<Id> mailbox)
+    private MailboxMessage getMailboxMessage(MessageMapper messageMapper, MessageId messageId, Mailbox mailbox)
             throws MailboxException, MessageNotFoundException {
 
-        Iterator<MailboxMessage<Id>> mailboxMessage = messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Metadata, LIMIT_BY_ONE);
+        Iterator<MailboxMessage> mailboxMessage = messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Metadata, LIMIT_BY_ONE);
         if (!mailboxMessage.hasNext()) {
             throw new MessageNotFoundException();
         }

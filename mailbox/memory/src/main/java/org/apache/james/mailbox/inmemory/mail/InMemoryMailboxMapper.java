@@ -35,20 +35,20 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.google.common.base.Objects;
 
-public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
+public class InMemoryMailboxMapper implements MailboxMapper {
     
     private static final int INITIAL_SIZE = 128;
-    private final Map<InMemoryId, Mailbox<InMemoryId>> mailboxesById;
+    private final Map<InMemoryId, Mailbox> mailboxesById;
     private final AtomicLong mailboxIdGenerator = new AtomicLong();
 
     public InMemoryMailboxMapper() {
-        mailboxesById = new ConcurrentHashMap<InMemoryId, Mailbox<InMemoryId>>(INITIAL_SIZE);
+        mailboxesById = new ConcurrentHashMap<InMemoryId, Mailbox>(INITIAL_SIZE);
     }
 
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#delete(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
-    public void delete(Mailbox<InMemoryId> mailbox) throws MailboxException {
+    public void delete(Mailbox mailbox) throws MailboxException {
         mailboxesById.remove(mailbox.getMailboxId());
     }
 
@@ -59,9 +59,9 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.mailbox.model.MailboxPath)
      */
-    public synchronized Mailbox<InMemoryId> findMailboxByPath(MailboxPath path) throws MailboxException {
-        Mailbox<InMemoryId> result = null;
-        for (Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
+    public synchronized Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
+        Mailbox result = null;
+        for (Mailbox mailbox:mailboxesById.values()) {
             MailboxPath mp = new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
             if (mp.equals(path)) {
                 result = mailbox;
@@ -78,10 +78,10 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.mailbox.model.MailboxPath)
      */
-    public List<Mailbox<InMemoryId>> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
+    public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         final String regex = path.getName().replace("%", ".*");
-        List<Mailbox<InMemoryId>> results = new ArrayList<Mailbox<InMemoryId>>();
-        for (Mailbox<InMemoryId> mailbox:mailboxesById.values()) {
+        List<Mailbox> results = new ArrayList<Mailbox>();
+        for (Mailbox mailbox:mailboxesById.values()) {
             if (mailboxMatchesRegex(mailbox, path, regex)) {
                 results.add(mailbox);
             }
@@ -89,7 +89,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
         return results;
     }
 
-    private boolean mailboxMatchesRegex(Mailbox<InMemoryId> mailbox, MailboxPath path, String regex) {
+    private boolean mailboxMatchesRegex(Mailbox mailbox, MailboxPath path, String regex) {
         return Objects.equal(mailbox.getNamespace(), path.getNamespace())
             && Objects.equal(mailbox.getUser(), path.getUser())
             && mailbox.getName().matches(regex);
@@ -98,11 +98,11 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox)
      */
-    public void save(Mailbox<InMemoryId> mailbox) throws MailboxException {
-        InMemoryId id = mailbox.getMailboxId();
+    public void save(Mailbox mailbox) throws MailboxException {
+        InMemoryId id = (InMemoryId) mailbox.getMailboxId();
         if (id == null) {
             id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
-            ((SimpleMailbox<InMemoryId>) mailbox).setMailboxId(id);
+            ((SimpleMailbox) mailbox).setMailboxId(id);
         }
         mailboxesById.put(id, mailbox);
     }
@@ -117,9 +117,9 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(org.apache.james.mailbox.store.mail.model.Mailbox, char)
      */
-    public boolean hasChildren(Mailbox<InMemoryId> mailbox, char delimiter) throws MailboxException {
+    public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException {
         String mailboxName = mailbox.getName() + delimiter;
-        for (Mailbox<InMemoryId> box:mailboxesById.values()) {
+        for (Mailbox box:mailboxesById.values()) {
             if (belongsToSameUser(mailbox, box) && box.getName().startsWith(mailboxName)) {
                 return true;
             }
@@ -127,7 +127,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
         return false;
     }
 
-    private boolean belongsToSameUser(Mailbox<InMemoryId> mailbox, Mailbox<InMemoryId> otherMailbox) {
+    private boolean belongsToSameUser(Mailbox mailbox, Mailbox otherMailbox) {
         return Objects.equal(mailbox.getNamespace(), otherMailbox.getNamespace())
             && Objects.equal(mailbox.getUser(), otherMailbox.getUser());
     }
@@ -135,8 +135,8 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     /**
      * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
      */
-    public List<Mailbox<InMemoryId>> list() throws MailboxException {
-        return new ArrayList<Mailbox<InMemoryId>>(mailboxesById.values());
+    public List<Mailbox> list() throws MailboxException {
+        return new ArrayList<Mailbox>(mailboxesById.values());
     }
 
     public <T> T execute(Transaction<T> transaction) throws MailboxException {
@@ -144,7 +144,7 @@ public class InMemoryMailboxMapper implements MailboxMapper<InMemoryId> {
     }
 
     @Override
-    public void updateACL(Mailbox<InMemoryId> mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException{
+    public void updateACL(Mailbox mailbox, MailboxACL.MailboxACLCommand mailboxACLCommand) throws MailboxException{
         mailbox.setACL(mailbox.getACL().apply(mailboxACLCommand));
     }
 }

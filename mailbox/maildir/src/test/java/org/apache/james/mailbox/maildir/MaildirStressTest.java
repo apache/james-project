@@ -38,7 +38,7 @@ public class MaildirStressTest extends AbstractStressTest {
 
     private static final String MAILDIR_HOME = "target/Maildir";
 
-    private StoreMailboxManager<MaildirId> mailboxManager;
+    private StoreMailboxManager mailboxManager;
     
     @Before
     public void setUp() throws MailboxException {
@@ -48,7 +48,7 @@ public class MaildirStressTest extends AbstractStressTest {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-        mailboxManager = new StoreMailboxManager<MaildirId>(mf, null, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+        mailboxManager = new StoreMailboxManager(mf, null, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
         mailboxManager.init();
 
     }

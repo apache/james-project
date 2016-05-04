@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -42,30 +43,29 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class SetMessagesUpdateProcessor<Id extends MailboxId> implements SetMessagesProcessor<Id> {
+public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private static final int LIMIT_BY_ONE = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesUpdateProcessor.class);
 
     private final UpdateMessagePatchConverter updatePatchConverter;
-    private final MailboxMapperFactory<Id> mailboxMapperFactory;
-    private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final MailboxMapperFactory mailboxMapperFactory;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     @Inject
     @VisibleForTesting SetMessagesUpdateProcessor(
             UpdateMessagePatchConverter updatePatchConverter,
-            MailboxMapperFactory<Id> mailboxMapperFactory,
-            MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory) {
+            MailboxMapperFactory mailboxMapperFactory,
+            MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.updatePatchConverter = updatePatchConverter;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -85,12 +85,12 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> implements SetMess
     private void update(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession,
                         SetMessagesResponse.Builder builder) {
         try {
-            MessageMapper<Id> messageMapper = mailboxSessionMapperFactory.createMessageMapper(mailboxSession);
-            Mailbox<Id> mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession)
+            MessageMapper messageMapper = mailboxSessionMapperFactory.createMessageMapper(mailboxSession);
+            Mailbox mailbox = mailboxMapperFactory.getMailboxMapper(mailboxSession)
                     .findMailboxByPath(messageId.getMailboxPath());
-            Iterator<MailboxMessage<Id>> mailboxMessage = messageMapper.findInMailbox(
+            Iterator<MailboxMessage> mailboxMessage = messageMapper.findInMailbox(
                     mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Metadata, LIMIT_BY_ONE);
-            MailboxMessage<Id> messageWithUpdatedFlags = applyMessagePatch(messageId, mailboxMessage.next(), updateMessagePatch, builder);
+            MailboxMessage messageWithUpdatedFlags = applyMessagePatch(messageId, mailboxMessage.next(), updateMessagePatch, builder);
             savePatchedMessage(mailbox, messageId, messageWithUpdatedFlags, messageMapper);
         } catch (NoSuchElementException e) {
             addMessageIdNotFoundToResponse(messageId, builder);
@@ -99,9 +99,9 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> implements SetMess
         }
     }
 
-    private boolean savePatchedMessage(Mailbox<Id> mailbox, MessageId messageId,
-                                       MailboxMessage<Id> message,
-                                       MessageMapper<Id> messageMapper) throws MailboxException {
+    private boolean savePatchedMessage(Mailbox mailbox, MessageId messageId,
+                                       MailboxMessage message,
+                                       MessageMapper messageMapper) throws MailboxException {
         return messageMapper.updateFlags(mailbox, new FlagsUpdateCalculator(message.createFlags(),
                         MessageManager.FlagsUpdateMode.REPLACE),
                 MessageRange.one(messageId.getUid()))
@@ -117,7 +117,7 @@ public class SetMessagesUpdateProcessor<Id extends MailboxId> implements SetMess
                         .build()));
     }
 
-    private MailboxMessage<Id> applyMessagePatch(MessageId messageId, MailboxMessage<Id> message,
+    private MailboxMessage applyMessagePatch(MessageId messageId, MailboxMessage message,
                                                  UpdateMessagePatch updatePatch, SetMessagesResponse.Builder builder) {
         Flags newStateFlags = updatePatch.applyToState(message.isSeen(), message.isAnswered(), message.isFlagged());
         message.setFlags(newStateFlags);

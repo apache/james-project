@@ -74,25 +74,25 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
-public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMessagesProcessor<Id> {
+public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
 
-    private final MailboxMapperFactory<Id> mailboxMapperFactory;
+    private final MailboxMapperFactory mailboxMapperFactory;
     private final MailboxManager mailboxManager;
-    private final MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MIMEMessageConverter mimeMessageConverter;
     private final MailSpool mailSpool;
-    private final MailFactory<Id> mailFactory;
+    private final MailFactory mailFactory;
 
     @Inject
     @VisibleForTesting
-    SetMessagesCreationProcessor(MailboxMapperFactory<Id> mailboxMapperFactory,
+    SetMessagesCreationProcessor(MailboxMapperFactory mailboxMapperFactory,
                                  MailboxManager mailboxManager,
-                                 MailboxSessionMapperFactory<Id> mailboxSessionMapperFactory,
+                                 MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                  MIMEMessageConverter mimeMessageConverter,
                                  MailSpool mailSpool,
-                                 MailFactory<Id> mailFactory) {
+                                 MailFactory mailFactory) {
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
@@ -103,7 +103,7 @@ public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMe
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        Mailbox<Id> outbox;
+        Mailbox outbox;
         try {
             outbox = getOutbox(mailboxSession).orElseThrow(() -> new MailboxRoleNotFoundException(Role.OUTBOX));
         } catch (MailboxException | MailboxRoleNotFoundException e) {
@@ -153,10 +153,10 @@ public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMe
     @VisibleForTesting
     protected MessageWithId<Message> createMessageInOutboxAndSend(MessageWithId.CreationMessageEntry createdEntry,
                                                            MailboxSession session,
-                                                           Mailbox<Id> outbox, Function<Long, MessageId> buildMessageIdFromUid) {
+                                                           Mailbox outbox, Function<Long, MessageId> buildMessageIdFromUid) {
         try {
-            MessageMapper<Id> messageMapper = mailboxSessionMapperFactory.createMessageMapper(session);
-            MailboxMessage<Id> newMailboxMessage = buildMailboxMessage(createdEntry, outbox);
+            MessageMapper messageMapper = mailboxSessionMapperFactory.createMessageMapper(session);
+            MailboxMessage newMailboxMessage = buildMailboxMessage(createdEntry, outbox);
             messageMapper.add(outbox, newMailboxMessage);
             Message jmapMessage = Message.fromMailboxMessage(newMailboxMessage, buildMessageIdFromUid);
             sendMessage(newMailboxMessage, jmapMessage, session);
@@ -169,12 +169,12 @@ public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMe
         }
     }
 
-    private Function<Long, MessageId> buildMessageIdFunc(MailboxSession session, Mailbox<Id> outbox) {
+    private Function<Long, MessageId> buildMessageIdFunc(MailboxSession session, Mailbox outbox) {
         MailboxPath outboxPath = new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), outbox.getName());
         return uid -> new MessageId(session.getUser(), outboxPath, uid);
     }
 
-    private MailboxMessage<Id> buildMailboxMessage(MessageWithId.CreationMessageEntry createdEntry, Mailbox<Id> outbox) {
+    private MailboxMessage buildMailboxMessage(MessageWithId.CreationMessageEntry createdEntry, Mailbox outbox) {
         byte[] messageContent = mimeMessageConverter.convert(createdEntry);
         SharedInputStream content = new SharedByteArrayInputStream(messageContent);
         long size = messageContent.length;
@@ -182,15 +182,15 @@ public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMe
 
         Flags flags = getMessageFlags(createdEntry.getMessage());
         PropertyBuilder propertyBuilder = buildPropertyBuilder();
-        Id mailboxId = outbox.getMailboxId();
+        MailboxId mailboxId = outbox.getMailboxId();
         Date internalDate = Date.from(createdEntry.getMessage().getDate().toInstant());
 
-        return new SimpleMailboxMessage<>(internalDate, size,
+        return new SimpleMailboxMessage(internalDate, size,
                 bodyStartOctet, content, flags, propertyBuilder, mailboxId);
     }
 
     @VisibleForTesting
-    protected Optional<Mailbox<Id>> getOutbox(MailboxSession session) throws MailboxException {
+    protected Optional<Mailbox> getOutbox(MailboxSession session) throws MailboxException {
         return mailboxManager.search(MailboxQuery.builder(session)
                 .privateUserMailboxes().build(), session).stream()
             .map(MailboxMetaData::getPath)
@@ -205,7 +205,7 @@ public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMe
                 .orElse(false);
     }
 
-    private ThrowingFunction<MailboxPath, Mailbox<Id>> loadMailbox(MailboxSession session) {
+    private ThrowingFunction<MailboxPath, Mailbox> loadMailbox(MailboxSession session) {
         return path -> mailboxMapperFactory.getMailboxMapper(session).findMailboxByPath(path);
     }
 
@@ -230,7 +230,7 @@ public class SetMessagesCreationProcessor<Id extends MailboxId> implements SetMe
         return result;
     }
 
-    private void sendMessage(MailboxMessage<Id> mailboxMessage, Message jmapMessage, MailboxSession session) throws MessagingException, IOException {
+    private void sendMessage(MailboxMessage mailboxMessage, Message jmapMessage, MailboxSession session) throws MessagingException, IOException {
         Mail mail = mailFactory.build(mailboxMessage, jmapMessage);
         MailMetadata metadata = new MailMetadata(jmapMessage.getId(), session.getUser().getUserName());
         mailSpool.send(mail, metadata);

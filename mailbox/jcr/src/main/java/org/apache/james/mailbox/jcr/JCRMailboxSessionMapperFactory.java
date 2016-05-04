@@ -36,20 +36,20 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * 
  *
  */
-public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory<JCRId> {
+public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
 
     private final MailboxSessionJCRRepository repository;
     private final static int DEFAULT_SCALING = 2;
     private final int scaling;
     private final int messageScaling;
-    private final UidProvider<JCRId> uidProvider;
-    private final ModSeqProvider<JCRId> modSeqProvider;
+    private final UidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
 
-    public JCRMailboxSessionMapperFactory(MailboxSessionJCRRepository repository, UidProvider<JCRId> uidProvider, ModSeqProvider<JCRId> modSeqProvider) {
+    public JCRMailboxSessionMapperFactory(MailboxSessionJCRRepository repository, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         this(repository, uidProvider, modSeqProvider, DEFAULT_SCALING, JCRMessageMapper.MESSAGE_SCALE_DAY);
     }
 
-    public JCRMailboxSessionMapperFactory(MailboxSessionJCRRepository repository, UidProvider<JCRId> uidProvider, ModSeqProvider<JCRId> modSeqProvider, int scaling, int messageScaling) {
+    public JCRMailboxSessionMapperFactory(MailboxSessionJCRRepository repository, UidProvider uidProvider, ModSeqProvider modSeqProvider, int scaling, int messageScaling) {
         this.repository = repository;
         this.scaling = scaling;
         this.messageScaling = messageScaling;
@@ -58,12 +58,12 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory<
     }
     
     @Override
-    public MailboxMapper<JCRId> createMailboxMapper(MailboxSession session) throws MailboxException {
+    public MailboxMapper createMailboxMapper(MailboxSession session) throws MailboxException {
         return new JCRMailboxMapper(repository, session, scaling);
     }
 
     @Override
-    public MessageMapper<JCRId> createMessageMapper(MailboxSession session) throws MailboxException {
+    public MessageMapper createMessageMapper(MailboxSession session) throws MailboxException {
         return new JCRMessageMapper(repository, session, uidProvider, modSeqProvider,  messageScaling);
     }
 

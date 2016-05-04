@@ -20,6 +20,8 @@ package org.apache.james.mailbox.inmemory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.apache.james.mailbox.AbstractMailboxManagerTest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -38,8 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * InMemoryMailboxManagerTest that extends the MailboxManagerTest.
@@ -84,7 +84,7 @@ public class InMemoryMailboxManagerTest extends AbstractMailboxManagerTest {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        StoreMailboxManager<InMemoryId> mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+        StoreMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
         mailboxManager.init();
         
         setMailboxManager(mailboxManager);

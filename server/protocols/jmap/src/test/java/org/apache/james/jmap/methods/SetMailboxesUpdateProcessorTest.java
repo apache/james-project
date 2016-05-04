@@ -35,24 +35,22 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SetMailboxesUpdateProcessorTest {
 
     private MailboxManager mockedMailboxManager;
-    private MailboxUtils<TestId> mockedMailboxUtils;
+    private MailboxUtils mockedMailboxUtils;
     private MailboxSession mockedMailboxSession;
-    private SetMailboxesUpdateProcessor<TestId> sut;
+    private SetMailboxesUpdateProcessor sut;
 
     @Before
-    @SuppressWarnings("unchecked")
     public void setup() {
         mockedMailboxManager = mock(MailboxManager.class);
         mockedMailboxUtils = mock(MailboxUtils.class);
         mockedMailboxSession = mock(MailboxSession.class);
-        sut = new SetMailboxesUpdateProcessor<>(mockedMailboxUtils, mockedMailboxManager);
+        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager);
     }
 
     @Test

@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 /**
  * JCR implementation of a {@link Mailbox}
  */
-public class JCRMailbox implements Mailbox<JCRId>, JCRImapConstants, Persistent{
+public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent{
 
     private static final String TAB = " ";
 

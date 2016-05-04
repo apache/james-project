@@ -49,12 +49,12 @@ public abstract class SetVacationResponseTest {
     public static final String USER = "username@" + USERS_DOMAIN;
     public static final String PASSWORD = "password";
 
-    protected abstract GuiceJamesServer<?> createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer();
 
     protected abstract void await();
 
     private AccessToken accessToken;
-    private GuiceJamesServer<?> jmapServer;
+    private GuiceJamesServer jmapServer;
 
     @Before
     public void setup() throws Throwable {

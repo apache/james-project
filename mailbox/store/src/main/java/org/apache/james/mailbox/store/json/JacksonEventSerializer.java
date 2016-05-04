@@ -19,19 +19,19 @@
 
 package org.apache.james.mailbox.store.json;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.store.event.EventSerializer;
 import org.apache.james.mailbox.store.json.event.EventConverter;
 import org.apache.james.mailbox.store.json.event.dto.EventDataTransferObject;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-public class JacksonEventSerializer<Id extends MailboxId> implements EventSerializer {
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-    private final EventConverter<Id> eventConverter;
+public class JacksonEventSerializer implements EventSerializer {
+
+    private final EventConverter eventConverter;
     private final ObjectMapper objectMapper;
 
-    public JacksonEventSerializer(EventConverter<Id> eventConverter, ObjectMapper objectMapper) {
+    public JacksonEventSerializer(EventConverter eventConverter, ObjectMapper objectMapper) {
         this.eventConverter = eventConverter;
         this.objectMapper = objectMapper;
     }

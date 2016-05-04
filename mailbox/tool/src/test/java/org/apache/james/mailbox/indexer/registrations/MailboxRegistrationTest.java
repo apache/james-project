@@ -21,7 +21,11 @@ package org.apache.james.mailbox.indexer.registrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
+import java.util.Date;
+import java.util.TreeMap;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
 import org.apache.james.mailbox.indexer.events.MessageDeletedEvent;
@@ -30,32 +34,29 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.mail.Flags;
-import java.util.Date;
-import java.util.TreeMap;
+import com.google.common.collect.Lists;
 
 public class MailboxRegistrationTest {
 
     public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
     public static final Long UID = 18L;
     public static final int UID_VALIDITY = 45;
-    public static final SimpleMailbox<TestId> MAILBOX = new SimpleMailbox<TestId>(INBOX, UID_VALIDITY);
+    public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
     public static final MockMailboxSession SESSION = new MockMailboxSession("test");
     public static final int MOD_SEQ = 21;
     public static final int SIZE = 41;
     public static final Flags NEW_FLAGS = new Flags(Flags.Flag.ANSWERED);
     private MailboxRegistration mailboxRegistration;
-    private EventFactory<TestId> eventFactory;
+    private EventFactory eventFactory;
 
     @Before
     public void setUp() {
-        eventFactory = new EventFactory<TestId>();
+        eventFactory = new EventFactory();
         mailboxRegistration = new MailboxRegistration(INBOX);
     }
 

@@ -26,19 +26,19 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getUid()} value
  *
  */
-public class UidComparator implements Comparator<MailboxMessage<?>>{
+public class UidComparator implements Comparator<MailboxMessage>{
 
 
-    private final static Comparator<MailboxMessage<?>> UID = new UidComparator();
-    private final static Comparator<MailboxMessage<?>> REVERSE_UID = new ReverseComparator(UID);
+    private final static Comparator<MailboxMessage> UID = new UidComparator();
+    private final static Comparator<MailboxMessage> REVERSE_UID = new ReverseComparator(UID);
 
     
     @Override
-    public int compare(MailboxMessage<?> o1, MailboxMessage<?> o2) {
+    public int compare(MailboxMessage o1, MailboxMessage o2) {
         return (int) (o1.getUid() - o2.getUid());
     }
 
-    public static Comparator<MailboxMessage<?>> uid(boolean reverse){
+    public static Comparator<MailboxMessage> uid(boolean reverse){
         if (reverse) {
             return REVERSE_UID;
         } else {

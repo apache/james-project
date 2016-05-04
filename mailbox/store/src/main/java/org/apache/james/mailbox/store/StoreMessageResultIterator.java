@@ -35,25 +35,24 @@ import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-public class StoreMessageResultIterator<Id extends MailboxId> implements MessageResultIterator {
+public class StoreMessageResultIterator implements MessageResultIterator {
 
-    private Iterator<MailboxMessage<Id>> next = null;
+    private Iterator<MailboxMessage> next = null;
     private MailboxException exception;
-    private final Mailbox<Id> mailbox;
+    private final Mailbox mailbox;
     private final FetchGroup group;
     private final long from;
     private long cursor;
     private final long to;
     private final int batchSize;
     private final Type type;
-    private final MessageMapper<Id> mapper;
+    private final MessageMapper mapper;
     private final FetchType ftype;
 
-    public StoreMessageResultIterator(MessageMapper<Id> mapper, Mailbox<Id> mailbox, MessageRange range, int batchSize, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
+    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, int batchSize, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
         this.mailbox = mailbox;
         this.group = group;
         this.mapper = mapper;
@@ -157,13 +156,13 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
           throw new NoSuchElementException();
         }
         
-        final MailboxMessage<Id> message = next.next();
+        final MailboxMessage message = next.next();
         MessageResult result;
         try {
             result = ResultUtils.loadMessageResult(message, group);
             cursor = result.getUid();
         } catch (MailboxException e) {
-            result = new UnloadedMessageResult<Id>(message, e);
+            result = new UnloadedMessageResult(message, e);
         }
 
         cursor++;
@@ -180,7 +179,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
         return exception;
     }
 
-    private static final class UnloadedMessageResult<Id extends MailboxId> implements MessageResult {
+    private static final class UnloadedMessageResult implements MessageResult {
         private final MailboxException exception;
 
         private final Date internalDate;
@@ -193,7 +192,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
 
         private long modSeq = -1;
 
-        public UnloadedMessageResult(MailboxMessage<Id> message, MailboxException exception) {
+        public UnloadedMessageResult(MailboxMessage message, MailboxException exception) {
             super();
             internalDate = message.getInternalDate();
             size = message.getFullContentOctets();
@@ -251,8 +250,7 @@ public class StoreMessageResultIterator<Id extends MailboxId> implements Message
                 return true;
             }
             if (obj instanceof UnloadedMessageResult) {
-                @SuppressWarnings("unchecked")
-                UnloadedMessageResult<Id> that = (UnloadedMessageResult<Id>)obj;
+                UnloadedMessageResult that = (UnloadedMessageResult)obj;
                 return (size == that.size) && (uid == that.uid) && (modSeq == that.modSeq) && exception.equals(that.exception)
                         && internalDate.equals(that.internalDate) && flags.equals(that.flags);
             }

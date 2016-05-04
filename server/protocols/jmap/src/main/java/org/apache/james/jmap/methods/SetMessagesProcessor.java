@@ -22,8 +22,7 @@ package org.apache.james.jmap.methods;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-public interface SetMessagesProcessor<Id extends MailboxId> {
+public interface SetMessagesProcessor {
     SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession);
 }

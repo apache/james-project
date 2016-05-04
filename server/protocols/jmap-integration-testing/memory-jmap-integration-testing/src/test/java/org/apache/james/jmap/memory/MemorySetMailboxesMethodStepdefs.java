@@ -40,7 +40,7 @@ public class MemorySetMailboxesMethodStepdefs {
     @Before
     public void init() throws Exception {
         temporaryFolder.create();
-        mainStepdefs.jmapServer = new GuiceJamesServer<>(MemoryJamesServerMain.inMemoryId)
+        mainStepdefs.jmapServer = new GuiceJamesServer()
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new MemoryJmapServerModule(temporaryFolder));
         mainStepdefs.init();

@@ -30,7 +30,7 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.store.mail.AbstractLockingUidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public class JPAUidProvider extends AbstractLockingUidProvider<JPAId> {
+public class JPAUidProvider extends AbstractLockingUidProvider {
 
     private final EntityManagerFactory factory;
 
@@ -41,12 +41,13 @@ public class JPAUidProvider extends AbstractLockingUidProvider<JPAId> {
     
     
     @Override
-    public long lastUid(MailboxSession session, Mailbox<JPAId> mailbox) throws MailboxException {
+    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         EntityManager manager = null;
         try {
             manager = factory.createEntityManager();
             manager.getTransaction().begin();
-            long uid = (Long) manager.createNamedQuery("findLastUid").setParameter("idParam", mailbox.getMailboxId().getRawId()).getSingleResult();
+            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            long uid = (Long) manager.createNamedQuery("findLastUid").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
             manager.getTransaction().commit();
             return uid;
         } catch (PersistenceException e) {
@@ -62,12 +63,13 @@ public class JPAUidProvider extends AbstractLockingUidProvider<JPAId> {
     }
 
     @Override
-    protected long lockedNextUid(MailboxSession session, Mailbox<JPAId> mailbox) throws MailboxException {
+    protected long lockedNextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         EntityManager manager = null;
         try {
             manager = factory.createEntityManager();
             manager.getTransaction().begin();
-            JPAMailbox m = manager.find(JPAMailbox.class, mailbox.getMailboxId().getRawId());
+            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            JPAMailbox m = manager.find(JPAMailbox.class, mailboxId.getRawId());
             long uid = m.consumeUid();
             manager.persist(m);
             manager.getTransaction().commit();

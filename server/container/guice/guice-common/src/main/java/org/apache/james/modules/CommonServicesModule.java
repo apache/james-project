@@ -29,27 +29,22 @@ import org.apache.james.core.JamesServerResourceLoader;
 import org.apache.james.core.filesystem.FileSystemImpl;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.FileConfigurationProvider;
-import org.apache.james.utils.GuiceGenericType;
 import org.apache.james.utils.GuiceServerProbe;
 import org.apache.onami.lifecycle.jsr250.PreDestroyModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
 
-public class CommonServicesModule<Id extends MailboxId> extends AbstractModule {
+public class CommonServicesModule extends AbstractModule {
     
     public static final String CONFIGURATION_PATH = "configurationPath";
-    private final GuiceGenericType<Id> guiceGenericType;
     
-    public CommonServicesModule(TypeLiteral<Id> type) {
-        guiceGenericType = new GuiceGenericType<>(type);
+    public CommonServicesModule() {
     }
     
     @Override
@@ -62,8 +57,7 @@ public class CommonServicesModule<Id extends MailboxId> extends AbstractModule {
         
         bind(FileSystem.class).to(FileSystemImpl.class);
         bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
-        TypeLiteral<GuiceServerProbe<Id>> serverProbe = guiceGenericType.newGenericType(GuiceServerProbe.class);
-        bind(serverProbe).in(Singleton.class);
+        bind(GuiceServerProbe.class).in(Singleton.class);
     }
 
     @Provides @Singleton @Named(CONFIGURATION_PATH)

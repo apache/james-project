@@ -22,7 +22,7 @@ package org.apache.james.mailbox.jpa;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 
-public class JPAMailboxIdDeserializer implements MailboxIdDeserializer<JPAId> {
+public class JPAMailboxIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public JPAId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {

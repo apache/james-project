@@ -27,15 +27,14 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 
-public class QuotaChecker<Id extends MailboxId> {
+public class QuotaChecker {
 
     private final Quota messageQuota;
     private final Quota sizeQuota;
     private final QuotaRoot quotaRoot;
 
-    public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox<Id> mailbox) throws MailboxException {
+    public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox mailbox) throws MailboxException {
         this.quotaRoot = quotaRootResolver.getQuotaRoot(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()));
         this.messageQuota = quotaManager.getMessageQuota(quotaRoot);
         this.sizeQuota = quotaManager.getStorageQuota(quotaRoot);

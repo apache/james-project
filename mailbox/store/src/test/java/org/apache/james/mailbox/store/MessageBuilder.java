@@ -37,7 +37,7 @@ public class MessageBuilder {
     public final Map<String, String> headers = new HashMap<String, String>();
     public int lineNumber = 0;
     
-    public MailboxMessage<TestId> build() throws Exception {
+    public MailboxMessage build() throws Exception {
         return new SimpleMailboxMembership(mailboxId, uid, -1,  internalDate, size, flags, body, headers);
     }
     

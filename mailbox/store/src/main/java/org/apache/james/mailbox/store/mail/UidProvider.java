@@ -20,7 +20,6 @@ package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 /**
@@ -28,9 +27,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * need to be thread-safe!
  * 
  *
- * @param <Id>
  */
-public interface UidProvider<Id extends MailboxId> {
+public interface UidProvider {
 
     /**
      * Return the next uid which can be used while append a MailboxMessage to the {@link Mailbox}.
@@ -42,7 +40,7 @@ public interface UidProvider<Id extends MailboxId> {
      * @return nextUid
      * @throws MailboxException
      */
-    long nextUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
     
     /**
      * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
@@ -52,5 +50,5 @@ public interface UidProvider<Id extends MailboxId> {
      * @return lastUid
      * @throws MailboxException
      */
-    long lastUid(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException;
+    long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
 }

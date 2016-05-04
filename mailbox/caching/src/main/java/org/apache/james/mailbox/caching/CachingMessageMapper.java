@@ -9,7 +9,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -17,14 +16,13 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * A MessageMapper implementation that uses a MailboxMetadataCache to cache the information
  * from the underlying MessageMapper
  * 
- * @param <Id>
  */
-public class CachingMessageMapper<Id extends MailboxId> implements MessageMapper<Id> {
+public class CachingMessageMapper implements MessageMapper {
 
-    private final MessageMapper<Id> underlying;
-    private final MailboxMetadataCache<Id> cache;
+    private final MessageMapper underlying;
+    private final MailboxMetadataCache cache;
 
-    public CachingMessageMapper(MessageMapper<Id> underlying, MailboxMetadataCache<Id> cache) {
+    public CachingMessageMapper(MessageMapper underlying, MailboxMetadataCache cache) {
         this.underlying = underlying;
         this.cache = cache;
     }
@@ -40,7 +38,7 @@ public class CachingMessageMapper<Id extends MailboxId> implements MessageMapper
     }
 
     @Override
-    public Iterator<MailboxMessage<Id>> findInMailbox(Mailbox<Id> mailbox,
+    public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox,
                                                       MessageRange set,
                                                       org.apache.james.mailbox.store.mail.MessageMapper.FetchType type,
                                                       int limit) throws MailboxException {
@@ -49,25 +47,25 @@ public class CachingMessageMapper<Id extends MailboxId> implements MessageMapper
 
     @Override
     public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(
-            Mailbox<Id> mailbox, MessageRange set) throws MailboxException {
+            Mailbox mailbox, MessageRange set) throws MailboxException {
         invalidateMetadata(mailbox);
         return underlying.expungeMarkedForDeletionInMailbox(mailbox, set);
     }
 
     @Override
-    public long countMessagesInMailbox(Mailbox<Id> mailbox)
+    public long countMessagesInMailbox(Mailbox mailbox)
             throws MailboxException {
         return cache.countMessagesInMailbox(mailbox, underlying);
     }
 
     @Override
-    public long countUnseenMessagesInMailbox(Mailbox<Id> mailbox)
+    public long countUnseenMessagesInMailbox(Mailbox mailbox)
             throws MailboxException {
         return cache.countUnseenMessagesInMailbox(mailbox, underlying);
     }
 
     @Override
-    public void delete(Mailbox<Id> mailbox, MailboxMessage<Id> message)
+    public void delete(Mailbox mailbox, MailboxMessage message)
             throws MailboxException {
         invalidateMetadata(mailbox);
         underlying.delete(mailbox, message);
@@ -75,27 +73,27 @@ public class CachingMessageMapper<Id extends MailboxId> implements MessageMapper
     }
 
     @Override
-    public Long findFirstUnseenMessageUid(Mailbox<Id> mailbox)
+    public Long findFirstUnseenMessageUid(Mailbox mailbox)
             throws MailboxException {
         return cache.findFirstUnseenMessageUid(mailbox, underlying);
     }
 
     @Override
-    public List<Long> findRecentMessageUidsInMailbox(Mailbox<Id> mailbox)
+    public List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox)
             throws MailboxException {
         // TODO can be meaningfully cached?
         return underlying.findRecentMessageUidsInMailbox(mailbox);
     }
 
     @Override
-    public MessageMetaData add(Mailbox<Id> mailbox, MailboxMessage<Id> message)
+    public MessageMetaData add(Mailbox mailbox, MailboxMessage message)
             throws MailboxException {
         invalidateMetadata(mailbox);
         return underlying.add(mailbox, message);
     }
 
     @Override
-    public Iterator<UpdatedFlags> updateFlags(Mailbox<Id> mailbox, FlagsUpdateCalculator calculator, MessageRange set)
+    public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator calculator, MessageRange set)
             throws MailboxException {
         //check if there are in fact any updates
         if (set.iterator().hasNext())
@@ -105,29 +103,29 @@ public class CachingMessageMapper<Id extends MailboxId> implements MessageMapper
 
 
     @Override
-    public MessageMetaData copy(Mailbox<Id> mailbox, MailboxMessage<Id> original)
+    public MessageMetaData copy(Mailbox mailbox, MailboxMessage original)
             throws MailboxException {
         invalidateMetadata(mailbox);
         return underlying.copy(mailbox, original);
     }
 
     @Override
-    public long getLastUid(Mailbox<Id> mailbox) throws MailboxException {
+    public long getLastUid(Mailbox mailbox) throws MailboxException {
         return cache.getLastUid(mailbox, underlying);
     }
 
     @Override
-    public long getHighestModSeq(Mailbox<Id> mailbox) throws MailboxException {
+    public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return cache.getHighestModSeq(mailbox, underlying);
     }
 
-    private void invalidateMetadata(Mailbox<Id> mailbox) {
+    private void invalidateMetadata(Mailbox mailbox) {
         cache.invalidate(mailbox);
 
     }
 
     @Override
-    public MessageMetaData move(Mailbox<Id> mailbox, MailboxMessage<Id> original) throws MailboxException {
+    public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         throw new UnsupportedOperationException("Move is not yet supported");
     }
 

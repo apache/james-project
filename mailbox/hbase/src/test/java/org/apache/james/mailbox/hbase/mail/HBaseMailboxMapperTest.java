@@ -47,7 +47,6 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
-import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
 import org.apache.james.mailbox.hbase.io.ChunkOutputStream;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
@@ -139,7 +138,7 @@ public class HBaseMailboxMapperTest {
         LOG.info("findMailboxWithPathLike");
         MailboxPath path = pathsList.get(pathsList.size() / 2);
 
-        List<Mailbox<HBaseId>> result = mapper.findMailboxWithPathLike(path);
+        List<Mailbox> result = mapper.findMailboxWithPathLike(path);
         assertEquals(1, result.size());
 
         int start = 3;
@@ -164,7 +163,7 @@ public class HBaseMailboxMapperTest {
      */
     private void testList() throws Exception {
         LOG.info("list");
-        List<Mailbox<HBaseId>> result = mapper.list();
+        List<Mailbox> result = mapper.list();
         assertEquals(mailboxList.size(), result.size());
 
     }

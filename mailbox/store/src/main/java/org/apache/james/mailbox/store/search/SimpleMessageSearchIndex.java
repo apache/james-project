@@ -37,7 +37,6 @@ import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -48,15 +47,14 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * This works with every implementation but is SLOW.
  * 
  *
- * @param <Id>
  */
 @Singleton
-public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSearchIndex<Id> {
+public class SimpleMessageSearchIndex implements MessageSearchIndex {
 
-    private final MessageMapperFactory<Id> factory;
+    private final MessageMapperFactory factory;
     
     @Inject
-    public SimpleMessageSearchIndex(MessageMapperFactory<Id> factory) {
+    public SimpleMessageSearchIndex(MessageMapperFactory factory) {
         this.factory = factory;
     }
     
@@ -80,10 +78,10 @@ public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSe
 	}
     
     @Override
-    public Iterator<Long> search(MailboxSession session, Mailbox<Id> mailbox, SearchQuery query) throws MailboxException {
-        MessageMapper<Id> mapper = factory.getMessageMapper(session);
+    public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
+        MessageMapper mapper = factory.getMessageMapper(session);
 
-        final SortedSet<MailboxMessage<?>> hitSet = new TreeSet<MailboxMessage<?>>();
+        final SortedSet<MailboxMessage> hitSet = new TreeSet<MailboxMessage>();
 
         UidCriterion uidCrit = findConjugatedUidCriterion(query.getCriterias());
         if (uidCrit != null) {
@@ -91,16 +89,16 @@ public class SimpleMessageSearchIndex<Id extends MailboxId> implements MessageSe
             // only fetching this uid range
             NumericRange[] ranges = uidCrit.getOperator().getRange();
             for (NumericRange r : ranges) {
-                Iterator<MailboxMessage<Id>> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
+                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
                 while (it.hasNext()) {
                     hitSet.add(it.next());
                 }
             }
         } else {
         	// we have to fetch all messages
-            Iterator<MailboxMessage<Id>> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
             while(messages.hasNext()) {
-            	MailboxMessage<Id> m = messages.next();
+            	MailboxMessage m = messages.next();
             	hitSet.add(m);
             }
         }

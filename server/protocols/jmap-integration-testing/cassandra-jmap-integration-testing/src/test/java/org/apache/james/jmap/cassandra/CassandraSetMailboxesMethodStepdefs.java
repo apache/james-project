@@ -44,7 +44,7 @@ public class CassandraSetMailboxesMethodStepdefs {
     public void init() throws Exception {
         temporaryFolder.create();
         embeddedElasticSearch.before();
-        mainStepdefs.jmapServer = new GuiceJamesServer<>(CassandraJamesServerMain.cassandraId)
+        mainStepdefs.jmapServer = new GuiceJamesServer()
                 .combineWith(CassandraJamesServerMain.cassandraServerModule)
                 .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();

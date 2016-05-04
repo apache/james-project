@@ -21,7 +21,10 @@ package org.apache.james.mailbox.store.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
+import java.util.TreeMap;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -36,8 +39,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.mail.Flags;
-import java.util.TreeMap;
+import com.google.common.collect.Lists;
 
 public abstract class EventSerializerTest {
 
@@ -49,18 +51,18 @@ public abstract class EventSerializerTest {
     public static final SimpleMessageMetaData MESSAGE_META_DATA = new SimpleMessageMetaData(UID, MOD_SEQ, FLAGS, SIZE, null);
     public static final MailboxPath FROM = new MailboxPath("namespace", "user", "name");
     private EventSerializer serializer;
-    private EventFactory<TestId> eventFactory;
+    private EventFactory eventFactory;
     private MailboxSession mailboxSession;
-    private SimpleMailbox<TestId> mailbox;
+    private SimpleMailbox mailbox;
 
     abstract EventSerializer createSerializer();
 
     @Before
     public void setUp() {
-        eventFactory = new EventFactory<TestId>();
+        eventFactory = new EventFactory();
         serializer = createSerializer();
         mailboxSession = new MockMailboxSession("benwa");
-        mailbox = new SimpleMailbox<TestId>(new MailboxPath("#private", "benwa", "name"), 42);
+        mailbox = new SimpleMailbox(new MailboxPath("#private", "benwa", "name"), 42);
         mailbox.setMailboxId(TestId.of(28L));
     }
 

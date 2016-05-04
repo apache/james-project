@@ -28,7 +28,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
@@ -52,7 +51,7 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
-    private StoreMailboxManager<InMemoryId> mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private MockAuthenticator userManager;
 
     public static JamesImapHostSystem build() throws Exception {
@@ -79,7 +78,7 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
 
-        mailboxManager = new StoreMailboxManager<InMemoryId>(factory, userManager, aclResolver, groupMembershipResolver);
+        mailboxManager = new StoreMailboxManager(factory, userManager, aclResolver, groupMembershipResolver);
         QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(factory);
 
         InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
@@ -87,7 +86,7 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
         perUserMaxQuotaManager.setDefaultMaxStorage(5L * 1024L * 1024L * 1024L);
 
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator<InMemoryId>(factory, quotaRootResolver),
+            new CurrentQuotaCalculator(factory, quotaRootResolver),
             mailboxManager);
 
         StoreQuotaManager quotaManager = new StoreQuotaManager();

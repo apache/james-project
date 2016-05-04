@@ -28,8 +28,8 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
@@ -40,15 +40,14 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
  * This class is mostly useful for in-memory indexes or for indexed that should be recreated on every server restart.
  * 
  *
- * @param <Id>
  */
-public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessageSearchIndex<Id> {
+public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
 
-    private final ListeningMessageSearchIndex<Id> index;
-    private final ConcurrentHashMap<Id, Object> indexed = new ConcurrentHashMap<Id, Object>();
+    private final ListeningMessageSearchIndex index;
+    private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<MailboxId, Object>();
     
     
-    public LazyMessageSearchIndex(ListeningMessageSearchIndex<Id> index) {
+    public LazyMessageSearchIndex(ListeningMessageSearchIndex index) {
         super(index.getFactory());
         this.index = index;
     }
@@ -59,17 +58,17 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox<Id> mailbox, MailboxMessage<Id> message) throws MailboxException {
+    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws MailboxException {
         index.add(session, mailbox, message);
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox<Id> mailbox, List<Long> expungedUids) throws MailboxException {
+    public void delete(MailboxSession session, Mailbox mailbox, List<Long> expungedUids) throws MailboxException {
         index.delete(session, mailbox, expungedUids);
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox<Id> mailbox) throws MailboxException {
+    public void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException {
         index.deleteAll(session, mailbox);
     }
 
@@ -80,8 +79,8 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
      * 
      */
     @Override
-    public Iterator<Long> search(MailboxSession session, Mailbox<Id> mailbox, SearchQuery searchQuery) throws MailboxException {
-        Id id = mailbox.getMailboxId();
+    public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+        MailboxId id = mailbox.getMailboxId();
         
         Object done = indexed.get(id);
         if (done == null) {
@@ -91,9 +90,9 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
                 done = oldDone;
             }
             synchronized (done) {
-                Iterator<MailboxMessage<Id>> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+                Iterator<MailboxMessage> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
                 while(messages.hasNext()) {
-                    final MailboxMessage<Id> message = messages.next();
+                    final MailboxMessage message = messages.next();
                     try {
                         add(session, mailbox, message);
                     } catch (MailboxException e) {
@@ -108,7 +107,7 @@ public class LazyMessageSearchIndex<Id extends MailboxId> extends ListeningMessa
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox<Id> mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
         index.update(session, mailbox, updatedFlagsList);
     }
 }

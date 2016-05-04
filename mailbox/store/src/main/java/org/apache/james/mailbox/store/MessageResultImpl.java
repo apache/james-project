@@ -49,14 +49,14 @@ public class MessageResultImpl implements MessageResult {
 
     private MimeDescriptor mimeDescriptor;
 
-	private final MailboxMessage<?> message;
+	private final MailboxMessage message;
 
     private HeadersImpl headers;
     private Content fullContent;
     private Content bodyContent;
 
     
-    public MessageResultImpl(MailboxMessage<?> message) throws IOException {
+    public MessageResultImpl(MailboxMessage message) throws IOException {
         this.message = message;
         this.headers = new HeadersImpl(message);
         

@@ -23,9 +23,8 @@ import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
-import org.apache.james.modules.CassandraJmapServerModule;
-import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
+import org.apache.james.modules.CassandraJmapServerModule;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
@@ -43,8 +42,8 @@ public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {
         .around(embeddedElasticSearch);
 
     @Override
-    protected GuiceJamesServer<CassandraId> createJmapServer() {
-        return new GuiceJamesServer<>(CassandraJamesServerMain.cassandraId)
+    protected GuiceJamesServer createJmapServer() {
+        return new GuiceJamesServer()
                     .combineWith(CassandraJamesServerMain.cassandraServerModule)
                     .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandra));
     }

@@ -29,7 +29,6 @@ import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
-import org.apache.james.mailbox.store.TestId;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -41,7 +40,7 @@ public class SetMessagesUpdateProcessorTest {
 
     @Test
     public void processShouldReturnEmptyUpdatedWhenRequestHasEmptyUpdate() {
-        SetMessagesUpdateProcessor<TestId> sut = new SetMessagesUpdateProcessor<>(null, null, null);
+        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(null, null, null);
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
         SetMessagesResponse result = sut.process(requestWithEmptyUpdate, null);
@@ -65,7 +64,7 @@ public class SetMessagesUpdateProcessorTest {
         when(mockConverter.fromJsonNode(any(ObjectNode.class)))
                 .thenReturn(mockInvalidPatch);
 
-        SetMessagesUpdateProcessor<TestId> sut = new SetMessagesUpdateProcessor<>(mockConverter, null, null);
+        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter, null, null);
         MessageId requestMessageId = MessageId.of("user|inbox|1");
         SetMessagesRequest requestWithInvalidUpdate = SetMessagesRequest.builder()
                 .update(ImmutableMap.of(requestMessageId, JsonNodeFactory.instance.objectNode()))

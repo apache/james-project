@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.james.mailbox.store.MessageBuilder;
-import org.apache.james.mailbox.store.TestId;
 import org.junit.Test;
 
 public class DelegatingMailboxMessageTest {
@@ -30,12 +30,12 @@ public class DelegatingMailboxMessageTest {
     @Test
     public void testShouldReturnPositiveWhenFirstGreaterThanSecond()
             throws Exception {
-        MailboxMessage<TestId> one = buildMessage(100);
-        MailboxMessage<TestId> two = buildMessage(99);
+        MailboxMessage one = buildMessage(100);
+        MailboxMessage two = buildMessage(99);
         assertTrue( one.compareTo(two) > 0);
     }
 
-    private MailboxMessage<TestId> buildMessage(int uid) throws Exception {
+    private MailboxMessage buildMessage(int uid) throws Exception {
         MessageBuilder builder = new MessageBuilder();
         builder.uid = uid;
         return builder.build();
@@ -44,15 +44,15 @@ public class DelegatingMailboxMessageTest {
     @Test
     public void testShouldReturnNegativeWhenFirstLessThanSecond()
             throws Exception {
-        MailboxMessage<TestId> one = buildMessage(98);
-        MailboxMessage<TestId> two = buildMessage(99);
+        MailboxMessage one = buildMessage(98);
+        MailboxMessage two = buildMessage(99);
         assertTrue( one.compareTo(two) < 0);
     }
 
     @Test
     public void testShouldReturnZeroWhenFirstEqualsSecond() throws Exception {
-        MailboxMessage<TestId> one = buildMessage(90);
-        MailboxMessage<TestId> two = buildMessage(90);
+        MailboxMessage one = buildMessage(90);
+        MailboxMessage two = buildMessage(90);
         assertEquals(0, one.compareTo(two));
     }
 }

@@ -39,7 +39,7 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 
-public class SimpleMailboxMembership implements MailboxMessage<TestId> {
+public class SimpleMailboxMembership implements MailboxMessage {
     
     private static final String TOSTRING_SEPARATOR = " ";
     
@@ -153,7 +153,6 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -162,8 +161,8 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        final MailboxMessage<TestId> other = (MailboxMessage<TestId>) obj;
-        if (mailboxId.id != other.getMailboxId().id)
+        final MailboxMessage other = (MailboxMessage) obj;
+        if (!mailboxId.equals(other.getMailboxId()))
             return false;
         if (uid != other.getUid())
             return false;
@@ -246,7 +245,7 @@ public class SimpleMailboxMembership implements MailboxMessage<TestId> {
         return size;
     }
 
-    public int compareTo(MailboxMessage<TestId> other) {
+    public int compareTo(MailboxMessage other) {
         return (int) (getUid() - other.getUid());
     }
 
