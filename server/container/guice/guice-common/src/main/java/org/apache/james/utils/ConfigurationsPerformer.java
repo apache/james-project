@@ -20,22 +20,47 @@
 package org.apache.james.utils;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.james.lifecycle.api.Configurable;
 
 import com.google.inject.Inject;
 
 public class ConfigurationsPerformer {
 
     private final Set<ConfigurationPerformer> configurationPerformers;
+    private final Configurables configurables;
 
     @Inject
-    public ConfigurationsPerformer(Set<ConfigurationPerformer> configurationPerformers) throws Exception {
+    public ConfigurationsPerformer(Set<ConfigurationPerformer> configurationPerformers, Configurables configurables) {
         this.configurationPerformers = configurationPerformers;
+        this.configurables = configurables;
     }
 
     public void initModules() throws Exception {
-        for(ConfigurationPerformer configurationPerformer : configurationPerformers) {
-            configurationPerformer.initModule();
-        }
+        
+        Set<ConfigurationPerformer> processed = processConfigurables();
+        
+        processOthers(processed);
     }
 
+    private Set<ConfigurationPerformer> processConfigurables() {
+        return configurables.get().stream()
+            .flatMap(configurable -> configurationPerformerFor(configurable))
+            .distinct()
+            .peek(ConfigurationPerformer::initModule)
+            .collect(Collectors.toSet());
+    }
+
+    private Stream<ConfigurationPerformer> configurationPerformerFor(Class<? extends Configurable> configurable) {
+        return configurationPerformers.stream()
+                .filter(x -> x.forClasses().contains(configurable));
+    }
+
+    private void processOthers(Set<ConfigurationPerformer> processed) {
+        configurationPerformers.stream()
+            .filter(x -> !processed.contains(x))
+            .forEach(ConfigurationPerformer::initModule);
+    }
 }

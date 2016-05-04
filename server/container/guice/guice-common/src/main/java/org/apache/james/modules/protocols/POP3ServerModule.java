@@ -19,12 +19,17 @@
 
 package org.apache.james.modules.protocols;
 
+import java.util.List;
+
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,10 +57,19 @@ public class POP3ServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() throws Exception {
-            pop3ServerFactory.setLog(LOGGER);
-            pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
-            pop3ServerFactory.init();
+        public void initModule() {
+            try {
+                pop3ServerFactory.setLog(LOGGER);
+                pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
+                pop3ServerFactory.init();
+            } catch (Exception e) {
+                Throwables.propagate(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of(POP3ServerFactory.class);
         }
     }
 

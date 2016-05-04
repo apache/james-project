@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 
 @Singleton
-public class InMemoryMailRepositoryStore implements MailRepositoryStore {
+public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMailRepositoryStore.class);
 
@@ -69,6 +69,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore {
             .collect(Collectors.toList());
     }
 
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         this.configuration = configuration;
     }

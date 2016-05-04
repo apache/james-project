@@ -19,12 +19,17 @@
 
 package org.apache.james.modules.protocols;
 
+import java.util.List;
+
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,10 +57,19 @@ public class LMTPServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() throws Exception {
-            lmtpServerFactory.setLog(LOGGER);
-            lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver"));
-            lmtpServerFactory.init();
+        public void initModule() {
+            try {
+                lmtpServerFactory.setLog(LOGGER);
+                lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver"));
+                lmtpServerFactory.init();
+            } catch (Exception e) {
+                Throwables.propagate(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of(LMTPServerFactory.class);
         }
     }
 

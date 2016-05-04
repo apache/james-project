@@ -19,8 +19,12 @@
 
 package org.apache.james.modules.data;
 
+import java.util.List;
+
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -32,6 +36,8 @@ import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -74,11 +80,20 @@ public class MemoryDataModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() throws Exception {
-            memoryDomainList.setLog(LOGGER);
-            memoryDomainList.configure(configurationProvider.getConfiguration("domainlist"));
-            memoryRecipientRewriteTable.setLog(LOGGER);
-            memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
+        public void initModule() {
+            try {
+                memoryDomainList.setLog(LOGGER);
+                memoryDomainList.configure(configurationProvider.getConfiguration("domainlist"));
+                memoryRecipientRewriteTable.setLog(LOGGER);
+                memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
+            } catch (ConfigurationException e) {
+                Throwables.propagate(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of(MemoryDomainList.class, MemoryRecipientRewriteTable.class);
         }
     }
 }

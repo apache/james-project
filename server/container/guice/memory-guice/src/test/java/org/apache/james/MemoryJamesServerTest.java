@@ -38,8 +38,7 @@ public class MemoryJamesServerTest extends AbstractJamesServerTest<InMemoryId> {
         return new GuiceJamesServer<>(new TypeLiteral<InMemoryId>(){})
                 .combineWith(MemoryJamesServerMain.inMemoryServerModule)
                 .overrideWith(new TestFilesystemModule(temporaryFolder),
-                        new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
-                        new TestModule());
+                        new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT));
     }
     
 }

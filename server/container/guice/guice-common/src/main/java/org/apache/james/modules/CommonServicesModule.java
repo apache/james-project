@@ -54,6 +54,7 @@ public class CommonServicesModule<Id extends MailboxId> extends AbstractModule {
     
     @Override
     protected void configure() {
+        install(new ConfigurablesModule());
         install(new ConfigurationProviderModule());
         install(new PreDestroyModule());
         install(new DNSServiceModule());

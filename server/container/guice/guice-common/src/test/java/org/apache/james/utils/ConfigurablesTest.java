@@ -17,32 +17,53 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.utils;
 
-import javax.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.junit.Before;
+import org.junit.Test;
 
-public class A implements Configurable {
+public class ConfigurablesTest {
 
-    @SuppressWarnings("unused")
-    private final C c;
-    private String domain;
+    private Configurables sut;
 
-    @Inject
-    private A(C c) {
-        this.c = c;
+    @Before
+    public void setup() {
+        sut = new Configurables();
     }
 
-    @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        System.out.println("Configure A");
-        domain = "configured";
+    @Test
+    public void addShouldNotStoreTwoTimesWhenSameConfigurable() {
+        sut.add(MyConfigurable.class);
+        sut.add(MyConfigurable.class);
+
+        assertThat(sut.get()).hasSize(1);
     }
 
-    public String getDomain() {
-        return domain.toLowerCase();
+    @Test
+    @SuppressWarnings("unchecked")
+    public void configurablesShouldKeepTheAddedElementsOrder() {
+        sut.add(MyConfigurable.class);
+        sut.add(MyConfigurable2.class);
+
+        assertThat(sut.get()).containsExactly(MyConfigurable.class, MyConfigurable2.class);
+    }
+
+    private static class MyConfigurable implements Configurable {
+
+        @Override
+        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        }
+    }
+
+    private static class MyConfigurable2 implements Configurable {
+
+        @Override
+        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        }
     }
 }

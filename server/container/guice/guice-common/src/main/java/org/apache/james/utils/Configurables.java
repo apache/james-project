@@ -17,30 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.utils;
 
-import javax.inject.Inject;
+import java.util.Set;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 
-public class B implements Configurable {
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
-    private final A a;
-    @SuppressWarnings("unused")
-    private final C c;
+public class Configurables {
 
-    @Inject
-    private B(A a, C c) {
-        this.a = a;
-        this.c = c;
+    private final Set<Class<? extends Configurable>> configurables;
+
+    public Configurables() {
+        this.configurables = Sets.newLinkedHashSet();
     }
 
-    @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        System.out.println("Configure B");
-        System.out.println(a.getDomain());
+    public void add(Class<? extends Configurable> configurable) {
+        configurables.add(configurable);
     }
 
+    public Set<Class<? extends Configurable>> get() {
+        return ImmutableSet.copyOf(configurables);
+    }
 }

@@ -18,7 +18,11 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
+import java.util.List;
+
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -26,6 +30,8 @@ import org.apache.james.utils.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -59,9 +65,18 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() throws Exception {
-            usersRepository.setLog(LOGGER);
-            usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
+        public void initModule() {
+            try {
+                usersRepository.setLog(LOGGER);
+                usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
+            } catch (ConfigurationException e) {
+                Throwables.propagate(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Configurable>> forClasses() {
+            return ImmutableList.of(CassandraUsersRepository.class);
         }
     }
 

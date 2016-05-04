@@ -19,9 +19,14 @@
 
 package org.apache.james.utils;
 
+import java.util.List;
+
+import org.apache.james.lifecycle.api.Configurable;
 
 public interface ConfigurationPerformer {
 
-    void initModule() throws Exception;
+    void initModule();
+
+    List<Class<? extends Configurable>> forClasses();
 
 }
