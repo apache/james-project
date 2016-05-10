@@ -23,10 +23,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.james.rrt.lib.Mappings;
-
 import org.apache.james.adapter.mailbox.SerializableQuota;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.rrt.lib.Mappings;
 
 public interface ServerProbe extends Closeable {
     /**
@@ -85,6 +84,8 @@ public interface ServerProbe extends Closeable {
      * @throws Exception
      */
     boolean containsDomain(String domain) throws Exception;
+
+    String getDefaultDomain() throws Exception;
 
     /**
      * Remove domain from the service

@@ -118,6 +118,11 @@ public class GuiceServerProbe implements ExtendedServerProbe {
     }
 
     @Override
+    public String getDefaultDomain() throws Exception {
+        return domainList.getDefaultDomain();
+    }
+
+    @Override
     public void removeDomain(String domain) throws Exception {
         domainList.removeDomain(domain);
     }
