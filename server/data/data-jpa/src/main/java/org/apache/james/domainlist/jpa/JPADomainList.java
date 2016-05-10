@@ -18,9 +18,8 @@
  ****************************************************************/
 package org.apache.james.domainlist.jpa;
 
-import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
@@ -29,8 +28,12 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.jpa.model.JPADomain;
+import org.apache.james.domainlist.lib.AbstractDomainList;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * JPA implementation of the DomainList.<br>
@@ -76,11 +79,7 @@ public class JPADomainList extends AbstractDomainList {
         } finally {
             entityManager.close();
         }
-        if (domains.size() == 0) {
-            return null;
-        } else {
-            return new ArrayList<String>(domains);
-        }
+        return ImmutableList.copyOf(domains);
     }
 
     @Override

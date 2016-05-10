@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.domainlist.lib;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
@@ -25,6 +27,8 @@ import javax.management.StandardMBean;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
+
+import com.google.common.collect.ImmutableList;
 
 public class DomainListManagement extends StandardMBean implements DomainListManagementMBean {
 
@@ -60,9 +64,9 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     }
 
     @Override
-    public String[] getDomains() throws Exception {
+    public List<String> getDomains() throws Exception {
         try {
-            return domainList.getDomains();
+            return ImmutableList.copyOf(domainList.getDomains());
         }
         catch (DomainListException e) {
             throw new Exception(e.getMessage());

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.domainlist.api;
 
+import java.util.List;
+
 /**
  * This interface should be implemented by services which offer domains for
  * which email will accepted.
@@ -30,7 +32,7 @@ public interface DomainList {
      * 
      * @return domains
      */
-    String[] getDomains() throws DomainListException;
+    List<String> getDomains() throws DomainListException;
 
     /**
      * Return true if the domain exists in the service

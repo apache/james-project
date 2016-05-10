@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.domainlist.api;
 
+import java.util.List;
+
 /**
  * JMX MBean for DomainList
  */
@@ -29,7 +31,7 @@ public interface DomainListManagementMBean {
      * 
      * @return domains
      */
-    String[] getDomains() throws Exception;
+    List<String> getDomains() throws Exception;
 
     /**
      * Return true if the domain exists in the service

@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Simplest implementation for ManageableDomainList
  */
@@ -37,8 +39,8 @@ public class SimpleDomainList implements DomainList {
     }
 
     @Override
-    public String[] getDomains() throws DomainListException {
-        return domains.toArray(new String[domains.size()]);
+    public List<String> getDomains() throws DomainListException {
+        return ImmutableList.copyOf(domains);
     }
 
     @Override

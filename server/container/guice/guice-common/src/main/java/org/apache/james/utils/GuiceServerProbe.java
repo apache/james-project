@@ -123,7 +123,7 @@ public class GuiceServerProbe implements ExtendedServerProbe {
     }
 
     @Override
-    public String[] listDomains() throws Exception {
+    public List<String> listDomains() throws Exception {
         return domainList.getDomains();
     }
 

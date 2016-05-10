@@ -44,6 +44,8 @@ import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class ServerCmdTest {
 
     public static final String ADDITIONAL_ARGUMENT = "additionalArgument";
@@ -106,8 +108,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        String[] res = {};
-        expect(serverProbe.listDomains()).andReturn(res);
+        expect(serverProbe.listDomains()).andReturn(ImmutableList.<String> of());
 
         control.replay();
         testee.executeCommandLine(commandLine);

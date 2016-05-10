@@ -78,7 +78,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
     }
 
     @Override
-    public String[] getDomains() throws DomainListException {
+    public List<String> getDomains() throws DomainListException {
         List<String> domains = getDomainListInternal();
         if (domains != null) {
 
@@ -104,14 +104,8 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
                     getLogger().debug("Handling mail for: " + domain);
                 }
             }
-            if (domains.isEmpty()) {
-                return null;
-            } else {
-                return domains.toArray(new String[domains.size()]);
-            }
-        } else {
-            return null;
         }
+        return domains;
     }
 
     /**

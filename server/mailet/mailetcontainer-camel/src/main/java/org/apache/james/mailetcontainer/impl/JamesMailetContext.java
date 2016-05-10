@@ -19,6 +19,27 @@
 
 package org.apache.james.mailetcontainer.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Vector;
+
+import javax.inject.Inject;
+import javax.mail.Address;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.MailImpl;
@@ -40,26 +61,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
-
-import javax.inject.Inject;
-import javax.mail.Address;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Vector;
 
 @SuppressWarnings("deprecation")
 public class JamesMailetContext implements MailetContext, LogEnabled, Configurable {
@@ -456,17 +457,14 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
                 // loop through candidate domains until we find one or exhaust
                 // the
                 // list
-                String[] doms = domains.getDomains();
-                if (doms != null) {
-                    for (String dom : doms) {
-                        String serverName = dom.toLowerCase(Locale.US);
-                        if (!("localhost".equals(serverName))) {
-                            domainName = serverName; // ok, not localhost, so
-                            // use it
-                        }
+                for (String dom : domains.getDomains()) {
+                    String serverName = dom.toLowerCase(Locale.US);
+                    if (!("localhost".equals(serverName))) {
+                        domainName = serverName; // ok, not localhost, so
+                        // use it
                     }
-
                 }
+
                 // if we found a suitable domain, use it. Otherwise fallback to
                 // the
                 // host name.

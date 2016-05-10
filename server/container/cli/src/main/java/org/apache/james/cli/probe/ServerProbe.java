@@ -20,6 +20,7 @@ package org.apache.james.cli.probe;
 
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.james.rrt.lib.Mappings;
@@ -100,7 +101,7 @@ public interface ServerProbe extends Closeable {
      * @return domains an array of domains, or null if no domains exist.
      * @throws Exception
      */
-    String[] listDomains() throws Exception;
+    List<String> listDomains() throws Exception;
 
     /**
      * Get a Map which holds all mappings. The key is the user@domain and the

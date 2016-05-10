@@ -18,15 +18,17 @@
  ****************************************************************/
 package org.apache.james.domainlist.xml;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
-import static org.junit.Assert.*;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +74,7 @@ public class XMLDomainListTest {
         dom.configure(setUpConfiguration(false, false, domains));
         dom.setDNSService(setUpDNSServer("localhost"));
 
-        assertNull("No domain found", dom.getDomains());
+        assertThat(dom.getDomains()).describedAs("No domain found").isEmpty();
     }
 
     @Test
@@ -86,7 +88,7 @@ public class XMLDomainListTest {
         dom.configure(setUpConfiguration(false, false, domains));
         dom.setDNSService(setUpDNSServer("localhost"));
 
-        assertTrue("Two domain found", dom.getDomains().length == 2);
+        assertThat(dom.getDomains()).describedAs("Two domain found").hasSize(2);
     }
 
     @Test
@@ -99,7 +101,7 @@ public class XMLDomainListTest {
         dom.configure(setUpConfiguration(true, false, domains));
 
         dom.setDNSService(setUpDNSServer("local"));
-        assertEquals("Two domains found", dom.getDomains().length, 2);
+        assertThat(dom.getDomains()).describedAs("Two domains found").hasSize(2);
     }
 
     @Test
@@ -113,6 +115,6 @@ public class XMLDomainListTest {
 
         dom.setDNSService(setUpDNSServer("localhost"));
 
-        assertEquals("One domain found", dom.getDomains().length, 1);
+        assertThat(dom.getDomains()).describedAs("One domain found").hasSize(1);
     }
 }

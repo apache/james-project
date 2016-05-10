@@ -80,14 +80,14 @@ public abstract class AbstractDomainListTest {
 
     @Test
     public void listDomainsShouldReturnNullWhenThereIsNoDomains() throws DomainListException {
-        assertThat(domainList.getDomains()).isNull();
+        assertThat(domainList.getDomains()).isEmpty();
     }
 
     @Test
     public void testAddRemoveContainsSameDomain() throws DomainListException {
         domainList.addDomain(DOMAIN_1);
         domainList.removeDomain(DOMAIN_1);
-        assertThat(domainList.getDomains()).isNull();
+        assertThat(domainList.getDomains()).isEmpty();
     }
 
     @Test(expected = DomainListException.class)
@@ -155,12 +155,10 @@ public abstract class AbstractDomainListTest {
     /**
      * Delete all possible domains from database.
      */
-    private void deleteAll() {
-        deleteWithoutError(DOMAIN_1);
-        deleteWithoutError(DOMAIN_2);
-        deleteWithoutError(DOMAIN_3);
-        deleteWithoutError(DOMAIN_4);
-        deleteWithoutError(DOMAIN_5);
+    private void deleteAll() throws DomainListException {
+        for (String domain : domainList.getDomains()) {
+            deleteWithoutError(domain);
+        }
     }
 
     private void deleteWithoutError(String domain) {
