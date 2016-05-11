@@ -39,6 +39,7 @@ public class CassandraJamesServerTest extends AbstractJamesServerTest {
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+    private CassandraCluster cassandra;
 
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -59,10 +60,15 @@ public class CassandraJamesServerTest extends AbstractJamesServerTest {
                     @Provides
                     @Singleton
                     Session provideSession(CassandraModule cassandraModule) {
-                        CassandraCluster cassandra = CassandraCluster.create(cassandraModule);
+                        cassandra = CassandraCluster.create(cassandraModule);
                         return cassandra.getConf();
                     }
                 });
+    }
+
+    @Override
+    protected void clean() {
+        cassandra.clearAllTables();
     }
     
 

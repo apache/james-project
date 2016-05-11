@@ -37,5 +37,8 @@ public class MemoryJamesServerTest extends AbstractJamesServerTest {
                 .overrideWith(new TestFilesystemModule(temporaryFolder),
                         new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT));
     }
-    
+
+    @Override
+    protected void clean() {
+    }
 }
