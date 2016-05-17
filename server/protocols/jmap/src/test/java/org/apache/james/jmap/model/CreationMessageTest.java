@@ -84,4 +84,14 @@ public class CreationMessageTest {
         assertThat(sut.validate()).extracting(ValidationResult::getErrorMessage).contains("no recipient address set");
     }
 
+    @Test
+    public void validateShouldReturnEmptyListWhenNoErrors () {
+        CreationMessage sut = testedBuilder
+            .from(DraftEmailer.builder().name("bob").email("bob@example.com").build())
+            .to(ImmutableList.of(DraftEmailer.builder().name("riri").email("riri@example.com").build()))
+            .build();
+
+        assertThat(sut.validate()).isEmpty();
+    }
+
 }

@@ -661,12 +661,13 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessageShouldReturnCreatedMessageWhenSendingMessage() {
         String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -715,6 +716,7 @@ public abstract class SetMessagesMethodTest {
         // Given
         String messageCreationId = "user|inbox|1";
         String presumedMessageId = "username@domain.tld|outbox|1";
+        String fromAddress = username;
         String messageSubject = "Thank you for joining example.com!";
         String outboxId = getOutboxId();
         String requestBody = "[" +
@@ -722,7 +724,7 @@ public abstract class SetMessagesMethodTest {
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"" + messageSubject + "\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -766,6 +768,7 @@ public abstract class SetMessagesMethodTest {
                 .map(x -> x.get("id"))
                 .findFirst().get();
 
+        String fromAddress = username;
         String messageCreationId = "user|inbox|1";
         String messageSubject = "Thank you for joining example.com!";
         String requestBody = "[" +
@@ -773,7 +776,7 @@ public abstract class SetMessagesMethodTest {
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"" + messageSubject + "\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -819,12 +822,13 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldRejectWhenSendingMessageHasNoValidAddress() {
         String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com@example.com\"}]," +
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
@@ -895,7 +899,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSucceedWhenSendingMessageWithOnlyFromAddress() {
         String messageCreationId = "user|inbox|1";
-        String fromAddress = "postmaster@example.com";
+        String fromAddress = username;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -934,7 +938,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSucceedWithHtmlBody() {
         String messageCreationId = "user|inbox|1";
-        String fromAddress = "postmaster@example.com";
+        String fromAddress = username;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -979,7 +983,7 @@ public abstract class SetMessagesMethodTest {
                 .findFirst().get();
 
         String messageCreationId = "user|inbox|1";
-        String fromAddress = "postmaster@example.com";
+        String fromAddress = username;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -1014,12 +1018,13 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldRejectWhenSendingMessageHasMissingSubject() {
         String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
                 "    {" +
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
-                "        \"from\": { \"name\": \"MAILER-DAEMON\", \"email\": \"postmaster@example.com\"}," +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -1047,6 +1052,45 @@ public abstract class SetMessagesMethodTest {
                 .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("subject"))
                 .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'subject' is missing"))
                 .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
+
+    @Test
+    public void setMessagesShouldRejectWhenSendingMessageUseSomeoneElseFromAddress() {
+        String messageCreationId = "user|inbox|1";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"other@domain.tld\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("from"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("Invalid 'from' field. Must be one of [username@domain.tld]"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
     @Test

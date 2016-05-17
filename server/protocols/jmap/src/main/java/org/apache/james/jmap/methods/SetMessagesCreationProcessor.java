@@ -72,7 +72,9 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
@@ -111,11 +113,18 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             throw Throwables.propagate(e);
         }
 
+        List<String> allowedSenders = ImmutableList.of(mailboxSession.getUser().getUserName());
+
         // handle errors
-        Predicate<CreationMessage> validMessagesTester = CreationMessage::isValid;
+        Predicate<CreationMessage> validMessagesTester = creationMessage -> creationMessage.isValid() && isAllowedFromAddress(creationMessage, allowedSenders);
         Predicate<CreationMessage> invalidMessagesTester = validMessagesTester.negate();
+        Function<CreationMessage, List<ValidationResult>> toValidationResults = creationMessage -> ImmutableList.<ValidationResult>builder()
+            .addAll(creationMessage.validate())
+            .addAll(validationResultForIncorrectAddress(creationMessage, allowedSenders))
+            .build();
+
         SetMessagesResponse.Builder responseBuilder = SetMessagesResponse.builder()
-                .notCreated(handleCreationErrors(invalidMessagesTester, request));
+                .notCreated(handleCreationErrors(invalidMessagesTester, toValidationResults, request));
 
         return request.getCreate().entrySet().stream()
                 .filter(e -> validMessagesTester.test(e.getValue()))
@@ -126,11 +135,39 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 .build();
     }
 
+    private boolean isAllowedFromAddress(CreationMessage creationMessage, List<String> allowedFromMailAddresses) {
+        return creationMessage.getFrom()
+            .map(draftEmailer -> draftEmailer.getEmail()
+                .map(allowedFromMailAddresses::contains)
+                .orElse(false))
+            .orElse(false);
+    }
+
+    private List<ValidationResult> validationResultForIncorrectAddress(CreationMessage creationMessage, List<String> allowedSenders) {
+        return creationMessage.getFrom()
+            .map(draftEmailer -> draftEmailer
+                .getEmail()
+                .map(mail -> validationResultForIncorrectAddress(allowedSenders, mail))
+                .orElse(Lists.newArrayList()))
+            .orElse(Lists.newArrayList());
+    }
+
+    private List<ValidationResult> validationResultForIncorrectAddress(List<String> allowedSenders, String mail) {
+        if (!allowedSenders.contains(mail)) {
+            return Lists.newArrayList(ValidationResult.builder()
+                .message("Invalid 'from' field. Must be one of " + allowedSenders)
+                .property(MessageProperty.from.asFieldName())
+                .build());
+        }
+        return Lists.newArrayList();
+    }
+
     private Map<CreationMessageId, SetError> handleCreationErrors(Predicate<CreationMessage> invalidMessagesTester,
+                                                                  Function<CreationMessage, List<ValidationResult>> toValidationResults,
                                                                   SetMessagesRequest request) {
         return request.getCreate().entrySet().stream()
                 .filter(e -> invalidMessagesTester.test(e.getValue()))
-                .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), buildSetErrorFromValidationResult(e.getValue().validate())))
+                .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), buildSetErrorFromValidationResult(toValidationResults.apply(e.getValue()))))
                 .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
     }
 

@@ -88,7 +88,7 @@ public class SetMessagesCreationProcessorTest {
 
     private MailboxSession buildStubbedSession() {
         MailboxSession.User stubUser = mock(MailboxSession.User.class);
-        when(stubUser.getUserName()).thenReturn("user");
+        when(stubUser.getUserName()).thenReturn("alice@example.com");
         MailboxSession stubSession = mock(MailboxSession.class);
         when(stubSession.getPathDelimiter()).thenReturn('.');
         when(stubSession.getUser()).thenReturn(stubUser);
