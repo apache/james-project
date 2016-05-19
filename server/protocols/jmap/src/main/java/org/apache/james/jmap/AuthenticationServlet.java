@@ -21,7 +21,6 @@ package org.apache.james.jmap;
 import java.io.IOException;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -46,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton
 public class AuthenticationServlet extends HttpServlet {
 
     public static final String JSON_CONTENT_TYPE = "application/json";

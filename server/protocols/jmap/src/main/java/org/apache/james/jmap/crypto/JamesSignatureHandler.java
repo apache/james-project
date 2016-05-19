@@ -30,7 +30,6 @@ import java.security.Signature;
 import java.security.SignatureException;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.james.filesystem.api.FileSystem;
@@ -42,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
-@Singleton
 public class JamesSignatureHandler implements SignatureHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesSignatureHandler.class);

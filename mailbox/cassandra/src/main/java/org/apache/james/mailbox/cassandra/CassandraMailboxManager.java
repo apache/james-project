@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
@@ -43,7 +42,6 @@ import com.google.common.collect.Lists;
 /**
  * Cassandra implementation of {@link StoreMailboxManager}
  */
-@Singleton
 public class CassandraMailboxManager extends StoreMailboxManager {
     private final MailboxPathLocker locker;
 

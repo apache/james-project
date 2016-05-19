@@ -24,12 +24,9 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 
-import javax.inject.Singleton;
-
 /**
  * This quota manager is intended to be used when you want to deactivate the Quota feature
  */
-@Singleton
 public class NoQuotaManager implements QuotaManager {
 
     @Override

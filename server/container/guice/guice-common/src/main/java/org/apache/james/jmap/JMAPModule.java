@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -54,6 +55,7 @@ public class JMAPModule extends AbstractModule {
     protected void configure() {
         install(new JMAPCommonModule());
         install(new MethodsModule());
+        bind(JMAPServer.class).in(Scopes.SINGLETON);
         bind(RequestHandler.class).in(Singleton.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MoveCapabilityPrecondition.class);
 

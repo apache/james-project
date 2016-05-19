@@ -32,6 +32,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -41,7 +42,7 @@ public class DNSServiceModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DNSService.class).to(DNSJavaService.class);
+        bind(DNSService.class).to(DNSJavaService.class).in(Scopes.SINGLETON);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DNSServiceConfigurationPerformer.class);
     }
 

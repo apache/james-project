@@ -37,9 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.inject.Singleton;
 
-@Singleton
 public class FileConfigurationProvider implements ConfigurationProvider {
 
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";

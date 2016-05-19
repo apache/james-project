@@ -35,9 +35,7 @@ import org.apache.james.queue.activemq.FileSystemBlobTransferPolicy;
 
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
-@Singleton
 public class EmbeddedActiveMQ {
 
     private final ActiveMQConnectionFactory activeMQConnectionFactory;

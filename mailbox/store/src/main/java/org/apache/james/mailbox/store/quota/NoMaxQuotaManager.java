@@ -24,14 +24,11 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
-import javax.inject.Singleton;
-
 /**
  * A Max Quota Manager that simply throws exceptions
  *
  * Intended to be used to disactivate Max Quota admin support
  */
-@Singleton
 public class NoMaxQuotaManager implements MaxQuotaManager {
 
     @Override

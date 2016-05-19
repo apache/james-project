@@ -36,9 +36,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     private final Session session;

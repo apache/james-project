@@ -27,14 +27,12 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Default implementation for the Quota Manager.
  *
  * Relies on the CurrentQuotaManager and MaxQuotaManager provided.
  */
-@Singleton
 public class StoreQuotaManager implements QuotaManager {
     private CurrentQuotaManager currentQuotaManager;
     private MaxQuotaManager maxQuotaManager;

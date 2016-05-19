@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
@@ -39,7 +38,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-@Singleton
 public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryCurrentQuotaManager.class);

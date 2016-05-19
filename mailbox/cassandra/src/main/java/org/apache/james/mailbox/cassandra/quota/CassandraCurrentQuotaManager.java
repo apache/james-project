@@ -37,9 +37,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
 public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
 
     private final Session session;

@@ -44,6 +44,7 @@ import org.apache.james.utils.MailboxManagerDefinition;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 
@@ -61,7 +62,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxPathLocker.class).to(NoMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
-        bind(MailboxManager.class).to(CassandraMailboxManager.class);
+        bind(MailboxManager.class).to(CassandraMailboxManager.class).in(Scopes.SINGLETON);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAclModule.class);

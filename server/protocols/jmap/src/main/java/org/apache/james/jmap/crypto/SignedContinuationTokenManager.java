@@ -23,7 +23,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.apache.james.jmap.api.ContinuationTokenManager;
 import org.apache.james.jmap.model.ContinuationToken;
@@ -31,7 +30,6 @@ import org.apache.james.jmap.utils.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
 
-@Singleton
 public class SignedContinuationTokenManager implements ContinuationTokenManager {
 
     private final SignatureHandler signatureHandler;

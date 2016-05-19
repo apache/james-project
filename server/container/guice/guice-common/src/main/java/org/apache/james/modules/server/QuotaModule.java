@@ -31,7 +31,7 @@ public class QuotaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(QuotaManager.class).to(NoQuotaManager.class);
+        bind(QuotaManager.class).to(NoQuotaManager.class).in(Scopes.SINGLETON);
         bind(QuotaRootResolver.class).to(DefaultQuotaRootResolver.class).in(Scopes.SINGLETON);
     }
     

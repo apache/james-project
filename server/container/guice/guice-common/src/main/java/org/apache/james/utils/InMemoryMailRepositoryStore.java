@@ -27,8 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import javax.inject.Singleton;
-
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
@@ -43,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-@Singleton
 public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMailRepositoryStore.class);

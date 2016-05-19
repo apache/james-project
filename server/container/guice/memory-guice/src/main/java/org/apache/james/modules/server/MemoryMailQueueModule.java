@@ -24,13 +24,14 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 
 public class MemoryMailQueueModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class);
+        bind(MailQueueFactory.class).to(MemoryMailQueueFactory.class).in(Scopes.SINGLETON);
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Singleton.class);
     }
 }

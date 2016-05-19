@@ -23,7 +23,6 @@ import static org.apache.james.jmap.BypassAuthOnRequestMethod.bypass;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -34,8 +33,6 @@ import org.apache.james.lifecycle.api.Configurable;
 
 import com.google.common.base.Throwables;
 
-
-@Singleton
 public class JMAPServer implements Configurable {
 
     private final JettyHttpServer server;

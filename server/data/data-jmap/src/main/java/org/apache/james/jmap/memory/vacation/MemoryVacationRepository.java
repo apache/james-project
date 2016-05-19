@@ -23,15 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import javax.inject.Singleton;
-
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 
 import com.google.common.base.Preconditions;
 
-@Singleton
 public class MemoryVacationRepository implements VacationRepository {
 
     private final Map<AccountId, Vacation> vacationMap;

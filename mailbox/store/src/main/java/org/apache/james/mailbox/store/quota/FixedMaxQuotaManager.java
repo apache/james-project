@@ -6,14 +6,11 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 
-import javax.inject.Singleton;
-
 /**
  * {@link MaxQuotaManager} which use the same quota for all users.
  *
  * By default this means not quota at all
  */
-@Singleton
 public class FixedMaxQuotaManager implements MaxQuotaManager {
     private long maxStorage = Quota.UNLIMITED;
     private long maxMessage = Quota.UNLIMITED;

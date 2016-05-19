@@ -27,7 +27,6 @@ import java.util.Random;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
@@ -80,7 +79,6 @@ import com.google.common.collect.Lists;
  * If you need a more low-level api just implement {@link MailboxManager} directly
  *
  */
-@Singleton
 public class StoreMailboxManager implements MailboxManager {
 
     public static final char SQL_WILDCARD_CHAR = '%';

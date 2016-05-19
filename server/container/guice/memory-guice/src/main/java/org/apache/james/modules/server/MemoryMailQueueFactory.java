@@ -35,9 +35,7 @@ import org.apache.mailet.Mail;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
-@Singleton
 public class MemoryMailQueueFactory implements MailQueueFactory {
 
     private final ConcurrentHashMap<String, MailQueue> mailQueues;

@@ -25,7 +25,6 @@ import java.util.concurrent.CompletionException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -34,7 +33,6 @@ import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
 
-@Singleton
 public class MemoryAccessTokenRepository implements AccessTokenRepository {
 
     private final PassiveExpiringMap<AccessToken, String> tokensExpirationDates;

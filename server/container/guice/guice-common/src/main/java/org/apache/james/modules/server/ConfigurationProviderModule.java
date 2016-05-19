@@ -22,12 +22,13 @@ import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.FileConfigurationProvider;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 public class ConfigurationProviderModule extends AbstractModule {
 
     @Override
     public void configure() {
-        bind(ConfigurationProvider.class).to(FileConfigurationProvider.class);
+        bind(ConfigurationProvider.class).to(FileConfigurationProvider.class).in(Scopes.SINGLETON);
     }
 
 }

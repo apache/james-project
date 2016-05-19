@@ -36,6 +36,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -43,7 +44,9 @@ public class MailStoreRepositoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(InMemoryMailRepositoryStore.class).in(Scopes.SINGLETON);
         bind(MailRepositoryStore.class).to(InMemoryMailRepositoryStore.class);
+
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
         multibinder.addBinding().to(FileMailRepositoryProvider.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailRepositoryStoreModuleConfigurationPerformer.class);
