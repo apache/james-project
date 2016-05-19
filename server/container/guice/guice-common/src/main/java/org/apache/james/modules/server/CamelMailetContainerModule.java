@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -58,10 +59,15 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MailProcessor.class).to(CamelCompositeProcessor.class).in(Singleton.class);
+        bind(CamelCompositeProcessor.class).in(Scopes.SINGLETON);
+        bind(MailProcessor.class).to(CamelCompositeProcessor.class);
+
+        bind(JamesMailSpooler.class).in(Scopes.SINGLETON);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
+
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);
+
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetModuleConfigurationPerformer.class);
     }
 
