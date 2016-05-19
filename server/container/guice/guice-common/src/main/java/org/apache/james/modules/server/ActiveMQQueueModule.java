@@ -40,7 +40,7 @@ public class ActiveMQQueueModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(EmbeddedActiveMQ.class).in(Scopes.SINGLETON);
-        bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Singleton.class);
+        bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
     }
     
     @Provides

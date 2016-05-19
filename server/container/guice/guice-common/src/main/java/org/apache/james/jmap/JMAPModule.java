@@ -56,7 +56,7 @@ public class JMAPModule extends AbstractModule {
         install(new JMAPCommonModule());
         install(new MethodsModule());
         bind(JMAPServer.class).in(Scopes.SINGLETON);
-        bind(RequestHandler.class).in(Singleton.class);
+        bind(RequestHandler.class).in(Scopes.SINGLETON);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MoveCapabilityPrecondition.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
