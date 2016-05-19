@@ -40,6 +40,7 @@ import org.elasticsearch.client.transport.NoNodeAvailableException;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
@@ -49,7 +50,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
+
+        bind(TikaTextExtractor.class).in(Scopes.SINGLETON);
         bind(TextExtractor.class).to(TikaTextExtractor.class);
     }
 

@@ -52,17 +52,24 @@ public class CassandraMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
+        bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);
+        bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
+        bind(CassandraSubscriptionManager.class).in(Scopes.SINGLETON);
+        bind(CassandraModSeqProvider.class).in(Scopes.SINGLETON);
+        bind(CassandraUidProvider.class).in(Scopes.SINGLETON);
+        bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
+
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
+
         bind(ModSeqProvider.class).to(CassandraModSeqProvider.class);
         bind(UidProvider.class).to(CassandraUidProvider.class);
-
         bind(SubscriptionManager.class).to(CassandraSubscriptionManager.class);
-        bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxPathLocker.class).to(NoMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
-        bind(MailboxManager.class).to(CassandraMailboxManager.class).in(Scopes.SINGLETON);
+        bind(MailboxManager.class).to(CassandraMailboxManager.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAclModule.class);

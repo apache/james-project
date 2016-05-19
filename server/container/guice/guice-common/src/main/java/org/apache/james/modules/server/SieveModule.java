@@ -23,11 +23,13 @@ import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.jsieve.Parser;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 public class SieveModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(Parser.class).in(Scopes.SINGLETON);
         bind(SieveParser.class).to(Parser.class);
     }
 
