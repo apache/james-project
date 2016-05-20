@@ -50,9 +50,12 @@ public class MethodsModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(JmapRequestParser.class).to(JmapRequestParserImpl.class).in(Scopes.SINGLETON);
-        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
+        bind(JmapRequestParserImpl.class).in(Scopes.SINGLETON);
+        bind(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
         bind(ObjectMapperFactory.class).in(Scopes.SINGLETON);
+
+        bind(JmapRequestParser.class).to(JmapRequestParserImpl.class);
+        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class);
 
         bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT);
 

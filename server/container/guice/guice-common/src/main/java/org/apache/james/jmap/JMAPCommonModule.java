@@ -47,17 +47,21 @@ public class JMAPCommonModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SignatureHandler.class).to(JamesSignatureHandler.class).in(Scopes.SINGLETON);
-        bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
-        bind(ContinuationTokenManager.class).to(SignedContinuationTokenManager.class).in(Scopes.SINGLETON);
+        bind(JamesSignatureHandler.class).in(Scopes.SINGLETON);
+        bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
+        bind(SignedContinuationTokenManager.class).in(Scopes.SINGLETON);
+        bind(AccessTokenManagerImpl.class).in(Scopes.SINGLETON);
         bind(MailSpool.class).in(Scopes.SINGLETON);
         bind(MailFactory.class).in(Scopes.SINGLETON);
         bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
 
-        bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
-        bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class).in(Scopes.SINGLETON);
-
+        bind(SignatureHandler.class).to(JamesSignatureHandler.class);
+        bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
+        bind(ContinuationTokenManager.class).to(SignedContinuationTokenManager.class);
         bind(AutomaticallySentMailDetector.class).to(AutomaticallySentMailDetectorImpl.class);
+
+        bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
+        bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
     }
 
     @Provides

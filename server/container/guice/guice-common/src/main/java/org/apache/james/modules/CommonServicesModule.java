@@ -56,8 +56,10 @@ public class CommonServicesModule extends AbstractModule {
         install(new DNSServiceModule());
         install(new AsyncTasksExecutorModule());
 
-        bind(FileSystem.class).to(FileSystemImpl.class).in(Scopes.SINGLETON);
+        bind(FileSystemImpl.class).in(Scopes.SINGLETON);
         bind(GuiceServerProbe.class).in(Scopes.SINGLETON);
+
+        bind(FileSystem.class).to(FileSystemImpl.class);
     }
 
     @Provides @Singleton @Named(CONFIGURATION_PATH)
