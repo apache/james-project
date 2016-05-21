@@ -42,7 +42,8 @@ public class DNSServiceModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DNSService.class).to(DNSJavaService.class).in(Scopes.SINGLETON);
+        bind(DNSJavaService.class).in(Scopes.SINGLETON);
+        bind(DNSService.class).to(DNSJavaService.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DNSServiceConfigurationPerformer.class);
     }
 
