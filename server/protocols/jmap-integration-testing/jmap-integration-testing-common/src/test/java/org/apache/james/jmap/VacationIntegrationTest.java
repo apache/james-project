@@ -55,6 +55,7 @@ public abstract class VacationIntegrationTest {
     private static final String USER_2 = "matthieu@" + DOMAIN;
     private static final String PASSWORD = "secret";
     private static final String REASON = "Message explaining my wonderful vacations";
+    public static final String ORIGINAL_MESSAGE_TEXT_BODY = "Hello someone, and thank you for joining example.com!";
 
     private ConditionFactory calmlyAwait;
     private GuiceJamesServer guiceJamesServer;
@@ -104,58 +105,17 @@ public abstract class VacationIntegrationTest {
         AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
         AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
         // User 1 benw@mydomain.tld sets a Vacation on its account
-        String bodyRequest = "[[" +
-            "\"setVacationResponse\", " +
-            "{" +
-            "  \"update\":{" +
-            "    \"singleton\" : {" +
-            "      \"id\": \"singleton\"," +
-            "      \"isEnabled\": \"true\"," +
-            "      \"textBody\": \"" + REASON + "\"" +
-            "    }" +
-            "  }" +
-            "}, \"#0\"" +
-            "]]";
-        given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
-            .header("Authorization", user1AccessToken.serialize())
-            .body(bodyRequest)
-            .when()
-            .post("/jmap")
-            .then()
-            .statusCode(200);
+        setVacationResponse(user1AccessToken);
 
         // When
         // User 2 matthieu@mydomain.tld sends User 1 a mail
-        String originalMessageTextBody = "Hello someone, and thank you for joining example.com!";
-        String requestBody = "[" +
-            "  [" +
-            "    \"setMessages\","+
-            "    {" +
-            "      \"create\": { \"user|inbox|1\" : {" +
-            "        \"from\": { \"email\": \"" + USER_2 + "\"}," +
-            "        \"to\": [{ \"name\": \"Benwa\", \"email\": \"" + USER_1 + "\"}]," +
-            "        \"subject\": \"Thank you for joining example.com!\"," +
-            "        \"textBody\": \"" + originalMessageTextBody + "\"," +
-            "        \"mailboxIds\": [\"" + getOutboxId(user2AccessToken) + "\"]" +
-            "      }}" +
-            "    }," +
-            "    \"#0\"" +
-            "  ]" +
-            "]";
-        given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
-            .header("Authorization", user2AccessToken.serialize())
-            .body(requestBody)
-            .when()
-            .post("/jmap");
+        String user2OutboxId = getOutboxId(user2AccessToken);
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
 
         // Then
         // User 1 should well receive this mail
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-            .until( () -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), originalMessageTextBody, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
             .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
@@ -175,34 +135,13 @@ public abstract class VacationIntegrationTest {
 
         // When
         // User 2 matthieu@mydomain.tld sends User 1 a mail
-        String originalMessageTextBody = "Hello someone, and thank you for joining example.com!";
-        String requestBody = "[" +
-            "  [" +
-            "    \"setMessages\"," +
-            "    {" +
-            "      \"create\": { \"user|inbox|1\" : {" +
-            "        \"from\": { \"email\": \"" + USER_2 + "\"}," +
-            "        \"to\": [{ \"name\": \"Benwa\", \"email\": \"" + USER_1 + "\"}]," +
-            "        \"subject\": \"Thank you for joining example.com!\"," +
-            "        \"textBody\": \"" + originalMessageTextBody + "\"," +
-            "        \"mailboxIds\": [\"" + getOutboxId(user2AccessToken) + "\"]" +
-            "      }}" +
-            "    }," +
-            "    \"#0\"" +
-            "  ]" +
-            "]";
-        given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
-            .header("Authorization", user2AccessToken.serialize())
-            .body(requestBody)
-            .when()
-            .post("/jmap");
+        String user2OutboxId = getOutboxId(user2AccessToken);
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
 
         // Then
         // User 1 should well receive this mail
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), originalMessageTextBody, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         // User 2 should not receive a notification
         Thread.sleep(1000L);
         with()
@@ -217,13 +156,124 @@ public abstract class VacationIntegrationTest {
                 "  }" +
                 "}, \"#0\"]]")
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
             .body(SECOND_NAME, equalTo("messages"))
             .body(SECOND_ARGUMENTS + ".list", empty());
     }
 
-    private boolean isTextMessageReceived(AccessToken recipientToken, String mailboxId, String expectedTextBody, String expectedFrom, String expectedTo) {
+    @Test
+    public void jmapVacationShouldNotSendNotificationTwice() throws Exception {
+        /* Test scenario :
+            - User 1 benw@mydomain.tld sets a Vacation on its account
+            - User 2 matthieu@mydomain.tld sends User 1 a mail
+            - User 2 matthieu@mydomain.tld sends User 1 a second mail
+            - User 1 should well receive this mail
+            - User 2 should well receive only one notification about user 1 vacation
+        */
+
+        // Given
+        AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
+        AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
+        // User 1 benw@mydomain.tld sets a Vacation on its account
+        setVacationResponse(user1AccessToken);
+
+        // When
+        // User 2 matthieu@mydomain.tld sends User 1 a mail
+        String user2OutboxId = getOutboxId(user2AccessToken);
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|2");
+
+        // Then
+        // User 2 should well receive a notification about user 1 vacation
+        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
+        // User 2 should not receive another notification
+        Thread.sleep(1000L);
+        assertOneMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2);
+    }
+
+    @Test
+    public void jmapVacationShouldSendNotificationTwiceWhenVacationReset() throws Exception {
+        /* Test scenario :
+            - User 1 benw@mydomain.tld sets a Vacation on its account
+            - User 2 matthieu@mydomain.tld sends User 1 a mail
+            - User 2 matthieu@mydomain.tld sends User 1 a second mail
+            - User 1 should well receive this mail
+            - User 2 should well receive only one notification about user 1 vacation
+        */
+
+        // Given
+        AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
+        AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
+        // User 1 benw@mydomain.tld sets a Vacation on its account
+        setVacationResponse(user1AccessToken);
+        // User 2 matthieu@mydomain.tld sends User 1 a mail
+        String user2OutboxId = getOutboxId(user2AccessToken);
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
+
+        // When
+        // User 1 benw@mydomain.tld resets a Vacation on its account
+        setVacationResponse(user1AccessToken);
+        // User 2 matthieu@mydomain.tld sends User 1 a mail
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|2");
+
+        // Then
+        // User 2 should well receive two notification about user 1 vacation
+        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+            .until(() -> areTwoTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken)));
+    }
+
+    private void setVacationResponse(AccessToken user1AccessToken) {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+            "  \"update\":{" +
+            "    \"singleton\" : {" +
+            "      \"id\": \"singleton\"," +
+            "      \"isEnabled\": \"true\"," +
+            "      \"textBody\": \"" + REASON + "\"" +
+            "    }" +
+            "  }" +
+            "}, \"#0\"" +
+            "]]";
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", user1AccessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+    }
+
+    private void sendMail(AccessToken user2AccessToken, String outboxId, String mailId) {
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + mailId + "\" : {" +
+            "        \"from\": { \"email\": \"" + USER_2 + "\"}," +
+            "        \"to\": [{ \"name\": \"Benwa\", \"email\": \"" + USER_1 + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"" + ORIGINAL_MESSAGE_TEXT_BODY + "\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", user2AccessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+    }
+
+    private boolean areTwoTextMessageReceived(AccessToken recipientToken, String mailboxId) {
         try {
             with()
                 .accept(ContentType.JSON)
@@ -232,7 +282,6 @@ public abstract class VacationIntegrationTest {
                 .body("[[\"getMessageList\", " +
                     "{" +
                     "  \"fetchMessages\": true, " +
-                    "  \"fetchMessageProperties\": [\"textBody\", \"from\", \"to\", \"mailboxIds\"]," +
                     "  \"filter\": {" +
                     "    \"inMailboxes\":[\"" + mailboxId + "\"]" +
                     "  }" +
@@ -241,15 +290,44 @@ public abstract class VacationIntegrationTest {
             .then()
                 .statusCode(200)
                 .body(SECOND_NAME, equalTo("messages"))
-                .body(SECOND_ARGUMENTS + ".list", hasSize(1))
-                .body(SECOND_ARGUMENTS + ".list[0].textBody", equalTo(expectedTextBody))
-                .body(SECOND_ARGUMENTS + ".list[0].from.email", equalTo(expectedFrom))
-                .body(SECOND_ARGUMENTS + ".list[0].to.email", hasSize(1))
-                .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
+                .body(SECOND_ARGUMENTS + ".list", hasSize(2));
             return true;
         } catch(AssertionError e) {
             return false;
         }
+    }
+
+    private boolean isTextMessageReceived(AccessToken recipientToken, String mailboxId, String expectedTextBody, String expectedFrom, String expectedTo) {
+        try {
+            assertOneMessageReceived(recipientToken, mailboxId, expectedTextBody, expectedFrom, expectedTo);
+            return true;
+        } catch(AssertionError e) {
+            return false;
+        }
+    }
+
+    private void assertOneMessageReceived(AccessToken recipientToken, String mailboxId, String expectedTextBody, String expectedFrom, String expectedTo) {
+        with()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", recipientToken.serialize())
+            .body("[[\"getMessageList\", " +
+                "{" +
+                "  \"fetchMessages\": true, " +
+                "  \"fetchMessageProperties\": [\"textBody\", \"from\", \"to\", \"mailboxIds\"]," +
+                "  \"filter\": {" +
+                "    \"inMailboxes\":[\"" + mailboxId + "\"]" +
+                "  }" +
+                "}, \"#0\"]]")
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(SECOND_NAME, equalTo("messages"))
+            .body(SECOND_ARGUMENTS + ".list", hasSize(1))
+            .body(SECOND_ARGUMENTS + ".list[0].textBody", equalTo(expectedTextBody))
+            .body(SECOND_ARGUMENTS + ".list[0].from.email", equalTo(expectedFrom))
+            .body(SECOND_ARGUMENTS + ".list[0].to.email", hasSize(1))
+            .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
     }
 
     private String getOutboxId(AccessToken accessToken) {
