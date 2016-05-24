@@ -43,7 +43,7 @@ public class EmbeddedActiveMQ {
 
     @Inject private EmbeddedActiveMQ(FileSystem fileSystem) {
         try {
-            launchEmbeddedBroker();
+            launchEmbeddedBroker(fileSystem);
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
@@ -80,12 +80,12 @@ public class EmbeddedActiveMQ {
         return blobTransferPolicy;
     }
 
-    private void launchEmbeddedBroker() throws Exception {
+    private void launchEmbeddedBroker(FileSystem fileSystem) throws Exception {
         brokerService = new BrokerService();
         brokerService.setBrokerName("james");
         brokerService.setUseJmx(false);
         brokerService.setPersistent(true);
-        brokerService.setDataDirectory("filesystem=file://var/store/activemq/brokers");
+        brokerService.setDataDirectoryFile(fileSystem.getFile("file://var/store/activemq/brokers"));
         brokerService.setUseShutdownHook(false);
         brokerService.setSchedulerSupport(false);
         brokerService.setBrokerId("broker");
