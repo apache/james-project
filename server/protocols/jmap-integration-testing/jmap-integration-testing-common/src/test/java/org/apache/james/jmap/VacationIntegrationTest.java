@@ -74,6 +74,8 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "outbox");
         guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, "sent");
         guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "sent");
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, "INBOX");
+        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "INBOX");
         await();
 
 
@@ -168,7 +170,6 @@ public abstract class VacationIntegrationTest {
         */
 
         // Given
-        guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "INBOX");
         AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
         AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
 
