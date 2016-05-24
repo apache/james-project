@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.jmap.api.vacation.AbstractVacationRepositoryTest;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.junit.After;
 
 public class CassandraVacationRepositoryTest extends AbstractVacationRepositoryTest {
 
@@ -33,5 +34,10 @@ public class CassandraVacationRepositoryTest extends AbstractVacationRepositoryT
     protected VacationRepository createVacationRepository() {
         cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraVacationModule(), new CassandraZonedDateTimeModule()));
         return new CassandraVacationRepository(new CassandraVacationDAO(cassandra.getConf(), cassandra.getTypesProvider()));
+    }
+
+    @After
+    public void tearDown() {
+        cassandra.clearAllTables();
     }
 }
