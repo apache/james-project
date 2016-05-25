@@ -35,12 +35,14 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.JCRId;
 import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -675,5 +677,10 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     @Override
     public int compareTo(MailboxMessage other) {
         return MESSAGE_UID_COMPARATOR.compare(this, other);
+    }
+
+    @Override
+    public List<AttachmentId> getAttachmentsIds() {
+        throw new NotImplementedException("Attachments Ids not implemented");
     }
 }

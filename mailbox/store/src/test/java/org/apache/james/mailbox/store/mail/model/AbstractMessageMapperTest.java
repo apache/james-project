@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.Flags;
@@ -46,6 +47,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public abstract class AbstractMessageMapperTest {
 
     private final static char DELIMITER = ':';
@@ -59,6 +62,7 @@ public abstract class AbstractMessageMapperTest {
 
     private SimpleMailbox benwaInboxMailbox;
     private SimpleMailbox benwaWorkMailbox;
+    private SimpleMailbox attachmentsMailbox;
     
     private SimpleMailboxMessage message1;
     private SimpleMailboxMessage message2;
@@ -66,6 +70,8 @@ public abstract class AbstractMessageMapperTest {
     private SimpleMailboxMessage message4;
     private SimpleMailboxMessage message5;
     private SimpleMailboxMessage message6;
+    private SimpleMailboxMessage message7With1Attachment;
+    private SimpleMailboxMessage message8With2Attachments;
 
     public AbstractMessageMapperTest(MapperProvider mapperProvider) {
         this.mapperProvider = mapperProvider;
@@ -77,12 +83,15 @@ public abstract class AbstractMessageMapperTest {
         messageMapper = mapperProvider.createMessageMapper();
         benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
         benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));
+        attachmentsMailbox = createMailbox( new MailboxPath("#private", "benwa", "Attachments"));
         message1 = createMessage(benwaInboxMailbox, "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
         message3 = createMessage(benwaInboxMailbox, "Subject: Test3 \n\nBody3\n.\n", BODY_START, new PropertyBuilder());
         message4 = createMessage(benwaInboxMailbox, "Subject: Test4 \n\nBody4\n.\n", BODY_START, new PropertyBuilder());
         message5 = createMessage(benwaInboxMailbox, "Subject: Test5 \n\nBody5\n.\n", BODY_START, new PropertyBuilder());
         message6 = createMessage(benwaWorkMailbox, "Subject: Test6 \n\nBody6\n.\n", BODY_START, new PropertyBuilder());
+        message7With1Attachment = createMessage(attachmentsMailbox, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(), ImmutableList.of(AttachmentId.from("123")));
+        message8With2Attachments = createMessage(attachmentsMailbox, "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(), ImmutableList.of(AttachmentId.from("123"), AttachmentId.from("456")));
     }
 
     @After
@@ -246,6 +255,54 @@ public abstract class AbstractMessageMapperTest {
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         MessageAssert.assertThat(retrievedMessageIterator.next()).isEqualTo(message1, fetchType);
         assertThat(retrievedMessageIterator).isEmpty();
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsIdsEmptyWhenNoAttachment() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEmpty();
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsIdsLoadedWhenOneAttachment() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEqualTo(message7With1Attachment.getAttachmentsIds());
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsIdsLoadedWhenTwoAttachments() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Full;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message8With2Attachments.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEqualTo(message8With2Attachments.getAttachmentsIds());
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeBodyShouldHaveAttachmentsIdsLoadedWhenOneAttachment() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEqualTo(message7With1Attachment.getAttachmentsIds());
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeHeadersShouldHaveAttachmentsIdsEmptyWhenOneAttachment() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Headers;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEmpty();
+    }
+
+    @Test
+    public void messagesRetrievedUsingFetchTypeMetadataShouldHaveAttachmentsIdsEmptyWhenOneAttachment() throws MailboxException, IOException{
+        saveMessages();
+        MessageMapper.FetchType fetchType = MessageMapper.FetchType.Metadata;
+        Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEmpty();
     }
 
     @Test
@@ -663,10 +720,18 @@ public abstract class AbstractMessageMapperTest {
         message5.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
         messageMapper.add(benwaWorkMailbox, message6);
         message6.setModSeq(messageMapper.getHighestModSeq(benwaWorkMailbox));
+        messageMapper.add(attachmentsMailbox, message7With1Attachment);
+        message7With1Attachment.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
+        messageMapper.add(attachmentsMailbox, message8With2Attachments);
+        message8With2Attachments.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
     }
 
     private MailboxMessage retrieveMessageFromStorage(MailboxMessage message) throws MailboxException {
         return messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message.getUid()), MessageMapper.FetchType.Metadata, LIMIT).next();
+    }
+    
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, String content, int bodyStart, PropertyBuilder propertyBuilder, List<AttachmentId> attachmentsIds) {
+        return new SimpleMailboxMessage(new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId(), attachmentsIds);
     }
     
     private SimpleMailboxMessage createMessage(Mailbox mailbox, String content, int bodyStart, PropertyBuilder propertyBuilder) {

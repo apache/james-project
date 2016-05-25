@@ -18,15 +18,19 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model.impl;
 
-import org.apache.james.mailbox.store.mail.model.Message;
-import org.apache.james.mailbox.store.mail.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.Property;
-
-import javax.mail.internet.SharedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
+
+import javax.mail.internet.SharedInputStream;
+
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
+import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MessageId;
+import org.apache.james.mailbox.store.mail.model.Property;
+
+import com.google.common.collect.ImmutableList;
 
 public class SimpleMessage implements Message {
 
@@ -38,8 +42,9 @@ public class SimpleMessage implements Message {
     private final long size;
     private final Long textualLineCount;
     private final List<Property> properties;
+    private final List<AttachmentId> attachmentsIds;
 
-    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties) {
+    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<AttachmentId> attachmentsIds) {
         this.subType = subType;
         this.mediaType = mediaType;
         this.content = content;
@@ -48,6 +53,11 @@ public class SimpleMessage implements Message {
         this.size = size;
         this.textualLineCount = textualLineCount;
         this.properties = properties;
+        this.attachmentsIds = attachmentsIds;
+    }
+
+    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties) {
+        this(content, size, internalDate, subType, mediaType, bodyStartOctet, textualLineCount, properties, ImmutableList.<AttachmentId>of());
     }
 
     @Override
@@ -107,5 +117,10 @@ public class SimpleMessage implements Message {
     @Override
     public List<Property> getProperties() {
         return properties;
+    }
+
+    @Override
+    public List<AttachmentId> getAttachmentsIds() {
+        return attachmentsIds;
     }
 }

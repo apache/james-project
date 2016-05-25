@@ -33,10 +33,12 @@ import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -350,5 +352,10 @@ public class HBaseMailboxMessage implements MailboxMessage {
     @Override
     public int compareTo(MailboxMessage other) {
         return MESSAGE_UID_COMPARATOR.compare(this, other);
+    }
+
+    @Override
+    public List<AttachmentId> getAttachmentsIds() {
+        throw new NotImplementedException("Attachments Ids not implemented");
     }
 }

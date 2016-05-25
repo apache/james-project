@@ -19,7 +19,9 @@
 package org.apache.james.mailbox.maildir.mail.model;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -272,6 +274,11 @@ public class MaildirMessage implements Message {
             limit = 0;
         }
         return new LimitingFileInputStream(messageName.getFile(), limit);
+    }
+
+    @Override
+    public List<AttachmentId> getAttachmentsIds() {
+        throw new NotImplementedException("Attachments Ids not implemented");
     }
 
 }

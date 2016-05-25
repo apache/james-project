@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model.impl;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -28,11 +29,13 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
 public class SimpleMailboxMessage extends DelegatingMailboxMessage {
@@ -45,7 +48,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
         PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
         pBuilder.setTextualLineCount(original.getTextualLineCount());
-        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId);
+        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId, original.getAttachmentsIds());
     }
 
     private static SharedByteArrayInputStream copyFullContent(MailboxMessage original) throws MailboxException {
@@ -68,19 +71,28 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     private long modSeq;
 
     public SimpleMailboxMessage(Date internalDate, long size, int bodyStartOctet,
+            SharedInputStream content, Flags flags,
+            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<AttachmentId> attachmentsIds) {
+        super(new SimpleMessage(
+                content, size, internalDate, propertyBuilder.getSubType(),
+                propertyBuilder.getMediaType(),
+                bodyStartOctet,
+                propertyBuilder.getTextualLineCount(),
+                propertyBuilder.toProperties(),
+                attachmentsIds
+                ));
+
+            setFlags(flags);
+            this.mailboxId = mailboxId;
+            this.userFlags = flags.getUserFlags();
+    }
+
+    public SimpleMailboxMessage(Date internalDate, long size, int bodyStartOctet,
                                 SharedInputStream content, Flags flags,
                                 PropertyBuilder propertyBuilder, MailboxId mailboxId) {
-        super(new SimpleMessage(
-            content, size, internalDate, propertyBuilder.getSubType(),
-            propertyBuilder.getMediaType(),
-            bodyStartOctet,
-            propertyBuilder.getTextualLineCount(),
-            propertyBuilder.toProperties()
-            ));
-
-        setFlags(flags);
-        this.mailboxId = mailboxId;
-        this.userFlags = flags.getUserFlags();
+        this(internalDate, size, bodyStartOctet,
+                content, flags,
+                propertyBuilder, mailboxId, ImmutableList.<AttachmentId>of());
     }
 
     @Override
