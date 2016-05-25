@@ -29,7 +29,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -82,6 +81,7 @@ public class VacationReply {
             reply.setText(reason);
             reply.setHeader("from", mailRecipient.toString());
             reply.setHeader("to", originalMail.getSender().toString());
+            reply.setHeader("Auto-Submitted", "auto-replied");
             return reply;
         }
     }
