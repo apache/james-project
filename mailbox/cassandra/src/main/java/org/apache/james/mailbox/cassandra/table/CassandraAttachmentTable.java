@@ -17,23 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.MessageMapper;
+public interface CassandraAttachmentTable {
 
-public interface MapperProvider {
-    MailboxMapper createMailboxMapper() throws MailboxException;
+    String TABLE_NAME = "attachment";
+    String ID = "id";
+    String PAYLOAD = "payload";
+    String TYPE = "type";
+    String SIZE = "size";
+    String[] FIELDS = { ID, PAYLOAD, TYPE, SIZE };
 
-    MessageMapper createMessageMapper() throws MailboxException;
-
-    AttachmentMapper createAttachmentMapper() throws MailboxException;
-
-    MailboxId generateId();
-
-    void clearMapper() throws MailboxException;
-
-    void ensureMapperPrepared() throws MailboxException;
 }
