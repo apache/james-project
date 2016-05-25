@@ -17,12 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods.integration;
+package org.apache.james.jmap.methods.integration.cucumber;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -30,79 +28,57 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.stream.IntStream;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.JmapAuthentication;
-import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Charsets;
-import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import cucumber.runtime.java.guice.ScenarioScoped;
 
+@ScenarioScoped
 public class SetMailboxesMethodStepdefs {
+
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
 
-    public GuiceJamesServer jmapServer;
-    public Runnable awaitMethod = () -> {};
+    private final MainStepdefs mainStepdefs;
+    private final UserStepdefs userStepdefs;
 
-    private AccessToken accessToken;
-    private String username;
-
-    public void init() throws Exception {
-        jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    }
-    
-    public void tearDown() {
-        jmapServer.stop();
-    }
-    
-
-    @Given("^a domain named \"([^\"]*)\"$")
-    public void createDomain(String domain) throws Throwable {
-        jmapServer.serverProbe().addDomain(domain);
-    }
-
-    @Given("^a current user with username \"([^\"]*)\" and password \"([^\"]*)\"$")
-    public void createUserWithPasswordAndAuthenticate(String username, String password) throws Throwable {
-        this.username = username;
-        jmapServer.serverProbe().addUser(username, password);
-        accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+    @Inject
+    private SetMailboxesMethodStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
+        this.mainStepdefs = mainStepdefs;
+        this.userStepdefs = userStepdefs;
     }
 
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
     public void mailboxWithMessages(String mailboxName, int messageCount) throws Throwable {
-        jmapServer.serverProbe().createMailbox("#private", username, mailboxName);
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
+        mainStepdefs.jmapServer.serverProbe().createMailbox("#private", userStepdefs.username, mailboxName);
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.username, mailboxName);
         IntStream
             .range(0, messageCount)
             .forEach(Throwing.intConsumer(i -> appendMessage(mailboxPath, i)));
-        awaitMethod.run();
+        mainStepdefs.awaitMethod.run();
     }
 
     private void appendMessage(MailboxPath mailboxPath, int i) throws MailboxException {
         String content = "Subject: test" + i + "\r\n\r\n"
                 + "testBody" + i;
-        jmapServer.serverProbe().appendMessage(username, mailboxPath,
+        mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.username, mailboxPath,
                 new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
     }
 
     @When("^renaming mailbox \"([^\"]*)\" to \"([^\"]*)\"")
     public void renamingMailbox(String actualMailboxName, String newMailboxName) throws Throwable {
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, actualMailboxName);
+        Mailbox mailbox = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", userStepdefs.username, actualMailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         String requestBody =
                 "[" +
@@ -121,16 +97,16 @@ public class SetMailboxesMethodStepdefs {
         with()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", userStepdefs.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
     }
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
     public void movingMailbox(String actualMailboxPath, String newParentMailboxPath) throws Throwable {
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, actualMailboxPath);
+        Mailbox mailbox = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", userStepdefs.username, actualMailboxPath);
         String mailboxId = mailbox.getMailboxId().serialize();
-        Mailbox parent = jmapServer.serverProbe().getMailbox("#private", username, newParentMailboxPath);
+        Mailbox parent = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", userStepdefs.username, newParentMailboxPath);
         String parentId = parent.getMailboxId().serialize();
 
         String requestBody =
@@ -150,19 +126,19 @@ public class SetMailboxesMethodStepdefs {
         with()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", userStepdefs.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
     }
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
     public void mailboxContainsMessages(String mailboxName, int messageCount) throws Throwable {
-        Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, mailboxName);
+        Mailbox mailbox = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", userStepdefs.username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", userStepdefs.accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")

@@ -17,26 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra;
+package org.apache.james.jmap.cassandra.cucumber;
+
+import javax.inject.Inject;
 
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.EmbeddedCassandra;
-import org.apache.james.jmap.methods.integration.SetMailboxesMethodStepdefs;
+import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
 import org.junit.rules.TemporaryFolder;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
+import cucumber.runtime.java.guice.ScenarioScoped;
 
-public class CassandraSetMailboxesMethodStepdefs {
-    private final SetMailboxesMethodStepdefs mainStepdefs;
+@ScenarioScoped
+public class CassandraStepdefs {
+
+    private final MainStepdefs mainStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private EmbeddedCassandra cassandra = EmbeddedCassandra.createStartServer();
 
-    public CassandraSetMailboxesMethodStepdefs(SetMailboxesMethodStepdefs mainStepdefs) {
+    @Inject
+    private CassandraStepdefs(MainStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;
     }
 
@@ -53,8 +59,16 @@ public class CassandraSetMailboxesMethodStepdefs {
 
     @After
     public void tearDown() {
-        mainStepdefs.tearDown();
-        embeddedElasticSearch.after();
-        temporaryFolder.delete();
+        tearDown(() -> mainStepdefs.tearDown());
+        tearDown(() -> embeddedElasticSearch.after());
+        tearDown(() -> temporaryFolder.delete());
+    }
+
+    private void tearDown(Runnable cleaningFunction) {
+        try {
+            cleaningFunction.run();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

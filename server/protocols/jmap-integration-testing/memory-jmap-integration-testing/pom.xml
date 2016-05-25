@@ -182,7 +182,7 @@
                 </dependency>
                 <dependency>
                     <groupId>info.cukes</groupId>
-                    <artifactId>cucumber-picocontainer</artifactId>
+                    <artifactId>cucumber-guice</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

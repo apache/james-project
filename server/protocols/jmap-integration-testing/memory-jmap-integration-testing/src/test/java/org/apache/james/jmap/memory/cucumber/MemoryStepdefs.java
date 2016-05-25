@@ -17,22 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.jmap.memory.cucumber;
+
+import javax.inject.Inject;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.SetMailboxesMethodStepdefs;
+import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
 import org.junit.rules.TemporaryFolder;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
+import cucumber.runtime.java.guice.ScenarioScoped;
 
-public class MemorySetMailboxesMethodStepdefs {
-    private final SetMailboxesMethodStepdefs mainStepdefs;
+@ScenarioScoped
+public class MemoryStepdefs {
+
+    private final MainStepdefs mainStepdefs;
     private final TemporaryFolder temporaryFolder;
 
-    public MemorySetMailboxesMethodStepdefs(SetMailboxesMethodStepdefs mainStepdefs) {
+    @Inject
+    private MemoryStepdefs(MainStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.temporaryFolder = new TemporaryFolder();
     }

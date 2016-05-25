@@ -189,12 +189,12 @@
                 </dependency>
                 <dependency>
                     <groupId>info.cukes</groupId>
-                    <artifactId>cucumber-junit</artifactId>
+                    <artifactId>cucumber-guice</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>info.cukes</groupId>
-                    <artifactId>cucumber-picocontainer</artifactId>
+                    <artifactId>cucumber-junit</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

@@ -17,15 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.jmap.methods.integration.cucumber;
 
-import org.junit.runner.RunWith;
+import javax.inject.Inject;
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
+import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.api.access.AccessToken;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(features="classpath:cucumber/MailboxModification.feature",
-                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory"})
-public class MemorySetMailboxesMethodCucumberTest {
+import cucumber.api.java.en.Given;
+import cucumber.runtime.java.guice.ScenarioScoped;
+
+@ScenarioScoped
+public class UserStepdefs {
+
+    private final MainStepdefs mainStepdefs;
+    protected String username;
+    protected AccessToken accessToken;
+
+    @Inject
+    private UserStepdefs(MainStepdefs mainStepdefs) {
+        this.mainStepdefs = mainStepdefs;
+    }
+
+    @Given("^a domain named \"([^\"]*)\"$")
+    public void createDomain(String domain) throws Throwable {
+        mainStepdefs.jmapServer.serverProbe().addDomain(domain);
+    }
+
+    @Given("^a current user with username \"([^\"]*)\" and password \"([^\"]*)\"$")
+    public void createUserWithPasswordAndAuthenticate(String username, String password) throws Throwable {
+        this.username = username;
+        mainStepdefs.jmapServer.serverProbe().addUser(username, password);
+        accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+    }
+
 }
