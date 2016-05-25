@@ -54,9 +54,15 @@ public class VacationMailetTest {
     public static final ZonedDateTime DATE_TIME_2016 = ZonedDateTime.parse("2016-10-09T08:07:06+07:00[Asia/Vientiane]");
     public static final ZonedDateTime DATE_TIME_2017 = ZonedDateTime.parse("2017-10-09T08:07:06+07:00[Asia/Vientiane]");
     public static final ZonedDateTime DATE_TIME_2018 = ZonedDateTime.parse("2018-10-09T08:07:06+07:00[Asia/Vientiane]");
-
     public static final String USERNAME = "benwa@apache.org";
     public static final AccountId ACCOUNT_ID = AccountId.fromString(USERNAME);
+    public static final Vacation VACATION = Vacation.builder()
+        .enabled(true)
+        .fromDate(Optional.of(DATE_TIME_2016))
+        .toDate(Optional.of(DATE_TIME_2018))
+        .textBody("Explaining my vacation")
+        .build();
+
     private VacationMailet testee;
     private VacationRepository vacationRepository;
     private ZonedDateTimeProvider zonedDateTimeProvider;
@@ -66,12 +72,18 @@ public class VacationMailetTest {
     private AutomaticallySentMailDetector automaticallySentMailDetector;
     private NotificationRegistry notificationRegistry;
     private RecipientId recipientId;
+    private FakeMail mail;
 
     @Before
     public void setUp() throws Exception {
         originalSender = new MailAddress("distant@apache.org");
         originalRecipient = new MailAddress(USERNAME);
         recipientId = RecipientId.fromMailAddress(originalSender);
+        mail = FakeMail.builder()
+            .fileName("spamMail.eml")
+            .recipient(originalRecipient)
+            .sender(originalSender)
+            .build();
 
         vacationRepository = mock(VacationRepository.class);
         zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
@@ -84,11 +96,6 @@ public class VacationMailetTest {
 
     @Test
     public void unactivatedVacationShouldNotSendNotification() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(new MailAddress("owner-list@any.com"))
-            .build();
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
             .thenReturn(CompletableFuture.completedFuture(VacationRepository.DEFAULT_VACATION));
@@ -101,19 +108,8 @@ public class VacationMailetTest {
 
     @Test
     public void activateVacationShouldSendNotification() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(originalSender)
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
@@ -129,19 +125,8 @@ public class VacationMailetTest {
 
     @Test
     public void activateVacationShouldNotSendNotificationIfAlreadySent() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(originalSender)
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
             .thenReturn(CompletableFuture.completedFuture(true));
@@ -153,19 +138,8 @@ public class VacationMailetTest {
 
     @Test
     public void activateVacationShouldSendNotificationIfErrorUpdatingNotificationRepository() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(originalSender)
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         RecipientId recipientId = RecipientId.fromMailAddress(originalSender);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
@@ -180,19 +154,8 @@ public class VacationMailetTest {
 
     @Test
     public void activateVacationShouldSendNotificationIfErrorRetrievingNotificationRepository() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(originalSender)
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         RecipientId recipientId = RecipientId.fromMailAddress(originalSender);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
@@ -205,23 +168,8 @@ public class VacationMailetTest {
 
     @Test
     public void activateVacationShouldNotSendNotificationToMailingList() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(new MailAddress("owner-list@any.com"))
-            .build();
-        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(true);
-        when(notificationRegistry.isRegistered(ACCOUNT_ID, RecipientId.fromMailAddress(originalSender)))
-            .thenReturn(CompletableFuture.completedFuture(false));
 
         testee.service(mail);
 
@@ -240,21 +188,9 @@ public class VacationMailetTest {
             .sender(originalSender)
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(vacationRepository.retrieveVacation(secondAccountId))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, RecipientId.fromMailAddress(originalSender)))
@@ -271,11 +207,6 @@ public class VacationMailetTest {
 
     @Test
     public void serviceShouldNotSendNotificationUponErrorsRetrievingVacationObject() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(new MailAddress("owner-list@any.com"))
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
             .thenReturn(CompletableFuture.supplyAsync(() -> {
                 throw new RuntimeException();
@@ -290,19 +221,8 @@ public class VacationMailetTest {
 
     @Test
     public void serviceShouldNotSendNotificationUponErrorsDetectingAutomaticallySentMails() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(originalSender)
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenThrow(new MessagingException());
 
@@ -313,19 +233,8 @@ public class VacationMailetTest {
 
     @Test
     public void serviceShouldNotPropagateExceptionIfSendFails() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .fileName("spamMail.eml")
-            .recipient(originalRecipient)
-            .sender(originalSender)
-            .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(
-                Vacation.builder()
-                    .enabled(true)
-                    .fromDate(Optional.of(DATE_TIME_2016))
-                    .toDate(Optional.of(DATE_TIME_2018))
-                    .textBody("Explaining my vacation")
-                    .build()));
+            .thenReturn(CompletableFuture.completedFuture(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, RecipientId.fromMailAddress(originalSender)))

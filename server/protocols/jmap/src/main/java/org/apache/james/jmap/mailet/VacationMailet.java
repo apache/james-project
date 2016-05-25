@@ -59,11 +59,13 @@ public class VacationMailet extends GenericMailet {
     @Override
     public void service(Mail mail) {
         try {
-            ZonedDateTime processingDate = zonedDateTimeProvider.get();
-            mail.getRecipients()
-                .stream()
-                .map(mailAddress -> manageVacation(mailAddress, mail, processingDate))
-                .forEach(CompletableFuture::join);
+            if (! automaticallySentMailDetector.isAutomaticallySent(mail)) {
+                ZonedDateTime processingDate = zonedDateTimeProvider.get();
+                mail.getRecipients()
+                    .stream()
+                    .map(mailAddress -> manageVacation(mailAddress, mail, processingDate))
+                    .forEach(CompletableFuture::join);
+            }
         } catch (Throwable e) {
             LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
         }
@@ -72,34 +74,20 @@ public class VacationMailet extends GenericMailet {
     public CompletableFuture<Void> manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
         CompletableFuture<Vacation> vacationFuture = vacationRepository.retrieveVacation(accountId);
-        return vacationFuture.thenAccept(vacation -> {
-            if (shouldSendNotification(vacation, processedMail, recipient, processingDate)) {
+        CompletableFuture<Boolean> hasAlreadyBeenSent = notificationRegistry.isRegistered(
+            AccountId.fromString(recipient.toString()),
+            RecipientId.fromMailAddress(processedMail.getSender()));
+
+        return vacationFuture.thenAcceptBoth(hasAlreadyBeenSent, (vacation, alreadySent) -> {
+            if (shouldSendNotification(vacation, processingDate, alreadySent)) {
                 sendNotification(recipient, processedMail, vacation);
             }
         });
     }
 
-    private boolean shouldSendNotification(Vacation vacation, Mail processedMail, MailAddress recipient, ZonedDateTime processingDate) {
-        try {
-            return vacation.isActiveAtDate(processingDate)
-                && ! automaticallySentMailDetector.isAutomaticallySent(processedMail)
-                && hasNotSentNotificationsYet(processedMail, recipient);
-        } catch (MessagingException e) {
-            LOGGER.warn("Failed detect automatic response in a mail from {} to {}", processedMail.getSender(), recipient, e);
-            return false;
-        }
-    }
-
-    private boolean hasNotSentNotificationsYet(Mail processedMail, MailAddress recipient) {
-        CompletableFuture<Boolean> hasAlreadyBeenSent = notificationRegistry.isRegistered(
-            AccountId.fromString(recipient.toString()),
-            RecipientId.fromMailAddress(processedMail.getSender()));
-        try {
-            return !hasAlreadyBeenSent.join();
-        } catch (Throwable t) {
-            LOGGER.warn("Error while checking registration state of vacation notification for user {} and sender {}", recipient, processedMail.getSender(), t);
-            return true;
-        }
+    private boolean shouldSendNotification(Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
+        return vacation.isActiveAtDate(processingDate)
+            && ! alreadySent;
     }
 
     private void sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
