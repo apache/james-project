@@ -22,16 +22,123 @@ package org.apache.james.mailbox.store.mail.model;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class Attachment {
 
-    private final byte[] bytes;
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    public Attachment(byte[] bytes) {
+    public static Attachment from(byte[] bytes, String type) {
+        return builder()
+                .attachmentId(AttachmentId.forPayload(bytes))
+                .bytes(bytes)
+                .type(type)
+                .size(bytes.length)
+                .build();
+    }
+
+    public static class Builder {
+
+        private AttachmentId attachmentId;
+        private byte[] bytes;
+        private String type;
+        private Long size;
+
+        private Builder() {
+        }
+
+        public Builder attachmentId(AttachmentId attachmentId) {
+            Preconditions.checkArgument(attachmentId != null);
+            this.attachmentId = attachmentId;
+            return this;
+        }
+
+        public Builder bytes(byte[] bytes) {
+            Preconditions.checkArgument(bytes != null);
+            this.bytes = bytes;
+            return this;
+        }
+
+        public Builder type(String type) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(type));
+            this.type = type;
+            return this;
+        }
+
+        public Builder size(long size) {
+            this.size = size;
+            return this;
+        }
+
+        public Attachment build() {
+            Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
+            Preconditions.checkState(bytes != null, "'bytes' is mandatory");
+            Preconditions.checkState(type != null, "'type' is mandatory");
+            Preconditions.checkState(size != null, "'size' is mandatory");
+            return new Attachment(bytes, attachmentId, type, size);
+        }
+    }
+
+    private final byte[] bytes;
+    private final AttachmentId attachmentId;
+    private final String type;
+    private final long size;
+
+    private Attachment(byte[] bytes, AttachmentId attachmentId, String type, long size) {
         this.bytes = bytes;
+        this.attachmentId = attachmentId;
+        this.type = type;
+        this.size = size;
+    }
+
+    public AttachmentId getAttachmentId() {
+        return attachmentId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public InputStream getStream() throws IOException {
         return new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Attachment) {
+            Attachment other = (Attachment) obj;
+            return Objects.equal(attachmentId, other.attachmentId)
+                && Arrays.equals(bytes, other.bytes)
+                && Objects.equal(type, other.type)
+                && Objects.equal(size, other.size);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(attachmentId, bytes, type, size);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects
+                .toStringHelper(this)
+                .add("attachmentId", attachmentId)
+                .add("bytes", bytes)
+                .add("type", type)
+                .add("size", size)
+                .toString();
     }
 }

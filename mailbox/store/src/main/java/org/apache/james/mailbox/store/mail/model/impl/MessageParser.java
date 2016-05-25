@@ -33,10 +33,16 @@ import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.apache.james.mime4j.stream.Field;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class MessageParser {
+
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String HEADER_SEPARATOR = ";";
 
     public List<Attachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         Body body = new DefaultMessageBuilder()
@@ -58,19 +64,29 @@ public class MessageParser {
         MessageWriter messageWriter = new DefaultMessageWriter();
         for (Entity entity : multipart.getBodyParts()) {
             if (isAttachment(entity)) {
-                attachments.add(createAttachment(messageWriter, entity.getBody()));
+                attachments.add(createAttachment(messageWriter, entity.getBody(), 
+                        contentType(entity.getHeader().getField(CONTENT_TYPE))));
             }
         }
         return attachments.build();
+    }
+
+    private String contentType(Field contentType) {
+        String body = contentType.getBody();
+        if (body.contains(HEADER_SEPARATOR)) {
+            return Iterables.get(Splitter.on(HEADER_SEPARATOR).split(body), 0);
+        }
+        return body;
     }
 
     private boolean isAttachment(Entity part) {
         return ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.equalsIgnoreCase(part.getDispositionType());
     }
 
-    private Attachment createAttachment(MessageWriter messageWriter, Body body) throws IOException {
+    private Attachment createAttachment(MessageWriter messageWriter, Body body, String contentType) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
-        return new Attachment(out.toByteArray());
+        byte[] bytes = out.toByteArray();
+        return Attachment.from(bytes, contentType);
     }
 }

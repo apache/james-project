@@ -37,17 +37,41 @@ public class MessageParserTest {
     }
 
     @Test
-    public void getAttachmentsShouldBeEmptyWhenNone() throws Exception {
+    public void getAttachmentsShouldBeEmptyWhenNoAttachment() throws Exception {
         List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noAttachment.eml"));
 
         assertThat(attachments).isEmpty();
     }
 
     @Test
-    public void getAttachmentsShouldRetrieveAttachmentsWhenOne() throws Exception {
+    public void getAttachmentsShouldRetrieveAttachmentsWhenOneAttachment() throws Exception {
         List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
 
         assertThat(attachments).hasSize(1);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachment() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachmentWithSimpleContentType() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveTheAttachmentSizeWhenOneAttachment() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getSize()).isEqualTo(3071);
     }
 
     @Test
