@@ -40,11 +40,13 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
@@ -573,5 +575,10 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         + " )";
     }
     
+
+    @Override
+    public List<AttachmentId> getAttachmentsIds() {
+        throw new NotImplementedException("Attachments Ids not implemented");
+    }
 
 }

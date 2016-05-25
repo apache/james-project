@@ -34,6 +34,7 @@ import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.cint;
+import static com.datastax.driver.core.DataType.frozenList;
 import static com.datastax.driver.core.DataType.set;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
@@ -68,6 +69,7 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageTable.Flag.SEEN, cboolean())
                     .addColumn(CassandraMessageTable.Flag.USER, cboolean())
                     .addColumn(CassandraMessageTable.Flag.USER_FLAGS, set(text()))
+                    .addColumn(CassandraMessageTable.ATTACHMENTS_IDS, frozenList(text()))
                     .addUDTListColumn(CassandraMessageTable.PROPERTIES, SchemaBuilder.frozen(CassandraMessageTable.PROPERTIES))));
         index = Arrays.asList(
             new CassandraIndex(

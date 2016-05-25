@@ -35,6 +35,8 @@ import java.util.Map.Entry;
 
 import javax.mail.Flags;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -269,6 +271,11 @@ public class SimpleMailboxMembership implements MailboxMessage {
     @Override
     public DefaultMessageId getMessageId() {
         return new DefaultMessageId(getMailboxId(), getUid());
+    }
+
+    @Override
+    public List<AttachmentId> getAttachmentsIds() {
+        throw new NotImplementedException("Attachments Ids not implemented");
     }
     
 }

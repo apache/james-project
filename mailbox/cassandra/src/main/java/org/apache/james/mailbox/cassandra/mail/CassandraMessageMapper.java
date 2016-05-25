@@ -28,6 +28,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.ATTACHMENTS_IDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_OCTECTS;
@@ -89,6 +90,7 @@ import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -105,6 +107,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Bytes;
 
@@ -300,7 +303,8 @@ public class CassandraMessageMapper implements MessageMapper {
                 buildContent(row, fetchType),
                 getFlags(row),
                 getPropertyBuilder(row),
-                CassandraId.of(row.getUUID(MAILBOX_ID)));
+                CassandraId.of(row.getUUID(MAILBOX_ID)),
+                getAttachmentsIds(row, fetchType));
         message.setUid(row.getLong(IMAP_UID));
         message.setModSeq(row.getLong(MOD_SEQ));
         return message;
@@ -326,6 +330,16 @@ public class CassandraMessageMapper implements MessageMapper {
                 .collect(Collectors.toList()));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property;
+    }
+
+    private List<AttachmentId> getAttachmentsIds(Row row, FetchType fetchType) {
+        if (FetchType.Full.equals(fetchType)) {
+            return row.getList(ATTACHMENTS_IDS, String.class)
+                    .stream()
+                    .map(AttachmentId::from)
+                    .collect(org.apache.james.util.streams.Collectors.toImmutableList());
+        }
+        return ImmutableList.of();
     }
 
     private MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
@@ -356,7 +370,10 @@ public class CassandraMessageMapper implements MessageMapper {
                         .setString(Properties.NAME, x.getLocalName())
                         .setString(Properties.VALUE, x.getValue()))
                     .collect(Collectors.toList()))
-                .value(TEXTUAL_LINE_COUNT, message.getTextualLineCount()));
+                .value(TEXTUAL_LINE_COUNT, message.getTextualLineCount())
+                .value(ATTACHMENTS_IDS, message.getAttachmentsIds().stream()
+                    .map(AttachmentId::getId)
+                    .collect(Collectors.toList())));
 
             return new SimpleMessageMetaData(message);
         } catch (IOException e) {
