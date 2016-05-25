@@ -182,7 +182,7 @@ public class AuthenticationServlet extends HttpServlet {
             .api(JMAPUrls.JMAP)
             .eventSource("/notImplemented")
             .upload("/notImplemented")
-            .download("/notImplemented")
+            .download(JMAPUrls.DOWNLOAD)
             .build();
         mapper.writeValue(resp.getOutputStream(), response);
     }
@@ -195,7 +195,7 @@ public class AuthenticationServlet extends HttpServlet {
             .api(JMAPUrls.JMAP)
             .eventSource("/notImplemented")
             .upload("/notImplemented")
-            .download("/notImplemented")
+            .download(JMAPUrls.DOWNLOAD)
             .build();
         mapper.writeValue(resp.getOutputStream(), response);
     }

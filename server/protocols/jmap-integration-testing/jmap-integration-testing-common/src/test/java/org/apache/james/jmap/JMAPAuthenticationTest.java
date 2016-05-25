@@ -284,7 +284,7 @@ public abstract class JMAPAuthenticationTest {
             .body("api", equalTo("/jmap"))
             .body("eventSource", both(isA(String.class)).and(notNullValue()))
             .body("upload", both(isA(String.class)).and(notNullValue()))
-            .body("download", both(isA(String.class)).and(notNullValue()));
+            .body("download", equalTo("/download"));
     }
     
     @Test
@@ -320,7 +320,7 @@ public abstract class JMAPAuthenticationTest {
             .body("api", equalTo("/jmap"))
             .body("eventSource", both(isA(String.class)).and(notNullValue()))
             .body("upload", both(isA(String.class)).and(notNullValue()))
-            .body("download", both(isA(String.class)).and(notNullValue()));
+            .body("download", equalTo("/download"));
     }
 
     @Test
