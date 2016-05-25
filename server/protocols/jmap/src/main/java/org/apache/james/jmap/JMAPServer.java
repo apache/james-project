@@ -44,14 +44,14 @@ public class JMAPServer implements Configurable {
 
         server = JettyHttpServer.create(
                 configurationBuilderFor(jmapConfiguration)
-                        .serve("/authentication")
+                        .serve(JMAPUrls.AUTHENTICATION)
                             .with(authenticationServlet)
-                        .filter("/authentication")
+                        .filter(JMAPUrls.AUTHENTICATION)
                             .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("POST").and("OPTIONS").only()))
                             .only()
-                        .serve("/jmap")
+                        .serve(JMAPUrls.JMAP)
                             .with(jmapServlet)
-                        .filter("/jmap")
+                        .filter(JMAPUrls.JMAP)
                             .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("OPTIONS").only()))
                             .and(firstUserConnectionFilter)
                             .only()
