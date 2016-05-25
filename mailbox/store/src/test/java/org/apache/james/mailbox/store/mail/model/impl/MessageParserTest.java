@@ -51,6 +51,22 @@ public class MessageParserTest {
     }
 
     @Test
+    public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOne() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveTheAttachmentSizeWhenOne() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getSize()).isEqualTo(3071);
+    }
+
+    @Test
     public void getAttachmentsShouldReturnTheExpectedAttachment() throws Exception {
         List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
 

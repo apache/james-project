@@ -32,7 +32,7 @@ public class AttachmentTest {
     @Test
     public void streamShouldBeConsumedOneTime() throws Exception {
         String input = "mystream";
-        Attachment attachment = new Attachment(input.getBytes());
+        Attachment attachment = Attachment.from(input.getBytes(), "content");
 
         InputStream stream = attachment.getStream();
         assertThat(stream).isNotNull();
@@ -42,11 +42,81 @@ public class AttachmentTest {
     @Test
     public void streamShouldBeConsumedMoreThanOneTime() throws Exception {
         String input = "mystream";
-        Attachment attachment = new Attachment(input.getBytes());
+        Attachment attachment = Attachment.from(input.getBytes(), "content");
 
         attachment.getStream();
         InputStream stream = attachment.getStream();
         assertThat(stream).isNotNull();
         assertThat(IOUtils.toString(stream)).isEqualTo(input);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void builderShouldThrowWhenAttachmentIdIsNull() {
+        Attachment.builder()
+            .attachmentId(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void builderShouldThrowWhenBytesIsNull() {
+        Attachment.builder()
+            .bytes(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void builderShouldThrowWhenTypeIsNull() {
+        Attachment.builder()
+            .type(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void builderShouldThrowWhenTypeIsEmpty() {
+        Attachment.builder()
+            .type("");
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void buildShouldThrowWhenAttachmentIdIsNotProvided() {
+        Attachment.builder().build();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void buildShouldThrowWhenBytesIsNotProvided() {
+        Attachment.builder()
+            .attachmentId(AttachmentId.forPayload("mystream".getBytes()))
+            .build();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void buildShouldThrowWhenTypeIsNotProvided() {
+        Attachment.builder()
+            .attachmentId(AttachmentId.forPayload("mystream".getBytes()))
+            .bytes("mystream".getBytes())
+            .build();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void buildShouldThrowWhenSizeIsNotProvided() {
+        Attachment.builder()
+            .attachmentId(AttachmentId.forPayload("mystream".getBytes()))
+            .bytes("mystream".getBytes())
+            .type("content")
+            .build();
+    }
+
+    @Test
+    public void fromShouldSetTheAttachmentId() throws Exception {
+        byte[] bytes = "mystream".getBytes();
+        Attachment attachment = Attachment.from(bytes, "content");
+        AttachmentId expected = AttachmentId.forPayload(bytes);
+
+        assertThat(attachment.getAttachmentId()).isEqualTo(expected);
+    }
+
+    @Test
+    public void fromShouldSetTheSize() throws Exception {
+        String input = "mystream";
+        Attachment attachment = Attachment.from(input.getBytes(), "content");
+
+        assertThat(attachment.getSize()).isEqualTo(input.length());
     }
 }
