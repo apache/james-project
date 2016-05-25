@@ -25,9 +25,11 @@ import org.apache.james.mailbox.jcr.mail.JCRMailboxMapper;
 import org.apache.james.mailbox.jcr.mail.JCRMessageMapper;
 import org.apache.james.mailbox.jcr.user.JCRSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
+import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
@@ -70,6 +72,11 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
         return new JCRSubscriptionMapper(repository, session, DEFAULT_SCALING);
+    }
+    
+    @Override
+    public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
+        return new NoopAttachmentMapper();
     }
     
     public MailboxSessionJCRRepository getRepository() {

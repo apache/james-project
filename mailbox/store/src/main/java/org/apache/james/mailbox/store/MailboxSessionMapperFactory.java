@@ -22,6 +22,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
  */
 public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, SubscriptionMapperFactory{
 
+    protected final static String ATTACHMENTMAPPER = "ATTACHMENTMAPPER";
     protected final static String MESSAGEMAPPER ="MESSAGEMAPPER";
     protected final static String MAILBOXMAPPER ="MAILBOXMAPPER";
     protected final static String SUBSCRIPTIONMAPPER ="SUBSCRIPTIONMAPPER";
@@ -54,6 +56,15 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         return mapper;
     }
 
+    public AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException {
+        AttachmentMapper mapper = (AttachmentMapper) session.getAttributes().get(ATTACHMENTMAPPER);
+        if (mapper == null) {
+            mapper = createAttachmentMapper(session);
+            session.getAttributes().put(ATTACHMENTMAPPER, mapper);
+        }
+        return mapper;
+    }
+
     /**
      * Create a {@link MessageMapper} instance which will get reused during the whole {@link MailboxSession}
      * 
@@ -62,6 +73,8 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
      * @throws MailboxException
      */
     public abstract MessageMapper createMessageMapper(MailboxSession session) throws MailboxException;
+
+    public abstract AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException;
 
 
     /**

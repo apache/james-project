@@ -27,8 +27,10 @@ import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
 import org.apache.james.mailbox.inmemory.mail.InMemoryUidProvider;
 import org.apache.james.mailbox.inmemory.user.InMemorySubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
@@ -36,11 +38,13 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final MailboxMapper mailboxMapper;
     private final MessageMapper messageMapper;
     private final SubscriptionMapper subscriptionMapper;
+    private final AttachmentMapper attachmentMapper;
     
     public InMemoryMailboxSessionMapperFactory() {
         mailboxMapper = new InMemoryMailboxMapper();
         messageMapper = new InMemoryMessageMapper(null, new InMemoryUidProvider(), new InMemoryModSeqProvider());
         subscriptionMapper = new InMemorySubscriptionMapper();
+        attachmentMapper = new NoopAttachmentMapper();
     }
     
     @Override
@@ -56,6 +60,11 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
         return subscriptionMapper;
+    }
+    
+    @Override
+    public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
+        return attachmentMapper;
     }
 
     public void deleteAll() throws MailboxException {
