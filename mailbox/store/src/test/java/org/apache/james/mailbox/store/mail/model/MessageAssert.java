@@ -61,17 +61,17 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
                 failWithMessage("Expected MailboxMessage size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());
             }
             if (!Objects.equal(IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()))) {
-                failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(actual.getFullContent()), IOUtils.toString(expected.getFullContent()));
+                failWithMessage("Expected Full content to be <%s> but was <%s>", IOUtils.toString(expected.getFullContent()), IOUtils.toString(actual.getFullContent()));
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Headers) {
             if (!Objects.equal(IOUtils.toString(actual.getHeaderContent()), IOUtils.toString(expected.getHeaderContent()))) {
-                failWithMessage("Expected Header content to be <%s> but was <%s>", IOUtils.toString(actual.getHeaderContent()), IOUtils.toString(expected.getHeaderContent()));
+                failWithMessage("Expected Header content to be <%s> but was <%s>", IOUtils.toString(expected.getHeaderContent()), IOUtils.toString(actual.getHeaderContent()));
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
             if (!Objects.equal(IOUtils.toString(actual.getBodyContent()), IOUtils.toString(expected.getBodyContent()))) {
-                failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(actual.getBodyContent()), IOUtils.toString(expected.getBodyContent()));
+                failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(expected.getBodyContent()), IOUtils.toString(actual.getBodyContent()));
             }
         }
         return this;
