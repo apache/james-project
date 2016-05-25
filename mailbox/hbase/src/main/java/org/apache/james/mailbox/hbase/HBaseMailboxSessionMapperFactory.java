@@ -43,9 +43,11 @@ import org.apache.james.mailbox.hbase.mail.HBaseMailboxMapper;
 import org.apache.james.mailbox.hbase.mail.HBaseMessageMapper;
 import org.apache.james.mailbox.hbase.user.HBaseSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
+import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
@@ -138,6 +140,11 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
         return new HBaseSubscriptionMapper(this.conf);
+    }
+
+    @Override
+    public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
+        return new NoopAttachmentMapper();
     }
 
     /**
