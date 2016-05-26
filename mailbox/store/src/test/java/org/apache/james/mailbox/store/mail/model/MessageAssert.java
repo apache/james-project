@@ -74,7 +74,7 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
                 failWithMessage("Expected Body content to be <%s> but was <%s>", IOUtils.toString(expected.getBodyContent()), IOUtils.toString(actual.getBodyContent()));
             }
         }
-        if (usedFetchType == MessageMapper.FetchType.Full) {
+        if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
             if (!Objects.equal(actual.getAttachmentsIds(), expected.getAttachmentsIds())) {
                 failWithMessage("Expected attachments ids to be <%s> but was <%s>", expected.getAttachmentsIds(), actual.getAttachmentsIds());
             }

@@ -282,11 +282,11 @@ public abstract class AbstractMessageMapperTest {
     }
 
     @Test
-    public void messagesRetrievedUsingFetchTypeBodyShouldHaveAttachmentsIdsEmptyWhenOneAttachment() throws MailboxException, IOException{
+    public void messagesRetrievedUsingFetchTypeBodyShouldHaveAttachmentsIdsLoadedWhenOneAttachment() throws MailboxException, IOException{
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(message7With1Attachment.getUid()), fetchType, LIMIT);
-        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEmpty();
+        assertThat(retrievedMessageIterator.next().getAttachmentsIds()).isEqualTo(message7With1Attachment.getAttachmentsIds());
     }
 
     @Test

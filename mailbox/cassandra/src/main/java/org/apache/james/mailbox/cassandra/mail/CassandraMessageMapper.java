@@ -333,13 +333,16 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private List<AttachmentId> getAttachmentsIds(Row row, FetchType fetchType) {
-        if (FetchType.Full.equals(fetchType)) {
+        switch (fetchType) {
+        case Full:
+        case Body:
             return row.getList(ATTACHMENTS_IDS, String.class)
                     .stream()
                     .map(AttachmentId::from)
                     .collect(org.apache.james.util.streams.Collectors.toImmutableList());
+        default:
+            return ImmutableList.of();
         }
-        return ImmutableList.of();
     }
 
     private MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
