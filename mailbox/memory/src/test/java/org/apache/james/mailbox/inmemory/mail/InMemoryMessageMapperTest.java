@@ -20,10 +20,21 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import org.apache.james.mailbox.store.mail.model.AbstractMessageMapperTest;
+import org.junit.Ignore;
 
 public class InMemoryMessageMapperTest extends AbstractMessageMapperTest {
 
     public InMemoryMessageMapperTest() {
         super(new InMemoryMapperProvider());
+    }
+
+    @Ignore("Partial fetch not supported by InMemory backend")
+    @Override
+    public void messagesRetrievedUsingFetchTypeHeadersShouldHaveAttachmentsIdsEmptyWhenOneAttachment() {
+    }
+
+    @Ignore("Partial fetch not supported by InMemory backend")
+    @Override
+    public void messagesRetrievedUsingFetchTypeMetadataShouldHaveAttachmentsIdsEmptyWhenOneAttachment() {
     }
 }
