@@ -175,7 +175,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     /** The value for the internalDate field */
     @Basic(optional = false)
     @Column(name = "MAIL_DATE")
-    private final Date internalDate;
+    private Date internalDate;
 
     /** The value for the answered field */
     @Basic(optional = false)
