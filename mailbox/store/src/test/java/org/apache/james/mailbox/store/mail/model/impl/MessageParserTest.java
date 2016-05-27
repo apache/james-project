@@ -51,6 +51,22 @@ public class MessageParserTest {
     }
 
     @Test
+    public void getAttachmentsShouldNotFailWhenContentTypeIsNotHere() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutContentType.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+    }
+
+    @Test
+    public void getAttachmentsShouldNotFailWhenContentTypeIsEmpty() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithEmptyContentType.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+    }
+
+    @Test
     public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachment() throws Exception {
         List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
 
