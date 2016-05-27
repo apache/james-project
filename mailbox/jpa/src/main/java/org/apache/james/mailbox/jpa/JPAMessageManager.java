@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.jpa;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -35,6 +36,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -57,7 +59,7 @@ public class JPAMessageManager extends StoreMessageManager {
     
     @Override
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content,
-                                                  final Flags flags, PropertyBuilder propertyBuilder) throws MailboxException{
+                                                  final Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException{
 
         return new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
     }

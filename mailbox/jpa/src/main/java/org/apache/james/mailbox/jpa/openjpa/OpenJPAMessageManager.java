@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.jpa.openjpa;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -73,7 +75,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     }
 
     @Override
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException {
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException {
         int headerEnd = bodyStartOctet -2;
         if (headerEnd < 0) {
             headerEnd = 0;
@@ -84,7 +86,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
         case Encryption:
             return new JPAEncryptedMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
         default:
-            return super.createMessage(internalDate, size, bodyStartOctet, content, flags,  propertyBuilder);
+            return super.createMessage(internalDate, size, bodyStartOctet, content, flags,  propertyBuilder, attachments);
         }
        
     }
