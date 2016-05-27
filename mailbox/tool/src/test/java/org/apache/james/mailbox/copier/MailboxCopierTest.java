@@ -38,6 +38,7 @@ import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -154,6 +155,7 @@ public class MailboxCopierTest {
     private MailboxManager newInMemoryMailboxManager() {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+        MessageParser messageParser = new MessageParser();
 
         return new StoreMailboxManager(
             new InMemoryMailboxSessionMapperFactory(), 
@@ -163,7 +165,8 @@ public class MailboxCopierTest {
                 }
             },
             aclResolver,
-            groupMembershipResolver
+            groupMembershipResolver,
+            messageParser
             );
     
     }

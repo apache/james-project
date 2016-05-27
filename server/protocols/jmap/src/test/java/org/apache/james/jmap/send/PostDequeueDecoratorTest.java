@@ -48,6 +48,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -77,7 +78,8 @@ public class PostDequeueDecoratorTest {
         mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver);
+        MessageParser messageParser = new MessageParser();
+        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver, messageParser);
         mailboxManager.init();
 
         mockedMailQueueItem = mock(MailQueueItem.class);

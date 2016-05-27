@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,9 +83,10 @@ public class InMemoryMailboxManagerTest extends AbstractMailboxManagerTest {
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+        MessageParser messageParser = new MessageParser();
 
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        StoreMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+        StoreMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser);
         mailboxManager.init();
         
         setMailboxManager(mailboxManager);

@@ -48,6 +48,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.elasticsearch.client.Client;
 import org.junit.Before;
 import org.junit.Rule;
@@ -177,7 +178,8 @@ public class ElasticSearchIntegrationTest {
             new MockAuthenticator(),
             new JVMMailboxPathLocker(),
             new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver());
+            new SimpleGroupMembershipResolver(),
+            new MessageParser());
         storeMailboxManager.setMessageSearchIndex(elasticSearchListeningMessageSearchIndex);
         storeMailboxManager.init();
     }

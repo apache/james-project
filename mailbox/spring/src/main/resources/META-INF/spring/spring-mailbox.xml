@@ -52,6 +52,11 @@
       Group Membership Resolver
      -->
     <bean id="groupMembershipResolver" class="org.apache.james.mailbox.acl.SimpleGroupMembershipResolver"/>
+    <!--
+      Attachments
+     -->
+    <bean id="messageParser" class="org.apache.james.mailbox.store.mail.model.impl.MessageParser"/>
+
 
 
     <beans profile="cassandra">

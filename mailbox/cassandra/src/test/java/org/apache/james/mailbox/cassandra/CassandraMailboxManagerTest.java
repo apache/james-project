@@ -25,6 +25,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
@@ -33,7 +34,8 @@ import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,8 @@ public class CassandraMailboxManagerTest extends AbstractMailboxManagerTest {
         new CassandraMailboxCounterModule(),
         new CassandraUidModule(),
         new CassandraModSeqModule(),
-        new CassandraSubscriptionModule()));
+        new CassandraSubscriptionModule(),
+        new CassandraAttachmentModule()));
 
     /**
      * Setup the mailboxManager.
@@ -92,7 +95,7 @@ public class CassandraMailboxManagerTest extends AbstractMailboxManagerTest {
             CASSANDRA.getConf(),
             CASSANDRA.getTypesProvider());
 
-        final CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, null, new JVMMailboxPathLocker());
+        final CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, null, new NoMailboxPathLocker(), new MessageParser());
         manager.init();
 
         setMailboxManager(manager);

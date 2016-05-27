@@ -31,6 +31,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
 import org.junit.Before;
 
@@ -47,8 +48,9 @@ public class MaildirStressTest extends AbstractStressTest {
         MaildirMailboxSessionMapperFactory mf = new MaildirMailboxSessionMapperFactory(store);
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+        MessageParser messageParser = new MessageParser();
 
-        mailboxManager = new StoreMailboxManager(mf, null, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+        mailboxManager = new StoreMailboxManager(mf, null, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser);
         mailboxManager.init();
 
     }

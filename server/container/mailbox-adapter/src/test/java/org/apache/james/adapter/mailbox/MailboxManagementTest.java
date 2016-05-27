@@ -31,6 +31,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MockAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +56,8 @@ public class MailboxManagementTest {
             new MockAuthenticator(),
             new JVMMailboxPathLocker(),
             new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver());
+            new SimpleGroupMembershipResolver(),
+            new MessageParser());
         mailboxManager.init();
         mailboxManagerManagement = new MailboxManagerManagement();
         mailboxManagerManagement.setMailboxManager(mailboxManager);

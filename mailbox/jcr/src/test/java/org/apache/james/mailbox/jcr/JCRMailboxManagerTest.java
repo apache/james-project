@@ -38,6 +38,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.mail.JCRModSeqProvider;
 import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.LoggerFactory;
@@ -93,8 +94,9 @@ public class JCRMailboxManagerTest extends AbstractMailboxManagerTest {
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+        MessageParser messageParser = new MessageParser();
 
-        JCRMailboxManager manager = new JCRMailboxManager(mf, null, locker, aclResolver, groupMembershipResolver);
+        JCRMailboxManager manager = new JCRMailboxManager(mf, null, locker, aclResolver, groupMembershipResolver, messageParser);
         manager.init();
         setMailboxManager(manager);
     }

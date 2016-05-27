@@ -33,14 +33,15 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
 import com.google.common.collect.Lists;
 
 public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Inject
-    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
-        super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver);
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
+        super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser);
     }
 
     @Override
@@ -58,6 +59,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getAclResolver(),
             getGroupMembershipResolver(),
             getQuotaManager(),
-            getQuotaRootResolver());
+            getQuotaRootResolver(),
+            getMessageParser());
     }
 }

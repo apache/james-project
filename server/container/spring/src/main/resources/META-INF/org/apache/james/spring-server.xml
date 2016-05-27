@@ -119,6 +119,7 @@
        Mailbox
     ===========================================================================
     -->
+    <bean id="messageParser" class="org.apache.james.mailbox.store.mail.model.impl.MessageParser" init-method="init"/>
 
     <!-- Mailbox Managers -->
     <bean class="org.apache.james.container.spring.bean.factorypostprocessor.MailboxConfigurationBeanFactoryPostProcessor"/>

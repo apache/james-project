@@ -31,6 +31,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
 /**
@@ -39,12 +40,12 @@ import org.apache.james.mailbox.store.transaction.TransactionalMapper;
  */
 public class HBaseMailboxManager extends StoreMailboxManager {
 
-    public HBaseMailboxManager(HBaseMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
-        super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver);
+    public HBaseMailboxManager(HBaseMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
+        super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser);
     }
 
-    public HBaseMailboxManager(HBaseMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver) {
-        super(mapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver);
+    public HBaseMailboxManager(HBaseMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
+        super(mapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser);
     }
 
     @Override
@@ -88,6 +89,7 @@ public class HBaseMailboxManager extends StoreMailboxManager {
             getAclResolver(),
             getGroupMembershipResolver(),
             getQuotaManager(),
-            getQuotaRootResolver());
+            getQuotaRootResolver(),
+            getMessageParser());
     }
 }

@@ -61,11 +61,14 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.mail.model.Attachment;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
@@ -81,6 +84,10 @@ import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
@@ -111,11 +118,14 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         MINIMAL_PERMANET_FLAGS.add(Flags.Flag.SEEN);
     }
 
+    private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
+
+
     private final Mailbox mailbox;
 
     private final MailboxEventDispatcher dispatcher;
 
-    private final MessageMapperFactory mapperFactory;
+    private final MailboxSessionMapperFactory mapperFactory;
 
     private final MessageSearchIndex index;
 
@@ -129,10 +139,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private final MailboxPathLocker locker;
 
+    private final MessageParser messageParser;
+
     private int fetchBatchSize;
 
-    public StoreMessageManager(MessageMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver,
-            final GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
+    public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver,
+            final GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser) throws MailboxException {
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
         this.mapperFactory = mapperFactory;
@@ -142,6 +154,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         this.groupMembershipResolver = groupMembershipResolver;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
+        this.messageParser = messageParser;
     }
 
     public void setFetchBatchSize(int fetchBatchSize) {
@@ -370,7 +383,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             contentIn = new SharedFileInputStream(file);
             final int size = (int) file.length();
 
-            final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder);
+            final List<Attachment> attachments = extractAttachments(contentIn);
+            final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
 
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
@@ -378,7 +392,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
                 @Override
                 public Long execute() throws MailboxException {
-                    MessageMetaData data = appendMessageToStore(message, mailboxSession);
+                    MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
 
                     SortedMap<Long, MessageMetaData> uids = new TreeMap<Long, MessageMetaData>();
                     uids.put(data.getUid(), data);
@@ -409,6 +423,15 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     }
 
+    private List<Attachment> extractAttachments(SharedFileInputStream contentIn) {
+        try {
+            return messageParser.retrieveAttachments(contentIn);
+        } catch (Exception e) {
+            LOG.warn("Error while parsing mail's attachments: " + e.getMessage(), e);
+            return ImmutableList.of();
+        }
+    }
+
     /**
      * Create a new {@link MailboxMessage} for the given data
      * 
@@ -417,11 +440,16 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * @param bodyStartOctet
      * @param content
      * @param flags
+     * @param attachments 
      * @return membership
      * @throws MailboxException
      */
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder) throws MailboxException {
-        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId());
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException {
+        ImmutableList.Builder<AttachmentId> attachmentsIds = ImmutableList.builder();
+        for (Attachment attachment: attachments) {
+            attachmentsIds.add(attachment.getAttachmentId());
+        }
+        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachmentsIds.build());
     }
 
     /**
@@ -607,12 +635,16 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }, true);
     }
 
-    protected MessageMetaData appendMessageToStore(final MailboxMessage message, MailboxSession session) throws MailboxException {
-        final MessageMapper mapper = mapperFactory.getMessageMapper(session);
+    protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<Attachment> attachments, MailboxSession session) throws MailboxException {
+        final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+        final AttachmentMapper attachmentMapper = mapperFactory.getAttachmentMapper(session);
         return mapperFactory.getMessageMapper(session).execute(new Mapper.Transaction<MessageMetaData>() {
 
             public MessageMetaData run() throws MailboxException {
-                return mapper.add(getMailboxEntity(), message);
+                for (Attachment attachment: attachments) {
+                    attachmentMapper.storeAttachment(attachment);
+                }
+                return messageMapper.add(getMailboxEntity(), message);
             }
 
         });

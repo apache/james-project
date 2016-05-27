@@ -26,7 +26,7 @@
     <!-- 
       Mailbox JPA
      -->
-          
+
     <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
 
     <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager" init-method="init">
@@ -36,6 +36,7 @@
         <constructor-arg index="3" type="boolean" value="false"/>
         <constructor-arg index="4" ref="aclResolver"/>
         <constructor-arg index="5" ref="groupMembershipResolver"/>
+        <constructor-arg index="6" ref="messageParser"/>
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
