@@ -19,24 +19,14 @@
 
 package org.apache.james.jmap.model;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
-import org.apache.james.jmap.model.message.EMailer;
-import org.apache.james.jmap.model.message.IndexableMessage;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -46,142 +36,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimap;
 
 @JsonDeserialize(builder = Message.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
 public class Message {
-    public static final String NO_SUBJECT = "(No subject)";
-    public static final String MULTIVALUED_HEADERS_SEPARATOR = ", ";
-    public static final String NO_BODY = "(Empty)";
-    public static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public static Message fromMailboxMessage(MailboxMessage mailboxMessage,
-            List<org.apache.james.mailbox.store.mail.model.Attachment> attachments, 
-            Function<Long, MessageId> uidToMessageId) {
-        IndexableMessage im = IndexableMessage.from(mailboxMessage, new DefaultTextExtractor(), UTC_ZONE_ID);
-        MessageId messageId = uidToMessageId.apply(im.getId());
-        return builder()
-                .id(messageId)
-                .blobId(String.valueOf(im.getId()))
-                .threadId(messageId.serialize())
-                .mailboxIds(ImmutableList.of(im.getMailboxId()))
-                .inReplyToMessageId(getHeaderAsSingleValue(im, "in-reply-to"))
-                .isUnread(im.isUnRead())
-                .isFlagged(im.isFlagged())
-                .isAnswered(im.isAnswered())
-                .isDraft(im.isDraft())
-                .subject(getSubject(im))
-                .headers(toMap(im.getHeaders()))
-                .from(firstElasticSearchEmailers(im.getFrom()))
-                .to(fromElasticSearchEmailers(im.getTo()))
-                .cc(fromElasticSearchEmailers(im.getCc()))
-                .bcc(fromElasticSearchEmailers(im.getBcc()))
-                .replyTo(fromElasticSearchEmailers(im.getReplyTo()))
-                .size(im.getSize())
-                .date(getInternalDate(mailboxMessage, im))
-                .preview(getPreview(im))
-                .textBody(getTextBody(im))
-                .htmlBody(getHtmlBody(im))
-                .attachments(getAttachments(attachments))
-                .build();
-    }
-
-    private static String getSubject(IndexableMessage im) {
-        return Optional.ofNullable(
-                    Strings.emptyToNull(
-                        im.getSubjects()
-                            .stream()
-                            .collect(Collectors.joining(MULTIVALUED_HEADERS_SEPARATOR))))
-                .orElse(NO_SUBJECT);
-    }
-    
-    private static Emailer firstElasticSearchEmailers(Set<EMailer> emailers) {
-        return emailers.stream()
-                    .findFirst()
-                    .map(Message::fromElasticSearchEmailer)
-                    .orElse(null);
-    }
-    
-    private static ImmutableList<Emailer> fromElasticSearchEmailers(Set<EMailer> emailers) {
-        return emailers.stream()
-                    .map(Message::fromElasticSearchEmailer)
-                    .collect(ImmutableCollectors.toImmutableList());
-    }
-    
-    private static Emailer fromElasticSearchEmailer(EMailer emailer) {
-        return Emailer.builder()
-                    .name(emailer.getName())
-                    .email(emailer.getAddress())
-                    .build();
-    }
-    
-    private static String getPreview(IndexableMessage im) {
-        Stream<Optional<String>> htmlThenTextStream = Stream.of(
-                im.getBodyHtml(),
-                im.getBodyText());
-
-        String body = htmlThenTextStream
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .filter(stringBody -> !stringBody.isEmpty())
-            .findFirst()
-            .orElse(NO_BODY);
-        
-        return computePreview(body);
-    }
-
-    @VisibleForTesting static String computePreview(String body) {
-        if (body.length() <= 256) {
-            return body;
-        }
-        return body.substring(0, 253) + "...";
-    }
-    
-    private static ImmutableMap<String, String> toMap(Multimap<String, String> multimap) {
-        return multimap
-                .asMap()
-                .entrySet()
-                .stream()
-                .collect(ImmutableCollectors.toImmutableMap(Map.Entry::getKey, x -> joinOnComma(x.getValue())));
-    }
-    
-    private static String getHeaderAsSingleValue(IndexableMessage im, String header) {
-        return Strings.emptyToNull(joinOnComma(im.getHeaders().get(header)));
-    }
-    
-    private static String joinOnComma(Iterable<String> iterable) {
-        return String.join(MULTIVALUED_HEADERS_SEPARATOR, iterable);
-    }
-    
-    private static ZonedDateTime getInternalDate(MailboxMessage mailboxMessage, IndexableMessage im) {
-        return ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), UTC_ZONE_ID);
-    }
-
-    private static String getTextBody(IndexableMessage im) {
-        return im.getBodyText().map(Strings::emptyToNull).orElse(null);
-    }
-
-    private static String getHtmlBody(IndexableMessage im) {
-        return im.getBodyHtml().map(Strings::emptyToNull).orElse(null);
-    }
-
-    private static List<Attachment> getAttachments(List<org.apache.james.mailbox.store.mail.model.Attachment> attachments) {
-        return attachments.stream()
-                .map(Message::fromMailboxAttachment)
-                .collect(ImmutableCollectors.toImmutableList());
-    }
-
-    private static Attachment fromMailboxAttachment(org.apache.james.mailbox.store.mail.model.Attachment attachment) {
-        return Attachment.builder()
-                    .blobId(attachment.getAttachmentId().getId())
-                    .type(attachment.getType())
-                    .size(attachment.getSize())
-                    .build();
     }
 
     @JsonPOJOBuilder(withPrefix = "")

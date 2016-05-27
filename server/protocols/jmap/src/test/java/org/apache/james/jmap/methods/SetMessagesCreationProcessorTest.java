@@ -35,26 +35,34 @@ import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
+import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.mailet.Mail;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SetMessagesCreationProcessorTest {
+    
+    private MessageFactory messageFactory;
 
     private static final Message FAKE_MESSAGE = Message.builder()
             .id(MessageId.of("user|outbox|1"))
@@ -67,10 +75,17 @@ public class SetMessagesCreationProcessorTest {
             .date(ZonedDateTime.now())
             .preview("anything")
             .build();
+    
+    @Before
+    public void setup() {
+        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
+        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        messageFactory = new MessageFactory(messagePreview);
+    }
 
     @Test
     public void processShouldReturnEmptyCreatedWhenRequestHasEmptyCreate() {
-        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null, null, null, null, null) {
+        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null, null, null, null, null, messageFactory) {
             @Override
             protected Optional<Mailbox> getOutbox(MailboxSession session) throws MailboxException {
 				Mailbox fakeOutbox = (Mailbox) mock(Mailbox.class);
@@ -104,7 +119,7 @@ public class SetMessagesCreationProcessorTest {
         when(mockSessionMapperFactory.createMessageMapper(any(MailboxSession.class)))
                 .thenReturn(stubMapper);
 
-        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null, mockSessionMapperFactory, null, null, null) {
+        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null, mockSessionMapperFactory, null, null, null, messageFactory) {
             @Override
             protected MessageWithId<Message> createMessageInOutboxAndSend(MessageWithId.CreationMessageEntry createdEntry, MailboxSession session, Mailbox outbox, Function<Long, MessageId> buildMessageIdFromUid) {
                 return new MessageWithId<>(createdEntry.getCreationId(), FAKE_MESSAGE);
@@ -127,7 +142,7 @@ public class SetMessagesCreationProcessorTest {
     @Test(expected = MailboxRoleNotFoundException.class)
     public void processShouldThrowWhenOutboxNotFound() {
         // Given
-        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null, null, null, null, null) {
+        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null, null, null, null, null, messageFactory) {
             @Override
             protected Optional<Mailbox> getOutbox(MailboxSession session) throws MailboxException {
                 return Optional.empty();
@@ -149,7 +164,7 @@ public class SetMessagesCreationProcessorTest {
         MailFactory mockedMailFactory = mock(MailFactory.class);
 
         SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null,
-                stubSessionMapperFactory, new MIMEMessageConverter(), mockedMailSpool, mockedMailFactory) {
+                stubSessionMapperFactory, new MIMEMessageConverter(), mockedMailSpool, mockedMailFactory, messageFactory) {
             @Override
             protected Optional<Mailbox> getOutbox(MailboxSession session) throws MailboxException {
                 TestId stubMailboxId = mock(TestId.class);
@@ -178,7 +193,7 @@ public class SetMessagesCreationProcessorTest {
         MailFactory mockedMailFactory = mock(MailFactory.class);
 
         SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(null, null,
-                stubSessionMapperFactory, new MIMEMessageConverter(), mockedMailSpool, mockedMailFactory) {
+                stubSessionMapperFactory, new MIMEMessageConverter(), mockedMailSpool, mockedMailFactory, messageFactory) {
             @Override
             protected Optional<Mailbox> getOutbox(MailboxSession session) throws MailboxException {
                 TestId stubMailboxId = mock(TestId.class);

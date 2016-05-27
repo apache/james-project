@@ -221,7 +221,93 @@ public abstract class GetMessagesMethodTest {
             .body(FIRST_MESSAGE + ".subject", equalTo("my test subject"))
             .body(FIRST_MESSAGE + ".htmlBody", equalTo("This is a <b>HTML</b> mail"))
             .body(FIRST_MESSAGE + ".isUnread", equalTo(true))
-            .body(FIRST_MESSAGE + ".preview", equalTo("This is a <b>HTML</b> mail"))
+            .body(FIRST_MESSAGE + ".preview", equalTo("This is a HTML mail"))
+            .body(FIRST_MESSAGE + ".headers", equalTo(ImmutableMap.of("content-type", "text/html", "subject", "my test subject")))
+            .body(FIRST_MESSAGE + ".date", equalTo("2014-10-30T14:12:00Z"));
+    }
+    
+    @Test
+    public void getMessagesShouldReturnMessageWhenComplexHtmlMessage() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
+                new ByteArrayInputStream("Content-Type: text/html\r\nSubject: my test subject\r\n\r\nThis is a <b>HTML</b> mail containing <u>underlined part</u>, <i>italic part</i> and <u><i>underlined AND italic part</i></u>".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+        
+        await();
+        
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MESSAGE + ".id", equalTo(username + "|inbox|1"))
+            .body(FIRST_MESSAGE + ".threadId", equalTo(username + "|inbox|1"))
+            .body(FIRST_MESSAGE + ".subject", equalTo("my test subject"))
+            .body(FIRST_MESSAGE + ".htmlBody", equalTo("This is a <b>HTML</b> mail containing <u>underlined part</u>, <i>italic part</i> and <u><i>underlined AND italic part</i></u>"))
+            .body(FIRST_MESSAGE + ".isUnread", equalTo(true))
+            .body(FIRST_MESSAGE + ".preview", equalTo("This is a HTML mail containing underlined part, italic part and underlined AND italic part"))
+            .body(FIRST_MESSAGE + ".headers", equalTo(ImmutableMap.of("content-type", "text/html", "subject", "my test subject")))
+            .body(FIRST_MESSAGE + ".date", equalTo("2014-10-30T14:12:00Z"));
+    }
+    
+    @Test
+    public void messagePreviewShouldContainTagsWhenPlainTextMessageContainsTags() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
+                new ByteArrayInputStream("Content-Type: text/plain\r\nSubject: my test subject\r\n\r\nHere is a listing of HTML tags : <b>jfjfjfj</b>, <i>jfhdgdgdfj</i>, <u>jfjaaafj</u>".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+
+        await();
+        
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MESSAGE + ".preview", equalTo("Here is a listing of HTML tags : <b>jfjfjfj</b>, <i>jfhdgdgdfj</i>, <u>jfjaaafj</u>"));
+    }
+    
+    @Test
+    public void getMessagesShouldReturnMessageWhenHtmlMessageWithIncorrectTag() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
+                new ByteArrayInputStream("Content-Type: text/html\r\nSubject: my test subject\r\n\r\nThis is a <ganan>HTML</b> mail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+        
+        await();
+        
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(FIRST_MESSAGE + ".id", equalTo(username + "|inbox|1"))
+            .body(FIRST_MESSAGE + ".threadId", equalTo(username + "|inbox|1"))
+            .body(FIRST_MESSAGE + ".subject", equalTo("my test subject"))
+            .body(FIRST_MESSAGE + ".htmlBody", equalTo("This is a <ganan>HTML</b> mail"))
+            .body(FIRST_MESSAGE + ".isUnread", equalTo(true))
+            .body(FIRST_MESSAGE + ".preview", equalTo("This is a HTML mail"))
             .body(FIRST_MESSAGE + ".headers", equalTo(ImmutableMap.of("content-type", "text/html", "subject", "my test subject")))
             .body(FIRST_MESSAGE + ".date", equalTo("2014-10-30T14:12:00Z"));
     }
@@ -391,7 +477,7 @@ public abstract class GetMessagesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(FIRST_MESSAGE + ".hasAttachment", equalTo(true))
             .body(ATTACHMENTS, hasSize(2))
-            .body(FIRST_MESSAGE + ".preview", equalTo("<b>html</b>\n"))
+            .body(FIRST_MESSAGE + ".preview", equalTo("html\n"))
             .body(FIRST_MESSAGE + ".textBody", nullValue())
             .body(FIRST_MESSAGE + ".htmlBody", equalTo("<b>html</b>\n"));
     }
@@ -443,7 +529,7 @@ public abstract class GetMessagesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(FIRST_MESSAGE + ".hasAttachment", equalTo(true))
             .body(ATTACHMENTS, hasSize(1))
-            .body(FIRST_MESSAGE + ".preview", equalTo("<i>blabla</i>\n<b>bloblo</b>\n"))
+            .body(FIRST_MESSAGE + ".preview", equalTo("blabla\nbloblo\n"))
             .body(FIRST_MESSAGE + ".textBody", equalTo("/blabla/\n*bloblo*\n"))
             .body(FIRST_MESSAGE + ".htmlBody", equalTo("<i>blabla</i>\n<b>bloblo</b>\n"));
     }

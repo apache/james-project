@@ -19,6 +19,7 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -30,11 +31,13 @@ import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -47,6 +50,17 @@ public class MailboxMessageTest {
     private static final ZonedDateTime ZONED_DATE = ZonedDateTime.of(2015, 07, 14, 12, 30, 42, 0, UTC_ZONE_ID);
     private static final Date INTERNAL_DATE = Date.from(ZONED_DATE.toInstant());
 
+    private MessageFactory messageFactory;
+    private MessagePreviewGenerator messagePreview ;
+    private HtmlTextExtractor htmlTextExtractor;
+    
+    @Before
+    public void setUp() {
+        htmlTextExtractor = mock(HtmlTextExtractor.class);
+        messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        messageFactory = new MessageFactory(messagePreview);
+    }
+    
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenIdIsNull() {
         Message.builder().build();
@@ -241,8 +255,7 @@ public class MailboxMessageTest {
                 new PropertyBuilder(),
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
-        
-        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
             .containsExactly("(Empty)", 0L, "(No subject)", ImmutableMap.of(), ZONED_DATE);
@@ -263,8 +276,7 @@ public class MailboxMessageTest {
                 new PropertyBuilder(),
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
-        
-        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee)
             .extracting(Message::isIsUnread, Message::isIsFlagged, Message::isIsAnswered, Message::isIsDraft)
             .containsExactly(true, true, true, true);
@@ -306,7 +318,7 @@ public class MailboxMessageTest {
                 .put("in-reply-to", "<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .put("other-header", "other header value")
                 .build();
-        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         Message expected = Message.builder()
                 .id(MessageId.of("user|box|0"))
                 .blobId("0")
@@ -341,31 +353,8 @@ public class MailboxMessageTest {
                 new PropertyBuilder(),
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
-        
-        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee.getTextBody()).hasValue("Mail body");
-    }
-    
-    @Test
-    public void bodyWith256LengthShouldNotBeTruncated() {
-        String body256 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
-                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
-                + "00000000001111111111222222222233333333334444444444555555";
-        assertThat(body256.length()).isEqualTo(256);
-        assertThat(Message.computePreview(body256)).isEqualTo(body256);
-    }
-    
-    @Test
-    public void bodyWith257LengthShouldBeTruncated() {
-        String body257 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
-                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
-                + "000000000011111111112222222222333333333344444444445555555";
-        String expected = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
-                + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
-                + "00000000001111111111222222222233333333334444444444555...";
-        assertThat(body257.length()).isEqualTo(257);
-        assertThat(expected.length()).isEqualTo(256);
-        assertThat(Message.computePreview(body257)).isEqualTo(expected);
     }
 
     @Test
@@ -389,8 +378,7 @@ public class MailboxMessageTest {
                 new PropertyBuilder(),
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
-        
-        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee.getPreview()).isEqualTo(expectedPreview);
     }
     
@@ -405,8 +393,7 @@ public class MailboxMessageTest {
                 new PropertyBuilder(),
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
-        
-        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee.getAttachments()).isEmpty();
     }
     
@@ -430,8 +417,7 @@ public class MailboxMessageTest {
                 .size(payload.length())
                 .type(type)
                 .build();
-
-        Message testee = Message.fromMailboxMessage(testMail, 
+        Message testee = messageFactory.fromMailboxMessage(testMail,
                 ImmutableList.of(org.apache.james.mailbox.store.mail.model.Attachment.builder()
                         .attachmentId(AttachmentId.from(blodId))
                         .bytes(payload.getBytes())

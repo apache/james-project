@@ -40,6 +40,7 @@ import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
@@ -86,6 +87,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final MIMEMessageConverter mimeMessageConverter;
     private final MailSpool mailSpool;
     private final MailFactory mailFactory;
+    private final MessageFactory messageFactory;
 
     @Inject
     @VisibleForTesting
@@ -94,13 +96,15 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                  MIMEMessageConverter mimeMessageConverter,
                                  MailSpool mailSpool,
-                                 MailFactory mailFactory) {
+                                 MailFactory mailFactory,
+                                 MessageFactory messageFactory) {
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.mimeMessageConverter = mimeMessageConverter;
         this.mailSpool = mailSpool;
         this.mailFactory = mailFactory;
+        this.messageFactory = messageFactory;
     }
 
     @Override
@@ -195,7 +199,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             MessageMapper messageMapper = mailboxSessionMapperFactory.createMessageMapper(session);
             MailboxMessage newMailboxMessage = buildMailboxMessage(createdEntry, outbox);
             messageMapper.add(outbox, newMailboxMessage);
-            Message jmapMessage = Message.fromMailboxMessage(newMailboxMessage, ImmutableList.of(), buildMessageIdFromUid);
+            Message jmapMessage = messageFactory.fromMailboxMessage(newMailboxMessage, ImmutableList.of(), buildMessageIdFromUid);
             sendMessage(newMailboxMessage, jmapMessage, session);
             return new MessageWithId<>(createdEntry.getCreationId(), jmapMessage);
         } catch (MailboxException | MessagingException | IOException e) {

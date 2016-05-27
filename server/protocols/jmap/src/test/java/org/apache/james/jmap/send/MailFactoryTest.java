@@ -27,9 +27,14 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.model.MessagePreviewGenerator;
+import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -69,7 +74,10 @@ public class MailFactoryTest {
                 new FlagsBuilder().add(Flags.Flag.SEEN).build(),
                 propertyBuilder,
                 TestId.of(2));
-        jmapMessage = Message.fromMailboxMessage(mailboxMessage, ImmutableList.of(), x -> MessageId.of("test|test|" + x));
+        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
+        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        MessageFactory messageFactory = new MessageFactory(messagePreview) ;
+        jmapMessage = messageFactory.fromMailboxMessage(mailboxMessage, ImmutableList.of(), x -> MessageId.of("test|test|" + x));
     }
 
     @Test(expected=NullPointerException.class)

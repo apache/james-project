@@ -34,6 +34,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
@@ -68,15 +69,18 @@ public class GetMessagesMethod implements Method {
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final AttachmentMapperFactory attachmentMapperFactory;
+    private final MessageFactory messageFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
             MessageMapperFactory messageMapperFactory,
             MailboxMapperFactory mailboxMapperFactory,
-            AttachmentMapperFactory attachmentMapperFactory) {
+            AttachmentMapperFactory attachmentMapperFactory,
+            MessageFactory messageFactory) {
         this.messageMapperFactory = messageMapperFactory;
         this.mailboxMapperFactory = mailboxMapperFactory;
         this.attachmentMapperFactory = attachmentMapperFactory;
+        this.messageFactory = messageFactory;
     }
     
     @Override
@@ -135,7 +139,7 @@ public class GetMessagesMethod implements Method {
 
     
     private Function<CompletedMailboxMessage, Message> toJmapMessage(MailboxSession mailboxSession) {
-        return (completedMailboxMessage) -> Message.fromMailboxMessage(
+        return (completedMailboxMessage) -> messageFactory.fromMailboxMessage(
                 completedMailboxMessage.mailboxMessage, 
                 completedMailboxMessage.attachments, 
                 uid -> new MessageId(mailboxSession.getUser(), completedMailboxMessage.mailboxPath , uid));
