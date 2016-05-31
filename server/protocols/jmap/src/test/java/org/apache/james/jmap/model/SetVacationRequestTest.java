@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.AbstractMap;
+import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class SetVacationRequestTest {
 
     @Test
     public void setVacationRequestShouldBeConstructedWithTheRightInformation() {
-        VacationResponse vacationResponse = VacationResponse.builder().id(VACATION_ID).textBody("any message").build();
+        VacationResponse vacationResponse = VacationResponse.builder().id(VACATION_ID).textBody(Optional.of("any message")).build();
         SetVacationRequest setVacationRequest = SetVacationRequest.builder()
             .update(ImmutableMap.of(VACATION_ID, vacationResponse))
             .build();
@@ -43,7 +44,7 @@ public class SetVacationRequestTest {
 
     @Test(expected = NotImplementedException.class)
     public void accountIdIsNotImplemented() {
-        VacationResponse vacationResponse = VacationResponse.builder().id(VACATION_ID).textBody("any message").build();
+        VacationResponse vacationResponse = VacationResponse.builder().id(VACATION_ID).textBody(Optional.of("any message")).build();
         SetVacationRequest.builder()
             .accountId("any")
             .update(ImmutableMap.of(VACATION_ID, vacationResponse))

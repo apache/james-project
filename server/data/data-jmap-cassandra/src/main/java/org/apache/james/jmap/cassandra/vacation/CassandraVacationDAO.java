@@ -62,7 +62,8 @@ public class CassandraVacationDAO {
             .value(CassandraVacationTable.FROM_DATE, bindMarker(CassandraVacationTable.FROM_DATE))
             .value(CassandraVacationTable.TO_DATE, bindMarker(CassandraVacationTable.TO_DATE))
             .value(CassandraVacationTable.TEXT, bindMarker(CassandraVacationTable.TEXT))
-            .value(CassandraVacationTable.SUBJECT, bindMarker(CassandraVacationTable.SUBJECT)));
+            .value(CassandraVacationTable.SUBJECT, bindMarker(CassandraVacationTable.SUBJECT))
+            .value(CassandraVacationTable.HTML, bindMarker(CassandraVacationTable.HTML)));
 
         this.readStatement = session.prepare(select()
             .from(CassandraVacationTable.TABLE_NAME)
@@ -77,8 +78,9 @@ public class CassandraVacationDAO {
                 .setBool(CassandraVacationTable.IS_ENABLED, vacation.isEnabled())
                 .setUDTValue(CassandraVacationTable.FROM_DATE, convertToUDTValue(vacation.getFromDate()))
                 .setUDTValue(CassandraVacationTable.TO_DATE, convertToUDTValue(vacation.getToDate()))
-                .setString(CassandraVacationTable.TEXT, vacation.getTextBody())
-                .setString(CassandraVacationTable.SUBJECT, vacation.getSubject().orElse(null)));
+                .setString(CassandraVacationTable.TEXT, vacation.getTextBody().orElse(null))
+                .setString(CassandraVacationTable.SUBJECT, vacation.getSubject().orElse(null))
+                .setString(CassandraVacationTable.HTML, vacation.getHtmlBody().orElse(null)));
     }
 
     public CompletableFuture<Optional<Vacation>> retrieveVacation(AccountId accountId) {
@@ -88,8 +90,9 @@ public class CassandraVacationDAO {
                 .enabled(row.getBool(CassandraVacationTable.IS_ENABLED))
                 .fromDate(retrieveDate(row, CassandraVacationTable.FROM_DATE))
                 .toDate(retrieveDate(row, CassandraVacationTable.TO_DATE))
-                .textBody(row.getString(CassandraVacationTable.TEXT))
                 .subject(Optional.ofNullable(row.getString(CassandraVacationTable.SUBJECT)))
+                .textBody(Optional.ofNullable(row.getString(CassandraVacationTable.TEXT)))
+                .htmlBody(Optional.ofNullable(row.getString(CassandraVacationTable.HTML)))
                 .build()));
     }
 

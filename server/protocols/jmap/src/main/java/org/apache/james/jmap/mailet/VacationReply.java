@@ -19,14 +19,21 @@
 
 package org.apache.james.jmap.mailet;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
+import javax.activation.DataHandler;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
+import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.jsoup.Jsoup;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -43,8 +50,7 @@ public class VacationReply {
         public static final boolean NOT_REPLY_TO_ALL = false;
         private final Mail originalMail;
         private MailAddress mailRecipient;
-        private String reason;
-        private Optional<String> subject = Optional.empty();
+        private Vacation vacation;
 
         private Builder(Mail originalMail) {
             Preconditions.checkNotNull(originalMail, "Origin mail shall not be null");
@@ -57,14 +63,8 @@ public class VacationReply {
             return this;
         }
 
-        public Builder reason(String reason) {
-            Preconditions.checkNotNull(reason);
-            this.reason = reason;
-            return this;
-        }
-
-        public Builder subject(Optional<String> subject) {
-            this.subject = subject;
+        public Builder vacation(Vacation vacation) {
+            this.vacation = vacation;
             return this;
         }
 
@@ -72,17 +72,60 @@ public class VacationReply {
             Preconditions.checkState(mailRecipient != null, "Original recipient address should not be null");
             Preconditions.checkState(originalMail.getSender() != null, "Original sender address should not be null");
 
+            MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(false);
+            reply.setContent(generateMultipart());
+
             return new VacationReply(mailRecipient, ImmutableList.of(originalMail.getSender()), generateMimeMessage());
         }
 
         private MimeMessage generateMimeMessage() throws MessagingException {
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(NOT_REPLY_TO_ALL);
-            subject.ifPresent(Throwing.consumer(subjectString -> reply.setHeader("subject", subjectString)));
-            reply.setText(reason);
+            vacation.getSubject().ifPresent(Throwing.consumer(subjectString -> reply.setHeader("subject", subjectString)));
             reply.setHeader("from", mailRecipient.toString());
             reply.setHeader("to", originalMail.getSender().toString());
             reply.setHeader("Auto-Submitted", "auto-replied");
+
+            return addBody(reply);
+        }
+
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        private MimeMessage addBody(MimeMessage reply) throws MessagingException {
+            if (! vacation.getHtmlBody().isPresent()) {
+                reply.setText(vacation.getTextBody().get());
+            } else {
+                reply.setContent(generateMultipart());
+            }
             return reply;
+        }
+
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        private Multipart generateMultipart() throws MessagingException {
+            try {
+
+                Multipart multipart = new MimeMultipart("mixed");
+                addTextPart(multipart, vacation.getHtmlBody().get(), "text/html");
+                addTextPart(multipart, retrievePlainTextMessage(), "text/plain");
+                return multipart;
+            } catch (IOException e) {
+                throw new MessagingException("Cannot read specified content", e);
+            }
+        }
+
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        private String retrievePlainTextMessage() {
+            return vacation.getTextBody()
+                .orElseGet(() -> Jsoup.parse(vacation.getHtmlBody().get()).text());
+        }
+
+        private Multipart addTextPart(Multipart multipart, String text, String contentType) throws MessagingException, IOException {
+            MimeBodyPart textReasonPart = new MimeBodyPart();
+            textReasonPart.setDataHandler(
+                new DataHandler(
+                    new ByteArrayDataSource(
+                        text,
+                        contentType + "; charset=UTF-8")));
+            multipart.addBodyPart(textReasonPart);
+            return multipart;
         }
     }
 

@@ -99,8 +99,9 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].fromDate", nullValue())
             .body(ARGUMENTS + ".list[0].toDate", nullValue())
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(false))
-            .body(ARGUMENTS + ".list[0].textBody", equalTo(""))
-            .body(ARGUMENTS + ".list[0].subject", nullValue());
+            .body(ARGUMENTS + ".list[0].subject", nullValue())
+            .body(ARGUMENTS + ".list[0].textBody", nullValue())
+            .body(ARGUMENTS + ".list[0].htmlBody", nullValue());
     }
 
     @Test
@@ -110,8 +111,9 @@ public abstract class GetVacationResponseTest {
                 .enabled(true)
                 .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00Z")))
                 .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00Z")))
-                .textBody("Test explaining my vacations")
                 .subject(Optional.of(SUBJECT))
+                .textBody(Optional.of("Test explaining my vacations"))
+                .htmlBody(Optional.of("<p>Test explaining my vacations</p>"))
                 .build());
 
         given()
@@ -135,7 +137,8 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].toDate", equalTo("2014-10-30T14:10:00Z"))
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
             .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"))
-            .body(ARGUMENTS + ".list[0].subject", equalTo(SUBJECT));
+            .body(ARGUMENTS + ".list[0].subject", equalTo(SUBJECT))
+            .body(ARGUMENTS + ".list[0].htmlBody", equalTo("<p>Test explaining my vacations</p>"));
     }
 
     @Test
@@ -145,7 +148,7 @@ public abstract class GetVacationResponseTest {
                 .enabled(true)
                 .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
                 .toDate(Optional.of(ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]")))
-                .textBody("Test explaining my vacations")
+                .textBody(Optional.of("Test explaining my vacations"))
                 .build());
 
         given()
@@ -178,7 +181,7 @@ public abstract class GetVacationResponseTest {
                 .enabled(true)
                 .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
                 .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00+02:00")))
-                .textBody("Test explaining my vacations")
+                .textBody(Optional.of("Test explaining my vacations"))
                 .build());
 
         given()

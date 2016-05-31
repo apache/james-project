@@ -28,5 +28,6 @@ public interface CassandraVacationTable {
     String IS_ENABLED = "is_enabled";
     String TEXT = "text";
     String SUBJECT = "subject";
+    String HTML = "html";
 
 }
