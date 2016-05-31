@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +30,7 @@ import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -37,6 +39,7 @@ import org.junit.rules.TemporaryFolder;
 import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
@@ -49,17 +52,14 @@ public class JamesCapabilitiesServerTest {
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void startShouldFailWhenNoMoveCapability() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedCapabilities())
             .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Basic));
         server = createCassandraJamesServer(mailboxManager);
 
-        server.start();
-
-        // In case of non-failure
-        server.stop();
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -70,21 +70,26 @@ public class JamesCapabilitiesServerTest {
         server = createCassandraJamesServer(mailboxManager);
 
         server.start();
-
-        server.stop();
     }
 
+    @After
+    public void teardown() {
+        server.stop();
+    }
+    
     private GuiceJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) {
+        Module mockMailboxManager = (binder) -> binder.bind(MailboxManager.class).toInstance(mailboxManager);
+        
         return new GuiceJamesServer()
             .combineWith(CassandraJamesServerMain.cassandraServerModule)
             .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
                 new TestFilesystemModule(temporaryFolder),
                 new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
+                mockMailboxManager,
                 new AbstractModule() {
 
                     @Override
                     protected void configure() {
-                        bind(MailboxManager.class).toInstance(mailboxManager);
                     }
 
                     @Provides
@@ -93,6 +98,7 @@ public class JamesCapabilitiesServerTest {
                         CassandraCluster cassandra = CassandraCluster.create(cassandraModule);
                         return cassandra.getConf();
                     }
+
                 });
     }
 }

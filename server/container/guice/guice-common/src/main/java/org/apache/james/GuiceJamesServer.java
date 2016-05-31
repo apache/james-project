@@ -68,14 +68,16 @@ public class GuiceJamesServer {
     
     public void start() throws Exception {
         Injector injector = Guice.createInjector(module);
-        injector.getInstance(ConfigurationsPerformer.class).initModules();
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
+        injector.getInstance(ConfigurationsPerformer.class).initModules();
         serverProbe = injector.getInstance(GuiceServerProbe.class);
         jmapPort = injector.getInstance(JMAPServer.class).getPort();
     }
 
     public void stop() {
-        preDestroy.stage();
+        if (preDestroy != null) {
+            preDestroy.stage();
+        }
     }
 
     public ExtendedServerProbe serverProbe() {
