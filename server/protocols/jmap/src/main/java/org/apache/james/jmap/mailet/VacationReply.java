@@ -21,7 +21,6 @@ package org.apache.james.jmap.mailet;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
@@ -34,6 +33,7 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.jsoup.Jsoup;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -88,6 +88,7 @@ public class VacationReply {
             return addBody(reply);
         }
 
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
         private MimeMessage addBody(MimeMessage reply) throws MessagingException {
             if (! vacation.getHtmlBody().isPresent()) {
                 reply.setText(vacation.getTextBody().get());
@@ -97,30 +98,23 @@ public class VacationReply {
             return reply;
         }
 
-
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
         private Multipart generateMultipart() throws MessagingException {
             try {
+
                 Multipart multipart = new MimeMultipart("mixed");
-                addPlainPart(multipart, vacation.getTextBody());
-                addHtmlPart(multipart, vacation.getHtmlBody());
+                addTextPart(multipart, vacation.getHtmlBody().get(), "text/html");
+                addTextPart(multipart, retrievePlainTextMessage(), "text/plain");
                 return multipart;
             } catch (IOException e) {
                 throw new MessagingException("Cannot read specified content", e);
             }
         }
 
-        private Multipart addPlainPart(Multipart multipart, Optional<String> textOptional) throws MessagingException, IOException {
-            if (textOptional.isPresent()) {
-                return addTextPart(multipart, textOptional.get(), "text/plain");
-            }
-            return multipart;
-        }
-
-        private Multipart addHtmlPart(Multipart multipart, Optional<String> htmlOptional) throws MessagingException, IOException {
-            if (htmlOptional.isPresent()) {
-                return addTextPart(multipart, htmlOptional.get(), "text/html");
-            }
-            return multipart;
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        private String retrievePlainTextMessage() {
+            return vacation.getTextBody()
+                .orElseGet(() -> Jsoup.parse(vacation.getHtmlBody().get()).text());
         }
 
         private Multipart addTextPart(Multipart multipart, String text, String contentType) throws MessagingException, IOException {

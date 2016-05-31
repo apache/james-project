@@ -36,8 +36,9 @@ import org.junit.Test;
 
 public class VacationReplyTest {
 
-    public static final String REASON = "I am in vacation dudes !";
-    public static final String HTML_REASON = "<p>I am in vacation dudes !</p>";
+    public static final String REASON = "I am in vacation dudes ! (plain text)";
+    public static final String HTML_REASON = "<b>I am in vacation dudes !</b> (html text)";
+    public static final String HTML_EXTRACTED_REASON = "I am in vacation dudes ! (html text)";
     public static final String SUBJECT = "subject";
 
     private MailAddress originalSender;
@@ -69,6 +70,22 @@ public class VacationReplyTest {
         assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
         assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
         assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(REASON);
+        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_REASON);
+    }
+
+    @Test
+    public void vacationReplyShouldExtractPlainTextContentWhenOnlyHtmlBody() throws Exception {
+        VacationReply vacationReply = VacationReply.builder(mail)
+            .vacation(Vacation.builder()
+                .enabled(true)
+                .htmlBody(Optional.of(HTML_REASON))
+                .build())
+            .receivedMailRecipient(originalRecipient)
+            .build();
+
+        assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
+        assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
+        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_EXTRACTED_REASON);
         assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_REASON);
     }
 
