@@ -60,7 +60,7 @@ public class VacationMailetTest {
         .enabled(true)
         .fromDate(Optional.of(DATE_TIME_2016))
         .toDate(Optional.of(DATE_TIME_2018))
-        .textBody("Explaining my vacation")
+        .textBody(Optional.of("Explaining my vacation"))
         .build();
 
     private VacationMailet testee;

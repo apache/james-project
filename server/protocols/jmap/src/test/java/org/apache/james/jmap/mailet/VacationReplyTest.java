@@ -28,6 +28,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
@@ -36,7 +37,9 @@ import org.junit.Test;
 public class VacationReplyTest {
 
     public static final String REASON = "I am in vacation dudes !";
-    public static final Optional<String> SUBJECT = Optional.of("Vacation subject specified by the user!");
+    public static final String HTML_REASON = "<p>I am in vacation dudes !</p>";
+    public static final String SUBJECT = "subject";
+
     private MailAddress originalSender;
     private MailAddress originalRecipient;
     private FakeMail mail;
@@ -55,19 +58,42 @@ public class VacationReplyTest {
     public void vacationReplyShouldGenerateASuitableAnswer() throws Exception {
 
         VacationReply vacationReply = VacationReply.builder(mail)
-            .reason(REASON)
+            .vacation(Vacation.builder()
+                .enabled(true)
+                .textBody(Optional.of(REASON))
+                .htmlBody(Optional.of(HTML_REASON))
+                .build())
             .receivedMailRecipient(originalRecipient)
             .build();
 
         assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
         assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
         assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(REASON);
+        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_REASON);
+    }
+
+    @Test
+    public void vacationReplyShouldNotBeMultipartWhenVacationHaveNoHTML() throws Exception {
+        VacationReply vacationReply = VacationReply.builder(mail)
+            .vacation(Vacation.builder()
+                .enabled(true)
+                .textBody(Optional.of(REASON))
+                .build())
+            .receivedMailRecipient(originalRecipient)
+            .build();
+
+        assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
+        assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
+        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).isEqualTo(REASON);
     }
 
     @Test
     public void vacationReplyShouldAddReSuffixToSubjectByDefault() throws Exception {
         VacationReply vacationReply = VacationReply.builder(mail)
-            .reason(REASON)
+            .vacation(Vacation.builder()
+                .enabled(true)
+                .textBody(Optional.of(REASON))
+                .build())
             .receivedMailRecipient(originalRecipient)
             .build();
 
@@ -77,12 +103,15 @@ public class VacationReplyTest {
     @Test
     public void aUserShouldBeAbleToSetTheSubjectOfTheGeneratedMimeMessage() throws Exception {
         VacationReply vacationReply = VacationReply.builder(mail)
-            .reason(REASON)
-            .subject(SUBJECT)
+            .vacation(Vacation.builder()
+                .enabled(true)
+                .textBody(Optional.of(REASON))
+                .subject(Optional.of(SUBJECT))
+                .build())
             .receivedMailRecipient(originalRecipient)
             .build();
 
-        assertThat(vacationReply.getMimeMessage().getHeader("subject")).containsExactly(SUBJECT.get());
+        assertThat(vacationReply.getMimeMessage().getHeader("subject")).containsExactly(SUBJECT);
     }
 
     @Test(expected = NullPointerException.class)
