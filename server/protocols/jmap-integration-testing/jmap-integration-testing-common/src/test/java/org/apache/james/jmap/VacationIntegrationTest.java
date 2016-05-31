@@ -211,6 +211,9 @@ public abstract class VacationIntegrationTest {
         // User 2 matthieu@mydomain.tld sends User 1 a mail
         String user2OutboxId = getOutboxId(user2AccessToken);
         sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
+        // Wait user 1 to receive the eMail before reset of vacation
+        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
 
         // When
         // User 1 benw@mydomain.tld resets a Vacation on its account
