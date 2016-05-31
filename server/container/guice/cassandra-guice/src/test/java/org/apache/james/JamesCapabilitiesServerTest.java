@@ -52,26 +52,6 @@ public class JamesCapabilitiesServerTest {
     @Rule
     public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
-    @Test
-    public void startShouldFailWhenNoMoveCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedCapabilities())
-            .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Basic));
-        server = createCassandraJamesServer(mailboxManager);
-
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void startShouldSucceedWhenMoveCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedCapabilities())
-            .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Move));
-        server = createCassandraJamesServer(mailboxManager);
-
-        server.start();
-    }
-
     @After
     public void teardown() {
         server.stop();
@@ -101,4 +81,25 @@ public class JamesCapabilitiesServerTest {
 
                 });
     }
+    
+    @Test
+    public void startShouldFailWhenNoMoveCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedCapabilities())
+            .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Basic));
+        server = createCassandraJamesServer(mailboxManager);
+
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void startShouldSucceedWhenMoveCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedCapabilities())
+            .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Move));
+        server = createCassandraJamesServer(mailboxManager);
+
+        server.start();
+    }
+
 }
