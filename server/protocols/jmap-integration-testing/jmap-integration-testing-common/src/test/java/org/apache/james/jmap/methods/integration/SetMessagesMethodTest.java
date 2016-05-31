@@ -797,7 +797,7 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
     }
 
     private boolean messageHasBeenMovedToSentBox(String sentMailboxId) {
@@ -1011,7 +1011,7 @@ public abstract class SetMessagesMethodTest {
         .when()
                 .post("/jmap");
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
     }
 
 
@@ -1135,7 +1135,7 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
     }
 
     @Test
@@ -1181,7 +1181,7 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
         with()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -1244,7 +1244,7 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
         with()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -1308,7 +1308,7 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
         with()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
@@ -1386,7 +1386,7 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
 
         // Then
-        calmlyAwait.atMost(10, TimeUnit.SECONDS).until( () -> isHtmlMessageReceived(recipientToken));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isHtmlMessageReceived(recipientToken));
     }
 
     private boolean isHtmlMessageReceived(AccessToken recipientToken) {

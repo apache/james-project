@@ -114,10 +114,10 @@ public abstract class VacationIntegrationTest {
 
         // Then
         // User 1 should well receive this mail
-        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         // User 2 should well receive a notification about user 1 vacation
-        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
     }
 
@@ -140,7 +140,7 @@ public abstract class VacationIntegrationTest {
 
         // Then
         // User 1 should well receive this mail
-        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         // User 2 should not receive a notification
         Thread.sleep(1000L);
@@ -186,7 +186,7 @@ public abstract class VacationIntegrationTest {
 
         // Then
         // User 2 should well receive a notification about user 1 vacation
-        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
         // User 2 should not receive another notification
         Thread.sleep(1000L);
@@ -212,7 +212,7 @@ public abstract class VacationIntegrationTest {
         String user2OutboxId = getOutboxId(user2AccessToken);
         sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
         // Wait user 1 to receive the eMail before reset of vacation
-        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
 
         // When
@@ -223,7 +223,7 @@ public abstract class VacationIntegrationTest {
 
         // Then
         // User 2 should well receive two notification about user 1 vacation
-        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> areTwoTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken)));
     }
 
