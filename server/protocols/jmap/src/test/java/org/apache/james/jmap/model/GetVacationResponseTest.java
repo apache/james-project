@@ -20,6 +20,8 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.junit.Test;
 
 public class GetVacationResponseTest {
@@ -29,7 +31,7 @@ public class GetVacationResponseTest {
     @Test
     public void getVacationResponseShouldBeConstructedWithTheRightInformation() {
         VacationResponse vacationResponse = VacationResponse.builder()
-            .textBody("Any text")
+            .textBody(Optional.of("Any text"))
             .id("singleton")
             .build();
         GetVacationResponse getVacationResponse = GetVacationResponse.builder()

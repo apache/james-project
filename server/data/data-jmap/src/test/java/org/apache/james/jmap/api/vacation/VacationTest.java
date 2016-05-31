@@ -20,6 +20,7 @@
 package org.apache.james.jmap.api.vacation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -32,6 +33,8 @@ public class VacationTest {
     public static final ZonedDateTime DATE_TIME_2017 = ZonedDateTime.parse("2017-10-09T08:07:06+07:00[Asia/Vientiane]");
     public static final ZonedDateTime DATE_TIME_2017_1MS = ZonedDateTime.parse("2017-10-09T08:07:06.001+07:00[Asia/Vientiane]");
     public static final ZonedDateTime DATE_TIME_2018 = ZonedDateTime.parse("2018-10-09T08:07:06+07:00[Asia/Vientiane]");
+    public static final Optional<String> TEXT_BODY = Optional.of("text is required when enabled");
+    public static final Optional<String> HTML_BODY = Optional.of("<b>HTML body</b>");
 
     @Test
     public void disabledVacationsAreNotActive() {
@@ -48,6 +51,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .build()
                 .isActiveAtDate(DATE_TIME_2016))
             .isTrue();
@@ -58,6 +62,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .fromDate(Optional.of(DATE_TIME_2016))
                 .build()
                 .isActiveAtDate(DATE_TIME_2016))
@@ -69,6 +74,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .toDate(Optional.of(DATE_TIME_2016))
                 .build()
                 .isActiveAtDate(DATE_TIME_2016))
@@ -80,6 +86,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .fromDate(Optional.of(DATE_TIME_2016))
                 .toDate(Optional.of(DATE_TIME_2018))
                 .build()
@@ -92,6 +99,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .fromDate(Optional.of(DATE_TIME_2016))
                 .toDate(Optional.of(DATE_TIME_2017))
                 .build()
@@ -104,6 +112,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .fromDate(Optional.of(DATE_TIME_2017))
                 .toDate(Optional.of(DATE_TIME_2018))
                 .build()
@@ -115,6 +124,7 @@ public class VacationTest {
     public void isActiveAtDateShouldThrowOnNullValue() {
         Vacation.builder()
             .enabled(true)
+            .textBody(TEXT_BODY)
             .fromDate(Optional.of(DATE_TIME_2016))
             .toDate(Optional.of(DATE_TIME_2016))
             .build()
@@ -126,6 +136,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .fromDate(Optional.of(DATE_TIME_2016))
                 .build()
                 .isActiveAtDate(DATE_TIME_2017))
@@ -137,6 +148,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .fromDate(Optional.of(DATE_TIME_2017))
                 .build()
                 .isActiveAtDate(DATE_TIME_2016))
@@ -148,6 +160,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .toDate(Optional.of(DATE_TIME_2017))
                 .build()
                 .isActiveAtDate(DATE_TIME_2018))
@@ -159,6 +172,7 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .toDate(Optional.of(DATE_TIME_2017))
                 .build()
                 .isActiveAtDate(DATE_TIME_2016))
@@ -170,10 +184,52 @@ public class VacationTest {
         assertThat(
             Vacation.builder()
                 .enabled(true)
+                .textBody(TEXT_BODY)
                 .toDate(Optional.of(DATE_TIME_2017))
                 .build()
                 .isActiveAtDate(DATE_TIME_2017_1MS))
             .isFalse();
+    }
+
+    @Test
+    public void activeVacationShouldHaveHtmlBodyOrTextBody() {
+        assertThatThrownBy(
+            () -> Vacation.builder()
+                .enabled(true)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void textBodyShouldBeEnoughToBuildAnActivatedVacation() {
+        assertThat(
+            Vacation.builder()
+                .enabled(true)
+                .textBody(TEXT_BODY)
+                .build()
+                .getTextBody())
+            .contains(TEXT_BODY.get());
+    }
+
+    @Test
+    public void htmlBodyShouldBeEnoughToBuildAnActivatedVacation() {
+        assertThat(
+            Vacation.builder()
+                .enabled(true)
+                .htmlBody(HTML_BODY)
+                .build()
+                .getTextBody())
+            .contains(HTML_BODY.get());
+    }
+
+    @Test
+    public void textOrHtmlBodyShouldNotBeRequiredOnUnactivatedVacation() {
+        assertThat(
+            Vacation.builder()
+                .enabled(false)
+                .build()
+                .isEnabled())
+            .isTrue();
     }
 
 }

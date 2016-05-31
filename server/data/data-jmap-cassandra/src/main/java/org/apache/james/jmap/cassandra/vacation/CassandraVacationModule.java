@@ -50,7 +50,8 @@ public class CassandraVacationModule implements CassandraModule {
                     .addUDTColumn(CassandraVacationTable.FROM_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
                     .addUDTColumn(CassandraVacationTable.TO_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
                     .addColumn(CassandraVacationTable.TEXT, text())
-                    .addColumn(CassandraVacationTable.SUBJECT, text())));
+                    .addColumn(CassandraVacationTable.SUBJECT, text())
+                    .addColumn(CassandraVacationTable.HTML, text())));
         index = ImmutableList.of();
         types = ImmutableList.of();
     }

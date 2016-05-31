@@ -81,7 +81,7 @@ public class GetVacationResponseMethodTest {
         ClientId clientId = mock(ClientId.class);
         Vacation vacation = Vacation.builder()
             .enabled(true)
-            .textBody("I am in vacation")
+            .textBody(Optional.of("I am in vacation"))
             .subject(Optional.of("subject"))
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));

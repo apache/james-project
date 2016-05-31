@@ -38,6 +38,8 @@ public abstract class AbstractVacationRepositoryTest {
         .fromDate(Optional.of(ZONED_DATE_TIME))
         .enabled(true)
         .subject(Optional.of("subject"))
+        .textBody(Optional.of("anyMessage"))
+        .htmlBody(Optional.of("html Message"))
         .build();
 
 
