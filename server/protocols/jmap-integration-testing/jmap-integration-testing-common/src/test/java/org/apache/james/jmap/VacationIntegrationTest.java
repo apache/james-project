@@ -47,6 +47,7 @@ import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationIntegrationTest {
 
+    private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String SECOND_NAME = "[1][0]";
     private static final String SECOND_ARGUMENTS = "[1][1]";
@@ -119,6 +120,35 @@ public abstract class VacationIntegrationTest {
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
             .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
+    }
+
+    @Test
+    public void jmapVacationShouldHaveSupportForHtmlMail() throws Exception {
+        /* Test scenario :
+            - User 1 benw@mydomain.tld sets a Vacation on its account with HTML
+            - User 2 matthieu@mydomain.tld sends User 1 a mail
+            - User 1 should well receive this mail
+            - User 2 can not read HTML mail as it is multipart
+        */
+
+        // Given
+        AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
+        AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
+        // User 1 benw@mydomain.tld sets a Vacation on its account
+        setHtmlVacationResponse(user1AccessToken);
+
+        // When
+        // User 2 matthieu@mydomain.tld sends User 1 a mail
+        String user2OutboxId = getOutboxId(user2AccessToken);
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
+
+        // Then
+        // User 1 should well receive this mail
+        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+        // User 2 should well receive a notification about user 1 vacation
+        calmlyAwait.atMost(10, TimeUnit.SECONDS)
+            .until( () -> assertNotYetImplemented(user2AccessToken, getInboxId(user2AccessToken)));
     }
 
     @Test
@@ -248,6 +278,30 @@ public abstract class VacationIntegrationTest {
             .statusCode(200);
     }
 
+    private void setHtmlVacationResponse(AccessToken user1AccessToken) {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+            "  \"update\":{" +
+            "    \"singleton\" : {" +
+            "      \"id\": \"singleton\"," +
+            "      \"isEnabled\": \"true\"," +
+            "      \"htmlBody\": \"<b>" + REASON + "</b>\"" +
+            "    }" +
+            "  }" +
+            "}, \"#0\"" +
+            "]]";
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", user1AccessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+    }
+
     private void sendMail(AccessToken user2AccessToken, String outboxId, String mailId) {
         String requestBody = "[" +
             "  [" +
@@ -328,6 +382,31 @@ public abstract class VacationIntegrationTest {
             .body(SECOND_ARGUMENTS + ".list[0].from.email", equalTo(expectedFrom))
             .body(SECOND_ARGUMENTS + ".list[0].to.email", hasSize(1))
             .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
+    }
+
+    private boolean assertNotYetImplemented(AccessToken recipientToken, String mailboxId) {
+        try {
+            with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", recipientToken.serialize())
+                .body("[[\"getMessageList\", " +
+                    "{" +
+                    "  \"fetchMessages\": true, " +
+                    "  \"fetchMessageProperties\": [\"textBody\", \"from\", \"to\", \"mailboxIds\"]," +
+                    "  \"filter\": {" +
+                    "    \"inMailboxes\":[\"" + mailboxId + "\"]" +
+                    "  }" +
+                    "}, \"#0\"]]")
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("error"))
+                .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
+            return true;
+        } catch (AssertionError e) {
+            return false;
+        }
     }
 
     private String getOutboxId(AccessToken accessToken) {
