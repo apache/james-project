@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
-import java.util.Collections;
 import java.util.Properties;
 
 import javax.mail.Session;

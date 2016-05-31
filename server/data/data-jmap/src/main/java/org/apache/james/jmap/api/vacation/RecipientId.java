@@ -21,8 +21,6 @@ package org.apache.james.jmap.api.vacation;
 
 import java.util.Objects;
 
-import javax.mail.internet.AddressException;
-
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Preconditions;

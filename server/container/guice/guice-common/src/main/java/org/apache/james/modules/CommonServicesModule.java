@@ -32,8 +32,6 @@ import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
-import org.apache.james.utils.ConfigurationProvider;
-import org.apache.james.utils.FileConfigurationProvider;
 import org.apache.james.utils.GuiceServerProbe;
 import org.apache.onami.lifecycle.jsr250.PreDestroyModule;
 
