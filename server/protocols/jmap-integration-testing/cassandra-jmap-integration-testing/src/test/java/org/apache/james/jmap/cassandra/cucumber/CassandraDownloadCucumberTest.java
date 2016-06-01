@@ -25,7 +25,7 @@ import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features="classpath:cucumber/DownloadEndpoint.feature",
+@CucumberOptions(features={"classpath:cucumber/DownloadEndpoint.feature", "classpath:cucumber/DownloadGet.feature"},
                 glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"})
 public class CassandraDownloadCucumberTest {
 }

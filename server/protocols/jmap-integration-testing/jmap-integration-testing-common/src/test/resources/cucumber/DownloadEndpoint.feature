@@ -10,8 +10,7 @@ Feature: Download endpoint
     When checking for the availability of the attachment endpoint
     Then the user should be authorized
 
-  Scenario: An unknown user should initiate the access to the download endpoint
-    Given an unknown current user with username "unknown@domain.tld" and password "secret"
+  Scenario: An unauthenticated user should initiate the access to the download endpoint
     When checking for the availability of the attachment endpoint
     Then the user should be authorized
 
@@ -20,8 +19,7 @@ Feature: Download endpoint
     When asking for an attachment
     Then the user should be authorized
 
-  Scenario: An unknown user should not have access to the download endpoint
-    Given an unknown current user with username "unknown@domain.tld" and password "secret"
+  Scenario: An unauthenticated user should not have access to the download endpoint
     When asking for an attachment
     Then the user should not be authorized
 

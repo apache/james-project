@@ -39,6 +39,9 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
 
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
+        if (!attachmentsById.containsKey(attachmentId)) {
+            throw new AttachmentNotFoundException(attachmentId.getId());
+        }
         return attachmentsById.get(attachmentId);
     }
 

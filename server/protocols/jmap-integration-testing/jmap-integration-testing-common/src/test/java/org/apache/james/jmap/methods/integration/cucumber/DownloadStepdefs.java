@@ -20,8 +20,16 @@
 package org.apache.james.jmap.methods.integration.cucumber;
 
 import static com.jayway.restassured.RestAssured.with;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+
+import java.util.Date;
 
 import javax.inject.Inject;
+import javax.mail.Flags;
+
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
@@ -45,9 +53,13 @@ public class DownloadStepdefs {
         this.userStepdefs = userStepdefs;
     }
 
-    @Given("^an unknown current user with username \"([^\"]*)\" and password \"([^\"]*)\"$")
-    public void createUserWithPassword(String username, String password) throws Exception {
-        mainStepdefs.jmapServer.serverProbe().addUser(username, password);
+    @Given("^a message containing an attachment$")
+    public void appendMessageWithAttachment() throws Exception {
+        mainStepdefs.jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.username, "INBOX");
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.username, "INBOX");
+
+        mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.username, mailboxPath,
+                ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
     }
 
     @When("^checking for the availability of the attachment endpoint$")
@@ -85,10 +97,28 @@ public class DownloadStepdefs {
             .get("/download/");
     }
 
+    @When("^getting the attachment with its correct blobId$")
+    public void getDownloadWithKnownBlobId() throws Throwable {
+        response = with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", userStepdefs.accessToken.serialize())
+                .get("/download/4000c5145f633410b80be368c44e1c394bff9437");
+    }
+
+    @When("^getting the attachment with an unknown blobId$")
+    public void getDownloadWithUnknownBlobId() throws Throwable {
+        response = with()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", userStepdefs.accessToken.serialize())
+                .get("/download/badbadbadbadbadbadbadbadbadbadbadbadbadb");
+    }
+
     @Then("^the user should be authorized$")
-    public void httpOkStatus() throws Exception {
+    public void httpStatusDifferentFromUnauthorized() throws Exception {
         response.then()
-            .statusCode(200);
+            .statusCode(not(401));
     }
 
     @Then("^the user should not be authorized$")
@@ -101,5 +131,18 @@ public class DownloadStepdefs {
     public void httpBadRequestStatus() throws Throwable {
         response.then()
             .statusCode(400);
+    }
+
+    @Then("^the user should receive that attachment$")
+    public void httpOkStatusAndExpectedContent() throws Throwable {
+        response.then()
+            .statusCode(200)
+            .content(notNullValue());
+    }
+
+    @Then("^the user should receive a not found response$")
+    public void httpNotFoundStatus() throws Throwable {
+        response.then()
+            .statusCode(404);
     }
 }

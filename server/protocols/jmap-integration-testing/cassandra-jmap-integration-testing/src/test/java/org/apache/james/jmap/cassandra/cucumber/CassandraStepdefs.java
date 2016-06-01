@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
+import java.util.Arrays;
+
 import javax.inject.Inject;
 
 import org.apache.james.CassandraJamesServerMain;
@@ -28,6 +30,8 @@ import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
 import org.junit.rules.TemporaryFolder;
+
+import com.github.fge.lambdas.runnable.ThrowingRunnable;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
@@ -59,16 +63,21 @@ public class CassandraStepdefs {
 
     @After
     public void tearDown() {
-        tearDown(() -> mainStepdefs.tearDown());
-        tearDown(() -> embeddedElasticSearch.after());
-        tearDown(() -> temporaryFolder.delete());
+        ignoreFailures(() -> mainStepdefs.tearDown(),
+                () -> embeddedElasticSearch.after(),
+                () -> temporaryFolder.delete());
     }
 
-    private void tearDown(Runnable cleaningFunction) {
+    private void ignoreFailures(ThrowingRunnable... cleaners) {
+        Arrays.stream(cleaners)
+            .forEach(this::runSwallowingException);
+    }
+    
+    private void runSwallowingException(Runnable run) {
         try {
-            cleaningFunction.run();
+            run.run();
         } catch (Exception e) {
-            e.printStackTrace();
+            // ignore
         }
     }
 }
