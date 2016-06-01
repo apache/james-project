@@ -1,0 +1,239 @@
+= Road map for James 3.0
+
+This document aims at dividing existing and upcoming code into the following categories :
+
+ - supported
+ - experimental
+ - unsupported
+
+== Mailbox section
+
+.Feature matrix : mailbox backend
+|===
+|Feature name |Status | Comment
+
+|JPA
+|supported
+|Already existing code
+
+|Memory
+|Unsupported
+|Reference for testing
+
+|Cassandra
+|experimental
+|Essentially we do not know about how performance will behave. Also consistency issues might arise.
+
+|ElasticSearch
+|supported
+|
+
+|HBase
+|unsupported
+|
+
+|JCR
+|unsupported
+|
+
+|Lucene
+|unsupported
+|
+
+|Caching
+|unsupported
+|
+
+|Maildir
+|unsupported
+|Known issue on MailboxPath handling
+
+|===
+
+What being "supported implies for a backend ?
+
+ - Being MPT tested
+ - Deployment tests part of unit tests (ex : cassandra-guice)
+ - Having support for domain names, users and rewrite tables in server/data/data-@backend@
+ - Having its mappers passing generic unit tests for mappers
+ - It should at least support USER_FLAGS feature on MPT tests
+ - Be able to handle a constant gatling workload for at least 4 hours with constant latency
+ - Be tested with thunderbird (we should write scenari for that)
+
+
+.Feature matrix : mailbox capabilities
+|===
+|Feature name |Status | Comment
+
+|ACL
+|unsupported
+|
+
+|Shared mailbox
+|unsupported
+|
+
+|Quota
+|experimental
+|
+
+|User flags
+|supported
+|
+
+|Distributed events
+|Unsupported
+|
+
+|===
+
+=== Short note about what needs to be DONE
+
+**General** :
+
+ - Define Thunderbird scenari
+ - Write Gatling tests for IMAP
+
+**JPA** :
+
+ - We need JPA to valid MessageMapper and MailboxMapper unit tests.
+
+Bonus : have quota support with JPA...
+
+== Server
+
+.Injection framework
+|===
+|Name |Status
+
+|Guice JPA
+|Supported
+
+|Spring
+|Supported
+
+|Guice cassandra
+|experimental
+
+|Guice memory
+|experimental
+
+|Cluster deployment
+|unsupported
+|===
+
+We need tests to ensure James starts when Spring is used.
+
+.Components
+|===
+|Name |Status |Comment
+
+|ActiveMQ mail queue
+|supported
+|
+
+|Camel mail processing
+|supported
+|
+
+|Sieve
+|experimental
+|Problem : it is compulsory today to rely on SIEVE scripts upon message reception
+
+|Mailets
+|experimental / supported
+|If need be, I can add the details on mailet
+|===
+
+=== What to do ?
+
+Write a JPA Guice project.
+
+Integration test on Spring. We need to ensure it starts in JPA flavour with some supported components.
+
+Write a LocalDelivery mailet variant that do not rely on SieveMailet, to make SIEVE use truly optional.
+
+== Protocols
+
+.Protocols
+|===
+|Name |Status |Comment
+
+|IMAP
+|supported
+|See details on IMAP extensions below
+
+|SMTP
+|supported
+|Lack some integration tests, I guess
+
+|POP3
+|Unsupported
+|
+
+|ManageSIEVE
+|Unsupported
+|
+
+|JMAP
+|Experimental
+|
+
+|LMTP
+|supported
+|
+
+
+|FetchMail
+|Unsupported
+|
+|===
+
+
+.IMAP extensions
+|===
+|Header 1 |Header 2 |Header 3
+
+|RFC-2087 Quota
+|experimental
+|
+
+|RFC-4314 ACLs
+|Unsupported
+|
+
+|RFC-5464 Metadatas
+|Unsupported
+|
+
+|RFC-3051 IMAP4 rev1
+|supported
+|Following https://james.apache.org/protocols/imap4.html
+
+|RFC-2342 Namespace
+|unsupported
+|Following https://james.apache.org/protocols/imap4.html it is implemented. However we do not see any test of this. Even if it works, as there is no proper ACL support, activating it is dangerous.
+
+|RFC-2177 IDLE
+|supported
+|Following https://james.apache.org/protocols/imap4.html
+
+|RFC-4551 CONDSTORE
+|supported
+|Following https://james.apache.org/protocols/imap4.html
+
+|RFC-5162 Resynch
+|supported
+|Following https://james.apache.org/protocols/imap4.html Implemented, enabled, but no MPT tests
+
+|===
+
+=== What to do ?
+
+ - I should be able to choose exposed IMAP commands
+ - More SMTP integration tests
+ - NAMESPACE, and interacting with other user mailboxes should not be allowed
+ - MPT tests for RFC-5162 Resynch
+
+
+
