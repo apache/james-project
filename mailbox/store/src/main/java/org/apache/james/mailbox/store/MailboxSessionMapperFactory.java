@@ -23,6 +23,7 @@ import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -35,7 +36,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
  * Maintain mapper instances by {@link MailboxSession}. So only one mapper instance is used
  * in a {@link MailboxSession}
  */
-public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, SubscriptionMapperFactory{
+public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, AttachmentMapperFactory, SubscriptionMapperFactory{
 
     protected final static String ATTACHMENTMAPPER = "ATTACHMENTMAPPER";
     protected final static String MESSAGEMAPPER ="MESSAGEMAPPER";

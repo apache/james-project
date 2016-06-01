@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -61,6 +62,7 @@ public class MemoryMailboxModule extends AbstractModule {
 
         bind(MessageMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
+        bind(AttachmentMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(ModSeqProvider.class).to(InMemoryModSeqProvider.class);
         bind(UidProvider.class).to(InMemoryUidProvider.class);
