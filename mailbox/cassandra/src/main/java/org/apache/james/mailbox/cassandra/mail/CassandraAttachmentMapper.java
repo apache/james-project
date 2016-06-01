@@ -32,6 +32,8 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -44,6 +46,8 @@ import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.ThrownByLambdaException;
 import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
@@ -95,15 +99,32 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public void storeAttachment(Attachment attachment) throws MailboxException {
         try {
-            cassandraAsyncExecutor.execute(
-                    insert.bind()
-                        .setString(ID, attachment.getAttachmentId().getId())
-                        .setBytes(PAYLOAD, ByteBuffer.wrap(IOUtils.toByteArray(attachment.getStream())))
-                        .setString(TYPE, attachment.getType())
-                        .setLong(SIZE, attachment.getSize())
-                ).join();
+            asyncStoreAttachment(attachment).join();
         } catch (IOException e) {
             throw new MailboxException(e.getMessage(), e);
+        }
+    }
+
+    private CompletableFuture<Void> asyncStoreAttachment(Attachment attachment) throws IOException {
+        return cassandraAsyncExecutor.executeVoid(
+                insert.bind()
+                    .setString(ID, attachment.getAttachmentId().getId())
+                    .setBytes(PAYLOAD, ByteBuffer.wrap(IOUtils.toByteArray(attachment.getStream())))
+                    .setString(TYPE, attachment.getType())
+                    .setLong(SIZE, attachment.getSize())
+            );
+    }
+
+    @Override
+    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
+        try {
+            CompletableFuture.allOf(
+                    attachments.stream()
+                        .map(Throwing.function(this::asyncStoreAttachment))
+                        .toArray(CompletableFuture[]::new)
+                ).join();
+        } catch (ThrownByLambdaException e) {
+            throw new MailboxException(e.getCause().getMessage(), e.getCause());
         }
     }
 }

@@ -35,7 +35,7 @@ public class MailboxException extends Exception {
         super(message);
     }
 
-    public MailboxException(String msg, Exception cause) {
+    public MailboxException(String msg, Throwable cause) {
         super(msg, cause);
     }
 }

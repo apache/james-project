@@ -641,9 +641,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return mapperFactory.getMessageMapper(session).execute(new Mapper.Transaction<MessageMetaData>() {
 
             public MessageMetaData run() throws MailboxException {
-                for (Attachment attachment: attachments) {
-                    attachmentMapper.storeAttachment(attachment);
-                }
+                attachmentMapper.storeAttachments(attachments);
                 return messageMapper.add(getMailboxEntity(), message);
             }
 

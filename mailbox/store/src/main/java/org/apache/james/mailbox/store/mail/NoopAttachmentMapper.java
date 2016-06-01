@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.mail;
 
+import java.util.Collection;
+
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.model.Attachment;
@@ -43,5 +45,9 @@ public class NoopAttachmentMapper implements AttachmentMapper {
 
     @Override
     public void storeAttachment(Attachment attachment) throws MailboxException {
+    }
+
+    @Override
+    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
     }
 }

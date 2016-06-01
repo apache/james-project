@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,5 +55,12 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     @Override
     public <T> T execute(Transaction<T> transaction) throws MailboxException {
         return transaction.run();
+    }
+
+    @Override
+    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
+        for (Attachment attachment: attachments) {
+            storeAttachment(attachment);
+        }
     }
 }

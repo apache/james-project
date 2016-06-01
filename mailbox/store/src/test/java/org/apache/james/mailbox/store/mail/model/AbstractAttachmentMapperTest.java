@@ -28,6 +28,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public abstract class AbstractAttachmentMapperTest {
 
     private MapperProvider mapperProvider;
@@ -68,5 +70,21 @@ public abstract class AbstractAttachmentMapperTest {
         Attachment attachment = attachmentMapper.getAttachment(attachmentId);
         //Then
         assertThat(attachment).isEqualTo(expected);
+    }
+
+    @Test
+    public void getAttachmentShouldReturnTheAttachmentsWhenMultipleStored() throws Exception {
+        //Given
+        Attachment expected1 = Attachment.from("payload1".getBytes(), "content1");
+        Attachment expected2 = Attachment.from("payload2".getBytes(), "content2");
+        AttachmentId attachmentId1 = expected1.getAttachmentId();
+        AttachmentId attachmentId2 = expected2.getAttachmentId();
+        //When
+        attachmentMapper.storeAttachments(ImmutableList.of(expected1, expected2));
+        //Then
+        Attachment attachment1 = attachmentMapper.getAttachment(attachmentId1);
+        Attachment attachment2 = attachmentMapper.getAttachment(attachmentId2);
+        assertThat(attachment1).isEqualTo(expected1);
+        assertThat(attachment2).isEqualTo(expected2);
     }
 }
