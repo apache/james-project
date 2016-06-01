@@ -71,7 +71,6 @@ public interface ParsingWritingObjects {
             .isFlagged(Common.IS_FLAGGED)
             .isAnswered(Common.IS_ANSWERED)
             .isDraft(Common.IS_DRAFT)
-            .hasAttachment(Common.HAS_ATTACHMENT)
             .headers(Common.HEADERS)
             .from(Common.FROM)
             .to(Common.TO)

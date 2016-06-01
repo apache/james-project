@@ -35,9 +35,6 @@ A **Message** object has the following properties:
 - **isDraft**: `Boolean` (Mutable by the server only)
   Is the message a draft? This corresponds to the `\Draft` system flag in IMAP.
 - **hasAttachment**: `Boolean`
-  <aside class="warning">
-  Not implemented
-  </aside>
   Does the message have any attachments?
 - **headers**: `String[String]`
   A map of header name to (decoded) header value for all headers in the message. For headers that occur multiple times (e.g. `Received`), the values are concatenated with a single new line (`\n`) character in between each one.
@@ -67,9 +64,6 @@ A **Message** object has the following properties:
   </aside>
   The HTML body part for the message if present. If there is only a plain text version of the body, an HTML version will be generated from this. Any scripting content, or references to external plugins, MUST be stripped from the HTML by the server.
 - **attachments**: `Attachment[]|null`
-  <aside class="warning">
-  Not implemented
-  </aside>
   An array of attachment objects (see below) detailing all the attachments to the message.
 - **attachedMessages**: `String[Message]|null`
   <aside class="warning">

@@ -56,18 +56,12 @@ public class AttachmentTest {
         Attachment.builder().blobId("blobId").type("").name("name").size(123).build();
     }
     
-    @Test(expected=IllegalStateException.class)
-    public void buildShouldThrowWhenNameIsEmpty() {
-        Attachment.builder().blobId("blobId").type("type").name("").size(123).build();
-    }
-    
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
-        Attachment expected = new Attachment("blobId", "type", "name", 123, Optional.empty(), false, Optional.empty(), Optional.empty());
+        Attachment expected = new Attachment("blobId", "type", Optional.empty(), 123, Optional.empty(), false, Optional.empty(), Optional.empty());
         Attachment tested = Attachment.builder()
             .blobId("blobId")
             .type("type")
-            .name("name")
             .size(123)
             .build();
         assertThat(tested).isEqualToComparingFieldByField(expected);
@@ -75,7 +69,7 @@ public class AttachmentTest {
 
     @Test
     public void buildShouldWorkWithAllFieldsSet() {
-        Attachment expected = new Attachment("blobId", "type", "name", 123, Optional.of("cid"), true, Optional.of(456L), Optional.of(789L));
+        Attachment expected = new Attachment("blobId", "type", Optional.of("name"), 123, Optional.of("cid"), true, Optional.of(456L), Optional.of(789L));
         Attachment tested = Attachment.builder()
             .blobId("blobId")
             .type("type")

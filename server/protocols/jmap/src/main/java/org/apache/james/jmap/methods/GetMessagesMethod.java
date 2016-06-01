@@ -38,11 +38,16 @@ import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.mail.model.Attachment;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.streams.Collectors;
@@ -62,13 +67,16 @@ public class GetMessagesMethod implements Method {
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
+    private final AttachmentMapperFactory attachmentMapperFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
-            MessageMapperFactory messageMapperFactory, 
-            MailboxMapperFactory mailboxMapperFactory) {
+            MessageMapperFactory messageMapperFactory,
+            MailboxMapperFactory mailboxMapperFactory,
+            AttachmentMapperFactory attachmentMapperFactory) {
         this.messageMapperFactory = messageMapperFactory;
         this.mailboxMapperFactory = mailboxMapperFactory;
+        this.attachmentMapperFactory = attachmentMapperFactory;
     }
     
     @Override
@@ -110,8 +118,8 @@ public class GetMessagesMethod implements Method {
     private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
         getMessagesRequest.getAccountId().ifPresent(GetMessagesMethod::notImplemented);
         
-        Function<MessageId, Stream<Pair<MailboxMessage, MailboxPath>>> loadMessages = loadMessage(mailboxSession);
-        Function<Pair<MailboxMessage, MailboxPath>, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
+        Function<MessageId, Stream<CompletedMailboxMessage>> loadMessages = loadMessage(mailboxSession);
+        Function<CompletedMailboxMessage, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
         
         List<Message> result = getMessagesRequest.getIds().stream()
             .flatMap(loadMessages)
@@ -126,17 +134,14 @@ public class GetMessagesMethod implements Method {
     }
 
     
-    private Function<Pair<MailboxMessage, MailboxPath>, Message> toJmapMessage(MailboxSession mailboxSession) {
-        return (value) -> {
-            MailboxMessage messageResult = value.getValue0();
-            MailboxPath mailboxPath = value.getValue1();
-            return Message.fromMailboxMessage(messageResult, uid -> new MessageId(mailboxSession.getUser(), mailboxPath , uid));
-        };
+    private Function<CompletedMailboxMessage, Message> toJmapMessage(MailboxSession mailboxSession) {
+        return (completedMailboxMessage) -> Message.fromMailboxMessage(
+                completedMailboxMessage.mailboxMessage, 
+                completedMailboxMessage.attachments, 
+                uid -> new MessageId(mailboxSession.getUser(), completedMailboxMessage.mailboxPath , uid));
     }
 
-    private Function<MessageId, Stream<
-                                    Pair<MailboxMessage,
-                                         MailboxPath>>> 
+    private Function<MessageId, Stream<CompletedMailboxMessage>> 
                 loadMessage(MailboxSession mailboxSession) {
 
         return Throwing
@@ -148,15 +153,89 @@ public class GetMessagesMethod implements Method {
                              messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Full, 1),
                              mailboxPath
                              );
-         })
-                .andThen(this::iteratorToStream);
+                })
+                .andThen(Throwing.function((pair) -> retrieveCompleteMailboxMessages(pair, mailboxSession)));
     }
     
-    private Stream<Pair<MailboxMessage, MailboxPath>> iteratorToStream(Pair<Iterator<MailboxMessage>, MailboxPath> value) {
+    private Stream<CompletedMailboxMessage> retrieveCompleteMailboxMessages(Pair<Iterator<MailboxMessage>, MailboxPath> value, MailboxSession mailboxSession) throws MailboxException {
         Iterable<MailboxMessage> iterable = () -> value.getValue0();
         Stream<MailboxMessage> targetStream = StreamSupport.stream(iterable.spliterator(), false);
-        
+
+        Function<List<AttachmentId>, List<Attachment>> retrieveAttachments = retrieveAttachments(attachmentMapperFactory.getAttachmentMapper(mailboxSession));
+
         MailboxPath mailboxPath = value.getValue1();
-        return targetStream.map(x -> Pair.with(x, mailboxPath));
+        return targetStream
+                .map(message -> CompletedMailboxMessage.builder().mailboxMessage(message).attachmentIds(message.getAttachmentsIds()))
+                .map(builder -> builder.mailboxPath(mailboxPath))
+                .map(builder -> builder.retrieveAttachments(retrieveAttachments))
+                .map(builder -> builder.build()); 
+    }
+
+    private static class CompletedMailboxMessage {
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+
+            private MailboxMessage mailboxMessage;
+            private List<AttachmentId> attachmentIds;
+            private MailboxPath mailboxPath;
+            private Function<List<AttachmentId>, List<Attachment>> retrieveAttachments;
+
+            private Builder() {
+            }
+
+            public Builder mailboxMessage(MailboxMessage mailboxMessage) {
+                Preconditions.checkArgument(mailboxMessage != null);
+                this.mailboxMessage = mailboxMessage;
+                return this;
+            }
+
+            public Builder attachmentIds(List<AttachmentId> attachmentIds) {
+                Preconditions.checkArgument(attachmentIds != null);
+                this.attachmentIds = attachmentIds;
+                return this;
+            }
+
+            public Builder mailboxPath(MailboxPath mailboxPath) {
+                Preconditions.checkArgument(mailboxPath != null);
+                this.mailboxPath = mailboxPath;
+                return this;
+            }
+
+            public Builder retrieveAttachments(Function<List<AttachmentId>, List<Attachment>> retrieveAttachments) {
+                Preconditions.checkArgument(retrieveAttachments != null);
+                this.retrieveAttachments = retrieveAttachments;
+                return this;
+            }
+
+            public CompletedMailboxMessage build() {
+                Preconditions.checkState(mailboxMessage != null);
+                Preconditions.checkState(attachmentIds != null);
+                Preconditions.checkState(mailboxPath != null);
+                Preconditions.checkState(retrieveAttachments != null);
+                return new CompletedMailboxMessage(mailboxMessage, retrieveAttachments.apply(attachmentIds), mailboxPath);
+            }
+        }
+
+        private final MailboxMessage mailboxMessage;
+        private final List<Attachment> attachments;
+        private final MailboxPath mailboxPath;
+
+        public CompletedMailboxMessage(MailboxMessage mailboxMessage, List<Attachment> attachments, MailboxPath mailboxPath) {
+            this.mailboxMessage = mailboxMessage;
+            this.attachments = attachments;
+            this.mailboxPath = mailboxPath;
+        }
+    }
+
+    private Function<List<AttachmentId>, List<Attachment>> retrieveAttachments(AttachmentMapper attachmentMapper) {
+        return (attachmentsIds) -> {
+            return attachmentsIds.stream()
+                    .map(Throwing.function(id -> attachmentMapper.getAttachment(id)))
+                    .collect(Collectors.toImmutableList());
+        };
     }
 }

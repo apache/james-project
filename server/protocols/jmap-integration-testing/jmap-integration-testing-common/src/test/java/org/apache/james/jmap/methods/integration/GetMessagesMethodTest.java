@@ -51,6 +51,9 @@ import com.jayway.restassured.http.ContentType;
 public abstract class GetMessagesMethodTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
+    private static final String ATTACHMENTS = ARGUMENTS + ".list[0].attachments";
+    private static final String FIRST_ATTACHMENT = ATTACHMENTS + "[0]";
+    private static final String SECOND_ATTACHMENT = ATTACHMENTS + "[1]";
 
     protected abstract GuiceJamesServer createJmapServer();
 
@@ -66,6 +69,7 @@ public abstract class GetMessagesMethodTest {
         jmapServer.start();
         RestAssured.port = jmapServer.getJmapPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
         String domain = "domain.tld";
         username = "username@" + domain;
@@ -185,7 +189,9 @@ public abstract class GetMessagesMethodTest {
             .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
             .body(ARGUMENTS + ".list[0].preview", equalTo("testmail"))
             .body(ARGUMENTS + ".list[0].headers", equalTo(ImmutableMap.of("subject", "my test subject")))
-            .body(ARGUMENTS + ".list[0].date", equalTo("2014-10-30T14:12:00Z"));
+            .body(ARGUMENTS + ".list[0].date", equalTo("2014-10-30T14:12:00Z"))
+            .body(ARGUMENTS + ".list[0].hasAttachment", equalTo(false))
+            .body(ATTACHMENTS, empty());
     }
 
     @Test
@@ -330,5 +336,36 @@ public abstract class GetMessagesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].id", equalTo("username@domain.tld|mailbox|1"))
             .body(ARGUMENTS + ".list[0].subject", equalTo("my test subject"));
+    }
+
+    @Test
+    public void getMessagesShouldReturnAttachmentsWhenSome() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "inbox");
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "inbox"),
+                ClassLoader.getSystemResourceAsStream("twoAttachments.eml"), Date.from(dateTime.toInstant()), false, new Flags());
+        
+        await();
+        
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].hasAttachment", equalTo(true))
+            .body(ATTACHMENTS, hasSize(2))
+            .body(FIRST_ATTACHMENT + ".blobId", equalTo("223a76c0e8c1b1762487d8e0598bd88497d73ef2"))
+            .body(FIRST_ATTACHMENT + ".type", equalTo("image/jpeg"))
+            .body(FIRST_ATTACHMENT + ".size", equalTo(846))
+            .body(SECOND_ATTACHMENT + ".blobId", equalTo("58aa22c2ec5770fb9e574ba19008dbfc647eba43"))
+            .body(SECOND_ATTACHMENT + ".type", equalTo("image/jpeg"))
+            .body(SECOND_ATTACHMENT + ".size", equalTo(597));
     }
 }

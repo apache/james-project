@@ -38,6 +38,7 @@ import org.apache.mailet.MailAddress;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class MailFactoryTest {
@@ -68,7 +69,7 @@ public class MailFactoryTest {
                 new FlagsBuilder().add(Flags.Flag.SEEN).build(),
                 propertyBuilder,
                 TestId.of(2));
-        jmapMessage = Message.fromMailboxMessage(mailboxMessage, x -> MessageId.of("test|test|" + x));
+        jmapMessage = Message.fromMailboxMessage(mailboxMessage, ImmutableList.of(), x -> MessageId.of("test|test|" + x));
     }
 
     @Test(expected=NullPointerException.class)

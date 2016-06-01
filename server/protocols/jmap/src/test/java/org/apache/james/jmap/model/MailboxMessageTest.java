@@ -30,8 +30,8 @@ import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -212,7 +212,6 @@ public class MailboxMessageTest {
             .isFlagged(true)
             .isAnswered(true)
             .isDraft(true)
-            .hasAttachment(true)
             .headers(ImmutableMap.of("key", "value"))
             .from(from)
             .to(to)
@@ -243,7 +242,7 @@ public class MailboxMessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
+        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
             .containsExactly("(Empty)", 0L, "(No subject)", ImmutableMap.of(), ZONED_DATE);
@@ -265,7 +264,7 @@ public class MailboxMessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
+        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee)
             .extracting(Message::isIsUnread, Message::isIsFlagged, Message::isIsAnswered, Message::isIsDraft)
             .containsExactly(true, true, true, true);
@@ -307,7 +306,7 @@ public class MailboxMessageTest {
                 .put("in-reply-to", "<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .put("other-header", "other header value")
                 .build();
-        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
+        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         Message expected = Message.builder()
                 .id(MessageId.of("user|box|0"))
                 .blobId("0")
@@ -343,7 +342,7 @@ public class MailboxMessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
+        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee.getTextBody()).hasValue("Mail body");
     }
     
@@ -391,12 +390,12 @@ public class MailboxMessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message testee = Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
+        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee.getPreview()).isEqualTo(expectedPreview);
     }
     
-    @Test(expected=NotImplementedException.class)
-    public void attachmentsShouldNotBeHandledForNow() throws Exception {
+    @Test
+    public void attachmentsShouldBeEmptyWhenNone() throws Exception {
         MailboxMessage testMail = new SimpleMailboxMessage(
                 INTERNAL_DATE,
                 0,
@@ -407,6 +406,86 @@ public class MailboxMessageTest {
                 MAILBOX_ID);
         testMail.setModSeq(MOD_SEQ);
         
-        Message.fromMailboxMessage(testMail, x -> MessageId.of("user|box|" + x));
+        Message testee = Message.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
+        assertThat(testee.getAttachments()).isEmpty();
+    }
+    
+    @Test
+    public void attachmentsShouldBeRetrievedWhenSome() throws Exception {
+        MailboxMessage testMail = new SimpleMailboxMessage(
+                INTERNAL_DATE,
+                0,
+                0,
+                new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("spamMail.eml"))),
+                new Flags(Flag.SEEN),
+                new PropertyBuilder(),
+                MAILBOX_ID);
+        testMail.setModSeq(MOD_SEQ);
+        
+        String payload = "payload";
+        String blodId = "id1";
+        String type = "content";
+        Attachment expectedAttachment = Attachment.builder()
+                .blobId(blodId)
+                .size(payload.length())
+                .type(type)
+                .build();
+
+        Message testee = Message.fromMailboxMessage(testMail, 
+                ImmutableList.of(org.apache.james.mailbox.store.mail.model.Attachment.builder()
+                        .attachmentId(AttachmentId.from(blodId))
+                        .bytes(payload.getBytes())
+                        .type(type)
+                        .size(payload.length())
+                        .build()), 
+                x -> MessageId.of("user|box|" + x));
+
+        assertThat(testee.getAttachments()).hasSize(1);
+        assertThat(testee.getAttachments().get(0)).isEqualToComparingFieldByField(expectedAttachment);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void buildShouldThrowWhenOneAttachedMessageIsNotInAttachments() throws Exception {
+        Message.builder()
+            .id(MessageId.of("user|box|1"))
+            .blobId("blodId")
+            .threadId("threadId")
+            .mailboxIds(ImmutableList.of("mailboxId"))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(ZonedDateTime.now())
+            .preview("preview")
+            .attachedMessages(ImmutableMap.of("key", SubMessage.builder()
+                    .headers(ImmutableMap.of("key", "value"))
+                    .subject("subject")
+                    .date(ZonedDateTime.now())
+                    .build()))
+            .build();
+    }
+
+    @Test
+    public void buildShouldNotThrowWhenOneAttachedMessageIsInAttachments() throws Exception {
+        Message.builder()
+            .id(MessageId.of("user|box|1"))
+            .blobId("blodId")
+            .threadId("threadId")
+            .mailboxIds(ImmutableList.of("mailboxId"))
+            .headers(ImmutableMap.of("key", "value"))
+            .subject("subject")
+            .size(1)
+            .date(ZonedDateTime.now())
+            .preview("preview")
+            .attachments(ImmutableList.of(Attachment.builder()
+                    .blobId("key")
+                    .size(1)
+                    .type("type")
+                    .build()))
+            .attachedMessages(ImmutableMap.of("key", SubMessage.builder()
+                    .headers(ImmutableMap.of("key", "value"))
+                    .subject("subject")
+                    .date(ZonedDateTime.now())
+                    .build()))
+            .build();
     }
 }

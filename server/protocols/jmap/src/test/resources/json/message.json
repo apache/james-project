@@ -8,7 +8,7 @@
     "isFlagged": true,
     "isAnswered": true,
     "isDraft": true,
-    "hasAttachment": true,
+    "hasAttachment": false,
     "headers": { "h1": "h1Value", "h2": "h2Value" },
     "from": { "name": "myName", "email": "myEmail@james.org"},
     "to": [ { "name": "to1", "email": "to1@james.org"}, { "name": "to2", "email": "to2@james.org"} ],

@@ -24,6 +24,8 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -88,22 +90,21 @@ public class Attachment {
         public Attachment build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(blobId), "'blobId' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(type), "'type' is mandatory");
-            Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(size != null, "'size' is mandatory");
-            return new Attachment(blobId, type, name, size, Optional.ofNullable(cid), isInline, Optional.ofNullable(width), Optional.ofNullable(height));
+            return new Attachment(blobId, type, Optional.ofNullable(name), size, Optional.ofNullable(cid), isInline, Optional.ofNullable(width), Optional.ofNullable(height));
         }
     }
 
     private final String blobId;
     private final String type;
-    private final String name;
+    private final Optional<String> name;
     private final long size;
     private final Optional<String> cid;
     private final boolean isInline;
     private final Optional<Long> width;
     private final Optional<Long> height;
 
-    @VisibleForTesting Attachment(String blobId, String type, String name, long size, Optional<String> cid, boolean isInline, Optional<Long> width, Optional<Long> height) {
+    @VisibleForTesting Attachment(String blobId, String type, Optional<String> name, long size, Optional<String> cid, boolean isInline, Optional<Long> width, Optional<Long> height) {
         this.blobId = blobId;
         this.type = type;
         this.name = name;
@@ -122,7 +123,7 @@ public class Attachment {
         return type;
     }
 
-    public String getName() {
+    public Optional<String> getName() {
         return name;
     }
 
@@ -144,5 +145,41 @@ public class Attachment {
 
     public Optional<Long> getHeight() {
         return height;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Attachment) {
+            Attachment other = (Attachment) obj;
+            return Objects.equal(blobId, other.blobId)
+                && Objects.equal(type, other.type)
+                && Objects.equal(name, other.name)
+                && Objects.equal(size, other.size)
+                && Objects.equal(cid, other.cid)
+                && Objects.equal(isInline, other.isInline)
+                && Objects.equal(width, other.width)
+                && Objects.equal(height, other.height);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(blobId, type, name, size, cid, isInline, width, height);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects
+                .toStringHelper(this)
+                .add("blobId", blobId)
+                .add("type", type)
+                .add("name", name)
+                .add("size", size)
+                .add("cid", cid)
+                .add("isInline", isInline)
+                .add("width", width)
+                .add("height", height)
+                .toString();
     }
 }

@@ -195,7 +195,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             MessageMapper messageMapper = mailboxSessionMapperFactory.createMessageMapper(session);
             MailboxMessage newMailboxMessage = buildMailboxMessage(createdEntry, outbox);
             messageMapper.add(outbox, newMailboxMessage);
-            Message jmapMessage = Message.fromMailboxMessage(newMailboxMessage, buildMessageIdFromUid);
+            Message jmapMessage = Message.fromMailboxMessage(newMailboxMessage, ImmutableList.of(), buildMessageIdFromUid);
             sendMessage(newMailboxMessage, jmapMessage, session);
             return new MessageWithId<>(createdEntry.getCreationId(), jmapMessage);
         } catch (MailboxException | MessagingException | IOException e) {
