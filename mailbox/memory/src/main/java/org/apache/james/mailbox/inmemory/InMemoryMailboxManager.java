@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.inmemory;
 
-import java.util.List;
+import java.util.EnumSet;
 
 import javax.inject.Inject;
 
@@ -35,8 +35,6 @@ import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
-import com.google.common.collect.Lists;
-
 public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Inject
@@ -45,8 +43,13 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     }
 
     @Override
-    public List<Capabilities> getSupportedCapabilities() {
-        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move, Capabilities.UserFlags);
+    public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlags);
+    }
+    
+    @Override
+    public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
+        return EnumSet.of(MessageCapabilities.Attachment);
     }
 
     @Override

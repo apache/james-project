@@ -41,7 +41,7 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
 
     public MoveProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
         super(MoveRequest.class, next, mailboxManager, factory);
-        moveCapabilitySupported = mailboxManager.getSupportedCapabilities().contains(MailboxManager.Capabilities.Move);
+        moveCapabilitySupported = mailboxManager.getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Move);
     }
 
     @Override

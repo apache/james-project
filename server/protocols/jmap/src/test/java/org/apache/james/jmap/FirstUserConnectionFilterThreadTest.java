@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.mailbox.MailboxListener;
@@ -193,7 +194,12 @@ public class FirstUserConnectionFilterThreadTest {
         }
 
         @Override
-        public List<Capabilities> getSupportedCapabilities() {
+        public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+            return null;
+        }
+        
+        @Override
+        public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
             return null;
         }
         

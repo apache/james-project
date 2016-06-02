@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,8 +67,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.google.common.collect.Lists;
-
 public class MailboxEventAnalyserTest {
 
     private static final long BASE_SESSION_ID = 99;
@@ -77,10 +76,15 @@ public class MailboxEventAnalyserTest {
     private final MailboxManager mockManager = new MailboxManager() {
 
         @Override
-        public List<Capabilities> getSupportedCapabilities() {
-            return Lists.newArrayList(Capabilities.Basic);
+        public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+            return EnumSet.noneOf(MailboxCapabilities.class);
         }
 
+        @Override
+        public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
+            return EnumSet.noneOf(MessageCapabilities.class);
+        }
+        
         public void removeListener(MailboxPath mailboxPath, MailboxListener listner, MailboxSession session) throws MailboxException {
             
         }
@@ -305,6 +309,7 @@ public class MailboxEventAnalyserTest {
                     throw new UnsupportedOperationException("Not implemented");
 
                 }
+                
             };
         }
         

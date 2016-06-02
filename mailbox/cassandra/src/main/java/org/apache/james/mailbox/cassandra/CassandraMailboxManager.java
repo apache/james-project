@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import java.util.List;
+import java.util.EnumSet;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -37,8 +38,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-
-import com.google.common.collect.Lists;
 
 /**
  * Cassandra implementation of {@link StoreMailboxManager}
@@ -64,10 +63,15 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     }
 
     @Override
-    public List<Capabilities> getSupportedCapabilities() {
-        return Lists.newArrayList(Capabilities.Basic, Capabilities.Move, Capabilities.UserFlags);
+    public EnumSet<MailboxManager.MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlags);
     }
 
+    @Override
+    public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
+        return EnumSet.of(MessageCapabilities.Attachment);
+    }
+    
     @Override
     protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         SimpleMailbox cassandraMailbox = new SimpleMailbox(mailboxPath, randomUidValidity());

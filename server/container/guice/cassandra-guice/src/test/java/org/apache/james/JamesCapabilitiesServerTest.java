@@ -22,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.jmap.methods.GetMessageListMethod;
@@ -37,7 +39,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.datastax.driver.core.Session;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -85,18 +86,34 @@ public class JamesCapabilitiesServerTest {
     @Test
     public void startShouldFailWhenNoMoveCapability() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedCapabilities())
-            .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Basic));
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.Move)));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+        server = createCassandraJamesServer(mailboxManager);
+        
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @Test
+    public void startShouldFailWhenNoAttachmentCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
         server = createCassandraJamesServer(mailboxManager);
 
         assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void startShouldSucceedWhenMoveCapability() throws Exception {
+    public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedCapabilities())
-            .thenReturn(ImmutableList.of(MailboxManager.Capabilities.Move));
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.MailboxCapabilities.Move));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
         server = createCassandraJamesServer(mailboxManager);
 
         server.start();

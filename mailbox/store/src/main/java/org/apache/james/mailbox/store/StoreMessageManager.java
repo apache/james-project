@@ -833,5 +833,4 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     protected MailboxACL getResolvedMailboxACL(MailboxSession mailboxSession) throws UnsupportedRightException {
         return aclResolver.applyGlobalACL(mailbox.getACL(), new GroupFolderResolver(mailboxSession).isGroupFolder(mailbox));
     }
-
 }

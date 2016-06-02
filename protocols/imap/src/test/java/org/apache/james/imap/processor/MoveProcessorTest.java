@@ -26,6 +26,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -75,9 +77,9 @@ public class MoveProcessorTest {
         mockImapSession = mock(ImapSession.class);
         mockMailboxSession = mock(MailboxSession.class);
 
-        when(mockMailboxManager.getSupportedCapabilities()).thenReturn(Lists.newArrayList(MailboxManager.Capabilities.Move, MailboxManager.Capabilities.Basic));
+        when(mockMailboxManager.getSupportedMailboxCapabilities()).thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
         testee = new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory);
-        verify(mockMailboxManager).getSupportedCapabilities();
+        verify(mockMailboxManager).getSupportedMailboxCapabilities();
     }
 
     @Test
@@ -87,7 +89,7 @@ public class MoveProcessorTest {
 
     @Test
     public void getImplementedCapabilitiesShouldNotContainMoveWhenUnSupportedByMailboxManager() {
-        when(mockMailboxManager.getSupportedCapabilities()).thenReturn(Lists.newArrayList(MailboxManager.Capabilities.Basic));
+        when(mockMailboxManager.getSupportedMailboxCapabilities()).thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.Move)));
         assertThat(new MoveProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory).getImplementedCapabilities(null)).isEmpty();
     }
 

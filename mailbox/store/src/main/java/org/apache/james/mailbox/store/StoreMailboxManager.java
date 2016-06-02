@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -69,8 +70,6 @@ import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 import org.slf4j.Logger;
-
-import com.google.common.collect.Lists;
 
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
@@ -199,10 +198,15 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public List<Capabilities> getSupportedCapabilities() {
-        return Lists.newArrayList(Capabilities.Basic);
+    public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return EnumSet.noneOf(MailboxCapabilities.class);
     }
 
+    @Override
+    public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
+        return EnumSet.noneOf(MessageCapabilities.class);
+    }
+    
     /**
      * Return the {@link DelegatingMailboxListener} which is used by this {@link MailboxManager}
      *

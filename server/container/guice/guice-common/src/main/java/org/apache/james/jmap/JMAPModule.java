@@ -62,7 +62,8 @@ public class JMAPModule extends AbstractModule {
         bind(MailboxBasedHtmlTextExtractor.class).in(Scopes.SINGLETON);
 
         bind(HtmlTextExtractor.class).to(MailboxBasedHtmlTextExtractor.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MoveCapabilityPrecondition.class);
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().to(VacationMailetCheck.class);
@@ -90,19 +91,21 @@ public class JMAPModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MoveCapabilityPrecondition implements ConfigurationPerformer {
+    public static class RequiredCapabilitiesPrecondition implements ConfigurationPerformer {
 
         private final MailboxManager mailboxManager;
 
         @Inject
-        public MoveCapabilityPrecondition(MailboxManager mailboxManager) {
+        public RequiredCapabilitiesPrecondition(MailboxManager mailboxManager) {
             this.mailboxManager = mailboxManager;
         }
 
         @Override
         public void initModule() {
-            Preconditions.checkArgument(mailboxManager.getSupportedCapabilities().contains(MailboxManager.Capabilities.Move),
+            Preconditions.checkArgument(mailboxManager.getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Move),
                     "MOVE support in MailboxManager is required by JMAP Module");
+            Preconditions.checkArgument(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.Attachment),
+                    "Attachment support in MailboxManager is required by JMAP Module");
         }
 
         @Override

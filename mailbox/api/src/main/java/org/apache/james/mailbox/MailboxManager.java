@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.mailbox.exception.BadCredentialsException;
@@ -69,14 +70,20 @@ import org.slf4j.Logger;
 
 public interface MailboxManager extends RequestAware, MailboxListenerSupport {
 
-    enum Capabilities {
-        Basic,
+    enum MailboxCapabilities {
         Move,
         UserFlags
     }
 
-    List<Capabilities> getSupportedCapabilities();
+    EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();
+    
+    enum MessageCapabilities {
+        Attachment
+    }
 
+    EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
+    
+    
     /**
      * Return the delimiter to use for folders
      * 
