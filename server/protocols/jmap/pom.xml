@@ -274,6 +274,11 @@
                     <artifactId>bcpkix-jdk15on</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>org.jsoup</groupId>
+                    <artifactId>jsoup</artifactId>
+                    <version>1.9.2</version>
+                </dependency>
+                <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>apache-james-mailbox-store</artifactId>
                     <scope>test</scope>

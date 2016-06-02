@@ -21,7 +21,6 @@ package org.apache.james.jmap.mailet;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
@@ -36,6 +35,7 @@ import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
+import org.jsoup.Jsoup;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -78,9 +78,6 @@ public class VacationReply {
             Preconditions.checkState(mailRecipient != null, "Original recipient address should not be null");
             Preconditions.checkState(originalMail.getSender() != null, "Original sender address should not be null");
 
-            MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(false);
-            reply.setContent(generateMultipart());
-
             return new VacationReply(mailRecipient, ImmutableList.of(originalMail.getSender()), generateMimeMessage());
         }
 
@@ -94,35 +91,32 @@ public class VacationReply {
             return addBody(reply);
         }
 
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
         private MimeMessage addBody(MimeMessage reply) throws MessagingException {
-            if (! vacation.getHtmlBody().isPresent()) {
-                reply.setText(vacation.getTextBody().get());
-            } else {
+            if (vacation.getHtmlBody().isPresent()) {
                 reply.setContent(generateMultipart());
+            } else {
+                reply.setText(vacation.getTextBody().get());
             }
             return reply;
         }
 
-
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
         private Multipart generateMultipart() throws MessagingException {
             try {
                 Multipart multipart = new MimeMultipart(MIXED);
-                addPlainPart(multipart, vacation.getTextBody());
-                addHtmlPart(multipart, vacation.getHtmlBody());
+                addTextPart(multipart, vacation.getHtmlBody().get(), "text/html");
+                addTextPart(multipart, retrievePlainTextMessage(), ContentTypeField.TYPE_TEXT_PLAIN);
                 return multipart;
             } catch (IOException e) {
                 throw new MessagingException("Cannot read specified content", e);
             }
         }
 
-        private Multipart addPlainPart(Multipart multipart, Optional<String> textBody) throws MessagingException, IOException {
-            textBody.ifPresent(Throwing.consumer(text -> addTextPart(multipart, text, ContentTypeField.TYPE_TEXT_PLAIN)));
-            return multipart;
-        }
-
-        private Multipart addHtmlPart(Multipart multipart, Optional<String> htmlBody) throws MessagingException, IOException {
-            htmlBody.ifPresent(Throwing.consumer(html -> addTextPart(multipart, html, "text/html")));
-            return multipart;
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        private String retrievePlainTextMessage() {
+            return vacation.getTextBody()
+                .orElseGet(() -> Jsoup.parse(vacation.getHtmlBody().get()).text());
         }
 
         private Multipart addTextPart(Multipart multipart, String text, String contentType) throws MessagingException, IOException {
