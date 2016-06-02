@@ -150,10 +150,6 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.james</groupId>
-                    <artifactId>james-server-util-java8</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-james-mailbox-api</artifactId>
                 </dependency>
                 <dependency>
@@ -176,6 +172,12 @@
                 <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>apache-james-mailbox-store</artifactId>
+                </dependency>
+                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-store</artifactId>
+                    <scope>test</scope>
+                    <type>test-jar</type>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
@@ -228,9 +230,8 @@
                     <artifactId>james-server-util</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                    <version>3.3.2</version>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-util-java8</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
@@ -251,6 +252,17 @@
                 <dependency>
                     <groupId>com.github.fge</groupId>
                     <artifactId>throwing-lambdas</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.googlecode.thread-weaver</groupId>
+                    <artifactId>threadweaver</artifactId>
+                    <version>0.2</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.jayway.jsonpath</groupId>
+                    <artifactId>json-path</artifactId>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.jayway.restassured</groupId>
@@ -276,31 +288,6 @@
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcprov-jdk15on</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcpkix-jdk15on</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>apache-james-mailbox-store</artifactId>
-                    <scope>test</scope>
-                    <type>test-jar</type>
-                </dependency>
-                <dependency>
-                    <groupId>com.jayway.jsonpath</groupId>
-                    <artifactId>json-path</artifactId>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.googlecode.thread-weaver</groupId>
-                    <artifactId>threadweaver</artifactId>
-                    <version>0.2</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
                     <groupId>junit</groupId>
                     <artifactId>junit</artifactId>
                     <scope>test</scope>
@@ -315,12 +302,26 @@
                     <groupId>nl.jqno.equalsverifier</groupId>
                     <artifactId>equalsverifier</artifactId>
                     <version>1.7.5</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                    <version>3.3.2</version>
                 </dependency>
                 <dependency>
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
                     <version>${assertj-3.version}</version>
                     <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15on</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.eclipse.jetty</groupId>
