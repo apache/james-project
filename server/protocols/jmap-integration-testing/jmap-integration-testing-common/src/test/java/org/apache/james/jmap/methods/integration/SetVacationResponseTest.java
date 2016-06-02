@@ -146,6 +146,7 @@ public abstract class SetVacationResponseTest {
                         "\"id\": \"singleton\"," +
                         "\"isEnabled\": \"true\"," +
                         "\"textBody\": \"Message explaining my wonderful vacations\"," +
+                        "\"htmlBody\": \"<p>Here is the HTML version</p>\"," +
                         "\"fromDate\":\"2014-09-30T14:10:00Z[GMT]\"," +
                         "\"toDate\":\"2014-10-30T14:10:00Z[GMT]\"," +
                         "\"subject\":\"" + SUBJECT + "\"" +
@@ -168,7 +169,8 @@ public abstract class SetVacationResponseTest {
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
         Vacation vacation = jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER));
-        assertThat(vacation.getTextBody()).isEqualTo("Message explaining my wonderful vacations");
+        assertThat(vacation.getTextBody()).contains("Message explaining my wonderful vacations");
+        assertThat(vacation.getHtmlBody()).contains("<p>Here is the HTML version</p>");
         assertThat(vacation.isEnabled()).isTrue();
         assertThat(vacation.getFromDate()).contains(ZonedDateTime.parse("2014-09-30T14:10:00Z[GMT]"));
         assertThat(vacation.getToDate()).contains(ZonedDateTime.parse("2014-10-30T14:10:00Z[GMT]"));
@@ -206,7 +208,7 @@ public abstract class SetVacationResponseTest {
             .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
 
         Vacation vacation = jmapServer.serverProbe().retrieveVacation(AccountId.fromString(USER));
-        assertThat(vacation.getTextBody()).isEqualTo("Message explaining my wonderful vacations");
+        assertThat(vacation.getTextBody()).contains("Message explaining my wonderful vacations");
         assertThat(vacation.isEnabled()).isTrue();
         assertThat(vacation.getFromDate()).contains(ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"));
         assertThat(vacation.getToDate()).contains(ZonedDateTime.parse("2016-04-07T02:01+07:00[Asia/Vientiane]"));
@@ -239,7 +241,7 @@ public abstract class SetVacationResponseTest {
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", containsString("textBody property of vacationResponse object should not be null"));
+            .body(ARGUMENTS + ".description", containsString("textBody or htmlBody property of vacationResponse object should not be null when enabled"));
     }
 
     @Test
@@ -268,7 +270,7 @@ public abstract class SetVacationResponseTest {
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", containsString("textBody property of vacationResponse object should not be null"));
+            .body(ARGUMENTS + ".description", containsString("textBody or htmlBody property of vacationResponse object should not be null when enabled"));
     }
 
     @Test

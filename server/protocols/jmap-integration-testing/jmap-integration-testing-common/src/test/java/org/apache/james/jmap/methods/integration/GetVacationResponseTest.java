@@ -99,8 +99,9 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].fromDate", nullValue())
             .body(ARGUMENTS + ".list[0].toDate", nullValue())
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(false))
-            .body(ARGUMENTS + ".list[0].textBody", equalTo(""))
-            .body(ARGUMENTS + ".list[0].subject", nullValue());
+            .body(ARGUMENTS + ".list[0].subject", nullValue())
+            .body(ARGUMENTS + ".list[0].textBody", nullValue())
+            .body(ARGUMENTS + ".list[0].htmlBody", nullValue());
     }
 
     @Test
@@ -112,6 +113,7 @@ public abstract class GetVacationResponseTest {
                 .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00Z")))
                 .textBody("Test explaining my vacations")
                 .subject(Optional.of(SUBJECT))
+                .htmlBody("<p>Test explaining my vacations</p>")
                 .build());
 
         given()
@@ -135,7 +137,8 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].toDate", equalTo("2014-10-30T14:10:00Z"))
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
             .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"))
-            .body(ARGUMENTS + ".list[0].subject", equalTo(SUBJECT));
+            .body(ARGUMENTS + ".list[0].subject", equalTo(SUBJECT))
+            .body(ARGUMENTS + ".list[0].htmlBody", equalTo("<p>Test explaining my vacations</p>"));
     }
 
     @Test

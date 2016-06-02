@@ -38,8 +38,9 @@ public class Vacation {
         private Optional<Boolean> isEnabled = Optional.empty();
         private Optional<ZonedDateTime> fromDate = Optional.empty();
         private Optional<ZonedDateTime> toDate = Optional.empty();
+        private Optional<String> textBody = Optional.empty();
         private Optional<String> subject = Optional.empty();
-        private String textBody = "";
+        private Optional<String> htmlBody = Optional.empty();
 
         public Builder enabled(boolean enabled) {
             isEnabled = Optional.of(enabled);
@@ -58,13 +59,33 @@ public class Vacation {
             return this;
         }
 
-        public Builder textBody(String textBody) {
+        public Builder textBody(Optional<String> textBody) {
+            Preconditions.checkNotNull(textBody);
             this.textBody = textBody;
             return this;
         }
 
+        public Builder textBody(String textBody) {
+            Preconditions.checkNotNull(textBody);
+            this.textBody = Optional.of(textBody);
+            return this;
+        }
+
         public Builder subject(Optional<String> subject) {
+            Preconditions.checkNotNull(subject);
             this.subject = subject;
+            return this;
+        }
+
+        public Builder htmlBody(Optional<String> htmlBody) {
+            Preconditions.checkNotNull(htmlBody);
+            this.htmlBody = htmlBody;
+            return this;
+        }
+
+        public Builder htmlBody(String htmlBody) {
+            Preconditions.checkNotNull(htmlBody);
+            this.htmlBody = Optional.of(htmlBody);
             return this;
         }
 
@@ -78,8 +99,11 @@ public class Vacation {
         }
 
         public Vacation build() {
-            Preconditions.checkNotNull(textBody);
-            return new Vacation(isEnabled.orElse(DEFAULT_DISABLED), fromDate, toDate, textBody, subject);
+            boolean enabled = isEnabled.orElse(DEFAULT_DISABLED);
+            if (enabled) {
+                Preconditions.checkState(textBody.isPresent() || htmlBody.isPresent(), "textBody or htmlBody property of vacationResponse object should not be null when enabled");
+            }
+            return new Vacation(enabled, fromDate, toDate, textBody, subject, htmlBody);
         }
     }
 
@@ -87,14 +111,17 @@ public class Vacation {
     private final Optional<ZonedDateTime> fromDate;
     private final Optional<ZonedDateTime> toDate;
     private final Optional<String> subject;
-    private final String textBody;
+    private final Optional<String> textBody;
+    private final Optional<String> htmlBody;
 
-    private Vacation(boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate, String textBody, Optional<String> subject) {
+    private Vacation(boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate,
+                     Optional<String> textBody, Optional<String> subject, Optional<String> htmlBody) {
         this.isEnabled = isEnabled;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.textBody = textBody;
         this.subject = subject;
+        this.htmlBody = htmlBody;
     }
 
 
@@ -110,12 +137,16 @@ public class Vacation {
         return toDate;
     }
 
-    public String getTextBody() {
+    public Optional<String> getTextBody() {
         return textBody;
     }
 
     public Optional<String> getSubject() {
         return subject;
+    }
+
+    public Optional<String> getHtmlBody() {
+        return htmlBody;
     }
 
     public boolean isActiveAtDate(ZonedDateTime instant) {
@@ -144,12 +175,13 @@ public class Vacation {
             Objects.equals(this.fromDate, vacation.fromDate) &&
             Objects.equals(this.toDate, vacation.toDate) &&
             Objects.equals(this.textBody, vacation.textBody) &&
-            Objects.equals(this.subject, vacation.subject);
+            Objects.equals(this.subject, vacation.subject) &&
+            Objects.equals(this.htmlBody, vacation.htmlBody);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isEnabled, fromDate, toDate, textBody, subject);
+        return Objects.hash(isEnabled, fromDate, toDate, textBody, subject, htmlBody);
     }
 
 }

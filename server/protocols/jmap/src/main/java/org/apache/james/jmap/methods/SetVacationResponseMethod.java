@@ -123,6 +123,7 @@ public class SetVacationResponseMethod implements Method {
             .toDate(vacationResponse.getToDate())
             .textBody(vacationResponse.getTextBody())
             .subject(vacationResponse.getSubject())
+            .htmlBody(vacationResponse.getHtmlBody())
             .build();
     }
 

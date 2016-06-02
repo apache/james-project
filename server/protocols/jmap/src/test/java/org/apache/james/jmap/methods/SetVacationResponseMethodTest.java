@@ -131,7 +131,7 @@ public class SetVacationResponseMethodTest {
             .update(ImmutableMap.of(WRONG_ID, VacationResponse.builder()
                 .id(Vacation.ID)
                 .enabled(false)
-                .textBody(TEXT_BODY)
+                .textBody(Optional.of(TEXT_BODY))
                 .build()))
             .build();
 
@@ -154,12 +154,12 @@ public class SetVacationResponseMethodTest {
             .update(ImmutableMap.of(Vacation.ID, VacationResponse.builder()
                     .id(Vacation.ID)
                     .enabled(false)
-                    .textBody(TEXT_BODY)
+                    .textBody(Optional.of(TEXT_BODY))
                     .build(),
                 WRONG_ID, VacationResponse.builder()
                     .id(Vacation.ID)
                     .enabled(false)
-                    .textBody(TEXT_BODY)
+                    .textBody(Optional.of(TEXT_BODY))
                     .build()))
             .build();
 
@@ -182,7 +182,7 @@ public class SetVacationResponseMethodTest {
             .update(ImmutableMap.of(Vacation.ID, VacationResponse.builder()
                     .id(Vacation.ID)
                     .enabled(false)
-                    .textBody(TEXT_BODY)
+                    .textBody(Optional.of(TEXT_BODY))
                     .subject(Optional.of(SUBJECT))
                     .build()))
             .build();
@@ -217,7 +217,7 @@ public class SetVacationResponseMethodTest {
         SetVacationRequest setVacationRequest = SetVacationRequest.builder()
             .update(ImmutableMap.of(Vacation.ID, VacationResponse.builder()
                 .id(WRONG_ID)
-                .textBody(TEXT_BODY)
+                .textBody(Optional.of(TEXT_BODY))
                 .enabled(false)
                 .build()))
             .build();

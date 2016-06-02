@@ -37,6 +37,8 @@ import com.google.common.base.Preconditions;
 @JsonDeserialize(builder = VacationResponse.Builder.class)
 public class VacationResponse {
 
+    public static final boolean DEFAULT_DISABLED = false;
+
     public static Builder builder() {
         return new Builder();
     }
@@ -44,11 +46,12 @@ public class VacationResponse {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         private String id;
-        private boolean isEnabled;
+        private Optional<Boolean> isEnabled = Optional.empty();
         private Optional<ZonedDateTime> fromDate = Optional.empty();
         private Optional<ZonedDateTime> toDate = Optional.empty();
         private Optional<String> subject = Optional.empty();
-        private String textBody;
+        private Optional<String> textBody = Optional.empty();
+        private Optional<String> htmlBody = Optional.empty();
 
         public Builder id(String id) {
             this.id = id;
@@ -57,45 +60,59 @@ public class VacationResponse {
 
         @JsonProperty("isEnabled")
         public Builder enabled(boolean enabled) {
-            isEnabled = enabled;
+            isEnabled = Optional.of(enabled);
             return this;
         }
 
         @JsonDeserialize(using = OptionalZonedDateTimeDeserializer.class)
         public Builder fromDate(Optional<ZonedDateTime> fromDate) {
+            Preconditions.checkNotNull(fromDate);
             this.fromDate = fromDate;
             return this;
         }
 
         @JsonDeserialize(using = OptionalZonedDateTimeDeserializer.class)
         public Builder toDate(Optional<ZonedDateTime> toDate) {
+            Preconditions.checkNotNull(toDate);
             this.toDate = toDate;
             return this;
         }
 
-        public Builder textBody(String textBody) {
+        public Builder textBody(Optional<String> textBody) {
+            Preconditions.checkNotNull(textBody);
             this.textBody = textBody;
             return this;
         }
 
         public Builder subject(Optional<String> subject) {
+            Preconditions.checkNotNull(subject);
             this.subject = subject;
+            return this;
+        }
+
+        public Builder htmlBody(Optional<String> htmlBody) {
+            Preconditions.checkNotNull(htmlBody);
+            this.htmlBody = htmlBody;
             return this;
         }
 
         public Builder fromVacation(Vacation vacation) {
             this.id = Vacation.ID;
-            this.isEnabled = vacation.isEnabled();
+            this.isEnabled = Optional.of(vacation.isEnabled());
             this.fromDate = vacation.getFromDate();
             this.toDate = vacation.getToDate();
             this.textBody = vacation.getTextBody();
             this.subject = vacation.getSubject();
+            this.htmlBody = vacation.getHtmlBody();
             return this;
         }
 
         public VacationResponse build() {
-            Preconditions.checkState(textBody != null, "textBody property of vacationResponse object should not be null");
-            return new VacationResponse(id, isEnabled, fromDate, toDate, textBody, subject);
+            boolean enabled = isEnabled.orElse(DEFAULT_DISABLED);
+            if (enabled) {
+                Preconditions.checkState(textBody.isPresent() || htmlBody.isPresent(), "textBody or htmlBody property of vacationResponse object should not be null when enabled");
+            }
+            return new VacationResponse(id, enabled, fromDate, toDate, textBody, subject, htmlBody);
         }
     }
 
@@ -104,16 +121,18 @@ public class VacationResponse {
     private final Optional<ZonedDateTime> fromDate;
     private final Optional<ZonedDateTime> toDate;
     private final Optional<String> subject;
-    private final String textBody;
+    private final Optional<String> textBody;
+    private final Optional<String> htmlBody;
 
     private VacationResponse(String id, boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate,
-                             String textBody, Optional<String> subject) {
+                             Optional<String> textBody, Optional<String> subject, Optional<String> htmlBody) {
         this.id = id;
         this.isEnabled = isEnabled;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.textBody = textBody;
         this.subject = subject;
+        this.htmlBody = htmlBody;
     }
 
     public String getId() {
@@ -135,12 +154,16 @@ public class VacationResponse {
         return toDate;
     }
 
-    public String getTextBody() {
+    public Optional<String> getTextBody() {
         return textBody;
     }
 
     public Optional<String> getSubject() {
         return subject;
+    }
+
+    public Optional<String> getHtmlBody() {
+        return htmlBody;
     }
 
     @JsonIgnore
@@ -161,11 +184,12 @@ public class VacationResponse {
             && Objects.equals(this.fromDate, that.fromDate)
             && Objects.equals(this.toDate, that.toDate)
             && Objects.equals(this.textBody, that.textBody)
-            && Objects.equals(this.subject, that.subject);
+            && Objects.equals(this.subject, that.subject)
+            && Objects.equals(this.htmlBody, that.htmlBody);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, isEnabled, fromDate, toDate, textBody, subject);
+        return Objects.hash(id, isEnabled, fromDate, toDate, textBody, subject, htmlBody);
     }
 }
