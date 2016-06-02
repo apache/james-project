@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Sets;
-import org.apache.james.util.streams.Collectors;
+import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -49,11 +49,11 @@ public class MessageProperties {
     }
 
     private ImmutableSet<MessageProperty> toMessageProperties(ImmutableSet<String> properties) {
-        return properties.stream().flatMap(MessageProperty::find).collect(Collectors.toImmutableSet());
+        return properties.stream().flatMap(MessageProperty::find).collect(ImmutableCollectors.toImmutableSet());
     }
     
     private ImmutableSet<HeaderProperty> toHeadersProperties(ImmutableSet<String> properties) {
-        return properties.stream().flatMap(HeaderProperty::find).collect(Collectors.toImmutableSet());
+        return properties.stream().flatMap(HeaderProperty::find).collect(ImmutableCollectors.toImmutableSet());
     }
 
     public Optional<ImmutableSet<HeaderProperty>> getOptionalHeadersProperties() {
@@ -168,7 +168,7 @@ public class MessageProperties {
         }
 
         public static ImmutableSet<MessageProperty> allOutputProperties() {
-            return Arrays.stream(values()).filter(MessageProperty::outputProperty).collect(Collectors.toImmutableSet());
+            return Arrays.stream(values()).filter(MessageProperty::outputProperty).collect(ImmutableCollectors.toImmutableSet());
         }
 
         private static boolean outputProperty(MessageProperty p) {

@@ -50,7 +50,7 @@ import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.Collectors;
+import org.apache.james.util.streams.ImmutableCollectors;
 import org.javatuples.Pair;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
@@ -124,7 +124,7 @@ public class GetMessagesMethod implements Method {
         List<Message> result = getMessagesRequest.getIds().stream()
             .flatMap(loadMessages)
             .map(convertToJmapMessage)
-            .collect(Collectors.toImmutableList());
+            .collect(ImmutableCollectors.toImmutableList());
 
         return GetMessagesResponse.builder().messages(result).expectedMessageIds(getMessagesRequest.getIds()).build();
     }
@@ -235,7 +235,7 @@ public class GetMessagesMethod implements Method {
         return (attachmentsIds) -> {
             return attachmentsIds.stream()
                     .map(Throwing.function(id -> attachmentMapper.getAttachment(id)))
-                    .collect(Collectors.toImmutableList());
+                    .collect(ImmutableCollectors.toImmutableList());
         };
     }
 }

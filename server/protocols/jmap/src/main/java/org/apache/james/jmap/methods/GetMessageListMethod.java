@@ -50,7 +50,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.Collectors;
+import org.apache.james.util.streams.ImmutableCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +136,7 @@ public class GetMessageListMethod implements Method {
         return mailboxManager.search(userMailboxesQuery, mailboxSession)
                 .stream()
                 .map(MailboxMetaData::getPath)
-                .collect(Collectors.toImmutableList());
+                .collect(ImmutableCollectors.toImmutableList());
     }
 
     private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, ClientId clientId, MailboxSession mailboxSession) {
@@ -186,7 +186,7 @@ public class GetMessageListMethod implements Method {
                 .stream()
                 .filter(mailbox -> mailboxIdSet.contains(mailbox.getMailboxId().serialize()))
                 .map(mailbox -> new StoreMailboxPath(mailbox))
-                .collect(Collectors.toImmutableSet());
+                .collect(ImmutableCollectors.toImmutableSet());
     }
     
     private Optional<MessageManager> getMessageManager(MailboxPath mailboxPath, MailboxSession mailboxSession) {
@@ -207,7 +207,7 @@ public class GetMessageListMethod implements Method {
             return ImmutableList.copyOf(messageManager.get().search(searchQuery, mailboxSession))
                     .stream()
                     .map(Throwing.function(messageId -> getMessage(mailboxPath, mailboxSession, messageMapper, messageId)))
-                    .collect(Collectors.toImmutableList());
+                    .collect(ImmutableCollectors.toImmutableList());
         } catch (MailboxException e) {
             LOGGER.warn("Error when searching messages for query :" + searchQuery, e);
             return ImmutableList.of();

@@ -35,6 +35,7 @@ import org.apache.james.jmap.model.message.EMailer;
 import org.apache.james.jmap.model.message.IndexableMessage;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -109,7 +110,7 @@ public class Message {
     private static ImmutableList<Emailer> fromElasticSearchEmailers(Set<EMailer> emailers) {
         return emailers.stream()
                     .map(Message::fromElasticSearchEmailer)
-                    .collect(org.apache.james.util.streams.Collectors.toImmutableList());
+                    .collect(ImmutableCollectors.toImmutableList());
     }
     
     private static Emailer fromElasticSearchEmailer(EMailer emailer) {
@@ -140,7 +141,7 @@ public class Message {
                 .asMap()
                 .entrySet()
                 .stream()
-                .collect(org.apache.james.util.streams.Collectors.toImmutableMap(Map.Entry::getKey, x -> joinOnComma(x.getValue())));
+                .collect(ImmutableCollectors.toImmutableMap(Map.Entry::getKey, x -> joinOnComma(x.getValue())));
     }
     
     private static String getHeaderAsSingleValue(IndexableMessage im, String header) {
@@ -183,7 +184,7 @@ public class Message {
     private static List<Attachment> getAttachments(List<org.apache.james.mailbox.store.mail.model.Attachment> attachments) {
         return attachments.stream()
                 .map(Message::fromMailboxAttachment)
-                .collect(org.apache.james.util.streams.Collectors.toImmutableList());
+                .collect(ImmutableCollectors.toImmutableList());
     }
 
     private static Attachment fromMailboxAttachment(org.apache.james.mailbox.store.mail.model.Attachment attachment) {

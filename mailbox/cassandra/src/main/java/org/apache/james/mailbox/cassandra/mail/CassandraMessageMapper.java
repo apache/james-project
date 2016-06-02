@@ -96,6 +96,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
+import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -339,7 +340,7 @@ public class CassandraMessageMapper implements MessageMapper {
             return row.getList(ATTACHMENTS_IDS, String.class)
                     .stream()
                     .map(AttachmentId::from)
-                    .collect(org.apache.james.util.streams.Collectors.toImmutableList());
+                    .collect(ImmutableCollectors.toImmutableList());
         default:
             return ImmutableList.of();
         }

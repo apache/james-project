@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class Collectors {
+public class ImmutableCollectors {
 
     public static <T> Collector<T, List<T>, ImmutableList<T>> toImmutableList() {
         return Collector.of(ArrayList::new, List::add, (left, right) -> {

@@ -33,13 +33,13 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class CollectorsTest {
+public class ImmutableCollectorsTest {
 
     @Test
     public void immutableListCollectorShouldReturnEmptyImmutableListWhenEmptyStream() {
         String[] data = {};
         List<String> actual = Arrays.stream(data)
-            .collect(Collectors.toImmutableList());
+            .collect(ImmutableCollectors.toImmutableList());
         assertThat(actual).isInstanceOf(ImmutableList.class);
         assertThat(actual).isEmpty();
     }
@@ -48,7 +48,7 @@ public class CollectorsTest {
     public void immutableListCollectorShouldReturnImmutableListWhenOneElementStream() {
         String[] data = {"a"};
         List<String> actual = Arrays.stream(data)
-            .collect(Collectors.toImmutableList());
+            .collect(ImmutableCollectors.toImmutableList());
         assertThat(actual).isInstanceOf(ImmutableList.class);
         assertThat(actual).containsExactly("a");
     }
@@ -57,7 +57,7 @@ public class CollectorsTest {
     public void immutableListCollectorShouldReturnImmutableListWhen3ElementsStream() {
         String[] data = {"a", "b", "c"};
         List<String> actual = Arrays.stream(data)
-            .collect(Collectors.toImmutableList());
+            .collect(ImmutableCollectors.toImmutableList());
         assertThat(actual).isInstanceOf(ImmutableList.class);
         assertThat(actual).containsExactly("a", "b", "c");
     }
@@ -66,7 +66,7 @@ public class CollectorsTest {
     public void immutableSetCollectorShouldReturnEmptyImmutableSetWhenEmptyStream() {
         String[] data = {};
         Set<String> actual = Arrays.stream(data)
-            .collect(Collectors.toImmutableSet());
+            .collect(ImmutableCollectors.toImmutableSet());
         assertThat(actual).isInstanceOf(ImmutableSet.class);
         assertThat(actual).isEmpty();
     }
@@ -75,7 +75,7 @@ public class CollectorsTest {
     public void immutableSetCollectorShouldReturnImmutableSetWhenOneElementStream() {
         String[] data = {"a"};
         Set<String> actual = Arrays.stream(data)
-            .collect(Collectors.toImmutableSet());
+            .collect(ImmutableCollectors.toImmutableSet());
         assertThat(actual).isInstanceOf(ImmutableSet.class);
         assertThat(actual).containsExactly("a");
     }
@@ -84,7 +84,7 @@ public class CollectorsTest {
     public void immutableSetCollectorShouldReturnImmutableSetWhen3ElementsStream() {
         String[] data = {"a", "b", "c"};
         Set<String> actual = Arrays.stream(data)
-            .collect(Collectors.toImmutableSet());
+            .collect(ImmutableCollectors.toImmutableSet());
         assertThat(actual).isInstanceOf(ImmutableSet.class);
         assertThat(actual).containsExactly("a", "b", "c");
     }
@@ -94,7 +94,7 @@ public class CollectorsTest {
     public void immutableMapCollectorShouldReturnEmptyImmutableMapWhenEmptyStream() {
         String[] data = {};
         Map<String, Integer> actual = Arrays.stream(data)
-                .collect(Collectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
+                .collect(ImmutableCollectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
         assertThat(actual).isEmpty();
     }
@@ -103,7 +103,7 @@ public class CollectorsTest {
     public void immutableMapCollectorShouldReturnAppliedImmutableMapWhenOneElementStream() {
         String[] data = {"a"};
         Map<String, Integer> actual = Arrays.stream(data)
-                .collect(Collectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
+                .collect(ImmutableCollectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
         assertThat(actual).containsExactly(entry("A", 1));
     }
@@ -112,7 +112,7 @@ public class CollectorsTest {
     public void immutableMapCollectorShouldReturnAppliedImmutableMapWhen3ElementsStream() {
         String[] data = {"a", "bb", "ccc"};
         Map<String, Integer> actual = Arrays.stream(data)
-                .collect(Collectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
+                .collect(ImmutableCollectors.toImmutableMap(x -> x.toUpperCase(), x -> x.length()));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
         assertThat(actual).containsExactly(entry("A", 1), entry("BB", 2), entry("CCC", 3));
     }
