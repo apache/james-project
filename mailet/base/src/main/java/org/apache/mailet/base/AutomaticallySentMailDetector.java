@@ -25,6 +25,9 @@ import org.apache.mailet.Mail;
 
 public interface AutomaticallySentMailDetector {
 
+    String AUTO_SUBMITTED_HEADER = "Auto-Submitted";
+    String AUTO_REPLIED_VALUE = "auto-replied";
+
     boolean isAutomaticallySent(Mail mail) throws MessagingException;
 
     boolean isMailingList(Mail mail) throws MessagingException;

@@ -94,7 +94,7 @@ public class VacationMailet extends GenericMailet {
         try {
             VacationReply vacationReply = VacationReply.builder(processedMail)
                 .receivedMailRecipient(recipient)
-                .reason(vacation.getTextBody())
+                .vacation(vacation)
                 .build();
             sendNotification(vacationReply);
             notificationRegistry.register(AccountId.fromString(recipient.toString()),

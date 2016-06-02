@@ -60,10 +60,10 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     }
 
     public boolean isAutoSubmitted(Mail mail) throws MessagingException {
-        String[] headers = mail.getMessage().getHeader("Auto-Submitted");
+        String[] headers = mail.getMessage().getHeader(AUTO_SUBMITTED_HEADER);
         if (headers != null) {
             for (String header : headers) {
-                if (header.equalsIgnoreCase("auto-replied")) {
+                if (header.equalsIgnoreCase(AUTO_REPLIED_VALUE)) {
                     return true;
                 }
             }
