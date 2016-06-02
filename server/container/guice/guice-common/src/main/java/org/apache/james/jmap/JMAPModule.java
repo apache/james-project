@@ -29,6 +29,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.methods.RequestHandler;
+import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
@@ -57,6 +59,9 @@ public class JMAPModule extends AbstractModule {
         install(new MethodsModule());
         bind(JMAPServer.class).in(Scopes.SINGLETON);
         bind(RequestHandler.class).in(Scopes.SINGLETON);
+        bind(MailboxBasedHtmlTextExtractor.class).in(Scopes.SINGLETON);
+
+        bind(HtmlTextExtractor.class).to(MailboxBasedHtmlTextExtractor.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MoveCapabilityPrecondition.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);

@@ -20,30 +20,41 @@
 package org.apache.james.jmap.mailet;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import java.util.Properties;
 
+import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Throwables;
 
 public class VacationReplyTest {
 
     public static final String REASON = "I am in vacation dudes ! (plain text)";
     public static final String HTML_REASON = "<b>I am in vacation dudes !</b> (html text)";
-    public static final String HTML_EXTRACTED_REASON = "I am in vacation dudes ! (html text)";
     public static final String SUBJECT = "subject";
 
+    private MimeMessageBodyGenerator mimeMessageBodyGenerator;
     private MailAddress originalSender;
     private MailAddress originalRecipient;
     private FakeMail mail;
+    private MimeMessage generatedBody;
 
     @Before
     public void setUp() throws Exception {
@@ -51,8 +62,13 @@ public class VacationReplyTest {
         originalRecipient = new MailAddress("benwa@apache.org");
 
         mail = new FakeMail();
-        mail.setMessage(new MimeMessage(Session.getInstance(new Properties()) ,ClassLoader.getSystemResourceAsStream("spamMail.eml")));
+
+        mail.setMessage(new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream("spamMail.eml")));
         mail.setSender(originalSender);
+
+        mimeMessageBodyGenerator = mock(MimeMessageBodyGenerator.class);
+        generatedBody = new MimeMessage(Session.getInstance(new Properties()));
+        when(mimeMessageBodyGenerator.from(any(MimeMessage.class), any(), any())).thenReturn(generatedBody);
     }
 
     @Test
@@ -65,43 +81,11 @@ public class VacationReplyTest {
                 .htmlBody(HTML_REASON)
                 .build())
             .receivedMailRecipient(originalRecipient)
-            .build();
+            .build(mimeMessageBodyGenerator);
 
         assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
         assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
-        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(REASON);
-        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_REASON);
-    }
-
-    @Test
-    public void vacationReplyShouldExtractPlainTextContentWhenOnlyHtmlBody() throws Exception {
-        VacationReply vacationReply = VacationReply.builder(mail)
-            .vacation(Vacation.builder()
-                .enabled(true)
-                .htmlBody(HTML_REASON)
-                .build())
-            .receivedMailRecipient(originalRecipient)
-            .build();
-
-        assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
-        assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
-        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_EXTRACTED_REASON);
-        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).contains(HTML_REASON);
-    }
-
-    @Test
-    public void vacationReplyShouldNotBeMultipartWhenVacationHaveNoHTML() throws Exception {
-        VacationReply vacationReply = VacationReply.builder(mail)
-            .vacation(Vacation.builder()
-                .enabled(true)
-                .textBody(REASON)
-                .build())
-            .receivedMailRecipient(originalRecipient)
-            .build();
-
-        assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
-        assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
-        assertThat(IOUtils.toString(vacationReply.getMimeMessage().getInputStream())).isEqualTo(REASON);
+        assertThat(vacationReply.getMimeMessage()).isEqualTo(generatedBody);
     }
 
     @Test
@@ -112,9 +96,12 @@ public class VacationReplyTest {
                 .textBody(REASON)
                 .build())
             .receivedMailRecipient(originalRecipient)
-            .build();
+            .build(mimeMessageBodyGenerator);
 
-        assertThat(vacationReply.getMimeMessage().getHeader("subject")).containsExactly("Re: Original subject");
+        verify(mimeMessageBodyGenerator).from(argThat(createSubjectMatcher("Re: Original subject")), any(), any());
+        assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
+        assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
+        assertThat(vacationReply.getMimeMessage()).isEqualTo(generatedBody);
     }
 
     @Test
@@ -126,9 +113,12 @@ public class VacationReplyTest {
                 .subject(Optional.of(SUBJECT))
                 .build())
             .receivedMailRecipient(originalRecipient)
-            .build();
+            .build(mimeMessageBodyGenerator);
 
-        assertThat(vacationReply.getMimeMessage().getHeader("subject")).containsExactly(SUBJECT);
+        verify(mimeMessageBodyGenerator).from(argThat(createSubjectMatcher(SUBJECT)), any(), any());
+        assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
+        assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
+        assertThat(vacationReply.getMimeMessage()).isEqualTo(generatedBody);
     }
 
     @Test(expected = NullPointerException.class)
@@ -139,8 +129,25 @@ public class VacationReplyTest {
     @Test(expected = NullPointerException.class)
     public void vacationReplyShouldThrowOnNullOriginalEMailAddress() throws Exception {
         VacationReply.builder(new FakeMail())
-            .receivedMailRecipient(null)
-            .build();
+            .receivedMailRecipient(null);
     }
 
+    private BaseMatcher<MimeMessage> createSubjectMatcher(final String expectedSubject) {
+        return new BaseMatcher<MimeMessage>() {
+            @Override
+            public boolean matches(Object o) {
+                MimeMessage mimeMessage = (MimeMessage) o;
+                try {
+                    return mimeMessage.getSubject().equals(expectedSubject);
+                } catch (MessagingException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+
+            @Override
+            public void describeTo(Description description) {
+
+            }
+        };
+    }
 }

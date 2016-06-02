@@ -53,7 +53,7 @@ public class MailetPreconditionTest {
 
     @Test(expected = ConfigurationException.class)
     public void vacationMailetCheckShouldThrowOnWrongMatcher() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null)));
+        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)));
         new JMAPModule.VacationMailetCheck().check(pairs);
     }
 
@@ -65,7 +65,7 @@ public class MailetPreconditionTest {
 
     @Test
     public void vacationMailetCheckShouldNotThrowIfValidPairPresent() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null)));
+        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)));
         new JMAPModule.VacationMailetCheck().check(pairs);
     }
 

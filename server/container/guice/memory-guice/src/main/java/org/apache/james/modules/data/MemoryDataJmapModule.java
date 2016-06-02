@@ -25,6 +25,8 @@ import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.memory.vacation.MemoryNotificationRegistry;
 import org.apache.james.jmap.memory.vacation.MemoryVacationRepository;
+import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -41,5 +43,8 @@ public class MemoryDataJmapModule extends AbstractModule {
 
         bind(MemoryNotificationRegistry.class).in(Scopes.SINGLETON);
         bind(NotificationRegistry.class).to(MemoryNotificationRegistry.class);
+
+        bind(TikaTextExtractor.class).in(Scopes.SINGLETON);
+        bind(TextExtractor.class).to(TikaTextExtractor.class);
     }
 }

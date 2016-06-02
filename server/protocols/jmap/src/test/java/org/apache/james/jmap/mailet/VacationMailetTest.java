@@ -38,6 +38,7 @@ import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.RecipientId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
@@ -66,6 +67,7 @@ public class VacationMailetTest {
     private VacationMailet testee;
     private VacationRepository vacationRepository;
     private ZonedDateTimeProvider zonedDateTimeProvider;
+    private MimeMessageBodyGenerator mimeMessageBodyGenerator;
     private MailetContext mailetContext;
     private MailAddress originalSender;
     private MailAddress originalRecipient;
@@ -85,11 +87,12 @@ public class VacationMailetTest {
             .sender(originalSender)
             .build();
 
+        mimeMessageBodyGenerator = mock(MimeMessageBodyGenerator.class);
         vacationRepository = mock(VacationRepository.class);
         zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
         automaticallySentMailDetector = mock(AutomaticallySentMailDetector.class);
         notificationRegistry = mock(NotificationRegistry.class);
-        testee = new VacationMailet(vacationRepository, zonedDateTimeProvider, automaticallySentMailDetector, notificationRegistry);
+        testee = new VacationMailet(vacationRepository, zonedDateTimeProvider, automaticallySentMailDetector, notificationRegistry, mimeMessageBodyGenerator);
         mailetContext = mock(MailetContext.class);
         testee.init(new FakeMailetConfig("vacation", mailetContext));
     }

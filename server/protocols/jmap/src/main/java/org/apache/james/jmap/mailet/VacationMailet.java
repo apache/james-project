@@ -30,6 +30,7 @@ import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.RecipientId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -46,14 +47,17 @@ public class VacationMailet extends GenericMailet {
     private final ZonedDateTimeProvider zonedDateTimeProvider;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
     private final NotificationRegistry notificationRegistry;
+    private final MimeMessageBodyGenerator mimeMessageBodyGenerator;
 
     @Inject
     public VacationMailet(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider,
-                          AutomaticallySentMailDetector automaticallySentMailDetector, NotificationRegistry notificationRegistry) {
+                          AutomaticallySentMailDetector automaticallySentMailDetector, NotificationRegistry notificationRegistry,
+                          MimeMessageBodyGenerator mimeMessageBodyGenerator) {
         this.vacationRepository = vacationRepository;
         this.zonedDateTimeProvider = zonedDateTimeProvider;
         this.automaticallySentMailDetector = automaticallySentMailDetector;
         this.notificationRegistry = notificationRegistry;
+        this.mimeMessageBodyGenerator = mimeMessageBodyGenerator;
     }
 
     @Override
@@ -95,7 +99,7 @@ public class VacationMailet extends GenericMailet {
             VacationReply vacationReply = VacationReply.builder(processedMail)
                 .receivedMailRecipient(recipient)
                 .vacation(vacation)
-                .build();
+                .build(mimeMessageBodyGenerator);
             sendNotification(vacationReply);
             notificationRegistry.register(AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getSender()),

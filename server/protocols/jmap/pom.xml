@@ -179,6 +179,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-tika</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-mailet-base</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
@@ -272,11 +277,6 @@
                 <dependency>
                     <groupId>org.bouncycastle</groupId>
                     <artifactId>bcpkix-jdk15on</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.jsoup</groupId>
-                    <artifactId>jsoup</artifactId>
-                    <version>1.9.2</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
