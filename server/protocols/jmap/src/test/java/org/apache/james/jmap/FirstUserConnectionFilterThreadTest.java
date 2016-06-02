@@ -20,6 +20,7 @@ package org.apache.james.jmap;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -202,7 +204,26 @@ public class FirstUserConnectionFilterThreadTest {
         public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
             return null;
         }
-        
+
+        @Override
+        public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<String> keys) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException {
+            
+        }
+
+        @Override
+        public boolean hasCapability(MailboxCapabilities capability) {
+            return false;
+        }
     }
 }
 

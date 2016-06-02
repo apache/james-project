@@ -23,6 +23,7 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -45,7 +47,8 @@ public class CassandraMapperProvider implements MapperProvider {
         new CassandraMailboxCounterModule(),
         new CassandraModSeqModule(),
         new CassandraUidModule(),
-        new CassandraAttachmentModule()));
+        new CassandraAttachmentModule(),
+        new CassandraAnnotationModule()));
 
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
@@ -95,5 +98,15 @@ public class CassandraMapperProvider implements MapperProvider {
     @Override
     public boolean supportPartialAttachmentFetch() {
         return true;
+    }
+
+    @Override
+    public AnnotationMapper createAnnotationMapper() throws MailboxException {
+        return new CassandraMailboxSessionMapperFactory(
+                new CassandraUidProvider(cassandra.getConf()),
+                new CassandraModSeqProvider(cassandra.getConf()),
+                cassandra.getConf(),
+                cassandra.getTypesProvider()
+            ).getAnnotationMapper(CassandraId.timeBased(), new MockMailboxSession("benwa"));
     }
 }

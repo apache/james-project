@@ -23,13 +23,14 @@ import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -53,7 +54,8 @@ public class CassandraMailboxManagerTest {
         new CassandraUidModule(),
         new CassandraModSeqModule(),
         new CassandraSubscriptionModule(),
-        new CassandraAttachmentModule()));
+        new CassandraAttachmentModule(),
+        new CassandraAnnotationModule()));
 
     private IProducer<CassandraMailboxManager> producer = new IProducer<CassandraMailboxManager>() {
 

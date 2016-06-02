@@ -86,5 +86,4 @@ public class CachingMailboxMapper implements MailboxMapper {
 		cache.invalidate(mailbox);
 	}
 
-
 }

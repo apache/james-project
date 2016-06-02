@@ -22,12 +22,14 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
@@ -42,7 +44,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
     protected final static String MESSAGEMAPPER ="MESSAGEMAPPER";
     protected final static String MAILBOXMAPPER ="MAILBOXMAPPER";
     protected final static String SUBSCRIPTIONMAPPER ="SUBSCRIPTIONMAPPER";
-    
+    protected final static String ANNOTATIONMAPPER = "ANNOTATIONMAPPER";
     
     
     /**
@@ -65,6 +67,17 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         }
         return mapper;
     }
+
+    public AnnotationMapper getAnnotationMapper(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+        AnnotationMapper mapper = (AnnotationMapper)session.getAttributes().get(ANNOTATIONMAPPER);
+        if (mapper == null) {
+            mapper = createAnnotationMapper(mailboxId, session);
+            session.getAttributes().put(ANNOTATIONMAPPER, mapper);
+        }
+        return mapper;
+    }
+
+    public abstract AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
     /**
      * Create a {@link MessageMapper} instance which will get reused during the whole {@link MailboxSession}

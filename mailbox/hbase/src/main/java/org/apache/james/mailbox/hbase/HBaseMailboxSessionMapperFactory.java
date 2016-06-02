@@ -29,6 +29,7 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 
 import java.io.IOException;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -43,12 +44,14 @@ import org.apache.james.mailbox.hbase.mail.HBaseMailboxMapper;
 import org.apache.james.mailbox.hbase.mail.HBaseMessageMapper;
 import org.apache.james.mailbox.hbase.user.HBaseSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 /**
@@ -169,5 +172,11 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
      */
     public UidProvider getUidProvider() {
         return uidProvider;
+    }
+
+    @Override
+    public AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession session)
+            throws MailboxException {
+        throw new NotImplementedException();
     }
 }

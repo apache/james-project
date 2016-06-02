@@ -23,15 +23,19 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMapper;
 import org.apache.james.mailbox.cassandra.user.CassandraSubscriptionMapper;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 import com.datastax.driver.core.Session;
@@ -92,5 +96,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     Session getSession() {
         return session;
+    }
+
+    @Override
+    public AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession mailboxSession)
+            throws MailboxException {
+        return new CassandraAnnotationMapper((CassandraId)mailboxId, session);
     }
 }

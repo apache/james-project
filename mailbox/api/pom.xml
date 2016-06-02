@@ -37,6 +37,10 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
             <groupId>${javax.mail.groupId}</groupId>
             <artifactId>${javax.mail.artifactId}</artifactId>
         </dependency>
@@ -58,6 +62,11 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj-1.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-guava</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

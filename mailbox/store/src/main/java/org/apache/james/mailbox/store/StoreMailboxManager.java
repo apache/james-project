@@ -25,6 +25,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxMetaData.Selectability;
@@ -57,6 +59,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -134,7 +137,6 @@ public class StoreMailboxManager implements MailboxManager {
     public void setMailboxSessionIdGenerator(MailboxSessionIdGenerator idGenerator) {
         this.idGenerator = idGenerator;
     }
-
     public void setQuotaManager(QuotaManager quotaManager) {
         this.quotaManager = quotaManager;
     }
@@ -701,4 +703,42 @@ public class StoreMailboxManager implements MailboxManager {
         );
     }
 
+    private AnnotationMapper getAnnotationMapper(MailboxPath mailboxPath, MailboxSession session)
+            throws MailboxException, MailboxNotFoundException {
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mailboxMapper.findMailboxByPath(mailboxPath);
+        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailbox.getMailboxId(), session);
+        return annotationMapper;
+    }
+    
+    @Override
+    public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
+        return annotationMapper.getAllAnnotations();
+    }
+
+    @Override
+    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<String> keys) 
+            throws MailboxException {
+        AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
+        return annotationMapper.getAnnotationsByKeys(keys);
+    }
+
+    @Override
+    public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) 
+            throws MailboxException {
+        AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
+        for (MailboxAnnotation annotation : mailboxAnnotations) {
+            if (annotation.isNil()) {
+                annotationMapper.deleteAnnotation(annotation.getKey());
+            } else {
+                annotationMapper.insertAnnotation(annotation);
+            }
+        }
+    }
+
+    @Override
+    public boolean hasCapability(MailboxCapabilities capability) {
+        return getSupportedMailboxCapabilities().contains(capability);
+    }
 }

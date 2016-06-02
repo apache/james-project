@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
@@ -25,10 +26,12 @@ import org.apache.james.mailbox.maildir.mail.MaildirMailboxMapper;
 import org.apache.james.mailbox.maildir.mail.MaildirMessageMapper;
 import org.apache.james.mailbox.maildir.user.MaildirSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
+import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 public class MaildirMailboxSessionMapperFactory extends
@@ -64,6 +67,13 @@ public class MaildirMailboxSessionMapperFactory extends
     @Override
     public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {
         return new NoopAttachmentMapper();
+    }
+
+
+    @Override
+    public AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession session)
+            throws MailboxException {
+        throw new NotImplementedException();
     }
 
 }

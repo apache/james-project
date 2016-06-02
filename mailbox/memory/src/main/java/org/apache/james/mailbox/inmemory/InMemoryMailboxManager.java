@@ -44,7 +44,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
-        return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace);
+        return EnumSet.of(MailboxCapabilities.Move, MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace, MailboxCapabilities.Annotation);
     }
     
     @Override

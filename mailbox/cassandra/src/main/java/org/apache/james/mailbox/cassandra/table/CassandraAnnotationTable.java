@@ -17,28 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.MessageMapper;
+public interface CassandraAnnotationTable {
+    String TABLE_NAME = "annotation";
 
-public interface MapperProvider {
-    MailboxMapper createMailboxMapper() throws MailboxException;
+    String MAILBOX_ID = "mailboxId";
+    String KEY = "key";
+    String VALUE = "value";
 
-    MessageMapper createMessageMapper() throws MailboxException;
-
-    AttachmentMapper createAttachmentMapper() throws MailboxException;
-
-    AnnotationMapper createAnnotationMapper() throws MailboxException;
-
-    MailboxId generateId();
-
-    void clearMapper() throws MailboxException;
-
-    void ensureMapperPrepared() throws MailboxException;
-
-    boolean supportPartialAttachmentFetch();
+    String[] SELECT_FIELDS = { KEY, VALUE };
 }

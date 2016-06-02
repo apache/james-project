@@ -33,6 +33,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -54,6 +55,7 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -85,6 +87,10 @@ public class MailboxEventAnalyserTest {
             return EnumSet.noneOf(MessageCapabilities.class);
         }
         
+        public boolean hasCapability(MailboxCapabilities capability) {
+            return false;
+        }
+
         public void removeListener(MailboxPath mailboxPath, MailboxListener listner, MailboxSession session) throws MailboxException {
             
         }
@@ -362,6 +368,24 @@ public class MailboxEventAnalyserTest {
                 throws MailboxException {
             throw new NotImplementedException("Not implemented");
         }
+
+        @Override
+        public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session)
+                throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session,
+                Set<String> keys) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session,
+                List<MailboxAnnotation> mailboxAnnotations) throws MailboxException {
+        }
+
     };
     
     private final class MyMailboxSession implements MailboxSession {
