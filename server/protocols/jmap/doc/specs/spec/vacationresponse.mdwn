@@ -1,9 +1,5 @@
 ## Vacation Response
 
-<aside class="warning">
-Endpoints and storage implemented but no notifications will be sent.
-</aside>
-
 The **VacationResponse** object represents the state of vacation-response
 related settings for an account. It has the following properties:
 
