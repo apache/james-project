@@ -6,6 +6,12 @@ This document aims at dividing existing and upcoming code into the following cat
  - experimental
  - unsupported
 
+== MISC
+
+We need to choose a new Logo.
+
+We need a better website.
+
 == Mailbox section
 
 .Feature matrix : mailbox backend
