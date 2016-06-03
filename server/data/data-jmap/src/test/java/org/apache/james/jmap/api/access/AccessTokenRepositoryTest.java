@@ -25,37 +25,46 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.concurrent.CompletionException;
 
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.After;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractTest;
+import org.xenei.junit.contract.IProducer;
 
-public abstract class AbstractAccessTokenRepositoryTest {
+@Contract(AccessTokenRepository.class)
+public class AccessTokenRepositoryTest<T extends AccessTokenRepository> {
 
     private static final AccessToken TOKEN = AccessToken.generate();
     private static final String USERNAME = "username";
-    protected static final long TTL_IN_MS = 1000;
+    public static final long TTL_IN_MS = 1000;
+
+    private IProducer<T> producer;
 
     private AccessTokenRepository accessTokenRepository;
 
-    @Before
-    public void setUp() {
-        accessTokenRepository = createAccessTokenRepository();
+    @Contract.Inject
+    public final void setProducer(IProducer<T> producer) {
+        this.producer = producer;
+        this.accessTokenRepository = producer.newInstance();
     }
 
-    protected abstract AccessTokenRepository createAccessTokenRepository();
+    @After
+    public void tearDown() {
+        producer.cleanUp();
+    }
 
-    @Test
+    @ContractTest
     public void validTokenMustBeRetrieved() throws Throwable {
         accessTokenRepository.addToken(USERNAME, TOKEN).join();
         assertThat(accessTokenRepository.getUsernameFromToken(TOKEN).join()).isEqualTo(USERNAME);
     }
 
-    @Test
+    @ContractTest
     public void absentTokensMustBeInvalid() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).isInstanceOf(CompletionException.class);
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).hasCauseInstanceOf(InvalidAccessToken.class);
     }
 
-    @Test
+    @ContractTest
     public void removedTokensMustBeInvalid() throws Exception {
         accessTokenRepository.addToken(USERNAME, TOKEN).join();
         accessTokenRepository.removeToken(TOKEN).join();
@@ -63,7 +72,7 @@ public abstract class AbstractAccessTokenRepositoryTest {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).hasCauseInstanceOf(InvalidAccessToken.class);
     }
 
-    @Test
+    @ContractTest
     public void outDatedTokenMustBeInvalid() throws Exception {
         accessTokenRepository.addToken(USERNAME, TOKEN).join();
         Thread.sleep(2 * TTL_IN_MS);
@@ -71,29 +80,34 @@ public abstract class AbstractAccessTokenRepositoryTest {
         assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(TOKEN).join()).hasCauseInstanceOf(InvalidAccessToken.class);
     }
 
-    @Test(expected = NullPointerException.class)
+    @ContractTest
     public void addTokenMustThrowWhenUsernameIsNull() throws Exception {
-        accessTokenRepository.addToken(null, TOKEN);
+        assertThatThrownBy(() -> accessTokenRepository.addToken(null, TOKEN))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @ContractTest
     public void addTokenMustThrowWhenUsernameIsEmpty() throws Exception {
-        accessTokenRepository.addToken("", TOKEN);
+        assertThatThrownBy(() -> accessTokenRepository.addToken("", TOKEN))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = NullPointerException.class)
+    @ContractTest
     public void addTokenMustThrowWhenTokenIsNull() throws Exception {
-        accessTokenRepository.addToken(USERNAME, null);
+        assertThatThrownBy(() -> accessTokenRepository.addToken(USERNAME, null))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    @Test(expected = NullPointerException.class)
+    @ContractTest
     public void removeTokenTokenMustThrowWhenTokenIsNull() throws Exception {
-        accessTokenRepository.removeToken(null);
+        assertThatThrownBy(() -> accessTokenRepository.removeToken(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    @Test(expected = NullPointerException.class)
+    @ContractTest
     public void getUsernameFromTokenMustThrowWhenTokenIsNull() throws Exception {
-        accessTokenRepository.getUsernameFromToken(null);
+        assertThatThrownBy(() -> accessTokenRepository.getUsernameFromToken(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
 }

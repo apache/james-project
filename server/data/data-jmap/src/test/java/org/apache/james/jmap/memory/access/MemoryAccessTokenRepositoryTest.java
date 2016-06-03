@@ -19,12 +19,33 @@
 
 package org.apache.james.jmap.memory.access;
 
-import org.apache.james.jmap.api.access.AbstractAccessTokenRepositoryTest;
+import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
+import org.junit.runner.RunWith;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 
-public class MemoryAccessTokenRepositoryTest extends AbstractAccessTokenRepositoryTest {
+@RunWith(ContractSuite.class)
+@ContractImpl(MemoryAccessTokenRepository.class)
+public class MemoryAccessTokenRepositoryTest {
 
-    protected MemoryAccessTokenRepository createAccessTokenRepository() {
-        return new MemoryAccessTokenRepository(TTL_IN_MS);
+    private IProducer<AccessTokenRepository> producer = new IProducer<AccessTokenRepository>() {
+        @Override
+        public MemoryAccessTokenRepository newInstance() {
+            return new MemoryAccessTokenRepository(AccessTokenRepositoryTest.TTL_IN_MS);
+        }
+
+        @Override
+        public void cleanUp() {
+
+        }
+    };
+
+    @Contract.Inject
+    public IProducer<AccessTokenRepository> getProducer() {
+        return producer;
     }
 
 }

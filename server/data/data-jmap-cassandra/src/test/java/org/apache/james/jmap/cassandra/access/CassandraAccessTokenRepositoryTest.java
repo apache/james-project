@@ -20,22 +20,36 @@
 package org.apache.james.jmap.cassandra.access;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.jmap.api.access.AbstractAccessTokenRepositoryTest;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.junit.After;
+import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
+import org.junit.runner.RunWith;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 
-public class CassandraAccessTokenRepositoryTest extends AbstractAccessTokenRepositoryTest {
+@RunWith(ContractSuite.class)
+@ContractImpl(CassandraAccessTokenRepository.class)
+public class CassandraAccessTokenRepositoryTest {
 
-    private CassandraCluster cassandra;
+    private IProducer<AccessTokenRepository> producer = new IProducer<AccessTokenRepository>() {
 
-    @Override
-    protected AccessTokenRepository createAccessTokenRepository() {
-        cassandra = CassandraCluster.create(new CassandraAccessModule());
-        return new CassandraAccessTokenRepository(new CassandraAccessTokenDAO(cassandra.getConf(), TTL_IN_MS));
-    }
+        private CassandraCluster cassandra;
 
-    @After
-    public void tearDown() {
-        cassandra.clearAllTables();
+        @Override
+        public CassandraAccessTokenRepository newInstance() {
+            cassandra = CassandraCluster.create(new CassandraAccessModule());
+            return new CassandraAccessTokenRepository(new CassandraAccessTokenDAO(cassandra.getConf(), AccessTokenRepositoryTest.TTL_IN_MS));
+        }
+
+        @Override
+        public void cleanUp() {
+            cassandra.clearAllTables();
+        }
+    };
+
+    @Contract.Inject
+    public IProducer<AccessTokenRepository> getProducer() {
+        return producer;
     }
 }
