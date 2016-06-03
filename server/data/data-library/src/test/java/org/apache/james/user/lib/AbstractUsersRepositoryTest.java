@@ -25,6 +25,7 @@ import java.util.Iterator;
 
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.junit.After;
@@ -142,7 +143,7 @@ public abstract class AbstractUsersRepositoryTest {
         assertThat(usersRepository.contains(user3)).isTrue();
     }
     
-    @Test(expected = UsersRepositoryException.class)
+    @Test(expected = AlreadyExistInUsersRepositoryException.class)
     public void addUserShouldThrowWhenSameUsernameWithDifferentCase() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(login("myUsername"), "password");
@@ -150,7 +151,7 @@ public abstract class AbstractUsersRepositoryTest {
         usersRepository.addUser(login("MyUsername"), "password"); 
     }
     
-    @Test(expected = UsersRepositoryException.class)
+    @Test(expected = AlreadyExistInUsersRepositoryException.class)
     public void addUserShouldThrowWhenUserAlreadyPresentInRepository() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(user1, "password");
