@@ -530,6 +530,7 @@ public abstract class SetMailboxesMethodTest {
                         ));
     }
 
+    @Test
     public void setMailboxesShouldReturnDestroyedMailbox() {
         jmapServer.serverProbe().createMailbox("#private", username, "myBox");
         Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
