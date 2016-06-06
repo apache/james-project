@@ -46,6 +46,7 @@ public class MailboxUtils {
 
     private static final boolean DONT_RESET_RECENT = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtils.class);
+    private static final String WILDCARD = "%";
 
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
@@ -105,7 +106,8 @@ public class MailboxUtils {
 
     private Optional<org.apache.james.mailbox.store.mail.model.Mailbox> getMailboxFromId(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .list().stream()
+                .findMailboxWithPathLike(new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), WILDCARD))
+                .stream()
                 .filter(mailbox -> mailbox.getMailboxId().serialize().equals(mailboxId))
                 .findFirst();
     }
