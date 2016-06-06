@@ -415,16 +415,9 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.jmock</groupId>
-                <artifactId>jmock</artifactId>
-                <version>${jmock.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jmock</groupId>
-                <artifactId>jmock-junit4</artifactId>
-                <version>${jmock.version}</version>
-                <scope>test</scope>
+                <groupId>org.xenei</groupId>
+                <artifactId>junit-contracts</artifactId>
+                <version>0.1.5</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
