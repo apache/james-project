@@ -30,6 +30,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -37,9 +38,15 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractTest;
+import org.xenei.junit.contract.IProducer;
 
-public abstract class AbstractMessageMoveTest {
+@Contract(MapperProvider.class)
+public class MessageMoveTest<T extends MapperProvider> {
 
     private final static char DELIMITER = ':';
     private static final int LIMIT = 10;
@@ -48,31 +55,34 @@ public abstract class AbstractMessageMoveTest {
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
+    private IProducer<T> producer;
 
     private SimpleMailbox benwaInboxMailbox;
     private SimpleMailbox benwaWorkMailbox;
 
     private SimpleMailboxMessage message1;
 
-    public AbstractMessageMoveTest(MapperProvider mapperProvider) {
-        this.mapperProvider = mapperProvider;
-    }
+    @Rule
+    public ExpectedException expected = ExpectedException.none();
 
-    @Before
-    public void setUp() throws MailboxException {
-        mapperProvider.ensureMapperPrepared();
-        messageMapper = mapperProvider.createMessageMapper();
+    @Contract.Inject
+    public final void setProducer(IProducer<T> producer) throws MailboxException {
+        this.producer = producer;
+        this.mapperProvider = producer.newInstance();
+        this.mapperProvider.ensureMapperPrepared();
+        this.messageMapper = mapperProvider.createMessageMapper();
+
         benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
         benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));
         message1 = createMessage(benwaInboxMailbox, "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
     }
 
     @After
-    public void tearDown() throws MailboxException {
-        mapperProvider.clearMapper();
+    public void tearDown() {
+        producer.cleanUp();
     }
 
-    @Test
+    @ContractTest
     public void movingAMessageShouldWork() throws Exception {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
@@ -82,7 +92,7 @@ public abstract class AbstractMessageMoveTest {
         assertThat(retrieveMessageFromStorage(benwaWorkMailbox, message1)).isEqualTo(message1);
     }
 
-    @Test
+    @ContractTest
     public void movingAMessageShouldReturnCorrectMetadata() throws Exception {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
@@ -96,7 +106,7 @@ public abstract class AbstractMessageMoveTest {
         assertThat(messageMetaData.getModSeq()).isEqualTo(messageMapper.getHighestModSeq(benwaWorkMailbox));
     }
 
-    @Test
+    @ContractTest
     public void movingAMessageShouldNotViolateMessageCount() throws Exception {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
@@ -107,7 +117,7 @@ public abstract class AbstractMessageMoveTest {
         assertThat(messageMapper.countMessagesInMailbox(benwaWorkMailbox)).isEqualTo(1);
     }
 
-    @Test
+    @ContractTest
     public void movingAMessageShouldNotViolateUnseenMessageCount() throws Exception {
         messageMapper.add(benwaInboxMailbox, message1);
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
@@ -118,7 +128,7 @@ public abstract class AbstractMessageMoveTest {
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaWorkMailbox)).isEqualTo(1);
     }
 
-    @Test
+    @ContractTest
     public void movingASeenMessageShouldNotIncrementUnseenMessageCount() throws Exception {
         message1.setFlags(new Flags(Flags.Flag.SEEN));
         messageMapper.add(benwaInboxMailbox, message1);

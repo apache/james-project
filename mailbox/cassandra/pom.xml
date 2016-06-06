@@ -147,6 +147,11 @@
             </activation>
             <dependencies>
                 <dependency>
+                    <groupId>org.xenei</groupId>
+                    <artifactId>junit-contracts</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                 </dependency>

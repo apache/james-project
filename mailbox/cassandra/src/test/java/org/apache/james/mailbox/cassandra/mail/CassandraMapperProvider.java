@@ -91,4 +91,9 @@ public class CassandraMapperProvider implements MapperProvider {
     public void ensureMapperPrepared() throws MailboxException {
         cassandra.ensureAllTables();
     }
+
+    @Override
+    public boolean supportPartialAttachmentFetch() {
+        return true;
+    }
 }

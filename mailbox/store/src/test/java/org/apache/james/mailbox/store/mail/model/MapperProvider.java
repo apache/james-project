@@ -36,4 +36,6 @@ public interface MapperProvider {
     void clearMapper() throws MailboxException;
 
     void ensureMapperPrepared() throws MailboxException;
+
+    boolean supportPartialAttachmentFetch();
 }

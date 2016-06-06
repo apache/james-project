@@ -48,4 +48,9 @@ public class InMemoryMapperProvider implements MapperProvider {
     public void ensureMapperPrepared() throws MailboxException {
 
     }
+
+    @Override
+    public boolean supportPartialAttachmentFetch() {
+        return false;
+    }
 }

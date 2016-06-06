@@ -80,6 +80,11 @@
             <version>${assertj-1.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.xenei</groupId>
+            <artifactId>junit-contracts</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -19,11 +19,42 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
-import org.apache.james.mailbox.store.mail.model.AbstractMailboxMapperTest;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.junit.runner.RunWith;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 
-public class InMemoryMailboxMapperTest extends AbstractMailboxMapperTest {
+import com.google.common.base.Throwables;
 
-    public InMemoryMailboxMapperTest() {
-        super(new InMemoryMapperProvider());
+@RunWith(ContractSuite.class)
+@ContractImpl(InMemoryMapperProvider.class)
+public class MemoryMappersTests {
+
+    private IProducer<MapperProvider> producer = new IProducer<MapperProvider>() {
+
+        private final InMemoryMapperProvider mapperProvider = new InMemoryMapperProvider();
+
+        @Override
+        public InMemoryMapperProvider newInstance() {
+            return mapperProvider;
+        }
+
+        @Override
+        public void cleanUp() {
+            try {
+                mapperProvider.clearMapper();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    };
+
+    @Contract.Inject
+    public IProducer<MapperProvider> getProducer() {
+        return producer;
     }
+
 }

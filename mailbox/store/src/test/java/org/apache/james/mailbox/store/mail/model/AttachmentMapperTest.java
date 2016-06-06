@@ -25,42 +25,47 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractTest;
+import org.xenei.junit.contract.IProducer;
 
 import com.google.common.collect.ImmutableList;
 
-public abstract class AbstractAttachmentMapperTest {
+@Contract(MapperProvider.class)
+public class AttachmentMapperTest<T extends MapperProvider> {
 
-    private MapperProvider mapperProvider;
+    private IProducer<T> producer;
     private AttachmentMapper attachmentMapper;
 
-    public AbstractAttachmentMapperTest(MapperProvider mapperProvider) {
-        this.mapperProvider = mapperProvider;
-    }
+    @Rule
+    public ExpectedException expected = ExpectedException.none();
 
-    @Before
-    public void setUp() throws MailboxException {
-        mapperProvider.ensureMapperPrepared();
-        attachmentMapper = mapperProvider.createAttachmentMapper();
+    @Contract.Inject
+    public final void setProducer(IProducer<T> producer) throws MailboxException {
+        this.producer = producer;
+        this.attachmentMapper = producer.newInstance().createAttachmentMapper();
     }
 
     @After
-    public void tearDown() throws MailboxException {
-        mapperProvider.clearMapper();
+    public void tearDown() {
+        producer.cleanUp();
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @ContractTest
     public void getAttachmentShouldThrowWhenNullAttachmentId() throws Exception {
+        expected.expect(IllegalArgumentException.class);
         attachmentMapper.getAttachment(null);
     }
 
-    @Test (expected = AttachmentNotFoundException.class)
+    @ContractTest
     public void getAttachmentShouldThrowWhenNonReferencedAttachmentId() throws Exception {
+        expected.expect(AttachmentNotFoundException.class);
         attachmentMapper.getAttachment(AttachmentId.forPayload("unknown".getBytes()));
     }
 
-    @Test
+    @ContractTest
     public void getAttachmentShouldReturnTheAttachmentWhenReferenced() throws Exception {
         //Given
         Attachment expected = Attachment.from("payload".getBytes(), "content");
@@ -72,7 +77,7 @@ public abstract class AbstractAttachmentMapperTest {
         assertThat(attachment).isEqualTo(expected);
     }
 
-    @Test
+    @ContractTest
     public void getAttachmentShouldReturnTheAttachmentsWhenMultipleStored() throws Exception {
         //Given
         Attachment expected1 = Attachment.from("payload1".getBytes(), "content1");
