@@ -28,6 +28,8 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 
+import com.google.common.base.Preconditions;
+
 public class InMemoryAttachmentMapper implements AttachmentMapper {
     
     private static final int INITIAL_SIZE = 128;
@@ -39,6 +41,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
 
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
+        Preconditions.checkArgument(attachmentId != null);
         if (!attachmentsById.containsKey(attachmentId)) {
             throw new AttachmentNotFoundException(attachmentId.getId());
         }
