@@ -19,13 +19,14 @@
 
 package org.apache.james.user.jdbc;
 
-import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.user.api.model.User;
-import org.apache.james.user.lib.model.DefaultUser;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
+import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.api.model.User;
+import org.apache.james.user.lib.model.DefaultUser;
 
 /**
  * A Jdbc-backed UserRepository which handles User instances of the
@@ -68,7 +69,7 @@ public class DefaultUsersJdbcRepository extends AbstractJdbcUsersRepository {
     @Override
     public void addUser(String username, String password) throws UsersRepositoryException {
         if (contains(username)) {
-            throw new UsersRepositoryException("User " + username + " already exist");
+            throw new AlreadyExistInUsersRepositoryException("User " + username + " already exist");
         }
         isValidUsername(username);
         User newbie = new DefaultUser(username, "SHA");
