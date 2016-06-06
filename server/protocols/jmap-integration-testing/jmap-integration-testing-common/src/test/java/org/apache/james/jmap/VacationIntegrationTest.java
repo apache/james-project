@@ -26,6 +26,7 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,6 @@ import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationIntegrationTest {
 
-    private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String SECOND_NAME = "[1][0]";
     private static final String SECOND_ARGUMENTS = "[1][1]";
@@ -137,7 +137,7 @@ public abstract class VacationIntegrationTest {
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-            .until( () -> assertNotYetImplemented(user2AccessToken, getInboxId(user2AccessToken)));
+                .until( () -> assertOneMessageWithNullTextBodyReceived(user2AccessToken, getInboxId(user2AccessToken), USER_1, USER_2));
     }
 
     @Test
@@ -376,7 +376,7 @@ public abstract class VacationIntegrationTest {
             .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
     }
 
-    private boolean assertNotYetImplemented(AccessToken recipientToken, String mailboxId) {
+    private boolean assertOneMessageWithNullTextBodyReceived(AccessToken recipientToken, String mailboxId, String expectedFrom, String expectedTo) {
         try {
             with()
                 .accept(ContentType.JSON)
@@ -393,8 +393,12 @@ public abstract class VacationIntegrationTest {
                 .post("/jmap")
             .then()
                 .statusCode(200)
-                .body(NAME, equalTo("error"))
-                .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
+                .body(SECOND_NAME, equalTo("messages"))
+                .body(SECOND_ARGUMENTS + ".list", hasSize(1))
+                .body(SECOND_ARGUMENTS + ".list[0].textBody", nullValue())
+                .body(SECOND_ARGUMENTS + ".list[0].from.email", equalTo(expectedFrom))
+                .body(SECOND_ARGUMENTS + ".list[0].to.email", hasSize(1))
+                .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
             return true;
         } catch (AssertionError e) {
             return false;
