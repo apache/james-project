@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -43,7 +42,6 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 
-import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.fge.lambdas.Throwing;
@@ -53,19 +51,9 @@ import com.google.common.base.Preconditions;
 public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
-    private final PreparedStatement select;
-    private final PreparedStatement insert;
 
     public CassandraAttachmentMapper(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.select = session.prepare(select(FIELDS)
-                .from(TABLE_NAME)
-                .where(eq(ID, bindMarker(ID))));
-        this.insert = session.prepare(insertInto(TABLE_NAME)
-                .value(ID, bindMarker(ID))
-                .value(PAYLOAD, bindMarker(PAYLOAD))
-                .value(TYPE, bindMarker(TYPE))
-                .value(SIZE, bindMarker(SIZE)));
     }
 
     @Override
@@ -80,11 +68,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.executeSingleRow(select.bind()
-                .setString(ID, attachmentId.getId()))
-                .thenApply(optional -> optional.map(this::attachment))
-                .join()
-                .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId()));
+        return cassandraAsyncExecutor.executeSingleRow(
+            select(FIELDS)
+                .from(TABLE_NAME)
+                .where(eq(ID, attachmentId.getId())))
+            .thenApply(optional -> optional.map(this::attachment))
+            .join()
+            .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId()));
     }
 
     private Attachment attachment(Row row) {
@@ -107,12 +97,12 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private CompletableFuture<Void> asyncStoreAttachment(Attachment attachment) throws IOException {
         return cassandraAsyncExecutor.executeVoid(
-                insert.bind()
-                    .setString(ID, attachment.getAttachmentId().getId())
-                    .setBytes(PAYLOAD, ByteBuffer.wrap(IOUtils.toByteArray(attachment.getStream())))
-                    .setString(TYPE, attachment.getType())
-                    .setLong(SIZE, attachment.getSize())
-            );
+            insertInto(TABLE_NAME)
+                .value(ID, attachment.getAttachmentId().getId())
+                .value(PAYLOAD, ByteBuffer.wrap(IOUtils.toByteArray(attachment.getStream())))
+                .value(TYPE, attachment.getType())
+                .value(SIZE, attachment.getSize())
+        );
     }
 
     @Override
