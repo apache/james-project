@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
@@ -36,28 +37,45 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.junit.Test;
+import org.junit.After;
 import org.slf4j.LoggerFactory;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractTest;
+import org.xenei.junit.contract.IProducer;
 
-public abstract class AbstractStressTest {
+import com.google.common.collect.ImmutableSet;
+
+@Contract(MailboxManager.class)
+public class MailboxManagerStressTest<T extends MailboxManager> {
 
     private final static int APPEND_OPERATIONS = 200;
 
+    private IProducer<T> producer;
+    private MailboxManager mailboxManager;
 
-    protected abstract MailboxManager getMailboxManager();
+    @Contract.Inject
+    public final void setProducer(IProducer<T> producer) throws MailboxException {
+        this.producer = producer;
+        this.mailboxManager = producer.newInstance();
+    }
 
-    @Test
-    public void testStessTest() throws InterruptedException, MailboxException {
+    @After
+    public void tearDown() {
+        producer.cleanUp();
+    }
+
+    @ContractTest
+    public void testStressTest() throws InterruptedException, MailboxException {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
         final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
         final List<Long> uList = new ArrayList<Long>();
         final String username = "username";
-        MailboxSession session = getMailboxManager().createSystemSession(username, LoggerFactory.getLogger("Test"));
-        getMailboxManager().startProcessingRequest(session);
+        MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
+        mailboxManager.startProcessingRequest(session);
         final MailboxPath path = new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "INBOX");
-        getMailboxManager().createMailbox(path, session);
-        getMailboxManager().addListener(path, new MailboxListener() {
+        mailboxManager.createMailbox(path, session);
+        mailboxManager.addListener(path, new MailboxListener() {
 
             @Override
             public ListenerType getType() {
@@ -75,8 +93,8 @@ public abstract class AbstractStressTest {
                 uList.add(u);
             }
         }, session);
-        getMailboxManager().endProcessingRequest(session);
-        getMailboxManager().logout(session, false);
+        mailboxManager.endProcessingRequest(session);
+        mailboxManager.logout(session, false);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
         final ConcurrentHashMap<Long, Object> uids = new ConcurrentHashMap<Long, Object>();
@@ -93,18 +111,18 @@ public abstract class AbstractStressTest {
 
 
                     try {
-                        MailboxSession session = getMailboxManager().createSystemSession(username, LoggerFactory.getLogger("Test"));
+                        MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
 
-                        getMailboxManager().startProcessingRequest(session);
-                        MessageManager m = getMailboxManager().getMailbox(path, session);
+                        mailboxManager.startProcessingRequest(session);
+                        MessageManager m = mailboxManager.getMailbox(path, session);
                         Long uid = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
 
                         System.out.println("Append message with uid=" + uid);
                         if (uids.put(uid, new Object()) != null) {
                             fail.set(true);
                         }
-                        getMailboxManager().endProcessingRequest(session);
-                        getMailboxManager().logout(session, false);
+                        mailboxManager.endProcessingRequest(session);
+                        mailboxManager.logout(session, false);
                     } catch (MailboxException e) {
                         e.printStackTrace();
                         fail.set(true);

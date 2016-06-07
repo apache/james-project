@@ -22,13 +22,12 @@ import java.util.HashMap;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.james.mailbox.AbstractMailboxManagerTest;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
@@ -42,89 +41,79 @@ import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.openjpa.persistence.OpenJPAPersistence;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 
-/**
- * JPAMailboxManagerTest that extends the StoreMailboxManagerTest.
- */
-public class JPAMailboxManagerTest extends AbstractMailboxManagerTest {
-    
+import com.google.common.base.Throwables;
+
+@RunWith(ContractSuite.class)
+@ContractImpl(OpenJPAMailboxManager.class)
+public class JPAMailboxManagerTest {
+
     /**
      * The entity manager factory.
      */
     private static EntityManagerFactory entityManagerFactory;
-    
-    /**
-     * Setup the mailboxManager.
-     * 
-     * @throws Exception
-     */
-    @Before
-    public void setup() throws Exception {
-        createMailboxManager();
-    }
-    
-    /**
-     * Close the system session and entityManagerFactory
-     * 
-     * @throws MailboxException 
-     * @throws BadCredentialsException 
-     */
-    @After
-    public void tearDown() throws BadCredentialsException, MailboxException {
-        deleteAllMailboxes();
-        MailboxSession session = getMailboxManager().createSystemSession("test", LoggerFactory.getLogger("Test"));
-        session.close();
-        entityManagerFactory.close();
-    }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.MailboxManagerTest#createMailboxManager()
-     */
-    @Override
-    protected void createMailboxManager() throws MailboxException {
-        
-        HashMap<String, String> properties = new HashMap<String, String>();
-        properties.put("openjpa.ConnectionDriverName", "org.h2.Driver");
-        properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:imap;DB_CLOSE_DELAY=-1");
-        properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
-        properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
-        properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
-        properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
+    private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
+
+        private OpenJPAMailboxManager openJPAMailboxManager;
+
+        @Override
+        public OpenJPAMailboxManager newInstance() {
+            HashMap<String, String> properties = new HashMap<String, String>();
+            properties.put("openjpa.ConnectionDriverName", "org.h2.Driver");
+            properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:imap;DB_CLOSE_DELAY=-1");
+            properties.put("openjpa.Log", "JDBC=WARN, SQL=WARN, Runtime=WARN");
+            properties.put("openjpa.ConnectionFactoryProperties", "PrettyPrint=true, PrettyPrintLineLength=72");
+            properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
+            properties.put("openjpa.MetaDataFactory", "jpa(Types=" +
                 JPAMailbox.class.getName() + ";" +
                 AbstractJPAMailboxMessage.class.getName() + ";" +
                 JPAMailboxMessage.class.getName() + ";" +
                 JPAProperty.class.getName() + ";" +
                 JPAUserFlag.class.getName() + ";" +
                 JPASubscription.class.getName() + ")");
-       
-        entityManagerFactory = OpenJPAPersistence.getEntityManagerFactory(properties);
-        JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(locker, entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
 
-        MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MessageParser messageParser = new MessageParser();
+            entityManagerFactory = OpenJPAPersistence.getEntityManagerFactory(properties);
+            JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
+            JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(locker, entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
 
-        JPAMailboxManager mailboxManager = new OpenJPAMailboxManager(mf, null, aclResolver, groupMembershipResolver, messageParser);
-        mailboxManager.init();
+            MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
+            GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+            MessageParser messageParser = new MessageParser();
 
-        setMailboxManager(mailboxManager);
-        
-        deleteAllMailboxes();
-        
-    }
-    
-    private void deleteAllMailboxes() throws BadCredentialsException, MailboxException {
-        MailboxSession session = getMailboxManager().createSystemSession("test", LoggerFactory.getLogger("Test"));
-        try {
-            ((OpenJPAMailboxManager) mailboxManager).deleteEverything(session);
-        } catch (MailboxException e) {
-            e.printStackTrace();
+            openJPAMailboxManager = new OpenJPAMailboxManager(mf, null, aclResolver, groupMembershipResolver, messageParser);
+
+            try {
+                openJPAMailboxManager.init();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
+            }
+
+            return openJPAMailboxManager;
         }
-        session.close();
+
+        @Override
+        public void cleanUp() {
+            MailboxSession session = openJPAMailboxManager.createSystemSession("test", LoggerFactory.getLogger("Test"));
+            try {
+                openJPAMailboxManager.deleteEverything(session);
+            } catch (MailboxException e) {
+                e.printStackTrace();
+            }
+            session.close();
+            entityManagerFactory.close();
+        }
+    };
+
+    @Contract.Inject
+    public IProducer<MailboxManager> getProducer() {
+        return producer;
     }
 
 }

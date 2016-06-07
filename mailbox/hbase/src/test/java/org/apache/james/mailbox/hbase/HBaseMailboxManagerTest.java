@@ -18,99 +18,86 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase;
 
-import java.io.IOException;
-import org.apache.james.mailbox.AbstractMailboxManagerTest;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOXES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MAILBOX_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_META_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGES_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_BODY_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
+import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
-import static org.apache.james.mailbox.hbase.HBaseNames.*;
 import org.apache.james.mailbox.hbase.mail.HBaseModSeqProvider;
 import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.junit.After;
-import org.junit.Before;
-import org.slf4j.LoggerFactory;
+import org.junit.runner.RunWith;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 
-/**
- * HBaseMailboxManagerTest that extends the StoreMailboxManagerTest.
- *
- */
-public class HBaseMailboxManagerTest extends AbstractMailboxManagerTest {
+import com.google.common.base.Throwables;
+
+@RunWith(ContractSuite.class)
+@ContractImpl(HBaseMailboxManager.class)
+public class HBaseMailboxManagerTest {
 
     private static final HBaseClusterSingleton CLUSTER = HBaseClusterSingleton.build();
 
-    /**
-     * Setup the mailboxManager.
+    private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
 
-     * @throws Exception
-     */
-    @Before
-    public void setup() throws Exception {
-        ensureTables();
-        clearTables();
-        createMailboxManager();
-    }
+        @Override
+        public HBaseMailboxManager newInstance() {
+            ensureTables();
 
-    private void ensureTables() throws IOException {
-        CLUSTER.ensureTable(MAILBOXES_TABLE, new byte[][]{MAILBOX_CF});
-        CLUSTER.ensureTable(MESSAGES_TABLE,
-                new byte[][]{MESSAGES_META_CF, MESSAGE_DATA_HEADERS_CF, MESSAGE_DATA_BODY_CF});
-        CLUSTER.ensureTable(SUBSCRIPTIONS_TABLE, new byte[][]{SUBSCRIPTION_CF});
-    }
-
-    private void clearTables() {
-        CLUSTER.clearTable(MAILBOXES);
-        CLUSTER.clearTable(MESSAGES);
-        CLUSTER.clearTable(SUBSCRIPTIONS);
-    }
-
-    /**
-     * Close the system session and entityManagerFactory
-     *
-     * @throws MailboxException
-     * @throws BadCredentialsException
-     */
-    @After
-    public void tearDown() throws Exception {
-        deleteAllMailboxes();
-        MailboxSession session = getMailboxManager().createSystemSession("test", LoggerFactory.getLogger("Test"));
-        session.close();
-    }
-
-    /* (non-Javadoc)i deve
-     * @see org.apache.james.mailbox.MailboxManagerTest#createMailboxManager()
-     */
-    @Override
-    protected void createMailboxManager() throws MailboxException {
-        final HBaseUidProvider uidProvider = new HBaseUidProvider(CLUSTER.getConf());
-        final HBaseModSeqProvider modSeqProvider = new HBaseModSeqProvider(CLUSTER.getConf());
-        final HBaseMailboxSessionMapperFactory mapperFactory = new HBaseMailboxSessionMapperFactory(CLUSTER.getConf(),
+            HBaseUidProvider uidProvider = new HBaseUidProvider(CLUSTER.getConf());
+            HBaseModSeqProvider modSeqProvider = new HBaseModSeqProvider(CLUSTER.getConf());
+            HBaseMailboxSessionMapperFactory mapperFactory = new HBaseMailboxSessionMapperFactory(CLUSTER.getConf(),
                 uidProvider, modSeqProvider);
 
-        final MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        final GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        final MessageParser messageParser = new MessageParser();
+            HBaseMailboxManager manager = new HBaseMailboxManager(mapperFactory,
+                null,
+                new UnionMailboxACLResolver(),
+                new SimpleGroupMembershipResolver(),
+                new MessageParser());
 
-        final HBaseMailboxManager manager = new HBaseMailboxManager(mapperFactory, null, aclResolver,
-                groupMembershipResolver, messageParser);
-        manager.init();
+            try {
+                manager.init();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
+            }
 
-        setMailboxManager(manager);
+            return manager;
+        }
 
-        deleteAllMailboxes();
+        @Override
+        public void cleanUp() {
+            CLUSTER.clearTable(MAILBOXES);
+            CLUSTER.clearTable(MESSAGES);
+            CLUSTER.clearTable(SUBSCRIPTIONS);
+        }
+    };
+
+    @Contract.Inject
+    public IProducer<MailboxManager> getProducer() {
+        return producer;
     }
 
-    private void deleteAllMailboxes() throws BadCredentialsException, MailboxException {
-        MailboxSession session = getMailboxManager().createSystemSession("test", LoggerFactory.getLogger("Test"));
+    private void ensureTables() {
         try {
-            ((HBaseMailboxManager) mailboxManager).deleteEverything(session);
-        } catch (MailboxException e) {
-            e.printStackTrace();
+            CLUSTER.ensureTable(MAILBOXES_TABLE, new byte[][]{MAILBOX_CF});
+            CLUSTER.ensureTable(MESSAGES_TABLE,
+                new byte[][]{MESSAGES_META_CF, MESSAGE_DATA_HEADERS_CF, MESSAGE_DATA_BODY_CF});
+            CLUSTER.ensureTable(SUBSCRIPTIONS_TABLE, new byte[][]{SUBSCRIPTION_CF});
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
-        session.close();
     }
 }

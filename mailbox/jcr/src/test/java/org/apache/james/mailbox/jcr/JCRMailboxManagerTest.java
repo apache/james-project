@@ -21,6 +21,7 @@ package org.apache.james.mailbox.jcr;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 
@@ -28,8 +29,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.james.mailbox.AbstractMailboxManagerTest;
-import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -39,66 +40,79 @@ import org.apache.james.mailbox.jcr.mail.JCRModSeqProvider;
 import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.junit.After;
-import org.junit.Before;
-import org.slf4j.LoggerFactory;
+import org.junit.runner.RunWith;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 import org.xml.sax.InputSource;
 
-/**
- * JCRMailboxManagerTest that extends the StoreMailboxManagerTest.
- */
-public class JCRMailboxManagerTest extends AbstractMailboxManagerTest {
+import com.google.common.base.Throwables;
+
+@RunWith(ContractSuite.class)
+@ContractImpl(JCRMailboxManager.class)
+public class JCRMailboxManagerTest extends MailboxManagerTest {
 
     private static final String JACKRABBIT_HOME = "target/jackrabbit";
 
-    public static final String META_DATA_DIRECTORY = "target/user-meta-data";
-
     private static RepositoryImpl repository;
 
-    @Before
-    public void setup() throws Exception {
-        createMailboxManager();
-    }
+    private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
 
-    @After
-    public void tearDown() throws Exception {
-        MailboxSession session = getMailboxManager().createSystemSession("test", LoggerFactory.getLogger("Test"));
-        session.close();
-        repository.shutdown();
-        FileUtils.forceDelete(new File(JACKRABBIT_HOME));
-    }
+        @Override
+        public JCRMailboxManager newInstance() {
+            String user = "user";
+            String pass = "pass";
+            String workspace = null;
+            RepositoryConfig config;
+            try {
+                config = RepositoryConfig.create(new InputSource(JCRMailboxManagerTest.class.getClassLoader().getResourceAsStream("test-repository.xml")), JACKRABBIT_HOME);
+                repository = RepositoryImpl.create(config);
+            } catch (ConfigurationException e) {
+                e.printStackTrace();
+                fail();
+            } catch (RepositoryException e) {
+                e.printStackTrace();
+                fail();
+            }
 
-    protected void createMailboxManager() throws MailboxException {
-        String user = "user";
-        String pass = "pass";
-        String workspace = null;
-        RepositoryConfig config;
-        try {
-            config = RepositoryConfig.create(new InputSource(JCRMailboxManagerTest.class.getClassLoader().getResourceAsStream("test-repository.xml")), JACKRABBIT_HOME);
-            repository = RepositoryImpl.create(config);
-        } catch (ConfigurationException e) {
-            e.printStackTrace();
-            fail();
-        } catch (RepositoryException e) {
-            e.printStackTrace();
-            fail();
+            // Register imap cnd file
+            JCRUtils.registerCnd(repository, workspace, user, pass);
+            MailboxSessionJCRRepository sessionRepos = new GlobalMailboxSessionJCRRepository(repository, workspace, user, pass);
+            JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
+            JCRUidProvider uidProvider = new JCRUidProvider(locker, sessionRepos);
+            JCRModSeqProvider modSeqProvider = new JCRModSeqProvider(locker, sessionRepos);
+            JCRMailboxSessionMapperFactory mf = new JCRMailboxSessionMapperFactory(sessionRepos, uidProvider, modSeqProvider);
+
+            MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
+            GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+            MessageParser messageParser = new MessageParser();
+
+            JCRMailboxManager manager = new JCRMailboxManager(mf, null, locker, aclResolver, groupMembershipResolver, messageParser);
+
+            try {
+                manager.init();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
+            }
+
+            return manager;
         }
 
-        // Register imap cnd file
-        JCRUtils.registerCnd(repository, workspace, user, pass);
-        MailboxSessionJCRRepository sessionRepos = new GlobalMailboxSessionJCRRepository(repository, workspace, user, pass);
-        JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-        JCRUidProvider uidProvider = new JCRUidProvider(locker, sessionRepos);
-        JCRModSeqProvider modSeqProvider = new JCRModSeqProvider(locker, sessionRepos);
-        JCRMailboxSessionMapperFactory mf = new JCRMailboxSessionMapperFactory(sessionRepos, uidProvider, modSeqProvider);
+        @Override
+        public void cleanUp() {
+            repository.shutdown();
+            try {
+                FileUtils.forceDelete(new File(JACKRABBIT_HOME));
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    };
 
-        MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MessageParser messageParser = new MessageParser();
-
-        JCRMailboxManager manager = new JCRMailboxManager(mf, null, locker, aclResolver, groupMembershipResolver, messageParser);
-        manager.init();
-        setMailboxManager(manager);
+    @Contract.Inject
+    public IProducer<MailboxManager> getProducer() {
+        return producer;
     }
 
 }
