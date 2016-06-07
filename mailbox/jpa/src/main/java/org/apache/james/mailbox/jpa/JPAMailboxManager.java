@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
+import java.util.EnumSet;
+
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -45,6 +47,11 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
     @Override
     protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
         return  new JPAMailbox(path, randomUidValidity());
+    }
+
+    @Override
+    public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return EnumSet.of(MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace);
     }
 
     /**

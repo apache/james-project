@@ -72,7 +72,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
 
     enum MailboxCapabilities {
         Move,
-        UserFlag
+        UserFlag,
+        Namespace
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();

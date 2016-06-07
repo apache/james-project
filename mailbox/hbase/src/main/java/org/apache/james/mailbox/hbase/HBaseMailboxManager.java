@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.hbase;
 
+import java.util.EnumSet;
+
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -77,6 +79,11 @@ public class HBaseMailboxManager extends StoreMailboxManager {
                 mapper.deleteAllMailboxes();
             }
         });
+    }
+
+    @Override
+    public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return EnumSet.of(MailboxCapabilities.Namespace);
     }
 
     @Override

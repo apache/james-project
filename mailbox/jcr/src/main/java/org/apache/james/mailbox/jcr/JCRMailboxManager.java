@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.jcr;
 
+import java.util.EnumSet;
+
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -50,6 +52,10 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
         super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser);
     }
 
+    @Override
+    public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return EnumSet.of(MailboxCapabilities.Namespace);
+    }
     
     @Override
     protected StoreMessageManager createMessageManager(Mailbox mailboxEntity, MailboxSession session) throws MailboxException{
