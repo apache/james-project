@@ -137,16 +137,11 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
 
         latch.await();
 
-        // check if the uids were higher on each append. See MAILBOX-131
-        long last = 0;
-        for (Long uid : uList) {
-            if (uid <= last) {
-                fail(uid + "->" + last);
-            } else {
-                last = uid;
-            }
-
-        }
+        // check if there is no duplicates
+        // For mailboxes without locks, even if the UID is monotic, as re-scheduling can happen between UID generation and event delivery,
+        // we can not check the order on the event listener
+        // No UID duplicates prevents message loss
+        assertEquals(APPEND_OPERATIONS, ImmutableSet.copyOf(uList).size());
         assertFalse("Unable to append all messages", fail.get());
         pool.shutdown();
     }
