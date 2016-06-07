@@ -22,6 +22,7 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
@@ -68,7 +69,7 @@ public class GetMailboxMessageListResponseTest {
     @Test
     public void builderShouldWork() {
         FilterCondition filterCondition = FilterCondition.builder()
-                .inMailboxes(ImmutableList.of("1", "2"))
+                .inMailboxes(Optional.of(ImmutableList.of("1", "2")))
                 .build();
         List<String> sort = ImmutableList.of("date desc");
         List<MessageId> messageIds = ImmutableList.of(MessageId.of("user|mailbox|3"), MessageId.of("user|mailbox|4"));

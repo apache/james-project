@@ -40,8 +40,8 @@ public class FilterCondition implements Filter {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private final ImmutableList.Builder<String> inMailboxes;
-        private final ImmutableList.Builder<String> notInMailboxes;
+        private Optional<List<String>> inMailboxes;
+        private Optional<List<String>> notInMailboxes;
         private Date before;
         private Date after;
         private Integer minSize;
@@ -61,18 +61,19 @@ public class FilterCondition implements Filter {
         private final ImmutableList.Builder<String> header;
 
         private Builder() {
-            inMailboxes = ImmutableList.builder();
-            notInMailboxes = ImmutableList.builder();
+            inMailboxes = Optional.empty();
+            notInMailboxes = Optional.empty();
             header = ImmutableList.builder();
         }
 
-        public Builder inMailboxes(List<String> inMailboxes) {
-            this.inMailboxes.addAll(inMailboxes);
+        public Builder inMailboxes(Optional<List<String>> inMailboxes) {
+            this.inMailboxes = inMailboxes.map(ImmutableList::copyOf);
             return this;
         }
 
-        public Builder notInMailboxes(List<Filter> notInMailboxes) {
-            throw new NotImplementedException();
+        public Builder notInMailboxes(Optional<List<String>> notInMailboxes) {
+            this.notInMailboxes = notInMailboxes.map(ImmutableList::copyOf);
+            return this;
         }
 
         public Builder before(Date before) {
@@ -144,14 +145,14 @@ public class FilterCondition implements Filter {
         }
 
         public FilterCondition build() {
-            return new FilterCondition(inMailboxes.build(), notInMailboxes.build(), Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
+            return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
                     Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(hasAttachment),
                     Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject), Optional.ofNullable(body), header.build());
         }
     }
 
-    private final List<String> inMailboxes;
-    private final List<String> notInMailboxes;
+    private final Optional<List<String>> inMailboxes;
+    private final Optional<List<String>> notInMailboxes;
     private final Optional<Date> before;
     private final Optional<Date> after;
     private final Optional<Integer> minSize;
@@ -170,7 +171,7 @@ public class FilterCondition implements Filter {
     private final Optional<String> body;
     private final List<String> header;
 
-    @VisibleForTesting FilterCondition(List<String> inMailboxes, List<String> notInMailboxes, Optional<Date> before, Optional<Date> after, Optional<Integer> minSize, Optional<Integer> maxSize,
+    @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<Date> before, Optional<Date> after, Optional<Integer> minSize, Optional<Integer> maxSize,
             Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
             Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject, Optional<String> body, List<String> header) {
 
@@ -195,11 +196,11 @@ public class FilterCondition implements Filter {
         this.header = header;
     }
 
-    public List<String> getInMailboxes() {
+    public Optional<List<String>> getInMailboxes() {
         return inMailboxes;
     }
 
-    public List<String> getNotInMailboxes() {
+    public Optional<List<String>> getNotInMailboxes() {
         return notInMailboxes;
     }
 

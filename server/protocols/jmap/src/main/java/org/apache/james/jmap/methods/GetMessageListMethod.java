@@ -22,7 +22,7 @@ package org.apache.james.jmap.methods;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -34,6 +34,7 @@ import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.MessageId;
+import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.jmap.utils.SortToComparatorConvertor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -45,7 +46,6 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -59,8 +59,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class GetMessageListMethod implements Method {
 
@@ -76,15 +74,17 @@ public class GetMessageListMethod implements Method {
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final int maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
+    private final MailboxUtils mailboxUtils;
 
     @Inject
     @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod) {
+            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxUtils mailboxUtils) {
 
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
+        this.mailboxUtils = mailboxUtils;
     }
 
     @Override
@@ -169,24 +169,35 @@ public class GetMessageListMethod implements Method {
         return SortToComparatorConvertor.comparatorFor(messageListRequest.getSort());
     }
 
-    private ImmutableSet<MailboxPath> listRequestedMailboxes(GetMessageListRequest messageListRequest, List<MailboxPath> mailboxPaths, MailboxSession session) {
-        ImmutableSet<MailboxPath> mailboxPathSet = ImmutableSet.copyOf(mailboxPaths);
+    private List<MailboxPath> listRequestedMailboxes(GetMessageListRequest messageListRequest, List<MailboxPath> mailboxPaths, MailboxSession session) {
         return messageListRequest.getFilter()
-            .filter(FilterCondition.class::isInstance)
-            .map(FilterCondition.class::cast)
-            .map(FilterCondition::getInMailboxes)
-            .map(Throwing.function(mailboxIds -> mailboxIdsToMailboxPaths(mailboxIds, session)))
-            .map(requestedMailboxPaths -> Sets.intersection(requestedMailboxPaths, mailboxPathSet).immutableCopy())
-            .orElse(mailboxPathSet);
+                .filter(FilterCondition.class::isInstance)
+                .map(FilterCondition.class::cast)
+                .map(filterCondition -> filterMailboxPaths(mailboxPaths, session, filterCondition))
+                .orElse(mailboxPaths);
     }
 
-    private Set<MailboxPath> mailboxIdsToMailboxPaths(List<String> mailboxIds, MailboxSession session) throws MailboxException {
-        Set<String> mailboxIdSet = Sets.newHashSet(mailboxIds);
-        return mailboxSessionMapperFactory.createMailboxMapper(session).list()
-                .stream()
-                .filter(mailbox -> mailboxIdSet.contains(mailbox.getMailboxId().serialize()))
-                .map(mailbox -> new StoreMailboxPath(mailbox))
-                .collect(ImmutableCollectors.toImmutableSet());
+    private List<MailboxPath> filterMailboxPaths(List<MailboxPath> mailboxPaths, MailboxSession session, FilterCondition filterCondition) {
+        Predicate<MailboxPath> inMailboxesPredicate = filterCondition.getInMailboxes()
+                .map(list -> mailboxIdsToMailboxPaths(list, session))
+                .<Predicate<MailboxPath>>map(list -> mailboxPath -> list.contains(mailboxPath))
+                .orElse(x -> true);
+        Predicate<MailboxPath> notInMailboxesPredicate = filterCondition.getNotInMailboxes()
+                .map(list -> mailboxIdsToMailboxPaths(list, session))
+                .<Predicate<MailboxPath>>map(list -> mailboxPath -> !list.contains(mailboxPath))
+                .orElse(x -> true);
+        return mailboxPaths.stream()
+                .filter(inMailboxesPredicate)
+                .filter(notInMailboxesPredicate)
+                .collect(ImmutableCollectors.toImmutableList());
+    }
+
+    private List<MailboxPath> mailboxIdsToMailboxPaths(List<String> mailboxIds, MailboxSession session) {
+        return mailboxIds.stream()
+            .map(id -> mailboxUtils.mailboxPathFromMailboxId(id, session))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(ImmutableCollectors.toImmutableList());
     }
     
     private Optional<MessageManager> getMessageManager(MailboxPath mailboxPath, MailboxSession mailboxSession) {
