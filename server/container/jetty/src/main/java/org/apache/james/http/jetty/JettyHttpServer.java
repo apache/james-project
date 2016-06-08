@@ -33,6 +33,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -40,6 +41,9 @@ import com.google.common.collect.Multimaps;
 
 public class JettyHttpServer implements Closeable {
     
+    private static final int A_SINGLE_THREAD = 1;
+    private static final int MAX_THREAD = 200;
+
     public static JettyHttpServer create(Configuration configuration) {
         return new JettyHttpServer(configuration);
     }
@@ -50,7 +54,7 @@ public class JettyHttpServer implements Closeable {
 
     private JettyHttpServer(Configuration configuration) {
         this.configuration = configuration;
-        this.server = new Server();
+        this.server = new Server(new QueuedThreadPool(MAX_THREAD, A_SINGLE_THREAD));
         this.server.addConnector(buildServerConnector(configuration));
         this.server.setHandler(buildServletHandler(configuration));
     }
