@@ -19,9 +19,9 @@ Feature: Download endpoint
     When asking for an attachment
     Then the user should be authorized
 
-  Scenario: An unauthenticated user should not have access to the download endpoint
+  Scenario: An unauthenticated user should have access to the download endpoint
     When asking for an attachment
-    Then the user should not be authorized
+    Then the user should be authorized
 
   Scenario: A known user should not have access to the download endpoint without a blobId
     Given a current user with username "username@domain.tld" and password "secret"
