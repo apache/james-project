@@ -19,12 +19,12 @@
 
 package org.apache.james.jmap.model.message;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.ParsedContent;
@@ -33,12 +33,22 @@ import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 public class MimePart {
+
+    private static final String HTML_SUBTYPE = "html";
+    private static final String PLAIN_SUBTYPE = "plain";
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder implements MimePartContainerBuilder {
 
@@ -160,11 +170,6 @@ public class MimePart {
                 return Optional.empty();
             }
         }
-
-    }
-    
-    public static Builder builder() {
-        return new Builder();
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MimePart.class);
@@ -244,14 +249,38 @@ public class MimePart {
     }
 
     @JsonIgnore
-    public Optional<String> locateFirstTextualBody() {
+    public Optional<String> retrieveTextHtmlBody() {
+        return retrieveTextBody(MimePart::isHTML);
+    }
+
+    @JsonIgnore
+    public Optional<String> retrieveTextPlainBody() {
+        return retrieveTextBody(MimePart::isPlain);
+    }
+
+    private Optional<String> retrieveTextBody(Predicate<MimePart> filter) {
         return Stream.concat(
-                    Stream.of(this),
-                    attachments.stream())
-                .map((mimePart) -> mimePart.bodyTextContent)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
+                Stream.of(this),
+                getAttachmentsStream())
+            .filter(filter)
+            .map(MimePart::getTextualBody)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .findFirst();
+    }
+
+    @JsonIgnore
+    @VisibleForTesting boolean isHTML() {
+        return subType
+                .filter(HTML_SUBTYPE::equals)
+                .isPresent();
+    }
+
+    @JsonIgnore
+    @VisibleForTesting boolean isPlain() {
+        return subType
+                .filter(PLAIN_SUBTYPE::equals)
+                .isPresent();
     }
 
     @JsonIgnore
