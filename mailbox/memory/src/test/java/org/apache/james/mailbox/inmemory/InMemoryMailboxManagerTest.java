@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -40,7 +39,7 @@ import com.google.common.base.Throwables;
 @ContractImpl(InMemoryMailboxManager.class)
 public class InMemoryMailboxManagerTest {
 
-    private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
+    private IProducer<InMemoryMailboxManager> producer = new IProducer<InMemoryMailboxManager>() {
 
         @Override
         public InMemoryMailboxManager newInstance() {
@@ -66,7 +65,7 @@ public class InMemoryMailboxManagerTest {
     };
 
     @Contract.Inject
-    public IProducer<MailboxManager> getProducer() {
+    public IProducer<InMemoryMailboxManager> getProducer() {
         return producer;
     }
     

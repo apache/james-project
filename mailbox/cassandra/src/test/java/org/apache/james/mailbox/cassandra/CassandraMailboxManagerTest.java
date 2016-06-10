@@ -20,7 +20,6 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -42,10 +41,6 @@ import org.xenei.junit.contract.IProducer;
 
 import com.google.common.base.Throwables;
 
-/**
- * CassandraMailboxManagerTest that extends the StoreMailboxManagerTest.
- * 
- */
 @RunWith(ContractSuite.class)
 @ContractImpl(CassandraMailboxManager.class)
 public class CassandraMailboxManagerTest {
@@ -60,7 +55,7 @@ public class CassandraMailboxManagerTest {
         new CassandraSubscriptionModule(),
         new CassandraAttachmentModule()));
 
-    private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
+    private IProducer<CassandraMailboxManager> producer = new IProducer<CassandraMailboxManager>() {
 
         @Override
         public CassandraMailboxManager newInstance() {
@@ -89,7 +84,7 @@ public class CassandraMailboxManagerTest {
     };
 
     @Contract.Inject
-    public IProducer<MailboxManager> getProducer() {
+    public IProducer<CassandraMailboxManager> getProducer() {
         return producer;
     }
 

@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.memory.access;
 
-import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
 import org.junit.runner.RunWith;
 import org.xenei.junit.contract.Contract;
@@ -31,7 +30,7 @@ import org.xenei.junit.contract.IProducer;
 @ContractImpl(MemoryAccessTokenRepository.class)
 public class MemoryAccessTokenRepositoryTest {
 
-    private IProducer<AccessTokenRepository> producer = new IProducer<AccessTokenRepository>() {
+    private IProducer<MemoryAccessTokenRepository> producer = new IProducer<MemoryAccessTokenRepository>() {
         @Override
         public MemoryAccessTokenRepository newInstance() {
             return new MemoryAccessTokenRepository(AccessTokenRepositoryTest.TTL_IN_MS);
@@ -44,7 +43,7 @@ public class MemoryAccessTokenRepositoryTest {
     };
 
     @Contract.Inject
-    public IProducer<AccessTokenRepository> getProducer() {
+    public IProducer<MemoryAccessTokenRepository> getProducer() {
         return producer;
     }
 

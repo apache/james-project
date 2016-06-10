@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.junit.runner.RunWith;
 import org.xenei.junit.contract.Contract;
 import org.xenei.junit.contract.ContractImpl;
@@ -33,7 +32,7 @@ import com.google.common.base.Throwables;
 @ContractImpl(CassandraMapperProvider.class)
 public class CassandraMappersTests {
 
-    private IProducer<MapperProvider> producer = new IProducer<MapperProvider>() {
+    private IProducer<CassandraMapperProvider> producer = new IProducer<CassandraMapperProvider>() {
 
         private final CassandraMapperProvider cassandraMapperProvider = new CassandraMapperProvider();
 
@@ -53,7 +52,7 @@ public class CassandraMappersTests {
     };
 
     @Contract.Inject
-    public IProducer<MapperProvider> getProducer() {
+    public IProducer<CassandraMapperProvider> getProducer() {
         return producer;
     }
 

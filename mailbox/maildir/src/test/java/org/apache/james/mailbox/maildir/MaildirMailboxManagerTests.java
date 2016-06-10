@@ -20,7 +20,6 @@ package org.apache.james.mailbox.maildir;
 
 import java.io.IOException;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
@@ -71,7 +70,7 @@ public class MaildirMailboxManagerTests {
     public static class DomainUser extends MaildirMailboxManagerTest {
         @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-        private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
+        private IProducer<StoreMailboxManager> producer = new IProducer<StoreMailboxManager>() {
 
             @Override
             public StoreMailboxManager newInstance() {
@@ -90,7 +89,7 @@ public class MaildirMailboxManagerTests {
         };
 
         @Contract.Inject
-        public IProducer<MailboxManager> getProducer() {
+        public IProducer<StoreMailboxManager> getProducer() {
             return producer;
         }
     }
@@ -101,7 +100,7 @@ public class MaildirMailboxManagerTests {
     public static class User extends MaildirMailboxManagerTest {
         @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-        private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
+        private IProducer<StoreMailboxManager> producer = new IProducer<StoreMailboxManager>() {
 
             @Override
             public StoreMailboxManager newInstance() {
@@ -120,7 +119,7 @@ public class MaildirMailboxManagerTests {
         };
 
         @Contract.Inject
-        public IProducer<MailboxManager> getProducer() {
+        public IProducer<StoreMailboxManager> getProducer() {
             return producer;
         }
     }
@@ -130,7 +129,7 @@ public class MaildirMailboxManagerTests {
     public static class FullUser extends MaildirMailboxManagerTest {
         @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-        private IProducer<MailboxManager> producer = new IProducer<MailboxManager>() {
+        private IProducer<StoreMailboxManager> producer = new IProducer<StoreMailboxManager>() {
 
             @Override
             public StoreMailboxManager newInstance() {
@@ -149,7 +148,7 @@ public class MaildirMailboxManagerTests {
         };
 
         @Contract.Inject
-        public IProducer<MailboxManager> getProducer() {
+        public IProducer<StoreMailboxManager> getProducer() {
             return producer;
         }
     }

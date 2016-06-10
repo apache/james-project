@@ -20,7 +20,6 @@
 package org.apache.james.jmap.cassandra.access;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
 import org.junit.runner.RunWith;
 import org.xenei.junit.contract.Contract;
@@ -32,7 +31,7 @@ import org.xenei.junit.contract.IProducer;
 @ContractImpl(CassandraAccessTokenRepository.class)
 public class CassandraAccessTokenRepositoryTest {
 
-    private IProducer<AccessTokenRepository> producer = new IProducer<AccessTokenRepository>() {
+    private IProducer<CassandraAccessTokenRepository> producer = new IProducer<CassandraAccessTokenRepository>() {
 
         private CassandraCluster cassandra;
 
@@ -49,7 +48,7 @@ public class CassandraAccessTokenRepositoryTest {
     };
 
     @Contract.Inject
-    public IProducer<AccessTokenRepository> getProducer() {
+    public IProducer<CassandraAccessTokenRepository> getProducer() {
         return producer;
     }
 }

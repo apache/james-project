@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.junit.runner.RunWith;
 import org.xenei.junit.contract.Contract;
 import org.xenei.junit.contract.ContractImpl;
@@ -33,7 +32,7 @@ import com.google.common.base.Throwables;
 @ContractImpl(InMemoryMapperProvider.class)
 public class MemoryMappersTests {
 
-    private IProducer<MapperProvider> producer = new IProducer<MapperProvider>() {
+    private IProducer<InMemoryMapperProvider> producer = new IProducer<InMemoryMapperProvider>() {
 
         private final InMemoryMapperProvider mapperProvider = new InMemoryMapperProvider();
 
@@ -53,7 +52,7 @@ public class MemoryMappersTests {
     };
 
     @Contract.Inject
-    public IProducer<MapperProvider> getProducer() {
+    public IProducer<InMemoryMapperProvider> getProducer() {
         return producer;
     }
 
