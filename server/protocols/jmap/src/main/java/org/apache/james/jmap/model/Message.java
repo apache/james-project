@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
@@ -46,7 +47,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
-import com.google.common.net.MediaType;
 
 @JsonDeserialize(builder = Message.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
@@ -121,12 +121,18 @@ public class Message {
     }
     
     private static String getPreview(IndexableMessage im) {
-        return Optional.ofNullable(
-                Strings.emptyToNull(
-                    im.getBodyText()
-                        .map(Message::computePreview)
-                        .orElse(NO_BODY)))
+        Stream<Optional<String>> htmlThenTextStream = Stream.of(
+                im.getBodyHtml(),
+                im.getBodyText());
+
+        String body = htmlThenTextStream
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(stringBody -> !stringBody.isEmpty())
+            .findFirst()
             .orElse(NO_BODY);
+        
+        return computePreview(body);
     }
 
     @VisibleForTesting static String computePreview(String body) {
@@ -157,28 +163,11 @@ public class Message {
     }
 
     private static String getTextBody(IndexableMessage im) {
-        if (isText(im) && !isHtml(im)) {
-            return im.getBodyText().map(Strings::emptyToNull).orElse(null);
-        }
-        return null;
+        return im.getBodyText().map(Strings::emptyToNull).orElse(null);
     }
 
     private static String getHtmlBody(IndexableMessage im) {
-        if (isText(im) && isHtml(im)) {
-            return im.getBodyText().map(Strings::emptyToNull).orElse(null);
-        }
-        return null;
-    }
-
-    private static boolean isText(IndexableMessage im) {
-        return im.getMediaType() == null
-            || im.getMediaType().equals(MediaType.ANY_TEXT_TYPE.type());
-    }
-
-    private static boolean isHtml(IndexableMessage im) {
-        return isText(im)
-            && im.getSubType() != null
-            && im.getSubType().equals(MediaType.HTML_UTF_8.subtype());
+        return im.getBodyHtml().map(Strings::emptyToNull).orElse(null);
     }
 
     private static List<Attachment> getAttachments(List<org.apache.james.mailbox.store.mail.model.Attachment> attachments) {

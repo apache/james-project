@@ -26,7 +26,6 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,7 @@ public abstract class VacationIntegrationTest {
     private static final String USER_2 = "matthieu@" + DOMAIN;
     private static final String PASSWORD = "secret";
     private static final String REASON = "Message explaining my wonderful vacations";
+    private static final String HTML_REASON = "<b>" + REASON + "</b>";
     public static final String ORIGINAL_MESSAGE_TEXT_BODY = "Hello someone, and thank you for joining example.com!";
 
     private ConditionFactory calmlyAwait;
@@ -137,7 +137,7 @@ public abstract class VacationIntegrationTest {
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
             .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-                .until( () -> assertOneMessageWithNullTextBodyReceived(user2AccessToken, getInboxId(user2AccessToken), USER_1, USER_2));
+                .until( () -> assertOneMessageWithHtmlBodyReceived(user2AccessToken, getInboxId(user2AccessToken), HTML_REASON, USER_1, USER_2));
     }
 
     @Test
@@ -278,7 +278,7 @@ public abstract class VacationIntegrationTest {
             "    \"singleton\" : {" +
             "      \"id\": \"singleton\"," +
             "      \"isEnabled\": \"true\"," +
-            "      \"htmlBody\": \"<b>" + REASON + "</b>\"" +
+            "      \"htmlBody\": \"" + HTML_REASON + "\"" +
             "    }" +
             "  }" +
             "}, \"#0\"" +
@@ -376,7 +376,7 @@ public abstract class VacationIntegrationTest {
             .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
     }
 
-    private boolean assertOneMessageWithNullTextBodyReceived(AccessToken recipientToken, String mailboxId, String expectedFrom, String expectedTo) {
+    private boolean assertOneMessageWithHtmlBodyReceived(AccessToken recipientToken, String mailboxId, String expectedHtmlBody, String expectedFrom, String expectedTo) {
         try {
             with()
                 .accept(ContentType.JSON)
@@ -385,7 +385,7 @@ public abstract class VacationIntegrationTest {
                 .body("[[\"getMessageList\", " +
                     "{" +
                     "  \"fetchMessages\": true, " +
-                    "  \"fetchMessageProperties\": [\"textBody\", \"from\", \"to\", \"mailboxIds\"]," +
+                    "  \"fetchMessageProperties\": [\"htmlBody\", \"from\", \"to\", \"mailboxIds\"]," +
                     "  \"filter\": {" +
                     "    \"inMailboxes\":[\"" + mailboxId + "\"]" +
                     "  }" +
@@ -395,7 +395,7 @@ public abstract class VacationIntegrationTest {
                 .statusCode(200)
                 .body(SECOND_NAME, equalTo("messages"))
                 .body(SECOND_ARGUMENTS + ".list", hasSize(1))
-                .body(SECOND_ARGUMENTS + ".list[0].textBody", nullValue())
+                .body(SECOND_ARGUMENTS + ".list[0].htmlBody", equalTo(expectedHtmlBody))
                 .body(SECOND_ARGUMENTS + ".list[0].from.email", equalTo(expectedFrom))
                 .body(SECOND_ARGUMENTS + ".list[0].to.email", hasSize(1))
                 .body(SECOND_ARGUMENTS + ".list[0].to.email[0]", equalTo(expectedTo));
