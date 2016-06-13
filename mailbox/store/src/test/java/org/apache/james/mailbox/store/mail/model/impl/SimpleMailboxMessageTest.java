@@ -37,8 +37,10 @@ import org.assertj.core.internal.FieldByFieldComparator;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
+
 public class SimpleMailboxMessageTest {
-    private static final Charset MESSAGE_CHARSET = Charset.forName("UTF-8");
+    private static final Charset MESSAGE_CHARSET = Charsets.UTF_8;
     private static final String MESSAGE_CONTENT = "Simple message content without special characters";
     private static final String MESSAGE_CONTENT_SPECIAL_CHAR = "Simple message content with special characters: \"'(§è!çà$*`";
     public static final TestId TEST_ID = TestId.of(1L);
@@ -62,7 +64,7 @@ public class SimpleMailboxMessageTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
             byteArrayOutputStream.write(MESSAGE.getFullContent());
-            assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT.getBytes().length);
+            assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET).length);
         } finally {
             byteArrayOutputStream.close();
         }
@@ -73,7 +75,7 @@ public class SimpleMailboxMessageTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
             byteArrayOutputStream.write(MESSAGE_SPECIAL_CHAR.getFullContent());
-            assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR.getBytes().length);
+            assertThat(byteArrayOutputStream.size()).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR.getBytes(MESSAGE_CHARSET).length);
         } finally {
             byteArrayOutputStream.close();
         }
@@ -81,8 +83,8 @@ public class SimpleMailboxMessageTest {
 
     @Test
     public void testFullContent() throws IOException {
-        assertThat(new String(IOUtils.toByteArray(MESSAGE.getFullContent()),MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT);
-        assertThat(new String(IOUtils.toByteArray(MESSAGE_SPECIAL_CHAR.getFullContent()),MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR);
+        assertThat(new String(IOUtils.toByteArray(MESSAGE.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT);
+        assertThat(new String(IOUtils.toByteArray(MESSAGE_SPECIAL_CHAR.getFullContent()), MESSAGE_CHARSET)).isEqualTo(MESSAGE_CONTENT_SPECIAL_CHAR);
     }
 
     @Test
