@@ -16,32 +16,35 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap;
 
-import static org.assertj.core.api.Assertions.assertThat;
+package org.apache.james.util.streams;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import java.util.List;
 
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.util.streams.SwarmGenericContainer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
-public class ContainerTest {
+import com.google.common.base.Strings;
 
-    @Rule public GenericContainer container = new SwarmGenericContainer("nginx:1.7.1")
-            .withAffinityToContainer()
-            .withExposedPorts(80);
+public class SwarmGenericContainer extends GenericContainer {
 
-    @Test
-    public void containerShouldBeReachableOnExposedPort() throws IOException, URISyntaxException {
-        String containerIpAddress = container.getContainerIpAddress();
-        Integer containerPort = container.getMappedPort(80);
-        Response response = Request.Get(new URIBuilder().setScheme("http").setHost(containerIpAddress).setPort(containerPort).build()).execute();
-        assertThat(response.returnResponse().getStatusLine().getStatusCode()).isEqualTo(200);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);
+    private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
+
+    public SwarmGenericContainer(String dockerImageName) {
+        super(dockerImageName);
+    }
+
+    public GenericContainer withAffinityToContainer() {
+        String container = System.getenv(DOCKER_CONTAINER);
+        if (Strings.isNullOrEmpty(container)) {
+            LOGGER.warn("'DOCKER_CONTAINER' environment variable not found, dockering without affinity");
+            return this;
+        }
+        List<String> envVariables = getEnv();
+        envVariables.add("affinity:container==" + container);
+        setEnv(envVariables);
+        return this;
     }
 }

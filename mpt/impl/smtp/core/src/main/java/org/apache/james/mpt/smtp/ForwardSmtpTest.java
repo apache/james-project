@@ -29,6 +29,7 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.apache.james.mpt.script.AbstractSimpleScriptedTestProtocol;
+import org.apache.james.util.streams.SwarmGenericContainer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +51,8 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
     public static final String PASSWORD = "secret";
 
     private final TemporaryFolder folder = new TemporaryFolder();
-    private final GenericContainer fakeSmtp = new GenericContainer("weave/rest-smtp-sink:latest");
+    private final GenericContainer fakeSmtp = new SwarmGenericContainer("weave/rest-smtp-sink:latest")
+            .withAffinityToContainer();
     
     @Rule
     public final RuleChain chain = RuleChain.outerRule(folder).around(fakeSmtp);

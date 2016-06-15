@@ -29,8 +29,6 @@
     </parent>
 
     <artifactId>james-server-util-java8</artifactId>
-    <packaging>bundle</packaging>
-
     <name>Apache James :: Server :: Common Utilities :: Java 8</name>
 
     <profiles>
@@ -146,6 +144,11 @@
                     <groupId>org.assertj</groupId>
                     <artifactId>assertj-core</artifactId>
                     <version>3.2.0</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.testcontainers</groupId>
+                    <artifactId>testcontainers</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
