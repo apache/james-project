@@ -104,6 +104,7 @@
         <module>queue/queue-file</module>
         <module>queue/queue-jms</module>
         <module>queue/queue-activemq</module>
+        <module>protocols/webadmin</module>
     </modules>
 
     <distributionManagement>
