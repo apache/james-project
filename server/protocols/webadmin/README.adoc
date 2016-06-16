@@ -1,0 +1,123 @@
+= Web administration for JAMES
+
+The web administration supports for now the CRUD operations on the domains and the users, as described in the following sections.
+
+**WARNING** : This API do not allow authentication for now. It means that an administrator should ensure an attacker can not use this API.
+
+== Administrating domains
+
+=== Create a domain
+
+.bash
+====
+curl -XPUT http://ip:port/domains/domainToBeCreated
+====
+
+Resource name domainToBeCreated :
+ - can not be null or empty
+ - can not contain '@'
+ - can not be more than 255 characters
+ - can not contain '/'
+
+Response codes :
+ - 204 : The domain was successfully added
+ - 400 : The domain name is invalid
+ - 500 : Internal error while adding the domain
+
+=== Delete a domain
+
+.bash
+====
+curl -XDELETE http://ip:port/domains/domainToBeDeleted
+====
+
+Response codes :
+ - 204 : The domain was successfully removed
+ - 500 : Internal error while removing the domain
+
+=== Test if a domain exists
+
+.bash
+====
+curl -XGET http://ip:port/domains/domainName
+====
+
+Response codes :
+ - 204 : The domains exists
+ - 404 : The domain does not exist
+ - 500 : Internal error while accessing the domains
+
+=== Get the list of domains
+
+.bash
+====
+curl -XGET http://ip:port/domains
+====
+
+Possible response :
+
+.json
+====
+{"domains":["domain1", "domain2"]}
+====
+
+Response codes :
+ - 200 : The domain list was successfully retrieved
+ - 500 : Internal error while accessing the domains
+
+== Administrating users
+
+=== Create a user
+
+.bash
+====
+curl -XPUT http://ip:port/users/usernameToBeUsed -d '{"password":"passwordToBeUsed"}'
+====
+
+Resource name usernameToBeUsed :
+ - can not be null or empty
+ - can not be more than 255 characters
+ - can not contain '/'
+
+Response codes :
+ - 204 : The user was successfully created
+ - 400 : The user name or the payload is invalid
+ - 409 : Conflict : A concurrent modification make that query to fail
+ - 500 : Internal error while adding the user
+
+Note : if the user is already, its password will be updated.
+
+=== Updating a user password
+
+Same than Create, but a user need to exist.
+
+If the user do not exist, then it will be created.
+
+=== Deleting a user
+
+.bash
+====
+curl -XDELETE http://ip:port/users/userToBeDeleted
+====
+
+Response codes :
+ - 204 : The user was successfully deleted
+ - 500 : Internal error while deleting the user
+
+=== Retrieving the user list
+
+.bash
+====
+curl -XGET http://ip:port/users
+====
+
+The answer looks like :
+
+.json
+====
+[{"username":"username@domain-jmapauthentication.tld"},{"username":"username@domain.tld"}]
+====
+
+Response codes :
+ - 200 : The user name list was successfully retrieved
+ - 500 : Internal error while retrieving the users
