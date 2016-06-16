@@ -36,6 +36,30 @@
 
    <subsection name='2016'>
 
+     <a name="20160901"><h4>Sep 2016 - Apache James Server 3.0</h4></a>
+     <p>We are currently working on the release.</p>
+     <p>Keep an eye on the <a href="http://james.apache.org/newsarchive.html">news</a>, we are planning to release the next version in November.</p>
+
+     <a name="20160702"><h4>July 2016 - JMAP implementation</h4></a>
+     <p>Full text search via JMAP.</p>
+     <p>Full text search via the <i>getMessageList</i> JMAP command is now supported.</p>
+     <p>The JMAP search <b>filtering</b> parameter is converted to an internal <i>SearchQuery</i>; then this query is processed by your binded search backend.</p>
+
+     <a name="20160701"><h4>July 2016 - JMAP implementation</h4></a>
+     <p>Read and Send message with attachments.</p>
+     <p>You can now send and read messages with attachments through the JMAP commands <i>setMessages</i> and <i>getMessages</i>.</p>
+     <p>Those attachments are uploaded via the <i>/upload</i> and downloaded via the <i>/download</i> JMAP endpoints.</p>
+
+     <a name="20160501"><h4>May 2016 - JMAP implementation</h4></a>
+     <p>We are now supporting all basic operations on mailboxes:
+       <ul>
+         <li>creating: through the <i>setMailboxes</i> JMAP command</li>
+         <li>reading: through the <i>getMailboxes</i> JMAP command</li>
+         <li>updating: through the <i>setMailboxes</i> JMAP command</li>
+         <li>deleting: through the <i>setMailboxes</i> JMAP command</li>
+       </ul>
+     </p>
+
      <a name="20160210"><h4>Feb 2016 - JMAP implementation</h4></a>
      <p>We are actively working on implementing JMAP protocol into James.</p>
      <p><a href="http://jmap.io">JMAP</a> is a transport-agnostic, stateless JSON-based API for synchronising a mail client with a mail server.</p>

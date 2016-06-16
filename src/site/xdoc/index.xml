@@ -398,6 +398,19 @@
 
       <subsection name="News">
         <ul>
+          <li>Sep/2016 - <ul>
+          <li><a href="newsarchive.html#20160901"><strong>Apache James Server 3.0</strong> We are currently working on the release.</a></li>
+          </ul>
+          </li>
+          <li>July/2016 - <ul>
+          <li><a href="newsarchive.html#20160702"><strong>JMAP implementation</strong> Full text search via JMAP.</a></li>
+          <li><a href="newsarchive.html#20160701"><strong>JMAP implementation</strong> Read and Send message with attachments.</a></li>
+          </ul>
+          </li>
+          <li>May/2016 - <ul>
+          <li><a href="newsarchive.html#20160501"><strong>JMAP implementation</strong> Support of all mailboxes operations.</a></li>
+          </ul>
+          </li>
           <li>Feb/2016 - <ul>
           <li><a href="newsarchive.html#20160210"><strong>JMAP implementation</strong> JMAP is being implemented into James.</a></li>
           </ul>
