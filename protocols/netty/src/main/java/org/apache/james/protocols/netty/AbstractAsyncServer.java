@@ -28,12 +28,15 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.protocols.api.ProtocolServer;
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.util.ExternalResourceReleasable;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Abstract base class for Servers which want to use async io
@@ -135,17 +138,17 @@ public abstract class AbstractAsyncServer implements ProtocolServer{
         bootstrap.releaseExternalResources();
         started = false;
     }
-    
-    
-    
 
-    
     /*
      * (non-Javadoc)
      * @see org.apache.james.protocols.api.ProtocolServer#getListenAddresses()
      */
     public synchronized List<InetSocketAddress> getListenAddresses() {
-        return addresses;
+        ImmutableList.Builder<InetSocketAddress> builder = ImmutableList.builder();
+        for (Channel channel : ImmutableList.copyOf(channels.iterator())) {
+            builder.add((InetSocketAddress) channel.getLocalAddress());
+        }
+        return builder.build();
     }
     
     
