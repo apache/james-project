@@ -99,7 +99,7 @@ public class JMAPModule extends AbstractModule {
 
         @Override
         public void initModule() {
-            Preconditions.checkArgument(mailboxManager.getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Move),
+            Preconditions.checkArgument(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move),
                     "MOVE support in MailboxManager is required by JMAP Module");
             Preconditions.checkArgument(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.Attachment),
                     "Attachment support in MailboxManager is required by JMAP Module");

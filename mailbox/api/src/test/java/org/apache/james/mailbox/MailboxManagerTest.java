@@ -223,7 +223,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
     @ContractTest
     public void searchShouldNotReturnResultsFromOtherNamespaces() throws Exception {
-        Assume.assumeTrue(mailboxManager.getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Namespace));
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Namespace));
         session = mailboxManager.createSystemSession(USER_1, LoggerFactory.getLogger("Mock"));
         mailboxManager.createMailbox(new MailboxPath("#namespace", USER_1, "Other"), session);
         mailboxManager.createMailbox(MailboxPath.inbox(session), session);

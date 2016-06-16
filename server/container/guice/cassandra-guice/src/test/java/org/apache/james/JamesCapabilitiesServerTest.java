@@ -110,8 +110,7 @@ public class JamesCapabilitiesServerTest {
     @Test
     public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
         MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.MailboxCapabilities.Move));
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
         server = createCassandraJamesServer(mailboxManager);

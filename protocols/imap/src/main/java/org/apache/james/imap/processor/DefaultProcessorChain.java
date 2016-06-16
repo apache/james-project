@@ -58,7 +58,7 @@ public class DefaultProcessorChain {
         final SubscribeProcessor subscribeProcessor = new SubscribeProcessor(unsubscribeProcessor, mailboxManager, subscriptionManager, statusResponseFactory);
         final CopyProcessor copyProcessor = new CopyProcessor(subscribeProcessor, mailboxManager, statusResponseFactory);
         AuthenticateProcessor authenticateProcessor;
-        if (mailboxManager.getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Move)) {
+        if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)) {
             final MoveProcessor moveProcessor = new MoveProcessor(copyProcessor, mailboxManager, statusResponseFactory);
             authenticateProcessor = new AuthenticateProcessor(moveProcessor, mailboxManager, statusResponseFactory);
             capabilityProcessor.addProcessor(moveProcessor);
