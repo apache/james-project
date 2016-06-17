@@ -39,6 +39,7 @@ import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.PropertiesProvider;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -72,18 +73,14 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration(FileSystem fileSystem) throws ConfigurationException, IOException{
-        PropertiesConfiguration configuration = getConfiguration(fileSystem);
+    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException{
+        PropertiesConfiguration configuration = propertiesProvider.getConfiguration("jmap");
         return JMAPConfiguration.builder()
                 .keystore(configuration.getString("tls.keystoreURL"))
                 .secret(configuration.getString("tls.secret"))
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
                 .port(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT))
                 .build();
-    }
-
-    private PropertiesConfiguration getConfiguration(FileSystem fileSystem) throws FileNotFoundException, ConfigurationException {
-        return new PropertiesConfiguration(fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + "jmap.properties"));
     }
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
