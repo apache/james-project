@@ -226,6 +226,10 @@
                     <artifactId>james-server-queue-activemq</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>james-server-webadmin</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>org.apache.james.protocols</groupId>
                     <artifactId>protocols-imap</artifactId>
                 </dependency>

@@ -25,6 +25,7 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.AbstractModule;
 
@@ -39,6 +40,7 @@ public class ProtocolsModule extends AbstractModule {
         install(new SMTPServerModule());
         install(new LMTPServerModule());
         install(new ManageSieveServerModule());
+        install(new WebAdminServerModule());
     }
     
 }

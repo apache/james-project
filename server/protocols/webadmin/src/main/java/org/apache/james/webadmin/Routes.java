@@ -19,8 +19,10 @@
 
 package org.apache.james.webadmin;
 
+import spark.Service;
+
 public interface Routes {
 
-    void define();
+    void define(Service service);
 
 }

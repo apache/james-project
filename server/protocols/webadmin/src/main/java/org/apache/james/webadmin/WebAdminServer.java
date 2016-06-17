@@ -19,10 +19,6 @@
 
 package org.apache.james.webadmin;
 
-import static spark.Spark.awaitInitialization;
-import static spark.Spark.port;
-import static spark.Spark.stop;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Set;
@@ -40,14 +36,20 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
+import spark.Service;
+
 public class WebAdminServer implements Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
     public static final HierarchicalConfiguration NO_CONFIGURATION = null;
     public static final String WEBADMIN_PORT = "webadmin_port";
+    public static final String WEBADMIN_ENABLED = "webadmin_enabled";
+    public static final int DEFAULT_PORT = 8080;
 
     private final int port;
     private final Set<Routes> routesList;
+    private final boolean enabled;
+    private final Service service;
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     public static int findFreePort() throws IOException {
@@ -57,31 +59,37 @@ public class WebAdminServer implements Configurable {
     }
 
     @Inject
-    @VisibleForTesting
-    public WebAdminServer(@Named(WEBADMIN_PORT)int port, Set<Routes> routesList) {
+    private WebAdminServer(@Named(WEBADMIN_ENABLED) boolean enabled, @Named(WEBADMIN_PORT)int port, Set<Routes> routesList) {
         this.port = port;
         this.routesList = routesList;
+        this.enabled = enabled;
+        this.service = Service.ignite();
     }
 
+    @VisibleForTesting
     public WebAdminServer(Routes... routes) throws IOException {
-        this(findFreePort(), ImmutableSet.copyOf(routes));
+        this(true, findFreePort(), ImmutableSet.copyOf(routes));
     }
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        port(port);
-        routesList.forEach(Routes::define);
-        LOGGER.info("Web admin server started");
+        if (enabled) {
+            service.port(port);
+            routesList.forEach(routes -> routes.define(service));
+            LOGGER.info("Web admin server started");
+        }
     }
 
     @PreDestroy
     public void destroy() {
-        stop();
-        LOGGER.info("Web admin server stopped");
+        if (enabled) {
+            service.stop();
+            LOGGER.info("Web admin server stopped");
+        }
     }
 
     public void await() {
-        awaitInitialization();
+        service.awaitInitialization();
     }
 
     public int getPort() {

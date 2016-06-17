@@ -606,6 +606,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>james-server-webadmin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.james.protocols</groupId>
                 <artifactId>protocols-smtp</artifactId>
                 <version>${protocols.version}</version>
