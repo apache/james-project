@@ -47,6 +47,7 @@ import javax.mail.Flags;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -116,14 +117,19 @@ public abstract class SetMessagesMethodTest {
         jmapServer.stop();
     }
     
-    private String getOutboxId() {
-        // Find username's outbox (using getMailboxes command on /jmap endpoint)
+    private String getOutboxId(AccessToken accessToken) {
+        return getMailboxId(accessToken, Role.OUTBOX);
+    }
+
+    private String getMailboxId(AccessToken accessToken, Role role) {
         return getAllMailboxesIds(accessToken).stream()
-                .filter(x -> x.get("role").equals("outbox"))
+                .filter(x -> x.get("role").equals(role.serialize()))
                 .map(x -> x.get("id"))
                 .findFirst().get();
     }
+    
 
+    
     private List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
         return with()
                 .header("Authorization", accessToken.serialize())
@@ -627,7 +633,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -678,7 +684,7 @@ public abstract class SetMessagesMethodTest {
             "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
             "        \"subject\": \"Thank you for joining example.com!\"," +
             "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-            "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
             "      }}" +
             "    }," +
             "    \"#0\"" +
@@ -705,7 +711,7 @@ public abstract class SetMessagesMethodTest {
         String presumedMessageId = "username@domain.tld|outbox|1";
         String fromAddress = username;
         String messageSubject = "Thank you for joining example.com!";
-        String outboxId = getOutboxId();
+        String outboxId = getOutboxId(accessToken);
         String requestBody = "[" +
                 "  [" +
                 "    \"setMessages\","+
@@ -763,7 +769,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"subject\": \"" + messageSubject + "\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -812,7 +818,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -847,7 +853,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -885,7 +891,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -922,7 +928,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"htmlBody\": \"Hello <i>someone</i>, and thank <b>you</b> for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -965,7 +971,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -997,7 +1003,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -1034,7 +1040,7 @@ public abstract class SetMessagesMethodTest {
             "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
             "        \"subject\": \"Thank you for joining example.com!\"," +
             "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-            "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
             "      }}" +
             "    }," +
             "    \"#0\"" +
@@ -1082,7 +1088,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -1126,7 +1132,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -1185,7 +1191,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -1245,7 +1251,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
@@ -1317,7 +1323,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
-                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
