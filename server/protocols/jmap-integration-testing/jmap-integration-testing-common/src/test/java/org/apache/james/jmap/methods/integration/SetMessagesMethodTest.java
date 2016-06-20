@@ -752,10 +752,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldMoveMessageInSentWhenMessageIsSent() throws MailboxException {
         // Given
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
-        String sentMailboxId = getAllMailboxesIds(accessToken).stream()
-                .filter(x -> x.get("role").equals("sent"))
-                .map(x -> x.get("id"))
-                .findFirst().get();
+        String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         String fromAddress = username;
         String messageCreationId = "user|inbox|1";
@@ -954,10 +951,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldMoveToSentWhenSendingMessageWithOnlyFromAddress() {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
-        String sentMailboxId = getAllMailboxesIds(accessToken).stream()
-                .filter(x -> x.get("role").equals("sent"))
-                .map(x -> x.get("id"))
-                .findFirst().get();
+        String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         String messageCreationId = "user|inbox|1";
         String fromAddress = username;
@@ -1166,10 +1160,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldKeepBccInSentMailbox() throws Exception {
         // Sender
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
-        String sentMailboxId = getAllMailboxesIds(accessToken).stream()
-                .filter(x -> x.get("role").equals("sent"))
-                .map(x -> x.get("id"))
-                .findFirst().get();
+        String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
