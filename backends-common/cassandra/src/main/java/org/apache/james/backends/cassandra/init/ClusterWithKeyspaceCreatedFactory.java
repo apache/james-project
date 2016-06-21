@@ -26,9 +26,17 @@ public class ClusterWithKeyspaceCreatedFactory {
 
     private final static int DEFAULT_REPLICATION_FACTOR = 1;
 
+    public static Cluster clusterWithInitializedKeyspaceWithoutDurableWrites(Cluster cluster, String keyspace, int replicationFactor) {
+        return clusterWithInitializedKeyspace(cluster, keyspace, replicationFactor, false);
+    }
+
     public static Cluster clusterWithInitializedKeyspace(Cluster cluster, String keyspace, int replicationFactor) {
+        return clusterWithInitializedKeyspace(cluster, keyspace, replicationFactor, true);
+    }
+
+    private static Cluster clusterWithInitializedKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {
         if (isKeyspacePresent(cluster, keyspace)) {
-            createKeyspace(cluster, keyspace, replicationFactor);
+            createKeyspace(cluster, keyspace, replicationFactor, durableWrites);
         }
         return cluster;
     }
@@ -41,10 +49,12 @@ public class ClusterWithKeyspaceCreatedFactory {
         return cluster.getMetadata().getKeyspace(keyspace) == null;
     }
 
-    private static void createKeyspace(Cluster cluster, String keyspace, int replicationFactor) {
+    private static void createKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {
         try (Session session = cluster.connect()) {
             session.execute("CREATE KEYSPACE IF NOT EXISTS " + keyspace
-                + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + replicationFactor + "};");
+                + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + replicationFactor + "}"
+                + " AND durable_writes = " + String.valueOf(durableWrites)
+                + ";");
         }
     }
 
