@@ -76,12 +76,14 @@ public class CassandraSessionModule extends AbstractModule {
         PropertiesConfiguration configuration = getConfiguration(fileSystem);
 
         return getRetryer(executor, configuration)
-                .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory.clusterWithInitializedKeyspace(
-                        ClusterFactory.createClusterForSingleServerWithoutPassWord(
-                                configuration.getString("cassandra.ip"),
-                                configuration.getInt("cassandra.port")),
-                        configuration.getString("cassandra.keyspace"),
-                        configuration.getInt("cassandra.replication.factor")))
+                .getWithRetry(ctx -> ClusterWithKeyspaceCreatedFactory
+                        .config(
+                            ClusterFactory.createClusterForSingleServerWithoutPassWord(
+                                    configuration.getString("cassandra.ip"),
+                                    configuration.getInt("cassandra.port")),
+                            configuration.getString("cassandra.keyspace"))
+                        .replicationFactor(configuration.getInt("cassandra.replication.factor"))
+                        .clusterWithInitializedKeyspace())
                 .get();
     }
 

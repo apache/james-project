@@ -25,24 +25,40 @@ import com.datastax.driver.core.Session;
 public class ClusterWithKeyspaceCreatedFactory {
 
     private final static int DEFAULT_REPLICATION_FACTOR = 1;
-
-    public static Cluster clusterWithInitializedKeyspaceWithoutDurableWrites(Cluster cluster, String keyspace, int replicationFactor) {
-        return clusterWithInitializedKeyspace(cluster, keyspace, replicationFactor, false);
+    
+    public static Configuration config(Cluster cluster, String keyspace) {
+        return new Configuration(cluster, keyspace);
     }
-
-    public static Cluster clusterWithInitializedKeyspace(Cluster cluster, String keyspace, int replicationFactor) {
-        return clusterWithInitializedKeyspace(cluster, keyspace, replicationFactor, true);
-    }
-
-    private static Cluster clusterWithInitializedKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {
-        if (isKeyspacePresent(cluster, keyspace)) {
-            createKeyspace(cluster, keyspace, replicationFactor, durableWrites);
+    
+    public static class Configuration {
+        private Cluster cluster;
+        private String keyspace;
+        private boolean durableWrites;
+        private int replicationFactor;
+        
+        private Configuration(Cluster cluster, String keyspace) {
+            this.cluster = cluster;
+            this.keyspace = keyspace;
+            this.durableWrites = true;
+            this.replicationFactor = DEFAULT_REPLICATION_FACTOR;
         }
-        return cluster;
-    }
-
-    public static Cluster clusterWithInitializedKeyspace(Cluster cluster, String keyspace) {
-        return clusterWithInitializedKeyspace(cluster, keyspace, DEFAULT_REPLICATION_FACTOR);
+        
+        public Configuration disableDurableWrites() {
+            this.durableWrites = false;
+            return this;
+        }
+        
+        public Configuration replicationFactor(int replicationFactor) {
+            this.replicationFactor = replicationFactor;
+            return this;
+        }
+        
+        public Cluster clusterWithInitializedKeyspace() {
+            if (isKeyspacePresent(cluster, keyspace)) {
+                createKeyspace(cluster, keyspace, replicationFactor, durableWrites);
+            }
+            return cluster;
+        }
     }
 
     private static boolean isKeyspacePresent(Cluster cluster, String keyspace) {
