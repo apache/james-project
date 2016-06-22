@@ -17,29 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.jmap.methods.integration.cucumber;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.GetMessagesMethodTest;
-import org.apache.james.jmap.servers.MemoryJmapServerModule;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import java.util.Optional;
 
-public class MemoryGetMessagesMethodTest extends GetMessagesMethodTest {
+public class ContentType {
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @Override
-    protected GuiceJamesServer createJmapServer() {
-        return new GuiceJamesServer()
-                    .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                    .overrideWith(new MemoryJmapServerModule(temporaryFolder));
+    public static ContentType from(String contentType) {
+        return new ContentType(Optional.ofNullable(contentType));
     }
-    
-    @Override
-    protected void await() {
 
+    public static ContentType noContentType() {
+        return new ContentType(Optional.empty());
+    }
+
+    private final Optional<String> contentType;
+
+    private ContentType(Optional<String> contentType) {
+        this.contentType = contentType;
+    }
+
+    public Optional<String> value() {
+        return contentType;
+    }
+
+    public String serializeToHeader() {
+        return contentType
+                .map(value -> "Content-Type: " + value + "\r\n")
+                .orElse("");
     }
 }

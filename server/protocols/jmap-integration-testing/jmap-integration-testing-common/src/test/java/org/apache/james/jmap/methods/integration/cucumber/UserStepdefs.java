@@ -59,7 +59,7 @@ public class UserStepdefs {
     }
 
     @Given("^a domain named \"([^\"]*)\"$")
-    public void createDomain(String domain) throws Throwable {
+    public void createDomain(String domain) throws Exception {
         mainStepdefs.jmapServer.serverProbe().addDomain(domain);
         domains.add(domain);
     }
@@ -111,5 +111,4 @@ public class UserStepdefs {
     private String generatePassword(String username) {
         return Hashing.murmur3_128().hashString(username, Charsets.UTF_8).toString();
     }
-
 }

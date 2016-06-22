@@ -17,39 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.methods.integration.cucumber;
+package org.apache.james.jmap.cassandra.cucumber;
 
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import org.junit.runner.RunWith;
 
-import org.apache.james.GuiceJamesServer;
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-import com.google.common.base.Charsets;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
-
-import cucumber.runtime.java.guice.ScenarioScoped;
-
-@ScenarioScoped
-public class MainStepdefs {
-
-    public GuiceJamesServer jmapServer;
-    public Runnable awaitMethod = () -> {};
-
-    public void init() throws Exception {
-        jmapServer.start();
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-                .setContentType(ContentType.JSON)
-                .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapPort())
-                .build();
-
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    }
-    
-    public void tearDown() {
-        jmapServer.stop();
-    }
+@RunWith(Cucumber.class)
+@CucumberOptions(features="classpath:cucumber/GetMessages.feature",
+                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
+                strict = true)
+public class CassandraGetMessagesMethodTest {
 }
