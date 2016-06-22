@@ -80,7 +80,10 @@ public final class CassandraCluster {
     private Optional<Session> tryInitializeSession() {
         try {
             Cluster clusterWithInitializedKeyspace = ClusterWithKeyspaceCreatedFactory
-                .clusterWithInitializedKeyspace(getCluster(), KEYSPACE_NAME, REPLICATION_FACTOR);
+                .config(getCluster(), KEYSPACE_NAME)
+                .replicationFactor(REPLICATION_FACTOR)
+                .disableDurableWrites()
+                .clusterWithInitializedKeyspace();
             return Optional.of(new SessionWithInitializedTablesFactory(module).createSession(clusterWithInitializedKeyspace, KEYSPACE_NAME));
         } catch (NoHostAvailableException exception) {
             sleep(SLEEP_BEFORE_RETRY);

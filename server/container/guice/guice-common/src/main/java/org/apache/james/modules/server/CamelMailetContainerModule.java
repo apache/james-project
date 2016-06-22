@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.SimpleRegistry;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -36,8 +37,8 @@ import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.mailetcontainer.impl.JamesMailetContext;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
-import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.mailetcontainer.impl.camel.CamelMailetProcessor;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationProvider;
@@ -119,8 +120,11 @@ public class CamelMailetContainerModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
+                DefaultCamelContext camelContext = new DefaultCamelContext();
+                camelContext.disableJMX();
+                camelContext.setRegistry(new SimpleRegistry());
                 camelCompositeProcessor.setLog(CAMEL_LOGGER);
-                camelCompositeProcessor.setCamelContext(new DefaultCamelContext());
+                camelCompositeProcessor.setCamelContext(camelContext);
                 camelCompositeProcessor.configure(configurationProvider.getConfiguration("mailetcontainer").configurationAt("processors"));
                 camelCompositeProcessor.init();
                 checkProcessors();

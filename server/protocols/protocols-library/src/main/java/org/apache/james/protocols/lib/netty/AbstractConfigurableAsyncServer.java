@@ -466,12 +466,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     
     @Override
     protected Executor createBossExecutor() {
-        return JMXEnabledThreadPoolExecutor.newCachedThreadPool(getThreadPoolJMXPath(), "boss");
+        return JMXEnabledThreadPoolExecutor.newCachedThreadPool(getThreadPoolJMXPath(), getDefaultJMXName() + "-boss");
     }
 
     @Override
     protected Executor createWorkerExecutor() {
-        return JMXEnabledThreadPoolExecutor.newCachedThreadPool(getThreadPoolJMXPath(), "worker");
+        return JMXEnabledThreadPoolExecutor.newCachedThreadPool(getThreadPoolJMXPath(), getDefaultJMXName() + "-worker");
     }
 
     /**
@@ -561,7 +561,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * @return ehandler
      */
     protected ExecutionHandler createExecutionHander() {
-        return new ExecutionHandler(new JMXEnabledOrderedMemoryAwareThreadPoolExecutor(maxExecutorThreads, 0, 0, getThreadPoolJMXPath(), "executor"));
+        return new ExecutionHandler(new JMXEnabledOrderedMemoryAwareThreadPoolExecutor(maxExecutorThreads, 0, 0, getThreadPoolJMXPath(), getDefaultJMXName() + "-executor"));
     }
 
     /**
