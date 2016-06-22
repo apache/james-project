@@ -24,6 +24,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import javax.inject.Inject;
 
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.model.AddUserRequest;
 import org.apache.james.webadmin.service.UserService;
@@ -40,7 +41,6 @@ import spark.Service;
 public class UserRoutes implements Routes {
 
     private static final String USER_NAME = ":userName";
-    private static final String EMPTY_BODY = "";
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRoutes.class);
 
     public static final String USERS = "/users";
@@ -72,14 +72,14 @@ public class UserRoutes implements Routes {
         try {
             userService.removeUser(username);
             response.status(204);
-            return EMPTY_BODY;
+            return Constants.EMPTY_BODY;
         } catch (UsersRepositoryException e) {
             response.status(204);
             return "The user " + username + " does not exists";
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
             response.status(400);
-            return EMPTY_BODY;
+            return Constants.EMPTY_BODY;
         }
     }
 
@@ -91,11 +91,11 @@ public class UserRoutes implements Routes {
         } catch (JsonExtractException e) {
             LOGGER.info("Error while deserializing addUser request", e);
             response.status(400);
-            return EMPTY_BODY;
+            return Constants.EMPTY_BODY;
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
             response.status(400);
-            return EMPTY_BODY;
+            return Constants.EMPTY_BODY;
         }
     }
 

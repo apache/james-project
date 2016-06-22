@@ -22,5 +22,6 @@ package org.apache.james.webadmin;
 public interface Constants {
 
     String SEPARATOR = "/";
+    String EMPTY_BODY = "";
 
 }

@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.slf4j.Logger;
@@ -40,7 +41,6 @@ import spark.Service;
 public class DomainRoutes implements Routes {
 
     private static final String DOMAIN_NAME = ":domainName";
-    private static final String EMPTY_BODY = "";
     private static final Logger LOGGER = LoggerFactory.getLogger(DomainRoutes.class);
 
     public static final String DOMAINS = "/domains";
@@ -78,7 +78,7 @@ public class DomainRoutes implements Routes {
             LOGGER.info("{} did not exists", request.params(DOMAIN_NAME));
         }
         response.status(204);
-        return EMPTY_BODY;
+        return Constants.EMPTY_BODY;
     }
 
     private void removeDomain(String domain) throws DomainListException {
@@ -97,7 +97,7 @@ public class DomainRoutes implements Routes {
             LOGGER.info("Invalid request for domain creation");
             response.status(400);
         }
-        return EMPTY_BODY;
+        return Constants.EMPTY_BODY;
     }
 
     private void addDomain(String domain) throws DomainListException {
@@ -113,6 +113,6 @@ public class DomainRoutes implements Routes {
         } else {
             response.status(204);
         }
-        return EMPTY_BODY;
+        return Constants.EMPTY_BODY;
     }
 }
