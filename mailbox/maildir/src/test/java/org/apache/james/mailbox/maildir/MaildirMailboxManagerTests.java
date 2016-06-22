@@ -20,6 +20,7 @@ package org.apache.james.mailbox.maildir;
 
 import java.io.IOException;
 
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
@@ -48,7 +49,7 @@ import com.google.common.base.Throwables;
 
 public class MaildirMailboxManagerTests {
 
-    public static abstract class MaildirMailboxManagerTest extends MailboxManagerTest {
+    public static abstract class MaildirMailboxManagerTest<T extends MailboxManager> extends MailboxManagerTest<T> {
         protected StoreMailboxManager createMailboxManager(String configuration, TemporaryFolder temporaryFolder) throws MailboxException, IOException {
             MaildirStore store = new MaildirStore(temporaryFolder.newFolder().getPath() + configuration, new JVMMailboxPathLocker());
             MaildirMailboxSessionMapperFactory mf = new MaildirMailboxSessionMapperFactory(store);
@@ -67,7 +68,7 @@ public class MaildirMailboxManagerTests {
 
     @RunWith(ContractSuite.class)
     @ContractImpl(StoreMailboxManager.class)
-    public static class DomainUser extends MaildirMailboxManagerTest {
+    public static class DomainUser extends MaildirMailboxManagerTest<StoreMailboxManager> {
         @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
         private IProducer<StoreMailboxManager> producer = new IProducer<StoreMailboxManager>() {
@@ -97,7 +98,7 @@ public class MaildirMailboxManagerTests {
     @Ignore
     @RunWith(ContractSuite.class)
     @ContractImpl(StoreMailboxManager.class)
-    public static class User extends MaildirMailboxManagerTest {
+    public static class User extends MaildirMailboxManagerTest<StoreMailboxManager> {
         @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
         private IProducer<StoreMailboxManager> producer = new IProducer<StoreMailboxManager>() {
@@ -126,7 +127,7 @@ public class MaildirMailboxManagerTests {
 
     @RunWith(ContractSuite.class)
     @ContractImpl(StoreMailboxManager.class)
-    public static class FullUser extends MaildirMailboxManagerTest {
+    public static class FullUser extends MaildirMailboxManagerTest<StoreMailboxManager> {
         @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
         private IProducer<StoreMailboxManager> producer = new IProducer<StoreMailboxManager>() {

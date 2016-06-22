@@ -25,7 +25,6 @@ import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_PORT;
 
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;

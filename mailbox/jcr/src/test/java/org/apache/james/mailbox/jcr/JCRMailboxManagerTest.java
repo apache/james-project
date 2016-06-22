@@ -50,7 +50,7 @@ import com.google.common.base.Throwables;
 
 @RunWith(ContractSuite.class)
 @ContractImpl(JCRMailboxManager.class)
-public class JCRMailboxManagerTest extends MailboxManagerTest {
+public class JCRMailboxManagerTest extends MailboxManagerTest<JCRMailboxManager> {
 
     private static final String JACKRABBIT_HOME = "target/jackrabbit";
 
