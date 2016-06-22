@@ -17,25 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin.integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_ENABLED;
+import static org.apache.james.webadmin.WebAdminServer.WEBADMIN_PORT;
 
-import spark.ResponseTransformer;
+import org.apache.james.webadmin.Port;
+import org.apache.james.webadmin.RandomPort;
 
-public class JsonTransformer implements ResponseTransformer {
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.name.Named;
 
-    private final ObjectMapper objectMapper;
-
-    public JsonTransformer() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    }
+public class WebAdminConfigurationModule extends AbstractModule {
 
     @Override
-    public String render(Object o) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(o);
+    protected void configure() {
+
+    }
+
+    @Provides
+    @Named(WEBADMIN_PORT)
+    public Port provideWebAdminPort() throws Exception {
+        return new RandomPort();
+    }
+
+    @Provides
+    @Named(WEBADMIN_ENABLED)
+    public boolean provideWebAdminEnabled() throws Exception {
+        return true;
     }
 }

@@ -17,25 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import spark.ResponseTransformer;
+import org.junit.Test;
 
-public class JsonTransformer implements ResponseTransformer {
+public class RandomPortTest {
 
-    private final ObjectMapper objectMapper;
-
-    public JsonTransformer() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    @Test
+    public void toIntShouldReturnTwoTimeTheSameResult() {
+        RandomPort testee = new RandomPort();
+        assertThat(testee.toInt()).isEqualTo(testee.toInt());
     }
 
-    @Override
-    public String render(Object o) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(o);
-    }
 }

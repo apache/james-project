@@ -17,25 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import java.io.IOException;
+import java.net.ServerSocket;
 
-import spark.ResponseTransformer;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 
-public class JsonTransformer implements ResponseTransformer {
+public class RandomPort implements Port {
 
-    private final ObjectMapper objectMapper;
+    public static int findFreePort() {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            return socket.getLocalPort();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
-    public JsonTransformer() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    private final Supplier<Integer> portSupplier;
+
+    public RandomPort() {
+        portSupplier = Suppliers.memoize(RandomPort::findFreePort);
     }
 
     @Override
-    public String render(Object o) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(o);
+    public int toInt() {
+        return portSupplier.get();
     }
+
 }

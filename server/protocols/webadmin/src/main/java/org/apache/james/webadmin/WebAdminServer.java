@@ -20,7 +20,6 @@
 package org.apache.james.webadmin;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -46,20 +45,16 @@ public class WebAdminServer implements Configurable {
     public static final String WEBADMIN_ENABLED = "webadmin_enabled";
     public static final int DEFAULT_PORT = 8080;
 
-    private final int port;
+    private final Port port;
     private final Set<Routes> routesList;
     private final boolean enabled;
     private final Service service;
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
-    public static int findFreePort() throws IOException {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            return socket.getLocalPort();
-        }
-    }
+
 
     @Inject
-    private WebAdminServer(@Named(WEBADMIN_ENABLED) boolean enabled, @Named(WEBADMIN_PORT)int port, Set<Routes> routesList) {
+    private WebAdminServer(@Named(WEBADMIN_ENABLED) boolean enabled, @Named(WEBADMIN_PORT)Port port, Set<Routes> routesList) {
         this.port = port;
         this.routesList = routesList;
         this.enabled = enabled;
@@ -68,13 +63,13 @@ public class WebAdminServer implements Configurable {
 
     @VisibleForTesting
     public WebAdminServer(Routes... routes) throws IOException {
-        this(true, findFreePort(), ImmutableSet.copyOf(routes));
+        this(true, new RandomPort(), ImmutableSet.copyOf(routes));
     }
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         if (enabled) {
-            service.port(port);
+            service.port(port.toInt());
             routesList.forEach(routes -> routes.define(service));
             LOGGER.info("Web admin server started");
         }
@@ -92,7 +87,7 @@ public class WebAdminServer implements Configurable {
         service.awaitInitialization();
     }
 
-    public int getPort() {
+    public Port getPort() {
         return port;
     }
 }

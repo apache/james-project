@@ -105,6 +105,7 @@
         <module>queue/queue-jms</module>
         <module>queue/queue-activemq</module>
         <module>protocols/webadmin</module>
+        <module>protocols/webadmin-integration-test</module>
     </modules>
 
     <distributionManagement>

@@ -17,25 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import spark.ResponseTransformer;
+import org.junit.Test;
 
-public class JsonTransformer implements ResponseTransformer {
+public class FixedPortTest {
 
-    private final ObjectMapper objectMapper;
-
-    public JsonTransformer() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    @Test
+    public void toIntShouldThrowOnNegativePort() {
+        assertThatThrownBy(() -> new FixedPort(-1)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Override
-    public String render(Object o) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(o);
+    @Test
+    public void toIntShouldThrowOnNullPort() {
+        assertThatThrownBy(() -> new FixedPort(0)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    public void toIntShouldThrowOnTooBigNumbers() {
+        assertThatThrownBy(() -> new FixedPort(65536)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void toIntShouldReturnedDesiredPort() {
+        int expectedPort = 452;
+        assertThat(new FixedPort(expectedPort).toInt()).isEqualTo(expectedPort);
+    }
+
 }

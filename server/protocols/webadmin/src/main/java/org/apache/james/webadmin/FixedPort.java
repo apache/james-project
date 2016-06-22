@@ -17,25 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.base.Preconditions;
 
-import spark.ResponseTransformer;
+public class FixedPort implements Port {
 
-public class JsonTransformer implements ResponseTransformer {
+    private final int port;
 
-    private final ObjectMapper objectMapper;
-
-    public JsonTransformer() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    public FixedPort(int port) {
+        Preconditions.checkArgument(port > 0 && port < 65536, "Port should be strictly contained between 0 and 65536");
+        this.port = port;
     }
 
     @Override
-    public String render(Object o) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(o);
+    public int toInt() {
+        return port;
     }
+
 }
