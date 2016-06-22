@@ -33,6 +33,7 @@ import org.apache.james.backends.cassandra.EmbeddedCassandra;
 import org.apache.james.mailbox.elasticsearch.EmbeddedElasticSearch;
 import org.apache.james.modules.CassandraJmapServerModule;
 import org.apache.james.webadmin.routes.DomainRoutes;
+import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +52,8 @@ public class WebAdminServerIntegrationTest {
     public static final String USERNAME = "username@" + DOMAIN;
     public static final String SPECIFIC_DOMAIN = DomainRoutes.DOMAINS + SEPARATOR + DOMAIN;
     public static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
+    public static final String MAILBOX = "mailbox";
+    public static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
@@ -144,6 +147,35 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(200)
             .body(is("[{\"username\":\"username@domain\"}]"));
+    }
+
+    @Test
+    public void putMailboxShouldAddAMailbox() throws Exception {
+        guiceJamesServer.serverProbe().addDomain(DOMAIN);
+        guiceJamesServer.serverProbe().addUser(USERNAME, "anyPassword");
+
+        when()
+            .put(SPECIFIC_MAILBOX)
+        .then()
+            .statusCode(204);
+
+        assertThat(guiceJamesServer.serverProbe().listUserMailboxes(USERNAME)).containsExactly(MAILBOX);
+    }
+
+
+
+    @Test
+    public void deleteMailboxShouldRemoveAMailbox() throws Exception {
+        guiceJamesServer.serverProbe().addDomain(DOMAIN);
+        guiceJamesServer.serverProbe().addUser(USERNAME, "anyPassword");
+        guiceJamesServer.serverProbe().createMailbox("#private", USERNAME, MAILBOX);
+
+        when()
+            .delete(SPECIFIC_MAILBOX)
+        .then()
+            .statusCode(204);
+
+        assertThat(guiceJamesServer.serverProbe().listUserMailboxes(USERNAME)).isEmpty();
     }
 
 }
