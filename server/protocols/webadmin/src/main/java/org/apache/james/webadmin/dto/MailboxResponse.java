@@ -17,23 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.model;
+package org.apache.james.webadmin.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+public class MailboxResponse {
 
-public class AddUserRequest {
+    private final String mailboxName;
 
-    private final char[] password;
-
-    @JsonCreator
-    public AddUserRequest(@JsonProperty("password") char[] password) {
-        Preconditions.checkNotNull(password);
-        this.password = password;
+    public MailboxResponse(String mailboxName) {
+        this.mailboxName = mailboxName;
     }
 
-    public char[] getPassword() {
-        return password;
+    public String getMailboxName() {
+        return mailboxName;
     }
 }

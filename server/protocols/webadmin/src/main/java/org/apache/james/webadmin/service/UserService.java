@@ -30,7 +30,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.util.streams.ImmutableCollectors;
 import org.apache.james.util.streams.Iterators;
-import org.apache.james.webadmin.model.UserResponse;
+import org.apache.james.webadmin.dto.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

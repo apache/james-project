@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.model;
+package org.apache.james.webadmin.dto;
 
 public class UserResponse {
 

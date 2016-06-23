@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.model.AddUserRequest;
+import org.apache.james.webadmin.dto.AddUserRequest;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;

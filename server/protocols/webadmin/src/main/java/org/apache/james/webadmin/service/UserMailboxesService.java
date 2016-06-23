@@ -35,7 +35,7 @@ import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.streams.ImmutableCollectors;
-import org.apache.james.webadmin.model.MailboxResponse;
+import org.apache.james.webadmin.dto.MailboxResponse;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
 import org.apache.james.webadmin.validation.MailboxName;
 import org.slf4j.Logger;
