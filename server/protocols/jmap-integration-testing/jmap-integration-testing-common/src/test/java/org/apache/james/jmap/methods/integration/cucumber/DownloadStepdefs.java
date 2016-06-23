@@ -24,13 +24,18 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.jayway.restassured.response.Response;
 
 import cucumber.api.java.en.Given;
@@ -44,58 +49,63 @@ public class DownloadStepdefs {
     private final UserStepdefs userStepdefs;
     private final MainStepdefs mainStepdefs;
     private Response response;
+    private Multimap<String, String> attachmentsByMessageId;
+    private Map<String, String> blobIdByAttachmentId;
 
     @Inject
     private DownloadStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.userStepdefs = userStepdefs;
+        this.attachmentsByMessageId = ArrayListMultimap.create();
+        this.blobIdByAttachmentId = new HashMap<>();
     }
 
-    @Given("^a message containing an attachment$")
-    public void appendMessageWithAttachment() throws Exception {
-        mainStepdefs.jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, userStepdefs.username, "INBOX");
-        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.username, "INBOX");
+    @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an attachment \"([^\"]*)\"$")
+    public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
 
-        mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.username, mailboxPath,
+        mainStepdefs.jmapServer.serverProbe().appendMessage(user, mailboxPath,
                 ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
+        
+        attachmentsByMessageId.put(messageId, attachmentId);
+        blobIdByAttachmentId.put(attachmentId, "4000c5145f633410b80be368c44e1c394bff9437");
     }
 
-    @When("^checking for the availability of the attachment endpoint$")
-    public void optionDownload() throws Throwable {
-        if (userStepdefs.accessToken != null) {
-            with().header("Authorization", userStepdefs.accessToken.serialize());
+    @When("^\"([^\"]*)\" checks for the availability of the attachment endpoint$")
+    public void optionDownload(String username) throws Throwable {
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        if (accessToken != null) {
+            with().header("Authorization", accessToken.serialize());
         }
 
         response = with().options("/download/myBlob");
     }
 
-    @When("^asking for an attachment$")
-    public void getDownload() throws Exception {
-        if (userStepdefs.accessToken != null) {
-            with().header("Authorization", userStepdefs.accessToken.serialize());
+    @When("^\"([^\"]*)\" downloads \"([^\"]*)\"$")
+    public void downloads(String username, String attachmentId) throws Throwable {
+        String blobId = blobIdByAttachmentId.get(attachmentId);
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        if (accessToken != null) {
+            with().header("Authorization", accessToken.serialize());
         }
-
-        response = with().get("/download/myBlob");
+        response = with().get("/download/" + blobId);
     }
+    
 
-    @When("^asking for an attachment without blobId parameter$")
-    public void getDownloadWithoutBlobId() throws Throwable {
+    @When("^\"([^\"]*)\" asks for an attachment without blobId parameter$")
+    public void getDownloadWithoutBlobId(String username) throws Throwable {
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
         response = with()
-            .header("Authorization", userStepdefs.accessToken.serialize())
+            .header("Authorization", accessToken.serialize())
             .get("/download/");
     }
+    
 
-    @When("^getting the attachment with its correct blobId$")
-    public void getDownloadWithKnownBlobId() throws Throwable {
+    @When("^\"([^\"]*)\" asks for an attachment with wrong blobId$")
+    public void getDownloadWithWrongBlobId(String username) throws Throwable {
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
         response = with()
-                .header("Authorization", userStepdefs.accessToken.serialize())
-                .get("/download/4000c5145f633410b80be368c44e1c394bff9437");
-    }
-
-    @When("^getting the attachment with an unknown blobId$")
-    public void getDownloadWithUnknownBlobId() throws Throwable {
-        response = with()
-                .header("Authorization", userStepdefs.accessToken.serialize())
+                .header("Authorization", accessToken.serialize())
                 .get("/download/badbadbadbadbadbadbadbadbadbadbadbadbadb");
     }
 

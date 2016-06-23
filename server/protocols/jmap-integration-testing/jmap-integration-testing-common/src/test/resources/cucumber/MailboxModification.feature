@@ -5,7 +5,7 @@ Feature: Mailbox modification
 
   Background:
     Given a domain named "domain.tld"
-    And a current user with username "username@domain.tld" and password "secret"
+    And a connected user "username@domain.tld"
 
   Scenario: Renaming a mailbox should keep messages
     Given mailbox "A" with 2 messages
