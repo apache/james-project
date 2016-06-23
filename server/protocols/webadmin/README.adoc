@@ -1,6 +1,6 @@
 = Web administration for JAMES
 
-The web administration supports for now the CRUD operations on the domains and the users, as described in the following sections.
+The web administration supports for now the CRUD operations on the domains, the users and the users mailboxes, as described in the following sections.
 
 **WARNING** : This API do not allow authentication for now. It means that an administrator should ensure an attacker can not use this API.
 
@@ -121,3 +121,94 @@ The answer looks like :
 Response codes :
  - 200 : The user name list was successfully retrieved
  - 500 : Internal error while retrieving the users
+
+== Administrating user mailboxes
+
+=== Creating a mailbox
+
+.bash
+====
+curl -XPUT http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+====
+
+Resource name usernameToBeUsed should be an existing user
+Resource name mailboxNameToBeCreated should not be empty
+
+Response codes :
+ - 204 : The mailbox now exists on the server
+ - 400 : The user name does not exist
+ - 500 : Internal error
+
+ To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is :
+
+ .bash
+ ====
+ curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/INBOX.work
+ ====
+
+=== Deleting a mailbox
+
+.bash
+====
+curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+====
+
+Resource name usernameToBeUsed should be an existing user
+Resource name mailboxNameToBeCreated should not be empty
+
+Response codes :
+ - 204 : The mailbox now does not exist on the server
+ - 400 : The user name does not exist
+ - 409 : The mailbox can not be deleted due to its children mailboxes. Delete children mailboxes first.
+ - 500 : Internal error
+
+=== Testing existence of a mailbox
+
+.bash
+====
+curl -XGET http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+====
+
+Resource name usernameToBeUsed should be an existing user
+Resource name mailboxNameToBeCreated should not be empty
+
+Response codes :
+ - 204 : The mailbox exists
+ - 400 : The user name does not exist
+ - 404 : The mailbox does not exist
+ - 500 : Internal error
+
+=== Listing user mailboxes
+
+.bash
+====
+curl -XGET http://ip:port/users/usernameToBeUsed/mailboxes
+====
+
+The answer looks like :
+
+.json
+====
+[{"mailboxName":"INBOX"},{"mailboxName":"outbox"}]
+====
+
+Resource name usernameToBeUsed should be an existing user
+
+Response codes :
+ - 200 : The mailboxes list was successfully retrieved
+ - 400 : The user name does not exist
+ - 500 : Internal error
+
+=== Deleting user mailboxes
+
+.bash
+====
+curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes
+====
+
+Resource name usernameToBeUsed should be an existing user
+
+Response codes :
+ - 204 : The user do not have mailboxes anymore
+ - 400 : The user name does not exist
+ - 500 : Internal error

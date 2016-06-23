@@ -36,6 +36,7 @@ import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.routes.DomainRoutes;
+import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
@@ -59,6 +60,7 @@ public class WebAdminServerModule extends AbstractModule {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(DomainRoutes.class);
         routesMultibinder.addBinding().to(UserRoutes.class);
+        routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(WebAdminServerModuleConfigurationPerformer.class);
     }

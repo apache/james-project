@@ -150,6 +150,15 @@
             <dependencies>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-api</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mailbox-memory</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>james-server-util-java8</artifactId>
                 </dependency>
                 <dependency>
@@ -168,6 +177,10 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.github.fge</groupId>
+                    <artifactId>throwing-lambdas</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>com.google.guava</groupId>
