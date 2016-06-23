@@ -27,6 +27,7 @@ import org.apache.james.mpt.imapmailbox.suite.FetchBodySection;
 import org.apache.james.mpt.imapmailbox.suite.FetchBodyStructure;
 import org.apache.james.mpt.imapmailbox.suite.FetchHeaders;
 import org.apache.james.mpt.imapmailbox.suite.Listing;
+import org.apache.james.mpt.imapmailbox.suite.MailboxAnnotation;
 import org.apache.james.mpt.imapmailbox.suite.Move;
 import org.apache.james.mpt.imapmailbox.suite.NonAuthenticatedState;
 import org.apache.james.mpt.imapmailbox.suite.PartialFetch;
@@ -65,7 +66,8 @@ import org.junit.runners.Suite.SuiteClasses;
     Move.class,
     SelectedInbox.class,
     SelectedState.class,
-    UidSearch.class
+    UidSearch.class,
+    MailboxAnnotation.class
 })
 public abstract class AbstractMailboxTest {
 

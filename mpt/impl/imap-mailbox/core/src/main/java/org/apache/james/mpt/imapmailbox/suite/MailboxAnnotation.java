@@ -16,43 +16,31 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.api;
 
-import java.util.Set;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
+package org.apache.james.mpt.imapmailbox.suite;
 
-public class ImapFeatures {
-    
-    public enum Feature {
-        NAMESPACE_SUPPORT,
-        MOVE_SUPPORT,
-        USER_FLAGS_SUPPORT,
-        QUOTA_SUPPORT,
-        ANNOTATION_SUPPORT
+import java.util.Locale;
+
+import javax.inject.Inject;
+
+import org.apache.james.mpt.api.ImapFeatures;
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedInbox;
+import org.junit.Assume;
+import org.junit.Test;
+
+public class MailboxAnnotation extends BaseSelectedInbox {
+    @Inject
+    private static ImapHostSystem system;
+
+    public MailboxAnnotation() throws Exception {
+        super(system);
     }
 
-    public static ImapFeatures of(Feature... features) {
-        return new ImapFeatures(ImmutableSet.copyOf(features));
+    @Test
+    public void testAnnotationUS() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
+        scriptTest("Annotation", Locale.US);
     }
-
-    private final ImmutableSet<Feature> supportedFeatures;
-    
-    private ImapFeatures(ImmutableSet<Feature> supportedFeatures) {
-        this.supportedFeatures = supportedFeatures;
-    }
-    
-    public Set<Feature> supportedFeatures() {
-        return supportedFeatures;
-    }
-    
-    public boolean supports(Feature... features) {
-        Preconditions.checkNotNull(features);
-        ImmutableSet<Feature> requestedFeatures = ImmutableSet.copyOf(features);
-        return FluentIterable.from(requestedFeatures).allMatch(Predicates.in(supportedFeatures));
-    }
-    
 }

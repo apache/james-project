@@ -31,6 +31,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -60,7 +61,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures IMAP_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.MOVE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
-        Feature.QUOTA_SUPPORT);
+        Feature.QUOTA_SUPPORT,
+        Feature.ANNOTATION_SUPPORT);
     
     private final CassandraMailboxManager mailboxManager;
     private final MockAuthenticator userManager;
@@ -76,7 +78,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraModSeqModule(),
             new CassandraSubscriptionModule(),
             new CassandraQuotaModule(),
-            new CassandraAttachmentModule());
+            new CassandraAttachmentModule(),
+            new CassandraAnnotationModule());
         cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
         userManager = new MockAuthenticator();
         com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();

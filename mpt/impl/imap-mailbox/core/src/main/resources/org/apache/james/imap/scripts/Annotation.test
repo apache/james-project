@@ -1,0 +1,63 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+C: a0 CAPABILITY
+S: \* CAPABILITY .* ANNOTATION .*
+S: a0 OK CAPABILITY completed.
+
+C: a1 SETMETADATA INBOX (/private/comment "My new comment")
+S: a1 OK SETMETADATA completed.
+
+C: a2 SETMETADATA INBOX (/pri*vate/comment "My new comment")
+S: a2 BAD SETMETADATA failed. Illegal arguments.
+
+C: a3 SETMETADATA INBOX (/private/comment NIL)
+S: a3 OK SETMETADATA completed.
+
+C: a4 SETMETADATA INBOX (/private/comment {33}
+S: \+
+C: My new comment across
+C: two lines. )
+S: a4 OK SETMETADATA completed.
+
+C: a5 SETMETADATA INBOX (/private/comment "My new comment" /shared/comment "This one is for you!")
+S: a5 OK SETMETADATA completed.
+
+C: a6 SETMETADATA INBOX (/private/comment "   ")
+S: a6 OK SETMETADATA completed.
+
+C: a7 SETMETADATA INBOX (/private/comment "NIL")
+S: a7 OK SETMETADATA completed.
+
+C: a8 SETMETADATA INBOX (/private/comment )
+S: a8 BAD SETMETADATA failed. Illegal arguments.
+
+C: a10 SETMETADATA INBOX /private/comment "My new comment")
+S: a10 BAD SETMETADATA failed. Illegal arguments.
+
+C: a11 SETMETADATA INBOX (/private/comment "My new comment"
+S: a11 BAD SETMETADATA failed. Illegal arguments.
+
+C: a12 SETMETADATA INBOX (/private/comment PP")
+S: a12 BAD SETMETADATA failed. Illegal arguments.
+
+C: a13 SETMETADATA INBOX ()
+S: a13 BAD SETMETADATA failed. Illegal arguments.
+
+C: a14 SETMETADATA INBOX (/private/comment My new comment)
+S: a14 BAD SETMETADATA failed. Illegal arguments.
