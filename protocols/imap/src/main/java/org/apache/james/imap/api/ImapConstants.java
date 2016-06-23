@@ -106,6 +106,8 @@ public interface ImapConstants {
     String SUPPORTS_ACL = "ACL";
 
     String SUPPORTS_QUOTA = "QUOTA";
+
+    String SUPPORTS_ANNOTATION = "ANNOTATION";
     
     String INBOX_NAME = "INBOX";
 
@@ -234,6 +236,8 @@ public interface ImapConstants {
     String GETQUOTA_COMMAND_NAME = "GETQUOTA";
 
     String SETQUOTA_COMMAND_NAME = "SETQUOTA";
+
+    String SETANNOTATION_COMMAND_NAME = "SETMETADATA";
 
     String LIST_RESPONSE_NAME = "LIST";
 

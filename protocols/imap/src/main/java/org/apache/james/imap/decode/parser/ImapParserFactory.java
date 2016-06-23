@@ -107,6 +107,9 @@ public class ImapParserFactory implements ImapCommandParserFactory {
         _imapCommands.put(ImapConstants.GETQUOTA_COMMAND_NAME, GetQuotaCommandParser.class);
         _imapCommands.put(ImapConstants.SETQUOTA_COMMAND_NAME, SetQuotaCommandParser.class);
 
+        //RFC5464
+        //SETMETADATA
+        _imapCommands.put(ImapConstants.SETANNOTATION_COMMAND_NAME, SetAnnotationCommandParser.class);
     }
 
     /**
