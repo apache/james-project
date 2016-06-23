@@ -50,7 +50,7 @@ public class UpdateMessagePatch {
 
         public Builder mailboxIds(Optional<List<String>> mailboxIds) {
             if (mailboxIds.isPresent()) {
-                throw new NotImplementedException();
+                throw new NotImplementedException("moving a message is not supported");
             }
             return this;
         }

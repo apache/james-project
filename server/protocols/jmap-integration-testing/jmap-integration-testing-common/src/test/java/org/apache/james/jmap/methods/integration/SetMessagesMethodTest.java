@@ -36,6 +36,7 @@ import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -72,6 +74,7 @@ public abstract class SetMessagesMethodTest {
     private static final String SECOND_NAME = "[1][0]";
     private static final String SECOND_ARGUMENTS = "[1][1]";
     private static final String USERS_DOMAIN = "domain.tld";
+    private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
 
     private ConditionFactory calmlyAwait;
 
@@ -351,7 +354,7 @@ public abstract class SetMessagesMethodTest {
                 .expectBody(ARGUMENTS + ".updated", hasSize(1))
                 .expectBody(ARGUMENTS + ".updated", contains(messageId))
                 .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
-                .expectBody(ARGUMENTS + ".notUpdated", not(hasKey(messageId)));
+                .expectBody(NOT_UPDATED, not(hasKey(messageId)));
         return builder.build();
     }
 
@@ -504,10 +507,10 @@ public abstract class SetMessagesMethodTest {
                 .log().ifValidationFails()
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
+                .body(NOT_UPDATED, hasKey(messageId))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
                         " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
                 .body(ARGUMENTS + ".updated", hasSize(0));
     }
@@ -532,11 +535,11 @@ public abstract class SetMessagesMethodTest {
                 .log().ifValidationFails()
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".notUpdated", hasKey(messageId))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties", hasSize(2))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body(ARGUMENTS + ".notUpdated[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
+                .body(NOT_UPDATED, hasKey(messageId))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].properties", hasSize(2))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+                .body(NOT_UPDATED + "[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
                 .body(ARGUMENTS + ".updated", hasSize(0));
     }
 
@@ -605,9 +608,9 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
-            .body(ARGUMENTS + ".notUpdated", hasKey(nonExistingMessageId))
-            .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].type", equalTo("notFound"))
-            .body(ARGUMENTS + ".notUpdated[\""+nonExistingMessageId+"\"].description", equalTo("message not found"))
+            .body(NOT_UPDATED, hasKey(nonExistingMessageId))
+            .body(NOT_UPDATED + "[\""+nonExistingMessageId+"\"].type", equalTo("notFound"))
+            .body(NOT_UPDATED + "[\""+nonExistingMessageId+"\"].description", equalTo("message not found"))
             .body(ARGUMENTS + ".updated", hasSize(0));
     }
 
@@ -1316,5 +1319,48 @@ public abstract class SetMessagesMethodTest {
         } catch(AssertionError e) {
             return false;
         }
+    }
+    
+    @Test
+    public void movingAMessageIsNotSupported() throws Exception {
+        String newMailboxName = "heartFolder";
+        jmapServer.serverProbe().createMailbox("#private", username, newMailboxName);
+        Mailbox heartFolder = jmapServer.serverProbe().getMailbox("#private", username, newMailboxName);
+        String heartFolderId = heartFolder.getMailboxId().serialize();
+
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        jmapServer.serverProbe().appendMessage(username, new MailboxPath("#private", username, "inbox"),
+                new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+
+        String messageToMoveId = "user|inbox|1";
+
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"update\": { \"" + messageToMoveId + "\" : {" +
+                "        \"mailboxIds\": [\"" + heartFolderId + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .header("Authorization", this.accessToken.serialize())
+                .body(requestBody)
+        .when()
+                .post("/jmap")
+        .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(NOT_UPDATED, hasKey(messageToMoveId))
+                .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].type", equalTo("invalidProperties"))
+                .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].properties[0]", equalTo("mailboxIds"))
+                .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].description", equalTo("mailboxIds: moving a message is not supported "
+                        + "(through reference chain: org.apache.james.jmap.model.Builder[\"mailboxIds\"])"))
+               .body(ARGUMENTS + ".updated", hasSize(0));
     }
 }

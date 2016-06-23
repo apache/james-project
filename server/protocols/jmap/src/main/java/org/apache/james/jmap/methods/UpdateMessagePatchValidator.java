@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.inject.Inject;
 
+import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.UpdateMessagePatch;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -38,8 +39,8 @@ public class UpdateMessagePatchValidator implements Validator<ObjectNode> {
     private final ObjectMapper parser;
 
     @Inject
-    @VisibleForTesting UpdateMessagePatchValidator(ObjectMapper parser) {
-        this.parser = parser;
+    @VisibleForTesting UpdateMessagePatchValidator(ObjectMapperFactory parserFactory) {
+        this.parser = parserFactory.forParsing();
     }
 
     @Override

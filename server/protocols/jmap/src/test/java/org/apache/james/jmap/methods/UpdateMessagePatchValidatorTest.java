@@ -28,7 +28,9 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.Set;
 
+import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.UpdateMessagePatch;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -36,15 +38,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class UpdateMessagePatchValidatorTest {
+    private ObjectMapperFactory objectMapperFactory;
+
+    @Before
+    public void setUp() {
+        objectMapperFactory = mock(ObjectMapperFactory.class);
+    }
 
     @Test
     public void validateShouldReturnPropertyNameWhenPropertyHasInvalidType() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
+        when(objectMapperFactory.forParsing())
+            .thenReturn(mapper);
+
         String jsonContent = "{ \"isUnread\" : \"123\" }";
         ObjectNode rootNode = mapper.readValue(jsonContent, ObjectNode.class);
 
-        UpdateMessagePatchValidator sut = new UpdateMessagePatchValidator(mapper);
+        UpdateMessagePatchValidator sut = new UpdateMessagePatchValidator(objectMapperFactory);
         Set<ValidationResult> result = sut.validate(rootNode);
         assertThat(result).extracting(ValidationResult::getProperty).contains("isUnread");
     }
@@ -53,25 +64,35 @@ public class UpdateMessagePatchValidatorTest {
     public void isValidShouldReturnTrueWhenPatchWellFormatted() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
+        when(objectMapperFactory.forParsing())
+            .thenReturn(mapper);
+
         String jsonContent = "{ \"isUnread\" : \"true\" }";
         ObjectNode rootNode = mapper.readValue(jsonContent, ObjectNode.class);
 
-        UpdateMessagePatchValidator sut = new UpdateMessagePatchValidator(mapper);
+        UpdateMessagePatchValidator sut = new UpdateMessagePatchValidator(objectMapperFactory);
         assertThat(sut.isValid(rootNode)).isTrue();
     }
 
     @Test
     public void validateShouldReturnANonEmptyResultWhenParsingThrows() throws IOException {
-        // Given
+        //Given
         ObjectNode emptyRootNode = new ObjectMapper().createObjectNode();
+
         ObjectMapper mapper = mock(ObjectMapper.class);
         when(mapper.readValue(anyString(), eq(UpdateMessagePatch.class)))
             .thenThrow(new JsonMappingException("Exception when parsing"));
-        UpdateMessagePatchValidator sut = new UpdateMessagePatchValidator(mapper);
+
+        when(objectMapperFactory.forParsing())
+            .thenReturn(mapper);
+
+        UpdateMessagePatchValidator sut = new UpdateMessagePatchValidator(objectMapperFactory);
+
         // When
         Set<ValidationResult> result = sut.validate(emptyRootNode);
         // Then
         assertThat(result).isNotEmpty();
         assertThat(result).extracting(ValidationResult::getProperty).contains(ValidationResult.UNDEFINED_PROPERTY);
     }
+
 }
