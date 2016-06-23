@@ -132,11 +132,12 @@ curl -XPUT http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreate
 ====
 
 Resource name usernameToBeUsed should be an existing user
-Resource name mailboxNameToBeCreated should not be empty
+Resource name mailboxNameToBeCreated should not be empty, nor contain # & % * characters.
 
 Response codes :
  - 204 : The mailbox now exists on the server
- - 400 : The user name does not exist
+ - 400 : Invalid mailbox name
+ - 404 : The user name does not exist
  - 500 : Internal error
 
  To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is :
@@ -146,7 +147,7 @@ Response codes :
  curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/INBOX.work
  ====
 
-=== Deleting a mailbox
+=== Deleting a mailbox and its children
 
 .bash
 ====
@@ -158,8 +159,8 @@ Resource name mailboxNameToBeCreated should not be empty
 
 Response codes :
  - 204 : The mailbox now does not exist on the server
- - 400 : The user name does not exist
- - 409 : The mailbox can not be deleted due to its children mailboxes. Delete children mailboxes first.
+ - 400 : Invalid mailbox name
+ - 404 : The user name does not exist
  - 500 : Internal error
 
 === Testing existence of a mailbox
@@ -174,8 +175,8 @@ Resource name mailboxNameToBeCreated should not be empty
 
 Response codes :
  - 204 : The mailbox exists
- - 400 : The user name does not exist
- - 404 : The mailbox does not exist
+ - 400 : Invalid mailbox name
+ - 404 : The user name does not exist, the mailbox does not exist
  - 500 : Internal error
 
 === Listing user mailboxes
@@ -196,7 +197,7 @@ Resource name usernameToBeUsed should be an existing user
 
 Response codes :
  - 200 : The mailboxes list was successfully retrieved
- - 400 : The user name does not exist
+ - 404 : The user name does not exist
  - 500 : Internal error
 
 === Deleting user mailboxes
@@ -210,5 +211,5 @@ Resource name usernameToBeUsed should be an existing user
 
 Response codes :
  - 204 : The user do not have mailboxes anymore
- - 400 : The user name does not exist
+ - 404 : The user name does not exist
  - 500 : Internal error
