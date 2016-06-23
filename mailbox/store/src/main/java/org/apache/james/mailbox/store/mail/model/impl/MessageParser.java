@@ -31,21 +31,19 @@ import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.MessageWriter;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
+import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class MessageParser {
 
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
-    private static final String HEADER_SEPARATOR = ";";
 
     public List<Attachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         Body body = new DefaultMessageBuilder()
@@ -67,38 +65,52 @@ public class MessageParser {
         MessageWriter messageWriter = new DefaultMessageWriter();
         for (Entity entity : multipart.getBodyParts()) {
             if (isAttachment(entity)) {
-                Optional<String> contentType = contentType(entity.getHeader().getField(CONTENT_TYPE));
-                attachments.add(createAttachment(messageWriter, entity.getBody(), contentType.or(DEFAULT_CONTENT_TYPE)));
+                Optional<ContentTypeField> contentTypeField = contentTypeField(entity.getHeader().getField(CONTENT_TYPE));
+                Optional<String> contentType = contentType(contentTypeField);
+                Optional<String> name = name(contentTypeField);
+                
+                attachments.add(Attachment.builder()
+                        .bytes(getBytes(messageWriter, entity.getBody()))
+                        .type(contentType.or(DEFAULT_CONTENT_TYPE))
+                        .name(name)
+                        .build());
             }
         }
         return attachments.build();
     }
 
-    private Optional<String> contentType(Field contentType) {
-        if (contentType == null) {
+    private Optional<String> contentType(Optional<ContentTypeField> contentTypeField) {
+        return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
+            @Override
+            public Optional<String> apply(ContentTypeField field) {
+                return Optional.fromNullable(field.getMimeType());
+            }
+        }).or(Optional.<String> absent());
+    }
+
+    private Optional<String> name(Optional<ContentTypeField> contentTypeField) {
+        return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
+            @Override
+            public Optional<String> apply(ContentTypeField field) {
+                return Optional.fromNullable(field.getParameter("name"));
+            }
+        }).or(Optional.<String> absent());
+    }
+
+    private Optional<ContentTypeField> contentTypeField(Field contentType) {
+        if (contentType == null || !(contentType instanceof ContentTypeField)) {
             return Optional.absent();
         }
-        String body = contentType.getBody();
-        if (Strings.isNullOrEmpty(body)) {
-            return Optional.absent();
-        }
-        if (body.contains(HEADER_SEPARATOR)) {
-            return Optional.of(Iterables.get(Splitter.on(HEADER_SEPARATOR).split(body), 0));
-        }
-        return Optional.of(body);
+        return Optional.of((ContentTypeField) contentType);
     }
 
     private boolean isAttachment(Entity part) {
         return ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.equalsIgnoreCase(part.getDispositionType());
     }
 
-    private Attachment createAttachment(MessageWriter messageWriter, Body body, String contentType) throws IOException {
+    private byte[] getBytes(MessageWriter messageWriter, Body body) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
-        byte[] bytes = out.toByteArray();
-        return Attachment.builder()
-                .bytes(bytes)
-                .type(contentType)
-                .build();
+        return out.toByteArray();
     }
 }

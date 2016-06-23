@@ -48,6 +48,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
+
 public abstract class AbstractMailboxManagerAttachmentTest {
     private static final String USERNAME = "user@domain.tld";
     private static final Date SUN_SEP_9TH_2001 = new Date(1000000000000L);
@@ -105,6 +107,18 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
         assertThat(messages.next().getAttachmentsIds()).hasSize(1);
+    }
+
+    @Test
+    public void appendMessageShouldStoreAttachmentNameWhenMailWithOneAttachment() throws Exception {
+        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml");
+        inboxMessageManager.appendMessage(mailInputStream, SUN_SEP_9TH_2001, mailboxSession, true, new Flags(Flags.Flag.RECENT));
+
+        Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
+
+        Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
+        List<AttachmentId> attachmentsIds = messages.next().getAttachmentsIds();
+        assertThat(attachmentMapper.getAttachment(attachmentsIds.get(0)).getName()).isEqualTo(expectedName);
     }
 
     @Test

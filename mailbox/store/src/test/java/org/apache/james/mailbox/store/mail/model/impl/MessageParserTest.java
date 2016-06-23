@@ -27,6 +27,8 @@ import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
+
 public class MessageParserTest {
 
     private MessageParser testee;
@@ -48,6 +50,23 @@ public class MessageParserTest {
         List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
 
         assertThat(attachments).hasSize(1);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveAttachmentNameWhenOne() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+
+        assertThat(attachments).hasSize(1);
+        Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
+        assertThat(attachments.get(0).getName()).isEqualTo(expectedName);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveEmptyNameWhenNone() throws Exception {
+        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getName()).isEqualTo(Optional.absent());
     }
 
     @Test
