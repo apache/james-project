@@ -31,6 +31,7 @@ import org.xenei.junit.contract.Contract;
 import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 @Contract(MapperProvider.class)
@@ -62,13 +63,16 @@ public class AttachmentMapperTest<T extends MapperProvider> {
     @ContractTest
     public void getAttachmentShouldThrowWhenNonReferencedAttachmentId() throws Exception {
         expected.expect(AttachmentNotFoundException.class);
-        attachmentMapper.getAttachment(AttachmentId.forPayload("unknown".getBytes()));
+        attachmentMapper.getAttachment(AttachmentId.forPayload("unknown".getBytes(Charsets.UTF_8)));
     }
 
     @ContractTest
     public void getAttachmentShouldReturnTheAttachmentWhenReferenced() throws Exception {
         //Given
-        Attachment expected = Attachment.from("payload".getBytes(), "content");
+        Attachment expected = Attachment.builder()
+                .bytes("payload".getBytes(Charsets.UTF_8))
+                .type("content")
+                .build();
         AttachmentId attachmentId = expected.getAttachmentId();
         attachmentMapper.storeAttachment(expected);
         //When
@@ -80,8 +84,14 @@ public class AttachmentMapperTest<T extends MapperProvider> {
     @ContractTest
     public void getAttachmentShouldReturnTheAttachmentsWhenMultipleStored() throws Exception {
         //Given
-        Attachment expected1 = Attachment.from("payload1".getBytes(), "content1");
-        Attachment expected2 = Attachment.from("payload2".getBytes(), "content2");
+        Attachment expected1 = Attachment.builder()
+                .bytes("payload1".getBytes(Charsets.UTF_8))
+                .type("content1")
+                .build();
+        Attachment expected2 = Attachment.builder()
+                .bytes("payload2".getBytes(Charsets.UTF_8))
+                .type("content2")
+                .build();
         AttachmentId attachmentId1 = expected1.getAttachmentId();
         AttachmentId attachmentId2 = expected2.getAttachmentId();
         //When

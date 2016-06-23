@@ -96,6 +96,9 @@ public class MessageParser {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
         byte[] bytes = out.toByteArray();
-        return Attachment.from(bytes, contentType);
+        return Attachment.builder()
+                .bytes(bytes)
+                .type(contentType)
+                .build();
     }
 }

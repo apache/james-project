@@ -422,7 +422,6 @@ public class MailboxMessageTest {
                         .attachmentId(AttachmentId.from(blodId))
                         .bytes(payload.getBytes())
                         .type(type)
-                        .size(payload.length())
                         .build()), 
                 x -> MessageId.of("user|box|" + x));
 

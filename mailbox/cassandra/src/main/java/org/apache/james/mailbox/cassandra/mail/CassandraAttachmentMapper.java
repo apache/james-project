@@ -24,6 +24,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.PAYLOAD;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.SIZE;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.TABLE_NAME;
@@ -46,6 +47,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.ThrownByLambdaException;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
@@ -82,7 +84,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
                 .attachmentId(AttachmentId.from(row.getString(ID)))
                 .bytes(row.getBytes(PAYLOAD).array())
                 .type(row.getString(TYPE))
-                .size(row.getLong(SIZE))
+                .name(Optional.fromNullable(row.getString(NAME)))
                 .build();
     }
 
@@ -101,6 +103,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
                 .value(ID, attachment.getAttachmentId().getId())
                 .value(PAYLOAD, ByteBuffer.wrap(IOUtils.toByteArray(attachment.getStream())))
                 .value(TYPE, attachment.getType())
+                .value(NAME, attachment.getName().orNull())
                 .value(SIZE, attachment.getSize())
         );
     }

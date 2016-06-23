@@ -48,6 +48,7 @@ public class CassandraAttachmentModule implements CassandraModule {
                     .addPartitionKey(CassandraAttachmentTable.ID, text())
                     .addColumn(CassandraAttachmentTable.PAYLOAD, blob())
                     .addColumn(CassandraAttachmentTable.TYPE, text())
+                    .addColumn(CassandraAttachmentTable.NAME, text())
                     .addColumn(CassandraAttachmentTable.SIZE, bigint())));
         index = Collections.emptyList();
         types = Collections.emptyList();
