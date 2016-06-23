@@ -27,6 +27,13 @@ public class FixedDateZonedDateTimeProvider implements ZonedDateTimeProvider {
 
     private ZonedDateTime zonedDateTime;
 
+    public FixedDateZonedDateTimeProvider() {
+    }
+
+    public FixedDateZonedDateTimeProvider(ZonedDateTime zonedDateTime) {
+        this.zonedDateTime = zonedDateTime;
+    }
+
     public void setFixedDateTime(ZonedDateTime zonedDateTime) {
         this.zonedDateTime = zonedDateTime;
     }

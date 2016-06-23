@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.json.OptionalZonedDateTimeDeserializer;
 import org.apache.james.jmap.json.OptionalZonedDateTimeSerializer;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -96,15 +97,20 @@ public class VacationResponse {
             return this;
         }
 
-        public Builder fromVacation(Vacation vacation) {
+        public Builder fromVacation(Vacation vacation, ZonedDateTime zonedDateTime) {
             this.id = Vacation.ID;
-            this.isEnabled = Optional.of(vacation.isEnabled());
+            this.isEnabled = computeEnabledState(vacation, zonedDateTime);
             this.fromDate = vacation.getFromDate();
             this.toDate = vacation.getToDate();
             this.textBody = vacation.getTextBody();
             this.subject = vacation.getSubject();
             this.htmlBody = vacation.getHtmlBody();
             return this;
+        }
+
+        private Optional<Boolean> computeEnabledState(Vacation vacation, ZonedDateTime zonedDateTime) {
+            return Optional.of(vacation.isEnabled())
+                .map(enabled -> enabled && vacation.isActiveAtDate(zonedDateTime));
         }
 
         public VacationResponse build() {

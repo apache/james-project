@@ -23,6 +23,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
 import org.apache.james.jmap.servers.MemoryJmapServerModule;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -32,10 +33,11 @@ public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
         return new GuiceJamesServer()
                     .combineWith(MemoryJamesServerMain.inMemoryServerModule)
-                    .overrideWith(new MemoryJmapServerModule(temporaryFolder));
+                    .overrideWith(new MemoryJmapServerModule(temporaryFolder),
+                        binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }
     
     @Override
