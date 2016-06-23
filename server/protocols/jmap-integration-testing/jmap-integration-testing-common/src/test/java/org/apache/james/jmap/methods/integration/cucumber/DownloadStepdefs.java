@@ -38,6 +38,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
+import com.jayway.restassured.response.ValidatableResponse;
 import com.jayway.restassured.specification.RequestSpecification;
 
 import cucumber.api.java.en.Given;
@@ -53,6 +54,7 @@ public class DownloadStepdefs {
     private Response response;
     private Multimap<String, String> attachmentsByMessageId;
     private Map<String, String> blobIdByAttachmentId;
+    private ValidatableResponse validatableResponse;
 
     @Inject
     private DownloadStepdefs(MainStepdefs mainStepdefs, UserStepdefs userStepdefs) {
@@ -125,33 +127,44 @@ public class DownloadStepdefs {
                 .post("/download/" + blobId);
     }
 
+    @When("^\"([^\"]*)\" downloads \"([^\"]*)\" with \"([^\"]*)\" name$")
+    public void downloadsWithName(String username, String attachmentId, String name) {
+        String blobId = blobIdByAttachmentId.get(attachmentId);
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        RequestSpecification with = with();
+        if (accessToken != null) {
+            with.header("Authorization", accessToken.serialize());
+        }
+        response = with.get("/download/" + blobId + "/" + name);
+    }
+
     @Then("^the user should be authorized$")
-    public void httpStatusDifferentFromUnauthorized() throws Exception {
+    public void httpStatusDifferentFromUnauthorized() {
         response.then()
             .statusCode(not(401));
     }
 
     @Then("^the user should not be authorized$")
-    public void httpUnauthorizedStatus() throws Exception {
+    public void httpUnauthorizedStatus() {
         response.then()
             .statusCode(401);
     }
 
     @Then("^the user should receive a bad request response$")
-    public void httpBadRequestStatus() throws Throwable {
+    public void httpBadRequestStatus() {
         response.then()
             .statusCode(400);
     }
 
     @Then("^the user should receive that attachment$")
-    public void httpOkStatusAndExpectedContent() throws Throwable {
-        response.then()
+    public void httpOkStatusAndExpectedContent() {
+        validatableResponse = response.then()
             .statusCode(200)
             .content(notNullValue());
     }
 
     @Then("^the user should receive a not found response$")
-    public void httpNotFoundStatus() throws Throwable {
+    public void httpNotFoundStatus() {
         response.then()
             .statusCode(404);
     }
@@ -162,5 +175,10 @@ public class DownloadStepdefs {
             .statusCode(200)
             .contentType(ContentType.TEXT)
             .content(notNullValue());
+    }
+
+    @Then("^the attachment is named \"([^\"]*)\"$")
+    public void assertContentDisposition(String name) {
+        validatableResponse.header("Content-Disposition", name);
     }
 }
