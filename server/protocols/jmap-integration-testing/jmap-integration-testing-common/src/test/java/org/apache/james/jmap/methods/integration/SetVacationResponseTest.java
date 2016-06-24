@@ -304,4 +304,36 @@ public abstract class SetVacationResponseTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
     }
+
+    @Test
+    public void accountIdNullIsSupported() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+            "{" +
+                "\"accountId\": null," +
+                "\"update\":{" +
+                    "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"," +
+                        "\"fromDate\":\"2014-09-30T14:10:00Z\"," +
+                        "\"toDate\":\"2014-10-30T14:10:00Z\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponseSet"))
+            .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
+    }
 }

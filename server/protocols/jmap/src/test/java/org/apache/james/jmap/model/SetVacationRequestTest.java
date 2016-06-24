@@ -51,4 +51,15 @@ public class SetVacationRequestTest {
             .build();
     }
 
+    @Test
+    public void accountIdNullShouldBeConsideredAsNoAccountId() {
+        VacationResponse vacationResponse = VacationResponse.builder().id(VACATION_ID).textBody(Optional.of("any message")).build();
+        SetVacationRequest setVacationRequest = SetVacationRequest.builder()
+            .accountId(null)
+            .update(ImmutableMap.of(VACATION_ID, vacationResponse))
+            .build();
+
+        assertThat(setVacationRequest.getUpdate()).containsEntry(VACATION_ID, vacationResponse);
+    }
+
 }
