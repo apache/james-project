@@ -110,6 +110,35 @@ public abstract class SetVacationResponseTest {
     }
 
     @Test
+    public void setVacationResponseShouldBeAbleToContainIsActivated() {
+        String bodyRequest = "[[" +
+            "\"setVacationResponse\", " +
+                "{" +
+                    "\"update\":{" +
+                        "\"singleton\" : {" +
+                        "\"id\": \"singleton\"," +
+                        "\"isActivated\": \"true\"," +
+                        "\"isEnabled\": \"true\"," +
+                        "\"textBody\": \"Message explaining my wonderful vacations\"" +
+                    "}" +
+                "}" +
+            "}, " +
+            "\"#0\"" +
+            "]]";
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body(bodyRequest)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".updated[0]", equalTo("singleton"));
+    }
+
+    @Test
     public void setVacationResponseShouldContainAnErrorWhenInvalidId() {
         String bodyRequest = "[[" +
             "\"setVacationResponse\", " +

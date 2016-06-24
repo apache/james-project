@@ -30,10 +30,12 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,17 +53,24 @@ public abstract class GetVacationResponseTest {
     public static final String USER = "username@" + USERS_DOMAIN;
     public static final String PASSWORD = "password";
     public static final String SUBJECT = "subject";
+    public static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
+    public static final ZonedDateTime DATE_2014 = ZonedDateTime.parse("2014-09-30T14:10:00+02:00");
+    public static final ZonedDateTime DATE_2016 = ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]");
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider);
 
     protected abstract void await();
 
     private AccessToken accessToken;
     private GuiceJamesServer jmapServer;
+    private FixedDateZonedDateTimeProvider fixedDateZonedDateTimeProvider;
 
     @Before
     public void setup() throws Throwable {
-        jmapServer = createJmapServer();
+        fixedDateZonedDateTimeProvider = new FixedDateZonedDateTimeProvider();
+        fixedDateZonedDateTimeProvider.setFixedDateTime(DATE_2015);
+
+        jmapServer = createJmapServer(fixedDateZonedDateTimeProvider);
         jmapServer.start();
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
@@ -173,6 +182,62 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].toDate", equalTo("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]"))
             .body(ARGUMENTS + ".list[0].isEnabled", equalTo(true))
             .body(ARGUMENTS + ".list[0].textBody", equalTo("Test explaining my vacations"));
+    }
+
+    @Test
+    public void getVacationResponseShouldReturnIsActivatedWhenInRange() {
+        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+            Vacation.builder()
+                .enabled(true)
+                .fromDate(Optional.of(DATE_2014))
+                .toDate(Optional.of(DATE_2016))
+                .textBody("Test explaining my vacations")
+                .build());
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                    "\"getVacationResponse\", " +
+                    "{}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponse"))
+            .body(ARGUMENTS + ".list[0].isActivated", equalTo(true));
+    }
+
+    @Test
+    public void getVacationResponseShouldNotReturnIsActivatedWhenOutOfRange() {
+        fixedDateZonedDateTimeProvider.setFixedDateTime(DATE_2014);
+
+        jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
+            Vacation.builder()
+                .enabled(true)
+                .fromDate(Optional.of(DATE_2015))
+                .toDate(Optional.of(DATE_2016))
+                .textBody("Test explaining my vacations")
+                .build());
+
+        given()
+            .accept(ContentType.JSON)
+            .contentType(ContentType.JSON)
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                    "\"getVacationResponse\", " +
+                    "{}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("vacationResponse"))
+            .body(ARGUMENTS + ".list[0].isActivated", equalTo(false));
     }
 
     @Test

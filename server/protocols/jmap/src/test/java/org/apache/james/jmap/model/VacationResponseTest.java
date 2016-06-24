@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.jmap.api.vacation.Vacation;
 import org.junit.Test;
 
 public class VacationResponseTest {
