@@ -160,6 +160,7 @@ public class MessageFactory {
         return Attachment.builder()
                     .blobId(attachment.getAttachmentId().getId())
                     .type(attachment.getType())
+                    .name(attachment.getName().orNull())
                     .size(attachment.getSize())
                     .build();
     }
