@@ -43,6 +43,7 @@ import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationIntegrationTest {
@@ -80,9 +81,12 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, "INBOX");
         await();
 
-
-        RestAssured.port = guiceJamesServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(guiceJamesServer.getJmapPort())
+        		.build();
 
         Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
         calmlyAwait = Awaitility.with().pollInterval(slowPacedPollInterval).and().with().pollDelay(slowPacedPollInterval).await();
@@ -164,8 +168,6 @@ public abstract class VacationIntegrationTest {
         // User 2 should not receive a notification
         Thread.sleep(1000L);
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", user2AccessToken.serialize())
             .body("[[\"getMessageList\", " +
                 "{" +
@@ -260,8 +262,6 @@ public abstract class VacationIntegrationTest {
             "}, \"#0\"" +
             "]]";
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", user1AccessToken.serialize())
             .body(bodyRequest)
         .when()
@@ -284,8 +284,6 @@ public abstract class VacationIntegrationTest {
             "}, \"#0\"" +
             "]]";
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", user1AccessToken.serialize())
             .body(bodyRequest)
         .when()
@@ -311,8 +309,6 @@ public abstract class VacationIntegrationTest {
             "  ]" +
             "]";
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", user2AccessToken.serialize())
             .body(requestBody)
         .when()
@@ -322,8 +318,6 @@ public abstract class VacationIntegrationTest {
     private boolean areTwoTextMessageReceived(AccessToken recipientToken, String mailboxId) {
         try {
             with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", recipientToken.serialize())
                 .body("[[\"getMessageList\", " +
                     "{" +
@@ -354,8 +348,6 @@ public abstract class VacationIntegrationTest {
 
     private void assertOneMessageReceived(AccessToken recipientToken, String mailboxId, String expectedTextBody, String expectedFrom, String expectedTo) {
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", recipientToken.serialize())
             .body("[[\"getMessageList\", " +
                 "{" +
@@ -379,8 +371,6 @@ public abstract class VacationIntegrationTest {
     private boolean assertOneMessageWithHtmlBodyReceived(AccessToken recipientToken, String mailboxId, String expectedHtmlBody, String expectedFrom, String expectedTo) {
         try {
             with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", recipientToken.serialize())
                 .body("[[\"getMessageList\", " +
                     "{" +
@@ -423,8 +413,6 @@ public abstract class VacationIntegrationTest {
 
     private List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
         return with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
             .post("/jmap")

@@ -95,8 +95,6 @@ public class SetMailboxesMethodStepdefs {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", userStepdefs.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
@@ -124,8 +122,6 @@ public class SetMailboxesMethodStepdefs {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", userStepdefs.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
@@ -136,8 +132,6 @@ public class SetMailboxesMethodStepdefs {
         Mailbox mailbox = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", userStepdefs.username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", userStepdefs.accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
         .when()

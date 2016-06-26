@@ -44,7 +44,8 @@ import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.parsing.Parser;
+import com.jayway.restassured.builder.RequestSpecBuilder;
+import com.jayway.restassured.http.ContentType;
 
 public class WebAdminServerIntegrationTest {
 
@@ -74,11 +75,15 @@ public class WebAdminServerIntegrationTest {
                 new WebAdminConfigurationModule());
         guiceJamesServer.start();
 
-        RestAssured.port = guiceJamesServer.getWebadminPort()
-            .orElseThrow(() -> new RuntimeException("Unable to locate Web Admin port"))
-            .toInt();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-        RestAssured.defaultParser = Parser.JSON;
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(guiceJamesServer
+        					.getWebadminPort()
+				            .orElseThrow(() -> new RuntimeException("Unable to locate Web Admin port"))
+				            .toInt())
+        		.build();
     }
 
     @After

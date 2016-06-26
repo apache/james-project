@@ -47,6 +47,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class GetMailboxesMethodTest {
@@ -63,8 +64,13 @@ public abstract class GetMailboxesMethodTest {
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
 
         String domain = "domain.tld";
         username = "username@" + domain;
@@ -82,8 +88,6 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldErrorNotSupportedWhenRequestContainsNonNullAccountId() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"accountId\": \"1\"}, \"#0\"]]")
         .when()
@@ -99,8 +103,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"notAMailboxId\"]}, \"#0\"]]")
         .when()
@@ -123,8 +125,6 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId2 = mailbox2.getMailboxId().serialize();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\", \"" + mailboxId2 + "\"]}, \"#0\"]]")
         .when()
@@ -147,8 +147,6 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId = mailbox.getMailboxId().serialize();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -165,8 +163,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "INBOX");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": []}, \"#0\"]]")
         .when()
@@ -189,8 +185,6 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId2 = mailbox2.getMailboxId().serialize();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": null}, \"#0\"]]")
         .when()
@@ -206,8 +200,6 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldErrorInvalidArgumentsWhenRequestIsInvalid() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": true}, \"#0\"]]")
         .when()
@@ -223,8 +215,6 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -245,8 +235,6 @@ public abstract class GetMailboxesMethodTest {
                 + "2RJTBsIo6flJT-MchaEvTYBvuV_wlCCQYjI1g7mdeD6aXfw";
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", "Bearer " + token)
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -268,8 +256,6 @@ public abstract class GetMailboxesMethodTest {
                 "qNOR8Q31ydinyqzXvCSzVJOf6T60-w";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", "Bearer " + badAuthToken)
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -286,8 +272,6 @@ public abstract class GetMailboxesMethodTest {
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -316,8 +300,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\" : [\"unreadMessages\", \"sortOrder\"]}, \"#0\"]]")
         .when()
@@ -347,8 +329,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\" : []}, \"#0\"]]")
         .when()
@@ -365,8 +345,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {\"properties\" : [\"unknown\"]}, \"#0\"]]")
         .when()
@@ -384,8 +362,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "trash");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -405,8 +381,6 @@ public abstract class GetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "outbox");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()

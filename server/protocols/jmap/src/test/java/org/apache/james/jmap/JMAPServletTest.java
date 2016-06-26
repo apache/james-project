@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public class JMAPServletTest {
@@ -65,8 +66,12 @@ public class JMAPServletTest {
 
         server.start();
 
-        RestAssured.port = server.getPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(server.getPort())
+        		.build();
     }
 
     @After
@@ -79,8 +84,6 @@ public class JMAPServletTest {
         String missingAnOpeningBracket = "[\"getAccounts\", {\"state\":false}, \"#0\"]]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .body(missingAnOpeningBracket)
         .when()
             .post("/")
@@ -97,8 +100,6 @@ public class JMAPServletTest {
             .thenReturn(Stream.of(new ProtocolResponse(ErrorResponse.ERROR_METHOD, json, ClientId.of("#0"))));
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .body("[[\"getAccounts\", {\"state\":false}, \"#0\"]]")
         .when()
             .post("/")
@@ -121,8 +122,6 @@ public class JMAPServletTest {
             .thenReturn(Stream.of(new ProtocolResponse(Method.Response.name("accounts"), json, ClientId.of("#0"))));
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .body("[[\"getAccounts\", {}, \"#0\"]]")
         .when()
             .post("/")

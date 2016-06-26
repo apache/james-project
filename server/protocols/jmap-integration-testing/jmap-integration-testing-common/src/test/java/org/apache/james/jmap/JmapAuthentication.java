@@ -23,8 +23,6 @@ import static com.jayway.restassured.RestAssured.with;
 
 import org.apache.james.jmap.api.access.AccessToken;
 
-import com.jayway.restassured.http.ContentType;
-
 public class JmapAuthentication {
 
     public static AccessToken authenticateJamesUser(String username, String password) {
@@ -32,8 +30,6 @@ public class JmapAuthentication {
 
         return AccessToken.fromString(
             with()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .body("{\"token\": \"" + continuationToken + "\", \"method\": \"password\", \"password\": \"" + password + "\"}")
             .post("/authentication")
                 .body()
@@ -44,8 +40,6 @@ public class JmapAuthentication {
 
     private static String getContinuationToken(String username) {
         return with()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
             .body("{\"username\": \"" + username + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}")
         .post("/authentication")
             .body()

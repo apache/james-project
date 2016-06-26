@@ -47,6 +47,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class SetMailboxesMethodTest {
@@ -67,8 +68,13 @@ public abstract class SetMailboxesMethodTest {
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
         username = "username@" + USERS_DOMAIN;
@@ -104,8 +110,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -134,8 +138,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -163,8 +165,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -192,16 +192,12 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .then()
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -217,8 +213,6 @@ public abstract class SetMailboxesMethodTest {
     public void setMailboxesShouldReturnCreatedMailboxWhenChildOfInboxMailbox() {
         String inboxId =
             with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
             .when()
@@ -244,8 +238,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -263,8 +255,6 @@ public abstract class SetMailboxesMethodTest {
     public void setMailboxesShouldCreateMailboxWhenChildOfInboxMailbox() {
         String inboxId =
             with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
             .when()
@@ -290,16 +280,12 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -329,8 +315,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -365,8 +349,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -404,8 +386,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -440,8 +420,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -477,8 +455,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -514,8 +490,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
             given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body(requestBody)
             .when()
@@ -546,8 +520,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -573,8 +545,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -583,8 +553,6 @@ public abstract class SetMailboxesMethodTest {
             .statusCode(200);
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
@@ -608,8 +576,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -640,8 +606,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -670,8 +634,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -704,8 +666,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -735,8 +695,6 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -764,8 +722,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -797,8 +753,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -829,8 +783,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -861,15 +813,11 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -906,8 +854,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -943,15 +889,11 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -990,8 +932,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1029,15 +969,11 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -1072,8 +1008,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1107,15 +1041,11 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -1155,8 +1085,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1195,15 +1123,11 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -1236,8 +1160,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1270,8 +1192,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1314,8 +1234,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1351,8 +1269,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1388,8 +1304,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1423,15 +1337,11 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
@@ -1464,8 +1374,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1500,8 +1408,6 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1543,8 +1449,6 @@ public abstract class SetMailboxesMethodTest {
                   "]";
 
       given()
-          .accept(ContentType.JSON)
-          .contentType(ContentType.JSON)
           .header("Authorization", this.accessToken.serialize())
           .body(requestBody)
       .when()

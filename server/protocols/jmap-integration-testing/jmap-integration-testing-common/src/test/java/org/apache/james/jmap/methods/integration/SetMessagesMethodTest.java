@@ -60,6 +60,7 @@ import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.ResponseSpecification;
@@ -86,9 +87,13 @@ public abstract class SetMessagesMethodTest {
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
+        
         username = "username@" + USERS_DOMAIN;
         String password = "password";
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
@@ -118,8 +123,6 @@ public abstract class SetMessagesMethodTest {
 
     private List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
         return with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
         .post("/jmap")
@@ -132,8 +135,6 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnErrorNotSupportedWhenRequestContainsNonNullAccountId() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"accountId\": \"1\"}, \"#0\"]]")
         .when()
@@ -147,8 +148,6 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnErrorNotSupportedWhenRequestContainsNonNullIfInState() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"ifInState\": \"1\"}, \"#0\"]]")
         .when()
@@ -164,8 +163,6 @@ public abstract class SetMessagesMethodTest {
 
         String unknownMailboxMessageId = username + "|unknown|12345";
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [\"" + unknownMailboxMessageId + "\"]}, \"#0\"]]")
         .when()
@@ -188,8 +185,6 @@ public abstract class SetMessagesMethodTest {
 
         String messageId = username + "|mailbox|12345";
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
@@ -216,8 +211,6 @@ public abstract class SetMessagesMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\"]}, \"#0\"]]")
         .when()
@@ -241,8 +234,6 @@ public abstract class SetMessagesMethodTest {
 
         // When
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\"]}, \"#0\"]]")
         .when()
@@ -252,8 +243,6 @@ public abstract class SetMessagesMethodTest {
 
         // Then
         given()
-           .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|mailbox|1\"]}, \"#0\"]]")
         .when()
@@ -280,8 +269,6 @@ public abstract class SetMessagesMethodTest {
 
         String missingMessageId = username + "|mailbox|4";
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\", \"" + missingMessageId + "\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
         .when()
@@ -315,8 +302,6 @@ public abstract class SetMessagesMethodTest {
 
         // When
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [\"" + username + "|mailbox|1\", \"" + username + "|mailbox|4\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
         .when()
@@ -326,8 +311,6 @@ public abstract class SetMessagesMethodTest {
 
         // Then
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|mailbox|1\", \"" + username + "|mailbox|2\", \"" + username + "|mailbox|3\"]}, \"#0\"]]")
         .when()
@@ -351,8 +334,6 @@ public abstract class SetMessagesMethodTest {
 
         // When
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
         .when()
@@ -385,8 +366,6 @@ public abstract class SetMessagesMethodTest {
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
         // When
@@ -394,8 +373,6 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
         // Then
         with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
                 .post("/jmap")
@@ -418,8 +395,6 @@ public abstract class SetMessagesMethodTest {
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
@@ -442,8 +417,6 @@ public abstract class SetMessagesMethodTest {
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
@@ -451,8 +424,6 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
         // Then
         with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
                 .post("/jmap")
@@ -475,8 +446,6 @@ public abstract class SetMessagesMethodTest {
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
@@ -499,8 +468,6 @@ public abstract class SetMessagesMethodTest {
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
@@ -508,8 +475,6 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
         // Then
         with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
                 .post("/jmap")
@@ -531,8 +496,6 @@ public abstract class SetMessagesMethodTest {
         String messageId = username + "|mailbox|1";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\" } } }, \"#0\"]]", messageId))
         .when()
@@ -561,8 +524,6 @@ public abstract class SetMessagesMethodTest {
         String messageId = username + "|mailbox|1";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\", \"isFlagged\" : 456 } } }, \"#0\"]]", messageId))
         .when()
@@ -591,8 +552,6 @@ public abstract class SetMessagesMethodTest {
         String presumedMessageId = username + "|mailbox|1";
         // When
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
         .when()
@@ -614,8 +573,6 @@ public abstract class SetMessagesMethodTest {
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
@@ -623,8 +580,6 @@ public abstract class SetMessagesMethodTest {
                 .post("/jmap");
         // Then
         with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
                 .post("/jmap")
@@ -642,8 +597,6 @@ public abstract class SetMessagesMethodTest {
         String nonExistingMessageId = username + "|mailbox|12345";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", nonExistingMessageId))
         .when()
@@ -679,8 +632,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         .when()
@@ -736,8 +687,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         // When
@@ -746,8 +695,6 @@ public abstract class SetMessagesMethodTest {
 
         // Then
         with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
         .post("/jmap")
@@ -788,8 +735,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         // When
@@ -803,8 +748,6 @@ public abstract class SetMessagesMethodTest {
     private boolean messageHasBeenMovedToSentBox(String sentMailboxId) {
         try {
             with()
-                    .accept(ContentType.JSON)
-                    .contentType(ContentType.JSON)
                     .header("Authorization", accessToken.serialize())
                     .body("[[\"getMessageList\", {\"fetchMessages\":true, \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
             .when()
@@ -841,8 +784,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
                 .when()
@@ -878,8 +819,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         .when()
@@ -918,8 +857,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         .when()
@@ -957,8 +894,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         .when()
@@ -1003,8 +938,6 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         // When
@@ -1036,8 +969,6 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body(requestBody)
         .when()
@@ -1075,8 +1006,6 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(requestBody)
         .when()
@@ -1126,8 +1055,6 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body(requestBody)
         // When
@@ -1172,8 +1099,6 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body(requestBody)
         // When
@@ -1183,8 +1108,6 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", recipientToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
         .when()
@@ -1235,8 +1158,6 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body(requestBody)
         // When
@@ -1246,8 +1167,6 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> messageHasBeenMovedToSentBox(sentMailboxId));
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", this.accessToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"bcc\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
         .when()
@@ -1299,8 +1218,6 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body(requestBody)
         // When
@@ -1310,8 +1227,6 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInRecipientsMailboxes(bccToken));
         with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", bccToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
         .when()
@@ -1327,8 +1242,6 @@ public abstract class SetMessagesMethodTest {
     private boolean isAnyMessageFoundInRecipientsMailboxes(AccessToken recipientToken) {
         try {
             with()
-                    .accept(ContentType.JSON)
-                    .contentType(ContentType.JSON)
                     .header("Authorization", recipientToken.serialize())
                     .body("[[\"getMessageList\", {}, \"#0\"]]")
             .when()
@@ -1377,8 +1290,6 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", this.accessToken.serialize())
                 .body(requestBody)
         // When
@@ -1392,8 +1303,6 @@ public abstract class SetMessagesMethodTest {
     private boolean isHtmlMessageReceived(AccessToken recipientToken) {
         try {
             with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", recipientToken.serialize())
                 .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"htmlBody\"]}, \"#0\"]]")
             .post("/jmap")

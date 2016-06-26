@@ -36,6 +36,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class AbstractJamesServerTest {
@@ -55,8 +56,12 @@ public abstract class AbstractJamesServerTest {
         socketChannel = SocketChannel.open();
         server.start();
 
-        RestAssured.port = server.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(server.getJmapPort())
+        		.build();
     }
 
     protected abstract GuiceJamesServer createJamesServer();
@@ -118,8 +123,6 @@ public abstract class AbstractJamesServerTest {
     @Test
     public void connectJMAPServerShouldRespondBadRequest() throws Exception {
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
             .body("{\"badAttributeName\": \"value\"}")
         .when()
             .post("/authentication")

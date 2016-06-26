@@ -48,6 +48,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class GetMessageListMethodTest {
@@ -67,8 +68,12 @@ public abstract class GetMessageListMethodTest {
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
 
         this.domain = "domain.tld";
         this.username = "username@" + domain;
@@ -86,8 +91,6 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldErrorInvalidArgumentsWhenRequestIsInvalid() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\": true}, \"#0\"]]")
         .when()
@@ -111,8 +114,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
@@ -135,8 +136,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
@@ -168,8 +167,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
@@ -189,16 +186,12 @@ public abstract class GetMessageListMethodTest {
 
         String mailboxId = 
                 with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap")
                 .path("[0][1].list[0].id");
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
         .when()
@@ -220,16 +213,12 @@ public abstract class GetMessageListMethodTest {
 
         List<String> mailboxIds = 
                 with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", accessToken.serialize())
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap")
                 .path("[0][1].list.id");
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"%s\", \"%s\"]}}, \"#0\"]]", mailboxIds.get(0), mailboxIds.get(1)))
         .when()
@@ -251,8 +240,6 @@ public abstract class GetMessageListMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[\"%s\"]}}, \"#0\"]]", mailboxId.serialize()))
         .when()
@@ -277,8 +264,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[\"%s\", \"%s\"]}}, \"#0\"]]", mailboxId.serialize(), mailbox2Id.serialize()))
         .when()
@@ -298,8 +283,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[\"%s\"], \"inMailboxes\":[\"%s\"]}}, \"#0\"]]", mailboxId.serialize(), mailboxId.serialize()))
         .when()
@@ -321,8 +304,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[\"%s\"]}}, \"#0\"]]", mailbox2Id.serialize()))
         .when()
@@ -343,8 +324,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body(String.format("[[\"getMessageList\", {\"filter\":{\"notInMailboxes\":[]}}, \"#0\"]]"))
         .when()
@@ -364,8 +343,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"mailbox2\"]}}, \"#0\"]]")
         .when()
@@ -387,8 +364,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"sort\":[\"date\"]}, \"#0\"]]")
         .when()
@@ -411,8 +386,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"sort\":[\"date asc\"]}, \"#0\"]]")
         .when()
@@ -435,8 +408,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"sort\":[\"date desc\"]}, \"#0\"]]")
         .when()
@@ -450,8 +421,6 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldWorkWhenCollapseThreadIsFalse() {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"collapseThreads\":false}, \"#0\"]]")
         .when()
@@ -464,8 +433,6 @@ public abstract class GetMessageListMethodTest {
     @Test
     public void getMessageListShouldWorkWhenCollapseThreadIsTrue() {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"collapseThreads\":true}, \"#0\"]]")
         .when()
@@ -487,8 +454,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
@@ -511,8 +476,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"position\":1}, \"#0\"]]")
         .when()
@@ -535,8 +498,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
@@ -559,8 +520,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"limit\":1}, \"#0\"]]")
         .when()
@@ -587,8 +546,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
@@ -609,8 +566,6 @@ public abstract class GetMessageListMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"fetchMessages\":true}, \"#0\"]]")
         .when()

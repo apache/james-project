@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.equalTo;
@@ -41,6 +41,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InetAddresses;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
@@ -72,19 +73,20 @@ public class ForwardSmtpTest extends AbstractSimpleScriptedTestProtocol {
             .registerRecord("yopmail.com", new InetAddress[]{containerIp}, ImmutableList.of("yopmail.com"), ImmutableList.of());
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
-        RestAssured.port = 80;
-        RestAssured.baseURI = "http://" + containerIp.getHostAddress();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(80)
+        		.setBaseUri("http://" + containerIp.getHostAddress())
+        		.build();
     }
 
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
         scriptTest("helo", Locale.US);
 
-        given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
-        .when()
+        when()
             .get("/api/email")
         .then()
             .statusCode(200)

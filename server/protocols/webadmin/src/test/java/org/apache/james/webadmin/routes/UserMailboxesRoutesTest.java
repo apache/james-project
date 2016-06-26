@@ -56,7 +56,8 @@ import org.junit.runner.RunWith;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.parsing.Parser;
+import com.jayway.restassured.builder.RequestSpecBuilder;
+import com.jayway.restassured.http.ContentType;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
@@ -76,10 +77,13 @@ public class UserMailboxesRoutesTest {
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
-        RestAssured.port = webAdminServer.getPort().toInt();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-        RestAssured.defaultParser = Parser.JSON;
-        RestAssured.basePath = UserRoutes.USERS + SEPARATOR + USERNAME + SEPARATOR + UserMailboxesRoutes.MAILBOXES;
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setBasePath(UserRoutes.USERS + SEPARATOR + USERNAME + SEPARATOR + UserMailboxesRoutes.MAILBOXES)
+        		.setPort(webAdminServer.getPort().toInt())
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.build();
     }
 
     @After

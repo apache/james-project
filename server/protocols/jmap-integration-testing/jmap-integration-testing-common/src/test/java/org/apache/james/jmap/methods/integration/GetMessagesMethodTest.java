@@ -46,6 +46,8 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
+import com.jayway.restassured.filter.log.LogDetail;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class GetMessagesMethodTest {
@@ -68,8 +70,14 @@ public abstract class GetMessagesMethodTest {
     public void setup() throws Throwable {
         jmapServer = createJmapServer();
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+        
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
+
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
         String domain = "domain.tld";
@@ -89,8 +97,6 @@ public abstract class GetMessagesMethodTest {
     @Test
     public void getMessagesShouldErrorNotSupportedWhenRequestContainsNonNullAccountId() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"accountId\": \"1\"}, \"#0\"]]")
         .when()
@@ -104,8 +110,6 @@ public abstract class GetMessagesMethodTest {
     @Test
     public void getMessagesShouldIgnoreUnknownArguments() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"WAT\": true}, \"#0\"]]")
         .when()
@@ -119,8 +123,6 @@ public abstract class GetMessagesMethodTest {
     @Test
     public void getMessagesShouldErrorInvalidArgumentsWhenRequestContainsInvalidArgument() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": null}, \"#0\"]]")
         .when()
@@ -135,8 +137,6 @@ public abstract class GetMessagesMethodTest {
     @Test
     public void getMessagesShouldReturnEmptyListWhenNoMessage() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": []}, \"#0\"]]")
         .when()
@@ -150,8 +150,6 @@ public abstract class GetMessagesMethodTest {
     @Test
     public void getMessagesShouldReturnNoFoundIndicesWhenMessageNotFound() throws Exception {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"username|inbox|12\"]}, \"#0\"]]")
         .when()
@@ -173,8 +171,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -206,8 +202,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -237,8 +231,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -268,8 +260,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -292,8 +282,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -323,8 +311,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"], \"properties\": [\"id\", \"subject\"]}, \"#0\"]]")
         .when()
@@ -358,8 +344,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"], \"properties\": [\"headers.from\", \"headers.heADER2\"]}, \"#0\"]]")
         .when()
@@ -388,8 +372,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"username|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -411,8 +393,6 @@ public abstract class GetMessagesMethodTest {
         await();
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|mailbox|1\"], \"properties\": [\"subject\"]}, \"#0\"]]")
         .when()
@@ -436,8 +416,6 @@ public abstract class GetMessagesMethodTest {
         await();
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -465,8 +443,6 @@ public abstract class GetMessagesMethodTest {
                 ClassLoader.getSystemResourceAsStream("twoAttachments.eml"), Date.from(dateTime.toInstant()), false, new Flags());
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -491,8 +467,6 @@ public abstract class GetMessagesMethodTest {
                 ClassLoader.getSystemResourceAsStream("twoAttachmentsTextPlain.eml"), Date.from(dateTime.toInstant()), false, new Flags());
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()
@@ -517,8 +491,6 @@ public abstract class GetMessagesMethodTest {
                 ClassLoader.getSystemResourceAsStream("htmlAndTextMultipartWithOneAttachment.eml"), Date.from(dateTime.toInstant()), false, new Flags());
         
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + username + "|inbox|1\"]}, \"#0\"]]")
         .when()

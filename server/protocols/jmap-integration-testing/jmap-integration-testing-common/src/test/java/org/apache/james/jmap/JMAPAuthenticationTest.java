@@ -40,6 +40,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class JMAPAuthenticationTest {
@@ -60,9 +61,10 @@ public abstract class JMAPAuthenticationTest {
         zonedDateTimeProvider.setFixedDateTime(oldDate);
         jmapServer = createJmapServer(zonedDateTimeProvider);
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
-
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
         
         userCredentials = UserCredentials.builder()
                 .username("user@domain.tld")

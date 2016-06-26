@@ -42,6 +42,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public abstract class GetVacationResponseTest {
@@ -65,8 +66,14 @@ public abstract class GetVacationResponseTest {
     public void setup() throws Throwable {
         jmapServer = createJmapServer(new FixedDateZonedDateTimeProvider(ZONED_DATE_TIME_2014));
         jmapServer.start();
-        RestAssured.port = jmapServer.getJmapPort();
-        RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));
+
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+        		.setContentType(ContentType.JSON)
+        		.setAccept(ContentType.JSON)
+        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+        		.setPort(jmapServer.getJmapPort())
+        		.build();
+
 
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
         jmapServer.serverProbe().addUser(USER, PASSWORD);
@@ -83,8 +90,6 @@ public abstract class GetVacationResponseTest {
     @Test
     public void getVacationResponseShouldReturnDefaultValue() {
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[" +
                 "\"getVacationResponse\", " +
@@ -120,8 +125,6 @@ public abstract class GetVacationResponseTest {
                 .build());
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[" +
                 "\"getVacationResponse\", " +
@@ -155,8 +158,6 @@ public abstract class GetVacationResponseTest {
                 .build());
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[" +
                 "\"getVacationResponse\", " +
@@ -188,8 +189,6 @@ public abstract class GetVacationResponseTest {
                 .build());
 
         given()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", accessToken.serialize())
             .body("[[" +
                 "\"getVacationResponse\", " +

@@ -31,9 +31,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
-import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
-import com.jayway.restassured.specification.RequestSpecification;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -64,35 +62,25 @@ public class DownloadStepdefs {
 
     @When("^checking for the availability of the attachment endpoint$")
     public void optionDownload() throws Throwable {
-        RequestSpecification requestSpecification = with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON);
-
         if (userStepdefs.accessToken != null) {
-            requestSpecification.header("Authorization", userStepdefs.accessToken.serialize());
+            with().header("Authorization", userStepdefs.accessToken.serialize());
         }
 
-        response = requestSpecification.options("/download/myBlob");
+        response = with().options("/download/myBlob");
     }
 
     @When("^asking for an attachment$")
     public void getDownload() throws Exception {
-        RequestSpecification requestSpecification = with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON);
-
         if (userStepdefs.accessToken != null) {
-            requestSpecification.header("Authorization", userStepdefs.accessToken.serialize());
+            with().header("Authorization", userStepdefs.accessToken.serialize());
         }
 
-        response = requestSpecification.get("/download/myBlob");
+        response = with().get("/download/myBlob");
     }
 
     @When("^asking for an attachment without blobId parameter$")
     public void getDownloadWithoutBlobId() throws Throwable {
         response = with()
-            .accept(ContentType.JSON)
-            .contentType(ContentType.JSON)
             .header("Authorization", userStepdefs.accessToken.serialize())
             .get("/download/");
     }
@@ -100,8 +88,6 @@ public class DownloadStepdefs {
     @When("^getting the attachment with its correct blobId$")
     public void getDownloadWithKnownBlobId() throws Throwable {
         response = with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", userStepdefs.accessToken.serialize())
                 .get("/download/4000c5145f633410b80be368c44e1c394bff9437");
     }
@@ -109,8 +95,6 @@ public class DownloadStepdefs {
     @When("^getting the attachment with an unknown blobId$")
     public void getDownloadWithUnknownBlobId() throws Throwable {
         response = with()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
                 .header("Authorization", userStepdefs.accessToken.serialize())
                 .get("/download/badbadbadbadbadbadbadbadbadbadbadbadbadb");
     }
