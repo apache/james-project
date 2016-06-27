@@ -20,68 +20,120 @@
 package org.apache.james.jmap.api.vacation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.util.PatchedValue;
-import org.junit.Before;
 import org.junit.Test;
 
-public abstract class AbstractVacationRepositoryTest {
+public class VacationPatchTest {
 
-    public static final AccountId ACCOUNT_ID = AccountId.fromString("identifier");
     public static final ZonedDateTime DATE_2014 = ZonedDateTime.parse("2014-04-03T02:01+07:00[Asia/Vientiane]");
     public static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-04-03T02:01+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime DATE_2016 = ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]");
     public static final ZonedDateTime DATE_2017 = ZonedDateTime.parse("2017-04-03T02:01+07:00[Asia/Vientiane]");
     public static final Vacation VACATION = Vacation.builder()
-        .fromDate(Optional.of(DATE_2015))
-        .toDate(Optional.of(DATE_2016))
+        .fromDate(Optional.of(DATE_2014))
+        .toDate(Optional.of(DATE_2015))
         .enabled(true)
         .subject(Optional.of("subject"))
         .textBody("anyMessage")
         .htmlBody("html Message")
         .build();
 
-
-    private VacationRepository vacationRepository;
-
-    protected abstract VacationRepository createVacationRepository();
-
-    @Before
-    public void setUp() {
-        vacationRepository = createVacationRepository();
+    @Test
+    public void fromDateShouldThrowNPEOnNullInput() {
+        assertThatThrownBy(() -> VacationPatch.builder().fromDate((PatchedValue) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void retrieveVacationShouldReturnDefaultValueByDefault() {
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join()).isEqualTo(VacationRepository.DEFAULT_VACATION);
+    public void toDateShouldThrowNPEOnNullInput() {
+        assertThatThrownBy(() -> VacationPatch.builder().toDate((PatchedValue) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void modifyVacationShouldUpdateEnabled() {
-        VacationPatch vacationPatch = VacationPatch.builder()
-            .isEnabled(true)
+    public void textBodyShouldThrowNPEOnNullInput() {
+        assertThatThrownBy(() -> VacationPatch.builder().textBody((PatchedValue) null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void htmlBodyShouldThrowNPEOnNullInput() {
+        assertThatThrownBy(() -> VacationPatch.builder().htmlBody((PatchedValue) null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void subjectShouldThrowNPEOnNullInput() {
+        assertThatThrownBy(() -> VacationPatch.builder().subject((PatchedValue) null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void isEnabledShouldThrowNPEOnNullInput() {
+        assertThatThrownBy(() -> VacationPatch.builder().isEnabled((PatchedValue) null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void isIdentityShouldBeTrueWhenUpdateIsEmpty() {
+        assertThat(
+            VacationPatch.builder()
+                .build()
+                .isIdentity())
+            .isTrue();
+    }
+
+    @Test
+    public void isIdentityShouldBeFalseWhenUpdateIsNotEmpty() {
+        assertThat(
+            VacationPatch.builder()
+                .subject(PatchedValue.modifyTo("any subject"))
+                .build()
+                .isIdentity())
+            .isFalse();
+    }
+
+    @Test
+    public void builderShouldWellSetFields() {
+        PatchedValue<String> subject = PatchedValue.modifyTo("subject");
+        PatchedValue<String> htmlBody = PatchedValue.modifyTo("html text");
+        PatchedValue<String> textBody = PatchedValue.modifyTo("simple text");
+        PatchedValue<Boolean> isEnabled = PatchedValue.modifyTo(true);
+
+        VacationPatch update = VacationPatch.builder()
+            .fromDate(PatchedValue.modifyTo(DATE_2014))
+            .toDate(PatchedValue.modifyTo(DATE_2015))
+            .subject(subject)
+            .htmlBody(htmlBody)
+            .textBody(textBody)
+            .isEnabled(isEnabled)
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
+        assertThat(update.getFromDate()).isEqualTo(PatchedValue.modifyTo(DATE_2014));
+        assertThat(update.getToDate()).isEqualTo(PatchedValue.modifyTo(DATE_2015));
+        assertThat(update.getSubject()).isEqualTo(subject);
+        assertThat(update.getHtmlBody()).isEqualTo(htmlBody);
+        assertThat(update.getTextBody()).isEqualTo(textBody);
+        assertThat(update.getIsEnabled()).isEqualTo(isEnabled);
+    }
 
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+    @Test
+    public void patchVacationShouldUpdateEnabled() {
+        VacationPatch vacationPatch = VacationPatch.builder()
+            .isEnabled(PatchedValue.modifyTo(true))
+            .build();
+
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(Vacation.builder()
                 .enabled(true)
                 .build());
     }
 
     @Test
-    public void modifyVacationShouldUpdateFromDate() {
+    public void patchVacationShouldUpdateFromDate() {
         VacationPatch vacationPatch = VacationPatch.builder()
-            .fromDate(DATE_2014)
+            .fromDate(PatchedValue.modifyTo(DATE_2014))
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(Vacation.builder()
                 .fromDate(Optional.of(DATE_2014))
                 .enabled(false)
@@ -89,14 +141,12 @@ public abstract class AbstractVacationRepositoryTest {
     }
 
     @Test
-    public void modifyVacationShouldUpdateToDate() {
+    public void patchVacationShouldUpdateToDate() {
         VacationPatch vacationPatch = VacationPatch.builder()
-            .toDate(DATE_2017)
+            .toDate(PatchedValue.modifyTo(DATE_2017))
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(Vacation.builder()
                 .toDate(Optional.of(DATE_2017))
                 .enabled(false)
@@ -104,15 +154,13 @@ public abstract class AbstractVacationRepositoryTest {
     }
 
     @Test
-    public void modifyVacationShouldUpdateSubject() {
+    public void patchVacationShouldUpdateSubject() {
         String newSubject = "new subject";
         VacationPatch vacationPatch = VacationPatch.builder()
-            .subject(newSubject)
+            .subject(PatchedValue.modifyTo(newSubject))
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(Vacation.builder()
                 .subject(Optional.of(newSubject))
                 .enabled(false)
@@ -120,15 +168,13 @@ public abstract class AbstractVacationRepositoryTest {
     }
 
     @Test
-    public void modifyVacationShouldUpdateTextBody() {
+    public void patchVacationShouldUpdateTextBody() {
         String newTextBody = "new text body";
         VacationPatch vacationPatch = VacationPatch.builder()
-            .textBody(newTextBody)
+            .textBody(PatchedValue.modifyTo(newTextBody))
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(Vacation.builder()
                 .textBody(newTextBody)
                 .enabled(false)
@@ -136,15 +182,13 @@ public abstract class AbstractVacationRepositoryTest {
     }
 
     @Test
-    public void modifyVacationShouldUpdateHtmlBody() {
+    public void patchVacationShouldUpdateHtmlBody() {
         String newHtmlBody = "new <b>html</b> body";
         VacationPatch vacationPatch = VacationPatch.builder()
-            .htmlBody(newHtmlBody)
+            .htmlBody(PatchedValue.modifyTo(newHtmlBody))
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(Vacation.builder()
                 .enabled(false)
                 .htmlBody(newHtmlBody)
@@ -152,61 +196,35 @@ public abstract class AbstractVacationRepositoryTest {
     }
 
     @Test
-    public void modifyVacationShouldAllowToUpdateAllFieldsAtOnce() {
-        VacationPatch vacationPatch = VacationPatch.builderFrom(VACATION)
+    public void patchVacationShouldAllowToUpdateAllFieldsAtOnce() {
+        VacationPatch vacationPatch = VacationPatch.builder()
+            .subject(PatchedValue.ofOptional(VACATION.getSubject()))
+            .textBody(PatchedValue.ofOptional(VACATION.getTextBody()))
+            .htmlBody(PatchedValue.ofOptional(VACATION.getHtmlBody()))
+            .fromDate(PatchedValue.ofOptional(VACATION.getFromDate()))
+            .toDate(PatchedValue.ofOptional(VACATION.getToDate()))
+            .isEnabled(PatchedValue.modifyTo(VACATION.isEnabled()))
             .build();
 
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+        assertThat(vacationPatch.patch(VacationRepository.DEFAULT_VACATION))
             .isEqualTo(VACATION);
     }
 
     @Test
-    public void modifyVacationShouldAllowEmptyUpdates() {
-        VacationPatch vacationPatch = VacationPatch.builder()
-            .build();
-
-        vacationRepository.modifyVacation(ACCOUNT_ID, vacationPatch).join();
-
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
-            .isEqualTo(VacationRepository.DEFAULT_VACATION);
-    }
-
-    @Test
-    public void emptyUpdatesShouldNotChangeExistingVacations() {
-        // Given
-        vacationRepository.modifyVacation(ACCOUNT_ID,
-            VacationPatch.builderFrom(VACATION)
-                .build())
-            .join();
-
-        // When
-        vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
-            .build())
-            .join();
-
-        // Then
-        assertThat(vacationRepository.retrieveVacation(ACCOUNT_ID).join())
+    public void emptyPatchesShouldNotChangeExistingVacations() {
+        assertThat(VacationPatch.builder()
+            .build()
+            .patch(VACATION))
             .isEqualTo(VACATION);
     }
 
     @Test
     public void nullUpdateShouldResetSubject() {
-        // Given
-        vacationRepository.modifyVacation(ACCOUNT_ID,
-            VacationPatch.builderFrom(VACATION)
-                .build())
-            .join();
-
-        // When
-        vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        Vacation vacation = VacationPatch.builderFrom(VACATION)
             .subject(PatchedValue.remove())
-            .build())
-            .join();
+            .build()
+            .patch(VACATION);
 
-        // Then
-        Vacation vacation = vacationRepository.retrieveVacation(ACCOUNT_ID).join();
         assertThat(vacation.getSubject()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -220,20 +238,11 @@ public abstract class AbstractVacationRepositoryTest {
 
     @Test
     public void nullUpdateShouldResetText() {
-        // Given
-        vacationRepository.modifyVacation(ACCOUNT_ID,
-            VacationPatch.builderFrom(VACATION)
-                .build())
-            .join();
-
-        // When
-        vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        Vacation vacation = VacationPatch.builderFrom(VACATION)
             .textBody(PatchedValue.remove())
-            .build())
-            .join();
+            .build()
+            .patch(VACATION);
 
-        // Then
-        Vacation vacation = vacationRepository.retrieveVacation(ACCOUNT_ID).join();
         assertThat(vacation.getTextBody()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -247,20 +256,11 @@ public abstract class AbstractVacationRepositoryTest {
 
     @Test
     public void nullUpdateShouldResetHtml() {
-        // Given
-        vacationRepository.modifyVacation(ACCOUNT_ID,
-            VacationPatch.builderFrom(VACATION)
-                .build())
-            .join();
-
-        // When
-        vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        Vacation vacation = VacationPatch.builderFrom(VACATION)
             .htmlBody(PatchedValue.remove())
-            .build())
-            .join();
+            .build()
+            .patch(VACATION);
 
-        // Then
-        Vacation vacation = vacationRepository.retrieveVacation(ACCOUNT_ID).join();
         assertThat(vacation.getHtmlBody()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -274,20 +274,11 @@ public abstract class AbstractVacationRepositoryTest {
 
     @Test
     public void nullUpdateShouldResetToDate() {
-        // Given
-        vacationRepository.modifyVacation(ACCOUNT_ID,
-            VacationPatch.builderFrom(VACATION)
-                .build())
-            .join();
-
-        // When
-        vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        Vacation vacation = VacationPatch.builderFrom(VACATION)
             .toDate(PatchedValue.remove())
-            .build())
-            .join();
+            .build()
+            .patch(VACATION);
 
-        // Then
-        Vacation vacation = vacationRepository.retrieveVacation(ACCOUNT_ID).join();
         assertThat(vacation.getToDate()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -301,20 +292,11 @@ public abstract class AbstractVacationRepositoryTest {
 
     @Test
     public void nullUpdateShouldResetFromDate() {
-        // Given
-        vacationRepository.modifyVacation(ACCOUNT_ID,
-            VacationPatch.builderFrom(VACATION)
-                .build())
-            .join();
-
-        // When
-        vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        Vacation vacation = VacationPatch.builderFrom(VACATION)
             .fromDate(PatchedValue.remove())
-            .build())
-            .join();
+            .build()
+            .patch(VACATION);
 
-        // Then
-        Vacation vacation = vacationRepository.retrieveVacation(ACCOUNT_ID).join();
         assertThat(vacation.getFromDate()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -324,21 +306,6 @@ public abstract class AbstractVacationRepositoryTest {
                 .textBody(VACATION.getTextBody())
                 .htmlBody(VACATION.getHtmlBody())
                 .build());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void retrieveVacationShouldThrowOnNullAccountId() {
-        vacationRepository.retrieveVacation(null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void modifyVacationShouldThrowOnNullAccountId() {
-        vacationRepository.modifyVacation(null, VacationPatch.builder().build());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void modifyVacationShouldThrowOnNullVacation() {
-        vacationRepository.modifyVacation(ACCOUNT_ID, null);
     }
 
 }

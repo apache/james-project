@@ -25,7 +25,7 @@ public interface VacationRepository {
 
     Vacation DEFAULT_VACATION = Vacation.builder().enabled(false).build();
 
-    CompletableFuture<Void> modifyVacation(AccountId accountId, Vacation vacation);
+    CompletableFuture<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch);
 
     CompletableFuture<Vacation> retrieveVacation(AccountId accountId);
 

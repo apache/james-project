@@ -36,6 +36,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.jmap.api.vacation.VacationUpdate;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -356,8 +357,8 @@ public class GuiceServerProbe implements ExtendedServerProbe {
     }
 
     @Override
-    public void modifyVacation(AccountId accountId, Vacation vacation) {
-        vacationRepository.modifyVacation(accountId, vacation).join();
+    public void modifyVacation(AccountId accountId, VacationUpdate vacationUpdate) {
+        vacationRepository.modifyVacation(accountId, vacationUpdate).join();
     }
 
     @Override
