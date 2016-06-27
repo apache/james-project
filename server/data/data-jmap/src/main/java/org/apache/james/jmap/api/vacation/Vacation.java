@@ -100,9 +100,6 @@ public class Vacation {
 
         public Vacation build() {
             boolean enabled = isEnabled.orElse(DEFAULT_DISABLED);
-            if (enabled) {
-                Preconditions.checkState(textBody.isPresent() || htmlBody.isPresent(), "textBody or htmlBody property of vacationResponse object should not be null when enabled");
-            }
             return new Vacation(enabled, fromDate, toDate, textBody, subject, htmlBody);
         }
     }

@@ -192,15 +192,6 @@ public class VacationTest {
     }
 
     @Test
-    public void activeVacationShouldHaveHtmlBodyOrTextBody() {
-        assertThatThrownBy(
-            () -> Vacation.builder()
-                .enabled(true)
-                .build())
-            .isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
     public void textBodyShouldBeEnoughToBuildAnActivatedVacation() {
         assertThat(
             Vacation.builder()
