@@ -30,10 +30,12 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +46,7 @@ import com.jayway.restassured.http.ContentType;
 
 public abstract class GetVacationResponseTest {
 
+    private static final ZonedDateTime ZONED_DATE_TIME_2014 = ZonedDateTime.parse("2014-10-15T14:10:00Z");
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String USERS_DOMAIN = "domain.tld";
@@ -51,7 +54,7 @@ public abstract class GetVacationResponseTest {
     public static final String PASSWORD = "password";
     public static final String SUBJECT = "subject";
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider);
 
     protected abstract void await();
 
@@ -60,7 +63,7 @@ public abstract class GetVacationResponseTest {
 
     @Before
     public void setup() throws Throwable {
-        jmapServer = createJmapServer();
+        jmapServer = createJmapServer(new FixedDateZonedDateTimeProvider(ZONED_DATE_TIME_2014));
         jmapServer.start();
         RestAssured.port = jmapServer.getJmapPort();
         RestAssured.config = newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8));

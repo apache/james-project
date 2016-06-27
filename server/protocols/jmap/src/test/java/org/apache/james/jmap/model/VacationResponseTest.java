@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.jmap.api.vacation.Vacation;
 import org.junit.Test;
 
 public class VacationResponseTest {
@@ -35,6 +36,9 @@ public class VacationResponseTest {
     public static final ZonedDateTime FROM_DATE = ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]");
     public static final ZonedDateTime TO_DATE = ZonedDateTime.parse("2016-04-16T11:56:32.224+07:00[Asia/Vientiane]");
     public static final String SUBJECT = "subject";
+    public static final ZonedDateTime ZONED_DATE_TIME_2014 = ZonedDateTime.parse("2014-09-30T14:10:00Z");
+    public static final ZonedDateTime ZONED_DATE_TIME_2015 = ZonedDateTime.parse("2015-09-30T14:10:00Z");
+    public static final ZonedDateTime ZONED_DATE_TIME_2016 = ZonedDateTime.parse("2016-09-30T14:10:00Z");
 
     @Test
     public void vacationResponseBuilderShouldBeConstructedWithTheRightInformation() {
@@ -106,6 +110,54 @@ public class VacationResponseTest {
         assertThat(vacationResponse.isEnabled()).isEqualTo(true);
         assertThat(vacationResponse.getTextBody()).isEmpty();
         assertThat(vacationResponse.getHtmlBody()).contains(MESSAGE);
+    }
+
+    @Test
+    public void fromVacationShouldMarkOutDatedVacationAsDisabled() {
+        VacationResponse vacationResponse = VacationResponse.builder()
+            .fromVacation(
+                Vacation.builder()
+                    .enabled(true)
+                    .textBody("Any text")
+                    .fromDate(Optional.of(ZONED_DATE_TIME_2014))
+                    .toDate(Optional.of(ZONED_DATE_TIME_2015))
+                    .build(),
+                ZONED_DATE_TIME_2016)
+            .build();
+
+        assertThat(vacationResponse.isEnabled()).isFalse();
+    }
+
+    @Test
+    public void fromVacationShouldMarkTooEarlyVacationAsDisabled() {
+        VacationResponse vacationResponse = VacationResponse.builder()
+            .fromVacation(
+                Vacation.builder()
+                    .enabled(true)
+                    .textBody("Any text")
+                    .fromDate(Optional.of(ZONED_DATE_TIME_2015))
+                    .toDate(Optional.of(ZONED_DATE_TIME_2016))
+                    .build(),
+                ZONED_DATE_TIME_2014)
+            .build();
+
+        assertThat(vacationResponse.isEnabled()).isFalse();
+    }
+
+    @Test
+    public void fromVacationShouldMarkInRangeVacationAsEnabled() {
+        VacationResponse vacationResponse = VacationResponse.builder()
+            .fromVacation(
+                Vacation.builder()
+                    .enabled(true)
+                    .textBody("Any text")
+                    .fromDate(Optional.of(ZONED_DATE_TIME_2014))
+                    .toDate(Optional.of(ZONED_DATE_TIME_2016))
+                    .build(),
+                ZONED_DATE_TIME_2015)
+            .build();
+
+        assertThat(vacationResponse.isEnabled()).isTrue();
     }
 
 }
