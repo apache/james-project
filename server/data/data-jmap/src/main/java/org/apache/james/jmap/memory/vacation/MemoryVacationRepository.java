@@ -21,11 +21,13 @@ package org.apache.james.jmap.memory.vacation;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
+import org.apache.james.jmap.api.vacation.VacationPatch;
 
 import com.google.common.base.Preconditions;
 
@@ -44,10 +46,13 @@ public class MemoryVacationRepository implements VacationRepository {
     }
 
     @Override
-    public CompletableFuture<Void> modifyVacation(AccountId accountId, Vacation vacation) {
+    public CompletableFuture<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
         Preconditions.checkNotNull(accountId);
-        Preconditions.checkNotNull(vacation);
-        vacationMap.put(accountId, vacation);
+        Preconditions.checkNotNull(vacationPatch);
+        Vacation oldVacation = retrieveVacation(accountId).join();
+        vacationMap.put(accountId, vacationPatch.patch(oldVacation));
         return CompletableFuture.completedFuture(null);
     }
+
+
 }
