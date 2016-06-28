@@ -26,7 +26,6 @@ import java.util.Optional;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.json.OptionalZonedDateTimeDeserializer;
 import org.apache.james.jmap.json.OptionalZonedDateTimeSerializer;
-import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
