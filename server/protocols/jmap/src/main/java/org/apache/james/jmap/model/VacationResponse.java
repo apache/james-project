@@ -19,13 +19,17 @@
 
 package org.apache.james.jmap.model;
 
+import static org.apache.james.jmap.api.vacation.Vacation.DEFAULT_DISABLED;
+
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.json.OptionalZonedDateTimeDeserializer;
 import org.apache.james.jmap.json.OptionalZonedDateTimeSerializer;
+import org.apache.james.util.PatchedValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,31 +41,29 @@ import com.google.common.base.Preconditions;
 @JsonDeserialize(builder = VacationResponse.Builder.class)
 public class VacationResponse {
 
-    public static final boolean DEFAULT_DISABLED = false;
-
     public static Builder builder() {
         return new Builder();
     }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private String id;
-        private Optional<Boolean> isEnabled = Optional.empty();
-        private Optional<ZonedDateTime> fromDate = Optional.empty();
-        private Optional<ZonedDateTime> toDate = Optional.empty();
-        private Optional<String> subject = Optional.empty();
-        private Optional<String> textBody = Optional.empty();
-        private Optional<String> htmlBody = Optional.empty();
+        private PatchedValue<String> id = PatchedValue.keep();
+        private PatchedValue<Boolean> isEnabled = PatchedValue.keep();
+        private PatchedValue<ZonedDateTime> fromDate = PatchedValue.keep();
+        private PatchedValue<ZonedDateTime> toDate = PatchedValue.keep();
+        private PatchedValue<String> subject = PatchedValue.keep();
+        private PatchedValue<String> textBody = PatchedValue.keep();
+        private PatchedValue<String> htmlBody = PatchedValue.keep();
         private Optional<Boolean> isActivated = Optional.empty();
 
         public Builder id(String id) {
-            this.id = id;
+            this.id = PatchedValue.modifyTo(id);
             return this;
         }
 
         @JsonProperty("isEnabled")
         public Builder enabled(boolean enabled) {
-            isEnabled = Optional.of(enabled);
+            isEnabled = PatchedValue.modifyTo(enabled);
             return this;
         }
 
@@ -79,67 +81,58 @@ public class VacationResponse {
 
         @JsonDeserialize(using = OptionalZonedDateTimeDeserializer.class)
         public Builder fromDate(Optional<ZonedDateTime> fromDate) {
-            Preconditions.checkNotNull(fromDate);
-            this.fromDate = fromDate;
+            this.fromDate = PatchedValue.ofOptional(fromDate);
             return this;
         }
 
         @JsonDeserialize(using = OptionalZonedDateTimeDeserializer.class)
         public Builder toDate(Optional<ZonedDateTime> toDate) {
-            Preconditions.checkNotNull(toDate);
-            this.toDate = toDate;
+            this.toDate = PatchedValue.ofOptional(toDate);
             return this;
         }
 
         public Builder textBody(Optional<String> textBody) {
-            Preconditions.checkNotNull(textBody);
-            this.textBody = textBody;
+            this.textBody = PatchedValue.ofOptional(textBody);
             return this;
         }
 
         public Builder subject(Optional<String> subject) {
-            Preconditions.checkNotNull(subject);
-            this.subject = subject;
+            this.subject = PatchedValue.ofOptional(subject);
             return this;
         }
 
         public Builder htmlBody(Optional<String> htmlBody) {
-            Preconditions.checkNotNull(htmlBody);
-            this.htmlBody = htmlBody;
+            this.htmlBody = PatchedValue.ofOptional(htmlBody);
             return this;
         }
 
         public Builder fromVacation(Vacation vacation) {
-            this.id = Vacation.ID;
-            this.isEnabled = Optional.of(vacation.isEnabled());
-            this.fromDate = vacation.getFromDate();
-            this.toDate = vacation.getToDate();
-            this.textBody = vacation.getTextBody();
-            this.subject = vacation.getSubject();
-            this.htmlBody = vacation.getHtmlBody();
+            this.id = PatchedValue.modifyTo(Vacation.ID);
+            this.isEnabled = PatchedValue.modifyTo(vacation.isEnabled());
+            this.fromDate = PatchedValue.ofOptional(vacation.getFromDate());
+            this.toDate = PatchedValue.ofOptional(vacation.getToDate());
+            this.textBody = PatchedValue.ofOptional(vacation.getTextBody());
+            this.subject = PatchedValue.ofOptional(vacation.getSubject());
+            this.htmlBody = PatchedValue.ofOptional(vacation.getHtmlBody());
             return this;
         }
 
         public VacationResponse build() {
-            boolean enabled = isEnabled.orElse(DEFAULT_DISABLED);
-            if (enabled) {
-                Preconditions.checkState(textBody.isPresent() || htmlBody.isPresent(), "textBody or htmlBody property of vacationResponse object should not be null when enabled");
-            }
-            return new VacationResponse(id, enabled, fromDate, toDate, textBody, subject, htmlBody, isActivated);
+            return new VacationResponse(id, isEnabled, fromDate, toDate, textBody, subject, htmlBody, isActivated);
         }
     }
 
-    private final String id;
-    private final boolean isEnabled;
-    private final Optional<ZonedDateTime> fromDate;
-    private final Optional<ZonedDateTime> toDate;
-    private final Optional<String> subject;
-    private final Optional<String> textBody;
-    private final Optional<String> htmlBody;
+    private final PatchedValue<String> id;
+    private final PatchedValue<Boolean> isEnabled;
+    private final PatchedValue<ZonedDateTime> fromDate;
+    private final PatchedValue<ZonedDateTime> toDate;
+    private final PatchedValue<String> subject;
+    private final PatchedValue<String> textBody;
+    private final PatchedValue<String> htmlBody;
     private final Optional<Boolean> isActivated;
 
-    private VacationResponse(String id, boolean isEnabled, Optional<ZonedDateTime> fromDate, Optional<ZonedDateTime> toDate,
-                             Optional<String> textBody, Optional<String> subject, Optional<String> htmlBody, Optional<Boolean> isActivated) {
+    private VacationResponse(PatchedValue<String> id, PatchedValue<Boolean> isEnabled, PatchedValue<ZonedDateTime> fromDate, PatchedValue<ZonedDateTime> toDate,
+                             PatchedValue<String> textBody, PatchedValue<String> subject, PatchedValue<String> htmlBody, Optional<Boolean> isActivated) {
         this.id = id;
         this.isEnabled = isEnabled;
         this.fromDate = fromDate;
@@ -151,39 +144,56 @@ public class VacationResponse {
     }
 
     public String getId() {
-        return id;
+        return id.get();
     }
 
     @JsonProperty("isEnabled")
     public boolean isEnabled() {
-        return isEnabled;
+        return isEnabled.get();
     }
 
     @JsonSerialize(using = OptionalZonedDateTimeSerializer.class)
     public Optional<ZonedDateTime> getFromDate() {
-        return fromDate;
+        return fromDate.toOptional();
     }
 
     @JsonSerialize(using = OptionalZonedDateTimeSerializer.class)
     public Optional<ZonedDateTime> getToDate() {
-        return toDate;
+        return toDate.toOptional();
     }
 
     public Optional<String> getTextBody() {
-        return textBody;
+        return textBody.toOptional();
     }
 
     public Optional<String> getSubject() {
-        return subject;
+        return subject.toOptional();
     }
 
     public Optional<String> getHtmlBody() {
-        return htmlBody;
+        return htmlBody.toOptional();
     }
 
     @JsonIgnore
     public boolean isValid() {
-        return id.equals(Vacation.ID);
+        return isMissingOrGoodValue() && !isEnabled.isRemoved();
+    }
+
+    @JsonIgnore
+    private boolean isMissingOrGoodValue() {
+        return id.isKept() || id.toOptional().equals(Optional.of(Vacation.ID));
+    }
+
+    @JsonIgnore
+    public VacationPatch getPatch() {
+        return VacationPatch.builder()
+            .fromDate(fromDate)
+            .toDate(toDate)
+            .htmlBody(htmlBody)
+            .textBody(textBody)
+            .subject(subject)
+            .isEnabled(isEnabled)
+            .build();
     }
 
     @JsonProperty("isActivated")

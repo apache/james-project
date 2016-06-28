@@ -59,54 +59,68 @@ public class VacationResponseTest {
     }
 
     @Test
-    public void vacationResponseBuilderRequiresABodyTextOrHtmlWhenEnabled() {
-        assertThatThrownBy(() ->
-            VacationResponse.builder()
-                .id(IDENTIFIER)
-                .enabled(true)
-                .build())
-            .isInstanceOf(IllegalStateException.class);
+    public void vacationResponseShouldBeValidIfIdIsMissing() {
+        VacationResponse vacationResponse = VacationResponse.builder().build();
+
+        assertThat(vacationResponse.isValid()).isTrue();
     }
 
     @Test
-    public void vacationResponseBuilderShouldNotRequiresABodyTextOrHtmlWhenDisabled() {
-        VacationResponse vacationResponse = VacationResponse.builder()
-            .id(IDENTIFIER)
-            .enabled(false)
-            .build();
+    public void vacationResponseShouldBeValidIfRightId() {
+        VacationResponse vacationResponse = VacationResponse.builder().id(Vacation.ID).build();
 
-        assertThat(vacationResponse.getId()).isEqualTo(IDENTIFIER);
-        assertThat(vacationResponse.isEnabled()).isEqualTo(false);
-        assertThat(vacationResponse.getTextBody()).isEmpty();
-        assertThat(vacationResponse.getHtmlBody()).isEmpty();
+        assertThat(vacationResponse.isValid()).isTrue();
     }
 
     @Test
-    public void bodyTextShouldBeEnoughWhenEnabled() {
-        VacationResponse vacationResponse = VacationResponse.builder()
-            .id(IDENTIFIER)
-            .enabled(true)
-            .textBody(Optional.of(MESSAGE))
-            .build();
+    public void vacationResponseShouldBeInvalidIfWrongId() {
+        VacationResponse vacationResponse = VacationResponse.builder().id(IDENTIFIER).build();
 
-        assertThat(vacationResponse.getId()).isEqualTo(IDENTIFIER);
-        assertThat(vacationResponse.isEnabled()).isEqualTo(true);
-        assertThat(vacationResponse.getTextBody()).contains(MESSAGE);
-        assertThat(vacationResponse.getHtmlBody()).isEmpty();
+        assertThat(vacationResponse.isValid()).isFalse();
     }
 
     @Test
-    public void htmlTextShouldBeEnoughWhenEnabled() {
-        VacationResponse vacationResponse = VacationResponse.builder()
-            .id(IDENTIFIER)
-            .enabled(true)
-            .htmlBody(Optional.of(MESSAGE))
-            .build();
+    public void vacationResponseShouldBeValidIfEnabledSetToFalse() {
+        VacationResponse vacationResponse = VacationResponse.builder().enabled(false).build();
 
-        assertThat(vacationResponse.getId()).isEqualTo(IDENTIFIER);
-        assertThat(vacationResponse.isEnabled()).isEqualTo(true);
-        assertThat(vacationResponse.getTextBody()).isEmpty();
-        assertThat(vacationResponse.getHtmlBody()).contains(MESSAGE);
+        assertThat(vacationResponse.isValid()).isTrue();
+    }
+
+    @Test
+    public void vacationResponseShouldBeValidIfEnabledSetToTrue() {
+        VacationResponse vacationResponse = VacationResponse.builder().enabled(true).build();
+
+        assertThat(vacationResponse.isValid()).isTrue();
+    }
+
+    @Test
+    public void subjectShouldThrowNPEOnNullValue() throws Exception {
+        assertThatThrownBy(() -> VacationResponse.builder().subject(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void fromDateShouldThrowNPEOnNullValue() throws Exception {
+        assertThatThrownBy(() -> VacationResponse.builder().fromDate(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void toDateShouldThrowNPEOnNullValue() throws Exception {
+        assertThatThrownBy(() -> VacationResponse.builder().toDate(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void textBodyShouldThrowNPEOnNullValue() throws Exception {
+        assertThatThrownBy(() -> VacationResponse.builder().textBody(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void htmlBodyShouldThrowNPEOnNullValue() throws Exception {
+        assertThatThrownBy(() -> VacationResponse.builder().htmlBody(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void idStringShouldThrowNPEOnNullValue() throws Exception {
+        assertThatThrownBy(() -> VacationResponse.builder().id(null)).isInstanceOf(NullPointerException.class);
     }
 
 }

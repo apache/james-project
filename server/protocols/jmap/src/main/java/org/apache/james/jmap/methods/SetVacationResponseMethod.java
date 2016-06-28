@@ -41,7 +41,7 @@ public class SetVacationResponseMethod implements Method {
     public static final Request.Name METHOD_NAME = Request.name("setVacationResponse");
     public static final Response.Name RESPONSE_NAME = Response.name("vacationResponseSet");
     public static final String INVALID_ARGUMENTS = "invalidArguments";
-    public static final String ERROR_MESSAGE_BASE = "There is one VacationResponse object per account, with id set to \"singleton\" and not to ";
+    public static final String ERROR_MESSAGE_BASE = "There is one VacationResponse object per account, with id set to \\\"singleton\\\" and not to ";
     public static final String INVALID_ARGUMENTS1 = "invalidArguments";
     public static final String INVALID_ARGUMENT_DESCRIPTION = "update field should just contain one entry with key \"singleton\"";
 
@@ -92,7 +92,7 @@ public class SetVacationResponseMethod implements Method {
 
     private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
-            vacationRepository.modifyVacation(accountId, convertToVacation(vacationResponse)).join();
+            vacationRepository.modifyVacation(accountId, vacationResponse.getPatch()).join();
             notificationRegistry.flush(accountId);
             return Stream.of(JmapResponse.builder()
                 .clientId(clientId)
@@ -114,17 +114,6 @@ public class SetVacationResponseMethod implements Method {
                     .build())
                 .build());
         }
-    }
-
-    public Vacation convertToVacation(VacationResponse vacationResponse) {
-        return Vacation.builder()
-            .enabled(vacationResponse.isEnabled())
-            .fromDate(vacationResponse.getFromDate())
-            .toDate(vacationResponse.getToDate())
-            .textBody(vacationResponse.getTextBody())
-            .subject(vacationResponse.getSubject())
-            .htmlBody(vacationResponse.getHtmlBody())
-            .build();
     }
 
 }
