@@ -22,12 +22,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.jmap.api.AccessTokenManager;
-import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.api.SimpleTokenFactory;
+import org.apache.james.jmap.api.SimpleTokenManager;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.jmap.crypto.SignatureHandler;
-import org.apache.james.jmap.crypto.SignedContinuationTokenManager;
+import org.apache.james.jmap.crypto.SignedTokenFactory;
+import org.apache.james.jmap.crypto.SignedTokenManager;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.send.MailFactory;
@@ -51,7 +53,7 @@ public class JMAPCommonModule extends AbstractModule {
     protected void configure() {
         bind(JamesSignatureHandler.class).in(Scopes.SINGLETON);
         bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
-        bind(SignedContinuationTokenManager.class).in(Scopes.SINGLETON);
+        bind(SignedTokenManager.class).in(Scopes.SINGLETON);
         bind(AccessTokenManagerImpl.class).in(Scopes.SINGLETON);
         bind(MailSpool.class).in(Scopes.SINGLETON);
         bind(MailFactory.class).in(Scopes.SINGLETON);
@@ -61,7 +63,8 @@ public class JMAPCommonModule extends AbstractModule {
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
-        bind(ContinuationTokenManager.class).to(SignedContinuationTokenManager.class);
+        bind(SimpleTokenManager.class).to(SignedTokenManager.class);
+        bind(SimpleTokenFactory.class).to(SignedTokenFactory.class);
         bind(AutomaticallySentMailDetector.class).to(AutomaticallySentMailDetectorImpl.class);
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);

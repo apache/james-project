@@ -57,6 +57,9 @@ public class JMAPServer implements Configurable {
                             .only()
                         .serveAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
                             .with(downloadServlet)
+                        .filterAsOneLevelTemplate(JMAPUrls.DOWNLOAD)
+                            .with(new AllowAllCrossOriginRequests(bypass(authenticationFilter).on("GET").and("OPTIONS").only()))
+                            .only()
                         .build());
     }
 

@@ -17,17 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.cucumber;
+package org.apache.james.jmap.api;
 
-import org.junit.runner.RunWith;
+import org.apache.james.jmap.model.AttachmentAccessToken;
+import org.apache.james.jmap.model.ContinuationToken;
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
+public interface SimpleTokenFactory {
+    ContinuationToken generateContinuationToken(String username);
 
-@RunWith(Cucumber.class)
-@CucumberOptions(features={"classpath:cucumber/DownloadEndpoint.feature", "classpath:cucumber/DownloadGet.feature", "classpath:cucumber/DownloadPost.feature"},
-                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber"},
-                tags = {"~@Ignore"},
-                strict = true)
-public class MemoryDownloadCucumberTest {
+    AttachmentAccessToken generateAttachmentAccessToken(String username, String blobId);
 }

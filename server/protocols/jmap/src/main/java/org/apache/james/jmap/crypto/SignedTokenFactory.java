@@ -24,55 +24,50 @@ import java.time.format.DateTimeFormatter;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.api.SimpleTokenFactory;
+import org.apache.james.jmap.model.AttachmentAccessToken;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
-public class SignedContinuationTokenManager implements ContinuationTokenManager {
+public class SignedTokenFactory implements SimpleTokenFactory {
 
     private final SignatureHandler signatureHandler;
     private final ZonedDateTimeProvider zonedDateTimeProvider;
 
     @Inject
-    public SignedContinuationTokenManager(SignatureHandler signatureHandler, ZonedDateTimeProvider zonedDateTimeProvider) {
+    public SignedTokenFactory(SignatureHandler signatureHandler, ZonedDateTimeProvider zonedDateTimeProvider) {
         this.signatureHandler = signatureHandler;
         this.zonedDateTimeProvider = zonedDateTimeProvider;
     }
 
     @Override
-    public ContinuationToken generateToken(String username) {
+    public ContinuationToken generateContinuationToken(String username) {
         Preconditions.checkNotNull(username);
         ZonedDateTime expirationTime = zonedDateTimeProvider.get().plusMinutes(15);
         return new ContinuationToken(username,
             expirationTime,
-            signatureHandler.sign(username + ContinuationToken.SEPARATOR + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationTime)));
+            signatureHandler.sign(
+                    Joiner.on(ContinuationToken.SEPARATOR)
+                        .join(username,
+                            DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationTime))));
     }
 
     @Override
-    public ContinuationTokenStatus getValidity(ContinuationToken token) {
-        Preconditions.checkNotNull(token);
-        if (! isCorrectlySigned(token)) {
-            return ContinuationTokenStatus.INVALID;
-        }
-        if (isExpired(token)) {
-            return ContinuationTokenStatus.EXPIRED;
-        }
-        return ContinuationTokenStatus.OK;
-    }
-    
-    @Override
-    public boolean isValid(ContinuationToken token) {
-        Preconditions.checkNotNull(token);
-        return ContinuationTokenStatus.OK.equals(getValidity(token));
-    }
-
-    private boolean isCorrectlySigned(ContinuationToken token) {
-        return signatureHandler.verify(token.getContent(), token.getSignature());
-    }
-
-    private boolean isExpired(ContinuationToken token) {
-        return token.getExpirationDate().isBefore(zonedDateTimeProvider.get());
+    public AttachmentAccessToken generateAttachmentAccessToken(String username, String blobId) {
+        Preconditions.checkArgument(! Strings.isNullOrEmpty(blobId));
+        ZonedDateTime expirationTime = zonedDateTimeProvider.get().plusMinutes(5);
+        return AttachmentAccessToken.builder()
+                .username(username)
+                .blobId(blobId)
+                .expirationDate(expirationTime)
+                .signature(signatureHandler.sign(Joiner.on(AttachmentAccessToken.SEPARATOR)
+                                                    .join(username, 
+                                                            blobId,
+                                                            DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationTime))))
+                .build();
     }
 }

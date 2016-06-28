@@ -36,7 +36,9 @@ import org.apache.james.mailbox.model.MailboxPath;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
+import com.jayway.restassured.specification.RequestSpecification;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -74,21 +76,23 @@ public class DownloadStepdefs {
     @When("^\"([^\"]*)\" checks for the availability of the attachment endpoint$")
     public void optionDownload(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        RequestSpecification with = with();
         if (accessToken != null) {
-            with().header("Authorization", accessToken.serialize());
+            with.header("Authorization", accessToken.serialize());
         }
 
-        response = with().options("/download/myBlob");
+        response = with.options("/download/myBlob");
     }
 
     @When("^\"([^\"]*)\" downloads \"([^\"]*)\"$")
     public void downloads(String username, String attachmentId) throws Throwable {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        RequestSpecification with = with();
         if (accessToken != null) {
-            with().header("Authorization", accessToken.serialize());
+            with.header("Authorization", accessToken.serialize());
         }
-        response = with().get("/download/" + blobId);
+        response = with.get("/download/" + blobId);
     }
     
 
@@ -107,6 +111,18 @@ public class DownloadStepdefs {
         response = with()
                 .header("Authorization", accessToken.serialize())
                 .get("/download/badbadbadbadbadbadbadbadbadbadbadbadbadb");
+    }
+
+    @When("^\"([^\"]*)\" asks for a token for attachment \"([^\"]*)\"$")
+    public void postDownload(String username, String attachmentId) throws Throwable {
+        String blobId = blobIdByAttachmentId.get(attachmentId);
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        RequestSpecification with = with();
+        if (accessToken != null) {
+            with = with.header("Authorization", accessToken.serialize());
+        }
+        response = with
+                .post("/download/" + blobId);
     }
 
     @Then("^the user should be authorized$")
@@ -138,5 +154,13 @@ public class DownloadStepdefs {
     public void httpNotFoundStatus() throws Throwable {
         response.then()
             .statusCode(404);
+    }
+
+    @Then("^the user should receive an attachment access token$")
+    public void accessTokenResponse() throws Throwable {
+        response.then()
+            .statusCode(200)
+            .contentType(ContentType.TEXT)
+            .content(notNullValue());
     }
 }

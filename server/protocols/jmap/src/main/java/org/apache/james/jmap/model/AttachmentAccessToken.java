@@ -19,22 +19,15 @@
 
 package org.apache.james.jmap.model;
 
-import java.time.DateTimeException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
-import org.apache.james.jmap.exceptions.MalformedContinuationTokenException;
-
-import com.google.common.base.Joiner;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
-public class ContinuationToken implements SignedExpiringToken {
+public class AttachmentAccessToken implements SignedExpiringToken {
 
     public static final String SEPARATOR = "_";
 
@@ -44,11 +37,17 @@ public class ContinuationToken implements SignedExpiringToken {
     
     public static class Builder {
         private String username;
+        private String blobId;
         private ZonedDateTime expirationDate;
         private String signature;
 
         private Builder() {}
         
+        public Builder blobId(String blobId) {
+            this.blobId = blobId;
+            return this;
+        }
+
         public Builder username(String username) {
             this.username = username;
             return this;
@@ -64,39 +63,31 @@ public class ContinuationToken implements SignedExpiringToken {
             return this;
         }
 
-        public ContinuationToken build() {
-            return new ContinuationToken(username, expirationDate, signature);
+        public AttachmentAccessToken build() {
+            Preconditions.checkNotNull(username);
+            Preconditions.checkNotNull(blobId);
+            Preconditions.checkArgument(! blobId.isEmpty());
+            Preconditions.checkNotNull(expirationDate);
+            Preconditions.checkNotNull(signature);
+            return new AttachmentAccessToken(username, blobId, expirationDate, signature);
         }
     }
     
-    public static ContinuationToken fromString(String serializedToken) throws MalformedContinuationTokenException {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(serializedToken), "Serialized continuation token should not be null or empty");
-        LinkedList<String> tokenParts = Lists.newLinkedList(Splitter.on(SEPARATOR).split(serializedToken));
-        try {
-            return ContinuationToken.builder()
-                    .signature(tokenParts.removeLast())
-                    .expirationDate(ZonedDateTime.parse(tokenParts.removeLast(), DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-                    .username(Joiner.on(SEPARATOR).join(tokenParts))
-                    .build();
-        } catch (NoSuchElementException | IllegalArgumentException e) {
-            throw new MalformedContinuationTokenException("Token " + serializedToken + " does not have enough parts", e);
-        } catch(DateTimeException e) {
-            throw new MalformedContinuationTokenException("Token " + serializedToken + " as an incorrect date", e);
-        }
-    }
-
     private final String username;
+    private final String blobId;
     private final ZonedDateTime expirationDate;
     private final String signature;
 
-    public ContinuationToken(String username, ZonedDateTime expirationDate, String signature) {
-        Preconditions.checkNotNull(username);
-        Preconditions.checkArgument(! username.isEmpty());
-        Preconditions.checkNotNull(expirationDate);
-        Preconditions.checkNotNull(signature);
+    @VisibleForTesting
+    AttachmentAccessToken(String username, String blobId, ZonedDateTime expirationDate, String signature) {
         this.username = username;
+        this.blobId = blobId;
         this.expirationDate = expirationDate;
         this.signature = signature;
+    }
+
+    public String getBlobId() {
+        return blobId;
     }
 
     public String getUsername() {
@@ -125,34 +116,38 @@ public class ContinuationToken implements SignedExpiringToken {
             + SEPARATOR
             + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationDate);
     }
-
+    
     @Override
     public String getSignedContent() {
-        return getPayload();
+        return blobId
+            + SEPARATOR
+            + getPayload();
     }
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || getClass() != other.getClass()) {
-            return false;
+        if (other instanceof AttachmentAccessToken) {
+            AttachmentAccessToken attachmentAccessToken = (AttachmentAccessToken) other;
+            return Objects.equals(username, attachmentAccessToken.username)
+                    && Objects.equals(blobId, attachmentAccessToken.blobId)
+                    && Objects.equals(expirationDate, attachmentAccessToken.expirationDate)
+                    && Objects.equals(signature, attachmentAccessToken.signature);
         }
-        ContinuationToken continuationToken = (ContinuationToken) other;
-        return Objects.equals(username, continuationToken.username)
-            && expirationDate.isEqual(continuationToken.expirationDate)
-            && Objects.equals(signature, continuationToken.signature);
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, expirationDate, signature);
+        return Objects.hash(username, blobId, expirationDate, signature);
     }
 
     @Override
     public String toString() {
-        return "ContinuationToken{" +
-            "username='" + username + '\'' +
-            ", expirationDate=" + expirationDate +
-            ", signature='" + signature + '\'' +
-            '}';
+        return MoreObjects.toStringHelper(this)
+                .add("username", username)
+                .add("blobId", blobId)
+                .add("expirationDate", expirationDate)
+                .add("signature", signature)
+                .toString();
     }
 }

@@ -27,7 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.api.AccessTokenManager;
-import org.apache.james.jmap.api.ContinuationTokenManager;
+import org.apache.james.jmap.api.SimpleTokenFactory;
+import org.apache.james.jmap.api.SimpleTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.exceptions.BadRequestException;
 import org.apache.james.jmap.exceptions.InternalErrorException;
@@ -54,13 +55,15 @@ public class AuthenticationServlet extends HttpServlet {
 
     private final ObjectMapper mapper;
     private final UsersRepository usersRepository;
-    private final ContinuationTokenManager continuationTokenManager;
+    private final SimpleTokenManager simpleTokenManager;
     private final AccessTokenManager accessTokenManager;
+    private final SimpleTokenFactory simpleTokenFactory;
     
     @Inject
-    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository, ContinuationTokenManager continuationTokenManager, AccessTokenManager accessTokenManager) {
+    @VisibleForTesting AuthenticationServlet(UsersRepository usersRepository, SimpleTokenManager simpleTokenManager, SimpleTokenFactory simpleTokenFactory, AccessTokenManager accessTokenManager) {
         this.usersRepository = usersRepository;
-        this.continuationTokenManager = continuationTokenManager;
+        this.simpleTokenManager = simpleTokenManager;
+        this.simpleTokenFactory = simpleTokenFactory;
         this.accessTokenManager = accessTokenManager;
         this.mapper = new MultipleObjectMapperBuilder()
             .registerClass(ContinuationTokenRequest.UNIQUE_JSON_PATH, ContinuationTokenRequest.class)
@@ -129,7 +132,7 @@ public class AuthenticationServlet extends HttpServlet {
         try {
             ContinuationTokenResponse continuationTokenResponse = ContinuationTokenResponse
                 .builder()
-                .continuationToken(continuationTokenManager.generateToken(request.getUsername()))
+                .continuationToken(simpleTokenFactory.generateContinuationToken(request.getUsername()))
                 .methods(ContinuationTokenResponse.AuthenticationMethod.PASSWORD)
                 .build();
             mapper.writeValue(resp.getOutputStream(), continuationTokenResponse);
@@ -139,7 +142,7 @@ public class AuthenticationServlet extends HttpServlet {
     }
 
     private void handleAccessTokenRequest(AccessTokenRequest request, HttpServletResponse resp) throws IOException {
-        switch (continuationTokenManager.getValidity(request.getToken())) {
+        switch (simpleTokenManager.getValidity(request.getToken())) {
         case EXPIRED:
             returnRestartAuthentication(resp);
             break;

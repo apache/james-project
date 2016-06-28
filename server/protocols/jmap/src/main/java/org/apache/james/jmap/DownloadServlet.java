@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.jmap.api.SimpleTokenFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -49,12 +50,50 @@ public class DownloadServlet extends HttpServlet {
 
     private static final String ROOT_URL = "/";
     private static final Logger LOGGER = LoggerFactory.getLogger(DownloadServlet.class);
+    private static final String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
 
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final SimpleTokenFactory simpleTokenFactory;
 
     @Inject
-    @VisibleForTesting DownloadServlet(MailboxSessionMapperFactory mailboxSessionMapperFactory) {
+    @VisibleForTesting DownloadServlet(MailboxSessionMapperFactory mailboxSessionMapperFactory, SimpleTokenFactory simpleTokenFactory) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+        this.simpleTokenFactory = simpleTokenFactory;
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+        String pathInfo = req.getPathInfo();
+        if (Strings.isNullOrEmpty(pathInfo) || pathInfo.equals(ROOT_URL)) {
+            resp.setStatus(SC_BAD_REQUEST);
+        } else {
+            respondAttachmentAccessToken(getMailboxSession(req), blobIdFrom(pathInfo), resp);
+        }
+    }
+
+    private void respondAttachmentAccessToken(MailboxSession mailboxSession, String blobId, HttpServletResponse resp) {
+        try {
+            if (! attachmentExists(mailboxSession, blobId)) {
+                resp.setStatus(SC_NOT_FOUND);
+                return;
+            }
+            resp.setContentType(TEXT_PLAIN_CONTENT_TYPE);
+            resp.getOutputStream().print(simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().getUserName(), blobId).serialize());
+            resp.setStatus(SC_OK);
+        } catch (MailboxException | IOException e) {
+            LOGGER.error("Error while asking attachment access token", e);
+            resp.setStatus(SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private boolean attachmentExists(MailboxSession mailboxSession, String blobId) throws MailboxException {
+        AttachmentMapper attachmentMapper = mailboxSessionMapperFactory.createAttachmentMapper(mailboxSession);
+        try {
+            attachmentMapper.getAttachment(AttachmentId.from(blobId));
+            return true;
+        } catch (AttachmentNotFoundException e) {
+            return false;
+        }
     }
 
     @Override

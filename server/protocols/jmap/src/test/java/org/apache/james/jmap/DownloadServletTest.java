@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.jmap.api.SimpleTokenFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -35,7 +36,9 @@ public class DownloadServletTest {
 
     @Test
     public void blobIdFromShouldSkipTheFirstCharacter() {
-        String blobId = new DownloadServlet(null).blobIdFrom("1234");
+        MailboxSessionMapperFactory nullMailboxSessionMapperFactory = null;
+        SimpleTokenFactory nullSimpleTokenFactory = null;
+        String blobId = new DownloadServlet(nullMailboxSessionMapperFactory, nullSimpleTokenFactory).blobIdFrom("1234");
         assertThat(blobId).isEqualTo("234");
     }
 
@@ -45,8 +48,9 @@ public class DownloadServletTest {
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mock(MailboxSessionMapperFactory.class);
         when(mailboxSessionMapperFactory.createAttachmentMapper(mailboxSession))
             .thenThrow(new MailboxException());
+        SimpleTokenFactory nullSimpleTokenFactory = null;
 
-        DownloadServlet testee = new DownloadServlet(mailboxSessionMapperFactory);
+        DownloadServlet testee = new DownloadServlet(mailboxSessionMapperFactory, nullSimpleTokenFactory);
 
         String blobId = null;
         HttpServletResponse resp = mock(HttpServletResponse.class);
