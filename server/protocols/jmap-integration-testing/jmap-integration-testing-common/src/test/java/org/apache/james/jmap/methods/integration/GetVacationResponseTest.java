@@ -27,14 +27,13 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsNull.nullValue;
 
 import java.time.ZonedDateTime;
-import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
-import org.apache.james.jmap.api.vacation.Vacation;
+import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -121,12 +120,12 @@ public abstract class GetVacationResponseTest {
     @Test
     public void getVacationResponseShouldReturnStoredValue() {
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
-            Vacation.builder()
-                .enabled(true)
-                .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00Z")))
-                .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00Z")))
+            VacationPatch.builder()
+                .isEnabled(true)
+                .fromDate(ZonedDateTime.parse("2014-09-30T14:10:00Z"))
+                .toDate(ZonedDateTime.parse("2014-10-30T14:10:00Z"))
                 .textBody("Test explaining my vacations")
-                .subject(Optional.of(SUBJECT))
+                .subject(SUBJECT)
                 .htmlBody("<p>Test explaining my vacations</p>")
                 .build());
 
@@ -156,10 +155,10 @@ public abstract class GetVacationResponseTest {
     @Test
     public void getVacationResponseShouldReturnStoredValueWithNonDefaultTimezone() {
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
-            Vacation.builder()
-                .enabled(true)
-                .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
-                .toDate(Optional.of(ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]")))
+            VacationPatch.builder()
+                .isEnabled(true)
+                .fromDate(ZonedDateTime.parse("2014-09-30T14:10:00+02:00"))
+                .toDate(ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]"))
                 .textBody("Test explaining my vacations")
                 .build());
 
@@ -187,10 +186,10 @@ public abstract class GetVacationResponseTest {
     @Test
     public void getVacationResponseShouldReturnIsActivatedWhenInRange() {
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
-            Vacation.builder()
-                .enabled(true)
-                .fromDate(Optional.of(DATE_2014))
-                .toDate(Optional.of(DATE_2016))
+            VacationPatch.builder()
+                .isEnabled(true)
+                .fromDate(DATE_2014)
+                .toDate(DATE_2016)
                 .textBody("Test explaining my vacations")
                 .build());
 
@@ -216,10 +215,10 @@ public abstract class GetVacationResponseTest {
         fixedDateZonedDateTimeProvider.setFixedDateTime(DATE_2014);
 
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
-            Vacation.builder()
-                .enabled(true)
-                .fromDate(Optional.of(DATE_2015))
-                .toDate(Optional.of(DATE_2016))
+            VacationPatch.builder()
+                .isEnabled(true)
+                .fromDate(DATE_2015)
+                .toDate(DATE_2016)
                 .textBody("Test explaining my vacations")
                 .build());
 
@@ -243,10 +242,10 @@ public abstract class GetVacationResponseTest {
     @Test
     public void accountIdIsNotSupported() {
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
-            Vacation.builder()
-                .enabled(true)
-                .fromDate(Optional.of(ZonedDateTime.parse("2014-09-30T14:10:00+02:00")))
-                .toDate(Optional.of(ZonedDateTime.parse("2014-10-30T14:10:00+02:00")))
+            VacationPatch.builder()
+                .isEnabled(true)
+                .fromDate(ZonedDateTime.parse("2014-09-30T14:10:00+02:00"))
+                .toDate(ZonedDateTime.parse("2014-10-30T14:10:00+02:00"))
                 .textBody("Test explaining my vacations")
                 .build());
 

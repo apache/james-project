@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.junit.After;
 import org.junit.Before;
@@ -124,6 +126,30 @@ public abstract class VacationIntegrationTest {
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
+    }
+
+    @Test
+    public void jmapVacationShouldGenerateAReplyEvenWhenNoText() throws Exception {
+        // Given
+        AccessToken user1AccessToken = JmapAuthentication.authenticateJamesUser(USER_1, PASSWORD);
+        AccessToken user2AccessToken = JmapAuthentication.authenticateJamesUser(USER_2, PASSWORD);
+        guiceJamesServer.serverProbe().modifyVacation(
+            AccountId.fromString(USER_1),
+            VacationPatch.builder()
+                .isEnabled(true)
+                .build());
+
+        // When
+        String user2OutboxId = getOutboxId(user2AccessToken);
+        sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
+
+        // Then
+        // User 1 should well receive this mail
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+        // User 2 should well receive a notification about user 1 vacation
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
+            .until( () -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), "", USER_1, USER_2));
     }
 
     @Test
