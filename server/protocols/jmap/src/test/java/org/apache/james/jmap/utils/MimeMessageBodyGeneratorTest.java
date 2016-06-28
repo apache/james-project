@@ -106,11 +106,13 @@ public class MimeMessageBodyGeneratorTest {
     }
 
     @Test
-    public void fromShouldThrowWhenNoPlainTextNorHtmlBody() throws Exception {
-        assertThatThrownBy(() -> mimeMessageBodyGenerator.from(original,
+    public void fromShouldUseEmptyTextWhenNoPlainTextNorHtmlBody() throws Exception {
+        String rowContent = IOUtils.toString(mimeMessageBodyGenerator.from(original,
             Optional.empty(),
-            Optional.empty()))
-            .isInstanceOf(IllegalStateException.class);
+            Optional.empty())
+            .getInputStream());
+
+        assertThat(rowContent).isEmpty();
     }
 
     @Test
