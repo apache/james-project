@@ -666,6 +666,39 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessageShouldSupportArbitraryMessageId() {
+        String messageCreationId = "1717fcd1-603e-44a5-b2a6-1234dbcd5723";
+        String fromAddress = username;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1));
+    }
+
+    @Test
     public void setMessagesShouldCreateMessageInOutboxWhenSendingMessage() throws MailboxException {
         // Given
         String messageCreationId = "user|inbox|1";
