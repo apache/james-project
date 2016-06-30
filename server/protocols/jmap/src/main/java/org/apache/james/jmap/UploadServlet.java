@@ -16,13 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.jmap;
 
-public interface JMAPUrls {
+import static javax.servlet.http.HttpServletResponse.SC_CREATED;
 
-    String JMAP = "/jmap";
-    String AUTHENTICATION = "/authentication";
-    String DOWNLOAD = "/download";
-    String UPLOAD = "/upload";
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class UploadServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+        resp.setStatus(SC_CREATED);
+    }
 }

@@ -17,12 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap;
+package org.apache.james.jmap.memory.cucumber;
 
-public interface JMAPUrls {
+import org.junit.runner.RunWith;
 
-    String JMAP = "/jmap";
-    String AUTHENTICATION = "/authentication";
-    String DOWNLOAD = "/download";
-    String UPLOAD = "/upload";
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(features={"classpath:cucumber/UploadEndpoint.feature"},
+                glue={"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber"},
+                tags = {"~@Ignore"},
+                strict = true)
+public class MemoryUploadCucumberTest {
 }
