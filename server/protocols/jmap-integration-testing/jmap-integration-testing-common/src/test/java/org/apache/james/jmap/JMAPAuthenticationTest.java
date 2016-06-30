@@ -285,7 +285,7 @@ public abstract class JMAPAuthenticationTest {
             .body("accessToken", isA(String.class))
             .body("api", equalTo("/jmap"))
             .body("eventSource", both(isA(String.class)).and(notNullValue()))
-            .body("upload", both(isA(String.class)).and(notNullValue()))
+            .body("upload", equalTo("/upload"))
             .body("download", equalTo("/download"));
     }
     
@@ -321,7 +321,7 @@ public abstract class JMAPAuthenticationTest {
             .statusCode(200)
             .body("api", equalTo("/jmap"))
             .body("eventSource", both(isA(String.class)).and(notNullValue()))
-            .body("upload", both(isA(String.class)).and(notNullValue()))
+            .body("upload", equalTo("/upload"))
             .body("download", equalTo("/download"));
     }
 
