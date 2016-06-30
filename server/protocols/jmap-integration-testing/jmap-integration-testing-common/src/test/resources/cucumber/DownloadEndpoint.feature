@@ -50,3 +50,10 @@ Feature: Download endpoint
     And "userb@domain.tld" is connected
     When "userb@domain.tld" downloads "a1"
     Then the user should be authorized
+
+  @Ignore
+  Scenario: A user should have acess to an inlined attachment
+    Given "usera@domain.tld" is connected
+    And "usera@domain.tld" mailbox "INBOX" contains a message "m2" with an inlined attachment "ia1"
+    When "usera@domain.tld" downloads "ia1"
+    Then the user should be authorized

@@ -75,6 +75,18 @@ public class DownloadStepdefs {
         blobIdByAttachmentId.put(attachmentId, "4000c5145f633410b80be368c44e1c394bff9437");
     }
 
+    @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an inlined attachment \"([^\"]*)\"$")
+    public void appendMessageWithInlinedAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, mailbox);
+
+        mainStepdefs.jmapServer.serverProbe().appendMessage(user, mailboxPath,
+                ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
+        
+        attachmentsByMessageId.put(messageId, attachmentId);
+        // TODO
+        //blobIdByAttachmentId.put(attachmentId, "<correctComputedBlobId>");
+    }
+
     @When("^\"([^\"]*)\" checks for the availability of the attachment endpoint$")
     public void optionDownload(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
