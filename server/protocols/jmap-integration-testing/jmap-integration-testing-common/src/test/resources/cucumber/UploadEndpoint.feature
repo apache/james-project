@@ -26,3 +26,16 @@ Feature: An upload endpoint should be available to upload contents
   Scenario: Uploading a content being authenticated
     When "username@domain.tld" upload a content
     Then the user should receive a created response
+
+  Scenario: Uploading a content without content type should be denied
+    When "username@domain.tld" upload a content without content type
+    Then the user should receive bad request response
+
+  Scenario: Uploading a content, the content should be retrievable
+    When "username@domain.tld" upload a content
+    Then "username@domain.tld" should be able to retrieve the content
+
+  Scenario: Uploading a content, the server should respond specified JSON
+    When "username@domain.tld" upload a content
+    Then the user should receive a specified JSON content
+    

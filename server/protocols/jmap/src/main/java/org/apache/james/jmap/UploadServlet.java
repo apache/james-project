@@ -18,17 +18,45 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
-import static javax.servlet.http.HttpServletResponse.SC_CREATED;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
+import java.io.IOException;
+
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.mailbox.exception.MailboxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
+
 public class UploadServlet extends HttpServlet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadServlet.class);
+
+    private final UploadHandler uploadHandler;
+
+    @Inject
+    private UploadServlet(UploadHandler uploadHandler) {
+        this.uploadHandler = uploadHandler;
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
-        resp.setStatus(SC_CREATED);
+        String contentType = req.getContentType();
+        if (Strings.isNullOrEmpty(contentType)) {
+            resp.setStatus(SC_BAD_REQUEST);
+        } else {
+            try {
+                uploadHandler.handle(contentType, req.getInputStream(), resp);
+            } catch (IOException | MailboxException e) {
+                LOGGER.error("Error while uploading content", e);
+                resp.setStatus(SC_INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 }

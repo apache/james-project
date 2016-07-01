@@ -59,6 +59,7 @@ public class JMAPModule extends AbstractModule {
         install(new MethodsModule());
         bind(JMAPServer.class).in(Scopes.SINGLETON);
         bind(RequestHandler.class).in(Scopes.SINGLETON);
+        bind(UploadHandler.class).in(Scopes.SINGLETON);
         bind(MailboxBasedHtmlTextExtractor.class).in(Scopes.SINGLETON);
 
         bind(HtmlTextExtractor.class).to(MailboxBasedHtmlTextExtractor.class);
