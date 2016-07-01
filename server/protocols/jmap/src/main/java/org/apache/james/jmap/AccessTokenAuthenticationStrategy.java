@@ -19,15 +19,16 @@
 package org.apache.james.jmap;
 
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.NoValidAuthHeaderException;
+import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -42,18 +43,20 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
 
     private final AccessTokenManager accessTokenManager;
     private final MailboxManager mailboxManager;
+    private final HeadersAuthenticationExtractor authenticationExtractor;
 
     @Inject
     @VisibleForTesting
-    AccessTokenAuthenticationStrategy(AccessTokenManager accessTokenManager, MailboxManager mailboxManager) {
+    AccessTokenAuthenticationStrategy(AccessTokenManager accessTokenManager, MailboxManager mailboxManager, HeadersAuthenticationExtractor authenticationExtractor) {
         this.accessTokenManager = accessTokenManager;
         this.mailboxManager = mailboxManager;
+        this.authenticationExtractor = authenticationExtractor;
     }
 
     @Override
-    public MailboxSession createMailboxSession(Stream<String> authHeaders) throws MailboxSessionCreationException, NoValidAuthHeaderException {
+    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
 
-        Optional<String> username = authHeaders
+        Optional<String> username = authenticationExtractor.authHeaders(httpRequest)
             .map(AccessToken::fromString)
             .map(accessTokenManager::getUsernameFromToken)
             .findFirst();
@@ -69,8 +72,8 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
     }
 
     @Override
-    public boolean checkAuthorizationHeader(Stream<String> authHeaders) {
-        return authHeaders
+    public boolean checkAuthorizationHeader(HttpServletRequest httpRequest) {
+        return authenticationExtractor.authHeaders(httpRequest)
                 .map(this::accessTokenFrom)
                 .anyMatch(this::isValid);
     }

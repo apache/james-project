@@ -19,10 +19,7 @@
 package org.apache.james.jmap;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.servlet.Filter;
@@ -50,7 +47,6 @@ public class AuthenticationFilter implements Filter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     public static final String MAILBOX_SESSION = "mailboxSession";
-    private static final String AUTHORIZATION_HEADERS = "Authorization";
 
     private final List<AuthenticationStrategy> authMethods;
 
@@ -71,9 +67,9 @@ public class AuthenticationFilter implements Filter {
 
         try {
             HttpServletRequest requestWithSession = authMethods.stream()
-                    .filter(auth -> auth.checkAuthorizationHeader(getAuthHeaders(httpRequest)))
+                    .filter(auth -> auth.checkAuthorizationHeader(httpRequest))
                     .findFirst()
-                    .map(auth -> addSessionToRequest(httpRequest, createSession(auth, getAuthHeaders(httpRequest))))
+                    .map(auth -> addSessionToRequest(httpRequest, createSession(auth, httpRequest)))
                     .orElseThrow(UnauthorizedException::new);
             chain.doFilter(requestWithSession, response);
 
@@ -84,19 +80,13 @@ public class AuthenticationFilter implements Filter {
 
     }
 
-    private Stream<String> getAuthHeaders(HttpServletRequest httpRequest) {
-        Enumeration<String> authHeaders = httpRequest.getHeaders(AUTHORIZATION_HEADERS);
-
-        return authHeaders != null ? Collections.list(authHeaders).stream() : Stream.of();
-    }
-
     private HttpServletRequest addSessionToRequest(HttpServletRequest httpRequest, MailboxSession mailboxSession) {
         httpRequest.setAttribute(MAILBOX_SESSION, mailboxSession);
         return httpRequest;
     }
 
-    private MailboxSession createSession(AuthenticationStrategy authenticationMethod, Stream<String> authorizationHeaders) {
-        return authenticationMethod.createMailboxSession(authorizationHeaders);
+    private MailboxSession createSession(AuthenticationStrategy authenticationMethod, HttpServletRequest httpRequest) {
+        return authenticationMethod.createMailboxSession(httpRequest);
     }
 
     @Override

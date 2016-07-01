@@ -21,10 +21,12 @@ package org.apache.james.jmap;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.jmap.crypto.JwtTokenVerifier;
 import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.NoValidAuthHeaderException;
+import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -39,18 +41,20 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     @VisibleForTesting static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     private final JwtTokenVerifier tokenManager;
     private final MailboxManager mailboxManager;
+    private final HeadersAuthenticationExtractor authenticationExtractor;
 
     @Inject
     @VisibleForTesting
-    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager) {
+    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, HeadersAuthenticationExtractor authenticationExtractor) {
         this.tokenManager = tokenManager;
         this.mailboxManager = mailboxManager;
+        this.authenticationExtractor = authenticationExtractor;
     }
 
     @Override
-    public MailboxSession createMailboxSession(Stream<String> authHeaders) throws MailboxSessionCreationException, NoValidAuthHeaderException {
+    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
 
-        Stream<String> userLoginStream = extractTokensFromAuthHeaders(authHeaders)
+        Stream<String> userLoginStream = extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
                 .filter(tokenManager::verify)
                 .map(tokenManager::extractLogin);
 
@@ -69,8 +73,8 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     }
 
     @Override
-    public boolean checkAuthorizationHeader(Stream<String> authHeaders) {
-        return extractTokensFromAuthHeaders(authHeaders)
+    public boolean checkAuthorizationHeader(HttpServletRequest httpRequest) {
+        return extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
                 .anyMatch(tokenManager::verify);
     }
 

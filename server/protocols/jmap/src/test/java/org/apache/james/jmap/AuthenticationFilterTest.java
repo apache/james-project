@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
@@ -129,12 +128,12 @@ public class AuthenticationFilterTest {
         }
 
         @Override
-        public MailboxSession createMailboxSession(Stream<String> requestHeaders) {
+        public MailboxSession createMailboxSession(HttpServletRequest httpRequest) {
             return null;
         }
 
         @Override
-        public boolean checkAuthorizationHeader(Stream<String> requestHeaders) {
+        public boolean checkAuthorizationHeader(HttpServletRequest httpRequest) {
             return isAuthorized;
         }
     }

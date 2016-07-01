@@ -28,11 +28,14 @@ import static org.mockito.Mockito.when;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.NoValidAuthHeaderException;
+import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -45,24 +48,34 @@ public class AccessTokenAuthenticationStrategyTest {
     private AccessTokenManagerImpl mockedAccessTokenManager;
     private MailboxManager mockedMailboxManager;
     private AccessTokenAuthenticationStrategy testee;
+    private HttpServletRequest request;
+    private HeadersAuthenticationExtractor mockAuthenticationExtractor;
 
     @Before
     public void setup() {
         mockedAccessTokenManager = mock(AccessTokenManagerImpl.class);
         mockedMailboxManager = mock(MailboxManager.class);
+        mockAuthenticationExtractor = mock(HeadersAuthenticationExtractor.class);
+        request = mock(HttpServletRequest.class);
 
-        testee = new AccessTokenAuthenticationStrategy(mockedAccessTokenManager, mockedMailboxManager);
+        testee = new AccessTokenAuthenticationStrategy(mockedAccessTokenManager, mockedMailboxManager, mockAuthenticationExtractor);
     }
 
     @Test
     public void createMailboxSessionShouldThrowWhenNoAuthProvided() {
-        assertThatThrownBy(() -> testee.createMailboxSession(Stream.empty()))
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.empty());
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
             .isExactlyInstanceOf(NoValidAuthHeaderException.class);
     }
 
     @Test
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() {
-        assertThatThrownBy(() -> testee.createMailboxSession(Stream.of("bad")))
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of("bad"));
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
                 .isExactlyInstanceOf(NotAnAccessTokenException.class);
     }
 
@@ -75,8 +88,11 @@ public class AccessTokenAuthenticationStrategyTest {
         UUID authHeader = UUID.randomUUID();
         when(mockedAccessTokenManager.getUsernameFromToken(AccessToken.fromString(authHeader.toString())))
                 .thenReturn(username);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(authHeader.toString()));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(Stream.of(authHeader.toString())))
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
                 .isExactlyInstanceOf(MailboxSessionCreationException.class);
     }
 
@@ -91,24 +107,36 @@ public class AccessTokenAuthenticationStrategyTest {
         UUID authHeader = UUID.randomUUID();
         when(mockedAccessTokenManager.getUsernameFromToken(AccessToken.fromString(authHeader.toString())))
                 .thenReturn(username);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(authHeader.toString()));
 
-        MailboxSession result = testee.createMailboxSession(Stream.of(authHeader.toString()));
+
+        MailboxSession result = testee.createMailboxSession(request);
         assertThat(result).isEqualTo(fakeMailboxSession);
     }
 
     @Test
     public void checkAuthorizationHeaderShouldReturnFalseWhenAuthHeaderIsEmpty() {
-        assertThat(testee.checkAuthorizationHeader(Stream.empty())).isFalse();
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.empty());
+
+        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
     }
 
     @Test
     public void checkAuthorizationHeaderShouldReturnFalseWhenAuthHeaderIsInvalid() {
-        assertThat(testee.checkAuthorizationHeader(Stream.of("bad"))).isFalse();
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of("bad"));
+
+        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
     }
 
     @Test
     public void checkAuthorizationHeaderShouldReturnFalseWhenAuthHeadersAreInvalid() {
-        assertThat(testee.checkAuthorizationHeader(Stream.of("bad", "alsobad"))).isFalse();
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of("bad", "alsobad"));
+
+        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
     }
 
     @Test
@@ -117,8 +145,11 @@ public class AccessTokenAuthenticationStrategyTest {
         String validToken = UUID.randomUUID().toString();
         when(mockedAccessTokenManager.isValid(AccessToken.fromString(validToken)))
                 .thenReturn(true);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(validToken));
 
-        assertThat(testee.checkAuthorizationHeader(Stream.of(validToken))).isTrue();
+
+        assertThat(testee.checkAuthorizationHeader(request)).isTrue();
     }
 
     @Test
@@ -127,7 +158,10 @@ public class AccessTokenAuthenticationStrategyTest {
         String validToken = UUID.randomUUID().toString();
         when(mockedAccessTokenManager.isValid(AccessToken.fromString(validToken)))
                 .thenReturn(true);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of("bad", validToken));
 
-        assertThat(testee.checkAuthorizationHeader(Stream.of("bad", validToken))).isTrue();
+
+        assertThat(testee.checkAuthorizationHeader(request)).isTrue();
     }
 }

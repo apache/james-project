@@ -27,9 +27,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.james.jmap.crypto.JwtTokenVerifier;
 import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.NoValidAuthHeaderException;
+import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -43,26 +46,35 @@ public class JWTAuthenticationStrategyTest {
     private JWTAuthenticationStrategy testee;
     private MailboxManager mockedMailboxManager;
     private JwtTokenVerifier stubTokenVerifier;
+    private HttpServletRequest request;
+    private HeadersAuthenticationExtractor mockAuthenticationExtractor;
 
     @Before
     public void setup() {
-        mockedMailboxManager = mock(MailboxManager.class);
-
         stubTokenVerifier = mock(JwtTokenVerifier.class);
+        mockedMailboxManager = mock(MailboxManager.class);
+        mockAuthenticationExtractor = mock(HeadersAuthenticationExtractor.class);
+        request = mock(HttpServletRequest.class);
 
-        testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager);
+        testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, mockAuthenticationExtractor);
     }
 
 
     @Test
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsEmpty() throws Exception {
-        assertThatThrownBy(() -> testee.createMailboxSession(Stream.empty()))
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.empty());
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
             .isExactlyInstanceOf(NoValidAuthHeaderException.class);
     }
 
     @Test
     public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() throws Exception {
-        assertThatThrownBy(() -> testee.createMailboxSession(Stream.of("bad")))
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of("bad"));
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
             .isExactlyInstanceOf(NoValidAuthHeaderException.class);
     }
 
@@ -76,8 +88,10 @@ public class JWTAuthenticationStrategyTest {
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
         when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
                 .thenThrow(new MailboxException());
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(Stream.of(fakeAuthHeaderWithPrefix)))
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
                 .isExactlyInstanceOf(MailboxSessionCreationException.class);
     }
 
@@ -92,14 +106,20 @@ public class JWTAuthenticationStrategyTest {
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
         when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
                 .thenReturn(fakeMailboxSession);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
 
-        MailboxSession result = testee.createMailboxSession(Stream.of(fakeAuthHeaderWithPrefix));
+
+        MailboxSession result = testee.createMailboxSession(request);
         assertThat(result).isEqualTo(fakeMailboxSession);
     }
 
     @Test
     public void checkAuthorizationHeaderShouldReturnFalsewWhenAuthHeaderIsEmpty() {
-        assertThat(testee.checkAuthorizationHeader(Stream.empty())).isFalse();
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.empty());
+
+        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
     }
 
     @Test
@@ -108,8 +128,10 @@ public class JWTAuthenticationStrategyTest {
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + wrongAuthHeader;
 
         when(stubTokenVerifier.verify(wrongAuthHeader)).thenReturn(false);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
 
-        assertThat(testee.checkAuthorizationHeader(Stream.of(fakeAuthHeaderWithPrefix))).isFalse();
+        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
     }
 
     @Test
@@ -122,7 +144,10 @@ public class JWTAuthenticationStrategyTest {
 
         Stream<String> authHeadersStream = Stream.of(wrongAuthHeader, invalidAuthHeader)
                 .map(h -> JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + h);
-        assertThat(testee.checkAuthorizationHeader(authHeadersStream)).isFalse();
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(authHeadersStream);
+
+        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
     }
 
     @Test
@@ -131,8 +156,10 @@ public class JWTAuthenticationStrategyTest {
         String validAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
 
         when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(validAuthHeaderWithPrefix));
 
-        assertThat(testee.checkAuthorizationHeader(Stream.of(validAuthHeaderWithPrefix))).isTrue();
+        assertThat(testee.checkAuthorizationHeader(request)).isTrue();
     }
 
     @Test
@@ -145,7 +172,10 @@ public class JWTAuthenticationStrategyTest {
 
         Stream<String> authHeadersStream = Stream.of(dummyAuthHeader, validAuthHeader)
                 .map(h -> JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + h);
-        assertThat(testee.checkAuthorizationHeader(authHeadersStream)).isTrue();
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(authHeadersStream);
+
+        assertThat(testee.checkAuthorizationHeader(request)).isTrue();
     }
 
 }

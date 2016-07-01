@@ -34,6 +34,7 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailSpool;
+import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
@@ -60,6 +61,7 @@ public class JMAPCommonModule extends AbstractModule {
         bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
         bind(MessageFactory.class).in(Scopes.SINGLETON);
         bind(MessagePreviewGenerator.class).in(Scopes.SINGLETON);
+        bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
