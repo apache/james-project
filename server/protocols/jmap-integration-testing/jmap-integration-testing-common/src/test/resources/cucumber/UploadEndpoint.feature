@@ -18,6 +18,11 @@ Feature: An upload endpoint should be available to upload contents
     When "non-authenticated@domain.tld" upload a content
     Then the user should receive a not authorized response
 
+  @Ignore
+  Scenario: Uploading a too big content
+    When "username@domain.tld" upload a too big content
+    Then the user should receive a request entity too large response
+
   Scenario: Uploading a content being authenticated
     When "username@domain.tld" upload a content
     Then the user should receive a created response

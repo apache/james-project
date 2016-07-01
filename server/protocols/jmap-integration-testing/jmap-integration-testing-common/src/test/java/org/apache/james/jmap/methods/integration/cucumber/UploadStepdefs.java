@@ -21,10 +21,14 @@ package org.apache.james.jmap.methods.integration.cucumber;
 
 import static com.jayway.restassured.RestAssured.with;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.access.AccessToken;
 
+import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
 import com.jayway.restassured.specification.RequestSpecification;
 
@@ -34,6 +38,8 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class UploadStepdefs {
+    private static final int _1M = 1024 * 1024;
+    private static final int _10M = 10 * _1M;
 
     private final UserStepdefs userStepdefs;
     private Response response;
@@ -51,6 +57,19 @@ public class UploadStepdefs {
             with.header("Authorization", accessToken.serialize());
         }
         response = with
+            .post("/upload");
+    }
+
+    @When("^\"([^\"]*)\" upload a too big content$")
+    public void userUploadTooBigContent(String username) throws Throwable {
+        AccessToken accessToken = userStepdefs.tokenByUser.get(username);
+        RequestSpecification with = with();
+        if (accessToken != null) {
+            with.header("Authorization", accessToken.serialize());
+        }
+        response = with
+            .contentType(ContentType.BINARY)
+            .content(new BufferedInputStream(new ZeroedInputStream(_10M), _10M))
             .post("/upload");
     }
 
@@ -82,4 +101,32 @@ public class UploadStepdefs {
         response.then()
             .statusCode(401);
     }
+
+    @Then("^the user should receive a request entity too large response$")
+    public void httpRequestEntityTooBigStatus() throws Exception {
+        response.then()
+            .statusCode(413);
+    }
+
+    public static class ZeroedInputStream extends InputStream {
+        public static final int RETURNED_VALUE = 0;
+
+        private final int max;
+        private int pos;
+
+        public ZeroedInputStream(int max) {
+            this.max = max;
+            this.pos = 0;
+        }
+
+        @Override
+        public int read() {
+            if (pos < max) {
+                pos++;
+                return RETURNED_VALUE;
+            }
+            return -1;
+        }
+    }
+
 }
