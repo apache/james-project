@@ -13,8 +13,9 @@ Feature: Download GET
     Then the user should receive that attachment
 
   Scenario: Getting an attachment with an unknown blobId
-    When "username@domain.tld" downloads "123"
-    Then the user should receive a not found response
+    Given "username@domain.tld" mailbox "inbox" contains a message "1" with an attachment "2"
+    When "username@domain.tld" downloads "2" with a valid authentication token
+    Then the user should not be authorized
 
   Scenario: Getting an attachment previously stored with a desired name
     Given "username@domain.tld" mailbox "inbox" contains a message "1" with an attachment "2"

@@ -65,8 +65,8 @@ public class SignedTokenFactory implements SimpleTokenFactory {
                 .blobId(blobId)
                 .expirationDate(expirationTime)
                 .signature(signatureHandler.sign(Joiner.on(AttachmentAccessToken.SEPARATOR)
-                                                    .join(username, 
-                                                            blobId,
+                                                    .join(blobId,
+                                                            username, 
                                                             DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(expirationTime))))
                 .build();
     }

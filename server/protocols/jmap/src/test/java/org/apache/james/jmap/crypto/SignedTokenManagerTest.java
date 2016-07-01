@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.api.SimpleTokenManager.TokenStatus;
+import org.apache.james.jmap.model.AttachmentAccessToken;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.junit.Before;
 import org.junit.Test;
@@ -167,5 +168,14 @@ public class SignedTokenManagerTest {
         zonedDateTimeProvider.setFixedDateTime(DATE);
         ContinuationToken pirateContinuationToken = new ContinuationToken("user", DATE.plusMinutes(15), "fake");
         assertThat(tokenManager.getValidity(pirateContinuationToken)).isEqualTo(TokenStatus.INVALID);
+    }
+
+    @Test
+    public void signedAttachmentAccessTokenShouldBeValidated() {
+        String blobId = "blobId";
+        zonedDateTimeProvider.setFixedDateTime(DATE);
+        String serializedToken = tokenFactory.generateAttachmentAccessToken("user", blobId).serialize();
+
+        assertThat(tokenManager.isValid(AttachmentAccessToken.from(serializedToken, blobId))).isTrue();
     }
 }

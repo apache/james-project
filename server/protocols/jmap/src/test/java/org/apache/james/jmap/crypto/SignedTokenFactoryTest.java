@@ -73,7 +73,6 @@ public class SignedTokenFactoryTest {
     public void generateAttachmentAccessTokenShouldHaveTheRightOutPut() throws Exception {
         zonedDateTimeProvider.setFixedDateTime(DATE);
         assertThat(toKenFactory.generateAttachmentAccessToken("user", "blobId").serialize())
-            .isEqualTo("user_2011-12-03T10:20:30+01:00_UAmjTzvmmIwvE1Yw54tE7jC1Q2nCJ1l3XX1703kYmLIeOZe7fNSLM6V8CzPFEvZ+Y4H+UD4UTkNHbmgcPbxesITnby+UfT/tIiTppJhXJvtTxSoTy9vuAJrW9/kJh6CruqtSM+BUEkLKuuzJySmvDkaHSaXwot4egGXaJ9yHgjEh2PT3uA0O0JjRNB2x8oa370fFSZsT2QgXrqeqHWWO1j6IrAf4UcyhvjNkJBK9TVNubfqGKuCZ4dz2Rm/CUvp13CpzUoVqBS1nJ1VaIw94L2rX8RkAMTlV7AXKB3kPiBX7MdGp2NBiAUlYlOLjflYl8plnv/QrRCmfGxnsvv4WVQ==");
+            .isEqualTo("user_2011-12-03T10:20:30+01:00_eSg1mVxMpqw5/u6wsTAatP7hoHDoI7blEW0hxGPrRMMj3hECT+YhbUCdhz9Lb4U+jsYPgNLDuAHwxin79xXfLoq0nVsogEE32svRYVvbaDpro+EOtkAHhYnYxWnAGxB/70u7Zyw0oYGmWOwkCkLDFsWKglMp9IUpOJQP50zbzbdW+4dKlAi/8VmN8jFyZx40envRbgEn4Q2QQbnUH/7F9+vdLIl+bAfcj6QlevqFRsUkmTZelkv1rtGUAvnPSBQL4TeBx5Qk/eEiw8IbB2lbCIAoIFZC6Vl8QOO5Y6LFzmqHL9i0BjvuoiZ8FKQS0pGd5CU6pwc7sv0xD82Vx1eFiw==");
     }
-
 }

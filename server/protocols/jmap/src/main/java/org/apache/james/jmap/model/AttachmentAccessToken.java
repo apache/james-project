@@ -21,11 +21,15 @@ package org.apache.james.jmap.model;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 
 public class AttachmentAccessToken implements SignedExpiringToken {
 
@@ -34,7 +38,21 @@ public class AttachmentAccessToken implements SignedExpiringToken {
     public static Builder builder() {
         return new Builder();
     }
-    
+
+    public static AttachmentAccessToken from(String serializedAttachmentAccessToken, String blobId) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(serializedAttachmentAccessToken), "'AttachmentAccessToken' is mandatory");
+        List<String> split = Splitter.on(SEPARATOR).splitToList(serializedAttachmentAccessToken);
+        Preconditions.checkArgument(split.size() == 3, "Wrong 'AttachmentAccessToken'");
+
+        String defaultValue = null;
+        return builder()
+                .blobId(blobId)
+                .username(Iterables.get(split, 0, defaultValue))
+                .expirationDate(ZonedDateTime.parse(Iterables.get(split, 1, defaultValue)))
+                .signature(Iterables.get(split, 2, defaultValue))
+                .build();
+    }
+
     public static class Builder {
         private String username;
         private String blobId;
