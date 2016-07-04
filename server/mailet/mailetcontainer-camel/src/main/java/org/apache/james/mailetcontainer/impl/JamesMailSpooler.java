@@ -19,6 +19,14 @@
 
 package org.apache.james.mailetcontainer.impl;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
@@ -34,13 +42,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages the mail spool. This class is responsible for retrieving messages
@@ -192,11 +193,11 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Log
                     logger.error("Exception dequeue mail", e1);
 
                 }
+            } catch (InterruptedException interrupted) {
+                //MailSpooler is stopping
             }
         }
-        if (logger.isInfoEnabled()) {
-            logger.info("Stop " + getClass().getName() + ": " + Thread.currentThread().getName());
-        }
+        logger.info("Stop {} : {}", getClass().getName(), Thread.currentThread().getName());
     }
 
     /**

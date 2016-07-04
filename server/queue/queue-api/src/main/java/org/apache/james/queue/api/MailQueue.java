@@ -86,10 +86,8 @@ public interface MailQueue {
      * block until a Mail is ready and then process the operation.
      * Implementations should take care todo some kind of transactions to not
      * loose any mail on error
-     * 
-     * @throws MailQueueException
      */
-    MailQueueItem deQueue() throws MailQueueException;
+    MailQueueItem deQueue() throws MailQueueException, InterruptedException;
 
     /**
      * Exception which will get thrown if any problems occur while working the

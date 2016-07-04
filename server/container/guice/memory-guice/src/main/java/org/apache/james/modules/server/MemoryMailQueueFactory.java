@@ -33,7 +33,6 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.mailet.Mail;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 public class MemoryMailQueueFactory implements MailQueueFactory {
@@ -86,14 +85,10 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         }
 
         @Override
-        public MailQueueItem deQueue() throws MailQueueException {
+        public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
             while (true) {
-                try {
-                    MemoryMailQueueItem item = mailItems.take();
-                    return mailQueueItemDecoratorFactory.decorate(item);
-                } catch (InterruptedException e) {
-                    Throwables.propagate(e);
-                }
+                MemoryMailQueueItem item = mailItems.take();
+                return mailQueueItemDecoratorFactory.decorate(item);
             }
         }
 
