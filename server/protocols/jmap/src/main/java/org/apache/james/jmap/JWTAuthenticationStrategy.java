@@ -72,12 +72,6 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
                 .orElseThrow(() -> new NoValidAuthHeaderException());
     }
 
-    @Override
-    public boolean checkAuthorizationHeader(HttpServletRequest httpRequest) {
-        return extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
-                .anyMatch(tokenManager::verify);
-    }
-
     private Stream<String> extractTokensFromAuthHeaders(Stream<String> authHeaders) {
         return authHeaders
                 .filter(h -> h.startsWith(AUTHORIZATION_HEADER_PREFIX))

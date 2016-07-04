@@ -80,10 +80,12 @@ public class AccessTokenAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
-        String username = "username";
+    public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() throws Exception {
+        String username = "123456789";
+        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
         when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
-                .thenThrow(new MailboxException());
+                .thenReturn(fakeMailboxSession);
 
         UUID authHeader = UUID.randomUUID();
         when(mockedAccessTokenManager.getUsernameFromToken(AccessToken.fromString(authHeader.toString())))
@@ -91,6 +93,25 @@ public class AccessTokenAuthenticationStrategyTest {
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.of(authHeader.toString()));
 
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
+            .isExactlyInstanceOf(NoValidAuthHeaderException.class);
+    }
+
+    @Test
+    public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
+        String username = "username";
+        when(mockedMailboxManager.createSystemSession(eq(username), any(Logger.class)))
+                .thenThrow(new MailboxException());
+
+        UUID authHeader = UUID.randomUUID();
+        AccessToken accessToken = AccessToken.fromString(authHeader.toString());
+        when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
+                .thenReturn(username);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(authHeader.toString()));
+        when(mockedAccessTokenManager.isValid(accessToken))
+            .thenReturn(true);
 
         assertThatThrownBy(() -> testee.createMailboxSession(request))
                 .isExactlyInstanceOf(MailboxSessionCreationException.class);
@@ -105,63 +126,16 @@ public class AccessTokenAuthenticationStrategyTest {
                 .thenReturn(fakeMailboxSession);
 
         UUID authHeader = UUID.randomUUID();
-        when(mockedAccessTokenManager.getUsernameFromToken(AccessToken.fromString(authHeader.toString())))
+        AccessToken accessToken = AccessToken.fromString(authHeader.toString());
+        when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
                 .thenReturn(username);
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.of(authHeader.toString()));
+        when(mockedAccessTokenManager.isValid(accessToken))
+            .thenReturn(true);
 
 
         MailboxSession result = testee.createMailboxSession(request);
         assertThat(result).isEqualTo(fakeMailboxSession);
-    }
-
-    @Test
-    public void checkAuthorizationHeaderShouldReturnFalseWhenAuthHeaderIsEmpty() {
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.empty());
-
-        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
-    }
-
-    @Test
-    public void checkAuthorizationHeaderShouldReturnFalseWhenAuthHeaderIsInvalid() {
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of("bad"));
-
-        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
-    }
-
-    @Test
-    public void checkAuthorizationHeaderShouldReturnFalseWhenAuthHeadersAreInvalid() {
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of("bad", "alsobad"));
-
-        assertThat(testee.checkAuthorizationHeader(request)).isFalse();
-    }
-
-    @Test
-    public void checkAuthorizationHeaderShouldReturnTrueWhenAuthHeaderIsValid() {
-
-        String validToken = UUID.randomUUID().toString();
-        when(mockedAccessTokenManager.isValid(AccessToken.fromString(validToken)))
-                .thenReturn(true);
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of(validToken));
-
-
-        assertThat(testee.checkAuthorizationHeader(request)).isTrue();
-    }
-
-    @Test
-    public void checkAuthorizationHeaderShouldReturnTrueWhenOneAuthHeaderIsValid() {
-
-        String validToken = UUID.randomUUID().toString();
-        when(mockedAccessTokenManager.isValid(AccessToken.fromString(validToken)))
-                .thenReturn(true);
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of("bad", validToken));
-
-
-        assertThat(testee.checkAuthorizationHeader(request)).isTrue();
     }
 }

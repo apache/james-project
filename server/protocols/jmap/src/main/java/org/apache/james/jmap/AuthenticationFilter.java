@@ -20,6 +20,7 @@ package org.apache.james.jmap;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.servlet.Filter;
@@ -67,9 +68,9 @@ public class AuthenticationFilter implements Filter {
 
         try {
             HttpServletRequest requestWithSession = authMethods.stream()
-                    .filter(auth -> auth.checkAuthorizationHeader(httpRequest))
+                    .flatMap(auth -> createSession(auth, httpRequest))
                     .findFirst()
-                    .map(auth -> addSessionToRequest(httpRequest, createSession(auth, httpRequest)))
+                    .map(mailboxSession -> addSessionToRequest(httpRequest, mailboxSession))
                     .orElseThrow(UnauthorizedException::new);
             chain.doFilter(requestWithSession, response);
 
@@ -85,8 +86,12 @@ public class AuthenticationFilter implements Filter {
         return httpRequest;
     }
 
-    private MailboxSession createSession(AuthenticationStrategy authenticationMethod, HttpServletRequest httpRequest) {
-        return authenticationMethod.createMailboxSession(httpRequest);
+    private Stream<MailboxSession> createSession(AuthenticationStrategy authenticationMethod, HttpServletRequest httpRequest) {
+        try {
+            return Stream.of(authenticationMethod.createMailboxSession(httpRequest));
+        } catch (Exception e) {
+            return Stream.empty();
+        }
     }
 
     @Override

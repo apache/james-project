@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 import org.apache.james.jmap.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
@@ -58,6 +57,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
 
         Optional<String> username = authenticationExtractor.authHeaders(httpRequest)
             .map(AccessToken::fromString)
+            .filter(accessTokenManager::isValid)
             .map(accessTokenManager::getUsernameFromToken)
             .findFirst();
 
@@ -69,25 +69,5 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
             }
         }
         throw new NoValidAuthHeaderException();
-    }
-
-    @Override
-    public boolean checkAuthorizationHeader(HttpServletRequest httpRequest) {
-        return authenticationExtractor.authHeaders(httpRequest)
-                .map(this::accessTokenFrom)
-                .anyMatch(this::isValid);
-    }
-
-    private Optional<AccessToken> accessTokenFrom(String header) {
-        try {
-            return Optional.of(AccessToken.fromString(header));
-        } catch (NotAnAccessTokenException e) {
-            return Optional.empty();
-        }
-    }
-
-    private boolean isValid(Optional<AccessToken> token) {
-        return token.map(accessTokenManager::isValid)
-            .orElse(false);
     }
 }

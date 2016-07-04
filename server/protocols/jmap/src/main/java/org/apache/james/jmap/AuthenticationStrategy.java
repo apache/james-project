@@ -25,6 +25,4 @@ import org.apache.james.mailbox.MailboxSession;
 public interface AuthenticationStrategy {
 
     MailboxSession createMailboxSession(HttpServletRequest httpRequest);
-
-    boolean checkAuthorizationHeader(HttpServletRequest httpRequest);
 }
