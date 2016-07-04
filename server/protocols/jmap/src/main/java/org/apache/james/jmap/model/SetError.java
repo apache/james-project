@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -59,6 +60,10 @@ public class SetError {
         public Builder description(String description) {
             this.description = description;
             return this;
+        }
+
+        public Builder properties(MessageProperty... properties) {
+            return properties(ImmutableSet.copyOf(properties));
         }
 
         public Builder properties(Set<MessageProperty> properties) {
@@ -115,5 +120,14 @@ public class SetError {
     @Override
     public int hashCode() {
         return Objects.hashCode(type, description, properties);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("description", description)
+                .add("type", type)
+                .add("properties", properties)
+                .toString();
     }
 }

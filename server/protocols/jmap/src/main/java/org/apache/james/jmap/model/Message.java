@@ -95,8 +95,12 @@ public class Message {
             return this;
         }
 
-        public Builder mailboxIds(ImmutableList<String> mailboxIds) {
-            this.mailboxIds = mailboxIds;
+        public Builder mailboxId(String mailboxId) {
+            return this.mailboxIds(ImmutableList.of(mailboxId));
+        }
+
+        public Builder mailboxIds(List<String> mailboxIds) {
+            this.mailboxIds = ImmutableList.copyOf(mailboxIds);
             return this;
         }
 

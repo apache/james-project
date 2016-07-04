@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.Test;
 import com.google.common.collect.ImmutableSet;
@@ -85,7 +86,7 @@ public class SetErrorTest {
     @Test
     public void buildShouldDefaultToEmptyWhenPropertiesNull() {
         SetError result = SetError.builder()
-                .type("a type").description("a description").properties(null)
+                .type("a type").description("a description").properties((Set<MessageProperty>)null)
                 .build();
 
         assertThat(result.getProperties()).isPresent();
@@ -98,10 +99,33 @@ public class SetErrorTest {
         SetError result = SetError.builder()
                 .type("a type").description("a description")
                 .properties(nonNullProperty)
-                .properties(null)
+                .properties((Set<MessageProperty>)null)
                 .build();
 
         assertThat(result.getProperties()).isPresent();
         assertThat(result.getProperties().get()).isEqualTo(nonNullProperty);
     }
+
+    public void buildShouldDefaultToEmptyWhenPropertiesWithNoArgument() {
+        SetError result = SetError.builder()
+                .type("a type").description("a description").properties()
+                .build();
+
+        assertThat(result.getProperties()).isPresent();
+        assertThat(result.getProperties().get()).isEmpty();
+    }
+
+    @Test
+    public void buildShouldBeIdempotentWhenPropertiesWithNoArgument() {
+        ImmutableSet<MessageProperty> nonNullProperty = ImmutableSet.of(MessageProperty.from);
+        SetError result = SetError.builder()
+                .type("a type").description("a description")
+                .properties(nonNullProperty)
+                .properties()
+                .build();
+
+        assertThat(result.getProperties()).isPresent();
+        assertThat(result.getProperties().get()).isEqualTo(nonNullProperty);
+    }
+
 }

@@ -19,31 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
-import org.apache.james.jmap.model.CreationMessage;
-import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.mailbox.exception.MailboxException;
 
-public class MessageWithId<T> {
-
-    private CreationMessageId creationId;
-    private T message;
-
-    public MessageWithId(CreationMessageId creationId, T message) {
-        this.creationId = creationId;
-        this.message = message;
-    }
-
-    public CreationMessageId getCreationId() {
-        return creationId;
-    }
-
-    public T getMessage() {
-        return message;
-    }
-
-    public static class CreationMessageEntry extends MessageWithId<CreationMessage> {
-        public CreationMessageEntry(CreationMessageId creationId, CreationMessage message) {
-            super(creationId, message);
-        }
-    }
+public class MailboxInvalidMessageCreationException extends MailboxException {
 
 }

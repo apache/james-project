@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
@@ -55,7 +56,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo));
 
         // Then
@@ -67,7 +68,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldThrowWhenMessageIsNull() {
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        sut.convertToMime(new MessageWithId.CreationMessageEntry(CreationMessageId.of("any"), null));
+        sut.convertToMime(new ValueWithId.CreationMessageEntry(CreationMessageId.of("any"), null));
     }
 
     @Test
@@ -83,7 +84,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -107,7 +108,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -128,7 +129,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -148,7 +149,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -169,7 +170,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -190,7 +191,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -247,7 +248,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -267,7 +268,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -288,7 +289,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then
@@ -310,7 +311,7 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
 
         // Then

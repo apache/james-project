@@ -30,6 +30,8 @@ import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
+import org.apache.james.jmap.utils.SystemMailboxesProvider;
+import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
@@ -64,11 +66,12 @@ public class JMAPModule extends AbstractModule {
 
         bind(HtmlTextExtractor.class).to(MailboxBasedHtmlTextExtractor.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().to(VacationMailetCheck.class);
         transportProcessorChecks.addBinding().to(BccMailetCheck.class);
+        
+        bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
     }
 
     @Provides

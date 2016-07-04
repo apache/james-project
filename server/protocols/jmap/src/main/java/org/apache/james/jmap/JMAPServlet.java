@@ -36,6 +36,8 @@ import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -44,6 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JMAPServlet extends HttpServlet {
 
+    public static final Logger LOG = LoggerFactory.getLogger(JMAPServlet.class);
     public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String JSON_CONTENT_TYPE_UTF8 = "application/json; charset=UTF-8";
 
@@ -70,6 +73,7 @@ public class JMAPServlet extends HttpServlet {
             resp.setContentType(JSON_CONTENT_TYPE);
             objectMapper.writeValue(resp.getOutputStream(), responses);
         } catch (IOException e) {
+            LOG.error("error handling request", e);
             resp.setStatus(SC_BAD_REQUEST);
         }
     }

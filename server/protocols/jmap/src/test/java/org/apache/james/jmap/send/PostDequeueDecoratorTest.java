@@ -29,9 +29,9 @@ import java.util.Iterator;
 
 import javax.mail.Flags;
 
+import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
-import org.apache.james.jmap.send.exception.MailboxRoleNotFoundException;
 import org.apache.james.jmap.send.exception.MessageIdNotFoundException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;

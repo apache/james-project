@@ -19,13 +19,17 @@
 
 package org.apache.james.jmap.model;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.jmap.methods.UpdateMessagePatchConverter;
+import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
+import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -34,7 +38,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import org.apache.commons.lang.NotImplementedException;
 
 @JsonDeserialize(builder = SetMessagesRequest.Builder.class)
 public class SetMessagesRequest implements JmapRequest {
@@ -48,13 +51,13 @@ public class SetMessagesRequest implements JmapRequest {
 
         private String accountId;
         private String ifInState;
-        private ImmutableMap.Builder<CreationMessageId, CreationMessage> create;
+        private HashMap<CreationMessageId, CreationMessage> create;
         private ImmutableMap.Builder<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> updatesProvider;
 
         private ImmutableList.Builder<MessageId> destroy;
 
         private Builder() {
-            create = ImmutableMap.builder();
+            create = new HashMap<>();
             updatesProvider = ImmutableMap.builder();
             destroy = ImmutableList.builder();
         }
@@ -70,6 +73,11 @@ public class SetMessagesRequest implements JmapRequest {
             if (ifInState != null) {
                 throw new NotImplementedException();
             }
+            return this;
+        }
+
+        public Builder create(CreationMessageId creationMessageId, CreationMessage creation) {
+            this.create.put(creationMessageId, creation);
             return this;
         }
 
@@ -89,17 +97,24 @@ public class SetMessagesRequest implements JmapRequest {
         }
 
         public SetMessagesRequest build() {
-            return new SetMessagesRequest(Optional.ofNullable(accountId), Optional.ofNullable(ifInState), create.build(), updatesProvider.build(), destroy.build());
+            return new SetMessagesRequest(Optional.ofNullable(accountId), Optional.ofNullable(ifInState), 
+                    messageCreations(), updatesProvider.build(), destroy.build());
+        }
+
+        private ImmutableList<CreationMessageEntry> messageCreations() {
+            return create.entrySet().stream()
+                    .map(entry -> new CreationMessageEntry(entry.getKey(), entry.getValue()))
+                    .collect(ImmutableCollectors.toImmutableList());
         }
     }
 
     private final Optional<String> accountId;
     private final Optional<String> ifInState;
-    private final Map<CreationMessageId, CreationMessage> create;
+    private final List<CreationMessageEntry> create;
     private final Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> update;
     private final List<MessageId> destroy;
 
-    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, Map<CreationMessageId, CreationMessage> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
+    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<CreationMessageEntry> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
         this.accountId = accountId;
         this.ifInState = ifInState;
         this.create = create;
@@ -115,7 +130,7 @@ public class SetMessagesRequest implements JmapRequest {
         return ifInState;
     }
 
-    public Map<CreationMessageId, CreationMessage> getCreate() {
+    public List<CreationMessageEntry> getCreate() {
         return create;
     }
 
@@ -126,4 +141,5 @@ public class SetMessagesRequest implements JmapRequest {
     public List<MessageId> getDestroy() {
         return destroy;
     }
+
 }

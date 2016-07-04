@@ -81,6 +81,11 @@ public class SetMessagesResponse implements Method.Response {
             throw new NotImplementedException();
         }
 
+        public Builder created(CreationMessageId creationMessageId, Message message) {
+            this.created.put(creationMessageId, message);
+            return this;
+        }
+
         public Builder created(Map<CreationMessageId, Message> created) {
             this.created.putAll(created);
             return this;
@@ -105,6 +110,11 @@ public class SetMessagesResponse implements Method.Response {
             this.notCreated.putAll(notCreated);
             return this;
         }
+        
+        public Builder notCreated(CreationMessageId id, SetError error) {
+            this.notCreated.put(id, error);
+            return this;
+        }
 
         public Builder notUpdated(Map<MessageId, SetError> notUpdated) {
             this.notUpdated.putAll(notUpdated);
@@ -119,6 +129,10 @@ public class SetMessagesResponse implements Method.Response {
         public Builder notDestroyed(Map<MessageId, SetError> notDestroyed) {
             this.notDestroyed.putAll(notDestroyed);
             return this;
+        }
+
+        public Builder mergeWith(Builder otherBuilder) {
+            return otherBuilder.build().mergeInto(this);
         }
 
         public SetMessagesResponse build() {

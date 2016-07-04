@@ -33,13 +33,18 @@ public class SimpleMailbox implements Mailbox {
     private final long uidValidity;
     private MailboxACL acl = SimpleMailboxACL.EMPTY;
 
-    public SimpleMailbox(MailboxPath path, long uidValidity) {
+    public SimpleMailbox(MailboxPath path, long uidValidity, MailboxId mailboxId) {
+        this.id = mailboxId;
         this.namespace = path.getNamespace();
         this.user = path.getUser();
         this.name = path.getName();
         this.uidValidity = uidValidity;
     }
-    
+
+    public SimpleMailbox(MailboxPath path, long uidValidity) {
+        this(path, uidValidity, null);
+    }
+
     public SimpleMailbox(Mailbox mailbox) {
         this.id = mailbox.getMailboxId();
         this.namespace = mailbox.getNamespace();

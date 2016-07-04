@@ -68,7 +68,7 @@ public class MIMEMessageConverter {
         this.bodyFactory = new BasicBodyFactory();
     }
 
-    public byte[] convert(MessageWithId.CreationMessageEntry creationMessageEntry) {
+    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry) {
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         DefaultMessageWriter writer = new DefaultMessageWriter();
@@ -80,18 +80,18 @@ public class MIMEMessageConverter {
         return buffer.toByteArray();
     }
 
-    @VisibleForTesting Message convertToMime(MessageWithId.CreationMessageEntry creationMessageEntry) {
-        if (creationMessageEntry == null || creationMessageEntry.getMessage() == null) {
+    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry) {
+        if (creationMessageEntry == null || creationMessageEntry.getValue() == null) {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
 
         MessageBuilder messageBuilder = MessageBuilder.create();
-        if (mixedTextAndHtml(creationMessageEntry.getMessage())) {
-            messageBuilder.setBody(createMultipartBody(creationMessageEntry.getMessage()));
+        if (mixedTextAndHtml(creationMessageEntry.getValue())) {
+            messageBuilder.setBody(createMultipartBody(creationMessageEntry.getValue()));
         } else {
-            messageBuilder.setBody(createTextBody(creationMessageEntry.getMessage()));
+            messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()));
         }
-        buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getMessage());
+        buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getValue());
         return messageBuilder.build();
     }
 
