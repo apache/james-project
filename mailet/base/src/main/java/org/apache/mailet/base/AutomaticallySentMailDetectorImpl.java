@@ -32,8 +32,18 @@ import org.apache.james.mime4j.parser.MimeStreamParser;
 import org.apache.james.mime4j.stream.BodyDescriptor;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 
 public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailDetector {
+
+    private static final String[] MAILING_LIST_HEADERS = new String[] {
+            "List-Help",
+            "List-Subscribe",
+            "List-Unsubscribe",
+            "List-Owner",
+            "List-Post",
+            "List-Id",
+            "List-Archive" };
 
     public boolean isAutomaticallySent(Mail mail) throws MessagingException {
         return isMailingList(mail) ||
@@ -42,20 +52,27 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     }
 
     public boolean isMailingList(Mail mail) throws MessagingException {
-        String localPart = mail.getSender().getLocalPart();
+        return senderIsMailingList(mail)
+            || headerIsMailingList(mail);
+    }
+
+    private boolean senderIsMailingList(Mail mail) {
+        MailAddress sender = mail.getSender();
+        if (sender == null) {
+            return false;
+        }
+
+        String localPart = sender.getLocalPart();
         return localPart.startsWith("owner-")
             || localPart.endsWith("-request")
             || localPart.equalsIgnoreCase("MAILER-DAEMON")
             || localPart.equalsIgnoreCase("LISTSERV")
-            || localPart.equalsIgnoreCase("majordomo")
-            || mail.getMessage()
-            .getMatchingHeaders(new String[]{"List-Help",
-                "List-Subscribe",
-                "List-Unsubscribe",
-                "List-Owner",
-                "List-Post",
-                "List-Id",
-                "List-Archive"})
+            || localPart.equalsIgnoreCase("majordomo");
+    }
+
+    private boolean headerIsMailingList(Mail mail) throws MessagingException {
+        return mail.getMessage()
+            .getMatchingHeaders(MAILING_LIST_HEADERS)
             .hasMoreElements();
     }
 
