@@ -30,7 +30,10 @@ import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.mailbox.store.mail.model.AttachmentId;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mime4j.Charsets;
+import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
@@ -57,7 +60,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo));
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("In-Reply-To")).extracting(Field::getBody)
@@ -68,7 +71,7 @@ public class MIMEMessageConverterTest {
     public void convertToMimeShouldThrowWhenMessageIsNull() {
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        sut.convertToMime(new ValueWithId.CreationMessageEntry(CreationMessageId.of("any"), null));
+        sut.convertToMime(new ValueWithId.CreationMessageEntry(CreationMessageId.of("any"), null), ImmutableList.of());
     }
 
     @Test
@@ -85,7 +88,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getFrom()).extracting(Mailbox::getAddress).allMatch(f -> f.equals(joesEmail));
@@ -109,7 +112,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getDate()).isEqualToIgnoringMillis(Date.from(now));
@@ -130,7 +133,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -150,7 +153,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -171,7 +174,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -192,7 +195,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isInstanceOf(Multipart.class);
@@ -216,7 +219,7 @@ public class MIMEMessageConverterTest {
 
         String expectedHeaders = "MIME-Version: 1.0\r\n" +
                 "Content-Type: multipart/mixed;\r\n" +
-                " boundary=\"-=Part.0.";
+                " boundary=\"-=Part.1.";
         String expectedPart1 = "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "\r\n" +
                 "Hello all!\r\n";
@@ -226,7 +229,7 @@ public class MIMEMessageConverterTest {
 
         // When
         byte[] convert = sut.convert(new MessageWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         String actual = new String(convert, Charsets.UTF_8);
@@ -249,7 +252,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getMimeType()).isEqualTo("text/plain");
@@ -269,7 +272,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getMimeType()).isEqualTo("text/html");
@@ -290,7 +293,7 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -312,10 +315,52 @@ public class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage));
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
         assertThat(result.getMimeType()).isEqualTo("text/plain");
+    }
+
+    @Test
+    public void convertToMimeShouldAddAttachmentWhenOne() {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+        String expectedCID = "<cid>";
+        String expectedMimeType = "image/png";
+        String text = "123456";
+        TextBody expectedBody = new BasicBodyFactory().textBody(text, Charsets.UTF_8);
+        MessageAttachment attachment = MessageAttachment.builder()
+                .attachment(org.apache.james.mailbox.store.mail.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes(text.getBytes())
+                    .type(expectedMimeType)
+                    .build())
+                .cid(expectedCID)
+                .isInline(true)
+                .build();
+
+        // When
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+
+        // Then
+        assertThat(result.getBody()).isInstanceOf(Multipart.class);
+        assertThat(result.isMultipart()).isTrue();
+        Multipart typedResult = (Multipart)result.getBody();
+        assertThat(typedResult.getBodyParts()).hasSize(2);
+        Entity attachmentPart = typedResult.getBodyParts().get(1);
+        assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expectedBody);
+        assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
+        assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
+        assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
     }
 }

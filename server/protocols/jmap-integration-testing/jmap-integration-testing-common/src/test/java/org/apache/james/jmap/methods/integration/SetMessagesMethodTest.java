@@ -33,10 +33,12 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -52,6 +54,7 @@ import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -93,12 +96,12 @@ public abstract class SetMessagesMethodTest {
         jmapServer = createJmapServer();
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort())
-        		.build();
-        
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setPort(jmapServer.getJmapPort())
+                .build();
+
         username = "username@" + USERS_DOMAIN;
         String password = "password";
         jmapServer.serverProbe().addDomain(USERS_DOMAIN);
@@ -148,6 +151,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
@@ -161,6 +165,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
@@ -215,7 +220,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         given()
@@ -224,6 +229,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".notDestroyed", anEmptyMap())
@@ -237,7 +243,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         // When
@@ -247,6 +253,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200);
 
         // Then
@@ -256,6 +263,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", empty());
@@ -266,13 +274,13 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String missingMessageId = username + "|mailbox|4";
@@ -282,6 +290,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", hasSize(2))
@@ -299,13 +308,13 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         // When
@@ -315,6 +324,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200);
 
         // Then
@@ -324,6 +334,7 @@ public abstract class SetMessagesMethodTest {
         .when()
             .post("/jmap")
         .then()
+            .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1));
@@ -335,7 +346,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String presumedMessageId = username + "|mailbox|1";
@@ -348,8 +359,8 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap")
         // Then
         .then()
-            .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
-            .log().ifValidationFails();
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId));
     }
 
     private ResponseSpecification getSetMessagesUpdateOKResponseAssertions(String messageId) {
@@ -369,27 +380,27 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", presumedMessageId))
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
         // Then
         with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-                .post("/jmap")
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
         .then()
-                .statusCode(200)
-                .body(NAME, equalTo("messages"))
-                .body(ARGUMENTS + ".list", hasSize(1))
-                .body(ARGUMENTS + ".list[0].isUnread", equalTo(false))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(false));
     }
 
     @Test
@@ -398,20 +409,20 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.SEEN));
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
         .when()
-                .post("/jmap")
+            .post("/jmap")
         // Then
         .then()
-                .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId));
     }
 
     @Test
@@ -420,26 +431,26 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.SEEN));
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
         // Then
         with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-                .post("/jmap")
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
         .then()
-                .body(NAME, equalTo("messages"))
-                .body(ARGUMENTS + ".list", hasSize(1))
-                .body(ARGUMENTS + ".list[0].isUnread", equalTo(true))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isUnread", equalTo(true));
     }
 
 
@@ -449,20 +460,20 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
         .when()
-                .post("/jmap")
+            .post("/jmap")
         // Then
         .then()
-                .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId));
     }
 
     @Test
@@ -471,53 +482,53 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
         // Then
         with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-                .post("/jmap")
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
         .then()
-                .body(NAME, equalTo("messages"))
-                .body(ARGUMENTS + ".list", hasSize(1))
-                .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isFlagged", equalTo(true));
     }
 
     @Test
     public void setMessagesShouldRejectUpdateWhenPropertyHasWrongType() throws MailboxException {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
         String messageId = username + "|mailbox|1";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\" } } }, \"#0\"]]", messageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\" } } }, \"#0\"]]", messageId))
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(NOT_UPDATED, hasKey(messageId))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
-                        " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
-                .body(ARGUMENTS + ".updated", hasSize(0));
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(NOT_UPDATED, hasKey(messageId))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
+                    " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
+            .body(ARGUMENTS + ".updated", hasSize(0));
     }
 
     @Test
@@ -525,27 +536,27 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldRejectUpdateWhenPropertiesHaveWrongTypes() throws MailboxException {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
 
         await();
 
         String messageId = username + "|mailbox|1";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\", \"isFlagged\" : 456 } } }, \"#0\"]]", messageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\", \"isFlagged\" : 456 } } }, \"#0\"]]", messageId))
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(NOT_UPDATED, hasKey(messageId))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].properties", hasSize(2))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
-                .body(NOT_UPDATED + "[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
-                .body(ARGUMENTS + ".updated", hasSize(0));
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(NOT_UPDATED, hasKey(messageId))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].type", equalTo("invalidProperties"))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].properties", hasSize(2))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].properties[0]", equalTo("isUnread"))
+            .body(NOT_UPDATED + "[\""+messageId+"\"].properties[1]", equalTo("isFlagged"))
+            .body(ARGUMENTS + ".updated", hasSize(0));
     }
 
     @Test
@@ -554,20 +565,20 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         // When
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
         .when()
-                .post("/jmap")
+            .post("/jmap")
         // Then
         .then()
-                .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .spec(getSetMessagesUpdateOKResponseAssertions(presumedMessageId));
     }
 
     @Test
@@ -576,26 +587,26 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
 
         jmapServer.serverProbe().appendMessage(username, new MailboxPath(MailboxConstants.USER_NAMESPACE, username, "mailbox"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), new Date(), false, new Flags());
         await();
 
         String presumedMessageId = username + "|mailbox|1";
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
+            .header("Authorization", accessToken.serialize())
+            .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", presumedMessageId))
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
         // Then
         with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
-                .post("/jmap")
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+            .post("/jmap")
         .then()
-                .body(NAME, equalTo("messages"))
-                .body(ARGUMENTS + ".list", hasSize(1))
-                .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true))
-                .log().ifValidationFails();
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].isAnswered", equalTo(true));
     }
 
     @Test
@@ -640,34 +651,34 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
-                // note that assertions on result message had to be split between
-                // string-typed values and boolean-typed value assertions on the same .created entry
-                // make sure only one creation has been processed
-                .body(ARGUMENTS + ".created", aMapWithSize(1))
-                // assert server-set attributes are returned
-                .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
-                        hasEntry(equalTo("id"), not(isEmptyOrNullString())),
-                        hasEntry(equalTo("blobId"), not(isEmptyOrNullString())),
-                        hasEntry(equalTo("threadId"), not(isEmptyOrNullString())),
-                        hasEntry(equalTo("size"), not(isEmptyOrNullString()))
-                )))
-                // assert that message flags are all unset
-                .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
-                        hasEntry(equalTo("isDraft"), equalTo(false)),
-                        hasEntry(equalTo("isUnread"), equalTo(false)),
-                        hasEntry(equalTo("isFlagged"), equalTo(false)),
-                        hasEntry(equalTo("isAnswered"), equalTo(false))
-                )))
-                ;
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            // note that assertions on result message had to be split between
+            // string-typed values and boolean-typed value assertions on the same .created entry
+            // make sure only one creation has been processed
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            // assert server-set attributes are returned
+            .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
+                    hasEntry(equalTo("id"), not(isEmptyOrNullString())),
+                    hasEntry(equalTo("blobId"), not(isEmptyOrNullString())),
+                    hasEntry(equalTo("threadId"), not(isEmptyOrNullString())),
+                    hasEntry(equalTo("size"), not(isEmptyOrNullString()))
+            )))
+            // assert that message flags are all unset
+            .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), Matchers.allOf(
+                    hasEntry(equalTo("isDraft"), equalTo(false)),
+                    hasEntry(equalTo("isUnread"), equalTo(false)),
+                    hasEntry(equalTo("isFlagged"), equalTo(false)),
+                    hasEntry(equalTo("isAnswered"), equalTo(false))
+            )))
+            ;
     }
 
     @Test
@@ -728,23 +739,24 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         // When
         .when()
-                .post("/jmap");
+            .post("/jmap");
 
         // Then
         with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
         .post("/jmap")
         .then()
-                .body(NAME, equalTo("messages"))
-                .body(ARGUMENTS + ".list", hasSize(1))
-                .body(ARGUMENTS + ".list[0].subject", equalTo(messageSubject))
-                .body(ARGUMENTS + ".list[0].mailboxIds", contains(outboxId))
-                ;
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(ARGUMENTS + ".list[0].subject", equalTo(messageSubject))
+            .body(ARGUMENTS + ".list[0].mailboxIds", contains(outboxId))
+            ;
     }
 
     @Test
@@ -822,19 +834,19 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
-                .when()
-                .post("/jmap")
-                .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
 
-                .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("no recipient address set"))
-                .body(ARGUMENTS + ".created", aMapWithSize(0));
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("no recipient address set"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
     @Test
@@ -857,20 +869,20 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'from' address is mandatory"))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("from"))
-                .body(ARGUMENTS + ".created", aMapWithSize(0));
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'from' address is mandatory"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("from"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
     @Test
@@ -895,19 +907,19 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".created", aMapWithSize(1))
-                .body(ARGUMENTS + ".created", hasKey(messageCreationId))
-                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
-                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
-                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
     }
 
     @Test
@@ -932,19 +944,19 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".created", aMapWithSize(1))
-                .body(ARGUMENTS + ".created", hasKey(messageCreationId))
-                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
-                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
-                .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
     }
 
     @Test
@@ -1004,20 +1016,20 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-                .header("Authorization", accessToken.serialize())
-                .body(requestBody)
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
         .when()
-                .post("/jmap")
+            .post("/jmap")
         .then()
-                .log().ifValidationFails()
-                .statusCode(200)
-                .body(NAME, equalTo("messagesSet"))
-                .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("subject"))
-                .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'subject' is missing"))
-                .body(ARGUMENTS + ".created", aMapWithSize(0));
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].type", equalTo("invalidProperties"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", hasSize(1))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].properties", contains("subject"))
+            .body(ARGUMENTS + ".notCreated[\""+messageCreationId+"\"].description", endsWith("'subject' is missing"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
 
@@ -1516,7 +1528,7 @@ public abstract class SetMessagesMethodTest {
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         jmapServer.serverProbe().appendMessage(username, new MailboxPath("#private", username, "inbox"),
-                new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes()), Date.from(dateTime.toInstant()), false, new Flags());
+                new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(Charsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         String messageToMoveId = "user|inbox|1";
 
@@ -1546,5 +1558,210 @@ public abstract class SetMessagesMethodTest {
                 .body(NOT_UPDATED + "[\""+messageToMoveId+"\"].description", equalTo("mailboxIds: moving a message is not supported "
                         + "(through reference chain: org.apache.james.jmap.model.Builder[\"mailboxIds\"])"))
                .body(ARGUMENTS + ".updated", hasSize(0));
+    }
+    
+    @Test
+    public void setMessagesShouldReturnAttachmentsNotFoundWhenBlobIdDoesntExist() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        await();
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"subject\": \"Message with a broken blobId\"," +
+                "        \"textBody\": \"Test body\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "        \"attachments\": [" +
+                "                {\"blobId\" : \"brokenId1\", \"type\" : \"image/gif\", \"size\" : 1337}," +
+                "                {\"blobId\" : \"brokenId2\", \"type\" : \"image/jpeg\", \"size\" : 1337}" +
+                "             ]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        String notCreatedPath = ARGUMENTS + ".notCreated[\""+messageCreationId+"\"]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
+            .body(notCreatedPath + ".type", equalTo("invalidProperties"))
+            .body(notCreatedPath + ".attachmentsNotFound", contains("brokenId1", "brokenId2"))
+            .body(ARGUMENTS + ".created", aMapWithSize(0));
+    }
+
+    @Test
+    public void setMessagesShouldReturnAttachmentsWhenMessageHasAttachment() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        Attachment attachment = Attachment.builder()
+                .bytes("attachment".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment);
+        Attachment attachment2 = Attachment.builder()
+                .bytes("attachment2".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment2);
+
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"subject\": \"Message with two attachments\"," +
+                "        \"textBody\": \"Test body\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "        \"attachments\": [" +
+                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+                "               \"type\" : \"" + attachment.getType() + "\", " +
+                "               \"size\" : " + attachment.getSize() + "}," +
+                "               {\"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+                "               \"type\" : \"" + attachment2.getType() + "\", " +
+                "               \"size\" : " + attachment2.getSize() + ", " +
+                "               \"cid\" : \"123456789\", " +
+                "               \"isInline\" : true }" +
+                "           ]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        String createdPath = ARGUMENTS + ".created[\""+messageCreationId+"\"]";
+        String firstAttachment = createdPath + ".attachments[0]";
+        String secondAttachment = createdPath + ".attachments[1]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(createdPath + ".attachments", hasSize(2))
+            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
+            .body(firstAttachment + ".cid", nullValue())
+            .body(firstAttachment + ".isInline", equalTo(false))
+            .body(secondAttachment + ".blobId", equalTo(attachment2.getAttachmentId().getId()))
+            .body(secondAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
+            .body(secondAttachment + ".size", equalTo((int) attachment2.getSize()))
+            .body(secondAttachment + ".cid", equalTo("123456789"))
+            .body(secondAttachment + ".isInline", equalTo(true));
+    }
+
+    private void uploadAttachment(Attachment attachment) throws IOException {
+        with()
+            .header("Authorization", accessToken.serialize())
+            .contentType(attachment.getType())
+            .content(attachment.getStream())
+        .post("/upload");
+    }
+
+    @Test
+    public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        Attachment attachment = Attachment.builder()
+                .bytes("attachment".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment);
+
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+                "        \"subject\": \"Message with an attachment\"," +
+                "        \"textBody\": \"Test body\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "        \"attachments\": [" +
+                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+                "               \"type\" : \"" + attachment.getType() + "\", " +
+                "               \"size\" : " + attachment.getSize() + ", " +
+                "               \"cid\" : \"123456789\", " +
+                "               \"isInline\" : true }" +
+                "           ]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        String firstAttachment = firstMessage + ".attachments[0]";
+        String presumedMessageId = "username@domain.tld|INBOX|1";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".attachments", hasSize(1))
+            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".type", equalTo("application/octet-stream"))
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
+            .body(firstAttachment + ".cid", equalTo("123456789"))
+            .body(firstAttachment + ".isInline", equalTo(true));
+    }
+
+    private boolean isAnyMessageFoundInInbox(AccessToken recipientToken) {
+        try {
+            String inboxId = getMailboxId(accessToken, Role.INBOX);
+            with()
+                    .header("Authorization", recipientToken.serialize())
+                    .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
+            .when()
+                    .post("/jmap")
+            .then()
+                    .statusCode(200)
+                    .body(NAME, equalTo("messageList"))
+                    .body(ARGUMENTS + ".messageIds", hasSize(1));
+            return true;
+            
+        } catch (AssertionError e) {
+            return false;
+        }
     }
 }

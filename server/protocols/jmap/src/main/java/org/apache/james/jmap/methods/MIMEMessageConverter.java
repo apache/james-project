@@ -27,9 +27,11 @@ import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.FieldParser;
@@ -37,9 +39,13 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.field.ContentDispositionField;
+import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
+import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
 import org.apache.james.mime4j.message.BasicBodyFactory;
+import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MessageBuilder;
@@ -51,16 +57,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.net.MediaType;
 
 public class MIMEMessageConverter {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MIMEMessageConverter.class);
 
     private static final String PLAIN_TEXT_MEDIA_TYPE = MediaType.PLAIN_TEXT_UTF_8.withoutParameters().toString();
     private static final String HTML_MEDIA_TYPE = MediaType.HTML_UTF_8.withoutParameters().toString();
     private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", Charsets.UTF_8.name());
     private static final String MIXED_SUB_TYPE = "mixed";
+    private static final String FIELD_PARAMETERS_SEPARATOR = ";";
 
     private final BasicBodyFactory bodyFactory;
 
@@ -68,34 +81,34 @@ public class MIMEMessageConverter {
         this.bodyFactory = new BasicBodyFactory();
     }
 
-    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry) {
+    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         DefaultMessageWriter writer = new DefaultMessageWriter();
         try {
-            writer.writeMessage(convertToMime(creationMessageEntry), buffer);
+            writer.writeMessage(convertToMime(creationMessageEntry, messageAttachments), buffer);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
         return buffer.toByteArray();
     }
 
-    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry) {
+    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
         if (creationMessageEntry == null || creationMessageEntry.getValue() == null) {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
 
         MessageBuilder messageBuilder = MessageBuilder.create();
-        if (mixedTextAndHtml(creationMessageEntry.getValue())) {
-            messageBuilder.setBody(createMultipartBody(creationMessageEntry.getValue()));
+        if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
+            messageBuilder.setBody(createMultipartBody(creationMessageEntry.getValue(), messageAttachments));
         } else {
             messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()));
         }
-        buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getValue());
+        buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getValue(), messageAttachments);
         return messageBuilder.build();
     }
 
-    private void buildMimeHeaders(MessageBuilder messageBuilder, CreationMessageId creationId, CreationMessage newMessage) {
+    private void buildMimeHeaders(MessageBuilder messageBuilder, CreationMessageId creationId, CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         Optional<Mailbox> fromAddress = newMessage.getFrom().filter(DraftEmailer::hasValidEmail).map(this::convertEmailToMimeHeader);
         fromAddress.ifPresent(messageBuilder::setFrom);
         fromAddress.ifPresent(messageBuilder::setSender);
@@ -121,7 +134,7 @@ public class MIMEMessageConverter {
         // note that date conversion probably lose milliseconds!
         messageBuilder.setDate(Date.from(newMessage.getDate().toInstant()), TimeZone.getTimeZone(newMessage.getDate().getZone()));
         newMessage.getInReplyToMessageId().ifPresent(addInReplyToHeader(messageBuilder::addField));
-        if (!mixedTextAndHtml(newMessage)) {
+        if (!isMultipart(newMessage, messageAttachments)) {
             newMessage.getHtmlBody().ifPresent(x -> messageBuilder.setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET));
         }
     }
@@ -134,8 +147,9 @@ public class MIMEMessageConverter {
         };
     }
 
-    private boolean mixedTextAndHtml(CreationMessage newMessage) {
-        return newMessage.getTextBody().isPresent() && newMessage.getHtmlBody().isPresent();
+    private boolean isMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+        return (newMessage.getTextBody().isPresent() && newMessage.getHtmlBody().isPresent())
+                || !messageAttachments.isEmpty();
     }
 
     private TextBody createTextBody(CreationMessage newMessage) {
@@ -145,24 +159,91 @@ public class MIMEMessageConverter {
         return bodyFactory.textBody(body, Charsets.UTF_8);
     }
 
-    private Multipart createMultipartBody(CreationMessage newMessage) {
+    private Multipart createMultipartBody(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         try {
-            return MultipartBuilder.create(MIXED_SUB_TYPE)
-                    .addBodyPart(BodyPartBuilder.create()
-                            .use(bodyFactory)
-                            .setBody(newMessage.getTextBody().get(), Charsets.UTF_8)
-                            .setContentType(PLAIN_TEXT_MEDIA_TYPE, UTF_8_CHARSET)
-                            .build())
-                    .addBodyPart(BodyPartBuilder.create()
-                            .use(bodyFactory)
-                            .setBody(newMessage.getHtmlBody().get(), Charsets.UTF_8)
-                            .setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET)
-                            .build())
-                    .build();
+            MultipartBuilder builder = MultipartBuilder.create(MIXED_SUB_TYPE);
+            addText(builder, newMessage.getTextBody());
+            addHtml(builder, newMessage.getHtmlBody());
+
+            Consumer<MessageAttachment> addAttachment = addAttachment(builder);
+            messageAttachments.stream()
+                .forEach(addAttachment);
+
+            return builder.build();
         } catch (IOException e) {
             LOGGER.error("Error while creating textBody \n"+ newMessage.getTextBody().get() +"\n or htmlBody \n" + newMessage.getHtmlBody().get(), e);
             throw Throwables.propagate(e);
         }
+    }
+
+    private void addText(MultipartBuilder builder, Optional<String> textBody) throws IOException {
+        if (textBody.isPresent()) {
+            builder.addBodyPart(BodyPartBuilder.create()
+                .use(bodyFactory)
+                .setBody(textBody.get(), Charsets.UTF_8)
+                .setContentType(PLAIN_TEXT_MEDIA_TYPE, UTF_8_CHARSET)
+                .build());
+        }
+    }
+
+    private void addHtml(MultipartBuilder builder, Optional<String> htmlBody) throws IOException {
+        if (htmlBody.isPresent()) {
+            builder.addBodyPart(BodyPartBuilder.create()
+                .use(bodyFactory)
+                .setBody(htmlBody.get(), Charsets.UTF_8)
+                .setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET)
+                .build());
+        }
+    }
+
+    private Consumer<MessageAttachment> addAttachment(MultipartBuilder builder) {
+        return att -> { 
+            try {
+                builder.addBodyPart(attachmentBodyPart(att));
+            } catch (IOException e) {
+                LOGGER.error("Error while creating attachment", e);
+                throw Throwables.propagate(e);
+            }
+        };
+    }
+
+    private BodyPart attachmentBodyPart(MessageAttachment att) throws IOException {
+        BodyPartBuilder builder = BodyPartBuilder.create()
+            .use(bodyFactory)
+            .setBody(IOUtils.toString(att.getAttachment().getStream()), Charsets.UTF_8)
+            .setField(contentTypeField(att))
+            .setField(contentDispositionField(att.isInline()));
+        contentId(builder, att);
+        return builder.build();
+    }
+
+    private void contentId(BodyPartBuilder builder, MessageAttachment att) {
+        if (att.getCid().isPresent()) {
+            builder.setField(new RawField("Content-ID", att.getCid().get()));
+        }
+    }
+
+    private ContentTypeField contentTypeField(MessageAttachment att) {
+        Builder<String, String> parameters = ImmutableMap.<String, String> builder();
+        if (att.getName().isPresent()) {
+            parameters.put("name", att.getName().get());
+        }
+        String type = att.getAttachment().getType();
+        if (type.contains(FIELD_PARAMETERS_SEPARATOR)) {
+            return Fields.contentType(contentTypeWithoutParameters(type), parameters.build());
+        }
+        return Fields.contentType(type, parameters.build());
+    }
+
+    private String contentTypeWithoutParameters(String type) {
+        return FluentIterable.from(Splitter.on(FIELD_PARAMETERS_SEPARATOR).split(type)).get(0);
+    }
+
+    private ContentDispositionField contentDispositionField(boolean isInline) {
+        if (isInline) {
+            return Fields.contentDisposition("inline");
+        }
+        return Fields.contentDisposition("attachment");
     }
 
     private Mailbox convertEmailToMimeHeader(DraftEmailer address) {

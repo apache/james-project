@@ -49,7 +49,7 @@ public class SetError {
         private String description;
         private Optional<ImmutableSet<MessageProperty>> properties = Optional.empty();
 
-        private Builder() {
+        protected Builder() {
         }
 
         public Builder type(String type) {
@@ -91,6 +91,13 @@ public class SetError {
         this.properties = properties;
     }
 
+    protected SetError(SetError setError) {
+        this.type = setError.type;
+        this.description = setError.description;
+        this.properties = setError.properties;
+    }
+
+    
     @JsonSerialize
     public String getType() {
         return type;

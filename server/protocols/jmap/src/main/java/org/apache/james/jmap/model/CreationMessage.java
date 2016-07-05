@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.mail.internet.AddressException;
@@ -73,7 +74,7 @@ public class CreationMessage {
         private String textBody;
         private String htmlBody;
         private final ImmutableList.Builder<Attachment> attachments;
-        private final ImmutableMap.Builder<String, SubMessage> attachedMessages;
+        private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
 
         private Builder() {
             to = ImmutableList.builder();
@@ -89,6 +90,7 @@ public class CreationMessage {
             return mailboxIds(Arrays.asList(mailboxIds));
         }
 
+        @JsonDeserialize
         public Builder mailboxIds(List<String> mailboxIds) {
             this.mailboxIds = ImmutableList.copyOf(mailboxIds);
             return this;
@@ -169,27 +171,39 @@ public class CreationMessage {
             return this;
         }
 
+        public Builder attachments(Attachment... attachments) {
+            return attachments(Arrays.asList(attachments));
+        }
+        
+        @JsonDeserialize
         public Builder attachments(List<Attachment> attachments) {
             this.attachments.addAll(attachments);
             return this;
         }
 
-        public Builder attachedMessages(Map<String, SubMessage> attachedMessages) {
+        public Builder attachedMessages(Map<BlobId, SubMessage> attachedMessages) {
             this.attachedMessages.putAll(attachedMessages);
             return this;
         }
 
-        private static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<String, SubMessage> attachedMessages) {
-            return attachments.stream()
+        private static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
+            return attachedMessages.isEmpty() || attachedMessages.keySet().stream()
+                    .anyMatch(inAttachments(attachments));
+        }
+
+        private static Predicate<BlobId> inAttachments(ImmutableList<Attachment> attachments) {
+            return (key) -> {
+                return attachments.stream()
                     .map(Attachment::getBlobId)
-                    .allMatch(attachedMessages::containsKey);
+                    .anyMatch(blobId -> blobId.equals(key));
+            };
         }
 
         public CreationMessage build() {
             Preconditions.checkState(mailboxIds != null, "'mailboxIds' is mandatory");
             Preconditions.checkState(headers != null, "'headers' is mandatory");
             ImmutableList<Attachment> attachments = this.attachments.build();
-            ImmutableMap<String, SubMessage> attachedMessages = this.attachedMessages.build();
+            ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachments'");
 
             if (date == null) {
@@ -218,12 +232,12 @@ public class CreationMessage {
     private final Optional<String> textBody;
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
-    private final ImmutableMap<String, SubMessage> attachedMessages;
+    private final ImmutableMap<BlobId, SubMessage> attachedMessages;
 
     @VisibleForTesting
     CreationMessage(ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, ImmutableMap<String, String> headers, Optional<DraftEmailer> from,
                     ImmutableList<DraftEmailer> to, ImmutableList<DraftEmailer> cc, ImmutableList<DraftEmailer> bcc, ImmutableList<DraftEmailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-                    ImmutableMap<String, SubMessage> attachedMessages) {
+                    ImmutableMap<BlobId, SubMessage> attachedMessages) {
         this.mailboxIds = mailboxIds;
         this.inReplyToMessageId = inReplyToMessageId;
         this.isUnread = isUnread;
@@ -312,7 +326,7 @@ public class CreationMessage {
         return attachments;
     }
 
-    public ImmutableMap<String, SubMessage> getAttachedMessages() {
+    public ImmutableMap<BlobId, SubMessage> getAttachedMessages() {
         return attachedMessages;
     }
 
