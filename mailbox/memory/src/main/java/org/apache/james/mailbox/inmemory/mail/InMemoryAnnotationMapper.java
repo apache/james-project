@@ -65,11 +65,11 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         lock.readLock().lock();
         try {
             return Iterables.transform(
-                mailboxesAnnotations.row(maiboxId).entrySet(),
+                mailboxesAnnotations.row(mailboxId).entrySet(),
                 new Function<Map.Entry<String, String>, MailboxAnnotation>() {
                     @Override
                     public MailboxAnnotation apply(Entry<String, String> input) {
-                        return MailboxAnnotation.newInstance(input.getKey(), input.getValue());
+                        return MailboxAnnotation.newInstance(new MailboxAnnotationKey(input.getKey()), input.getValue());
                     }
                 });
         } finally {

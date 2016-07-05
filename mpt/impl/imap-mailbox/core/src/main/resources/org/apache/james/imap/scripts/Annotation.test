@@ -23,6 +23,10 @@ S: a0 OK CAPABILITY completed.
 C: a1 SETMETADATA INBOX (/private/comment "My new comment")
 S: a1 OK SETMETADATA completed.
 
+C: g1 GETMETADATA "INBOX" /private/comment
+S: \* METADATA "INBOX" \(\/private\/comment "My new comment"\)
+S: g1 OK GETMETADATA completed.
+
 C: a2 SETMETADATA INBOX (/pri*vate/comment "My new comment")
 S: a2 BAD SETMETADATA failed. Illegal arguments.
 
@@ -34,6 +38,11 @@ S: \+
 C: My new comment across
 C: two lines. )
 S: a4 OK SETMETADATA completed.
+
+C: g2 GETMETADATA "INBOX" /private/comment
+S: \* METADATA "INBOX" \(\/private\/comment "My new comment across
+S: two lines."\)
+S: g2 OK GETMETADATA completed.
 
 C: a5 SETMETADATA INBOX (/private/comment "My new comment" /shared/comment "This one is for you!")
 S: a5 OK SETMETADATA completed.
@@ -61,3 +70,75 @@ S: a13 BAD SETMETADATA failed. Illegal arguments.
 
 C: a14 SETMETADATA INBOX (/private/comment My new comment)
 S: a14 BAD SETMETADATA failed. Illegal arguments.
+
+########################For get annotation############
+
+C: s1 SETMETADATA INBOX (/private/comment "My own comment")
+S: s1 OK SETMETADATA completed.
+
+C: s2 SETMETADATA INBOX (/shared/comment "The shared comment")
+S: s2 OK SETMETADATA completed.
+
+C: g3 GETMETADATA "INBOX" (/shared/comment /private/comment)
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/shared\/comment "The shared comment"\)
+S: g3 OK GETMETADATA completed.
+
+C: g4 GETMETADATA "INBOX"
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/shared\/comment "The shared comment"\)
+S: g4 OK GETMETADATA completed.
+
+C: g5 GETMETADATA "INBOX" /shared/comment /private/comment)
+S: g5 BAD GETMETADATA failed. Illegal arguments.
+
+C: g6 GETMETADATA "INBOX" (/shared/comment /private/comment
+S: g6 BAD GETMETADATA failed. Illegal arguments.
+
+C: g7 GETMETADATA "INBOX" private/comment
+S: g7 BAD GETMETADATA failed. Illegal arguments.
+
+C: g8 GETMETADATA "INBOX" (MAXSIZE 15)
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment"\)
+S: g8 OK \[METADATA LONGENTRIES 18\] GETMETADATA completed.
+
+C: g9 GETMETADATA "INBOX" (MAXSIZE 100)
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/shared\/comment "The shared comment"\)
+S: g9 OK GETMETADATA completed.
+
+C: s3 SETMETADATA INBOX (/private/comment/user "My own comment for user")
+S: s3 OK SETMETADATA completed.
+
+C: s4 SETMETADATA INBOX (/private/comment/user/name "My own comment for user name")
+S: s4 OK SETMETADATA completed.
+
+C: g10 GETMETADATA "INBOX" (DEPTH 1) (MAXSIZE 15) (/private/comment)
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment"\)
+S: g10 OK \[METADATA LONGENTRIES 23\] GETMETADATA completed.
+
+C: g11 GETMETADATA "INBOX" (DEPTH 1) (/private/comment)
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/private\/comment\/user "My own comment for user"\)
+S: g11 OK GETMETADATA completed.
+
+C: g12 GETMETADATA "INBOX" (DEPTH infinity) (/private/comment)
+S: \* METADATA "INBOX" \(\/private\/comment.* "My own comment.* \/private\/comment.* "My own comment.* \/private\/comment.* "My own comment.*\)
+S: g12 OK GETMETADATA completed.
+
+C: g13 GETMETADATA "INBOX" (/private/comment) (/another/key/group)
+S: g13 BAD GETMETADATA failed. Illegal arguments.
+
+C: g14 GETMETADATA "INBOX" (MAXSIZE 10) (DEPTH 1)
+S: g14 BAD GETMETADATA failed. Illegal arguments.
+
+C: g15 GETMETADATA "INBOX" (/private/comment) (MAXSIZE 10)
+S: g15 BAD GETMETADATA failed. Illegal arguments.
+
+C: g17 GETMETADATA "INBOX" (/private/comment) (DEPTH 1)
+S: g17 BAD GETMETADATA failed. Illegal arguments.
+
+C: g16 GETMETADATA "INBOX" (DEPTH -1) (/private/comment)
+S: g16 BAD GETMETADATA failed. Illegal arguments.
+
+C: g18 GETMETADATA (/private/comment)
+S: g18 BAD GETMETADATA failed. Illegal arguments.
+
+C: g19 GETMETADATA "INBOX" (MAXSIZE 0) (/private/comment)
+S: g19 BAD GETMETADATA failed. Illegal arguments.

@@ -92,11 +92,14 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         }
     }
 
-    private Optional<Integer> getMaxSizeOfItemsOversize(List<MailboxAnnotation> mailboxAnnotations, long maxsize) {
-        if (maxsize > 0) {
-            return getMaxValueOverSize(mailboxAnnotations, maxsize);
-        } else {
-            return Optional.absent();
+    private Optional<Integer> getMaxSizeValue(final List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize) {
+        if (maxsize.isPresent()) {
+            return maxsize.transform(new Function<Integer, Optional<Integer>>() {
+                @Override
+                public Optional<Integer> apply(Integer input) {
+                    return getMaxSizeOfOversizedItems(mailboxAnnotations, input);
+                }
+            }).get();
         }
         return Optional.absent();
     }
