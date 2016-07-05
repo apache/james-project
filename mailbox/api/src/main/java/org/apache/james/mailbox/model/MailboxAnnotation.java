@@ -39,8 +39,6 @@ public class MailboxAnnotation {
     private MailboxAnnotation(MailboxAnnotationKey key, Optional<String> value) {
         Preconditions.checkNotNull(key);
         Preconditions.checkNotNull(value);
-        Preconditions.checkArgument(key.isValid(),
-            "Key must start with '/' and not end with '/' and does not contain charater with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
         this.key = key;
         this.value = value;
     }

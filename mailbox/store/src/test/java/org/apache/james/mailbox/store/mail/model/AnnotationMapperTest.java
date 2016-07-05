@@ -40,6 +40,7 @@ import com.google.common.collect.Lists;
 @Contract(MapperProvider.class)
 public class AnnotationMapperTest<T extends MapperProvider> {
     private static final MailboxAnnotationKey PRIVATE_USER_KEY = new MailboxAnnotationKey("/private/commentuser");
+    private static final MailboxAnnotationKey PRIVATE_UPPER_CASE_KEY = new MailboxAnnotationKey("/PRIVATE/COMMENT");
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey PRIVATE_CHILD_KEY = new MailboxAnnotationKey("/private/comment/user");
     private static final MailboxAnnotationKey PRIVATE_GRANDCHILD_KEY = new MailboxAnnotationKey("/private/comment/user/name");
@@ -47,6 +48,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
 
     private static final MailboxAnnotation PRIVATE_USER_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_USER_KEY, "My private comment");
     private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "My private comment");
+    private static final MailboxAnnotation PRIVATE_ANNOTATION_WITH_KEY_UPPER = MailboxAnnotation.newInstance(PRIVATE_UPPER_CASE_KEY, "The annotation with upper key");
     private static final MailboxAnnotation PRIVATE_CHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_CHILD_KEY, "My private comment");
     private static final MailboxAnnotation PRIVATE_ANNOTATION_UPDATE = MailboxAnnotation.newInstance(PRIVATE_KEY, "My updated private comment");
     private static final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance(SHARED_KEY, "My shared comment");
@@ -192,5 +194,13 @@ public class AnnotationMapperTest<T extends MapperProvider> {
         annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
 
         assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(ImmutableSet.of(PRIVATE_KEY))).isEmpty();
+    }
+
+    @ContractTest
+    public void annotationShouldBeCaseInsentive() throws Exception {
+        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION_WITH_KEY_UPPER);
+
+        assertThat(annotationMapper.getAllAnnotations()).containsOnly(PRIVATE_ANNOTATION_WITH_KEY_UPPER);
     }
 }

@@ -103,7 +103,7 @@ public class AnnotationResponseEncoderTest {
 
         encoder.encode(response, composer, imapSession);
 
-        verify(log).warn("There is nil data of key {} on store: ", PRIVATE_KEY.getKey());
+        verify(log).warn("There is nil data of key {} on store: ", PRIVATE_KEY.asString());
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\" ()\r\n");
     }
 }

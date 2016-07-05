@@ -43,7 +43,7 @@ import com.google.common.collect.Table;
 
 public class InMemoryAnnotationMapper implements AnnotationMapper {
     private final InMemoryId mailboxId;
-    private final Table<InMemoryId, MailboxAnnotationKey, String> mailboxesAnnotations;
+    private final Table<InMemoryId, String, String> mailboxesAnnotations;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public InMemoryAnnotationMapper(InMemoryId mailboxId) {
@@ -145,7 +145,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         Preconditions.checkArgument(!mailboxAnnotation.isNil());
         lock.writeLock().lock();
         try {
-            mailboxesAnnotations.put(mailboxId, mailboxAnnotation.getKey(), mailboxAnnotation.getValue().get());
+            mailboxesAnnotations.put(mailboxId, mailboxAnnotation.getKey().asString(), mailboxAnnotation.getValue().get());
         } finally {
             lock.writeLock().unlock();
         }
@@ -155,7 +155,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     public void deleteAnnotation(MailboxAnnotationKey key) {
         lock.writeLock().lock();
         try {
-            mailboxesAnnotations.remove(mailboxId, key);
+            mailboxesAnnotations.remove(mailboxId, key.asString());
         } finally {
             lock.writeLock().unlock();
         }

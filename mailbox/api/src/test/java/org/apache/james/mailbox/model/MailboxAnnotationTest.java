@@ -29,7 +29,6 @@ public class MailboxAnnotationTest {
 
     private static final String PERCENT_CHARACTER = "%";
 
-    private static final MailboxAnnotationKey ANY_KEY = new MailboxAnnotationKey("shared");
     private static final MailboxAnnotationKey ANNOTATION_KEY = new MailboxAnnotationKey("/private/comment");
     private static final String ANNOTATION_VALUE = "anyValue";
 
@@ -53,52 +52,7 @@ public class MailboxAnnotationTest {
 
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowsExceptionWithNullValue() throws Exception {
-        MailboxAnnotation.newInstance(ANY_KEY, null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWithEmptyKey() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey(""), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWithBlankKey() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("    "), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyDoesNotStartWithSlash() throws Exception {
-        MailboxAnnotation.newInstance(ANY_KEY, ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyContainsAsterisk() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key*comment"), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyContainsPercent() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key%comment"), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyContainsTwoConsecutiveSlash() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private//keycomment"), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyEndsWithSlash() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/keycomment/"), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyContainsNonASCII() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key┬ácomment"), ANNOTATION_VALUE);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyContainsTabCharacter() throws Exception {
-        MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key\tcomment"), ANNOTATION_VALUE);
+        MailboxAnnotation.newInstance(ANNOTATION_KEY, null);
     }
 
     @Test
@@ -122,7 +76,7 @@ public class MailboxAnnotationTest {
 
     @Test(expected = NullPointerException.class)
     public void newInstanceMailboxAnnotationShouldThrowExceptionWithNullValue() throws Exception {
-        MailboxAnnotation.newInstance(ANY_KEY, null);
+        MailboxAnnotation.newInstance(ANNOTATION_KEY, null);
     }
 
     @Test
@@ -131,12 +85,6 @@ public class MailboxAnnotationTest {
 
         assertThat(annotation.getKey()).isEqualTo(ANNOTATION_KEY);
         assertThat(annotation.getValue()).contains(ANNOTATION_VALUE);
-    }
-
-    @Test
-    public void countSlashShouldReturnRightNumberOfSlash() throws Exception {
-        MailboxAnnotation annotation = MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment/user/name"), ANNOTATION_VALUE);
-        assertThat(annotation.getKey().countSlash()).isEqualTo(4);
     }
 
 }

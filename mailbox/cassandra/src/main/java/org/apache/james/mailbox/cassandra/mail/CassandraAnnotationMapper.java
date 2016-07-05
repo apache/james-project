@@ -49,7 +49,6 @@ import com.google.common.base.Preconditions;
 
 public class CassandraAnnotationMapper extends NonTransactionalMapper implements AnnotationMapper {
 
-    public static final char MAXIMUM_ASCII_CHARACTER = 127;
     private final CassandraId mailboxId;
     private final Session session;
 
@@ -85,14 +84,14 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     public void deleteAnnotation(MailboxAnnotationKey key) {
         session.execute(delete().from(CassandraAnnotationTable.TABLE_NAME)
             .where(eq(CassandraAnnotationTable.MAILBOX_ID, mailboxId.asUuid()))
-            .and(eq(CassandraAnnotationTable.KEY, key.getKey())));
+            .and(eq(CassandraAnnotationTable.KEY, key.asString())));
     }
 
     public void insertAnnotation(MailboxAnnotation mailboxAnnotation) {
         Preconditions.checkArgument(!mailboxAnnotation.isNil());
         session.execute(insertInto(CassandraAnnotationTable.TABLE_NAME)
             .value(CassandraAnnotationTable.MAILBOX_ID, mailboxId.asUuid())
-            .value(CassandraAnnotationTable.KEY, mailboxAnnotation.getKey().getKey())
+            .value(CassandraAnnotationTable.KEY, mailboxAnnotation.getKey().asString())
             .value(CassandraAnnotationTable.VALUE, mailboxAnnotation.getValue().get()));
     }
 
@@ -120,22 +119,22 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     }
     
     private String buildNextKey(String key) {
-        return key + MailboxAnnotationKey.SLASH_CHARACTER + MAXIMUM_ASCII_CHARACTER;
+        return key + MailboxAnnotationKey.SLASH_CHARACTER + Ascii.MAX;
     }
 
     private Stream<MailboxAnnotation> getAnnotationsByKeyWithAllDepth(MailboxAnnotationKey key) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(key.getKey())))
+        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(key.asString())))
             .map(this::toAnnotation);
     }
 
     private Stream<MailboxAnnotation> getAnnotationsByKeyWithOneDepth(MailboxAnnotationKey key) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(key.getKey())))
+        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(key.asString())))
             .map(this::toAnnotation)
             .filter(annotation -> isChild(key, annotation));
     }
 
     private boolean isChild(MailboxAnnotationKey key, MailboxAnnotation annotation) {
-        return annotation.getKey().countSlash() <= key.countSlash();
+        return annotation.getKey().countComponents() <= key.countComponents() + 1;
     }
 
     @Override

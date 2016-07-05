@@ -28,6 +28,7 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.protocols.imap.DecodingException;
 
 import com.google.common.base.Function;
@@ -66,7 +67,7 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
 
             return Optional.fromNullable(value)
                 .transform(transforMailboxAnnotation(key))
-                .or(MailboxAnnotation.nil(key));
+                .or(MailboxAnnotation.nil(createAnnotationKey(key)));
         } catch (IllegalArgumentException e) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "The key is not valid: " + e.getMessage());
         }
@@ -75,9 +76,13 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
     private Function<String, MailboxAnnotation> transforMailboxAnnotation(final String key) {
         return new Function<String, MailboxAnnotation>() {
             public MailboxAnnotation apply(String value) {
-                return MailboxAnnotation.newInstance(key, value);
+                return MailboxAnnotation.newInstance(createAnnotationKey(key), value);
             }
         };
+    }
+
+    private MailboxAnnotationKey createAnnotationKey(String key) {
+        return new MailboxAnnotationKey(key);
     }
 
 }

@@ -21,27 +21,26 @@ package org.apache.james.mailbox.model;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
 
-/**
- * Created by quynh on 04/07/2016.
- */
 public class MailboxAnnotationKey {
     public static final String SLASH_CHARACTER = "/";
 
     public static final String TWO_SLASH_CHARACTER = "//";
 
-    private static final CharMatcher NAME_ANNOTATION_PATTERN = CharMatcher.ASCII
-        .and(CharMatcher.inRange('\u0000', '\u0019').negate()).and(CharMatcher.isNot('*'))
-        .and(CharMatcher.isNot('%'));
+    private static final CharMatcher NAME_ANNOTATION_PATTERN = CharMatcher.JAVA_LETTER_OR_DIGIT
+        .or(CharMatcher.is('/'));
 
     private final String key;
 
     public MailboxAnnotationKey(String key) {
+        Preconditions.checkArgument(isValid(key),
+            "Key must start with '/' and not end with '/' and does not contain charater with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
         this.key = key;
     }
 
-    public boolean isValid() {
+    private boolean isValid(String key) {
         if (StringUtils.isBlank(key)) {
             return false;
         }
@@ -63,19 +62,19 @@ public class MailboxAnnotationKey {
         return true;
     }
 
-    public int countSlash() {
+    public int countComponents() {
         return StringUtils.countMatches(key, SLASH_CHARACTER);
     }
 
-    public String getKey() {
-        return key;
+    public String asString() {
+        return key.toLowerCase();
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof MailboxAnnotationKey) {
             MailboxAnnotationKey anotherKey = (MailboxAnnotationKey)obj;
-            return Objects.equal(anotherKey.getKey(), key);
+            return Objects.equal(anotherKey.asString(), key);
         } else {
             return false;
         }

@@ -30,6 +30,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Test;
 
@@ -37,9 +38,12 @@ public class SetAnnotationCommandParserTest {
 
     private static final String INBOX = "anyMailboxName";
     private static final String TAG = "A1";
-    private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance("/private/comment", "This is my comment");
-    private static final MailboxAnnotation SHARED_ANNOTATION = MailboxAnnotation.newInstance("/shared/comment", "This one is for you!");
-    private static final MailboxAnnotation NIL_ANNOTATION = MailboxAnnotation.nil("/private/comment");
+    private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
+    private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
+
+    private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "This is my comment");
+    private static final MailboxAnnotation SHARED_ANNOTATION = MailboxAnnotation.newInstance(SHARED_KEY, "This one is for you!");
+    private static final MailboxAnnotation NIL_ANNOTATION = MailboxAnnotation.nil(PRIVATE_KEY);
     private SetAnnotationCommandParser parser = new SetAnnotationCommandParser();
     private ImapCommand command = ImapCommand.anyStateCommand("Command");
 
@@ -78,7 +82,7 @@ public class SetAnnotationCommandParserTest {
         SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
 
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
-        assertThat(request.getMailboxAnnotations()).containsOnly(MailboxAnnotation.newInstance("/private/comment", "My new comment across two lines."));
+        assertThat(request.getMailboxAnnotations()).containsOnly(MailboxAnnotation.newInstance(PRIVATE_KEY, "My new comment across two lines."));
     }
 
     @Test
