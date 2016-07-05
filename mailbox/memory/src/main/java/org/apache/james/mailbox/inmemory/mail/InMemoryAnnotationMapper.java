@@ -26,9 +26,11 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
 import com.google.common.base.Function;
@@ -41,7 +43,7 @@ import com.google.common.collect.Table;
 
 public class InMemoryAnnotationMapper implements AnnotationMapper {
     private final InMemoryId mailboxId;
-    private final Table<InMemoryId, String, String> mailboxesAnnotations;
+    private final Table<InMemoryId, MailboxAnnotationKey, String> mailboxesAnnotations;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public InMemoryAnnotationMapper(InMemoryId mailboxId) {
@@ -59,11 +61,11 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         return transaction.run();
     }
 
-    private Iterable<MailboxAnnotation> retrieveAllAnnotations(InMemoryId maiboxId) {
+    private Iterable<MailboxAnnotation> retrieveAllAnnotations(InMemoryId mailboxId) {
         lock.readLock().lock();
         try {
             return Iterables.transform(
-                mailboxesAnnotations.row(maiboxId).entrySet(), 
+                mailboxesAnnotations.row(maiboxId).entrySet(),
                 new Function<Map.Entry<String, String>, MailboxAnnotation>() {
                     @Override
                     public MailboxAnnotation apply(Entry<String, String> input) {
@@ -81,7 +83,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     }
 
     @Override
-    public List<MailboxAnnotation> getAnnotationsByKeys(final Set<String> keys) {
+    public List<MailboxAnnotation> getAnnotationsByKeys(final Set<MailboxAnnotationKey> keys) {
         return ImmutableList.copyOf(
             Iterables.filter(retrieveAllAnnotations(mailboxId),
                 new Predicate<MailboxAnnotation>() {
@@ -150,7 +152,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     }
 
     @Override
-    public void deleteAnnotation(String key) {
+    public void deleteAnnotation(MailboxAnnotationKey key) {
         lock.writeLock().lock();
         try {
             mailboxesAnnotations.remove(mailboxId, key);
