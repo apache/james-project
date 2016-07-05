@@ -65,6 +65,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
             return Iterables.transform(
                 mailboxesAnnotations.row(maiboxId).entrySet(), 
                 new Function<Map.Entry<String, String>, MailboxAnnotation>() {
+                    @Override
                     public MailboxAnnotation apply(Entry<String, String> input) {
                         return MailboxAnnotation.newInstance(input.getKey(), input.getValue());
                     }
@@ -84,10 +85,57 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         return ImmutableList.copyOf(
             Iterables.filter(retrieveAllAnnotations(mailboxId),
                 new Predicate<MailboxAnnotation>() {
+                    @Override
                     public boolean apply(MailboxAnnotation input) {
                         return keys.contains(input.getKey());
                     }
             }));
+    }
+
+    @Override
+    public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(final Set<MailboxAnnotationKey> keys) {
+        return ImmutableList.copyOf(Iterables.filter(retrieveAllAnnotations(mailboxId), getPredicateFilterByAll(keys)));
+    }
+
+    @Override
+    public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(final Set<MailboxAnnotationKey> keys) {
+        return ImmutableList.copyOf(Iterables.filter(getAnnotationsByKeysWithAllDepth(keys), getPredicateFilterByOne(keys)));
+    }
+
+    private Predicate<MailboxAnnotation> getPredicateFilterByAll(final Set<MailboxAnnotationKey> keys) {
+        return new Predicate<MailboxAnnotation>() {
+            @Override
+            public boolean apply(final MailboxAnnotation input) {
+                return Iterables.tryFind(keys, filterAnnotationsByPrefix(input)).isPresent();
+            }
+        };
+    }
+
+    private Predicate<MailboxAnnotation> getPredicateFilterByOne(final Set<MailboxAnnotationKey> keys) {
+        return new Predicate<MailboxAnnotation>() {
+            @Override
+            public boolean apply(final MailboxAnnotation input) {
+                return Iterables.tryFind(keys, filterAnnotationsByParentKey(input.getKey())).isPresent();
+            }
+        };
+    }
+
+    private Predicate<MailboxAnnotationKey> filterAnnotationsByParentKey(final MailboxAnnotationKey input) {
+        return new Predicate<MailboxAnnotationKey>() {
+            @Override
+            public boolean apply(MailboxAnnotationKey key) {
+                return input.countComponents() <= (key.countComponents() + 1);
+            }
+        };
+    }
+
+    private Predicate<MailboxAnnotationKey> filterAnnotationsByPrefix(final MailboxAnnotation input) {
+        return new Predicate<MailboxAnnotationKey>() {
+            @Override
+            public boolean apply(MailboxAnnotationKey key) {
+                return key.equals(input.getKey()) || StringUtils.startsWith(input.getKey().asString(), key.asString() + "/");
+            }
+        };
     }
 
     @Override

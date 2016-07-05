@@ -55,9 +55,9 @@ public class AnnotationResponse implements ImapResponseMessage {
         if (obj instanceof AnnotationResponse) {
             AnnotationResponse o = (AnnotationResponse) obj;
             return Objects.equal(mailboxName, o.getMailboxName()) && Objects.equal(mailboxAnnotations, o.getMailboxAnnotations());
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     public String toString() {

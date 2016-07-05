@@ -44,23 +44,27 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
         composer.commandName(ImapConstants.ANNOTATION_RESPONSE_NAME);
 
         composer.quote(Optional.fromNullable(response.getMailboxName()).or(""));
-        composeAnnotations(composer, response.getMailboxAnnotations(), session);
+        composeAnnotations(composer, session, response.getMailboxAnnotations());
 
         composer.end();
     }
 
-    private void composeAnnotations(ImapResponseComposer composer, List<MailboxAnnotation> annotations, ImapSession session) throws IOException {
+    private void composeAnnotations(ImapResponseComposer composer, ImapSession session, List<MailboxAnnotation> annotations) throws IOException {
         if (!annotations.isEmpty()) {
             composer.openParen();
             for (MailboxAnnotation annotation : annotations) {
-                if (annotation.isNil()) {
-                    session.getLog().warn("There is nil data of key {} on store: ", annotation.getKey().getKey());
-                } else {
-                    composer.message(annotation.getKey().getKey());
-                    composer.quote(annotation.getValue().or(""));
-                }
+                composeAnnotation(composer, session, annotation);
             }
             composer.closeParen();
+        }
+    }
+
+    private void composeAnnotation(ImapResponseComposer composer, ImapSession session, MailboxAnnotation annotation) throws IOException {
+        if (annotation.isNil()) {
+            session.getLog().warn("There is nil data of key {} on store: ", annotation.getKey().asString());
+        } else {
+            composer.message(annotation.getKey().asString());
+            composer.quote(annotation.getValue().or(""));
         }
     }
 

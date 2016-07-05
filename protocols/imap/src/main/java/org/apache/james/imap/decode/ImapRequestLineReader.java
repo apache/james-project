@@ -685,6 +685,14 @@ public abstract class ImapRequestLineReader {
         return (IdRange[]) merged.toArray(new IdRange[merged.size()]);
     }
 
+    /**
+     * Reads the first non-space character in the current line. This method will continue
+     * to resume if meet space character until meet the non-space character.
+     *
+     * @return The next first non-space character
+     * @throws DecodingException
+     *             If the end-of-stream is reached.
+     */
     public char nextNonSpaceChar() throws DecodingException {
         char next = nextChar();
         while (next == ' ') {

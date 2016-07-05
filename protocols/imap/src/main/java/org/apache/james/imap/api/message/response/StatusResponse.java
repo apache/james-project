@@ -286,6 +286,14 @@ public interface StatusResponse extends ImapResponseMessage {
         }
         
         /**
+         * Create a RFC5464 getMetadata which support MAXSIZE
+         * @param entryLong positive non-zero long
+         * @return <code>ResponseCode</code>
+         */
+        public static ResponseCode longestMetadataEntry(long entryLong) {
+            return new ResponseCode("METADATA LONGENTRIES", entryLong);
+        }
+        /**
          * Create a RFC4551 <code>NOMODSEQ</code> response code
          * 
          * @return <code>ResponseCode</code>
