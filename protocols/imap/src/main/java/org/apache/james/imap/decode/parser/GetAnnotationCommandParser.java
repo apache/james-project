@@ -60,10 +60,8 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
     }
 
     private ImapMessage buildAnnotationRequest(ImapCommand command, ImapRequestLineReader requestReader, String tag) throws DecodingException {
-        GetAnnotationRequest.Builder builder = GetAnnotationRequest.builder()
-            .tag(tag)
-            .command(command)
-            .mailboxName(requestReader.mailbox());
+        GetAnnotationRequest.Builder builder = GetAnnotationRequest.builder().tag(tag).command(command);
+        builder.mailboxName(requestReader.mailbox());
 
         consumeOptionsAndKeys(requestReader, builder);
 

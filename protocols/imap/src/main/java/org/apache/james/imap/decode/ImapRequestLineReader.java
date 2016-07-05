@@ -685,7 +685,14 @@ public abstract class ImapRequestLineReader {
         return (IdRange[]) merged.toArray(new IdRange[merged.size()]);
     }
 
-    
+    public char nextNonSpaceChar() throws DecodingException {
+        char next = nextChar();
+        while (next == ' ') {
+            consume();
+            next = nextChar();
+        }
+        return next;
+    }
     /**
      * Parse a range which use a ":" as delimiter
      * 
