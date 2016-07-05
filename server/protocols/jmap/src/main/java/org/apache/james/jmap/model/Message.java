@@ -48,7 +48,7 @@ public class Message {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         private MessageId id;
-        private String blobId;
+        private BlobId blobId;
         private String threadId;
         private ImmutableList<String> mailboxIds;
         private String inReplyToMessageId;
@@ -69,7 +69,7 @@ public class Message {
         private String textBody;
         private String htmlBody;
         private final ImmutableList.Builder<Attachment> attachments;
-        private final ImmutableMap.Builder<String, SubMessage> attachedMessages;
+        private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
 
         private Builder() {
             to = ImmutableList.builder();
@@ -85,7 +85,7 @@ public class Message {
             return this;
         }
 
-        public Builder blobId(String blobId) {
+        public Builder blobId(BlobId blobId) {
             this.blobId = blobId;
             return this;
         }
@@ -194,14 +194,14 @@ public class Message {
             return this;
         }
 
-        public Builder attachedMessages(Map<String, SubMessage> attachedMessages) {
+        public Builder attachedMessages(Map<BlobId, SubMessage> attachedMessages) {
             this.attachedMessages.putAll(attachedMessages);
             return this;
         }
 
         public Message build() {
             Preconditions.checkState(id != null, "'id' is mandatory");
-            Preconditions.checkState(!Strings.isNullOrEmpty(blobId), "'blobId' is mandatory");
+            Preconditions.checkState(blobId != null, "'blobId' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(threadId), "'threadId' is mandatory");
             Preconditions.checkState(mailboxIds != null, "'mailboxIds' is mandatory");
             Preconditions.checkState(headers != null, "'headers' is mandatory");
@@ -210,7 +210,7 @@ public class Message {
             Preconditions.checkState(date != null, "'date' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(preview), "'preview' is mandatory");
             ImmutableList<Attachment> attachments = this.attachments.build();
-            ImmutableMap<String, SubMessage> attachedMessages = this.attachedMessages.build();
+            ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
             boolean hasAttachment = !attachments.isEmpty();
 
@@ -219,12 +219,12 @@ public class Message {
         }
     }
 
-    protected static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<String, SubMessage> attachedMessages) {
+    protected static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
         return attachedMessages.isEmpty() || attachedMessages.keySet().stream()
                 .anyMatch(inAttachments(attachments));
     }
 
-    private static Predicate<String> inAttachments(ImmutableList<Attachment> attachments) {
+    private static Predicate<BlobId> inAttachments(ImmutableList<Attachment> attachments) {
         return (key) -> {
             return attachments.stream()
                 .map(Attachment::getBlobId)
@@ -233,7 +233,7 @@ public class Message {
     }
 
     private final MessageId id;
-    private final String blobId;
+    private final BlobId blobId;
     private final String threadId;
     private final ImmutableList<String> mailboxIds;
     private final Optional<String> inReplyToMessageId;
@@ -256,11 +256,11 @@ public class Message {
     private final Optional<String> textBody;
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
-    private final ImmutableMap<String, SubMessage> attachedMessages;
+    private final ImmutableMap<BlobId, SubMessage> attachedMessages;
 
-    @VisibleForTesting Message(MessageId id, String blobId, String threadId, ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
+    @VisibleForTesting Message(MessageId id, BlobId blobId, String threadId, ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
             ImmutableList<Emailer> to, ImmutableList<Emailer> cc, ImmutableList<Emailer> bcc, ImmutableList<Emailer> replyTo, String subject, ZonedDateTime date, long size, String preview, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
-            ImmutableMap<String, SubMessage> attachedMessages) {
+            ImmutableMap<BlobId, SubMessage> attachedMessages) {
         this.id = id;
         this.blobId = blobId;
         this.threadId = threadId;
@@ -291,7 +291,7 @@ public class Message {
         return id;
     }
 
-    public String getBlobId() {
+    public BlobId getBlobId() {
         return blobId;
     }
 
@@ -379,7 +379,7 @@ public class Message {
         return attachments;
     }
 
-    public ImmutableMap<String, SubMessage> getAttachedMessages() {
+    public ImmutableMap<BlobId, SubMessage> getAttachedMessages() {
         return attachedMessages;
     }
 

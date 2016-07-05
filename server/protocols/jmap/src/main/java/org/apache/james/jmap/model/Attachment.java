@@ -38,7 +38,7 @@ public class Attachment {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private String blobId;
+        private BlobId blobId;
         private String type;
         private String name;
         private Long size;
@@ -47,7 +47,7 @@ public class Attachment {
         private Long width;
         private Long height;
 
-        public Builder blobId(String blobId) {
+        public Builder blobId(BlobId blobId) {
             this.blobId = blobId;
             return this;
         }
@@ -88,14 +88,14 @@ public class Attachment {
         }
 
         public Attachment build() {
-            Preconditions.checkState(!Strings.isNullOrEmpty(blobId), "'blobId' is mandatory");
+            Preconditions.checkState(blobId != null, "'blobId' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(type), "'type' is mandatory");
             Preconditions.checkState(size != null, "'size' is mandatory");
             return new Attachment(blobId, type, Optional.ofNullable(name), size, Optional.ofNullable(cid), isInline, Optional.ofNullable(width), Optional.ofNullable(height));
         }
     }
 
-    private final String blobId;
+    private final BlobId blobId;
     private final String type;
     private final Optional<String> name;
     private final long size;
@@ -104,7 +104,7 @@ public class Attachment {
     private final Optional<Long> width;
     private final Optional<Long> height;
 
-    @VisibleForTesting Attachment(String blobId, String type, Optional<String> name, long size, Optional<String> cid, boolean isInline, Optional<Long> width, Optional<Long> height) {
+    @VisibleForTesting Attachment(BlobId blobId, String type, Optional<String> name, long size, Optional<String> cid, boolean isInline, Optional<Long> width, Optional<Long> height) {
         this.blobId = blobId;
         this.type = type;
         this.name = name;
@@ -115,7 +115,7 @@ public class Attachment {
         this.height = height;
     }
 
-    public String getBlobId() {
+    public BlobId getBlobId() {
         return blobId;
     }
 

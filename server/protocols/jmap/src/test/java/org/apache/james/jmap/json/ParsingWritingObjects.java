@@ -22,6 +22,7 @@ package org.apache.james.jmap.json;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.Emailer;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
@@ -34,7 +35,7 @@ public interface ParsingWritingObjects {
 
     public interface Common {
         MessageId MESSAGE_ID = MessageId.of("username|mailbox|1");
-        String BLOB_ID = "myBlobId";
+        BlobId BLOB_ID = BlobId.of("myBlobId");
         String THREAD_ID = "myThreadId";
         ImmutableList<String> MAILBOX_IDS = ImmutableList.of("mailboxId1", "mailboxId2");
         String IN_REPLY_TO_MESSAGE_ID = "myInReplyToMessageId";

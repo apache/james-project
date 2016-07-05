@@ -64,14 +64,14 @@ public class SubMailboxMessageTest {
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenAttachedMessageIsNotMatchingAttachments() {
-        Attachment simpleAttachment = Attachment.builder().blobId("blobId").type("type").name("name").size(123).build();
+        Attachment simpleAttachment = Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").size(123).build();
         ImmutableList<Attachment> attachments = ImmutableList.of(simpleAttachment);
         SubMessage simpleMessage = SubMessage.builder()
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
                 .date(ZonedDateTime.now())
                 .build();
-        ImmutableMap<String, SubMessage> attachedMessages = ImmutableMap.of("differentBlobId", simpleMessage);
+        ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("differentBlobId"), simpleMessage);
         SubMessage.builder()
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
@@ -89,14 +89,14 @@ public class SubMailboxMessageTest {
         ImmutableList<Emailer> bcc = ImmutableList.of(Emailer.builder().name("bcc").email("bcc@domain").build());
         ImmutableList<Emailer> replyTo = ImmutableList.of(Emailer.builder().name("replyTo").email("replyTo@domain").build());
         ZonedDateTime currentDate = ZonedDateTime.now();
-        Attachment simpleAttachment = Attachment.builder().blobId("blobId").type("type").name("name").size(123).build();
+        Attachment simpleAttachment = Attachment.builder().blobId(BlobId.of("blobId")).type("type").name("name").size(123).build();
         ImmutableList<Attachment> attachments = ImmutableList.of(simpleAttachment);
         SubMessage simpleMessage = SubMessage.builder()
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
                 .date(currentDate)
                 .build();
-        ImmutableMap<String, SubMessage> attachedMessages = ImmutableMap.of("blobId", simpleMessage);
+        ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("blobId"), simpleMessage);
         SubMessage expected = new SubMessage(
                 ImmutableMap.of("key", "value"),
                 Optional.of(from),

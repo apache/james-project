@@ -56,7 +56,7 @@ public class SetMessagesResponseTest {
         ImmutableMap<CreationMessageId, Message> created = ImmutableMap.of(CreationMessageId.of("user|created|1"),
             Message.builder()
                 .id(MessageId.of("user|created|1"))
-                .blobId("blobId")
+                .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
                 .mailboxIds(ImmutableList.of("mailboxId"))
                 .headers(ImmutableMap.of("key", "value"))
@@ -106,7 +106,7 @@ public class SetMessagesResponseTest {
     private ImmutableMap<CreationMessageId, Message> buildMessage(CreationMessageId messageId) {
         return ImmutableMap.of(messageId, Message.builder()
                 .id(MessageId.of(messageId.getId()))
-                .blobId("blobId")
+                .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
                 .mailboxIds(ImmutableList.of())
                 .headers(ImmutableMap.of())

@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
+import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
@@ -89,7 +90,7 @@ public class SetMessagesCreationProcessorTest {
 
     private static final Message FAKE_OUTBOX_MESSAGE = Message.builder()
             .id(MessageId.of(OUTBOX_MESSAGE_ID))
-            .blobId("anything")
+            .blobId(BlobId.of("anything"))
             .threadId("anything")
             .mailboxId(OUTBOX_ID.serialize())
             .headers(ImmutableMap.of())

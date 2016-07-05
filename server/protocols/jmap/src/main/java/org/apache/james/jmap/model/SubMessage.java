@@ -52,7 +52,7 @@ public class SubMessage {
         private String textBody;
         private String htmlBody;
         private final ImmutableList.Builder<Attachment> attachments;
-        private final ImmutableMap.Builder<String, SubMessage> attachedMessages;
+        private final ImmutableMap.Builder<BlobId, SubMessage> attachedMessages;
         
         private Builder() {
             to = ImmutableList.builder();
@@ -118,7 +118,7 @@ public class SubMessage {
             return this;
         }
 
-        public Builder attachedMessages(Map<String, SubMessage> attachedMessages) {
+        public Builder attachedMessages(Map<BlobId, SubMessage> attachedMessages) {
             this.attachedMessages.putAll(attachedMessages);
             return this;
         }
@@ -128,7 +128,7 @@ public class SubMessage {
             Preconditions.checkState(!Strings.isNullOrEmpty(subject), "'subject' is mandatory");
             Preconditions.checkState(date != null, "'date' is mandatory");
             ImmutableList<Attachment> attachments = this.attachments.build();
-            ImmutableMap<String, SubMessage> attachedMessages = this.attachedMessages.build();
+            ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             Preconditions.checkState(Message.areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
             return new SubMessage(headers, Optional.ofNullable(from), to.build(), cc.build(), bcc.build(),
                     replyTo.build(), subject, date, Optional.ofNullable(textBody), Optional.ofNullable(htmlBody),
@@ -148,10 +148,10 @@ public class SubMessage {
     private final Optional<String> textBody;
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
-    private final ImmutableMap<String, SubMessage> attachedMessages;
+    private final ImmutableMap<BlobId, SubMessage> attachedMessages;
 
     @VisibleForTesting SubMessage(ImmutableMap<String, String> headers, Optional<Emailer> from, ImmutableList<Emailer> to, ImmutableList<Emailer> cc, ImmutableList<Emailer> bcc, ImmutableList<Emailer> replyTo, String subject, ZonedDateTime date, Optional<String> textBody,
-            Optional<String> htmlBody, ImmutableList<Attachment> attachments, ImmutableMap<String, SubMessage> attachedMessages) {
+            Optional<String> htmlBody, ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
         super();
         this.headers = headers;
         this.from = from;
@@ -211,7 +211,7 @@ public class SubMessage {
         return attachments;
     }
 
-    public ImmutableMap<String, SubMessage> getAttachedMessages() {
+    public ImmutableMap<BlobId, SubMessage> getAttachedMessages() {
         return attachedMessages;
     }
     
