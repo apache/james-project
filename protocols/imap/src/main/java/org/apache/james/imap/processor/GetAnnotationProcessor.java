@@ -1,0 +1,175 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.imap.processor;
+
+import static org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.message.request.GetAnnotationRequest;
+import org.apache.james.imap.message.response.AnnotationResponse;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxPath;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+
+public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotationRequest> implements CapabilityImplementingProcessor {
+    public GetAnnotationProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory) {
+        super(GetAnnotationRequest.class, next, mailboxManager, factory);
+    }
+
+    public List<String> getImplementedCapabilities(ImapSession session) {
+        return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
+    }
+
+    protected void doProcess(GetAnnotationRequest message, ImapSession session, String tag, ImapCommand command,
+            Responder responder) {
+        try {
+            proceed(message, session, tag, command, responder);
+        } catch (MailboxNotFoundException e) {
+            session.getLog().info("The command: {} is failed because not found mailbox {}", command.getName(), message.getMailboxName());
+            no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
+        } catch (MailboxException e) {
+            session.getLog().info("The command: {} on mailbox {} is failed", command.getName(), message.getMailboxName());
+            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+        }
+    }
+
+    private void proceed(GetAnnotationRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) throws MailboxException {
+        String mailboxName = message.getMailboxName();
+        Optional<Integer> maxsize = message.getMaxsize();
+        MailboxPath mailboxPath = buildFullPath(session, mailboxName);
+
+        List<MailboxAnnotation> mailboxAnnotations = getMailboxAnnotations(session, message.getKeys(), message.getDepth(), mailboxPath);
+        Optional<Integer> maximumOversizedSize = getMaxSizeValue(mailboxAnnotations, maxsize);
+
+        respond(tag, command, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize);
+    }
+
+    private void respond(String tag, ImapCommand command, Responder responder, String mailboxName,
+                         List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize, Optional<Integer> maximumOversizedSize) {
+        if (maximumOversizedSize.isPresent()) {
+            responder.respond(new AnnotationResponse(mailboxName, filterItemsBySize(responder, mailboxName, mailboxAnnotations, maxsize)));
+            okComplete(command, tag, ResponseCode.longestMetadataEntry(maximumOversizedSize.get()), responder);
+        } else {
+            responder.respond(new AnnotationResponse(mailboxName, mailboxAnnotations));
+            okComplete(command, tag, responder);
+        }
+    }
+
+    private Optional<Integer> getMaxSizeValue(final List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize) {
+        if (maxsize.isPresent()) {
+            return maxsize.transform(new Function<Integer, Optional<Integer>>() {
+                @Override
+                public Optional<Integer> apply(Integer input) {
+                    return getMaxSizeOfOversizedItems(mailboxAnnotations, input);
+                }
+            }).get();
+        }
+        return Optional.absent();
+    }
+
+    private List<MailboxAnnotation> filterItemsBySize(Responder responder, String mailboxName, List<MailboxAnnotation> mailboxAnnotations, final Optional<Integer> maxsize) {
+        Predicate<MailboxAnnotation> lowerPredicate = new Predicate<MailboxAnnotation>() {
+            @Override
+            public boolean apply(final MailboxAnnotation input) {
+                return maxsize.transform(new Function<Integer, Boolean>() {
+                    @Override
+                    public Boolean apply(Integer maxSizeInput) {
+                        return (input.size() <= maxSizeInput);
+                    }
+                }).or(true);
+            }
+        };
+
+        return FluentIterable.from(mailboxAnnotations).filter(lowerPredicate).toList();
+    }
+
+    private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetAnnotationRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
+        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        switch (depth) {
+            case ZERO:
+                return getMailboxAnnotationsWithDepthZero(keys, mailboxPath, mailboxSession);
+            case ONE:
+                return getMailboxManager().getAnnotationsByKeysWithOneDepth(mailboxPath, mailboxSession, keys);
+            case INFINITY:
+                return getMailboxManager().getAnnotationsByKeysWithAllDepth(mailboxPath, mailboxSession, keys);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private List<MailboxAnnotation> getMailboxAnnotationsWithDepthZero(Set<MailboxAnnotationKey> keys, MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+        if (keys.isEmpty()) {
+            return getMailboxManager().getAllAnnotations(mailboxPath, mailboxSession);
+        } else {
+            return getMailboxManager().getAnnotationsByKeys(mailboxPath, mailboxSession, keys);
+        }
+    }
+
+    private Optional<Integer> getMaxSizeOfOversizedItems(List<MailboxAnnotation> mailboxAnnotations, final Integer maxsize) {
+        Predicate<MailboxAnnotation> filterOverSizedAnnotation = new Predicate<MailboxAnnotation>() {
+            @Override
+            public boolean apply(MailboxAnnotation input) {
+                return (input.size() > maxsize);
+            }
+        };
+
+        Function<MailboxAnnotation, Integer> transformToSize = new Function<MailboxAnnotation,Integer>(){
+            public Integer apply(MailboxAnnotation input) {
+                return input.size();
+            }
+        };
+
+        ImmutableSortedSet<Integer> overLimitSizes = FluentIterable.from(mailboxAnnotations)
+            .filter(filterOverSizedAnnotation)
+            .transform(transformToSize)
+            .toSortedSet(new Comparator<Integer>() {
+                @Override
+                public int compare(Integer annotationSize1, Integer annotationSize2) {
+                    return annotationSize2.compareTo(annotationSize1);
+                }
+            });
+
+        if (overLimitSizes.isEmpty()) {
+            return Optional.absent();
+        }
+        return Optional.of(overLimitSizes.first());
+    }
+
+}

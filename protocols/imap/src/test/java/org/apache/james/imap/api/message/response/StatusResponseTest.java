@@ -19,9 +19,8 @@
 
 package org.apache.james.imap.api.message.response;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.apache.james.imap.api.message.response.StatusResponse;
 import org.junit.Test;
 
 

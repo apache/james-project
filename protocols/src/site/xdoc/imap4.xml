@@ -55,8 +55,9 @@
        <li>SASL-IR (in release 0.2.1)</li>
        <li>ENABLE (in release 0.2.1)</li>
        <li>CONDSTORE (RFC 4551 http://www.ietf.org/rfc/rfc4551.txt in release 0.3)</li>
-       <li>RESYNCH (RFC 5162 http://www.ietf.org/rfc/rfc5162.txt in trunk)</li>
-       <li>MOVE (RFC 6851 https://tools.ietf.org/html/rfc6851 in trunk). This is enabled only if you use a MailboxManager exposing the Move capability</li>
+       <li>RESYNCH (RFC 5162 http://www.ietf.org/rfc/rfc5162.txt on master)</li>
+       <li>MOVE (RFC 6851 https://tools.ietf.org/html/rfc6851 on master). This is enabled only if you use a MailboxManager exposing the Move capability</li>
+       <li>METADATA Extension (RFC 5464 http://www.ietf.org/rfc/rfc5464.txt on master). This is enabled only if you use a MailboxManager exposing the Annotation capability</li>
      </ul>
      <p>We follow RFC2683 recommendations for our implementations:</p>
      <ul>

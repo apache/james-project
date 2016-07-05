@@ -59,7 +59,9 @@ public class DefaultProcessorChain {
         if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Annotation)) {
             final SetAnnotationProcessor setAnnotationProcessor = new SetAnnotationProcessor(unsubscribeProcessor, mailboxManager, statusResponseFactory);
             capabilityProcessor.addProcessor(setAnnotationProcessor);
-            subscribeProcessor = new SubscribeProcessor(setAnnotationProcessor, mailboxManager, subscriptionManager, statusResponseFactory);
+            final GetAnnotationProcessor getAnnotationProcessor = new GetAnnotationProcessor(setAnnotationProcessor, mailboxManager, statusResponseFactory);
+            capabilityProcessor.addProcessor(getAnnotationProcessor);
+            subscribeProcessor = new SubscribeProcessor(getAnnotationProcessor, mailboxManager, subscriptionManager, statusResponseFactory);
         } else {
             subscribeProcessor = new SubscribeProcessor(unsubscribeProcessor, mailboxManager, subscriptionManager, statusResponseFactory);
         }
