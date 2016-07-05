@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -220,7 +221,7 @@ public class FirstUserConnectionFilterThreadTest {
         }
 
         @Override
-        public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<String> keys) throws MailboxException {
+        public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException {
             return null;
         }
 
@@ -236,6 +237,18 @@ public class FirstUserConnectionFilterThreadTest {
 
         @Override
         public Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session,
+                Set<MailboxAnnotationKey> keys) throws MailboxException {
+            return null;
+        }
+
+        @Override
+        public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
+                Set<MailboxAnnotationKey> keys) throws MailboxException {
             return null;
         }
     }
