@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.javatuples.Pair;
@@ -317,8 +318,8 @@ public class GetMessagesMethodStepdefs {
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {
-        attachmentProperties.asMap(String.class, String.class).entrySet()
+        attachmentProperties.asList(TableRow.class)
             .stream()
-            .map(entry -> response.body(attachment + "." + entry.getKey(), equalTo(entry.getValue())));
+            .forEach(row -> response.body(attachment + "." + row.getKey(), equalTo(row.getValue())));
     }
 }

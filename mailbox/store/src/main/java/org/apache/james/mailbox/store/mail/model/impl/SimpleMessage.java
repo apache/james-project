@@ -25,8 +25,8 @@ import java.util.List;
 
 import javax.mail.internet.SharedInputStream;
 
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Property;
 
@@ -42,9 +42,9 @@ public class SimpleMessage implements Message {
     private final long size;
     private final Long textualLineCount;
     private final List<Property> properties;
-    private final List<AttachmentId> attachmentsIds;
+    private final List<MessageAttachment> attachments;
 
-    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<AttachmentId> attachmentsIds) {
+    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachment> attachments) {
         this.subType = subType;
         this.mediaType = mediaType;
         this.content = content;
@@ -53,11 +53,11 @@ public class SimpleMessage implements Message {
         this.size = size;
         this.textualLineCount = textualLineCount;
         this.properties = properties;
-        this.attachmentsIds = attachmentsIds;
+        this.attachments = attachments;
     }
 
     public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties) {
-        this(content, size, internalDate, subType, mediaType, bodyStartOctet, textualLineCount, properties, ImmutableList.<AttachmentId>of());
+        this(content, size, internalDate, subType, mediaType, bodyStartOctet, textualLineCount, properties, ImmutableList.<MessageAttachment>of());
     }
 
     @Override
@@ -120,7 +120,7 @@ public class SimpleMessage implements Message {
     }
 
     @Override
-    public List<AttachmentId> getAttachmentsIds() {
-        return attachmentsIds;
+    public List<MessageAttachment> getAttachments() {
+        return attachments;
     }
 }

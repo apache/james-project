@@ -42,15 +42,12 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.util.streams.ImmutableCollectors;
 import org.javatuples.Pair;
 
@@ -68,18 +65,15 @@ public class GetMessagesMethod implements Method {
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private final MessageMapperFactory messageMapperFactory;
     private final MailboxMapperFactory mailboxMapperFactory;
-    private final AttachmentMapperFactory attachmentMapperFactory;
     private final MessageFactory messageFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
             MessageMapperFactory messageMapperFactory,
             MailboxMapperFactory mailboxMapperFactory,
-            AttachmentMapperFactory attachmentMapperFactory,
             MessageFactory messageFactory) {
         this.messageMapperFactory = messageMapperFactory;
         this.mailboxMapperFactory = mailboxMapperFactory;
-        this.attachmentMapperFactory = attachmentMapperFactory;
         this.messageFactory = messageFactory;
     }
     
@@ -165,13 +159,10 @@ public class GetMessagesMethod implements Method {
         Iterable<MailboxMessage> iterable = () -> value.getValue0();
         Stream<MailboxMessage> targetStream = StreamSupport.stream(iterable.spliterator(), false);
 
-        Function<List<AttachmentId>, List<Attachment>> retrieveAttachments = retrieveAttachments(attachmentMapperFactory.getAttachmentMapper(mailboxSession));
-
         MailboxPath mailboxPath = value.getValue1();
         return targetStream
-                .map(message -> CompletedMailboxMessage.builder().mailboxMessage(message).attachmentIds(message.getAttachmentsIds()))
+                .map(message -> CompletedMailboxMessage.builder().mailboxMessage(message).attachments(message.getAttachments()))
                 .map(builder -> builder.mailboxPath(mailboxPath))
-                .map(builder -> builder.retrieveAttachments(retrieveAttachments))
                 .map(builder -> builder.build()); 
     }
 
@@ -184,9 +175,8 @@ public class GetMessagesMethod implements Method {
         public static class Builder {
 
             private MailboxMessage mailboxMessage;
-            private List<AttachmentId> attachmentIds;
+            private List<MessageAttachment> attachments;
             private MailboxPath mailboxPath;
-            private Function<List<AttachmentId>, List<Attachment>> retrieveAttachments;
 
             private Builder() {
             }
@@ -197,9 +187,9 @@ public class GetMessagesMethod implements Method {
                 return this;
             }
 
-            public Builder attachmentIds(List<AttachmentId> attachmentIds) {
-                Preconditions.checkArgument(attachmentIds != null);
-                this.attachmentIds = attachmentIds;
+            public Builder attachments(List<MessageAttachment> attachments) {
+                Preconditions.checkArgument(attachments != null);
+                this.attachments = attachments;
                 return this;
             }
 
@@ -209,37 +199,22 @@ public class GetMessagesMethod implements Method {
                 return this;
             }
 
-            public Builder retrieveAttachments(Function<List<AttachmentId>, List<Attachment>> retrieveAttachments) {
-                Preconditions.checkArgument(retrieveAttachments != null);
-                this.retrieveAttachments = retrieveAttachments;
-                return this;
-            }
-
             public CompletedMailboxMessage build() {
                 Preconditions.checkState(mailboxMessage != null);
-                Preconditions.checkState(attachmentIds != null);
+                Preconditions.checkState(attachments != null);
                 Preconditions.checkState(mailboxPath != null);
-                Preconditions.checkState(retrieveAttachments != null);
-                return new CompletedMailboxMessage(mailboxMessage, retrieveAttachments.apply(attachmentIds), mailboxPath);
+                return new CompletedMailboxMessage(mailboxMessage, attachments, mailboxPath);
             }
         }
 
         private final MailboxMessage mailboxMessage;
-        private final List<Attachment> attachments;
+        private final List<MessageAttachment> attachments;
         private final MailboxPath mailboxPath;
 
-        public CompletedMailboxMessage(MailboxMessage mailboxMessage, List<Attachment> attachments, MailboxPath mailboxPath) {
+        public CompletedMailboxMessage(MailboxMessage mailboxMessage, List<MessageAttachment> attachments, MailboxPath mailboxPath) {
             this.mailboxMessage = mailboxMessage;
             this.attachments = attachments;
             this.mailboxPath = mailboxPath;
         }
-    }
-
-    private Function<List<AttachmentId>, List<Attachment>> retrieveAttachments(AttachmentMapper attachmentMapper) {
-        return (attachmentsIds) -> {
-            return attachmentsIds.stream()
-                    .map(Throwing.function(id -> attachmentMapper.getAttachment(id)))
-                    .collect(ImmutableCollectors.toImmutableList());
-        };
     }
 }

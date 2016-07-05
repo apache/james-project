@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.mail;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -29,6 +30,8 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 public interface AttachmentMapper extends Mapper {
 
     Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException;
+
+    List<Attachment> getAttachments(List<AttachmentId> attachmentIds);
 
     void storeAttachment(Attachment attachment) throws MailboxException;
 

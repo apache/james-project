@@ -105,10 +105,10 @@ public interface Message {
     List<Property> getProperties();
     
     /**
-     * Return the list of ids of parsed attachments
+     * Return the list of attachments
      * 
-     * @return a read only list of attachments ids
+     * @return a read only list of attachments
      */
-    List<AttachmentId> getAttachmentsIds();
+    List<MessageAttachment> getAttachments();
 
 }

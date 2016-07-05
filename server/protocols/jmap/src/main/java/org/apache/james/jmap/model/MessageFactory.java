@@ -33,6 +33,7 @@ import org.apache.james.jmap.model.message.EMailer;
 import org.apache.james.jmap.model.message.IndexableMessage;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.google.common.base.Strings;
@@ -54,7 +55,7 @@ public class MessageFactory {
     }
 
     public Message fromMailboxMessage(MailboxMessage mailboxMessage,
-            List<org.apache.james.mailbox.store.mail.model.Attachment> attachments,
+            List<MessageAttachment> attachments,
             Function<Long, MessageId> uidToMessageId) {
 
         IndexableMessage im = IndexableMessage.from(mailboxMessage, new DefaultTextExtractor(), UTC_ZONE_ID);
@@ -150,18 +151,20 @@ public class MessageFactory {
         return im.getBodyHtml().map(Strings::emptyToNull).orElse(null);
     }
 
-    private List<Attachment> getAttachments(List<org.apache.james.mailbox.store.mail.model.Attachment> attachments) {
+    private List<Attachment> getAttachments(List<MessageAttachment> attachments) {
         return attachments.stream()
                 .map(this::fromMailboxAttachment)
                 .collect(ImmutableCollectors.toImmutableList());
     }
 
-    private Attachment fromMailboxAttachment(org.apache.james.mailbox.store.mail.model.Attachment attachment) {
+    private Attachment fromMailboxAttachment(MessageAttachment attachment) {
         return Attachment.builder()
                     .blobId(attachment.getAttachmentId().getId())
-                    .type(attachment.getType())
-                    .name(attachment.getName().orNull())
-                    .size(attachment.getSize())
+                    .type(attachment.getAttachment().getType())
+                    .name(attachment.getAttachment().getName().orNull())
+                    .size(attachment.getAttachment().getSize())
+                    .cid(attachment.getCid().orNull())
+                    .isInline(attachment.isInline())
                     .build();
     }
 }

@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -101,5 +103,41 @@ public class AttachmentMapperTest<T extends MapperProvider> {
         Attachment attachment2 = attachmentMapper.getAttachment(attachmentId2);
         assertThat(attachment1).isEqualTo(expected1);
         assertThat(attachment2).isEqualTo(expected2);
+    }
+
+    @ContractTest
+    public void getAttachmentsShouldThrowWhenNullAttachmentId() throws Exception {
+        expected.expect(IllegalArgumentException.class);
+        attachmentMapper.getAttachments(null);
+    }
+
+    @ContractTest
+    public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() throws Exception {
+        List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(AttachmentId.forPayload("unknown".getBytes(Charsets.UTF_8))));
+
+        assertThat(attachments).isEmpty();
+    }
+
+    @ContractTest
+    public void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
+        //Given
+        Attachment expected = Attachment.builder()
+                .bytes("payload".getBytes(Charsets.UTF_8))
+                .type("content")
+                .build();
+        AttachmentId attachmentId = expected.getAttachmentId();
+        attachmentMapper.storeAttachment(expected);
+
+        Attachment expected2 = Attachment.builder()
+                .bytes("payload2".getBytes(Charsets.UTF_8))
+                .type("content")
+                .build();
+        AttachmentId attachmentId2 = expected2.getAttachmentId();
+        attachmentMapper.storeAttachment(expected2);
+
+        //When
+        List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(attachmentId, attachmentId2));
+        //Then
+        assertThat(attachments).contains(expected, expected2);
     }
 }

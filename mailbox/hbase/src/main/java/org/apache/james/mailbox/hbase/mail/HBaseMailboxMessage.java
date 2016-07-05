@@ -38,10 +38,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
@@ -355,7 +355,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public List<AttachmentId> getAttachmentsIds() {
-        throw new NotImplementedException("Attachments Ids not implemented");
+    public List<MessageAttachment> getAttachments() {
+        throw new NotImplementedException("Attachments are not implemented");
     }
 }

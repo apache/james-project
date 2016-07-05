@@ -28,7 +28,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.ATTACHMENTS_IDS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.ATTACHMENTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageTable.BODY_OCTECTS;
@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.mail.Flags;
@@ -80,6 +81,7 @@ import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MessageDeletedDuringFlagsUpdateException;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Attachments;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -87,12 +89,15 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
@@ -107,6 +112,7 @@ import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -120,14 +126,16 @@ public class CassandraMessageMapper implements MessageMapper {
     private final UidProvider uidProvider;
     private final CassandraTypesProvider typesProvider;
     private final int maxRetries;
+    private final AttachmentMapper attachmentMapper;
 
-    public CassandraMessageMapper(Session session, UidProvider uidProvider, ModSeqProvider modSeqProvider, MailboxSession mailboxSession, int maxRetries, CassandraTypesProvider typesProvider) {
+    public CassandraMessageMapper(Session session, UidProvider uidProvider, ModSeqProvider modSeqProvider, MailboxSession mailboxSession, int maxRetries, CassandraTypesProvider typesProvider, AttachmentMapper attachmentMapper) {
         this.session = session;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.mailboxSession = mailboxSession;
         this.maxRetries = maxRetries;
         this.typesProvider = typesProvider;
+        this.attachmentMapper = attachmentMapper;
     }
 
     @Override
@@ -305,7 +313,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 getFlags(row),
                 getPropertyBuilder(row),
                 CassandraId.of(row.getUUID(MAILBOX_ID)),
-                getAttachmentsIds(row, fetchType));
+                getAttachments(row, fetchType));
         message.setUid(row.getLong(IMAP_UID));
         message.setModSeq(row.getLong(MOD_SEQ));
         return message;
@@ -333,17 +341,40 @@ public class CassandraMessageMapper implements MessageMapper {
         return property;
     }
 
-    private List<AttachmentId> getAttachmentsIds(Row row, FetchType fetchType) {
+    private List<MessageAttachment> getAttachments(Row row, FetchType fetchType) {
         switch (fetchType) {
         case Full:
         case Body:
-            return row.getList(ATTACHMENTS_IDS, String.class)
+            List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+            Map<AttachmentId,Attachment> attachmentsById = attachmentsById(row, udtValues);
+
+            return udtValues
                     .stream()
-                    .map(AttachmentId::from)
+                    .map(Throwing.function(x -> 
+                        MessageAttachment.builder()
+                            .attachment(attachmentsById.get(attachmentIdFrom(x)))
+                            .cid(x.getString(Attachments.CID))
+                            .isInline(x.getBool(Attachments.IS_INLINE))
+                            .build()))
                     .collect(ImmutableCollectors.toImmutableList());
         default:
             return ImmutableList.of();
         }
+    }
+
+    private Map<AttachmentId,Attachment> attachmentsById(Row row, List<UDTValue> udtValues) {
+        return attachmentMapper.getAttachments(attachmentIds(udtValues)).stream()
+            .collect(ImmutableCollectors.toImmutableMap(Attachment::getAttachmentId, Function.identity()));
+    }
+
+    private List<AttachmentId> attachmentIds(List<UDTValue> udtValues) {
+        return udtValues.stream()
+            .map(this::attachmentIdFrom)
+            .collect(ImmutableCollectors.toImmutableList());
+    }
+
+    private AttachmentId attachmentIdFrom(UDTValue udtValue) {
+        return AttachmentId.from(udtValue.getString(Attachments.ID));
     }
 
     private MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
@@ -375,14 +406,22 @@ public class CassandraMessageMapper implements MessageMapper {
                         .setString(Properties.VALUE, x.getValue()))
                     .collect(Collectors.toList()))
                 .value(TEXTUAL_LINE_COUNT, message.getTextualLineCount())
-                .value(ATTACHMENTS_IDS, message.getAttachmentsIds().stream()
-                    .map(AttachmentId::getId)
+                .value(ATTACHMENTS, message.getAttachments().stream()
+                    .map(this::toUDT)
                     .collect(Collectors.toList())));
 
             return new SimpleMessageMetaData(message);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail", e);
         }
+    }
+
+    private UDTValue toUDT(MessageAttachment messageAttachment) {
+        return typesProvider.getDefinedUserType(ATTACHMENTS)
+            .newValue()
+            .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
+            .setString(Attachments.CID, messageAttachment.getCid().orNull())
+            .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 
     private Set<String> userFlagsSet(MailboxMessage message) {

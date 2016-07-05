@@ -133,28 +133,28 @@ public class GetMessagesMethodTest {
     
     @Test
     public void processShouldThrowWhenNullRequest() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         GetMessagesRequest request = null;
         assertThatThrownBy(() -> testee.process(request, mock(ClientId.class), mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenNullSession() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         MailboxSession mailboxSession = null;
         assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), mock(ClientId.class), mailboxSession)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenNullClientId() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         ClientId clientId = null;
         assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), clientId, mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenRequestHasAccountId() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         assertThatThrownBy(() -> testee.process(
                 GetMessagesRequest.builder().accountId("abc").build(), mock(ClientId.class), mock(MailboxSession.class))).isInstanceOf(NotImplementedException.class);
     }
@@ -176,7 +176,7 @@ public class GetMessagesMethodTest {
                           new MessageId(ROBERT, inboxPath, message3Uid)))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
         
         assertThat(result).hasSize(1)
@@ -205,7 +205,7 @@ public class GetMessagesMethodTest {
                 .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, messageUid)))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
         
         assertThat(result).hasSize(1)
@@ -229,7 +229,7 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of())
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
@@ -250,7 +250,7 @@ public class GetMessagesMethodTest {
                 .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         Stream<JmapResponse> result = testee.process(request, clientId, session);
 
         assertThat(result).hasSize(1)
@@ -274,7 +274,7 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.subject);
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
@@ -298,7 +298,7 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.textBody);
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
@@ -325,7 +325,7 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.headers);
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result)
@@ -351,7 +351,7 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
+        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result)

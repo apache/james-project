@@ -75,8 +75,8 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
             }
         }
         if (usedFetchType == MessageMapper.FetchType.Full || usedFetchType == MessageMapper.FetchType.Body) {
-            if (!Objects.equal(actual.getAttachmentsIds(), expected.getAttachmentsIds())) {
-                failWithMessage("Expected attachments ids to be <%s> but was <%s>", expected.getAttachmentsIds(), actual.getAttachmentsIds());
+            if (!Objects.equal(actual.getAttachments(), expected.getAttachments())) {
+                failWithMessage("Expected attachments to be <%s> but was <%s>", expected.getAttachments(), actual.getAttachments());
             }
         }
         return this;

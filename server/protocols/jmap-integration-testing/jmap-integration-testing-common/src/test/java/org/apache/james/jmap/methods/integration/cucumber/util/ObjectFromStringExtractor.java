@@ -17,43 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.jmap.methods.integration.cucumber.util;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.junit.runner.RunWith;
-import org.xenei.junit.contract.Contract;
-import org.xenei.junit.contract.ContractImpl;
-import org.xenei.junit.contract.ContractSuite;
-import org.xenei.junit.contract.IProducer;
+import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
-@RunWith(ContractSuite.class)
-@ContractImpl(CassandraMapperProvider.class)
-public class CassandraMappersTests {
+public class ObjectFromStringExtractor {
 
-    private IProducer<CassandraMapperProvider> producer = new IProducer<CassandraMapperProvider>() {
+    private static final List<ObjectFromString<?>> EXTRACTORS = ImmutableList.of(
+            new StringFromString(),
+            new IntegerFromString(),
+            new BooleanFromString());
 
-        private final CassandraMapperProvider cassandraMapperProvider = new CassandraMapperProvider();
-
-        @Override
-        public CassandraMapperProvider newInstance() {
-            return cassandraMapperProvider;
-        }
-
-        @Override
-        public void cleanUp() {
-            try {
-                cassandraMapperProvider.clearMapper();
-            } catch (MailboxException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    };
-
-    @Contract.Inject
-    public IProducer<CassandraMapperProvider> getProducer() {
-        return producer;
+    public Object extract(String value) {
+        return EXTRACTORS.stream()
+            .map(extractor -> extractor.extract(value))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .findFirst()
+            .orElse(null);
     }
-
 }

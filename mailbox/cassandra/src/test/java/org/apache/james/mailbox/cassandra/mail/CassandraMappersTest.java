@@ -17,43 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail;
+package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
+import org.junit.runner.RunWith;
+import org.xenei.junit.contract.Contract;
+import org.xenei.junit.contract.ContractImpl;
+import org.xenei.junit.contract.ContractSuite;
+import org.xenei.junit.contract.IProducer;
 
-public class NoopAttachmentMapper implements AttachmentMapper {
+import com.google.common.base.Throwables;
 
-    @Override
-    public void endRequest() {
+@RunWith(ContractSuite.class)
+@ContractImpl(CassandraMapperProvider.class)
+public class CassandraMappersTest {
 
+    private IProducer<CassandraMapperProvider> producer = new IProducer<CassandraMapperProvider>() {
+
+        private final CassandraMapperProvider cassandraMapperProvider = new CassandraMapperProvider();
+
+        @Override
+        public CassandraMapperProvider newInstance() {
+            return cassandraMapperProvider;
+        }
+
+        @Override
+        public void cleanUp() {
+            try {
+                cassandraMapperProvider.clearMapper();
+            } catch (MailboxException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+    };
+
+    @Contract.Inject
+    public IProducer<CassandraMapperProvider> getProducer() {
+        return producer;
     }
 
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
-    }
-
-    @Override
-    public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
-        return null;
-    }
-
-    @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
-        return null;
-    }
-
-    @Override
-    public void storeAttachment(Attachment attachment) throws MailboxException {
-    }
-
-    @Override
-    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
-    }
 }

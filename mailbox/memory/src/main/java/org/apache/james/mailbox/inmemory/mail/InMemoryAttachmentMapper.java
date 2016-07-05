@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +30,8 @@ import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 
 public class InMemoryAttachmentMapper implements AttachmentMapper {
     
@@ -46,6 +49,18 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
             throw new AttachmentNotFoundException(attachmentId.getId());
         }
         return attachmentsById.get(attachmentId);
+    }
+
+    @Override
+    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
+        Preconditions.checkArgument(attachmentIds != null);
+        Builder<Attachment> builder = ImmutableList.<Attachment> builder();
+        for (AttachmentId attachmentId : attachmentIds) {
+            if (attachmentsById.containsKey(attachmentId)) {
+                builder.add(attachmentsById.get(attachmentId));
+            }
+        }
+        return builder.build();
     }
 
     @Override

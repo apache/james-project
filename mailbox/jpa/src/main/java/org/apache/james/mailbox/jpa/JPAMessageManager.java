@@ -36,9 +36,9 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -60,7 +60,7 @@ public class JPAMessageManager extends StoreMessageManager {
     
     @Override
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content,
-                                                  final Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException{
+                                                  final Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException{
 
         return new JPAMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
     }

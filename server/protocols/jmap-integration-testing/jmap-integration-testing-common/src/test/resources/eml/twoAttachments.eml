@@ -54,7 +54,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 Content-Type: image/jpeg;
  name="4037_015.jpg"
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
+Content-ID: <part1.37A15C92.A7C3488D@linagora.com>
+Content-Disposition: inline;
  filename="4037_015.jpg"
 
 iVBORw0KGgoAAAANSUhEUgAABYUAAAL4CAIAAACrzA8fAAAACXBIWXMAAAsTAAALEwEAmpwY

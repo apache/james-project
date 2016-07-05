@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.apache.james.mailbox.store.mail.model.Attachment;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,101 +41,117 @@ public class MessageParserTest {
 
     @Test
     public void getAttachmentsShouldBeEmptyWhenNoAttachment() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noAttachment.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noAttachment.eml"));
 
         assertThat(attachments).isEmpty();
     }
 
     @Test
     public void getAttachmentsShouldRetrieveAttachmentsWhenOneAttachment() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments).hasSize(1);
     }
 
     @Test
     public void getAttachmentsShouldRetrieveAttachmentNameWhenOne() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments).hasSize(1);
         Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
-        assertThat(attachments.get(0).getName()).isEqualTo(expectedName);
+        assertThat(attachments.get(0).getAttachment().getName()).isEqualTo(expectedName);
     }
 
     @Test
     public void getAttachmentsShouldRetrieveEmptyNameWhenNone() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getName()).isEqualTo(Optional.absent());
+        assertThat(attachments.get(0).getAttachment().getName()).isEqualTo(Optional.absent());
     }
 
     @Test
     public void getAttachmentsShouldNotFailWhenContentTypeIsNotHere() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutContentType.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutContentType.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getAttachment().getType()).isEqualTo("application/octet-stream");
     }
 
     @Test
     public void getAttachmentsShouldNotFailWhenContentTypeIsEmpty() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithEmptyContentType.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithEmptyContentType.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getAttachment().getType()).isEqualTo("application/octet-stream");
     }
 
     @Test
     public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachment() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getAttachment().getType()).isEqualTo("application/octet-stream");
     }
 
     @Test
     public void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachmentWithSimpleContentType() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getType()).isEqualTo("application/octet-stream");
+        assertThat(attachments.get(0).getAttachment().getType()).isEqualTo("application/octet-stream");
     }
 
     @Test
     public void getAttachmentsShouldRetrieveTheAttachmentSizeWhenOneAttachment() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getSize()).isEqualTo(3071);
+        assertThat(attachments.get(0).getAttachment().getSize()).isEqualTo(3071);
     }
 
     @Test
     public void getAttachmentsShouldReturnTheExpectedAttachment() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
-        Attachment attachment = attachments.get(0);
+        Attachment attachment = attachments.get(0).getAttachment();
         assertThat(attachment.getStream()).hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
     @Test
     public void getAttachmentsShouldRetrieveAttachmentsWhenTwo() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"));
 
         assertThat(attachments).hasSize(2);
     }
 
     @Test
     public void getAttachmentsShouldNotRetrieveEmbeddedAttachmentsWhenSome() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithInline.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithInline.eml"));
 
         assertThat(attachments).hasSize(1);
     }
 
     @Test
     public void getAttachmentsShouldNotRetrieveInlineAttachmentsWhenSome() throws Exception {
-        List<Attachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithAttachment.eml"));
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithAttachment.eml"));
 
         assertThat(attachments).hasSize(1);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveTheAttachmentCIDWhenOne() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getCid()).isEqualTo(Optional.of("<part1.37A15C92.A7C3488D@linagora.com>"));
+    }
+
+    @Test
+    public void getAttachmentsShouldSetInlineWhenOneInlinedAttachment() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
+
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).isInline()).isTrue();
     }
 }

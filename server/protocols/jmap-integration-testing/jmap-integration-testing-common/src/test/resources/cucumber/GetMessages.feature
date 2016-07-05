@@ -142,13 +142,19 @@ Feature: GetMessages method
     And the hasAttachment of the message is "true"
     And the list of attachments of the message contains 2 attachments
     And the first attachment is:
-      |blobId |"223a76c0e8c1b1762487d8e0598bd88497d73ef2" |
-      |type   |"image/jpeg"                               |
-      |size   |846                                        |
+      |key      | value                                     |
+      |blobId   |"223a76c0e8c1b1762487d8e0598bd88497d73ef2" |
+      |type     |"image/jpeg"                               |
+      |size     |846                                        |
+      |cid      |null                                       |
+      |isInline |false                                      |
     And the second attachment is:
-      |blobId |"58aa22c2ec5770fb9e574ba19008dbfc647eba43" |
-      |type   |"image/jpeg"                               |
-      |size   |597                                        |
+      |key      | value                                     |
+      |blobId   |"58aa22c2ec5770fb9e574ba19008dbfc647eba43" |
+      |type     |"image/jpeg"                               |
+      |size     |597                                        |
+      |cid      |"<part1.37A15C92.A7C3488D@linagora.com>"   |
+      |isInline |true                                       |
 
   Scenario: Retrieving message should return attachments and html body when some attachments and html message
     Given the user has a message in "inbox" mailbox with two attachments

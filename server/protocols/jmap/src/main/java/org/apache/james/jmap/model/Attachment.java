@@ -135,7 +135,7 @@ public class Attachment {
         return cid;
     }
 
-    public boolean isInline() {
+    public boolean isIsInline() {
         return isInline;
     }
 

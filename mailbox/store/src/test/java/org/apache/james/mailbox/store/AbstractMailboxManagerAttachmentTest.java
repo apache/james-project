@@ -41,9 +41,9 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,41 +96,41 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        assertThat(messages.next().getAttachmentsIds()).isEmpty();
+        assertThat(messages.next().getAttachments()).isEmpty();
     }
 
     @Test
     public void appendMessageShouldStoreAttachmentWhenMailWithOneAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml");
+        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
         inboxMessageManager.appendMessage(mailInputStream, SUN_SEP_9TH_2001, mailboxSession, true, new Flags(Flags.Flag.RECENT));
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        assertThat(messages.next().getAttachmentsIds()).hasSize(1);
+        assertThat(messages.next().getAttachments()).hasSize(1);
     }
 
     @Test
     public void appendMessageShouldStoreAttachmentNameWhenMailWithOneAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml");
+        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
         inboxMessageManager.appendMessage(mailInputStream, SUN_SEP_9TH_2001, mailboxSession, true, new Flags(Flags.Flag.RECENT));
 
         Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
-        List<AttachmentId> attachmentsIds = messages.next().getAttachmentsIds();
-        assertThat(attachmentMapper.getAttachment(attachmentsIds.get(0)).getName()).isEqualTo(expectedName);
+        List<MessageAttachment> attachments = messages.next().getAttachments();
+        assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getName()).isEqualTo(expectedName);
     }
 
     @Test
     public void appendMessageShouldStoreARetrievableAttachmentWhenMailWithOneAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml");
+        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
         inboxMessageManager.appendMessage(mailInputStream, SUN_SEP_9TH_2001, mailboxSession, true, new Flags(Flags.Flag.RECENT));
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<AttachmentId> attachmentsIds = messages.next().getAttachmentsIds();
-        assertThat(attachmentsIds).hasSize(1);
-        assertThat(attachmentMapper.getAttachment(attachmentsIds.get(0)).getStream())
+        List<MessageAttachment> attachments = messages.next().getAttachments();
+        assertThat(attachments).hasSize(1);
+        assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
             .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
@@ -141,7 +141,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        assertThat(messages.next().getAttachmentsIds()).hasSize(2);
+        assertThat(messages.next().getAttachments()).hasSize(2);
     }
 
     @Test
@@ -151,11 +151,11 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<AttachmentId> attachmentsIds = messages.next().getAttachmentsIds();
-        assertThat(attachmentsIds).hasSize(2);
-        assertThat(attachmentMapper.getAttachment(attachmentsIds.get(0)).getStream())
+        List<MessageAttachment> attachments = messages.next().getAttachments();
+        assertThat(attachments).hasSize(2);
+        assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
             .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/4037_014.jpg"));
-        assertThat(attachmentMapper.getAttachment(attachmentsIds.get(1)).getStream())
+        assertThat(attachmentMapper.getAttachment(attachments.get(1).getAttachmentId()).getStream())
             .hasContentEqualTo(ClassLoader.getSystemResourceAsStream("eml/4037_015.jpg"));
     }
 
@@ -166,7 +166,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        assertThat(messages.next().getAttachmentsIds()).hasSize(1);
+        assertThat(messages.next().getAttachments()).hasSize(1);
     }
 
     @Test
@@ -178,14 +178,14 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<AttachmentId> attachmentsIds = messages.next().getAttachmentsIds();
-        assertThat(attachmentsIds).hasSize(0);
+        List<MessageAttachment> attachments = messages.next().getAttachments();
+        assertThat(attachments).hasSize(0);
     }
 
     @Test
     public void appendMessageShouldStoreOnceWhenDuplicateAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml");
-        InputStream mailInputStream2 = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeInlined.eml");
+        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
+        InputStream mailInputStream2 = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
         String user2 = "user2@domain.tld";
         MailboxSession user2MailboxSession = new MockMailboxSession(user2);
         MessageMapper user2MessageMapper = getMailboxSessionMapperFactory().getMessageMapper(user2MailboxSession);
@@ -201,11 +201,11 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         Iterator<MailboxMessage> user2Messages = user2MessageMapper.findInMailbox(user2Inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
-        List<AttachmentId> attachmentsIds = messages.next().getAttachmentsIds();
-        assertThat(attachmentsIds).hasSize(1);
+        List<MessageAttachment> attachments = messages.next().getAttachments();
+        assertThat(attachments).hasSize(1);
         assertThat(user2Messages.hasNext()).isTrue();
-        List<AttachmentId> user2AttachmentsIds = user2Messages.next().getAttachmentsIds();
-        assertThat(attachmentsIds.equals(user2AttachmentsIds)).isTrue();
+        List<MessageAttachment> user2Attachments = user2Messages.next().getAttachments();
+        assertThat(attachments.equals(user2Attachments)).isTrue();
     }
 }
 

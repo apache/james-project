@@ -17,43 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail;
+package org.apache.james.jmap.methods.integration.cucumber.util;
 
-import java.util.Collection;
-import java.util.List;
+import com.google.common.base.MoreObjects;
 
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
+public class TableRow {
 
-public class NoopAttachmentMapper implements AttachmentMapper {
+    private String key;
+    private String value;
 
-    @Override
-    public void endRequest() {
+    public TableRow(String key, String value) {
+        this.key = key;
+        this.value = value;
+    }
 
+    public String getKey() {
+        return key;
+    }
+
+    public Object getValue() {
+        return new ObjectFromStringExtractor().extract(value);
     }
 
     @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
-    }
-
-    @Override
-    public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
-        return null;
-    }
-
-    @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
-        return null;
-    }
-
-    @Override
-    public void storeAttachment(Attachment attachment) throws MailboxException {
-    }
-
-    @Override
-    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
+    public String toString() {
+        return MoreObjects
+                .toStringHelper(this)
+                .add("key", key)
+                .add("value", value)
+                .toString();
     }
 }

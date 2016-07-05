@@ -35,6 +35,7 @@ import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
@@ -416,12 +417,18 @@ public class MailboxMessageTest {
                 .blobId(blodId)
                 .size(payload.length())
                 .type(type)
+                .cid("cid")
+                .isInline(true)
                 .build();
         Message testee = messageFactory.fromMailboxMessage(testMail,
-                ImmutableList.of(org.apache.james.mailbox.store.mail.model.Attachment.builder()
-                        .attachmentId(AttachmentId.from(blodId))
-                        .bytes(payload.getBytes())
-                        .type(type)
+                ImmutableList.of(MessageAttachment.builder()
+                        .attachment(org.apache.james.mailbox.store.mail.model.Attachment.builder()
+                            .attachmentId(AttachmentId.from(blodId))
+                            .bytes(payload.getBytes())
+                            .type(type)
+                            .build())
+                        .cid("cid")
+                        .isInline(true)
                         .build()), 
                 x -> MessageId.of("user|box|" + x));
 

@@ -29,10 +29,10 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +48,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
         PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
         pBuilder.setTextualLineCount(original.getTextualLineCount());
-        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId, original.getAttachmentsIds());
+        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId, original.getAttachments());
     }
 
     private static SharedByteArrayInputStream copyFullContent(MailboxMessage original) throws MailboxException {
@@ -72,14 +72,14 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(Date internalDate, long size, int bodyStartOctet,
             SharedInputStream content, Flags flags,
-            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<AttachmentId> attachmentsIds) {
+            PropertyBuilder propertyBuilder, MailboxId mailboxId, List<MessageAttachment> attachments) {
         super(new SimpleMessage(
                 content, size, internalDate, propertyBuilder.getSubType(),
                 propertyBuilder.getMediaType(),
                 bodyStartOctet,
                 propertyBuilder.getTextualLineCount(),
                 propertyBuilder.toProperties(),
-                attachmentsIds
+                attachments
                 ));
 
             setFlags(flags);
@@ -92,7 +92,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                                 PropertyBuilder propertyBuilder, MailboxId mailboxId) {
         this(internalDate, size, bodyStartOctet,
                 content, flags,
-                propertyBuilder, mailboxId, ImmutableList.<AttachmentId>of());
+                propertyBuilder, mailboxId, ImmutableList.<MessageAttachment>of());
     }
 
     @Override

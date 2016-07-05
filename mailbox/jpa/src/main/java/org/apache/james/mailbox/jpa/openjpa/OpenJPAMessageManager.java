@@ -37,9 +37,9 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -76,7 +76,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     }
 
     @Override
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException {
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
         int headerEnd = bodyStartOctet -2;
         if (headerEnd < 0) {
             headerEnd = 0;

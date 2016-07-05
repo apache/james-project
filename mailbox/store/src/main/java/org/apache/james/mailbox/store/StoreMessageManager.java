@@ -65,9 +65,9 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -383,7 +383,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             contentIn = new SharedFileInputStream(file);
             final int size = (int) file.length();
 
-            final List<Attachment> attachments = extractAttachments(contentIn);
+            final List<MessageAttachment> attachments = extractAttachments(contentIn);
             final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
 
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
@@ -423,7 +423,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     }
 
-    private List<Attachment> extractAttachments(SharedFileInputStream contentIn) {
+    private List<MessageAttachment> extractAttachments(SharedFileInputStream contentIn) {
         try {
             return messageParser.retrieveAttachments(contentIn);
         } catch (Exception e) {
@@ -444,12 +444,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * @return membership
      * @throws MailboxException
      */
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException {
-        ImmutableList.Builder<AttachmentId> attachmentsIds = ImmutableList.builder();
-        for (Attachment attachment: attachments) {
-            attachmentsIds.add(attachment.getAttachmentId());
-        }
-        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachmentsIds.build());
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
+        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
     }
 
     /**
@@ -635,13 +631,17 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }, true);
     }
 
-    protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<Attachment> attachments, MailboxSession session) throws MailboxException {
+    protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<MessageAttachment> messageAttachments, MailboxSession session) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         final AttachmentMapper attachmentMapper = mapperFactory.getAttachmentMapper(session);
         return mapperFactory.getMessageMapper(session).execute(new Mapper.Transaction<MessageMetaData>() {
 
             public MessageMetaData run() throws MailboxException {
-                attachmentMapper.storeAttachments(attachments);
+                ImmutableList.Builder<Attachment> attachments = ImmutableList.builder();
+                for (MessageAttachment attachment : messageAttachments) {
+                    attachments.add(attachment.getAttachment());
+                }
+                attachmentMapper.storeAttachments(attachments.build());
                 return messageMapper.add(getMailboxEntity(), message);
             }
 

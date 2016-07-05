@@ -25,13 +25,16 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.james.mailbox.store.mail.model.Attachment;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.MessageWriter;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
+import org.apache.james.mime4j.dom.field.ContentIdField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
+import org.apache.james.mime4j.dom.field.ParsedField;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.stream.Field;
@@ -42,10 +45,16 @@ import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
 
+    private static final String TEXT_MEDIA_TYPE = "text";
     private static final String CONTENT_TYPE = "Content-Type";
+    private static final String CONTENT_ID = "Content-ID";
+    private static final String CONTENT_DISPOSITION = "Content-Disposition";
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+    private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
+            ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(),
+            ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase());
 
-    public List<Attachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
+    public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         Body body = new DefaultMessageBuilder()
                 .parseMessage(fullContent)
                 .getBody();
@@ -60,23 +69,49 @@ public class MessageParser {
         }
     }
 
-    private List<Attachment> listAttachments(Multipart multipart) throws IOException {
-        ImmutableList.Builder<Attachment> attachments = ImmutableList.builder();
+    private List<MessageAttachment> listAttachments(Multipart multipart) throws IOException {
+        ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
         MessageWriter messageWriter = new DefaultMessageWriter();
         for (Entity entity : multipart.getBodyParts()) {
-            if (isAttachment(entity)) {
-                Optional<ContentTypeField> contentTypeField = contentTypeField(entity.getHeader().getField(CONTENT_TYPE));
-                Optional<String> contentType = contentType(contentTypeField);
-                Optional<String> name = name(contentTypeField);
-                
-                attachments.add(Attachment.builder()
-                        .bytes(getBytes(messageWriter, entity.getBody()))
-                        .type(contentType.or(DEFAULT_CONTENT_TYPE))
-                        .name(name)
-                        .build());
+            if (entity.isMultipart() && entity.getBody() instanceof Multipart) {
+                attachments.addAll(listAttachments((Multipart) entity.getBody()));
+            } else {
+                if (isAttachment(entity)) {
+                    attachments.add(retrieveAttachment(messageWriter, entity));
+                }
             }
         }
         return attachments.build();
+    }
+
+    private MessageAttachment retrieveAttachment(MessageWriter messageWriter, Entity entity) throws IOException {
+        Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
+        Optional<String> contentType = contentType(contentTypeField);
+        Optional<String> name = name(contentTypeField);
+        Optional<String> cid = cid(castField(entity.getHeader().getField(CONTENT_ID), ContentIdField.class));
+        boolean isInline = isInline(castField(entity.getHeader().getField(CONTENT_DISPOSITION), ContentDispositionField.class));
+
+        return MessageAttachment.builder()
+                .attachment(Attachment.builder()
+                    .bytes(getBytes(messageWriter, entity.getBody()))
+                    .type(contentType.or(DEFAULT_CONTENT_TYPE))
+                    .name(name)
+                    .build())
+                .cid(cid.orNull())
+                .isInline(isInline)
+                .build();
+    }
+
+    private Optional<ContentTypeField> getContentTypeField(Entity entity) {
+        return castField(entity.getHeader().getField(CONTENT_TYPE), ContentTypeField.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <U extends ParsedField> Optional<U> castField(Field field, Class<U> clazz) {
+        if (field == null || !clazz.isInstance(field)) {
+            return Optional.absent();
+        }
+        return Optional.of((U) field);
     }
 
     private Optional<String> contentType(Optional<ContentTypeField> contentTypeField) {
@@ -97,15 +132,47 @@ public class MessageParser {
         }).or(Optional.<String> absent());
     }
 
-    private Optional<ContentTypeField> contentTypeField(Field contentType) {
-        if (contentType == null || !(contentType instanceof ContentTypeField)) {
-            return Optional.absent();
-        }
-        return Optional.of((ContentTypeField) contentType);
+    private Optional<String> cid(Optional<ContentIdField> contentIdField) {
+        return contentIdField.transform(new Function<ContentIdField, Optional<String>>() {
+            @Override
+            public Optional<String> apply(ContentIdField field) {
+                return Optional.fromNullable(field.getId());
+            }
+        }).or(Optional.<String> absent());
+    }
+
+    private boolean isInline(Optional<ContentDispositionField> contentDispositionField) {
+        return contentDispositionField.transform(new Function<ContentDispositionField, Boolean>() {
+            @Override
+            public Boolean apply(ContentDispositionField field) {
+                return field.isInline();
+            }
+        }).or(false);
     }
 
     private boolean isAttachment(Entity part) {
-        return ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.equalsIgnoreCase(part.getDispositionType());
+        if (isTextPart(part)) {
+            return false;
+        }
+        return Optional.fromNullable(part.getDispositionType())
+                .transform(new Function<String, Boolean>() {
+
+                    @Override
+                    public Boolean apply(String dispositionType) {
+                        return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase());
+                    }
+                }).isPresent();
+    }
+
+    private boolean isTextPart(Entity part) {
+        Optional<ContentTypeField> contentTypeField = getContentTypeField(part);
+        if (contentTypeField.isPresent()) {
+            String mediaType = contentTypeField.get().getMediaType();
+            if (mediaType != null && mediaType.equals(TEXT_MEDIA_TYPE)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private byte[] getBytes(MessageWriter messageWriter, Body body) throws IOException {

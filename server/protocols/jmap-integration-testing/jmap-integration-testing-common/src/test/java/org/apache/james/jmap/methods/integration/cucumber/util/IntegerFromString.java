@@ -17,43 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail;
+package org.apache.james.jmap.methods.integration.cucumber.util;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
-
-public class NoopAttachmentMapper implements AttachmentMapper {
+public class IntegerFromString implements ObjectFromString<Integer> {
 
     @Override
-    public void endRequest() {
-
+    public Optional<Integer> extract(String source) {
+        try {
+            return Optional.of(Integer.valueOf(source));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
-    }
-
-    @Override
-    public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
-        return null;
-    }
-
-    @Override
-    public List<Attachment> getAttachments(List<AttachmentId> attachmentIds) {
-        return null;
-    }
-
-    @Override
-    public void storeAttachment(Attachment attachment) throws MailboxException {
-    }
-
-    @Override
-    public void storeAttachments(Collection<Attachment> attachments) throws MailboxException {
-    }
 }

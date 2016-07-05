@@ -36,8 +36,8 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -59,7 +59,7 @@ public class JCRMessageManager extends StoreMessageManager {
 
 
     @Override
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<Attachment> attachments) throws MailboxException{
+    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException{
         JCRId mailboxId = (JCRId) getMailboxEntity().getMailboxId();
         return new JCRMailboxMessage(mailboxId, internalDate,
                 size, flags, content, bodyStartOctet, propertyBuilder, log);
