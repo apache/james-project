@@ -34,32 +34,26 @@ import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.FieldParser;
-import org.apache.james.mime4j.dom.Header;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.MessageBuilder;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
-import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
 import org.apache.james.mime4j.message.BasicBodyFactory;
-import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
-import org.apache.james.mime4j.message.HeaderImpl;
+import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.stream.NameValuePair;
 import org.apache.james.mime4j.stream.RawField;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
-import com.google.common.net.MediaType;
 
 public class MIMEMessageConverter {
 
-    private final MessageBuilder messageBuilder;
     private final BasicBodyFactory bodyFactory;
 
     public MIMEMessageConverter() {
-        this.messageBuilder = new DefaultMessageBuilder();
         this.bodyFactory = new BasicBodyFactory();
     }
 
@@ -80,52 +74,39 @@ public class MIMEMessageConverter {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
 
-        Message message = messageBuilder.newMessage();
-        message.setBody(createTextBody(creationMessageEntry.getMessage()));
-        message.setHeader(buildMimeHeaders(creationMessageEntry.getCreationId(), creationMessageEntry.getMessage()));
-        return message;
+        MessageBuilder messageBuilder = MessageBuilder.create();
+        messageBuilder.setBody(createTextBody(creationMessageEntry.getMessage()));
+        buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getMessage());
+        return messageBuilder.build();
     }
 
-    private Header buildMimeHeaders(CreationMessageId creationId, CreationMessage newMessage) {
-        Header messageHeaders = new HeaderImpl();
-
-        // add From: and Sender: headers
+    private void buildMimeHeaders(MessageBuilder messageBuilder, CreationMessageId creationId, CreationMessage newMessage) {
         Optional<Mailbox> fromAddress = newMessage.getFrom().filter(DraftEmailer::hasValidEmail).map(this::convertEmailToMimeHeader);
-        fromAddress.map(Fields::from).ifPresent(messageHeaders::addField);
-        fromAddress.map(Fields::sender).ifPresent(messageHeaders::addField);
+        fromAddress.ifPresent(messageBuilder::setFrom);
+        fromAddress.ifPresent(messageBuilder::setSender);
 
-        // add Reply-To:
-        messageHeaders.addField(Fields.replyTo(newMessage.getReplyTo().stream()
+        messageBuilder.setReplyTo(newMessage.getReplyTo().stream()
                 .map(this::convertEmailToMimeHeader)
-                .collect(Collectors.toList())));
-        // add To: headers
-        messageHeaders.addField(Fields.to(newMessage.getTo().stream()
+                .collect(Collectors.toList()));
+        messageBuilder.setTo(newMessage.getTo().stream()
                 .filter(DraftEmailer::hasValidEmail)
                 .map(this::convertEmailToMimeHeader)
-                .collect(Collectors.toList())));
-        // add Cc: headers
-        messageHeaders.addField(Fields.cc(newMessage.getCc().stream()
+                .collect(Collectors.toList()));
+        messageBuilder.setCc(newMessage.getCc().stream()
                 .filter(DraftEmailer::hasValidEmail)
                 .map(this::convertEmailToMimeHeader)
-                .collect(Collectors.toList())));
-        // add Bcc: headers
-        messageHeaders.addField(Fields.bcc(newMessage.getBcc().stream()
+                .collect(Collectors.toList()));
+        messageBuilder.setBcc(newMessage.getBcc().stream()
                 .filter(DraftEmailer::hasValidEmail)
                 .map(this::convertEmailToMimeHeader)
-                .collect(Collectors.toList())));
-        // add Subject: header
-        messageHeaders.addField(Fields.subject(newMessage.getSubject()));
-        // set creation Id as MessageId: header
-        messageHeaders.addField(Fields.messageId(creationId.getId()));
+                .collect(Collectors.toList()));
+        messageBuilder.setSubject(newMessage.getSubject());
+        messageBuilder.setMessageId(creationId.getId());
 
-        // date(String fieldName, Date date, TimeZone zone)
-        // note that date conversion probably lose milliseconds !
-        messageHeaders.addField(Fields.date("Date",
-                Date.from(newMessage.getDate().toInstant()), TimeZone.getTimeZone(newMessage.getDate().getZone())
-        ));
-        newMessage.getInReplyToMessageId().ifPresent(addInReplyToHeader(messageHeaders::addField));
-        newMessage.getHtmlBody().ifPresent(x -> messageHeaders.addField(Fields.contentType(MediaType.HTML_UTF_8.toString())));
-        return messageHeaders;
+        // note that date conversion probably lose milliseconds!
+        messageBuilder.setDate(Date.from(newMessage.getDate().toInstant()), TimeZone.getTimeZone(newMessage.getDate().getZone()));
+        newMessage.getInReplyToMessageId().ifPresent(addInReplyToHeader(messageBuilder::addField));
+        newMessage.getHtmlBody().ifPresent(x -> messageBuilder.setContentType("text/html", new NameValuePair("charset", "utf-8")));
     }
 
     private Consumer<String> addInReplyToHeader(Consumer<Field> headerAppender) {
