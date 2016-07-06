@@ -1355,6 +1355,68 @@ public abstract class SetMessagesMethodTest {
     }
     
     @Test
+    public void setMessagesShouldSendAReadableTextPlusHtmlMessage() throws Exception {
+        // Sender
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        // Recipient
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(recipientAddress, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, "inbox");
+        await();
+        AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
+
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"htmlBody\": \"Hello <b>someone</b>, and thank you for joining example.com!\"," +
+                "        \"textBody\": \"Hello someone, and thank you for joining example.com, text version!\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId() + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        // Given
+        given()
+                .header("Authorization", this.accessToken.serialize())
+                .body(requestBody)
+        // When
+        .when()
+                .post("/jmap");
+
+        // Then
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isTextPlusHtmlMessageReceived(recipientToken));
+    }
+
+    private boolean isTextPlusHtmlMessageReceived(AccessToken recipientToken) {
+        try {
+            with()
+                .header("Authorization", recipientToken.serialize())
+                .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"htmlBody\", \"textBody\"]}, \"#0\"]]")
+            .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(SECOND_NAME, equalTo("messages"))
+                .body(SECOND_ARGUMENTS + ".list", hasSize(1))
+                .body(SECOND_ARGUMENTS + ".list[0].htmlBody", equalTo("Hello <b>someone</b>, and thank you for joining example.com!"))
+                .body(SECOND_ARGUMENTS + ".list[0].textBody", equalTo("Hello someone, and thank you for joining example.com, text version!"))
+            ;
+            return true;
+        } catch(AssertionError e) {
+            return false;
+        }
+    }
+
+    @Test
     public void movingAMessageIsNotSupported() throws Exception {
         String newMailboxName = "heartFolder";
         jmapServer.serverProbe().createMailbox("#private", username, newMailboxName);

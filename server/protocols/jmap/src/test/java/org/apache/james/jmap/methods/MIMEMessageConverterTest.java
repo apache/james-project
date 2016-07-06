@@ -26,12 +26,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.message.BasicBodyFactory;
@@ -176,8 +176,8 @@ public class MIMEMessageConverterTest {
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
     }
 
-    @Test(expected=NotImplementedException.class)
-    public void convertToMimeShouldFailWhenHtmlBodyAndTxtBodyProvided() {
+    @Test
+    public void convertToMimeShouldGenerateMultipartWhenHtmlBodyAndTextBodyProvided() throws Exception {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -190,8 +190,48 @@ public class MIMEMessageConverterTest {
                 .build();
 
         // When
-        sut.convertToMime(new MessageWithId.CreationMessageEntry(
+        Message result = sut.convertToMime(new MessageWithId.CreationMessageEntry(
                 CreationMessageId.of("user|mailbox|1"), testMessage));
+
+        // Then
+        assertThat(result.getBody()).isInstanceOf(Multipart.class);
+        assertThat(result.isMultipart()).isTrue();
+        Multipart typedResult = (Multipart)result.getBody();
+        assertThat(typedResult.getBodyParts()).hasSize(2);
+    }
+
+    @Test
+    public void convertShouldGenerateExpectedMultipartWhenHtmlAndTextBodyProvided() throws Exception {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .textBody("Hello all!")
+                .htmlBody("Hello <b>all</b>!")
+                .build();
+
+        String expectedHeaders = "MIME-Version: 1.0\r\n" +
+                "Content-Type: multipart/mixed;\r\n" +
+                " boundary=\"-=Part.0.";
+        String expectedPart1 = "Content-Type: text/plain; charset=UTF-8\r\n" +
+                "\r\n" +
+                "Hello all!\r\n";
+        String expectedPart2 = "Content-Type: text/html; charset=UTF-8\r\n" +
+                "\r\n" +
+                "Hello <b>all</b>!\r\n";
+
+        // When
+        byte[] convert = sut.convert(new MessageWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage));
+
+        // Then
+        String actual = new String(convert, Charsets.UTF_8);
+        assertThat(actual).startsWith(expectedHeaders);
+        assertThat(actual).contains(expectedPart1);
+        assertThat(actual).contains(expectedPart2);
     }
 
     @Test
