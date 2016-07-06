@@ -32,6 +32,7 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailrepository.jpa.JPAUrl;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.user.jpa.model.JPAUser;
@@ -43,8 +44,6 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.MariaDBContainer;
 
 public class JPAJamesServerTest {
-
-    private static final int SMTP_PORT = 1025;
 
     private GuiceJamesServer server;
     private SocketChannel socketChannel;
@@ -89,7 +88,7 @@ public class JPAJamesServerTest {
 
     @Test
     public void connectSMTPServerShouldSendShabangOnConnect() throws Exception {
-        socketChannel.connect(new InetSocketAddress("127.0.0.1", SMTP_PORT));
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("220 JAMES Linagora's SMTP awesome Server");
     }
     

@@ -23,7 +23,6 @@ import static io.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -37,6 +36,7 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.IsSenderInRRTLoop;
@@ -149,7 +149,7 @@ public class GroupMappingRelayTest {
         String externalMail = "ray@yopmail.com";
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)

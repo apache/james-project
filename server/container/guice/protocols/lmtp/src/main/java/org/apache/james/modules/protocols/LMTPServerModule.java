@@ -23,12 +23,15 @@ import java.util.List;
 
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
+import org.apache.james.lmtpserver.netty.OioLMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.GuiceProbe;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -36,7 +39,11 @@ public class LMTPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(LMTPServerFactory.class).in(Scopes.SINGLETON);
+        bind(OioLMTPServerFactory.class).in(Scopes.SINGLETON);
+
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(LMTPModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(LmtpGuiceProbe.class);
     }
 
     @Singleton

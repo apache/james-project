@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
-package org.apache.james.mpt.smtp.host;
+package org.apache.james.mpt.smtp;
 
 import java.util.Iterator;
+import java.util.function.Function;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.CassandraJamesServerMain;
@@ -29,10 +29,12 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.modules.server.CamelMailetContainerModule;
+import org.apache.james.mpt.api.Continuation;
+import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
-import org.apache.james.mpt.smtp.SmtpHostSystem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.Configuration;
@@ -40,28 +42,52 @@ import org.apache.james.util.Host;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory implements SmtpHostSystem {
+public class CassandraSmtpTestRule implements TestRule, SmtpHostSystem {
+
+    enum SmtpServerConnectedType {
+        SMTP_GLOBAL_SERVER(probe -> Port.of(probe.getSmtpPort())),
+        SMTP_START_TLS_SERVER(probe -> Port.of(probe.getSmtpsPort()));
+
+        private final Function<SmtpGuiceProbe, Port> portExtractor;
+
+        private SmtpServerConnectedType(Function<SmtpGuiceProbe, Port> portExtractor) {
+            this.portExtractor = portExtractor;
+        }
+
+        public Function<SmtpGuiceProbe, Port> getPortExtractor() {
+            return portExtractor;
+        }
+    }
 
     private static final Module SMTP_PROTOCOL_MODULE = Modules.combine(
         new ProtocolHandlerModule(),
         new SMTPServerModule());
 
-    private TemporaryFolder folder;
+    private final Host cassandraHost;
+    private final SmtpServerConnectedType smtpServerConnectedType;
 
+    private TemporaryFolder folder;
     private GuiceJamesServer jamesServer;
     private InMemoryDNSService inMemoryDNSService;
-    private final Host cassandraHost;
+    private ExternalSessionFactory sessionFactory;
 
-
-    public CassandraJamesSmtpHostSystem(Port smtpPort, Host cassandraHost) {
-        super("localhost", smtpPort, new SystemLoggingMonitor(), "220 mydomain.tld smtp");
+    public CassandraSmtpTestRule(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost) {
+        this.smtpServerConnectedType = smtpServerConnectedType;
         this.cassandraHost = cassandraHost;
+    }
+
+    @Override
+    public Statement apply(Statement base, Description description) {
+        return base;
     }
 
     @Override
@@ -74,6 +100,11 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         createDomainIfNeeded(domain);
         jamesServer.getProbe(DataProbeImpl.class).addUser(userAtDomain, password);
         return true;
+    }
+
+    @Override
+    public Session newSession(Continuation continuation) throws Exception {
+        return sessionFactory.newSession(continuation);
     }
 
     private void createDomainIfNeeded(String domain) throws Exception {
@@ -94,6 +125,8 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         folder.create();
         jamesServer = createJamesServer();
         jamesServer.start();
+
+        createSessionFactory();
     }
 
     @Override
@@ -107,7 +140,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         return inMemoryDNSService;
     }
 
-    protected GuiceJamesServer createJamesServer() throws Exception {
+    private GuiceJamesServer createJamesServer() throws Exception {
         Configuration configuration = Configuration.builder()
             .workingDirectory(folder.newFolder())
             .configurationFromClasspath()
@@ -128,5 +161,12 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
                         .replicationFactor(1)
                         .build()),
                 binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+    }
+
+    private void createSessionFactory() {
+        SmtpGuiceProbe smtpProbe = jamesServer.getProbe(SmtpGuiceProbe.class);
+        Port smtpPort = smtpServerConnectedType.getPortExtractor().apply(smtpProbe);
+
+        sessionFactory = new ExternalSessionFactory("localhost", smtpPort, new SystemLoggingMonitor(), "220 mydomain.tld smtp");
     }
 }

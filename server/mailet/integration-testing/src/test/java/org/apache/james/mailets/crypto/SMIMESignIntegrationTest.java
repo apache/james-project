@@ -20,7 +20,6 @@
 package org.apache.james.mailets.crypto;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
@@ -34,6 +33,8 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.SMIMESign;
 import org.apache.james.transport.mailets.SetMimeHeader;
@@ -52,7 +53,6 @@ import org.junit.rules.TemporaryFolder;
 public class SMIMESignIntegrationTest {
 
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
-    private static final int SMTP_SECURE_PORT = 10465;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -107,11 +107,11 @@ public class SMIMESignIntegrationTest {
 
     @Test
     public void authenticatedMessagesShouldBeSigned() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX);
         awaitAtMostOneMinute.until(imapMessageReader::hasAMessage);
@@ -121,10 +121,10 @@ public class SMIMESignIntegrationTest {
 
     @Test
     public void nonAuthenticatedMessagesShouldNotBeSigned() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX);
         awaitAtMostOneMinute.until(imapMessageReader::hasAMessage);

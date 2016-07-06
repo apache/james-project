@@ -51,9 +51,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    private static final int AUTH_DISABLED = 0;
-    private static final int AUTH_REQUIRED = 1;
-    private static final int AUTH_ANNOUNCE = 2;
+    public static final int AUTH_DISABLED = 0;
+    public static final int AUTH_REQUIRED = 1;
+    public static final int AUTH_ANNOUNCE = 2;
     private int authRequired = AUTH_DISABLED;
     
     /**
@@ -339,4 +339,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         return new AllButStartTlsLineChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
+    public int getAuthRequired() {
+        return authRequired;
+    }
 }

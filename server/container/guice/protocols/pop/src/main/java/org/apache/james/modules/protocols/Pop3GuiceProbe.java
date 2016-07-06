@@ -16,30 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.smtp;
+package org.apache.james.modules.protocols;
 
-import org.apache.james.mpt.smtp.host.CassandraJamesSmtpHostSystem;
-import org.apache.james.util.Host;
-import org.apache.james.util.Port;
+import java.net.InetSocketAddress;
 
-import com.google.inject.AbstractModule;
+import javax.inject.Inject;
 
-public class SmtpTestModule extends AbstractModule {
+import org.apache.james.pop3server.netty.POP3ServerFactory;
+import org.apache.james.utils.GuiceProbe;
 
-    public static Port SMTP_PORT = new Port(1025);
-    public static Port SMTP_START_TLS_PORT = new Port(1587);
 
-    private final Port smtpPort;
-    private final Host cassandraHost;
+public class Pop3GuiceProbe implements GuiceProbe {
 
-    public SmtpTestModule(Port smtpPort, Host cassandraHost) {
-        this.smtpPort = smtpPort;
-        this.cassandraHost = cassandraHost;
-    }
-    
-    @Override
-    protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(smtpPort, cassandraHost));
+    private final POP3ServerFactory pop3ServerFactory;
+
+    @Inject
+    private Pop3GuiceProbe(POP3ServerFactory pop3ServerFactory) {
+        this.pop3ServerFactory = pop3ServerFactory;
     }
 
+    public int getPop3Port() {
+        return pop3ServerFactory.getServers().stream()
+                .findFirst()
+                .flatMap(server -> server.getListenAddresses().stream().findFirst())
+                .map(InetSocketAddress::getPort)
+                .orElseThrow(() -> new IllegalStateException("POP3 server not defined"));
+    }
 }

@@ -26,6 +26,8 @@ import java.io.IOException;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.modules.QuotaProbesImpl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -48,9 +50,6 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
     private static final String DOMAIN = "james.local";
     private static final String USER = "toto@" + DOMAIN;
     private static final String PASSWORD = "123456";
-    private static final String LOCALHOST = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final int IMAP_PORT = 1143;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -84,15 +83,16 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
         server.getProbe(QuotaProbesImpl.class).setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.size(50 * 1024)));
 
         // ~ 12 KB email
-        smtpMessageSender.connect(LOCALHOST, SMTP_PORT)
+        int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
+        smtpMessageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(USER, USER, "header: toto\\r\\n\\r\\n" + Strings.repeat("0123456789\n", 1024));
-        AWAIT.until(() -> imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+        AWAIT.until(() -> imapMessageReader.connect(JAMES_SERVER_HOST, imapPort)
             .login(USER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .hasAMessage());
 
         assertThat(
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(JAMES_SERVER_HOST, imapPort)
                 .login(USER, PASSWORD)
                 .getQuotaRoot(IMAPMessageReader.INBOX))
             .startsWith("* QUOTAROOT \"INBOX\" #private&toto@james.local\r\n" +

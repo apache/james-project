@@ -35,12 +35,10 @@ import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.BOB;
 import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.IMAP_PORT;
 import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.SECOND_ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.SECOND_NAME;
-import static org.apache.james.jmap.TestingConstants.SMTP_PORT;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -101,6 +99,8 @@ import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
@@ -5010,7 +5010,7 @@ public abstract class SetMessagesMethodTest {
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(USERNAME, PASSWORD)
                 .select(MailboxConstants.INBOX);
             assertThat(imapMessageReader.readFirstMessage())
@@ -5403,7 +5403,7 @@ public abstract class SetMessagesMethodTest {
             .sender(fromAddress)
             .recipient(fromAddress)
             .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, jmapServer.getProbe(SmtpGuiceProbe.class).getSmtpPort(), DOMAIN)) {
             messageSender.sendMessage(mail);
         }
 

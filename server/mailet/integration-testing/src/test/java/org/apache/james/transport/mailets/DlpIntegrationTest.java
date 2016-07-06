@@ -26,7 +26,6 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import java.util.Optional;
@@ -39,6 +38,7 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.dlp.Dlp;
 import org.apache.james.utils.DataProbeImpl;
@@ -57,6 +57,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.inject.util.Modules;
+
 import io.restassured.specification.RequestSpecification;
 
 public class DlpIntegrationTest {
@@ -130,7 +131,7 @@ public class DlpIntegrationTest {
                 "}]}")
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
@@ -162,7 +163,7 @@ public class DlpIntegrationTest {
                 "}]}")
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
@@ -200,7 +201,7 @@ public class DlpIntegrationTest {
                 "}]}")
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
@@ -238,7 +239,7 @@ public class DlpIntegrationTest {
                 "}]}")
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)

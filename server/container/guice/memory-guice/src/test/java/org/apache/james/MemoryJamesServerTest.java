@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.junit.Rule;
 
-public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
+public class MemoryJamesServerTest extends AbstractJamesServerTest {
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 

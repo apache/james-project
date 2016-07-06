@@ -29,6 +29,10 @@ public class Port {
     public static final int PRIVILEGED_PORT_BOUND = 1024;
     private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, MAX_PORT_VALUE);
 
+    public static Port of(int portNumber) {
+        return new Port(portNumber);
+    }
+
     public static int generateValidUnprivilegedPort() {
         return new Random().nextInt(Port.MAX_PORT_VALUE - PRIVILEGED_PORT_BOUND) + PRIVILEGED_PORT_BOUND;
     }

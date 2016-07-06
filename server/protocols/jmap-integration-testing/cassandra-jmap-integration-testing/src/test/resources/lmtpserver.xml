@@ -23,7 +23,7 @@
     <lmtpserver enabled="true">
         <jmxName>lmtpserver</jmxName>
         <!-- LMTP should not be reachable from outside your network so bind it to loopback-->
-        <bind>127.0.0.1:1024</bind>
+        <bind>0.0.0.0:0</bind>
         <connectionBacklog>200</connectionBacklog>
         <connectiontimeout>1200</connectiontimeout>
         <!-- Set the maximum simultaneous incoming connections for this service -->

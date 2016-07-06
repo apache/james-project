@@ -20,10 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,6 +38,8 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
@@ -556,13 +556,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void calendarAttachmentShouldNotBePublishedInMQWhenNoICalAttachment() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithoutICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -572,13 +572,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void calendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -604,13 +604,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldNotBeAddedInMailWhenNoICalAttachment() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithoutICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -625,13 +625,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldBeAddedInMailWhenOneICalAttachment() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -645,13 +645,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldBeAddedInMailWhenOneBase64ICalAttachment() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSBase64Attached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -665,13 +665,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void base64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSBase64Attached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -690,13 +690,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void yahooBase64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(yahooInvitationMessage)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -716,13 +716,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithThreeICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -736,13 +736,13 @@ public class ICSAttachmentWorkflowTest {
 
     @Test
     public void pipelineShouldSendSeveralJSONOverRabbitMQWhenSeveralAttachments() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithThreeICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -774,13 +774,13 @@ public class ICSAttachmentWorkflowTest {
     public void mailShouldNotContainCalendarContentInTextBodyButAttachment() throws Exception {
         MimeMessage calendarMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(calendarMessage)
                 .sender(FROM)
                 .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);

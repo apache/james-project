@@ -26,6 +26,8 @@ import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Domain;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.user.ldap.LdapGenericContainer;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -86,19 +88,19 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
 
     @Test
     public void userFromLdapShouldLoginViaImapProtocol() throws Exception {
-        imapClient.connect(JAMES_SERVER_HOST, IMAP_PORT);
+        imapClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort());
 
         assertThat(imapClient.login(JAMES_USER, PASSWORD)).isTrue();
     }
 
     @Test
     public void mailsShouldBeWellReceivedBeforeFirstUserConnectionWithLdap() throws Exception {
-        messageSender.connect("127.0.0.1", 1025)
+        messageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("bob@any.com", JAMES_USER + "@localhost");
 
         calmlyAwait.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
-        imapMessageReader.connect("127.0.0.1", 1143)
+        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(JAMES_USER, PASSWORD)
             .select("INBOX")
             .awaitMessage(calmlyAwait);

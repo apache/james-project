@@ -22,7 +22,7 @@
 <smtpservers>
     <smtpserver enabled="true">
         <jmxName>smtpserver-global</jmxName>
-        <bind>0.0.0.0:1025</bind>
+        <bind>0.0.0.0:0</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="false">
             <keystore>file://conf/keystore</keystore>

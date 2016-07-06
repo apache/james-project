@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.modules.TestESMetricReporterModule;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.awaitility.Duration;
@@ -54,7 +55,6 @@ import io.restassured.http.ContentType;
 
 public class ESReporterTest {
 
-    private static final int IMAP_PORT = 1143;
     private static final int DELAY_IN_MS = 100;
     private static final int PERIOD_IN_MS = 100;
 
@@ -108,7 +108,7 @@ public class ESReporterTest {
     @Test
     public void timeMetricsShouldBeReportedWhenImapCommandsReceived() throws Exception {
         IMAPClient client = new IMAPClient();
-        client.connect(InetAddress.getLocalHost(), IMAP_PORT);
+        client.connect(InetAddress.getLocalHost(), server.getProbe(ImapGuiceProbe.class).getImapPort());
         client.login(USERNAME, PASSWORD);
         
         TimerTask timerTask = new TimerTask() {

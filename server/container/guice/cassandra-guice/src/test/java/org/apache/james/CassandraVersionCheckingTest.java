@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -43,7 +44,6 @@ import org.junit.rules.ExpectedException;
 public class CassandraVersionCheckingTest {
 
     private static final String LOCAL_HOST = "127.0.0.1";
-    private static final int IMAP_PORT = 1143;
     private static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
     private static final SchemaVersion MAX_VERSION = new SchemaVersion(4);
 
@@ -155,7 +155,7 @@ public class CassandraVersionCheckingTest {
 
     private void assertThatServerStartCorrectly() throws Exception {
         jamesServer.start();
-        socketChannel.connect(new InetSocketAddress(LOCAL_HOST, IMAP_PORT));
+        socketChannel.connect(new InetSocketAddress(LOCAL_HOST, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort()));
         assertThat(getServerConnectionResponse(socketChannel))
             .startsWith("* OK JAMES IMAP4rev1 Server");
     }

@@ -21,7 +21,6 @@ package org.apache.james.jmap;
 
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
-import static org.apache.james.jmap.TestingConstants.SMTP_PORT;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
@@ -38,6 +37,7 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
@@ -108,7 +108,7 @@ public abstract class VacationRelayIntegrationTest {
         String externalMail = "ray@yopmail.com";
 
         SMTPClient smtpClient = new SMTPClient();
-        smtpClient.connect(LOCALHOST_IP, SMTP_PORT);
+        smtpClient.connect(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
         smtpClient.helo(DOMAIN);
         smtpClient.setSender(externalMail);
         smtpClient.rcpt("<" + USER_WITH_DOMAIN + ">");

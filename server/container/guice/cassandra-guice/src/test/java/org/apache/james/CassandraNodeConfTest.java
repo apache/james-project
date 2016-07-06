@@ -27,6 +27,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.Host;
 import org.junit.After;
 import org.junit.Before;
@@ -38,7 +39,6 @@ import org.testcontainers.DockerClientFactory;
 public class CassandraNodeConfTest {
 
     private static final int CASSANDRA_PORT = 9042;
-    private static final int IMAP_PORT = 1143;
 
     private static String getDockerHostIp() {
         return DockerClientFactory.instance().dockerHostIpAddress();
@@ -102,7 +102,7 @@ public class CassandraNodeConfTest {
 
     private void assertThatServerStartCorrectly() throws Exception {
         jamesServer.start();
-        socketChannel.connect(new InetSocketAddress("127.0.0.1", IMAP_PORT));
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", jamesServer.getProbe(ImapGuiceProbe.class).getImapPort()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("* OK JAMES IMAP4rev1 Server");
     }
 

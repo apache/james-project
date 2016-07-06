@@ -21,10 +21,8 @@ package org.apache.james.transport.mailets;
 
 import static io.restassured.RestAssured.with;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -33,6 +31,8 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
@@ -97,7 +97,7 @@ public class ToRepositoryTest {
 
     @Test
     public void incomingShouldBeStoredInProcessorByDefault() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
@@ -106,7 +106,7 @@ public class ToRepositoryTest {
 
     @Test
     public void userShouldBeAbleToAccessReprocessedMails() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
@@ -127,7 +127,7 @@ public class ToRepositoryTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessageCount(awaitAtMostOneMinute, 2);
@@ -136,7 +136,7 @@ public class ToRepositoryTest {
 
     @Test
     public void userShouldBeAbleToAccessReprocessedMail() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
@@ -153,7 +153,7 @@ public class ToRepositoryTest {
             .jsonPath()
             .get("taskId");
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessageCount(awaitAtMostOneMinute, 1);

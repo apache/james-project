@@ -21,10 +21,8 @@ package org.apache.james.transport.mailets;
 
 import static io.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,6 +34,8 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.IsOverQuota;
 import org.apache.james.utils.DataProbeImpl;
@@ -115,10 +115,10 @@ public class IsOverQuotaMatcherTest {
             .body(SMALL_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -133,10 +133,10 @@ public class IsOverQuotaMatcherTest {
             .body(SMALL_SIZE.asLong())
             .put("/quota/domains/" + DEFAULT_DOMAIN + "/size");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -151,10 +151,10 @@ public class IsOverQuotaMatcherTest {
             .body(LARGE_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -166,10 +166,10 @@ public class IsOverQuotaMatcherTest {
             .body(SMALL_COUNT.asLong())
             .put("/quota/users/" + RECIPIENT + "/count");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -184,10 +184,10 @@ public class IsOverQuotaMatcherTest {
             .body(SMALL_COUNT.asLong())
             .put("/quota/domains/" + DEFAULT_DOMAIN + "/count");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -202,10 +202,10 @@ public class IsOverQuotaMatcherTest {
             .body(LARGE_COUNT.asLong())
             .put("/quota/users/" + RECIPIENT + "/count");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);

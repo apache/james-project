@@ -24,12 +24,15 @@ import java.util.List;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
+import org.apache.james.smtpserver.netty.OioSMTPServerFactory;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.GuiceProbe;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -38,8 +41,11 @@ public class SMTPServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new JSPFModule());
+        bind(SMTPServerFactory.class).in(Scopes.SINGLETON);
+        bind(OioSMTPServerFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(SMTPModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
     }
 
     @Singleton

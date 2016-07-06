@@ -64,8 +64,4 @@ public interface TestingConstants {
 
 
     String LOCALHOST_IP = "127.0.0.1";
-    int SMTP_PORT = 1025;
-    int IMAP_PORT = 1143;
-
-
 }

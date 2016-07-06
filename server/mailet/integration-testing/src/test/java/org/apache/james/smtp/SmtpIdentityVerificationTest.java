@@ -22,11 +22,11 @@ package org.apache.james.smtp;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -74,7 +74,7 @@ public class SmtpIdentityVerificationTest {
             .requireAuthentication()
             .verifyIdentity());
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(USER, PASSWORD).sendMessage(USER, USER);
     }
 
@@ -84,7 +84,7 @@ public class SmtpIdentityVerificationTest {
             .requireAuthentication()
             .doNotVerifyIdentity());
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
             .sendMessage(USER, USER);
     }
@@ -96,7 +96,7 @@ public class SmtpIdentityVerificationTest {
             .verifyIdentity());
 
         assertThatThrownBy(() ->
-            messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(ATTACKER, ATTACKER_PASSWORD)
                 .sendMessage(USER, USER))
             .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));

@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
-public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
+public class CassandraJamesServerTest extends AbstractJamesServerTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();

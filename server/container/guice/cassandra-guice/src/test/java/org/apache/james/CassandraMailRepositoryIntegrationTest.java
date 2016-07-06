@@ -24,6 +24,7 @@ import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -76,7 +77,7 @@ public class CassandraMailRepositoryIntegrationTest {
             .addDomain("domain.com")
             .addUser("user@domain.com", "secret");
 
-        smtpMessageSender.connect("127.0.0.1", 1025)
+        smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("denied@other.com", "user@domain.com");
 
         MailRepositoryProbeImpl repositoryProbe = server.getProbe(MailRepositoryProbeImpl.class);

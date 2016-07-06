@@ -22,13 +22,16 @@ package org.apache.james.modules.protocols;
 import java.util.List;
 
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.pop3server.netty.OioPOP3ServerFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.GuiceProbe;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
@@ -36,7 +39,11 @@ public class POP3ServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(POP3ServerFactory.class).in(Scopes.SINGLETON);
+        bind(OioPOP3ServerFactory.class).in(Scopes.SINGLETON);
+
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(POP3ModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(Pop3GuiceProbe.class);
     }
 
     @Singleton

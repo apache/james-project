@@ -25,7 +25,7 @@
 <smtpservers>
   <smtpserver enabled="true">
     <jmxName>smtpserver</jmxName>
-    <bind>0.0.0.0:2525</bind>
+    <bind>0.0.0.0:0</bind>
     <connectionBacklog>200</connectionBacklog>
     <tls socketTLS="false" startTLS="false">
       <keystore>file://conf/keystore</keystore>

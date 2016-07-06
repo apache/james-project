@@ -20,7 +20,6 @@
 package org.apache.james.mailets.crypto;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +32,8 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.mailets.SMIMEDecrypt;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.ClassLoaderUtils;
@@ -48,7 +49,6 @@ import org.junit.rules.TemporaryFolder;
 
 public class SMIMEDecryptIntegrationTest {
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
-    private static final int SMTP_SECURE_PORT = 10465;
     private static final String FROM = "sender@" + DEFAULT_DOMAIN;
     private static final String PASSWORD = "secret";
 
@@ -97,12 +97,12 @@ public class SMIMEDecryptIntegrationTest {
 
     @Test
     public void cryptedMessageShouldBeDecryptedWhenCertificateMatches() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
                 ClassLoaderUtils.getSystemResourceAsString("eml/crypted.eml"));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -111,12 +111,12 @@ public class SMIMEDecryptIntegrationTest {
 
     @Test
     public void cryptedMessageWithAttachmentShouldBeDecryptedWhenCertificateMatches() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
                 ClassLoaderUtils.getSystemResourceAsString("eml/crypted_with_attachment.eml"));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -126,12 +126,12 @@ public class SMIMEDecryptIntegrationTest {
 
     @Test
     public void cryptedMessageShouldNotBeDecryptedWhenCertificateDoesntMatch() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
                 ClassLoaderUtils.getSystemResourceAsString("eml/bad_crypted.eml"));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
