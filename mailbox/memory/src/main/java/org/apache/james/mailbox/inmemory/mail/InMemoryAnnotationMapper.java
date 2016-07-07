@@ -32,6 +32,7 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -91,6 +92,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
 
     @Override
     public void insertAnnotation(MailboxAnnotation mailboxAnnotation) {
+        Preconditions.checkArgument(!mailboxAnnotation.isNil());
         lock.writeLock().lock();
         try {
             mailboxesAnnotations.put(mailboxId, mailboxAnnotation.getKey(), mailboxAnnotation.getValue().get());

@@ -30,7 +30,7 @@ import com.google.common.base.Throwables;
 
 @RunWith(ContractSuite.class)
 @ContractImpl(InMemoryMapperProvider.class)
-public class MemoryMappersTests {
+public class MemoryMappersTest {
 
     private IProducer<InMemoryMapperProvider> producer = new IProducer<InMemoryMapperProvider>() {
 
