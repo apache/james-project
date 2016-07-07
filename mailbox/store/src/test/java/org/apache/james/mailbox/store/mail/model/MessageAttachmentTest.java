@@ -45,7 +45,7 @@ public class MessageAttachmentTest {
                 .bytes("content".getBytes())
                 .type("type")
                 .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.<String> absent(), false);
+        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.<String> absent(), Optional.<String> absent(), false);
 
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(attachment)
@@ -87,10 +87,11 @@ public class MessageAttachmentTest {
                 .bytes("content".getBytes())
                 .type("type")
                 .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.of("cid"), true);
+        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.of("name"), Optional.of("cid"), true);
 
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(attachment)
+            .name("name")
             .cid("cid")
             .isInline(true)
             .build();

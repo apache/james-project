@@ -161,8 +161,8 @@ public class MessageFactory {
         return Attachment.builder()
                     .blobId(attachment.getAttachmentId().getId())
                     .type(attachment.getAttachment().getType())
-                    .name(attachment.getAttachment().getName().orNull())
                     .size(attachment.getAttachment().getSize())
+                    .name(attachment.getName().orNull())
                     .cid(attachment.getCid().orNull())
                     .isInline(attachment.isInline())
                     .build();

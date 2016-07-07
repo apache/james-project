@@ -25,8 +25,7 @@ public interface CassandraAttachmentTable {
     String ID = "id";
     String PAYLOAD = "payload";
     String TYPE = "type";
-    String NAME = "name";
     String SIZE = "size";
-    String[] FIELDS = { ID, PAYLOAD, TYPE, NAME, SIZE };
+    String[] FIELDS = { ID, PAYLOAD, TYPE, SIZE };
 
 }

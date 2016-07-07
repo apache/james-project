@@ -118,7 +118,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         List<MessageAttachment> attachments = messages.next().getAttachments();
-        assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getName()).isEqualTo(expectedName);
+        assertThat(attachments.get(0).getName()).isEqualTo(expectedName);
     }
 
     @Test

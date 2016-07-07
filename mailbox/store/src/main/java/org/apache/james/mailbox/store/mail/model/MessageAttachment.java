@@ -34,16 +34,23 @@ public class MessageAttachment {
     public static class Builder {
 
         private Attachment attachment;
+        private Optional<String> name;
         private Optional<String> cid;
         private Boolean isInline;
 
         private Builder() {
+            name = Optional.absent();
             cid = Optional.absent();
         }
 
         public Builder attachment(Attachment attachment) {
             Preconditions.checkArgument(attachment != null);
             this.attachment = attachment;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = Optional.fromNullable(name);
             return this;
         }
 
@@ -65,16 +72,18 @@ public class MessageAttachment {
             if (isInline && !cid.isPresent()) {
                 throw new IllegalStateException("'cid' is mandatory for inline attachments");
             }
-            return new MessageAttachment(attachment, cid, isInline);
+            return new MessageAttachment(attachment, name, cid, isInline);
         }
     }
 
     private final Attachment attachment;
+    private final Optional<String> name;
     private final Optional<String> cid;
     private final boolean isInline;
 
-    @VisibleForTesting MessageAttachment(Attachment attachment, Optional<String> cid, boolean isInline) {
+    @VisibleForTesting MessageAttachment(Attachment attachment, Optional<String> name, Optional<String> cid, boolean isInline) {
         this.attachment = attachment;
+        this.name = name;
         this.cid = cid;
         this.isInline = isInline;
     }
@@ -85,6 +94,10 @@ public class MessageAttachment {
 
     public AttachmentId getAttachmentId() {
         return attachment.getAttachmentId();
+    }
+
+    public Optional<String> getName() {
+        return name;
     }
 
     public Optional<String> getCid() {
@@ -100,6 +113,7 @@ public class MessageAttachment {
         if (obj instanceof MessageAttachment) {
             MessageAttachment other = (MessageAttachment) obj;
             return Objects.equal(attachment, other.attachment)
+                && Objects.equal(name, other.name)
                 && Objects.equal(cid, other.cid)
                 && Objects.equal(isInline, other.isInline);
         }
@@ -108,7 +122,7 @@ public class MessageAttachment {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(attachment, cid, isInline);
+        return Objects.hashCode(attachment, name, cid, isInline);
     }
 
     @Override
@@ -116,6 +130,7 @@ public class MessageAttachment {
         return MoreObjects
                 .toStringHelper(this)
                 .add("attachment", attachment)
+                .add("name", name)
                 .add("cid", cid)
                 .add("isInline", isInline)
                 .toString();

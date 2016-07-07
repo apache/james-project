@@ -59,7 +59,7 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(1);
         Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
-        assertThat(attachments.get(0).getAttachment().getName()).isEqualTo(expectedName);
+        assertThat(attachments.get(0).getName()).isEqualTo(expectedName);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getAttachment().getName()).isEqualTo(Optional.absent());
+        assertThat(attachments.get(0).getName()).isEqualTo(Optional.absent());
     }
 
     @Test

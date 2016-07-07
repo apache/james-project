@@ -95,8 +95,8 @@ public class MessageParser {
                 .attachment(Attachment.builder()
                     .bytes(getBytes(messageWriter, entity.getBody()))
                     .type(contentType.or(DEFAULT_CONTENT_TYPE))
-                    .name(name)
                     .build())
+                .name(name.orNull())
                 .cid(cid.orNull())
                 .isInline(isInline)
                 .build();

@@ -27,8 +27,6 @@ import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
-
 public class AttachmentTest {
 
     @Test
@@ -82,12 +80,6 @@ public class AttachmentTest {
             .type("");
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void builderShouldThrowWhenNameIsNull() {
-        Attachment.builder()
-            .name(null);
-    }
-
     @Test (expected = IllegalStateException.class)
     public void buildShouldThrowWhenAttachmentIdIsNotProvided() {
         Attachment.builder().build();
@@ -129,18 +121,5 @@ public class AttachmentTest {
                 .build();
 
         assertThat(attachment.getSize()).isEqualTo(input.getBytes().length);
-    }
-
-    @Test
-    public void buildShouldSetTheName() throws Exception {
-        String input = "mystream";
-        Optional<String> expectedName = Optional.of("myName");
-        Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes())
-                .type("content")
-                .name(expectedName)
-                .build();
-
-        assertThat(attachment.getName()).isEqualTo(expectedName);
     }
 }

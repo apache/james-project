@@ -59,12 +59,12 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.mail.Flags;
@@ -353,6 +353,7 @@ public class CassandraMessageMapper implements MessageMapper {
                     .map(Throwing.function(x -> 
                         MessageAttachment.builder()
                             .attachment(attachmentsById.get(attachmentIdFrom(x)))
+                            .name(x.getString(Attachments.NAME))
                             .cid(x.getString(Attachments.CID))
                             .isInline(x.getBool(Attachments.IS_INLINE))
                             .build()))
@@ -363,8 +364,10 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Map<AttachmentId,Attachment> attachmentsById(Row row, List<UDTValue> udtValues) {
-        return attachmentMapper.getAttachments(attachmentIds(udtValues)).stream()
-            .collect(ImmutableCollectors.toImmutableMap(Attachment::getAttachmentId, Function.identity()));
+        Map<AttachmentId, Attachment> map = new HashMap<>();
+        attachmentMapper.getAttachments(attachmentIds(udtValues)).stream()
+                .forEach(att -> map.put(att.getAttachmentId(), att));
+        return map;
     }
 
     private List<AttachmentId> attachmentIds(List<UDTValue> udtValues) {
@@ -420,6 +423,7 @@ public class CassandraMessageMapper implements MessageMapper {
         return typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
+            .setString(Attachments.NAME, messageAttachment.getName().orNull())
             .setString(Attachments.CID, messageAttachment.getCid().orNull())
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }

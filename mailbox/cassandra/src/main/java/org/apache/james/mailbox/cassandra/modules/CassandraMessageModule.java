@@ -98,6 +98,7 @@ public class CassandraMessageModule implements CassandraModule {
                     SchemaBuilder.createType(CassandraMessageTable.ATTACHMENTS)
                         .ifNotExists()
                         .addColumn(CassandraMessageTable.Attachments.ID, text())
+                        .addColumn(CassandraMessageTable.Attachments.NAME, text())
                         .addColumn(CassandraMessageTable.Attachments.CID, text())
                         .addColumn(CassandraMessageTable.Attachments.IS_INLINE, cboolean())));
     }

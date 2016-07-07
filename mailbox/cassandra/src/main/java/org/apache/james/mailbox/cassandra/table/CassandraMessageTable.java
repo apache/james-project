@@ -74,6 +74,7 @@ public interface CassandraMessageTable {
 
     interface Attachments {
         String ID = "id";
+        String NAME = "name";
         String CID = "cid";
         String IS_INLINE = "isInline";
     }
