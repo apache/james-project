@@ -72,6 +72,7 @@ public class MIMEMessageConverter {
     private static final String PLAIN_TEXT_MEDIA_TYPE = MediaType.PLAIN_TEXT_UTF_8.withoutParameters().toString();
     private static final String HTML_MEDIA_TYPE = MediaType.HTML_UTF_8.withoutParameters().toString();
     private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", Charsets.UTF_8.name());
+    private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
     private static final String FIELD_PARAMETERS_SEPARATOR = ";";
 
@@ -100,7 +101,7 @@ public class MIMEMessageConverter {
 
         MessageBuilder messageBuilder = MessageBuilder.create();
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
-            messageBuilder.setBody(createMultipartBody(creationMessageEntry.getValue(), messageAttachments));
+            messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments));
         } else {
             messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()));
         }
@@ -149,7 +150,11 @@ public class MIMEMessageConverter {
 
     private boolean isMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         return (newMessage.getTextBody().isPresent() && newMessage.getHtmlBody().isPresent())
-                || !messageAttachments.isEmpty();
+                || hasAttachment(messageAttachments);
+    }
+
+    private boolean hasAttachment(ImmutableList<MessageAttachment> messageAttachments) {
+        return !messageAttachments.isEmpty();
     }
 
     private TextBody createTextBody(CreationMessage newMessage) {
@@ -159,21 +164,43 @@ public class MIMEMessageConverter {
         return bodyFactory.textBody(body, Charsets.UTF_8);
     }
 
-    private Multipart createMultipartBody(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         try {
-            MultipartBuilder builder = MultipartBuilder.create(MIXED_SUB_TYPE);
-            addText(builder, newMessage.getTextBody());
-            addHtml(builder, newMessage.getHtmlBody());
-
-            Consumer<MessageAttachment> addAttachment = addAttachment(builder);
-            messageAttachments.stream()
-                .forEach(addAttachment);
-
-            return builder.build();
+            if (hasAttachment(messageAttachments)) {
+                MultipartBuilder builder = MultipartBuilder.create(MIXED_SUB_TYPE);
+                addBody(newMessage, builder);
+    
+                Consumer<MessageAttachment> addAttachment = addAttachment(builder);
+                messageAttachments.stream()
+                    .forEach(addAttachment);
+    
+                return builder.build();
+            } else {
+                return createMultipartAlternativeBody(newMessage);
+            }
         } catch (IOException e) {
             LOGGER.error("Error while creating textBody \n"+ newMessage.getTextBody().get() +"\n or htmlBody \n" + newMessage.getHtmlBody().get(), e);
             throw Throwables.propagate(e);
         }
+    }
+
+    private void addBody(CreationMessage newMessage, MultipartBuilder builder) throws IOException {
+        if (newMessage.getHtmlBody().isPresent() && newMessage.getTextBody().isPresent()) {
+            Multipart body = createMultipartAlternativeBody(newMessage);
+            builder.addBodyPart(BodyPartBuilder.create().setBody(body).build());
+        }
+        else {
+            addText(builder, newMessage.getTextBody());
+            addHtml(builder, newMessage.getHtmlBody());
+        }
+    }
+
+    private Multipart createMultipartAlternativeBody(CreationMessage newMessage) throws IOException {
+        MultipartBuilder bodyBuilder = MultipartBuilder.create(ALTERNATIVE_SUB_TYPE);
+        addText(bodyBuilder, newMessage.getTextBody());
+        addHtml(bodyBuilder, newMessage.getHtmlBody());
+        Multipart body = bodyBuilder.build();
+        return body;
     }
 
     private void addText(MultipartBuilder builder, Optional<String> textBody) throws IOException {
