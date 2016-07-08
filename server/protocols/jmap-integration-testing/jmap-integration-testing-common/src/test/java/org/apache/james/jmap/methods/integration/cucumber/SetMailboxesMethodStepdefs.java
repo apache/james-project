@@ -19,24 +19,27 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.with;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.github.fge.lambdas.Throwing;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -93,11 +96,11 @@ public class SetMailboxesMethodStepdefs {
                     "    \"#0\"" +
                     "  ]" +
                     "]";
-
-        with()
-            .header("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .body(requestBody)
-            .post("/jmap");
+        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
+            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .bodyString(requestBody, ContentType.APPLICATION_JSON)
+            .execute()
+            .discardContent();
     }
 
     @When("^moving mailbox \"([^\"]*)\" to \"([^\"]*)\"$")
@@ -122,10 +125,11 @@ public class SetMailboxesMethodStepdefs {
                     "  ]" +
                     "]";
 
-        with()
-            .header("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .body(requestBody)
-            .post("/jmap");
+        Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
+            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .bodyString(requestBody, ContentType.APPLICATION_JSON)
+            .execute()
+            .discardContent();
     }
 
     @Then("^mailbox \"([^\"]*)\" contains (\\d+) messages$")
@@ -133,14 +137,14 @@ public class SetMailboxesMethodStepdefs {
         String username = userStepdefs.lastConnectedUser;
         Mailbox mailbox = mainStepdefs.jmapServer.serverProbe().getMailbox("#private", username, mailboxName);
         String mailboxId = mailbox.getMailboxId().serialize();
-        given()
-            .header("Authorization", userStepdefs.tokenByUser.get(username).serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", hasSize(messageCount));
+        HttpResponse response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
+            .addHeader("Authorization", userStepdefs.tokenByUser.get(username).serialize())
+            .bodyString("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]", ContentType.APPLICATION_JSON)
+            .execute().returnResponse();
+
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
+        DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
+        assertThat(jsonPath.<String>read(NAME)).isEqualTo("messageList");
+        assertThat(jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(messageCount);
     }
 }

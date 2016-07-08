@@ -19,15 +19,10 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 
 import com.google.common.base.Charsets;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 import cucumber.runtime.java.guice.ScenarioScoped;
 
@@ -39,14 +34,15 @@ public class MainStepdefs {
 
     public void init() throws Exception {
         jmapServer.start();
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-                .setContentType(ContentType.JSON)
-                .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-                .setPort(jmapServer.getJmapPort())
-                .build();
+    }
+    
 
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+    public URIBuilder baseUri() {
+        return new URIBuilder()
+                .setScheme("http")
+                .setHost("localhost")
+                .setPort(jmapServer.getJmapPort())
+                .setCharset(Charsets.UTF_8);
     }
     
     public void tearDown() {
