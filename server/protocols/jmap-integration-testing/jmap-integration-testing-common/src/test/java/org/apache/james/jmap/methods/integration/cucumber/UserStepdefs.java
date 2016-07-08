@@ -27,7 +27,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.JmapAuthentication;
+import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 
@@ -98,7 +98,7 @@ public class UserStepdefs {
     public void connectUser(String username) throws Throwable {
         String password = passwordByUser.get(username);
         Preconditions.checkState(password != null, "unknown user " + username);
-        AccessToken accessToken = JmapAuthentication.authenticateJamesUser(username, password);
+        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(mainStepdefs.baseUri(), username, password);
         tokenByUser.put(username, accessToken);
         lastConnectedUser = username;
     }

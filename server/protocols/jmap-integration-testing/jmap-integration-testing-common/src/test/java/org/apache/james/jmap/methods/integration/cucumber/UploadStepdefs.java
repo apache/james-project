@@ -19,23 +19,25 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
-import static org.hamcrest.Matchers.equalTo;
-
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.inject.Inject;
 
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.james.jmap.api.access.AccessToken;
 
 import com.google.common.base.Charsets;
-import com.jayway.restassured.config.EncoderConfig;
-import com.jayway.restassured.config.RestAssuredConfig;
-import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.response.Response;
-import com.jayway.restassured.specification.RequestSpecification;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -43,121 +45,108 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class UploadStepdefs {
-    private static final RestAssuredConfig NO_CHARSET = newConfig().encoderConfig(EncoderConfig.encoderConfig().appendDefaultContentCharsetToContentTypeIfUndefined(false));
     private static final String _1M_ZEROED_FILE_BLOB_ID = "3b71f43ff30f4b15b5cd85dd9e95ebc7e84eb5a3";
     private static final int _1M = 1024 * 1024;
     private static final int _10M = 10 * _1M;
 
     private final UserStepdefs userStepdefs;
-    private Response response;
+    private final MainStepdefs mainStepdefs;
+    private final URI uploadUri;
+    private HttpResponse response;
 
     @Inject
-    private UploadStepdefs(UserStepdefs userStepdefs) {
+    private UploadStepdefs(UserStepdefs userStepdefs, MainStepdefs mainStepdefs) throws URISyntaxException {
         this.userStepdefs = userStepdefs;
+        this.mainStepdefs = mainStepdefs;
+        uploadUri = mainStepdefs.baseUri().setPath("/upload").build();
     }
 
     @When("^\"([^\"]*)\" upload a content$")
     public void userUploadContent(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
-        RequestSpecification with = with();
+        Request request = Request.Post(uploadUri)
+            .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         if (accessToken != null) {
-            with.header("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.serialize());
         }
-        response = with
-            .config(NO_CHARSET)
-            .contentType(ContentType.BINARY)
-            .content(new BufferedInputStream(new ZeroedInputStream(_1M), _1M))
-            .post("/upload");
+        response = Executor.newInstance(HttpClientBuilder.create().disableAutomaticRetries().build()).execute(request).returnResponse();
     }
 
     @When("^\"([^\"]*)\" upload a content without content type$")
     public void userUploadContentWithoutContentType(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
-        RequestSpecification with = with();
+        Request request = Request.Post(uploadUri)
+                .bodyByteArray("some text".getBytes(Charsets.UTF_8));
         if (accessToken != null) {
-            with.header("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.serialize());
         }
-        response = with
-            .config(NO_CHARSET)
-            .contentType("")
-            .content("some text".getBytes(Charsets.UTF_8))
-            .post("/upload");
+        response = request.execute().returnResponse();
     }
 
     @When("^\"([^\"]*)\" upload a too big content$")
     public void userUploadTooBigContent(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
-        RequestSpecification with = with();
+        Request request = Request.Post(uploadUri)
+                .bodyStream(new BufferedInputStream(new ZeroedInputStream(_10M), _10M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         if (accessToken != null) {
-            with.header("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.serialize());
         }
-        response = with
-            .contentType(ContentType.BINARY)
-            .content(new BufferedInputStream(new ZeroedInputStream(_10M), _10M))
-            .post("/upload");
+        response = request.execute().returnResponse();
     }
 
     @When("^\"([^\"]*)\" checks for the availability of the upload endpoint$")
     public void optionUpload(String username) throws Throwable {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
-        RequestSpecification with = with();
+        Request request = Request.Options(uploadUri);
         if (accessToken != null) {
-            with.header("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.serialize());
         }
-        response = with
-            .options("/upload");
+        response = request.execute().returnResponse();
     }
 
     @Then("^the user should receive an authorized response$")
     public void httpAuthorizedStatus() throws Exception {
-        response.then()
-            .statusCode(200);
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
     }
 
     @Then("^the user should receive a created response$")
     public void httpCreatedStatus() throws Exception {
-        response.then()
-            .statusCode(201);
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(201);
     }
 
     @Then("^the user should receive bad request response$")
     public void httpBadRequestStatus() throws Throwable {
-        response.then()
-            .statusCode(400);
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(400);
     }
 
     @Then("^the user should receive a not authorized response$")
     public void httpUnauthorizedStatus() throws Exception {
-        response.then()
-            .statusCode(401);
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(401);
     }
 
     @Then("^the user should receive a request entity too large response$")
     public void httpRequestEntityTooBigStatus() throws Exception {
-        response.then()
-            .statusCode(413);
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(413);
     }
 
     @Then("^the user should receive a specified JSON content$")
     public void jsonResponse() throws Exception {
-        response.then()
-            .contentType(ContentType.JSON)
-            .body("blobId", equalTo(_1M_ZEROED_FILE_BLOB_ID))
-            .body("type", equalTo("application/octet-stream"))
-            .body("size", equalTo(_1M));
+        assertThat(response.getHeaders("Content-Type")).extracting(Header::getValue).containsExactly(org.apache.http.entity.ContentType.APPLICATION_JSON.toString());
+        DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
+        assertThat(jsonPath.<String>read("blobId")).isEqualTo(_1M_ZEROED_FILE_BLOB_ID);
+        assertThat(jsonPath.<String>read("type")).isEqualTo("application/octet-stream");
+        assertThat(jsonPath.<Integer>read("size")).isEqualTo(_1M);
     }
 
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")
     public void contentShouldBeRetrievable(String username) throws Exception {
         AccessToken accessToken = userStepdefs.tokenByUser.get(username);
-        RequestSpecification with = with();
+        Request request = Request.Get(mainStepdefs.baseUri().setPath("/download/" + _1M_ZEROED_FILE_BLOB_ID).build());
         if (accessToken != null) {
-            with.header("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.serialize());
         }
-        with
-            .get("/download/" + _1M_ZEROED_FILE_BLOB_ID)
-        .then()
-            .statusCode(200);
+        response = request.execute().returnResponse();
+        httpAuthorizedStatus();
     }
 
     public static class ZeroedInputStream extends InputStream {
