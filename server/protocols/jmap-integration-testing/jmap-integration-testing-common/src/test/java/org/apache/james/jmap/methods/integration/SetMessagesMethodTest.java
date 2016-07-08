@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -1682,6 +1683,14 @@ public abstract class SetMessagesMethodTest {
         .post("/upload");
     }
 
+    private void uploadTextAttachment(Attachment attachment) throws IOException {
+        with()
+            .header("Authorization", accessToken.serialize())
+            .contentType(attachment.getType())
+            .content(new String(IOUtils.toByteArray(attachment.getStream()), Charsets.UTF_8))
+        .post("/upload");
+    }
+
     @Test
     public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
@@ -1763,5 +1772,72 @@ public abstract class SetMessagesMethodTest {
         } catch (AssertionError e) {
             return false;
         }
+    }
+
+    @Test
+    public void attachmentsAndBodysShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithMixedTextAndHtmlBodyAndHtmlAttachment() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        Attachment attachment = Attachment.builder()
+                .bytes(("<html>\n" +
+                        "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
+                        "</html>").getBytes(Charsets.UTF_8))
+                .type("text/html; charset=UTF-8")
+                .build();
+        uploadTextAttachment(attachment);
+
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+                "        \"subject\": \"Message with an attachment\"," +
+                "        \"textBody\": \"Test body, plain text version\"," +
+                "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "        \"attachments\": [" +
+                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+                "               \"type\" : \"" + attachment.getType() + "\", " +
+                "               \"size\" : " + attachment.getSize() + ", " +
+                "               \"isInline\" : false }" +
+                "           ]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        String firstAttachment = firstMessage + ".attachments[0]";
+        String presumedMessageId = "username@domain.tld|INBOX|1";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".textBody", equalTo("Test body, plain text version"))
+            .body(firstMessage + ".htmlBody", equalTo("Test <b>body</b>, HTML version"))
+            .body(firstMessage + ".attachments", hasSize(1))
+            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".type", equalTo("text/html"))
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
     }
 }

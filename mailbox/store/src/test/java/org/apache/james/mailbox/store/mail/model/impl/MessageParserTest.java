@@ -126,14 +126,14 @@ public class MessageParserTest {
     }
 
     @Test
-    public void getAttachmentsShouldNotRetrieveEmbeddedAttachmentsWhenSome() throws Exception {
+    public void getAttachmentsShouldRetrieveEmbeddedAttachmentsWhenSome() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithInline.eml"));
 
         assertThat(attachments).hasSize(1);
     }
 
     @Test
-    public void getAttachmentsShouldNotRetrieveInlineAttachmentsWhenSome() throws Exception {
+    public void getAttachmentsShouldRetrieveInlineAttachmentsWhenSome() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithAttachment.eml"));
 
         assertThat(attachments).hasSize(1);
@@ -153,5 +153,12 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(1);
         assertThat(attachments.get(0).isInline()).isTrue();
+    }
+
+    @Test
+    public void getAttachementsShouldRetrieveHtmlAttachementsWhenSome() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneHtmlAttachmentAndSomeTextInlined.eml"));
+
+        assertThat(attachments).hasSize(1);
     }
 }

@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
 
-    private static final String TEXT_MEDIA_TYPE = "text";
+    private static final String MULTIPART_ALTERNATIVE = "multipart/alternative";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String CONTENT_ID = "Content-ID";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
@@ -73,7 +73,7 @@ public class MessageParser {
         ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
         MessageWriter messageWriter = new DefaultMessageWriter();
         for (Entity entity : multipart.getBodyParts()) {
-            if (entity.isMultipart() && entity.getBody() instanceof Multipart) {
+            if (isMultipart(entity) && !isMainBody(entity)) {
                 attachments.addAll(listAttachments((Multipart) entity.getBody()));
             } else {
                 if (isAttachment(entity)) {
@@ -141,6 +141,14 @@ public class MessageParser {
         }).or(Optional.<String> absent());
     }
 
+    private boolean isMultipart(Entity entity) {
+        return entity.isMultipart() && entity.getBody() instanceof Multipart;
+    }
+
+    private boolean isMainBody(Entity entity) {
+        return entity.getMimeType().equalsIgnoreCase(MULTIPART_ALTERNATIVE);
+    }
+
     private boolean isInline(Optional<ContentDispositionField> contentDispositionField) {
         return contentDispositionField.transform(new Function<ContentDispositionField, Boolean>() {
             @Override
@@ -151,9 +159,6 @@ public class MessageParser {
     }
 
     private boolean isAttachment(Entity part) {
-        if (isTextPart(part)) {
-            return false;
-        }
         return Optional.fromNullable(part.getDispositionType())
                 .transform(new Function<String, Boolean>() {
 
@@ -162,17 +167,6 @@ public class MessageParser {
                         return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase());
                     }
                 }).isPresent();
-    }
-
-    private boolean isTextPart(Entity part) {
-        Optional<ContentTypeField> contentTypeField = getContentTypeField(part);
-        if (contentTypeField.isPresent()) {
-            String mediaType = contentTypeField.get().getMediaType();
-            if (mediaType != null && mediaType.equals(TEXT_MEDIA_TYPE)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private byte[] getBytes(MessageWriter messageWriter, Body body) throws IOException {
