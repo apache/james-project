@@ -161,4 +161,11 @@ public class MessageParserTest {
 
         assertThat(attachments).hasSize(1);
     }
+
+    @Test
+    public void getAttachementsShouldRetrieveAttachmentsWhenSomeAreInTheMultipartAlternative() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/invitationEmailFromOP.eml"));
+        
+        assertThat(attachments).hasSize(6);
+    }
 }

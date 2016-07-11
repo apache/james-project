@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
 
-    private static final String MULTIPART_ALTERNATIVE = "multipart/alternative";
+    private static final String TEXT_MEDIA_TYPE = "text";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String CONTENT_ID = "Content-ID";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
@@ -60,7 +60,8 @@ public class MessageParser {
                 .getBody();
         try {
             if (body instanceof Multipart) {
-                return listAttachments((Multipart)body);
+                Multipart multipartBody = (Multipart)body;
+                return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()));
             } else {
                 return ImmutableList.of();
             }
@@ -69,14 +70,14 @@ public class MessageParser {
         }
     }
 
-    private List<MessageAttachment> listAttachments(Multipart multipart) throws IOException {
+    private List<MessageAttachment> listAttachments(Multipart multipart, Context context) throws IOException {
         ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
         MessageWriter messageWriter = new DefaultMessageWriter();
         for (Entity entity : multipart.getBodyParts()) {
-            if (isMultipart(entity) && !isMainBody(entity)) {
-                attachments.addAll(listAttachments((Multipart) entity.getBody()));
+            if (isMultipart(entity)) {
+                attachments.addAll(listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity)));
             } else {
-                if (isAttachment(entity)) {
+                if (isAttachment(entity, context)) {
                     attachments.add(retrieveAttachment(messageWriter, entity));
                 }
             }
@@ -152,10 +153,6 @@ public class MessageParser {
         return entity.isMultipart() && entity.getBody() instanceof Multipart;
     }
 
-    private boolean isMainBody(Entity entity) {
-        return entity.getMimeType().equalsIgnoreCase(MULTIPART_ALTERNATIVE);
-    }
-
     private boolean isInline(Optional<ContentDispositionField> contentDispositionField) {
         return contentDispositionField.transform(new Function<ContentDispositionField, Boolean>() {
             @Override
@@ -165,7 +162,10 @@ public class MessageParser {
         }).or(false);
     }
 
-    private boolean isAttachment(Entity part) {
+    private boolean isAttachment(Entity part, Context context) {
+        if (context == Context.BODY && isTextPart(part)) {
+            return false;
+        }
         return Optional.fromNullable(part.getDispositionType())
                 .transform(new Function<String, Boolean>() {
 
@@ -176,9 +176,51 @@ public class MessageParser {
                 }).isPresent();
     }
 
+    private boolean isTextPart(Entity part) {
+        Optional<ContentTypeField> contentTypeField = getContentTypeField(part);
+        if (contentTypeField.isPresent()) {
+            String mediaType = contentTypeField.get().getMediaType();
+            if (mediaType != null && mediaType.equals(TEXT_MEDIA_TYPE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private byte[] getBytes(MessageWriter messageWriter, Body body) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
         return out.toByteArray();
+    }
+
+    private static enum Context {
+        BODY,
+        OTHER;
+
+        private static final String ALTERNATIVE_SUB_TYPE = "alternative";
+        private static final String MULTIPART_ALTERNATIVE = "multipart/" + ALTERNATIVE_SUB_TYPE;
+
+        public static Context fromEntity(Entity entity) {
+            if (isMultipartAlternative(entity)) {
+                return BODY;
+            }
+            return OTHER;
+        }
+
+        public static Context fromSubType(String subPart) {
+            if (isAlternative(subPart)) {
+                return BODY;
+            }
+            return OTHER;
+        }
+
+        private static boolean isMultipartAlternative(Entity entity) {
+            return entity.getMimeType().equalsIgnoreCase(MULTIPART_ALTERNATIVE);
+        }
+
+        private static boolean isAlternative(String subPart) {
+            return subPart.equalsIgnoreCase(ALTERNATIVE_SUB_TYPE);
+        }
+
     }
 }
