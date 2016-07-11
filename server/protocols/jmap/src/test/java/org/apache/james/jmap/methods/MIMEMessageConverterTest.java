@@ -32,6 +32,7 @@ import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
@@ -335,7 +336,7 @@ public class MIMEMessageConverterTest {
                 .htmlBody("Hello <b>all<b>!")
                 .build();
 
-        String expectedCID = "<cid>";
+        String expectedCID = "cid";
         String expectedMimeType = "image/png";
         String text = "123456";
         TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), Charsets.UTF_8);
@@ -345,7 +346,7 @@ public class MIMEMessageConverterTest {
                     .bytes(text.getBytes())
                     .type(expectedMimeType)
                     .build())
-                .cid(expectedCID)
+                .cid(Cid.from(expectedCID))
                 .isInline(true)
                 .build();
 
@@ -380,7 +381,7 @@ public class MIMEMessageConverterTest {
         TextBody expectedTextBody = new BasicBodyFactory().textBody("Hello all!".getBytes(), Charsets.UTF_8);
         TextBody expectedHtmlBody = new BasicBodyFactory().textBody("Hello <b>all<b>!".getBytes(), Charsets.UTF_8);
 
-        String expectedCID = "<cid>";
+        String expectedCID = "cid";
         String expectedMimeType = "image/png";
         String text = "123456";
         TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), Charsets.UTF_8);
@@ -390,7 +391,7 @@ public class MIMEMessageConverterTest {
                     .bytes(text.getBytes())
                     .type(expectedMimeType)
                     .build())
-                .cid(expectedCID)
+                .cid(Cid.from(expectedCID))
                 .isInline(true)
                 .build();
 

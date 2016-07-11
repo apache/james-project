@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -35,7 +37,7 @@ public class MessageAttachment {
 
         private Attachment attachment;
         private Optional<String> name;
-        private Optional<String> cid;
+        private Optional<Cid> cid;
         private Boolean isInline;
 
         private Builder() {
@@ -54,7 +56,14 @@ public class MessageAttachment {
             return this;
         }
 
-        public Builder cid(String cid) {
+        public Builder cid(Optional<Cid> cid) {
+            Preconditions.checkNotNull(cid);
+            this.cid = cid;
+            return this;
+        }
+
+        
+        public Builder cid(Cid cid) {
             this.cid = Optional.fromNullable(cid);
             return this;
         }
@@ -78,10 +87,10 @@ public class MessageAttachment {
 
     private final Attachment attachment;
     private final Optional<String> name;
-    private final Optional<String> cid;
+    private final Optional<Cid> cid;
     private final boolean isInline;
 
-    @VisibleForTesting MessageAttachment(Attachment attachment, Optional<String> name, Optional<String> cid, boolean isInline) {
+    @VisibleForTesting MessageAttachment(Attachment attachment, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.attachment = attachment;
         this.name = name;
         this.cid = cid;
@@ -100,7 +109,7 @@ public class MessageAttachment {
         return name;
     }
 
-    public Optional<String> getCid() {
+    public Optional<Cid> getCid() {
         return cid;
     }
 

@@ -246,7 +246,7 @@ public class MIMEMessageConverter {
 
     private void contentId(BodyPartBuilder builder, MessageAttachment att) {
         if (att.getCid().isPresent()) {
-            builder.setField(new RawField("Content-ID", att.getCid().get()));
+            builder.setField(new RawField("Content-ID", att.getCid().get().getValue()));
         }
     }
 

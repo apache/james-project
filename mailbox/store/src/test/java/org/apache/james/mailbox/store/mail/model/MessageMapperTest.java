@@ -41,6 +41,7 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -118,19 +119,19 @@ public class MessageMapperTest<T extends MapperProvider> {
         message7With1Attachment = createMessage(attachmentsMailbox, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(), 
                 ImmutableList.of(MessageAttachment.builder()
                         .attachment(attachment)
-                        .cid("cid")
+                        .cid(Cid.from("cid"))
                         .isInline(true)
                         .build()));
         message8With2Attachments = createMessage(attachmentsMailbox, "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(), 
                 ImmutableList.of(
                         MessageAttachment.builder()
                             .attachment(attachment)
-                            .cid("cid")
+                            .cid(Cid.from("cid"))
                             .isInline(true)
                             .build(),
                         MessageAttachment.builder()
                             .attachment(attachment2)
-                            .cid("cid2")
+                            .cid(Cid.from("cid2"))
                             .isInline(false)
                             .build()));
 

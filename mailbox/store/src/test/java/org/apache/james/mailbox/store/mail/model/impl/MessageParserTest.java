@@ -144,7 +144,7 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
 
         assertThat(attachments).hasSize(1);
-        assertThat(attachments.get(0).getCid()).isEqualTo(Optional.of("<part1.37A15C92.A7C3488D@linagora.com>"));
+        assertThat(attachments.get(0).getCid()).isEqualTo(Optional.of(Cid.from("part1.37A15C92.A7C3488D@linagora.com")));
     }
 
     @Test

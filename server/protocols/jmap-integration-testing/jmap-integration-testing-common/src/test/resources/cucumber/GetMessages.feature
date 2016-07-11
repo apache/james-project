@@ -153,7 +153,7 @@ Feature: GetMessages method
       |blobId   |"58aa22c2ec5770fb9e574ba19008dbfc647eba43" |
       |type     |"image/jpeg"                               |
       |size     |597                                        |
-      |cid      |"<part1.37A15C92.A7C3488D@linagora.com>"   |
+      |cid      |"part1.37A15C92.A7C3488D@linagora.com"     |
       |isInline |true                                       |
 
   Scenario: Retrieving message should return attachments and html body when some attachments and html message

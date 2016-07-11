@@ -36,6 +36,7 @@ import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
@@ -422,7 +423,7 @@ public class MailboxMessageTest {
                             .bytes(payload.getBytes())
                             .type(type)
                             .build())
-                        .cid("cid")
+                        .cid(Cid.from("cid"))
                         .isInline(true)
                         .build()), 
                 x -> MessageId.of("user|box|" + x));

@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -45,7 +46,7 @@ public class MessageAttachmentTest {
                 .bytes("content".getBytes())
                 .type("type")
                 .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.<String> absent(), Optional.<String> absent(), false);
+        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.<String> absent(), Optional.<Cid> absent(), false);
 
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(attachment)
@@ -87,12 +88,12 @@ public class MessageAttachmentTest {
                 .bytes("content".getBytes())
                 .type("type")
                 .build();
-        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.of("name"), Optional.of("cid"), true);
+        MessageAttachment expectedMessageAttachment = new MessageAttachment(attachment, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(attachment)
             .name("name")
-            .cid("cid")
+            .cid(Cid.from("cid"))
             .isInline(true)
             .build();
 

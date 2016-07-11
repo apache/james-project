@@ -98,6 +98,7 @@ import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
@@ -354,7 +355,7 @@ public class CassandraMessageMapper implements MessageMapper {
                         MessageAttachment.builder()
                             .attachment(attachmentsById.get(attachmentIdFrom(x)))
                             .name(x.getString(Attachments.NAME))
-                            .cid(x.getString(Attachments.CID))
+                            .cid(com.google.common.base.Optional.fromNullable(x.getString(Attachments.CID)).transform(Cid::from))
                             .isInline(x.getBool(Attachments.IS_INLINE))
                             .build()))
                     .collect(ImmutableCollectors.toImmutableList());
@@ -424,7 +425,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
             .setString(Attachments.NAME, messageAttachment.getName().orNull())
-            .setString(Attachments.CID, messageAttachment.getCid().orNull())
+            .setString(Attachments.CID, messageAttachment.getCid().transform(Cid::getValue).orNull())
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
     }
 

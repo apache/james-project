@@ -88,7 +88,7 @@ public class MessageParser {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<String> contentType = contentType(contentTypeField);
         Optional<String> name = name(contentTypeField);
-        Optional<String> cid = cid(castField(entity.getHeader().getField(CONTENT_ID), ContentIdField.class));
+        Optional<Cid> cid = cid(castField(entity.getHeader().getField(CONTENT_ID), ContentIdField.class));
         boolean isInline = isInline(castField(entity.getHeader().getField(CONTENT_DISPOSITION), ContentDispositionField.class));
 
         return MessageAttachment.builder()
@@ -132,13 +132,20 @@ public class MessageParser {
         }).or(Optional.<String> absent());
     }
 
-    private Optional<String> cid(Optional<ContentIdField> contentIdField) {
-        return contentIdField.transform(new Function<ContentIdField, Optional<String>>() {
+    private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
+        return contentIdField.transform(new Function<ContentIdField, Optional<Cid>>() {
             @Override
-            public Optional<String> apply(ContentIdField field) {
-                return Optional.fromNullable(field.getId());
+            public Optional<Cid> apply(ContentIdField field) {
+                return Optional.fromNullable(field.getId())
+                        .transform(new Function<String, Cid>() {
+
+                            @Override
+                            public Cid apply(String cid) {
+                                return Cid.from(cid);
+                            }
+                        });
             }
-        }).or(Optional.<String> absent());
+        }).or(Optional.<Cid> absent());
     }
 
     private boolean isMultipart(Entity entity) {

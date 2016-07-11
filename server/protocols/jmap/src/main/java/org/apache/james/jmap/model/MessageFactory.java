@@ -34,6 +34,7 @@ import org.apache.james.jmap.model.message.IndexableMessage;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.google.common.base.Strings;
@@ -163,7 +164,7 @@ public class MessageFactory {
                     .type(attachment.getAttachment().getType())
                     .size(attachment.getAttachment().getSize())
                     .name(attachment.getName().orNull())
-                    .cid(attachment.getCid().orNull())
+                    .cid(attachment.getCid().transform(Cid::getValue).orNull())
                     .isInline(attachment.isInline())
                     .build();
     }

@@ -70,6 +70,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
+import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.ImmutableCollectors;
@@ -327,7 +328,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             return MessageAttachment.builder()
                     .attachment(attachmentMapper.getAttachment(AttachmentId.from(attachment.getBlobId().getRawValue())))
                     .name(attachment.getName().orElse(null))
-                    .cid(attachment.getCid().orElse(null))
+                    .cid(attachment.getCid().map(Cid::from).orElse(null))
                     .isInline(attachment.isIsInline())
                     .build();
         } catch (AttachmentNotFoundException e) {
