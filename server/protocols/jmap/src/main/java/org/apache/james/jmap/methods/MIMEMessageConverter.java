@@ -27,7 +27,6 @@ import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
@@ -63,6 +62,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.io.ByteStreams;
 import com.google.common.net.MediaType;
 
 public class MIMEMessageConverter {
@@ -237,9 +237,10 @@ public class MIMEMessageConverter {
     private BodyPart attachmentBodyPart(MessageAttachment att) throws IOException {
         BodyPartBuilder builder = BodyPartBuilder.create()
             .use(bodyFactory)
-            .setBody(IOUtils.toString(att.getAttachment().getStream()), Charsets.UTF_8)
+            .setBody(new BasicBodyFactory().binaryBody(ByteStreams.toByteArray(att.getAttachment().getStream())))
             .setField(contentTypeField(att))
-            .setField(contentDispositionField(att.isInline()));
+            .setField(contentDispositionField(att.isInline()))
+            .setContentTransferEncoding("base64");
         contentId(builder, att);
         return builder.build();
     }
