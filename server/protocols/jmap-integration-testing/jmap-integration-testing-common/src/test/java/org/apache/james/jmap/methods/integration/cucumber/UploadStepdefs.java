@@ -20,7 +20,6 @@
 package org.apache.james.jmap.methods.integration.cucumber;
 
 import java.io.BufferedInputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -32,6 +31,7 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.util.ZeroedInputStream;
 
 import com.google.common.base.Charsets;
 import com.jayway.jsonpath.DocumentContext;
@@ -147,26 +147,5 @@ public class UploadStepdefs {
         }
         response = request.execute().returnResponse();
         httpAuthorizedStatus();
-    }
-
-    public static class ZeroedInputStream extends InputStream {
-        public static final int RETURNED_VALUE = 0;
-
-        private final int max;
-        private int pos;
-
-        public ZeroedInputStream(int max) {
-            this.max = max;
-            this.pos = 0;
-        }
-
-        @Override
-        public int read() {
-            if (pos < max) {
-                pos++;
-                return RETURNED_VALUE;
-            }
-            return -1;
-        }
     }
 }

@@ -81,16 +81,15 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
             IOUtils.copy(in, out);
             sourceId = key;
         } catch (IOException ioe) {
+            File file = out.getFile();
+            if (file != null) {
+                FileUtils.deleteQuietly(file);
+            }
             throw new MessagingException("Unable to retrieve the data: " + ioe.getMessage(), ioe);
         } finally {
             try {
                 if (out != null) {
                     out.close();
-
-                    File file = out.getFile();
-                    if (file != null) {
-                        FileUtils.forceDelete(file);
-                    }
                 }
             } catch (IOException ioe) {
                 // Ignored - logging unavailable to log this non-fatal error.

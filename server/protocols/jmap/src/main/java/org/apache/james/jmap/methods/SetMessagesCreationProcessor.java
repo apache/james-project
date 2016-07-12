@@ -56,6 +56,7 @@ import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -361,8 +362,12 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void sendMessage(MailboxMessage mailboxMessage, Message jmapMessage, MailboxSession session) throws MessagingException {
         Mail mail = buildMessage(mailboxMessage, jmapMessage);
-        MailMetadata metadata = new MailMetadata(jmapMessage.getId(), session.getUser().getUserName());
-        mailSpool.send(mail, metadata);
+        try {
+            MailMetadata metadata = new MailMetadata(jmapMessage.getId(), session.getUser().getUserName());
+            mailSpool.send(mail, metadata);
+        } finally {
+            LifecycleUtil.dispose(mail);
+        }
     }
 
     private Mail buildMessage(MailboxMessage mailboxMessage, Message jmapMessage) throws MessagingException {

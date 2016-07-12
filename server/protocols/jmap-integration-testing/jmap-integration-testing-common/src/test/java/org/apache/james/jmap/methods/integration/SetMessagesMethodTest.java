@@ -57,6 +57,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.util.ZeroedInputStream;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -64,6 +65,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.io.ByteStreams;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
@@ -75,6 +77,7 @@ import com.jayway.restassured.specification.ResponseSpecification;
 
 public abstract class SetMessagesMethodTest {
 
+    private static final int _1MB = 1024*1024;
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String SECOND_NAME = "[1][0]";
@@ -1696,7 +1699,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
 
         Attachment attachment = Attachment.builder()
-                .bytes("attachment".getBytes(Charsets.UTF_8))
+                .bytes(ByteStreams.toByteArray(new ZeroedInputStream(_1MB)))
                 .type("application/octet-stream")
                 .build();
         uploadAttachment(attachment);
