@@ -301,6 +301,15 @@
                 <role>Developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>rouazana</id>
+            <name>Raphael Ouazana</name>
+            <email>rouazana@apache.org</email>
+            <timezone/>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
     </developers>
 
     <contributors>
