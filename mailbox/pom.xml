@@ -58,6 +58,7 @@
         <module>lucene</module>
         <module>maildir</module>
         <module>memory</module>
+        <module>scanning-search</module>
         <module>store</module>
         <module>spring</module>
         <module>tika</module>
@@ -124,6 +125,7 @@
         <apache-backends-cassandra.version>1.8.3-SNAPSHOT</apache-backends-cassandra.version>
         <assertj-1.version>1.7.1</assertj-1.version>
         <assertj-3.version>3.2.0</assertj-3.version>
+        <logback.version>1.1.7</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -310,6 +312,11 @@
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
             <!--
                 START Logging
