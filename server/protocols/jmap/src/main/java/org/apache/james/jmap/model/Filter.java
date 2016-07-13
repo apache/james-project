@@ -19,18 +19,11 @@
 
 package org.apache.james.jmap.model;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.james.jmap.json.FilterDeserializer;
 
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "filter",
-        defaultImpl = FilterCondition.class
-)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = FilterOperator.class, name = "operator")
-})
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+@JsonDeserialize(using = FilterDeserializer.class)
 public interface Filter {
 
 }

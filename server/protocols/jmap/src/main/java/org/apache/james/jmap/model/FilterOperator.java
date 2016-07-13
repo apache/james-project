@@ -65,6 +65,22 @@ public class FilterOperator implements Filter {
         }
     }
 
+    public static FilterOperator or(Filter... filters) {
+        Preconditions.checkArgument(filters.length > 0);
+        return builder().operator(Operator.OR).conditions(ImmutableList.copyOf(filters)).build();
+    }
+
+    public static FilterOperator and(Filter... filters) {
+        Preconditions.checkArgument(filters.length > 0);
+        return builder().operator(Operator.AND).conditions(ImmutableList.copyOf(filters)).build();
+    }
+
+
+    public static FilterOperator not(Filter... filters) {
+        Preconditions.checkArgument(filters.length > 0);
+        return builder().operator(Operator.NOT).conditions(ImmutableList.copyOf(filters)).build();
+    }
+    
     private final Operator operator;
     private final List<Filter> conditions;
 

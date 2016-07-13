@@ -43,7 +43,15 @@ public class FilterConditionTest {
         FilterCondition filterCondition = FilterCondition.builder()
                 .inMailboxes(Optional.of(ImmutableList.of("1", "2")))
                 .build();
-        assertThat(filterCondition.getInMailboxes()).isEqualTo(Optional.of(ImmutableList.of("1", "2")));
+        assertThat(filterCondition.getInMailboxes()).contains(ImmutableList.of("1", "2"));
+    }
+
+    @Test
+    public void buildShouldWorkWhenGivenInMailboxesAsEllipsis() {
+        FilterCondition filterCondition = FilterCondition.builder()
+                .inMailboxes("1", "2")
+                .build();
+        assertThat(filterCondition.getInMailboxes()).contains(ImmutableList.of("1", "2"));
     }
 
     @Test
@@ -51,9 +59,17 @@ public class FilterConditionTest {
         FilterCondition filterCondition = FilterCondition.builder()
                 .notInMailboxes(Optional.of(ImmutableList.of("1", "2")))
                 .build();
-        assertThat(filterCondition.getNotInMailboxes()).isEqualTo(Optional.of(ImmutableList.of("1", "2")));
+        assertThat(filterCondition.getNotInMailboxes()).contains(ImmutableList.of("1", "2"));
     }
 
+    @Test
+    public void builderShouldBuildWhenGivenNotInMailboxesAsEllipsis() {
+        FilterCondition filterCondition = FilterCondition.builder()
+                .notInMailboxes("1", "2")
+                .build();
+        assertThat(filterCondition.getNotInMailboxes()).contains(ImmutableList.of("1", "2"));
+    }
+    
     @Test(expected=NotImplementedException.class)
     public void builderShouldThrowWhenBefore() {
         FilterCondition.builder().before(null);
@@ -147,7 +163,7 @@ public class FilterConditionTest {
 
         FilterCondition filterCondition = FilterCondition.builder()
                 .inMailboxes(Optional.of(ImmutableList.of("1")))
-                .notInMailboxes(Optional.of(ImmutableList.of("2")))
+                .notInMailboxes("2")
                 .build();
 
         assertThat(filterCondition).isEqualToComparingFieldByField(expectedFilterCondition);

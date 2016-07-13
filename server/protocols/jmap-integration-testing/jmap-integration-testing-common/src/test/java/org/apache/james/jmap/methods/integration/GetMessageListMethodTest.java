@@ -98,9 +98,7 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("error"))
-            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", equalTo("Can not instantiate value of type [simple type, class org.apache.james.jmap.model.FilterCondition$Builder] from Boolean value (true); no single-boolean/Boolean-arg constructor/factory method\n" + 
-                    " at [Source: {\"filter\":true}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"filter\"])"));
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
     }
 
     @Test

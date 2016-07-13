@@ -69,11 +69,23 @@ public class FilterCondition implements Filter {
             header = Optional.empty();
         }
 
+        public Builder inMailboxes(String... inMailboxes) {
+            this.inMailboxes = Optional.of(ImmutableList.copyOf(inMailboxes));
+            return this;
+        }
+
+        @JsonDeserialize
         public Builder inMailboxes(Optional<List<String>> inMailboxes) {
             this.inMailboxes = inMailboxes.map(ImmutableList::copyOf);
             return this;
         }
 
+        public Builder notInMailboxes(String... notInMailboxes) {
+            this.notInMailboxes = Optional.of(ImmutableList.copyOf(notInMailboxes));
+            return this;
+        }
+
+        @JsonDeserialize
         public Builder notInMailboxes(Optional<List<String>> notInMailboxes) {
             this.notInMailboxes = notInMailboxes.map(ImmutableList::copyOf);
             return this;

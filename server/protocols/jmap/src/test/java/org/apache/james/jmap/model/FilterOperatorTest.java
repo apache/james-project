@@ -20,6 +20,7 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
@@ -55,6 +56,45 @@ public class FilterOperatorTest {
             .build();
 
         assertThat(filterOperator).isEqualToComparingFieldByField(expectedFilterOperator);
+    }
+
+    @Test
+    public void andFactoryMethodShouldThrowWhenNoArgument() {
+        assertThatThrownBy(() -> FilterOperator.and()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void andFactoryMethodShouldReturnRightOperator() {
+        FilterCondition condition = FilterCondition.builder().inMailboxes("12").build();
+        ImmutableList<Filter> conditions = ImmutableList.of(condition);
+        FilterOperator expectedFilterOperator = new FilterOperator(Operator.AND, conditions);
+        assertThat(FilterOperator.and(condition)).isEqualTo(expectedFilterOperator);
+    }
+
+    @Test
+    public void orFactoryMethodShouldThrowWhenNoArgument() {
+        assertThatThrownBy(() -> FilterOperator.or()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void orFactoryMethodShouldReturnRightOperator() {
+        FilterCondition condition = FilterCondition.builder().inMailboxes("12").build();
+        ImmutableList<Filter> conditions = ImmutableList.of(condition);
+        FilterOperator expectedFilterOperator = new FilterOperator(Operator.OR, conditions);
+        assertThat(FilterOperator.or(condition)).isEqualTo(expectedFilterOperator);
+    }
+
+    @Test
+    public void notFactoryMethodShouldThrowWhenNoArgument() {
+        assertThatThrownBy(() -> FilterOperator.not()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void notFactoryMethodShouldReturnRightOperator() {
+        FilterCondition condition = FilterCondition.builder().inMailboxes("12").build();
+        ImmutableList<Filter> conditions = ImmutableList.of(condition);
+        FilterOperator expectedFilterOperator = new FilterOperator(Operator.NOT, conditions);
+        assertThat(FilterOperator.not(condition)).isEqualTo(expectedFilterOperator);
     }
 
     @Test
