@@ -96,20 +96,15 @@ public class VacationResponse {
             return this;
         }
 
-        public Builder fromVacation(Vacation vacation, ZonedDateTime zonedDateTime) {
+        public Builder fromVacation(Vacation vacation) {
             this.id = Vacation.ID;
-            this.isEnabled = computeEnabledState(vacation, zonedDateTime);
+            this.isEnabled = Optional.of(vacation.isEnabled());
             this.fromDate = vacation.getFromDate();
             this.toDate = vacation.getToDate();
             this.textBody = vacation.getTextBody();
             this.subject = vacation.getSubject();
             this.htmlBody = vacation.getHtmlBody();
             return this;
-        }
-
-        private Optional<Boolean> computeEnabledState(Vacation vacation, ZonedDateTime zonedDateTime) {
-            return Optional.of(vacation.isEnabled())
-                .map(enabled -> enabled && vacation.isActiveAtDate(zonedDateTime));
         }
 
         public VacationResponse build() {

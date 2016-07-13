@@ -31,7 +31,6 @@ import org.apache.james.jmap.model.GetVacationRequest;
 import org.apache.james.jmap.model.GetVacationResponse;
 import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.util.date.ZonedDateTimeProvider;
 
 import com.google.common.base.Preconditions;
 
@@ -41,12 +40,10 @@ public class GetVacationResponseMethod implements Method {
     public static final Response.Name RESPONSE_NAME = Response.name("vacationResponse");
 
     private final VacationRepository vacationRepository;
-    private final ZonedDateTimeProvider zonedDateTimeProvider;
 
     @Inject
-    public GetVacationResponseMethod(VacationRepository vacationRepository, ZonedDateTimeProvider zonedDateTimeProvider) {
+    public GetVacationResponseMethod(VacationRepository vacationRepository) {
         this.vacationRepository = vacationRepository;
-        this.zonedDateTimeProvider = zonedDateTimeProvider;
     }
 
     @Override
@@ -78,7 +75,7 @@ public class GetVacationResponseMethod implements Method {
         return GetVacationResponse.builder()
             .accountId(mailboxSession.getUser().getUserName())
             .vacationResponse(VacationResponse.builder()
-                .fromVacation(vacation, zonedDateTimeProvider.get())
+                .fromVacation(vacation)
                 .build())
             .build();
     }

@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -38,29 +37,23 @@ import org.apache.james.jmap.model.GetVacationResponse;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Before;
 import org.junit.Test;
 
 public class GetVacationResponseMethodTest {
 
     public static final String USERNAME = "username";
-    public static final ZonedDateTime ZONED_DATE_TIME_2014 = ZonedDateTime.parse("2014-09-30T14:10:00Z");
-    public static final ZonedDateTime ZONED_DATE_TIME_2015 = ZonedDateTime.parse("2015-09-30T14:10:00Z");
-    public static final ZonedDateTime ZONED_DATE_TIME_2016 = ZonedDateTime.parse("2016-09-30T14:10:00Z");
     private GetVacationResponseMethod testee;
     private VacationRepository vacationRepository;
     private MailboxSession mailboxSession;
     private MailboxSession.User user;
-    private ZonedDateTimeProvider zonedDateTimeProvider;
 
     @Before
     public void setUp() {
         vacationRepository = mock(VacationRepository.class);
         mailboxSession = mock(MailboxSession.class);
         user = mock(MailboxSession.User.class);
-        zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
-        testee = new GetVacationResponseMethod(vacationRepository, zonedDateTimeProvider);
+        testee = new GetVacationResponseMethod(vacationRepository);
     }
 
     @Test(expected = NullPointerException.class)
@@ -94,7 +87,6 @@ public class GetVacationResponseMethodTest {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
         when(mailboxSession.getUser()).thenReturn(user);
         when(user.getUserName()).thenReturn(USERNAME);
-        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_2015);
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
@@ -106,84 +98,7 @@ public class GetVacationResponseMethodTest {
             .response(GetVacationResponse.builder()
                 .accountId(USERNAME)
                 .vacationResponse(VacationResponse.builder()
-                    .id(Vacation.ID)
-                    .enabled(true)
-                    .textBody(Optional.of("I am in vacation"))
-                    .subject(Optional.of("subject"))
-                    .build())
-                .build())
-            .build();
-        assertThat(result).containsExactly(expected);
-    }
-
-    @Test
-    public void processShouldMarkOutDatedVacationAsUnactivated() {
-        ClientId clientId = mock(ClientId.class);
-        Vacation vacation = Vacation.builder()
-            .enabled(true)
-            .textBody("I am in vacation")
-            .subject(Optional.of("subject"))
-            .fromDate(Optional.of(ZONED_DATE_TIME_2014))
-            .toDate(Optional.of(ZONED_DATE_TIME_2015))
-            .build();
-        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
-        when(mailboxSession.getUser()).thenReturn(user);
-        when(user.getUserName()).thenReturn(USERNAME);
-        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_2016);
-
-        GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
-
-        Stream<JmapResponse> result = testee.process(getVacationRequest, clientId, mailboxSession);
-
-        JmapResponse expected = JmapResponse.builder()
-            .clientId(clientId)
-            .responseName(GetVacationResponseMethod.RESPONSE_NAME)
-            .response(GetVacationResponse.builder()
-                .accountId(USERNAME)
-                .vacationResponse(VacationResponse.builder()
-                    .enabled(false)
-                    .id(Vacation.ID)
-                    .textBody(Optional.of("I am in vacation"))
-                    .subject(Optional.of("subject"))
-                    .fromDate(Optional.of(ZONED_DATE_TIME_2014))
-                    .toDate(Optional.of(ZONED_DATE_TIME_2015))
-                    .build())
-                .build())
-            .build();
-        assertThat(result).containsExactly(expected);
-    }
-
-    @Test
-    public void processShouldMarkTooEarlyVacationAsUnactivated() {
-        ClientId clientId = mock(ClientId.class);
-        Vacation vacation = Vacation.builder()
-            .enabled(true)
-            .textBody("I am in vacation")
-            .subject(Optional.of("subject"))
-            .fromDate(Optional.of(ZONED_DATE_TIME_2015))
-            .toDate(Optional.of(ZONED_DATE_TIME_2016))
-            .build();
-        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
-        when(mailboxSession.getUser()).thenReturn(user);
-        when(user.getUserName()).thenReturn(USERNAME);
-        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_2014);
-
-        GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
-
-        Stream<JmapResponse> result = testee.process(getVacationRequest, clientId, mailboxSession);
-
-        JmapResponse expected = JmapResponse.builder()
-            .clientId(clientId)
-            .responseName(GetVacationResponseMethod.RESPONSE_NAME)
-            .response(GetVacationResponse.builder()
-                .accountId(USERNAME)
-                .vacationResponse(VacationResponse.builder()
-                    .enabled(false)
-                    .id(Vacation.ID)
-                    .textBody(Optional.of("I am in vacation"))
-                    .subject(Optional.of("subject"))
-                    .fromDate(Optional.of(ZONED_DATE_TIME_2015))
-                    .toDate(Optional.of(ZONED_DATE_TIME_2016))
+                    .fromVacation(vacation)
                     .build())
                 .build())
             .build();
