@@ -28,6 +28,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class FilterConditionTest {
 
     @Test
@@ -149,5 +151,10 @@ public class FilterConditionTest {
                 .build();
 
         assertThat(filterCondition).isEqualToComparingFieldByField(expectedFilterCondition);
+    }
+
+    @Test
+    public void shouldRespectJavaBeanContract() {
+        EqualsVerifier.forClass(FilterCondition.class).verify();
     }
 }

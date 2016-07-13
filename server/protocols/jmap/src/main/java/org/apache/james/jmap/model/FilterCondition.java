@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -28,6 +29,8 @@ import org.apache.commons.lang.NotImplementedException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = FilterCondition.Builder.class)
@@ -270,5 +273,62 @@ public class FilterCondition implements Filter {
 
     public Optional<List<String>> getHeader() {
         return header;
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+        if (obj instanceof FilterCondition) {
+            FilterCondition other = (FilterCondition) obj;
+            return Objects.equals(this.inMailboxes, other.inMailboxes)
+                && Objects.equals(this.notInMailboxes, other.notInMailboxes)
+                && Objects.equals(this.before, other.before)
+                && Objects.equals(this.after, other.after)
+                && Objects.equals(this.minSize, other.minSize)
+                && Objects.equals(this.maxSize, other.maxSize)
+                && Objects.equals(this.isFlagged, other.isFlagged)
+                && Objects.equals(this.isUnread, other.isUnread)
+                && Objects.equals(this.isAnswered, other.isAnswered)
+                && Objects.equals(this.isDraft, other.isDraft)
+                && Objects.equals(this.hasAttachment, other.hasAttachment)
+                && Objects.equals(this.text, other.text)
+                && Objects.equals(this.from, other.from)
+                && Objects.equals(this.to, other.to)
+                && Objects.equals(this.cc, other.cc)
+                && Objects.equals(this.bcc, other.bcc)
+                && Objects.equals(this.subject, other.subject)
+                && Objects.equals(this.body, other.body)
+                && Objects.equals(this.header, other.header);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(inMailboxes, notInMailboxes, before, after, minSize, maxSize, isFlagged, isUnread, isAnswered, isDraft, hasAttachment, text, from, to, cc, bcc, subject, body, header);
+    }
+
+    @Override
+    public String toString() {
+        ToStringHelper helper = MoreObjects.toStringHelper(getClass());
+        inMailboxes.ifPresent(x -> helper.add("inMailboxes", x));
+        notInMailboxes.ifPresent(x -> helper.add("notInMailboxes", x));
+        before.ifPresent(x -> helper.add("before", x));
+        after.ifPresent(x -> helper.add("after", x));
+        minSize.ifPresent(x -> helper.add("minSize", x));
+        maxSize.ifPresent(x -> helper.add("maxSize", x));
+        isFlagged.ifPresent(x -> helper.add("isFlagged", x));
+        isUnread.ifPresent(x -> helper.add("isUnread", x));
+        isAnswered.ifPresent(x -> helper.add("isAnswered", x));
+        isDraft.ifPresent(x -> helper.add("isDraft", x));
+        hasAttachment.ifPresent(x -> helper.add("hasAttachment", x));
+        text.ifPresent(x -> helper.add("text", x));
+        from.ifPresent(x -> helper.add("from", x));
+        to.ifPresent(x -> helper.add("to", x));
+        cc.ifPresent(x -> helper.add("cc", x));
+        bcc.ifPresent(x -> helper.add("bcc", x));
+        subject.ifPresent(x -> helper.add("subject", x));
+        body.ifPresent(x -> helper.add("body", x));
+        header.ifPresent(x -> helper.add("header", x));
+        return helper.toString();
     }
 }

@@ -25,6 +25,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class FilterOperatorTest {
 
     @Test(expected=IllegalStateException.class)
@@ -53,5 +55,10 @@ public class FilterOperatorTest {
             .build();
 
         assertThat(filterOperator).isEqualToComparingFieldByField(expectedFilterOperator);
+    }
+
+    @Test
+    public void shouldRespectJavaBeanContract() {
+        EqualsVerifier.forClass(FilterOperator.class).verify();
     }
 }
