@@ -58,12 +58,12 @@ public class FilterCondition implements Filter {
         private String bcc;
         private String subject;
         private String body;
-        private final ImmutableList.Builder<String> header;
+        private Optional<List<String>> header;
 
         private Builder() {
             inMailboxes = Optional.empty();
             notInMailboxes = Optional.empty();
-            header = ImmutableList.builder();
+            header = Optional.empty();
         }
 
         public Builder inMailboxes(Optional<List<String>> inMailboxes) {
@@ -147,7 +147,7 @@ public class FilterCondition implements Filter {
         public FilterCondition build() {
             return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
                     Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(hasAttachment),
-                    Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject), Optional.ofNullable(body), header.build());
+                    Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject), Optional.ofNullable(body), header);
         }
     }
 
@@ -169,11 +169,11 @@ public class FilterCondition implements Filter {
     private final Optional<String> bcc;
     private final Optional<String> subject;
     private final Optional<String> body;
-    private final List<String> header;
+    private final Optional<List<String>> header;
 
     @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<Date> before, Optional<Date> after, Optional<Integer> minSize, Optional<Integer> maxSize,
             Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
-            Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject, Optional<String> body, List<String> header) {
+            Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject, Optional<String> body, Optional<List<String>> header) {
 
         this.inMailboxes = inMailboxes;
         this.notInMailboxes = notInMailboxes;
@@ -268,7 +268,7 @@ public class FilterCondition implements Filter {
         return body;
     }
 
-    public List<String> getHeader() {
+    public Optional<List<String>> getHeader() {
         return header;
     }
 }
