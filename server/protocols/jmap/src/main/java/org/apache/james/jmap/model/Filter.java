@@ -25,5 +25,5 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(using = FilterDeserializer.class)
 public interface Filter {
-
+    String prettyPrint(String indentation);
 }

@@ -343,4 +343,9 @@ public class FilterCondition implements Filter {
         header.ifPresent(x -> helper.add("header", x));
         return helper.toString();
     }
+
+    @Override
+    public String prettyPrint(String indentation) {
+        return indentation + toString() + "\n";
+    }
 }

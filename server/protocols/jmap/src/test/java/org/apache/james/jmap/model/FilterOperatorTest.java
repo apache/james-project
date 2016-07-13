@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -100,5 +101,27 @@ public class FilterOperatorTest {
     @Test
     public void shouldRespectJavaBeanContract() {
         EqualsVerifier.forClass(FilterOperator.class).verify();
+    }
+
+    @Test
+    public void toStringShouldBePretty() {
+        FilterOperator testee = 
+                FilterOperator.and(
+                    FilterCondition.builder().inMailboxes("12","34").build(),
+                    FilterOperator.or(
+                        FilterOperator.not(
+                            FilterCondition.builder().notInMailboxes("45").build()),
+                        FilterCondition.builder().build()));
+                
+        String expected = Joiner.on('\n').join(
+                            "FilterOperator{operator=AND}",
+                            "  FilterCondition{inMailboxes=[12, 34]}",
+                            "  FilterOperator{operator=OR}",
+                            "    FilterOperator{operator=NOT}",
+                            "      FilterCondition{notInMailboxes=[45]}",
+                            "    FilterCondition{}",
+                            "");
+        String actual = testee.toString();
+        assertThat(actual).isEqualTo(expected);
     }
 }

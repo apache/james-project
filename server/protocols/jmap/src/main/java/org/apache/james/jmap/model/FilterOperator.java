@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -114,9 +115,22 @@ public class FilterOperator implements Filter {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(getClass())
-                .add("operator", operator)
-                .add("conditions", conditions)
-                .toString();
+        return prettyPrint("");
+    }
+
+    @Override
+    public String prettyPrint(String indentation) {
+        return indentation
+            + MoreObjects.toStringHelper(getClass())
+                    .add("operator", operator)
+                    .toString()
+            + "\n"
+            + conditionListToString(indentation + "  ");
+    }
+
+    private String conditionListToString(String indentation) {
+        return conditions.stream()
+            .map(condition -> condition.prettyPrint(indentation))
+            .collect(Collectors.joining());
     }
 }
