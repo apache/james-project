@@ -76,14 +76,14 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage spamMail = new SimpleMailboxMessage(date,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/spamMail.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/spamMail.eml"))),
             new Flags(),
             propertyBuilder,
             MAILBOX_ID);
         spamMail.setModSeq(MOD_SEQ);
         assertThatJson(messageToElasticSearchJson.convertToJson(spamMail))
             .when(IGNORING_ARRAY_ORDER)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/spamMail.json"), CHARSET));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/spamMail.json"), CHARSET));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage htmlMail = new SimpleMailboxMessage(date,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/htmlMail.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/htmlMail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("social", "pocket-money").build(),
             propertyBuilder,
             MAILBOX_ID);
@@ -102,7 +102,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         htmlMail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(htmlMail))
             .when(IGNORING_ARRAY_ORDER)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/htmlMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/htmlMail.json")));
     }
 
     @Test
@@ -113,7 +113,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage pgpSignedMail = new SimpleMailboxMessage(date,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/pgpSignedMail.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/pgpSignedMail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder,
             MAILBOX_ID);
@@ -121,7 +121,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         pgpSignedMail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(pgpSignedMail))
             .when(IGNORING_ARRAY_ORDER)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/pgpSignedMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/pgpSignedMail.json")));
     }
 
     @Test
@@ -132,7 +132,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage mail = new SimpleMailboxMessage(date,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/mail.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/mail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder,
             MAILBOX_ID);
@@ -140,7 +140,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         mail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(mail))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/mail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/mail.json")));
     }
 
     @Test
@@ -151,7 +151,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage recursiveMail = new SimpleMailboxMessage(date,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/recursiveMail.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/recursiveMail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder,
             MAILBOX_ID);
@@ -159,7 +159,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         recursiveMail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(recursiveMail))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/recursiveMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
     }
 
     @Test
@@ -170,7 +170,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(null,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/recursiveMail.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/recursiveMail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder,
             MAILBOX_ID);
@@ -179,7 +179,7 @@ public class MailboxMessageToElasticSearchJsonTest {
         assertThatJson(messageToElasticSearchJson.convertToJson(mailWithNoInternalDate))
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/recursiveMail.json")));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/recursiveMail.json")));
     }
 
     @Test(expected = NullPointerException.class)
@@ -192,7 +192,7 @@ public class MailboxMessageToElasticSearchJsonTest {
             mailWithNoMailboxId = new SimpleMailboxMessage(date,
                 SIZE,
                 BODY_START_OCTET,
-                new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/recursiveMail.eml"))),
+                new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder,
                 null);
@@ -238,14 +238,14 @@ public class MailboxMessageToElasticSearchJsonTest {
         MailboxMessage spamMail = new SimpleMailboxMessage(date,
             SIZE,
             BODY_START_OCTET,
-            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("documents/nonTextual.eml"))),
+            new SharedByteArrayInputStream(IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream("eml/nonTextual.eml"))),
             new Flags(),
             propertyBuilder,
             MAILBOX_ID);
         spamMail.setModSeq(MOD_SEQ);
         assertThatJson(messageToElasticSearchJson.convertToJson(spamMail))
             .when(IGNORING_ARRAY_ORDER)
-            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("documents/nonTextual.json"), CHARSET));
+            .isEqualTo(IOUtils.toString(ClassLoader.getSystemResource("eml/nonTextual.json"), CHARSET));
     }
 
 }
