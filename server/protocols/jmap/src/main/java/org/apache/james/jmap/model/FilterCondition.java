@@ -19,12 +19,10 @@
 
 package org.apache.james.jmap.model;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import org.apache.commons.lang.NotImplementedException;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -45,8 +43,8 @@ public class FilterCondition implements Filter {
 
         private Optional<List<String>> inMailboxes;
         private Optional<List<String>> notInMailboxes;
-        private Date before;
-        private Date after;
+        private ZonedDateTime before;
+        private ZonedDateTime after;
         private Integer minSize;
         private Integer maxSize;
         private Boolean isFlagged;
@@ -61,12 +59,11 @@ public class FilterCondition implements Filter {
         private String bcc;
         private String subject;
         private String body;
-        private Optional<List<String>> header;
+        private Header header;
 
         private Builder() {
             inMailboxes = Optional.empty();
             notInMailboxes = Optional.empty();
-            header = Optional.empty();
         }
 
         public Builder inMailboxes(String... inMailboxes) {
@@ -91,85 +88,102 @@ public class FilterCondition implements Filter {
             return this;
         }
 
-        public Builder before(Date before) {
-            throw new NotImplementedException();
+        public Builder before(ZonedDateTime before) {
+            this.before = before;
+            return this;
         }
 
-        public Builder after(Date after) {
-            throw new NotImplementedException();
+        public Builder after(ZonedDateTime after) {
+            this.after = after;
+            return this;
         }
 
         public Builder minSize(int minSize) {
-            throw new NotImplementedException();
+            this.minSize = minSize;
+            return this;
         }
 
         public Builder maxSize(int maxSize) {
-            throw new NotImplementedException();
+            this.maxSize = maxSize;
+            return this;
         }
 
-        public Builder isFlagged(boolean isFlagger) {
-            throw new NotImplementedException();
+        public Builder isFlagged(boolean isFlagged) {
+            this.isFlagged = isFlagged;
+            return this;
         }
 
         public Builder isUnread(boolean isUnread) {
-            throw new NotImplementedException();
+            this.isUnread = isUnread;
+            return this;
         }
 
         public Builder isAnswered(boolean isAnswered) {
-            throw new NotImplementedException();
+            this.isAnswered = isAnswered;
+            return this;
         }
 
         public Builder isDraft(boolean isDraft) {
-            throw new NotImplementedException();
+            this.isDraft = isDraft;
+            return this;
         }
 
         public Builder hasAttachment(boolean hasAttachment) {
-            throw new NotImplementedException();
+            this.hasAttachment = hasAttachment;
+            return this;
         }
 
         public Builder text(String text) {
-            throw new NotImplementedException();
+            this.text = text;
+            return this;
         }
 
         public Builder from(String from) {
-            throw new NotImplementedException();
+            this.from = from;
+            return this;
         }
 
         public Builder to(String to) {
-            throw new NotImplementedException();
+            this.to = to;
+            return this;
         }
 
         public Builder cc(String cc) {
-            throw new NotImplementedException();
+            this.cc = cc;
+            return this;
         }
 
         public Builder bcc(String bcc) {
-            throw new NotImplementedException();
+            this.bcc = bcc;
+            return this;
         }
 
         public Builder subject(String subject) {
-            throw new NotImplementedException();
+            this.subject = subject;
+            return this;
         }
 
         public Builder body(String body) {
-            throw new NotImplementedException();
+            this.body = body;
+            return this;
         }
 
-        public Builder header(List<String> body) {
-            throw new NotImplementedException();
+        public Builder header(Header header) {
+            this.header = header;
+            return this;
         }
 
         public FilterCondition build() {
             return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
                     Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(hasAttachment),
-                    Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject), Optional.ofNullable(body), header);
+                    Optional.ofNullable(text), Optional.ofNullable(from), Optional.ofNullable(to), Optional.ofNullable(cc), Optional.ofNullable(bcc), Optional.ofNullable(subject), Optional.ofNullable(body), Optional.ofNullable(header));
         }
     }
 
     private final Optional<List<String>> inMailboxes;
     private final Optional<List<String>> notInMailboxes;
-    private final Optional<Date> before;
-    private final Optional<Date> after;
+    private final Optional<ZonedDateTime> before;
+    private final Optional<ZonedDateTime> after;
     private final Optional<Integer> minSize;
     private final Optional<Integer> maxSize;
     private final Optional<Boolean> isFlagged;
@@ -184,11 +198,11 @@ public class FilterCondition implements Filter {
     private final Optional<String> bcc;
     private final Optional<String> subject;
     private final Optional<String> body;
-    private final Optional<List<String>> header;
+    private final Optional<Header> header;
 
-    @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<Date> before, Optional<Date> after, Optional<Integer> minSize, Optional<Integer> maxSize,
+    @VisibleForTesting FilterCondition(Optional<List<String>> inMailboxes, Optional<List<String>> notInMailboxes, Optional<ZonedDateTime> before, Optional<ZonedDateTime> after, Optional<Integer> minSize, Optional<Integer> maxSize,
             Optional<Boolean> isFlagged, Optional<Boolean> isUnread, Optional<Boolean> isAnswered, Optional<Boolean> isDraft, Optional<Boolean> hasAttachment,
-            Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject, Optional<String> body, Optional<List<String>> header) {
+            Optional<String> text, Optional<String> from, Optional<String> to, Optional<String> cc, Optional<String> bcc, Optional<String> subject, Optional<String> body, Optional<Header> header) {
 
         this.inMailboxes = inMailboxes;
         this.notInMailboxes = notInMailboxes;
@@ -219,11 +233,11 @@ public class FilterCondition implements Filter {
         return notInMailboxes;
     }
 
-    public Optional<Date> getBefore() {
+    public Optional<ZonedDateTime> getBefore() {
         return before;
     }
 
-    public Optional<Date> getAfter() {
+    public Optional<ZonedDateTime> getAfter() {
         return after;
     }
 
@@ -283,7 +297,7 @@ public class FilterCondition implements Filter {
         return body;
     }
 
-    public Optional<List<String>> getHeader() {
+    public Optional<Header> getHeader() {
         return header;
     }
 

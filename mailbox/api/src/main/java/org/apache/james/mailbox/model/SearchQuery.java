@@ -471,6 +471,17 @@ public class SearchQuery implements Serializable {
     }
 
     /**
+     * Creates a filter composing the listed criteria.
+     * 
+     * @param criteria
+     *            <code>List</code> of {@link Criterion}
+     * @return <code>Criterion</code>, not null
+     */
+    public static final Criterion or(List<Criterion> criteria) {
+        return new ConjunctionCriterion(Conjunction.OR, criteria);
+    }
+
+    /**
      * Creates a filter composing the two different criteria.
      * 
      * @param one
@@ -507,6 +518,17 @@ public class SearchQuery implements Serializable {
     public static final Criterion not(Criterion criterion) {
         final List<Criterion> criteria = new ArrayList<Criterion>();
         criteria.add(criterion);
+        return new ConjunctionCriterion(Conjunction.NOR, criteria);
+    }
+
+    /**
+     * Creates a filter composing the listed criteria.
+     * 
+     * @param criteria
+     *            <code>List</code> of {@link Criterion}
+     * @return <code>Criterion</code>, not null
+     */
+    public static final Criterion not(List<Criterion> criteria) {
         return new ConjunctionCriterion(Conjunction.NOR, criteria);
     }
 
@@ -611,7 +633,7 @@ public class SearchQuery implements Serializable {
 
     private final List<Criterion> criterias = new ArrayList<Criterion>();
 
-    private List<Sort> sorts = new ArrayList<SearchQuery.Sort>(Arrays.asList(new Sort(Sort.SortClause.Uid, false)));
+    private List<Sort> sorts = new ArrayList<Sort>(Arrays.asList(new Sort(Sort.SortClause.Uid, false)));
 
     public void andCriteria(Criterion crit) {
         criterias.add(crit);

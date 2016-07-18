@@ -21,9 +21,9 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -69,101 +69,50 @@ public class FilterConditionTest {
                 .build();
         assertThat(filterCondition.getNotInMailboxes()).contains(ImmutableList.of("1", "2"));
     }
-    
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenBefore() {
-        FilterCondition.builder().before(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenAfter() {
-        FilterCondition.builder().after(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenMinSize() {
-        FilterCondition.builder().minSize(0);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenMaxSize() {
-        FilterCondition.builder().maxSize(0);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenIsFlagged() {
-        FilterCondition.builder().isFlagged(false);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenIsUnread() {
-        FilterCondition.builder().isUnread(false);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenIsAnswered() {
-        FilterCondition.builder().isAnswered(false);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenIsDraft() {
-        FilterCondition.builder().isDraft(false);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenHasAttachment() {
-        FilterCondition.builder().hasAttachment(false);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenText() {
-        FilterCondition.builder().text(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenFrom() {
-        FilterCondition.builder().from(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenTo() {
-        FilterCondition.builder().to(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenCc() {
-        FilterCondition.builder().cc(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenBcc() {
-        FilterCondition.builder().bcc(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenSubject() {
-        FilterCondition.builder().subject(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenBody() {
-        FilterCondition.builder().body(null);
-    }
-
-    @Test(expected=NotImplementedException.class)
-    public void builderShouldThrowWhenHeader() {
-        FilterCondition.builder().header(ImmutableList.of());
-    }
 
     @Test
     public void buildShouldWork() {
-        FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), 
-                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), 
-                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        ZonedDateTime before = ZonedDateTime.parse("2016-07-19T14:30:00Z");
+        ZonedDateTime after = ZonedDateTime.parse("2016-07-19T14:31:00Z");
+        int minSize = 4;
+        int maxSize = 123;
+        boolean isFlagged = true;
+        boolean isUnread = true;
+        boolean isAnswered = true;
+        boolean isDraft = true;
+        boolean hasAttachment = true;
+        String text = "text";
+        String from = "sender@james.org";
+        String to = "recipient@james.org";
+        String cc = "copy@james.org";
+        String bcc = "blindcopy@james.org";
+        String subject = "subject";
+        String body = "body";
+        Header header = Header.from(ImmutableList.of("name", "value"));
+        FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after), Optional.of(minSize), Optional.of(maxSize), 
+                Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(hasAttachment), Optional.of(text), Optional.of(from), 
+                Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(header));
 
         FilterCondition filterCondition = FilterCondition.builder()
                 .inMailboxes(Optional.of(ImmutableList.of("1")))
                 .notInMailboxes("2")
+                .before(before)
+                .after(after)
+                .minSize(minSize)
+                .maxSize(maxSize)
+                .isFlagged(isFlagged)
+                .isUnread(isUnread)
+                .isAnswered(isAnswered)
+                .isDraft(isDraft)
+                .hasAttachment(hasAttachment)
+                .text(text)
+                .from(from)
+                .to(to)
+                .cc(cc)
+                .bcc(bcc)
+                .subject(subject)
+                .body(body)
+                .header(header)
                 .build();
 
         assertThat(filterCondition).isEqualToComparingFieldByField(expectedFilterCondition);

@@ -69,11 +69,11 @@ public abstract class GetMessageListMethodTest {
         jmapServer = createJmapServer();
         jmapServer.start();
         RestAssured.requestSpecification = new RequestSpecBuilder()
-        		.setContentType(ContentType.JSON)
-        		.setAccept(ContentType.JSON)
-        		.setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-        		.setPort(jmapServer.getJmapPort())
-        		.build();
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
+                .setPort(jmapServer.getJmapPort())
+                .build();
 
         this.domain = "domain.tld";
         this.username = "username@" + domain;
@@ -89,7 +89,7 @@ public abstract class GetMessageListMethodTest {
     }
     
     @Test
-    public void getMessageListShouldErrorInvalidArgumentsWhenRequestIsInvalid() throws Exception {
+    public void getMessageListShouldReturnErrorInvalidArgumentsWhenRequestIsInvalid() throws Exception {
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\": true}, \"#0\"]]")
@@ -99,6 +99,31 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
+    }
+
+    @Test
+    public void getMessageListShouldReturnErrorInvalidArgumentsWhenHeaderIsInvalid() throws Exception {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"header\":[\"132\", \"456\", \"789\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
+    }
+
+    @Test
+    public void getMessageListShouldNotFailWhenHeaderIsValid() throws Exception {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"header\":[\"132\", \"456\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"));
     }
 
     @Test
