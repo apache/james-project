@@ -32,8 +32,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * 
  * A developer should think of building an inverse-index for that.
  * 
- *
- * @param <Id>
  */
 public interface MessageSearchIndex {
     
