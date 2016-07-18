@@ -21,7 +21,7 @@ package org.apache.james.mailbox.hbase;
 import java.util.UUID;
 
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId;
 
 public class HBaseId implements MailboxId {
 

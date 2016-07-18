@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId;
 
 public class JPAId implements MailboxId {
 

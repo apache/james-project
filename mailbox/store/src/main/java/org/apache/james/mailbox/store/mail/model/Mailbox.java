@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 
 /**
  * Models long term mailbox data.

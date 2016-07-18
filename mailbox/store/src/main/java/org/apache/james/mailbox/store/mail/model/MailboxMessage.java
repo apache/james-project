@@ -20,6 +20,8 @@ package org.apache.james.mailbox.store.mail.model;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.model.MailboxId;
+
 /**
  * A MIME message, consisting of meta-data (including MIME headers)
  * plus body content. In the case of multipart documents, this body content

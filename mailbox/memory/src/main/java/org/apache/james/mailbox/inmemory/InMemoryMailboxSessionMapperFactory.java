@@ -28,12 +28,12 @@ import org.apache.james.mailbox.inmemory.mail.InMemoryMessageMapper;
 import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
 import org.apache.james.mailbox.inmemory.mail.InMemoryUidProvider;
 import org.apache.james.mailbox.inmemory.user.InMemorySubscriptionMapper;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFactory {

@@ -20,7 +20,7 @@ package org.apache.james.mailbox.cassandra;
 
 import java.util.UUID;
 
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.datastax.driver.core.utils.UUIDs;
 

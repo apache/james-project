@@ -27,6 +27,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.JPAMessageMapper;
 import org.apache.james.mailbox.jpa.user.JPASubscriptionMapper;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -35,7 +36,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 /**

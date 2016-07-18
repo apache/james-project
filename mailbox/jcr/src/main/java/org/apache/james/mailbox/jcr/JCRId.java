@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jcr;
 
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId;
 
 public class JCRId implements MailboxId {
 

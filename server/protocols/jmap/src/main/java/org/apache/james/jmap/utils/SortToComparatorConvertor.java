@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.apache.james.mailbox.store.mail.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Preconditions;

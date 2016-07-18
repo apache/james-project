@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.UUID;
 
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
 import org.junit.Before;

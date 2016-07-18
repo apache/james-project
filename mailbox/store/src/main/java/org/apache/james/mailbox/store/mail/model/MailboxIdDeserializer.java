@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import org.apache.james.mailbox.model.MailboxId;
+
 public interface MailboxIdDeserializer {
 
     MailboxId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException;

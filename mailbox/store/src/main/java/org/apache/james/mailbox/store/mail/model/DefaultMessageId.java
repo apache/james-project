@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
+import org.apache.james.mailbox.model.MailboxId;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
