@@ -25,7 +25,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.MailboxSession.User;
@@ -67,7 +66,7 @@ public class IndexableMessage {
 
     private void copyHeaderFields(HeaderCollection headerCollection, ZonedDateTime internalDate) {
         this.headers = headerCollection.getHeaders();
-        this.subjects = headerCollection.getSubjectSet();
+        this.subjects = Subjects.from(headerCollection.getSubjectSet());
         this.from = EMailers.from(headerCollection.getFromAddressSet());
         this.to = EMailers.from(headerCollection.getToAddressSet());
         this.replyTo = EMailers.from(headerCollection.getReplyToAddressSet());
@@ -124,7 +123,7 @@ public class IndexableMessage {
     private EMailers cc;
     private EMailers bcc;
     private EMailers replyTo;
-    private Set<String> subjects;
+    private Subjects subjects;
     private String sentDate;
     private List<Property> properties;
     private List<MimePart> attachments;
@@ -211,7 +210,7 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.SUBJECT)
-    public Set<String> getSubjects() {
+    public Subjects getSubjects() {
         return subjects;
     }
 
