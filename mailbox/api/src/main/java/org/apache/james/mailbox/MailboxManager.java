@@ -73,10 +73,10 @@ import org.slf4j.Logger;
 public interface MailboxManager extends RequestAware, MailboxListenerSupport {
 
     enum MailboxCapabilities {
+        Annotation,
         Move,
-        UserFlag,
         Namespace,
-        Annotation
+        UserFlag
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();
