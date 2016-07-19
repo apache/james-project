@@ -68,11 +68,11 @@ public class IndexableMessage {
     private void copyHeaderFields(HeaderCollection headerCollection, ZonedDateTime internalDate) {
         this.headers = headerCollection.getHeaders();
         this.subjects = headerCollection.getSubjectSet();
-        this.from = headerCollection.getFromAddressSet();
-        this.to = headerCollection.getToAddressSet();
-        this.replyTo = headerCollection.getReplyToAddressSet();
-        this.cc = headerCollection.getCcAddressSet();
-        this.bcc = headerCollection.getBccAddressSet();
+        this.from = EMailers.from(headerCollection.getFromAddressSet());
+        this.to = EMailers.from(headerCollection.getToAddressSet());
+        this.replyTo = EMailers.from(headerCollection.getReplyToAddressSet());
+        this.cc = EMailers.from(headerCollection.getCcAddressSet());
+        this.bcc = EMailers.from(headerCollection.getBccAddressSet());
         this.sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
     }
 
@@ -119,11 +119,11 @@ public class IndexableMessage {
     private boolean isAnswered;
     private String[] userFlags;
     private Multimap<String, String> headers;
-    private Set<EMailer> from;
-    private Set<EMailer> to;
-    private Set<EMailer> cc;
-    private Set<EMailer> bcc;
-    private Set<EMailer> replyTo;
+    private EMailers from;
+    private EMailers to;
+    private EMailers cc;
+    private EMailers bcc;
+    private EMailers replyTo;
     private Set<String> subjects;
     private String sentDate;
     private List<Property> properties;
@@ -216,27 +216,27 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.FROM)
-    public Set<EMailer> getFrom() {
+    public EMailers getFrom() {
         return from;
     }
 
     @JsonProperty(JsonMessageConstants.TO)
-    public Set<EMailer> getTo() {
+    public EMailers getTo() {
         return to;
     }
 
     @JsonProperty(JsonMessageConstants.CC)
-    public Set<EMailer> getCc() {
+    public EMailers getCc() {
         return cc;
     }
 
     @JsonProperty(JsonMessageConstants.BCC)
-    public Set<EMailer> getBcc() {
+    public EMailers getBcc() {
         return bcc;
     }
 
     @JsonProperty(JsonMessageConstants.REPLY_TO)
-    public Set<EMailer> getReplyTo() {
+    public EMailers getReplyTo() {
         return replyTo;
     }
 
