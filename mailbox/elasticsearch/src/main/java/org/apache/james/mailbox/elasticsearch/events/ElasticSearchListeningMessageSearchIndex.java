@@ -20,8 +20,10 @@ package org.apache.james.mailbox.elasticsearch.events;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -32,6 +34,8 @@ import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -42,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSearchIndex {
 
@@ -68,7 +73,17 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     @Override
     public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
-        return searcher.search(mailbox, searchQuery);
+        MailboxId mailboxId = mailbox.getMailboxId();
+        return searcher
+                .search(ImmutableList.of(mailboxId), searchQuery)
+                .get(mailboxId)
+                .iterator();
+    }
+    
+    @Override
+    public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery)
+            throws MailboxException {
+        return searcher.search(searchQuery.getMailboxIds(), searchQuery.getSearchQuery()).asMap();
     }
 
     @Override

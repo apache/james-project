@@ -26,6 +26,13 @@ import com.datastax.driver.core.utils.UUIDs;
 
 public class CassandraId implements MailboxId {
 
+    public static class Factory implements MailboxId.Factory {
+        @Override
+        public MailboxId fromString(String serialized) {
+            return of(UUID.fromString(serialized));
+        }
+    }
+    
     private final UUID id;
 
     public static CassandraId timeBased() {

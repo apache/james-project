@@ -20,16 +20,20 @@
 package org.apache.james.mailbox.elasticsearch.query;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.elasticsearch.index.query.QueryBuilder;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class QueryConverter {
 
@@ -41,11 +45,9 @@ public class QueryConverter {
         this.criterionConverter = criterionConverter;
     }
 
-    public QueryBuilder from(SearchQuery searchQuery, String mailboxUUID) {
-        return Stream.of(generateQueryBuilder(searchQuery))
-            .map((rep) -> addMailboxFilters(rep, mailboxUUID))
-            .findAny()
-            .get();
+    public QueryBuilder from(SearchQuery searchQuery, Collection<MailboxId> mailboxIds) {
+        QueryBuilder queryBuilder = generateQueryBuilder(searchQuery);
+        return addMailboxFilters(queryBuilder, mailboxIds);
     }
 
     private QueryBuilder generateQueryBuilder(SearchQuery searchQuery) {
@@ -59,9 +61,15 @@ public class QueryConverter {
         }
     }
 
-    private QueryBuilder addMailboxFilters(QueryBuilder queryBuilder, String mailboxUUID) {
+    private QueryBuilder addMailboxFilters(QueryBuilder queryBuilder, Collection<MailboxId> mailboxIds) {
+        if (mailboxIds.isEmpty()) {
+            return queryBuilder;
+        }
+        ImmutableList<String> ids = mailboxIds.stream()
+                .map(MailboxId::serialize)
+                .collect(Guavate.toImmutableList());
         return boolQuery().must(queryBuilder)
-            .filter(termQuery(JsonMessageConstants.MAILBOX_ID, mailboxUUID));
+            .filter(termsQuery(JsonMessageConstants.MAILBOX_ID, ids));
     }
 
 }

@@ -44,6 +44,7 @@ import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
@@ -105,7 +106,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
             factory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor())),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter())),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), new InMemoryId.Factory()),
             new MessageToElasticSearchJson(new DefaultTextExtractor()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

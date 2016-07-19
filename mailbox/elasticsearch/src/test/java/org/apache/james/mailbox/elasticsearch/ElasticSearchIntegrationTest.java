@@ -30,6 +30,7 @@ import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.elasticsearch.utils.TestingClientProvider;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -67,7 +68,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         MailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
         messageSearchIndex = new ElasticSearchListeningMessageSearchIndex(mapperFactory,
             new ElasticSearchIndexer(client, new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), BATCH_SIZE)),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE),
+            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, new InMemoryId.Factory()),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,

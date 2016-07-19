@@ -19,27 +19,33 @@
 
 package org.apache.james.mailbox.elasticsearch.search;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.query.SortConverter;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHitField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.Multimap;
 
 public class ElasticSearchSearcher {
 
@@ -50,50 +56,55 @@ public class ElasticSearchSearcher {
     private final Client client;
     private final QueryConverter queryConverter;
     private final int size;
+    private final Factory mailboxIdFactory;
 
     @Inject
-    public ElasticSearchSearcher(Client client, QueryConverter queryConverter) {
-        this(client, queryConverter, DEFAULT_SIZE);
+    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, MailboxId.Factory mailboxIdFactory) {
+        this(client, queryConverter, DEFAULT_SIZE, mailboxIdFactory);
     }
 
-    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size) {
+    public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size, MailboxId.Factory mailboxIdFactory) {
         this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;
+        this.mailboxIdFactory = mailboxIdFactory;
     }
-
-    public Iterator<Long> search(Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
-        return new ScrollIterable(client, getSearchRequestBuilder(client, mailbox, searchQuery)).stream()
+    
+    public Multimap<MailboxId, Long> search(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
+        return new ScrollIterable(client, getSearchRequestBuilder(client, mailboxIds, searchQuery)).stream()
             .flatMap(this::transformResponseToUidStream)
-            .iterator();
+            .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
     }
-
-    private SearchRequestBuilder getSearchRequestBuilder(Client client, Mailbox mailbox, SearchQuery searchQuery) {
+    
+    private SearchRequestBuilder getSearchRequestBuilder(Client client, Collection<MailboxId> mailboxIds, SearchQuery searchQuery) {
         return searchQuery.getSorts()
             .stream()
             .reduce(
                 client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
                     .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
                     .setScroll(TIMEOUT)
-                    .setFetchSource(JsonMessageConstants.ID, "")
-                    .setQuery(queryConverter.from(searchQuery, mailbox.getMailboxId().serialize()))
+                    .addFields(JsonMessageConstants.ID, JsonMessageConstants.MAILBOX_ID)
+                    .setQuery(queryConverter.from(searchQuery, mailboxIds))
                     .setSize(size),
                 (searchBuilder, sort) -> searchBuilder.addSort(SortConverter.convertSort(sort)),
                 (partialResult1, partialResult2) -> partialResult1);
     }
 
-    private Stream<Long> transformResponseToUidStream(SearchResponse searchResponse) {
+    private Stream<Pair<MailboxId, Long>> transformResponseToUidStream(SearchResponse searchResponse) {
         return StreamSupport.stream(searchResponse.getHits().spliterator(), false)
-            .map(this::extractUidFromHit)
+            .map(this::extractContentFromHit)
             .filter(Optional::isPresent)
             .map(Optional::get);
     }
 
-    private Optional<Long> extractUidFromHit(SearchHit hit) {
-        try {
-            return Optional.of(((Number) hit.getSource().get(JsonMessageConstants.ID)).longValue());
-        } catch (Exception exception) {
-            LOGGER.warn("Can not extract UID for search result " + hit.getId(), exception);
+    private Optional<Pair<MailboxId, Long>> extractContentFromHit(SearchHit hit) {
+        SearchHitField mailboxId = hit.field(JsonMessageConstants.MAILBOX_ID);
+        SearchHitField uid = hit.field(JsonMessageConstants.ID);
+        if (mailboxId != null && uid != null) {
+            Number uidAsNumber = uid.getValue();
+            return Optional.of(Pair.of(mailboxIdFactory.fromString(mailboxId.getValue()), uidAsNumber.longValue()));
+        } else {
+            LOGGER.warn("Can not extract UID and/or MailboxId for search result " + hit.getId());
             return Optional.empty();
         }
     }

@@ -19,5 +19,10 @@
 package org.apache.james.mailbox.model;
 
 public interface MailboxId {
+    
+    interface Factory {
+        MailboxId fromString(String serialized);
+    }
+    
     String serialize();
 }

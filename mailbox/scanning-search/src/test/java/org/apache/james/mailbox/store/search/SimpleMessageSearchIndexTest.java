@@ -214,4 +214,29 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     public void sortShouldOrderMessages() throws Exception {
     }
+    
+    @Ignore
+    @Override
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
+    }
+
+    @Ignore
+    @Override
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
+    }
+    
+    @Ignore
+    @Override
+    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() throws MailboxException {
+    }
+    
+    @Ignore
+    @Override
+    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInAllMailboxes() throws MailboxException {
+    }
+    
+    @Ignore
+    @Override
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInOneMailbox() throws MailboxException {
+    }
 }

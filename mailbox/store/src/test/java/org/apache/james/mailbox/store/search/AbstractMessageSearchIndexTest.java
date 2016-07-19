@@ -19,16 +19,19 @@
 
 package org.apache.james.mailbox.store.search;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -39,6 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public abstract class AbstractMessageSearchIndexTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageSearchIndexTest.class);
@@ -46,6 +51,7 @@ public abstract class AbstractMessageSearchIndexTest {
     protected MessageSearchIndex messageSearchIndex;
     protected StoreMailboxManager storeMailboxManager;
     private Mailbox mailbox;
+    private Mailbox mailbox2;
     private MailboxSession session;
 
     @Before
@@ -54,13 +60,18 @@ public abstract class AbstractMessageSearchIndexTest {
 
         session = storeMailboxManager.createSystemSession("benwa", LOGGER);
 
-        storeMailboxManager.createMailbox(new MailboxPath("#private", "benwa", "INBOX"), session);
-        StoreMessageManager messageManager = (StoreMessageManager) storeMailboxManager.getMailbox(new MailboxPath("#private", "benwa", "INBOX"), session);
-        mailbox = messageManager.getMailboxEntity();
+        MailboxPath inboxPath = new MailboxPath("#private", "benwa", "INBOX");
+        storeMailboxManager.createMailbox(inboxPath, session);
+        StoreMessageManager inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
+        MailboxPath myFolderPath = new MailboxPath("#private", "benwa", "MyFolder");
+        storeMailboxManager.createMailbox(myFolderPath, session);
+        StoreMessageManager myFolderMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(myFolderPath, session);
+        mailbox = inboxMessageManager.getMailboxEntity();
+        mailbox2 = myFolderMessageManager.getMailboxEntity();
 
         // sentDate: Wed, 3 Jun 2015 09:05:46 +0000
         // Internal date : 2014/01/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/spamMail.eml"),
             new Date(1388617200000L),
             session,
@@ -68,7 +79,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.DELETED));
         // sentDate: Thu, 4 Jun 2015 09:23:37 +0000
         // Internal date : 2014/02/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail1.eml"),
             new Date(1391295600000L),
             session,
@@ -76,7 +87,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.ANSWERED));
         // sentDate: Thu, 4 Jun 2015 09:27:37 +0000
         // Internal date : 2014/03/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail2.eml"),
             new Date(1393714800000L),
             session,
@@ -84,7 +95,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.DRAFT));
         // sentDate: Tue, 2 Jun 2015 08:16:19 +0000
         // Internal date : 2014/05/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail3.eml"),
             new Date(1398981600000L),
             session,
@@ -92,7 +103,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.RECENT));
         // sentDate: Fri, 15 May 2015 06:35:59 +0000
         // Internal date : 2014/04/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail4.eml"),
             new Date(1396389600000L),
             session,
@@ -100,7 +111,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.FLAGGED));
         // sentDate: Wed, 03 Jun 2015 19:14:32 +0000
         // Internal date : 2014/06/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/pgpSignedMail.eml"),
             new Date(1401660000000L),
             session,
@@ -108,7 +119,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags(Flags.Flag.SEEN));
         // sentDate: Thu, 04 Jun 2015 07:36:08 +0000
         // Internal date : 2014/07/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/htmlMail.eml"),
             new Date(1404252000000L),
             session,
@@ -116,21 +127,28 @@ public abstract class AbstractMessageSearchIndexTest {
             new Flags());
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
             new Date(1406930400000L),
             session,
             true,
             new Flags("Hello"));
+        // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
+        // Internal date : 2014/08/02 00:00:00.000
+        myFolderMessageManager.appendMessage(
+            ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
+            new Date(1406930400000L),
+            session,
+            true,
+            new Flags(Flags.Flag.SEEN));
         // sentDate: Tue, 2 Jun 2015 12:00:55 +0200
         // Internal date : 2014/09/02 00:00:00.000
-        messageManager.appendMessage(
+        inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/frnog.eml"),
             new Date(1409608800000L),
             session,
             true,
             new Flags("Hello you"));
-
         await();
     }
 
@@ -224,7 +242,75 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(6L);
     }
+    
+    @Test
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.flagIsSet(Flags.Flag.SEEN));
+        Map<MailboxId, Collection<Long>> actual = messageSearchIndex.search(session, MultimailboxesSearchQuery.from(searchQuery).build());
+        assertThat(actual.entrySet()).hasSize(2);
+        assertThat(actual.get(mailbox.getMailboxId())).containsExactly(6L);
+        assertThat(actual.get(mailbox2.getMailboxId())).containsExactly(1L);
+    }
 
+    @Test
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInOneMailbox() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.flagIsSet(Flags.Flag.SEEN));
+        MultimailboxesSearchQuery query = 
+                MultimailboxesSearchQuery
+                    .from(searchQuery)
+                    .inMailboxes(mailbox.getMailboxId())
+                    .build();
+        Map<MailboxId, Collection<Long>> actual = messageSearchIndex.search(session, query);
+        assertThat(actual.entrySet()).hasSize(1);
+        assertThat(actual.get(mailbox.getMailboxId())).containsExactly(6L);
+    }
+
+    @Test
+    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.address(AddressType.From, "murari"));
+        MultimailboxesSearchQuery query = 
+                MultimailboxesSearchQuery
+                    .from(searchQuery)
+                    .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
+                    .build();
+        Map<MailboxId, Collection<Long>> actual = messageSearchIndex.search(session, query);
+        assertThat(actual.entrySet()).hasSize(2);
+        assertThat(actual.get(mailbox.getMailboxId())).containsExactly(8L);
+        assertThat(actual.get(mailbox2.getMailboxId())).containsExactly(1L);
+    }
+
+    @Test
+    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInAllMailboxes() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.address(AddressType.From, "murari"));
+        MultimailboxesSearchQuery query = 
+                MultimailboxesSearchQuery
+                    .from(searchQuery)
+                    .build();
+        Map<MailboxId, Collection<Long>> actual = messageSearchIndex.search(session, query);
+        assertThat(actual.entrySet()).hasSize(2);
+        assertThat(actual.get(mailbox.getMailboxId())).containsExactly(8L);
+        assertThat(actual.get(mailbox2.getMailboxId())).containsExactly(1L);
+    }
+
+    @Test
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.flagIsSet(Flags.Flag.SEEN));
+        MultimailboxesSearchQuery query = 
+                MultimailboxesSearchQuery
+                    .from(searchQuery)
+                    .inMailboxes(mailbox.getMailboxId(), mailbox2.getMailboxId())
+                    .build();
+        Map<MailboxId, Collection<Long>> actual = messageSearchIndex.search(session, query);
+        assertThat(actual.entrySet()).hasSize(2);
+        assertThat(actual.get(mailbox.getMailboxId())).containsExactly(6L);
+        assertThat(actual.get(mailbox2.getMailboxId())).containsExactly(1L);
+    }
+    
     @Test
     public void flagIsSetShouldReturnUidsOfMessageContainingAGivenUserFlag() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();

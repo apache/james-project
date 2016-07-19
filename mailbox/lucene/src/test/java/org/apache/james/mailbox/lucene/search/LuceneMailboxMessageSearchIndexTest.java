@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,6 +34,8 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -73,7 +76,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     
     @Before
     public void setUp() throws Exception {
-        index = new LuceneMessageSearchIndex(null, new RAMDirectory(), true, useLenient());
+        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient());
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<String, String>();
         headersSubject.put("Subject", "test (fwd)");
@@ -241,6 +244,35 @@ public class LuceneMailboxMessageSearchIndexTest {
         query.andCriteria(SearchQuery.all());
         Iterator<Long> result = index.search(null, mailbox2, query);
         assertThat(result).containsExactly(1L);
+    }
+
+    @Test
+    public void searchBodyInAllMailboxesShouldMatch() throws Exception {
+        SearchQuery query = new SearchQuery();
+        query.andCriteria(SearchQuery.bodyContains("My Body"));
+        Map<MailboxId, Collection<Long>> result = index.search(null, MultimailboxesSearchQuery.from(query).build());
+        assertThat(result).hasSize(2);
+        assertThat(result.get(mailbox.id)).containsExactly(1L);
+        assertThat(result.get(mailbox2.id)).containsExactly(1L);
+    }
+
+    @Test
+    public void searchBodyInSpecificMailboxesShouldMatch() throws Exception {
+        SearchQuery query = new SearchQuery();
+        query.andCriteria(SearchQuery.bodyContains("My Body"));
+        Map<MailboxId, Collection<Long>> result = index.search(null, 
+                MultimailboxesSearchQuery.from(query).inMailboxes(mailbox.id, mailbox3.id).build());
+        assertThat(result).hasSize(1);
+        assertThat(result.get(mailbox.id)).containsExactly(1L);
+    }
+
+
+    @Test
+    public void searchAllShouldMatchAllUserEmails() throws Exception {
+        SearchQuery query = new SearchQuery();
+        query.andCriteria(SearchQuery.all());
+        Map<MailboxId, Collection<Long>> result = index.search(null, MultimailboxesSearchQuery.from(query).build());
+        assertThat(result).hasSize(3);
     }
     
     @Test

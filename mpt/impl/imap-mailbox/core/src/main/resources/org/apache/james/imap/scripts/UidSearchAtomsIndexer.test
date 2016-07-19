@@ -2212,3 +2212,38 @@ S: A135 OK SEARCH completed\.
 # C: A139 UID SEARCH NEW
 # S: \* SEARCH 23 24 28 29 33 34 38 39
 # S: A139 OK SEARCH completed\.
+
+C: A200 CREATE secondmailbox
+S: A200 OK CREATE completed\.
+
+C: A201 SELECT secondmailbox
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY (.)*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\](.)*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A201 OK \[READ-WRITE\] SELECT completed\.
+
+C: A202 APPEND secondmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C: 
+C: This is a very simple email.
+C: 
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: A202 OK (\[.+\] )?APPEND completed\.
+
+LOG INFO Waiting for ElasticSearch to index data
+
+WAIT 1000
+
+LOG INFO Performing tests about search
+
+C: A203 UID SEARCH FROM "Timothy"
+S: \* SEARCH 1
+S: A203 OK SEARCH completed\.

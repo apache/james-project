@@ -22,6 +22,14 @@ import org.apache.james.mailbox.model.MailboxId;
 
 public class TestId implements MailboxId {
 
+    public static class Factory implements MailboxId.Factory {
+        
+        @Override
+        public MailboxId fromString(String serialized) {
+            return TestId.of(Long.valueOf(serialized));
+        }
+    }
+    
     public static TestId of(long id) {
         return new TestId(id);
     }

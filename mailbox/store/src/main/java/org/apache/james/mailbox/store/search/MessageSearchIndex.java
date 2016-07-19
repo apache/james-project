@@ -19,10 +19,14 @@
 
 package org.apache.james.mailbox.store.search;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
@@ -37,11 +41,12 @@ public interface MessageSearchIndex {
     
     /**
      * Return all uids of the previous indexed {@link Mailbox}'s which match the {@link SearchQuery}
-     * 
-     * @param mailbox
-     * @param searchQuery
-     * @return Iterator on found uids
-     * @throws MailboxException
      */
     Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException;
+
+    /**
+     * Return all uids of all {@link Mailbox}'s the current user has access to which match the {@link SearchQuery}
+     */
+    Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery) throws MailboxException;
+
 }
