@@ -26,8 +26,8 @@ import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.util.streams.ImmutableCollectors;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class CassandraModuleComposite implements CassandraModule {
@@ -39,13 +39,13 @@ public class CassandraModuleComposite implements CassandraModule {
     public CassandraModuleComposite(CassandraModule... modules) {
         tables = Arrays.stream(modules)
             .flatMap(module -> module.moduleTables().stream())
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
         index = Arrays.stream(modules)
             .flatMap(module -> module.moduleIndex().stream())
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
         types = Arrays.stream(modules)
             .flatMap(module -> module.moduleTypes().stream())
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

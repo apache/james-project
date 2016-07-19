@@ -74,11 +74,11 @@ import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.streams.ImmutableCollectors;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -214,7 +214,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 } catch (AttachmentNotFoundException e) {
                     return Stream.of(attachment.getBlobId());
                 }
-            }).collect(ImmutableCollectors.toImmutableList());
+            }).collect(Guavate.toImmutableList());
     }
 
     private AttachmentId getAttachmentId(Attachment attachment) {
@@ -321,7 +321,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         AttachmentMapper attachmentMapper = attachmentMapperFactory.getAttachmentMapper(session);
         return attachments.stream()
             .map(att -> messageAttachment(attachmentMapper, att))
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
 
     private MessageAttachment messageAttachment(AttachmentMapper attachmentMapper, Attachment attachment) {

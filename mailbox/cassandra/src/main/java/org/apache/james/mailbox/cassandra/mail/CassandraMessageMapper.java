@@ -102,7 +102,6 @@ import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
-import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -114,6 +113,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -358,7 +358,7 @@ public class CassandraMessageMapper implements MessageMapper {
                             .cid(com.google.common.base.Optional.fromNullable(x.getString(Attachments.CID)).transform(Cid::from))
                             .isInline(x.getBool(Attachments.IS_INLINE))
                             .build()))
-                    .collect(ImmutableCollectors.toImmutableList());
+                    .collect(Guavate.toImmutableList());
         default:
             return ImmutableList.of();
         }
@@ -374,7 +374,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private List<AttachmentId> attachmentIds(List<UDTValue> udtValues) {
         return udtValues.stream()
             .map(this::attachmentIdFrom)
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
 
     private AttachmentId attachmentIdFrom(UDTValue udtValue) {

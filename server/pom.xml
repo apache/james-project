@@ -190,6 +190,7 @@
         <assertj-1.version>1.7.1</assertj-1.version>
         <assertj-3.version>3.3.0</assertj-3.version>
         <testcontainers-version>1.0.2</testcontainers-version>
+        <guavate.version>1.0.0</guavate.version>
     </properties>
 
     <dependencyManagement>
@@ -1291,6 +1292,11 @@
                 <version>${geronimo-annotation-spec.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.github.steveash.guavate</groupId>
+                <artifactId>guavate</artifactId>
+                <version>${guavate.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>

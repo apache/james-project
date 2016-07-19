@@ -24,11 +24,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Sets;
-import org.apache.james.util.streams.ImmutableCollectors;
-
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class MessageProperties {
 
@@ -49,11 +48,11 @@ public class MessageProperties {
     }
 
     private ImmutableSet<MessageProperty> toMessageProperties(ImmutableSet<String> properties) {
-        return properties.stream().flatMap(MessageProperty::find).collect(ImmutableCollectors.toImmutableSet());
+        return properties.stream().flatMap(MessageProperty::find).collect(Guavate.toImmutableSet());
     }
     
     private ImmutableSet<HeaderProperty> toHeadersProperties(ImmutableSet<String> properties) {
-        return properties.stream().flatMap(HeaderProperty::find).collect(ImmutableCollectors.toImmutableSet());
+        return properties.stream().flatMap(HeaderProperty::find).collect(Guavate.toImmutableSet());
     }
 
     public Optional<ImmutableSet<HeaderProperty>> getOptionalHeadersProperties() {
@@ -168,7 +167,7 @@ public class MessageProperties {
         }
 
         public static ImmutableSet<MessageProperty> allOutputProperties() {
-            return Arrays.stream(values()).filter(MessageProperty::outputProperty).collect(ImmutableCollectors.toImmutableSet());
+            return Arrays.stream(values()).filter(MessageProperty::outputProperty).collect(Guavate.toImmutableSet());
         }
 
         private static boolean outputProperty(MessageProperty p) {

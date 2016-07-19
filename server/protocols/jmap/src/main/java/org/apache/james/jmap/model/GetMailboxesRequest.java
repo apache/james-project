@@ -23,10 +23,10 @@ import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
-import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -69,7 +69,7 @@ public class GetMailboxesRequest implements JmapRequest {
                     .map(MailboxProperty::findProperty)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .collect(ImmutableCollectors.toImmutableSet()));
+                    .collect(Guavate.toImmutableSet()));
             return this;
         }
         

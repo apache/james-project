@@ -35,8 +35,8 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.Cid;
-import org.apache.james.util.streams.ImmutableCollectors;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -114,7 +114,7 @@ public class MessageFactory {
     private ImmutableList<Emailer> fromElasticSearchEmailers(Set<EMailer> emailers) {
         return emailers.stream()
                     .map(this::fromElasticSearchEmailer)
-                    .collect(ImmutableCollectors.toImmutableList());
+                    .collect(Guavate.toImmutableList());
     }
     
     private Emailer fromElasticSearchEmailer(EMailer emailer) {
@@ -129,7 +129,7 @@ public class MessageFactory {
                 .asMap()
                 .entrySet()
                 .stream()
-                .collect(ImmutableCollectors.toImmutableMap(Map.Entry::getKey, x -> joinOnComma(x.getValue())));
+                .collect(Guavate.toImmutableMap(Map.Entry::getKey, x -> joinOnComma(x.getValue())));
     }
     
     private String getHeaderAsSingleValue(IndexableMessage im, String header) {
@@ -155,7 +155,7 @@ public class MessageFactory {
     private List<Attachment> getAttachments(List<MessageAttachment> attachments) {
         return attachments.stream()
                 .map(this::fromMailboxAttachment)
-                .collect(ImmutableCollectors.toImmutableList());
+                .collect(Guavate.toImmutableList());
     }
 
     private Attachment fromMailboxAttachment(MessageAttachment attachment) {

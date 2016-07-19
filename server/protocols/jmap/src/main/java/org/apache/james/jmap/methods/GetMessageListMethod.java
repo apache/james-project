@@ -50,11 +50,11 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.util.streams.ImmutableCollectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -136,7 +136,7 @@ public class GetMessageListMethod implements Method {
         return mailboxManager.search(userMailboxesQuery, mailboxSession)
                 .stream()
                 .map(MailboxMetaData::getPath)
-                .collect(ImmutableCollectors.toImmutableList());
+                .collect(Guavate.toImmutableList());
     }
 
     private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, ClientId clientId, MailboxSession mailboxSession) {
@@ -189,7 +189,7 @@ public class GetMessageListMethod implements Method {
         return mailboxPaths.stream()
                 .filter(inMailboxesPredicate)
                 .filter(notInMailboxesPredicate)
-                .collect(ImmutableCollectors.toImmutableList());
+                .collect(Guavate.toImmutableList());
     }
 
     private List<MailboxPath> mailboxIdsToMailboxPaths(List<String> mailboxIds, MailboxSession session) {
@@ -197,7 +197,7 @@ public class GetMessageListMethod implements Method {
             .map(id -> mailboxUtils.mailboxPathFromMailboxId(id, session))
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
     
     private Optional<MessageManager> getMessageManager(MailboxPath mailboxPath, MailboxSession mailboxSession) {
@@ -218,7 +218,7 @@ public class GetMessageListMethod implements Method {
             return ImmutableList.copyOf(messageManager.get().search(searchQuery, mailboxSession))
                     .stream()
                     .map(Throwing.function(messageId -> getMessage(mailboxPath, mailboxSession, messageMapper, messageId)))
-                    .collect(ImmutableCollectors.toImmutableList());
+                    .collect(Guavate.toImmutableList());
         } catch (MailboxException e) {
             LOGGER.warn("Error when searching messages for query :" + searchQuery, e);
             return ImmutableList.of();

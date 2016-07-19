@@ -34,7 +34,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.streams.ImmutableCollectors;
 import org.apache.james.webadmin.dto.MailboxResponse;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
 import org.apache.james.webadmin.validation.MailboxName;
@@ -42,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -85,7 +85,7 @@ public class UserMailboxesService {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USER_NAME, LOGGER);
         return listUserMailboxes(username, mailboxSession)
             .map(mailboxMetaData -> new MailboxResponse(mailboxMetaData.getPath().getName()))
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
 
     public boolean testMailboxExists(String username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {

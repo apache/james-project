@@ -48,12 +48,12 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
-import org.apache.james.util.streams.ImmutableCollectors;
 import org.javatuples.Pair;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -122,7 +122,7 @@ public class GetMessagesMethod implements Method {
         List<Message> result = getMessagesRequest.getIds().stream()
             .flatMap(loadMessages)
             .map(convertToJmapMessage)
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
 
         return GetMessagesResponse.builder().messages(result).expectedMessageIds(getMessagesRequest.getIds()).build();
     }

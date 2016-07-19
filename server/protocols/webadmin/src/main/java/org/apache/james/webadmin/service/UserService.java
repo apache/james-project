@@ -28,12 +28,12 @@ import javax.inject.Inject;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
-import org.apache.james.util.streams.ImmutableCollectors;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.dto.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -57,7 +57,7 @@ public class UserService {
             .map(Iterators::toStream)
             .orElse(Stream.of())
             .map(UserResponse::new)
-            .collect(ImmutableCollectors.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
 
     public void removeUser(String username) throws UsersRepositoryException {

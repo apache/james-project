@@ -28,13 +28,13 @@ import javax.inject.Inject;
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.ProtocolResponse;
-import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.github.steveash.guavate.Guavate;
 
 public class JmapResponseWriterImpl implements JmapResponseWriter {
 
@@ -82,6 +82,6 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     private Set<String> toFieldNames(Set<? extends Property> properties) {
         return properties.stream()
             .map(Property::asFieldName)
-            .collect(ImmutableCollectors.toImmutableSet());
+            .collect(Guavate.toImmutableSet());
     }
 }

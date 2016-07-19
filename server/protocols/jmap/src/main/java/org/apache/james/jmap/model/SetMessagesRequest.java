@@ -29,11 +29,11 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.jmap.methods.UpdateMessagePatchConverter;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
-import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,7 +104,7 @@ public class SetMessagesRequest implements JmapRequest {
         private ImmutableList<CreationMessageEntry> messageCreations() {
             return create.entrySet().stream()
                     .map(entry -> new CreationMessageEntry(entry.getKey(), entry.getValue()))
-                    .collect(ImmutableCollectors.toImmutableList());
+                    .collect(Guavate.toImmutableList());
         }
     }
 

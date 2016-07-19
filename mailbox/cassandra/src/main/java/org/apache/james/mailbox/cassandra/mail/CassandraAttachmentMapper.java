@@ -43,13 +43,13 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.AttachmentId;
-import org.apache.james.util.streams.ImmutableCollectors;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.ThrownByLambdaException;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -96,7 +96,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         Preconditions.checkArgument(attachmentIds != null);
         List<String> ids = attachmentIds.stream()
                 .map(AttachmentId::getId)
-                .collect(ImmutableCollectors.toImmutableList());
+                .collect(Guavate.toImmutableList());
         return cassandraAsyncExecutor.execute(
             select(FIELDS)
                 .from(TABLE_NAME)
