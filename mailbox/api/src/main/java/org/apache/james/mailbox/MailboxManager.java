@@ -88,7 +88,13 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     }
 
     EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
+
+    enum SearchCapabilities {
+        MultimailboxSearch
+    }
     
+    EnumSet<SearchCapabilities> getSupportedSearchCapabilities();
+
     
     /**
      * Return the delimiter to use for folders

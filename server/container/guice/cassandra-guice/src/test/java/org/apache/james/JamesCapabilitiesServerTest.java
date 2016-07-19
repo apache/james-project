@@ -106,6 +106,20 @@ public class JamesCapabilitiesServerTest {
 
         assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
     }
+    
+    @Test
+    public void startShouldFailWhenNoMultimailboxSearchCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.noneOf(MailboxManager.SearchCapabilities.class));
+        server = createCassandraJamesServer(mailboxManager);
+
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
 
     @Test
     public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
@@ -113,6 +127,8 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch));
         server = createCassandraJamesServer(mailboxManager);
 
         server.start();

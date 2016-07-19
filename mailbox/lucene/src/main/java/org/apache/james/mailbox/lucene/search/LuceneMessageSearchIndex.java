@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +40,7 @@ import java.util.TimeZone;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
@@ -366,6 +368,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         return ListenerType.EACH_NODE;
     }
 
+
+    @Override
+    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
+        return EnumSet.noneOf(SearchCapabilities.class);
+    }
+    
     /**
      * Set the max count of results which will get returned from a query. The default is {@link #DEFAULT_MAX_QUERY_RESULTS}
      * 

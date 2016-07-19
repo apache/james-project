@@ -21,6 +21,7 @@ package org.apache.james.mailbox.elasticsearch.events;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
@@ -71,6 +73,11 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         return ListenerType.ONCE;
     }
 
+    @Override
+    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch);
+    }
+    
     @Override
     public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         MailboxId mailboxId = mailbox.getMailboxId();

@@ -87,6 +87,11 @@ public class MailboxEventAnalyserTest {
             return EnumSet.noneOf(MessageCapabilities.class);
         }
         
+        @Override
+        public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
+            return EnumSet.noneOf(SearchCapabilities.class);
+        }
+        
         public boolean hasCapability(MailboxCapabilities capability) {
             return false;
         }

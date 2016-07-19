@@ -19,11 +19,13 @@
 package org.apache.james.mailbox.store.search;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
@@ -59,6 +61,11 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     @Override
     public ListenerType getType() {
         return index.getType();
+    }
+    
+    @Override
+    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
+        return EnumSet.noneOf(SearchCapabilities.class);
     }
 
     @Override

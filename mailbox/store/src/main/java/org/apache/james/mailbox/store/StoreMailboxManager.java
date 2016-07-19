@@ -209,6 +209,12 @@ public class StoreMailboxManager implements MailboxManager {
         return EnumSet.noneOf(MessageCapabilities.class);
     }
     
+    @Override
+    public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
+        return index.getSupportedCapabilities();
+    }
+    
+
     /**
      * Return the {@link DelegatingMailboxListener} which is used by this {@link MailboxManager}
      *

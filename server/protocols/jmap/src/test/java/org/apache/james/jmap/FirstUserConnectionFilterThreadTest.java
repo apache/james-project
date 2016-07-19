@@ -92,6 +92,11 @@ public class FirstUserConnectionFilterThreadTest {
         }
 
         @Override
+        public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
+            return EnumSet.noneOf(SearchCapabilities.class);
+        }
+        
+        @Override
         public void startProcessingRequest(MailboxSession session) {
         }
 

@@ -106,6 +106,8 @@ public class JMAPModule extends AbstractModule {
                     "MOVE support in MailboxManager is required by JMAP Module");
             Preconditions.checkArgument(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.Attachment),
                     "Attachment support in MailboxManager is required by JMAP Module");
+            Preconditions.checkArgument(mailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.MultimailboxSearch),
+                    "Multimailbox search in MailboxManager is required by JMAP Module");
         }
 
         @Override

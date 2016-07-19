@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.search;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.TreeSet;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
@@ -59,6 +61,11 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     @Inject
     public SimpleMessageSearchIndex(MessageMapperFactory factory) {
         this.factory = factory;
+    }
+    
+    @Override
+    public EnumSet<SearchCapabilities> getSupportedCapabilities() {
+        return EnumSet.noneOf(SearchCapabilities.class);
     }
     
     /**
