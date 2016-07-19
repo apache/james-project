@@ -669,7 +669,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>appassembler-maven-plugin</artifactId>
-                        <version>1.0</version>
+                        <version>1.10</version>
                         <configuration>
                             <!-- Include etc/ in the beginning of the classpath declaration in the bin scripts -->
                             <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
@@ -688,21 +688,21 @@
                                 <platform>windows</platform>
                                 <platform>unix</platform>
                             </platforms>
+                            <!-- use .sh on unix instead of .bin -->
+                            <binFileExtensions>
+                                <unix>.sh</unix>
+                            </binFileExtensions>
+                            <!-- use *.jar instead of every single jar file in classpath -->
+                            <useWildcardClassPath>true</useWildcardClassPath>
+                            <repositoryLayout>flat</repositoryLayout>
                             <programs>
                                 <program>
                                     <mainClass>org.apache.james.app.spring.JamesAppSpringMain</mainClass>
-                                    <!-- call it only run because appassemble will add .bat by default on windows -->
+                                    <!-- call it only "run" because appassemble will add the extension -->
                                     <name>run</name>
-                                    <!-- Only generate windows bat script for this application -->
+                                    <!-- Only generate windows bat script and unix sh for this application -->
                                     <platforms>
                                         <platform>windows</platform>
-                                    </platforms>
-                                </program>
-                                <program>
-                                    <mainClass>org.apache.james.app.spring.JamesAppSpringMain</mainClass>
-                                    <name>run.sh</name>
-                                    <!-- Only generate unix shell script for this application -->
-                                    <platforms>
                                         <platform>unix</platform>
                                     </platforms>
                                 </program>
@@ -710,18 +710,11 @@
                                 <!-- This create the scripts for the command line administration client. Maybe this should better be moved to the cli module, but I'm not sure yet -->
                                 <program>
                                     <mainClass>org.apache.james.cli.ServerCmd</mainClass>
-                                    <!-- call it only run because appassemble will add .bat by default on windows -->
+                                    <!-- call it only "james-cli" because appassemble will add the extension -->
                                     <name>james-cli</name>
-                                    <!-- Only generate windows bat script for this application -->
+                                    <!-- Only generate windows bat script and unix sh for this application -->
                                     <platforms>
                                         <platform>windows</platform>
-                                    </platforms>
-                                </program>
-                                <program>
-                                    <mainClass>org.apache.james.cli.ServerCmd</mainClass>
-                                    <name>james-cli.sh</name>
-                                    <!-- Only generate unix shell script for the client -->
-                                    <platforms>
                                         <platform>unix</platform>
                                     </platforms>
                                 </program>
