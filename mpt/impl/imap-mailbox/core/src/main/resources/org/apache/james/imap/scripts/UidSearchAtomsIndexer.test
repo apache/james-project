@@ -1947,6 +1947,78 @@ S: \* 19 EXISTS
 S: \* 19 RECENT
 S: A82 OK (\[.+\] )?APPEND completed\.
 
+C: A801 APPEND testmailbox {900+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Wed, 20 Jul 2016 15:30:00 +0000 (GMT)
+C: Message-ID: <ddae9adc-566b-92c1-fb38-3c1e2af07769@linagora.com>
+C: Subject: html
+C: MIME-Version: 1.0
+C: Content-Type: multipart/alternative;
+C:  boundary="------------E8CB67F44E1EBC80F62E6ACF"
+C: 
+C: This is a multi-part message in MIME format.
+C: --------------E8CB67F44E1EBC80F62E6ACF
+C: Content-Type: text/plain; charset=utf-8; format=flowed
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: Text
+C: 
+C: --------------E8CB67F44E1EBC80F62E6ACF
+C: Content-Type: text/html; charset=utf-8
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: <html>
+C:   <head>
+C: 
+C:     <meta http-equiv="content-type" content="text/html; charset=utf-8">
+C:   </head>
+C:   <body bgcolor="#FFFFFF" text="#000000">
+C:     This is a <i>html</i> <b>mail</b>, with a <i><b>banana</b></i>.<br>
+C:   </body>
+C: </html>
+C: 
+C: --------------E8CB67F44E1EBC80F62E6ACF--
+S: \* 20 EXISTS
+S: \* 20 RECENT
+S: A801 OK (\[.+\] )?APPEND completed\.
+
+C: A802 APPEND testmailbox {886+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Wed, 20 Jul 2016 15:30:00 +0000 (GMT)
+C: Message-ID: <ddae9adc-566b-92c1-fb38-3c1e2af07769@linagora.com>
+C: Subject: html
+C: MIME-Version: 1.0
+C: Content-Type: multipart/alternative;
+C:  boundary="------------E8CB67F44E1EBC80F62E6ACF"
+C: 
+C: This is a multi-part message in MIME format.
+C: --------------E8CB67F44E1EBC80F62E6ACF
+C: Content-Type: text/plain; charset=utf-8; format=flowed
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: Text
+C: 
+C: --------------E8CB67F44E1EBC80F62E6ACF
+C: Content-Type: text/html; charset=utf-8
+C: Content-Transfer-Encoding: 7bit
+C: 
+C: <html>
+C:   <head>
+C: 
+C:     <meta http-equiv="content-type" content="text/html; charset=utf-8">
+C:   </head>
+C:   <body bgcolor="#FFFFFF" text="#000000">
+C:     This is a <i>html</i> <b>mail</b>, with a banana.<br>
+C:   </body>
+C: </html>
+C: 
+C: --------------E8CB67F44E1EBC80F62E6ACF--
+S: \* 21 EXISTS
+S: \* 21 RECENT
+S: A802 OK (\[.+\] )?APPEND completed\.
+
 C: A83 STORE 1:9  +FLAGS (\FLAGGED)
 S: \* 1 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
 S: \* 2 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
@@ -2046,7 +2118,7 @@ WAIT 5000
 LOG INFO Performing tests about search
 
 C: A100 UID SEARCH ALL
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A100 OK SEARCH completed\.
 
 C: A101 UID SEARCH ANSWERED
@@ -2090,11 +2162,11 @@ S: \* SEARCH 22 30 31 32 37 38 39
 S: A109 OK SEARCH completed\.
 
 C: A110 UID SEARCH LARGER 10
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A110 OK SEARCH completed\.
 
 C: A111 UID SEARCH LARGER 100
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A111 OK SEARCH completed\.
 
 C: A112 UID SEARCH LARGER 1000
@@ -2118,7 +2190,7 @@ S: \* SEARCH
 S: A116 OK SEARCH completed\.
 
 C: A117 UID SEARCH NOT FLAGGED
-S: \* SEARCH 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 30 31 32 33 34 35 36 37 38 39 40 41
 S: A117 OK SEARCH completed\.
 
 C: A118 UID SEARCH 3:5
@@ -2126,7 +2198,7 @@ S: \* SEARCH 23 24 25
 S: A118 OK SEARCH completed\.
 
 C: A119 UID SEARCH *:10
-S: \* SEARCH 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 30 31 32 33 34 35 36 37 38 39 40 41
 S: A119 OK SEARCH completed\.
 
 C: A120 UID SEARCH OR ANSWERED FLAGGED
@@ -2142,23 +2214,23 @@ S: \* SEARCH
 S: A122 OK SEARCH completed\.
 
 C: A123 UID SEARCH SMALLER 1000
-S: \* SEARCH 21 22 23 24 26 27 28 29 33 34 35 36
+S: \* SEARCH 21 22 23 24 26 27 28 29 33 34 35 36 40 41
 S: A123 OK SEARCH completed\.
 
 C: A124 UID SEARCH SMALLER 10000
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 31 32 33 34 35 36
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 31 32 33 34 35 36 40 41
 S: A124 OK SEARCH completed\.
 
 C: A125 UID SEARCH SMALLER 12500
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 40 41
 S: A125 OK SEARCH completed\.
 
 C: A126 UID SEARCH SMALLER 15000
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A126 OK SEARCH completed\.
 
 C: A127 UID SEARCH SMALLER 20000
-S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A127 OK SEARCH completed\.
 
 C: A128 UID SEARCH SUBJECT the
@@ -2182,20 +2254,24 @@ S: \* SEARCH 21 22 23
 S: A131 OK SEARCH completed\.
 
 C: A132 UID SEARCH UNANSWERED
-S: \* SEARCH 25 26 27 28 29 35 36 37 38 39
+S: \* SEARCH 25 26 27 28 29 35 36 37 38 39 40 41
 S: A132 OK SEARCH completed\.
 
 C: A133 UID SEARCH UNDELETED
-S: \* SEARCH 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 S: A133 OK SEARCH completed\.
 
 C: A134 UID SEARCH UNDRAFT
-S: \* SEARCH 22 24 26 28 30 32 34 36 38 39
+S: \* SEARCH 22 24 26 28 30 32 34 36 38 39 40 41
 S: A134 OK SEARCH completed\.
 
 C: A135 UID SEARCH UNFLAGGED
-S: \* SEARCH 30 31 32 33 34 35 36 37 38 39
+S: \* SEARCH 30 31 32 33 34 35 36 37 38 39 40 41
 S: A135 OK SEARCH completed\.
+
+C: A136 UID SEARCH BODY "banana"
+S: \* SEARCH 40 41
+S: A136 OK SEARCH completed\.
 
 # C: A146 UID SEARCH RECENT
 # S: \* SEARCH 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39

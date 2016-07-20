@@ -823,4 +823,22 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(2l, 3l);
     }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
+        Assume.assumeTrue(messageSearchIndex.hasCapability(MessageSearchIndexCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("Regarder"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(7l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
+        Assume.assumeTrue(messageSearchIndex.hasCapability(MessageSearchIndexCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("Regarder tendance"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(7l);
+    }
 }

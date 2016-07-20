@@ -127,13 +127,16 @@ public class CriterionConverter {
     private QueryBuilder convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
         case BODY:
-            return matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue());
+            return boolQuery()
+                    .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()));
         case TEXT:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT, textCriterion.getOperator().getValue()));
         case FULL:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
                         textCriterion.getOperator().getValue()));
         }

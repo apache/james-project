@@ -19,12 +19,11 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.ParsedContent;
@@ -33,10 +32,12 @@ import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 public class MimePart {
 
@@ -244,14 +245,48 @@ public class MimePart {
     }
 
     @JsonIgnore
-    public Optional<String> locateFirstTextualBody() {
-        return Stream.concat(
-                    Stream.of(this),
-                    attachments.stream())
+    public Optional<String> locateFirstTextBody() {
+        return firstBody(textAttachments()
+                .filter(this::isPlainSubType));
+    }
+
+    @JsonIgnore
+    public Optional<String> locateFirstHtmlBody() {
+        return firstBody(textAttachments()
+                .filter(this::isHtmlSubType));
+    }
+
+    private Optional<String> firstBody(Stream<MimePart> mimeParts) {
+        return mimeParts
                 .map((mimePart) -> mimePart.bodyTextContent)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
+    }
+
+    private Stream<MimePart> textAttachments() {
+        return Stream.concat(
+                    Stream.of(this),
+                    attachments.stream())
+                .filter(this::isTextMediaType);
+    }
+
+    private boolean isTextMediaType(MimePart mimePart) {
+        return mimePart.getMediaType()
+                .filter("text"::equals)
+                .isPresent();
+    }
+
+    private boolean isPlainSubType(MimePart mimePart) {
+        return mimePart.getSubType()
+                .filter("plain"::equals)
+                .isPresent();
+    }
+
+    private boolean isHtmlSubType(MimePart mimePart) {
+        return mimePart.getSubType()
+                .filter("html"::equals)
+                .isPresent();
     }
 
     @JsonIgnore

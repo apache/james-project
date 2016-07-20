@@ -147,6 +147,7 @@
       "textContent":"Awesome document provided for text extraction !\n"}
   ],
   "textBody":"This mail have a non textual attachment !\n\n",
+  "htmlBody": null,
   "isAnswered":false,
   "isDeleted":false,
   "isDraft":false,
