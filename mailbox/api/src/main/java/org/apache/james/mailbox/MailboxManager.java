@@ -90,7 +90,13 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
 
     enum SearchCapabilities {
-        MultimailboxSearch
+        MultimailboxSearch,
+        /**
+         *  The implementation supporting this capability should
+         *  provide an index on the fields: 
+         *  From, To, Cc, Bcc, Subjects, textBody & htmlBody
+         */
+        Text
     }
     
     EnumSet<SearchCapabilities> getSupportedSearchCapabilities();

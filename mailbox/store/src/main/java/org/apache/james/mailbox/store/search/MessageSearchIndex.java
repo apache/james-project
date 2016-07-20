@@ -40,7 +40,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
  * 
  */
 public interface MessageSearchIndex {
-    
+
     /**
      * Return all uids of the previous indexed {@link Mailbox}'s which match the {@link SearchQuery}
      */

@@ -76,7 +76,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities() {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch);
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch, SearchCapabilities.Text);
     }
     
     /**

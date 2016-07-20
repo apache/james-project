@@ -1383,6 +1383,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             throw new MailboxException("Unable to delete message from index", e);
         }
     }
+
     
 
 

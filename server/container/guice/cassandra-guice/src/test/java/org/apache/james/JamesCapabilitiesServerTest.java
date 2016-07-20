@@ -90,6 +90,9 @@ public class JamesCapabilitiesServerTest {
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.Move)));
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+
         server = createCassandraJamesServer(mailboxManager);
         
         assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
@@ -102,6 +105,24 @@ public class JamesCapabilitiesServerTest {
             .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+
+        server = createCassandraJamesServer(mailboxManager);
+
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @Test
+    public void startShouldFailWhenNoTextCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch));
+
         server = createCassandraJamesServer(mailboxManager);
 
         assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
@@ -115,7 +136,8 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.noneOf(MailboxManager.SearchCapabilities.class));
+            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.Text));
+
         server = createCassandraJamesServer(mailboxManager);
 
         assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
@@ -128,7 +150,8 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.of(MailboxManager.MessageCapabilities.Attachment));
         when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch));
+            .thenReturn(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch, MailboxManager.SearchCapabilities.Text));
+
         server = createCassandraJamesServer(mailboxManager);
 
         server.start();

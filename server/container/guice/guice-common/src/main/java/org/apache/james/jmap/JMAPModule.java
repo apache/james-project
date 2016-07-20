@@ -19,6 +19,7 @@
 package org.apache.james.jmap;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,7 @@ import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
@@ -106,8 +108,12 @@ public class JMAPModule extends AbstractModule {
                     "MOVE support in MailboxManager is required by JMAP Module");
             Preconditions.checkArgument(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.Attachment),
                     "Attachment support in MailboxManager is required by JMAP Module");
-            Preconditions.checkArgument(mailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.MultimailboxSearch),
+
+            EnumSet<SearchCapabilities> searchCapabilities = mailboxManager.getSupportedSearchCapabilities();
+            Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.MultimailboxSearch),
                     "Multimailbox search in MailboxManager is required by JMAP Module");
+            Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.Text),
+                    "Text support in MailboxManager is required by JMAP Module");
         }
 
         @Override

@@ -55,7 +55,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchListeningMessageSearchIndex.class);
     private final static String ID_SEPARATOR = ":";
-    
+
     private final ElasticSearchIndexer indexer;
     private final ElasticSearchSearcher searcher;
     private final MessageToElasticSearchJson messageToElasticSearchJson;
@@ -76,7 +76,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities() {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch);
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch, SearchCapabilities.Text);
     }
     
     @Override
