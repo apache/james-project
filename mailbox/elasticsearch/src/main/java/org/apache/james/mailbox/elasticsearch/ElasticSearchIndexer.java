@@ -28,6 +28,8 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -53,6 +55,7 @@ public class ElasticSearchIndexer {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
     public static final String MAILBOX_INDEX = "mailbox";
     public static final String MESSAGE_TYPE = "message";
     
@@ -67,6 +70,7 @@ public class ElasticSearchIndexer {
     
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
+        LOGGER.debug(String.format("Indexing %s: %s", id, content));
         return client.prepareIndex(MAILBOX_INDEX, MESSAGE_TYPE, id)
             .setSource(content)
             .get();
