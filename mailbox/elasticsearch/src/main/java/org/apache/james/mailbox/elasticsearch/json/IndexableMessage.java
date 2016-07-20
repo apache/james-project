@@ -26,6 +26,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
@@ -37,6 +38,7 @@ import org.apache.james.mime4j.MimeException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 
@@ -52,6 +54,7 @@ public class IndexableMessage {
             indexableMessage.bodyText = parsingResult.locateFirstTextualBody();
             indexableMessage.setFlattenedAttachments(parsingResult);
             indexableMessage.copyHeaderFields(parsingResult.getHeaderCollection(), getSanitizedInternalDate(message, zoneId));
+            indexableMessage.generateText();
         } catch (IOException | MimeException e) {
             throw Throwables.propagate(e);
         }
@@ -102,6 +105,17 @@ public class IndexableMessage {
             zoneId);
     }
 
+    private void generateText() {
+        this.text = Stream.of(from.serialize(),
+                to.serialize(),
+                cc.serialize(),
+                bcc.serialize(),
+                subjects.serialize(),
+                bodyText.orElse(null))
+            .filter(str -> !Strings.isNullOrEmpty(str))
+            .collect(Collectors.joining(" "));
+    }
+
     private Long id;
     private String mailboxId;
     private List<String> users;
@@ -128,6 +142,7 @@ public class IndexableMessage {
     private List<Property> properties;
     private List<MimePart> attachments;
     private Optional<String> bodyText;
+    private String text;
 
     @JsonProperty(JsonMessageConstants.ID)
     public Long getId() {
@@ -262,5 +277,10 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.HAS_ATTACHMENT)
     public boolean getHasAttachment() {
         return attachments.size() > 0;
+    }
+
+    @JsonProperty(JsonMessageConstants.TEXT)
+    public String getText() {
+        return text;
     }
 }

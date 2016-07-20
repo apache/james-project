@@ -212,6 +212,17 @@ public class NodeMappingFactory {
                                     .endObject()
                                 .endObject()
                             .endObject()
+                            
+
+                            .startObject(JsonMessageConstants.TEXT)
+                                .field(TYPE, STRING)
+                                .startObject(FIELDS)
+                                    .startObject(RAW)
+                                        .field(TYPE, STRING)
+                                        .field(ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
+                                    .endObject()
+                                .endObject()
+                            .endObject()
                         .endObject()
                     .endObject()
                 .endObject();

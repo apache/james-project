@@ -156,5 +156,6 @@
   "isUnread":true,
   "users": [
     "username"
-  ]
+  ],
+  "text": "Benoit Tellier btellier@linagora.com btellier@linagora.com btellier@linagora.com Test message This mail have a non textual attachment !\r\n\n"
 }

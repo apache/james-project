@@ -30,6 +30,8 @@ import java.util.Set;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.model.SearchQuery.Sort;
+
 /**
  * <p>
  * Models a query used to search for messages. A query is the logical
@@ -425,6 +427,22 @@ public class SearchQuery implements Serializable {
      */
     public static final Criterion mailContains(String value) {
         return new TextCriterion(value, Scope.FULL);
+    }
+
+    /**
+     * Creates a filter matching messages which contains the given text either
+     * within the headers (From, To, Cc, Bcc & Subject) and text / html bodies. 
+     * Implementations may choose to ignore mime parts which cannot be decoded to text.
+     * 
+     * All to-compared Strings MUST BE converted to uppercase before doing so
+     * (this also include the search value)
+     * 
+     * @param value
+     *            search value
+     * @return <code>Criterion</code>, not null
+     */
+    public static final Criterion textContains(String value) {
+        return new TextCriterion(value, Scope.TEXT);
     }
 
     /**
@@ -949,6 +967,11 @@ public class SearchQuery implements Serializable {
     public enum Scope {
         /** Only message body content */
         BODY,
+
+        /** Headers: From, To, Cc, Bcc & Subjects
+         *  plus text/plain & text/html part
+         */
+        TEXT,
 
         /** Full message content including headers */
         FULL

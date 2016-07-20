@@ -757,4 +757,70 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(2L, 3L, 4L, 5L);
     }
+
+    @Test
+    public void searchWithFullTextShouldReturnNoMailWhenNotMatching() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("unmatching"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .isEmpty();
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenFromMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("spam.minet.net"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(1l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenToMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("listes.minet.net"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(1l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenCcMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("abc.org"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenBccMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("any.com"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(5l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatches() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("reviewing work"));
+        // text/plain contains: "We are reviewing work I did for this feature."
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        // 2: text/plain contains: "Issue Type: New Feature"
+        // 3: text/plain contains: "We are reviewing work I did for this feature."
+        searchQuery.andCriteria(SearchQuery.textContains("reviewing feature"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(2l, 3l);
+    }
 }

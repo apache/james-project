@@ -1,0 +1,14 @@
+Content-Type: text/plain; Charset=UTF-8
+Date: Fri, 17 Sep 2010 17:12:26 +0200
+Subject: my subject
+To: a@test, B <b@test>
+Cc: c@test
+Bcc: dD <d@test>
+MIME-Version: 1.0
+Message-Id: <20100917151246.2A9384BA1@lenny>
+From: Ad Min <admin@opush.test>
+
+Mail content
+
+-- 
+Ad Min

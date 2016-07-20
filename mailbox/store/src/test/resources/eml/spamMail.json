@@ -200,5 +200,6 @@
   "isUnread": true,
   "users": [
     "username"
-  ]
+  ],
+  "text": "Content-filter at spam.minet.net postmaster@minet.net root@listes.minet.net root@listes.minet.net [root] UNCHECKED contents in mail FROM <quentin.h@riseup.net> No viruses were found.\n\nContent type: Unchecked\nInternal reference code for the message is 12583-16/Ss-IZaXqmZao\n\nAccording to a 'Received:' trace, the message apparently originated at:\n  [198.252.153.129], [127.0.0.1] localhost [127.0.0.1] Authenticated sender:\n  quentin.h\n\nReturn-Path: <quentin.h@riseup.net>\nFrom: Quentin <quentin.h@riseup.net>\nMessage-ID: <556EC361.6000308@riseup.net>\nSubject: =?UTF-8?B?UmU6IEZ3ZDogW1RtcGxhYl0gW0FQUEVMIEEgUEFSVElDSVBBVElPTl0=?=\n  =?UTF-8?B?IFdvb3QgZGV2aWNlcyAjMiAgOiB2ZW5leiBmYWlyZSBsZXVyIGhhY2tmw6p0ZSA=?=\n  =?UTF-8?B?YXV4IHBldGl0ZXMgbWFjaGluZXMgcHJvZ3JhbW1hYmxlcyBsZXMgNi03IGp1aW4=?=\n  =?UTF-8?B?IGF1IEphcmRpbiBkJ2FsaWNlL0JsYWNrbG9vcA==?=\nNot quarantined.\n\nThe message WILL BE relayed to:\n<yann@minet.net>\n\n"
 }

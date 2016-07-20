@@ -128,6 +128,9 @@ public class CriterionConverter {
         switch (textCriterion.getType()) {
         case BODY:
             return matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue());
+        case TEXT:
+            return boolQuery()
+                    .should(matchQuery(JsonMessageConstants.TEXT, textCriterion.getOperator().getValue()));
         case FULL:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
