@@ -112,6 +112,7 @@
         <javax.mail.artifactId>mail</javax.mail.artifactId>
         <backends.version>1.8.3-SNAPSHOT</backends.version>
         <james.version>3.0.0-beta5-SNAPSHOT</james.version>
+        <logback.version>1.1.7</logback.version>
     </properties>
 
 
@@ -293,6 +294,11 @@
                 <artifactId>ant-antunit</artifactId>
                 <version>1.1</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
