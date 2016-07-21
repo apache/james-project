@@ -1132,6 +1132,7 @@ The Apache Software Foundation (http://www.apache.org/).
                 <resource name='wrapper-solaris-sparc-64'/>
                 <resource name='wrapper-solaris-x86-32'/>
                 <resource name='wrapper-windows-x86-32.exe'/>
+                <resource name='wrapper-windows-x86-64.exe'/>
             </by-organisation>
         </with-license>
         <with-license id='ApacheLicenseVersion2'>
