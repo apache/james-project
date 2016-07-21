@@ -826,7 +826,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
-        Assume.assumeTrue(messageSearchIndex.hasCapability(MessageSearchIndexCapabilities.Text));
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.textContains("Regarder"));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -835,7 +835,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
-        Assume.assumeTrue(messageSearchIndex.hasCapability(MessageSearchIndexCapabilities.Text));
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.textContains("Regarder tendance"));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))

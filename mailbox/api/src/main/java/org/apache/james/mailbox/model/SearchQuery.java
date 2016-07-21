@@ -30,8 +30,6 @@ import java.util.Set;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import org.apache.james.mailbox.model.SearchQuery.Sort;
-
 /**
  * <p>
  * Models a query used to search for messages. A query is the logical

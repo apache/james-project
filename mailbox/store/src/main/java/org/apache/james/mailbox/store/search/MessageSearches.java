@@ -19,8 +19,11 @@
 
 package org.apache.james.mailbox.store.search;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -48,16 +51,22 @@ import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.MimeIOException;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.dom.datetime.DateTime;
+import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.address.AddressFormatter;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.field.datetime.parser.ParseException;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 
 import com.google.common.collect.Lists;
@@ -116,7 +125,7 @@ public class MessageSearches implements Iterable<Long> {
      *         <code>false</code> otherwise
      * @throws MailboxException
      */
-    protected boolean isMatch(SearchQuery query, MailboxMessage message) throws MailboxException {
+    private boolean isMatch(SearchQuery query, MailboxMessage message) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = query.getCriterias();
         final Collection<Long> recentMessageUids = query.getRecentMessageUids();
         boolean result = true;
@@ -177,7 +186,7 @@ public class MessageSearches implements Iterable<Long> {
         return result;
     }
 
-    protected boolean matches(SearchQuery.TextCriterion criterion, MailboxMessage message)
+    private boolean matches(SearchQuery.TextCriterion criterion, MailboxMessage message)
             throws MailboxException {
         try {
             final SearchQuery.ContainsOperator operator = criterion.getOperator();
@@ -185,11 +194,12 @@ public class MessageSearches implements Iterable<Long> {
             switch (criterion.getType()) {
             case BODY:
                 return bodyContains(value, message);
+            case TEXT:
+                return textContains(value, message);
             case FULL:
                 return messageContains(value, message);
-            default:
-                throw new UnsupportedSearchException();
             }
+            throw new UnsupportedSearchException();
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message", e);
         } catch (MimeException e) {
@@ -197,12 +207,12 @@ public class MessageSearches implements Iterable<Long> {
         }
     }
 
-    protected boolean bodyContains(String value, MailboxMessage message) throws IOException, MimeException {
+    private boolean bodyContains(String value, MailboxMessage message) throws IOException, MimeException {
         final InputStream input = message.getFullContent();
         return isInMessage(value, input, false);
     }
 
-    protected boolean isInMessage(String value, InputStream input, boolean header) throws IOException, MimeException {
+    private boolean isInMessage(String value, InputStream input, boolean header) throws IOException, MimeException {
         MessageMatcher.MessageMatcherBuilder builder = MessageMatcher.builder()
             .searchContents(Lists.<CharSequence>newArrayList(value))
             .caseInsensitive(true)
@@ -213,11 +223,46 @@ public class MessageSearches implements Iterable<Long> {
         return builder.build().messageMatches(input);
     }
 
-    protected boolean messageContains(String value, MailboxMessage message) throws IOException, MimeException {
+    private boolean messageContains(String value, MailboxMessage message) throws IOException, MimeException {
         final InputStream input = message.getFullContent();
         return isInMessage(value, input, true);
     }
 
+    private boolean textContains(String value, MailboxMessage message) throws IOException, MimeException, MailboxException {
+        InputStream bodyContent = message.getBodyContent();
+        return isInMessage(value, new SequenceInputStream(textHeaders(message), bodyContent), true);
+    }
+
+    private InputStream textHeaders(MailboxMessage message) throws MimeIOException, IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new DefaultMessageWriter()
+            .writeHeader(buildTextHeaders(message), out);
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    private HeaderImpl buildTextHeaders(MailboxMessage message) throws IOException, MimeIOException {
+        Message headersMessage = new DefaultMessageBuilder()
+            .parseMessage(message.getHeaderContent());
+        HeaderImpl headerImpl = new HeaderImpl();
+        addFrom(headerImpl, headersMessage.getFrom());
+        addAddressList(headerImpl, headersMessage.getTo());
+        addAddressList(headerImpl, headersMessage.getCc());
+        addAddressList(headerImpl, headersMessage.getBcc());
+        headerImpl.addField(Fields.subject(headersMessage.getSubject()));
+        return headerImpl;
+    }
+
+    private void addFrom(HeaderImpl headerImpl, MailboxList from) {
+        if (from != null) {
+            headerImpl.addField(Fields.from(Lists.newArrayList(from.iterator())));
+        }
+    }
+
+    private void addAddressList(HeaderImpl headerImpl, AddressList addressList) {
+        if (addressList != null) {
+            headerImpl.addField(Fields.to(Lists.newArrayList(addressList.iterator())));
+        }
+    }
     private boolean matches(SearchQuery.ConjunctionCriterion criterion, MailboxMessage message,
             final Collection<Long> recentMessageUids) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = criterion.getCriteria();

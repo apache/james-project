@@ -222,6 +222,16 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Ignore
     @Override
+    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
+    }
+
+    @Ignore
+    @Override
     public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInAllMailboxes() throws MailboxException {
+    }
+
+    @Ignore
+    @Override
+    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
     }
 }
