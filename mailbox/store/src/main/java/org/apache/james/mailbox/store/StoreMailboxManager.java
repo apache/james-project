@@ -173,7 +173,7 @@ public class StoreMailboxManager implements MailboxManager {
         dispatcher = new MailboxEventDispatcher(getDelegationListener());
 
         if (index == null) {
-            index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory);
+            index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory);
         }
         if (index instanceof ListeningMessageSearchIndex) {
             this.addGlobalListener((MailboxListener) index, null);
