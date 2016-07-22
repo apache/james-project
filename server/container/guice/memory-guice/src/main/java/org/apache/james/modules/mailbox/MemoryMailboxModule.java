@@ -30,10 +30,12 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
 import org.apache.james.mailbox.inmemory.mail.InMemoryUidProvider;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -66,6 +68,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MailboxSessionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(ModSeqProvider.class).to(InMemoryModSeqProvider.class);
         bind(UidProvider.class).to(InMemoryUidProvider.class);
+        bind(MailboxId.Factory.class).to(InMemoryId.Factory.class);
 
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(SubscriptionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);

@@ -24,12 +24,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.Filter;
+import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
@@ -44,6 +47,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
@@ -76,16 +80,18 @@ public class GetMessageListMethod implements Method {
     private final int maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final MailboxUtils mailboxUtils;
+    private final Factory mailboxIdFactory;
 
     @Inject
     @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MessageSearchIndex messageSearchIndex,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxUtils mailboxUtils) {
+            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxUtils mailboxUtils, MailboxId.Factory mailboxIdFactory) {
 
         this.mailboxManager = mailboxManager;
         this.messageSearchIndex = messageSearchIndex;
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
         this.mailboxUtils = mailboxUtils;
+        this.mailboxIdFactory = mailboxIdFactory;
     }
 
     @Override
@@ -161,11 +167,27 @@ public class GetMessageListMethod implements Method {
         SearchQuery searchQuery = messageListRequest.getFilter()
                 .map(filter -> new FilterToSearchQuery().convert(filter))
                 .orElse(new SearchQuery());
+        Set<MailboxId> inMailboxes = filterToFilterCondition(messageListRequest.getFilter())
+                .flatMap(condition -> Guavate.stream(condition.getInMailboxes()))
+                .flatMap(List::stream)
+                .map(mailboxIdFactory::fromString)
+                .collect(Guavate.toImmutableSet());
         return MultimailboxesSearchQuery
                 .from(searchQuery)
+                .inMailboxes(inMailboxes)
                 .build();
     }
 
+    private Stream<FilterCondition> filterToFilterCondition(Optional<Filter> maybeCondition) {
+        return Guavate.stream(maybeCondition)
+                .flatMap(c -> {
+                    if (c instanceof FilterCondition) {
+                        return Stream.of((FilterCondition)c);
+                    }
+                    return Stream.of();
+                });
+    }
+    
     private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, ClientId clientId, MailboxSession mailboxSession) {
         if (shouldChainToGetMessages(messageListRequest)) {
             GetMessagesRequest getMessagesRequest = GetMessagesRequest.builder()
