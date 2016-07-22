@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.store.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -35,17 +36,20 @@ import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 
 public class IndexableMessage {
 
-    public static IndexableMessage from(MailboxMessage message, TextExtractor textExtractor, ZoneId zoneId) {
+    public static IndexableMessage from(MailboxMessage message, List<User> users, TextExtractor textExtractor, ZoneId zoneId) {
         Preconditions.checkNotNull(message.getMailboxId());
+        Preconditions.checkArgument(!users.isEmpty());
         IndexableMessage indexableMessage = new IndexableMessage();
         try {
             MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
+            indexableMessage.users = users.stream().map(User::getUserName).collect(Guavate.toImmutableList());
             indexableMessage.bodyText = parsingResult.locateFirstTextualBody();
             indexableMessage.setFlattenedAttachments(parsingResult);
             indexableMessage.copyHeaderFields(parsingResult.getHeaderCollection(), getSanitizedInternalDate(message, zoneId));
@@ -101,6 +105,7 @@ public class IndexableMessage {
 
     private Long id;
     private String mailboxId;
+    private List<String> users;
     private long modSeq;
     private long size;
     private String date;
@@ -133,6 +138,11 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.MAILBOX_ID)
     public String getMailboxId() {
         return mailboxId;
+    }
+
+    @JsonProperty(JsonMessageConstants.USERS)
+    public List<String> getUsers() {
+        return users;
     }
 
     @JsonProperty(JsonMessageConstants.MODSEQ)

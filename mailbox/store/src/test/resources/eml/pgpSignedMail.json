@@ -169,5 +169,8 @@
   "isFlagged": false,
   "isRecent": false,
   "hasAttachment": false,
-  "isUnread": false
+  "isUnread": false,
+  "users": [
+    "username"
+  ]
 }

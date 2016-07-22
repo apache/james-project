@@ -162,5 +162,8 @@
  "isDeleted": true,
  "isRecent": false,
  "hasAttachment": false,
- "isUnread": false
+ "isUnread": false,
+  "users": [
+    "user1", "user2"
+  ]
 }

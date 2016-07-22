@@ -19,12 +19,15 @@
 
 package org.apache.james.mailbox.store.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -35,14 +38,13 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractMessageSearchIndexTest {
 
@@ -154,6 +156,23 @@ public abstract class AbstractMessageSearchIndexTest {
 
     protected abstract void await();
     protected abstract void initializeMailboxManager() throws Exception;
+
+    @Test(expected = IllegalArgumentException.class)
+    public void searchShouldThrowWhenSessionIsNull() throws MailboxException {
+        SearchQuery searchQuery = new SearchQuery();
+        MailboxSession session = null;
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .isEmpty();
+    }
+
+    @Test
+    public void searchShouldReturnEmptyWhenUserDontMatch() throws MailboxException {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.MultimailboxSearch));
+        MailboxSession otherUserSession = storeMailboxManager.createSystemSession("otherUser", LOGGER);
+        SearchQuery searchQuery = new SearchQuery();
+        assertThat(messageSearchIndex.search(otherUserSession, mailbox, searchQuery))
+            .isEmpty();
+    }
 
     @Test
     public void emptySearchQueryShouldReturnAllUids() throws MailboxException {

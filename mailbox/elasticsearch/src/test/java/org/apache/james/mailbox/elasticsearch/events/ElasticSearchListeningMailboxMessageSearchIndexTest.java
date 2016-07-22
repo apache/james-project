@@ -32,6 +32,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
@@ -70,7 +71,8 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
         indexer = control.createMock(ElasticSearchIndexer.class);
 
-        expect(messageToElasticSearchJson.convertToJson(anyObject(MailboxMessage.class))).andReturn("json content").anyTimes();
+        List<User> users = anyObject();
+        expect(messageToElasticSearchJson.convertToJson(anyObject(MailboxMessage.class), users)).andReturn("json content").anyTimes();
         expect(messageToElasticSearchJson.getUpdatedJsonMessagePart(anyObject(Flags.class), anyLong())).andReturn("json updated content").anyTimes();
 
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, indexer, elasticSearchSearcher, messageToElasticSearchJson);
@@ -78,9 +80,12 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     
     @Test
     public void addShouldIndex() throws Exception {
+        MailboxSession.User user = control.createMock(MailboxSession.User.class);
         MailboxSession session = control.createMock(MailboxSession.class);
+        expect(session.getUser())
+            .andReturn(user);
+
         Mailbox mailbox = control.createMock(Mailbox.class);
-        
         long messageId = 1;
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
@@ -103,7 +108,11 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     
     @Test
     public void addShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
+        MailboxSession.User user = control.createMock(MailboxSession.User.class);
         MailboxSession session = control.createMock(MailboxSession.class);
+        expect(session.getUser())
+            .andReturn(user);
+
         Mailbox mailbox = control.createMock(Mailbox.class);
         
         long messageId = 1;

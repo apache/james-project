@@ -26,6 +26,7 @@ public interface JsonMessageConstants {
      */
     String ID = "id";
     String MAILBOX_ID = "mailboxId";
+    String USERS = "users";
     String IS_UNREAD = "isUnread";
     String IS_FLAGGED = "isFlagged";
     String IS_ANSWERED = "isAnswered";

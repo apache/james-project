@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -45,8 +46,9 @@ public class QueryConverter {
         this.criterionConverter = criterionConverter;
     }
 
-    public QueryBuilder from(SearchQuery searchQuery, Collection<MailboxId> mailboxIds) {
+    public QueryBuilder from(SearchQuery searchQuery, List<User> users, Collection<MailboxId> mailboxIds) {
         QueryBuilder queryBuilder = generateQueryBuilder(searchQuery);
+        queryBuilder = addUsersFilter(queryBuilder, users);
         return addMailboxFilters(queryBuilder, mailboxIds);
     }
 
@@ -59,6 +61,14 @@ public class QueryConverter {
         } else {
             return criterionConverter.convertCriterion(new SearchQuery.ConjunctionCriterion(SearchQuery.Conjunction.AND, criteria));
         }
+    }
+
+    private QueryBuilder addUsersFilter(QueryBuilder queryBuilder, List<User> users) {
+        ImmutableList<String> usernames = users.stream()
+                .map(User::getUserName)
+                .collect(Guavate.toImmutableList());
+        return boolQuery().must(queryBuilder)
+            .filter(termsQuery(JsonMessageConstants.USERS, usernames));
     }
 
     private QueryBuilder addMailboxFilters(QueryBuilder queryBuilder, Collection<MailboxId> mailboxIds) {

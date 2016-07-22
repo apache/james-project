@@ -38,6 +38,8 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.google.common.base.Preconditions;
+
 /**
  * {@link ListeningMessageSearchIndex} implementation which wraps another {@link ListeningMessageSearchIndex} and will forward all calls to it.
  * 
@@ -91,6 +93,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
      */
     @Override
     public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+        Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId id = mailbox.getMailboxId();
         
         Object done = indexed.get(id);

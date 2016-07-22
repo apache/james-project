@@ -115,6 +115,7 @@ import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -428,6 +429,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * @see org.apache.james.mailbox.store.search.MessageSearchIndex#search(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.model.SearchQuery)
      */
     public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+        Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId mailboxId = mailbox.getMailboxId();
         Multimap<MailboxId, Long> results = 
                 searchMultimap(
@@ -441,6 +443,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery) throws MailboxException {
+        Preconditions.checkArgument(session != null, "'session' is mandatory");
         return searchMultimap(session, searchQuery).asMap();
     }
     

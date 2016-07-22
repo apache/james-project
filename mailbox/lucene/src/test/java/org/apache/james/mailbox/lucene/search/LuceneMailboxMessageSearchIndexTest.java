@@ -33,6 +33,8 @@ import java.util.Map;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -56,7 +58,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     private SimpleMailbox mailbox = new SimpleMailbox(0);
     private SimpleMailbox mailbox2 = new SimpleMailbox(1);
     private SimpleMailbox mailbox3 = new SimpleMailbox(2);
-
+    private MailboxSession session;
 
     private static final String FROM_ADDRESS = "Harry <harry@example.org>";
 
@@ -121,7 +123,8 @@ public class LuceneMailboxMessageSearchIndexTest {
         builder.mailboxId = mailbox3.getMailboxId();
         
         index.add(null, mailbox3, builder.build());
-                
+
+        session = new MockMailboxSession("username");
     }
     
 
@@ -130,7 +133,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldMatchPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(CUSTARD));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
 
@@ -138,7 +141,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldNotMatchAbsentPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(CUSTARD + CUSTARD));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
     
@@ -146,7 +149,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldBeCaseInsensitive() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(RHUBARD));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
 
@@ -154,7 +157,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchNotMatchPhraseOnlyInFrom() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(FROM_ADDRESS));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
 
@@ -162,7 +165,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldNotMatchPhraseOnlyInSubject() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(SUBJECT_PART));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
 
@@ -170,7 +173,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(CUSTARD));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
 
@@ -178,7 +181,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldNotAbsentMatchPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(CUSTARD + CUSTARD));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
 
@@ -186,7 +189,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchMatchShouldBeCaseInsensitive() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(RHUBARD.toLowerCase(Locale.US)));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
 
@@ -194,7 +197,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchToFullAddress() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.To,FROM_ADDRESS));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
 
@@ -202,7 +205,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchToDisplayName() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.To,"Harry"));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
     
@@ -210,7 +213,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchToEmail() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.To,"Harry@example.org"));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
     
@@ -218,7 +221,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchFrom() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.From,"ser-from@domain.or"));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
 
@@ -226,7 +229,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchPhraseOnlyInToHeader() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(FROM_ADDRESS));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
     
@@ -234,7 +237,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchPhraseOnlyInSubjectHeader() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(SUBJECT_PART));
-        Iterator<Long> result = index.search(null, mailbox3, query);
+        Iterator<Long> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(10L);
     }
     
@@ -242,7 +245,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void searchAllShouldMatchAllMailboxEmails() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
-        Iterator<Long> result = index.search(null, mailbox2, query);
+        Iterator<Long> result = index.search(session, mailbox2, query);
         assertThat(result).containsExactly(1L);
     }
 
@@ -250,7 +253,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void searchBodyInAllMailboxesShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("My Body"));
-        Map<MailboxId, Collection<Long>> result = index.search(null, MultimailboxesSearchQuery.from(query).build());
+        Map<MailboxId, Collection<Long>> result = index.search(session, MultimailboxesSearchQuery.from(query).build());
         assertThat(result).hasSize(2);
         assertThat(result.get(mailbox.id)).containsExactly(1L);
         assertThat(result.get(mailbox2.id)).containsExactly(1L);
@@ -260,7 +263,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void searchBodyInSpecificMailboxesShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("My Body"));
-        Map<MailboxId, Collection<Long>> result = index.search(null, 
+        Map<MailboxId, Collection<Long>> result = index.search(session, 
                 MultimailboxesSearchQuery.from(query).inMailboxes(mailbox.id, mailbox3.id).build());
         assertThat(result).hasSize(1);
         assertThat(result.get(mailbox.id)).containsExactly(1L);
@@ -271,7 +274,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void searchAllShouldMatchAllUserEmails() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
-        Map<MailboxId, Collection<Long>> result = index.search(null, MultimailboxesSearchQuery.from(query).build());
+        Map<MailboxId, Collection<Long>> result = index.search(session, MultimailboxesSearchQuery.from(query).build());
         assertThat(result).hasSize(3);
     }
     
@@ -279,7 +282,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void flagSearchShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.flagIsSet(Flag.DELETED));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L);
     }
     
@@ -287,7 +290,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldMatchSeveralEmails() throws Exception {    
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("body"));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -295,7 +298,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchSeveralEmails() throws Exception {    
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains("body"));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -303,7 +306,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void headerSearchShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.headerContains("Subject", "test"));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 3L);
     }
     
@@ -311,7 +314,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void headerExistsShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.headerExists("Subject"));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 3L);
     }
     
@@ -319,7 +322,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void flagUnsetShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.flagIsUnSet(Flag.DRAFT));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -330,7 +333,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.internalDateBefore(cal.getTime(), DateResolution.Day));
         
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L);
     }
     
@@ -341,7 +344,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.internalDateAfter(cal.getTime(), DateResolution.Day));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(3L);
     }
     
@@ -353,7 +356,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.internalDateOn(cal.getTime(), DateResolution.Day));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L);
     }
     
@@ -363,7 +366,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.uid(new SearchQuery.NumericRange[] {new SearchQuery.NumericRange(1)}));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L);
     }
     
@@ -373,7 +376,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.uid(new SearchQuery.NumericRange[] {new SearchQuery.NumericRange(1), new SearchQuery.NumericRange(2,3)}));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -381,7 +384,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void sizeEqualsShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.sizeEquals(200));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L);
     }
     
@@ -389,7 +392,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void sizeLessThanShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.sizeLessThan(200));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L);
     }
     
@@ -397,7 +400,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void sizeGreaterThanShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.sizeGreaterThan(6));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -405,7 +408,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void uidShouldBeSorted() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -414,7 +417,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Uid, true)));
         query.andCriteria(SearchQuery.all());
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(3L, 2L, 1L);
     }
     
@@ -423,7 +426,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.SentDate, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L, 1L);
     }
     
@@ -432,7 +435,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.SentDate, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 3L, 2L);
     }
 
@@ -441,7 +444,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.BaseSubject, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 1L, 3L);
     }
     
@@ -450,7 +453,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.BaseSubject, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(3L, 1L, 2L);
     }
     
@@ -459,7 +462,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxFrom, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L, 1L);
     }
     
@@ -468,7 +471,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxFrom, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 3L, 2L);
     }
     
@@ -477,7 +480,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxCc, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -486,7 +489,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxCc, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L, 1L);
     }
     
@@ -495,7 +498,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxTo, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(3L, 1L, 2L);
     }
     
@@ -504,7 +507,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.MailboxTo, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 1L, 3L);
     }
     
@@ -513,7 +516,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayTo, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(3L, 1L, 2L);
     }
     
@@ -522,7 +525,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayTo, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 1L, 3L);
     }
     
@@ -531,7 +534,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayFrom, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L, 1L);
     }
     
@@ -540,7 +543,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.DisplayFrom, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 3L, 2L);
     }
     
@@ -549,7 +552,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Arrival, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 1L, 3L);
     }
     
@@ -558,7 +561,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Arrival, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(3L, 1L, 2L);
     }
     
@@ -567,7 +570,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Size, false)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L, 1L);
     }
     
@@ -576,7 +579,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
         query.setSorts(Arrays.asList(new SearchQuery.Sort(SortClause.Size, true)));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(1L, 2L, 3L);
     }
     
@@ -584,7 +587,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void notOperatorShouldReverseMatching() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.not(SearchQuery.uid(new SearchQuery.NumericRange[] { new SearchQuery.NumericRange(1)})));
-        Iterator<Long> result = index.search(null, mailbox, query);
+        Iterator<Long> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(2L, 3L);
     }
     

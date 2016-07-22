@@ -219,5 +219,8 @@
   "isAnswered": false,
   "isDeleted": true,
   "hasAttachment": true,
-  "isUnread": false
+  "isUnread": false,
+  "users": [
+    "username"
+  ]
 }
