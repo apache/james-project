@@ -21,14 +21,18 @@ package org.apache.james.jmap.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.store.MessageResultImpl;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
@@ -39,55 +43,60 @@ import com.google.common.collect.Lists;
 
 public class SortToComparatorConvertorTest {
 
-    private List<SimpleMailboxMessage> messages;
-    private SimpleMailboxMessage firstMessage;
-    private SimpleMailboxMessage secondMessage;
+    private MailboxPath mailboxPath;
+    private Entry firstMessage;
+    private Entry secondMessage;
+    private List<Entry> messages;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         LocalDate date = LocalDate.now();
-        firstMessage = new SimpleMailboxMessage(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
-        firstMessage.setUid(1);
-        secondMessage = new SimpleMailboxMessage(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
-        secondMessage.setUid(2);
+        SimpleMailboxMessage firstMailboxMessage = new SimpleMailboxMessage(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        mailboxPath = new MailboxPath("#private", "user", "path");
+        firstMailboxMessage.setUid(1);
+        firstMessage = new Entry(mailboxPath, new MessageResultImpl(firstMailboxMessage));
+        SimpleMailboxMessage secondMailboxMessage = new SimpleMailboxMessage(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        secondMailboxMessage.setUid(2);
+        secondMessage = new Entry(mailboxPath, new MessageResultImpl(secondMailboxMessage));
         messages = Lists.newArrayList(firstMessage, secondMessage);
     }
 
     @Test
     public void comparatorForShouldBeInitialOrderWhenEmptyList() {
-        Comparator<SimpleMailboxMessage> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of());
+        Comparator<Entry> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of());
         messages.sort(comparator);
         assertThat(messages).containsExactly(firstMessage, secondMessage);
     }
 
     @Test
     public void comparatorForShouldBeDescByDateWhenOnlyDateInList() {
-        Comparator<MailboxMessage> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date"));
+        Comparator<Entry> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(secondMessage, firstMessage);
     }
 
     @Test
     public void comparatorForShouldBeDescByDateWhenOnlyDateDescInList() {
-        Comparator<MailboxMessage> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date desc"));
+        Comparator<Entry> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date desc"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(secondMessage, firstMessage);
     }
 
     @Test
     public void comparatorForShouldBeAscByDateWhenOnlyDateAscInList() {
-        Comparator<MailboxMessage> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc"));
+        Comparator<Entry> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(firstMessage, secondMessage);
     }
 
     @Test
-    public void comparatorForShouldChainComparatorsWhenOnlyMultipleElementInList() {
-        SimpleMailboxMessage thirdMessage = new SimpleMailboxMessage(secondMessage.getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
-        thirdMessage.setUid(3);
+    public void comparatorForShouldChainComparatorsWhenOnlyMultipleElementInList() throws IOException {
+        SimpleMailboxMessage thirdMailboxMessage = new SimpleMailboxMessage(secondMessage.getValue().getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
+        thirdMailboxMessage.setUid(3);
+        Entry thirdMessage = new Entry(mailboxPath, new MessageResultImpl(thirdMailboxMessage));
         messages.add(thirdMessage);
 
-        Comparator<MailboxMessage> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc", "id desc"));
+        Comparator<Entry> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc", "id desc"));
         messages.sort(comparator);
         assertThat(messages).containsExactly(firstMessage, thirdMessage, secondMessage);
     }
@@ -105,5 +114,32 @@ public class SortToComparatorConvertorTest {
     @Test(expected=IllegalArgumentException.class)
     public void comparatorForShouldThrowWhenUnknownField() {
         SortToComparatorConvertor.comparatorFor(ImmutableList.of("unknown"));
+    }
+    
+    private static class Entry implements Map.Entry<MailboxPath, MessageResult> {
+        
+        private MailboxPath mailboxPath;
+        private MessageResult messageResult;
+
+        public Entry(MailboxPath mailboxPath, MessageResult messageResult) {
+            this.mailboxPath = mailboxPath;
+            this.messageResult = messageResult;
+        }
+
+        @Override
+        public MailboxPath getKey() {
+            return mailboxPath;
+        }
+
+        @Override
+        public MessageResult getValue() {
+            return messageResult;
+        }
+
+        @Override
+        public MessageResult setValue(MessageResult messageResult) {
+            this.messageResult = messageResult;
+            return this.messageResult;
+        }
     }
 }

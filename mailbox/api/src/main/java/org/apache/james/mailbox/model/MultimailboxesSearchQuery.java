@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -41,10 +42,14 @@ public class MultimailboxesSearchQuery {
             this.searchQuery = searchQuery;
             this.mailboxIds = ImmutableSet.builder();
         }
+
+        public Builder inMailboxes(Collection<MailboxId> mailboxIds) {
+            this.mailboxIds.addAll(mailboxIds);
+            return this;
+        }
         
         public Builder inMailboxes(MailboxId... mailboxIds) {
-            this.mailboxIds.addAll(Arrays.asList(mailboxIds));
-            return this;
+            return inMailboxes(Arrays.asList(mailboxIds));
         }
         
         public MultimailboxesSearchQuery build() {
