@@ -151,8 +151,8 @@ public class CreationMessage {
             return this;
         }
 
-        public Builder subject(String subject) {
-            this.subject = subject;
+        public Builder subject (String subject) {
+            this.subject = Strings.nullToEmpty(subject);
             return this;
         }
 
@@ -338,14 +338,7 @@ public class CreationMessage {
         ImmutableList.Builder<ValidationResult> errors = ImmutableList.builder();
         assertValidFromProvided(errors);
         assertAtLeastOneValidRecipient(errors);
-        assertSubjectProvided(errors);
         return errors.build();
-    }
-
-    private void assertSubjectProvided(ImmutableList.Builder<ValidationResult> errors) {
-        if (Strings.isNullOrEmpty(subject)) {
-            errors.add(ValidationResult.builder().message("'subject' is missing").property(MessageProperty.subject.asFieldName()).build());
-        }
     }
 
     private void assertAtLeastOneValidRecipient(ImmutableList.Builder<ValidationResult> errors) {

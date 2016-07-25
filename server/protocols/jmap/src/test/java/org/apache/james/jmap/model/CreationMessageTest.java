@@ -38,12 +38,14 @@ public class CreationMessageTest {
     public void setUp() {
         testedBuilder = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("ba9-0f-dead-beef"))
-                .headers(ImmutableMap.of())
-                .subject("anything");
+                .headers(ImmutableMap.of());
     }
 
     @Test
     public void validateShouldReturnErrorWhenFromIsMissing() {
+       testedBuilder = testedBuilder
+               .subject("anything");
+
         CreationMessage sut = testedBuilder.build();
 
         assertThat(sut.validate()).contains(ValidationResult.builder()
@@ -55,6 +57,9 @@ public class CreationMessageTest {
 
     @Test
     public void validateShouldReturnErrorWhenFromIsInvalid() {
+        testedBuilder = testedBuilder
+                .subject("anything");
+
         CreationMessage sut = testedBuilder.from(DraftEmailer.builder().name("bob").email("bob@domain.com@example.com").build()).build();
 
         assertThat(sut.validate()).contains(ValidationResult.builder()
@@ -66,6 +71,9 @@ public class CreationMessageTest {
 
     @Test
     public void validateShouldReturnErrorWhenNoRecipientSet () {
+        testedBuilder = testedBuilder
+                .subject("anything");
+
         CreationMessage  sut = testedBuilder
                 .from(DraftEmailer.builder().name("bob").email("bob@example.com").build()).build();
 
@@ -74,6 +82,9 @@ public class CreationMessageTest {
 
     @Test
     public void validateShouldReturnErrorWhenNoValidRecipientSet () {
+        testedBuilder = testedBuilder
+                .subject("anything");
+
         CreationMessage sut = testedBuilder
                 .from(DraftEmailer.builder().name("bob").email("bob@example.com").build())
                 .to(ImmutableList.of(DraftEmailer.builder().name("riri").email("riri@acme.com@example.com").build()))
@@ -86,10 +97,39 @@ public class CreationMessageTest {
 
     @Test
     public void validateShouldReturnEmptyListWhenNoErrors () {
+        testedBuilder = testedBuilder
+                .subject("anything");
+
         CreationMessage sut = testedBuilder
-            .from(DraftEmailer.builder().name("bob").email("bob@example.com").build())
-            .to(ImmutableList.of(DraftEmailer.builder().name("riri").email("riri@example.com").build()))
-            .build();
+                .from(DraftEmailer.builder().name("bob").email("bob@example.com").build())
+                .to(ImmutableList.of(DraftEmailer.builder().name("riri").email("riri@example.com").build()))
+                .build();
+
+        assertThat(sut.validate()).isEmpty();
+    }
+
+    @Test
+    public void validateShouldReturnEmptyListWhenSubjectIsNull () {
+        testedBuilder = testedBuilder
+                .subject(null);
+
+        CreationMessage sut = testedBuilder
+                .from(DraftEmailer.builder().name("bob").email("bob@example.com").build())
+                .to(ImmutableList.of(DraftEmailer.builder().name("riri").email("riri@example.com").build()))
+                .build();
+
+        assertThat(sut.validate()).isEmpty();
+    }
+
+    @Test
+    public void validateShouldReturnEmptyListWhenSubjectIsEmpty () {
+        testedBuilder = testedBuilder
+                .subject("");
+
+        CreationMessage sut = testedBuilder
+                .from(DraftEmailer.builder().name("bob").email("bob@example.com").build())
+                .to(ImmutableList.of(DraftEmailer.builder().name("riri").email("riri@example.com").build()))
+                .build();
 
         assertThat(sut.validate()).isEmpty();
     }

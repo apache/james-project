@@ -44,7 +44,6 @@ import com.google.common.collect.Multimap;
 
 public class MessageFactory {
 
-    public static final String NO_SUBJECT = "(No subject)";
     public static final String MULTIVALUED_HEADERS_SEPARATOR = ", ";
     public static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
@@ -96,14 +95,12 @@ public class MessageFactory {
     }
 
     private String getSubject(IndexableMessage im) {
-        return Optional.ofNullable(
-                    Strings.emptyToNull(
-                        im.getSubjects()
-                            .stream()
-                            .collect(Collectors.joining(MULTIVALUED_HEADERS_SEPARATOR))))
-                .orElse(NO_SUBJECT);
+        return im.getSubjects()
+                    .stream()
+                    .map(String::trim)
+                    .collect(Collectors.joining(MULTIVALUED_HEADERS_SEPARATOR));
     }
-    
+
     private Emailer firstElasticSearchEmailers(Set<EMailer> emailers) {
         return emailers.stream()
                     .findFirst()

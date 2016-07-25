@@ -255,7 +255,7 @@ public class MailboxMessageTest {
         Message testee = messageFactory.fromMailboxMessage(testMail, ImmutableList.of(), x -> MessageId.of("user|box|" + x));
         assertThat(testee)
             .extracting(Message::getPreview, Message::getSize, Message::getSubject, Message::getHeaders, Message::getDate)
-            .containsExactly("(Empty)", 0L, "(No subject)", ImmutableMap.of(), ZONED_DATE);
+            .containsExactly("(Empty)", 0L, "", ImmutableMap.of(), ZONED_DATE);
     }
 
     @Test

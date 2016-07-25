@@ -188,7 +188,7 @@ public class GetMessagesMethodTest {
             .containsOnly(
                     Tuple.tuple(message1Uid, "message 1 subject", Optional.of("my message")), 
                     Tuple.tuple(message2Uid, "message 2 subject", Optional.of("my message")),
-                    Tuple.tuple(message3Uid, "(No subject)", Optional.of("my message")));
+                    Tuple.tuple(message3Uid, "", Optional.of("my message")));
     }
     
     @Test
