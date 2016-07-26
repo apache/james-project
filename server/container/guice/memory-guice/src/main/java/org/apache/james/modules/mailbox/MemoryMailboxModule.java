@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
 import org.apache.james.mailbox.inmemory.mail.InMemoryModSeqProvider;
 import org.apache.james.mailbox.inmemory.mail.InMemoryUidProvider;
 import org.apache.james.mailbox.model.MailboxId;
@@ -49,7 +50,6 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
-import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.apache.james.modules.Names;
 
 import com.google.inject.AbstractModule;
@@ -80,7 +80,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
 
         bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class);
-        bind(TextExtractor.class).to(TikaTextExtractor.class);
+        bind(TextExtractor.class).to(JsoupTextExtractor.class);
 
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(InMemoryModSeqProvider.class).in(Scopes.SINGLETON);

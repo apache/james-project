@@ -275,7 +275,8 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the preview of the message is \"([^\"]*)\"$")
     public void assertPreviewOfTheFirstMessage(String preview) throws Throwable {
-        assertThat(jsonPath.<String>read(FIRST_MESSAGE + ".preview")).isEqualTo(StringEscapeUtils.unescapeJava(preview));
+        String actual = jsonPath.<String>read(FIRST_MESSAGE + ".preview").replace("\n", " ");
+        assertThat(actual).isEqualToIgnoringWhitespace(StringEscapeUtils.unescapeJava(preview));
     }
 
     @Then("^the headers of the message contains:$")
