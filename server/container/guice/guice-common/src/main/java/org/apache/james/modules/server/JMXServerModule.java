@@ -26,11 +26,15 @@ import org.apache.james.adapter.mailbox.MailboxCopierManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerManagement;
 import org.apache.james.adapter.mailbox.MailboxManagerManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerResolver;
+import org.apache.james.adapter.mailbox.ReIndexerManagement;
+import org.apache.james.adapter.mailbox.ReIndexerManagementMBean;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.domainlist.lib.DomainListManagement;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.copier.MailboxCopier;
 import org.apache.james.mailbox.copier.MailboxCopierImpl;
+import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.indexer.ReIndexerImpl;
 import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
@@ -55,6 +59,7 @@ public class JMXServerModule extends AbstractModule {
     private static final String JMX_COMPONENT_RECIPIENTREWRITETABLE = "org.apache.james:type=component,name=recipientrewritetable";
     private static final String JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN = "org.apache.james:type=component,name=mailboxmanagerbean";
     private static final String JMX_COMPONENT_MAILBOXCOPIER = "org.apache.james:type=component,name=mailboxcopier";
+    private static final String JMX_COMPONENT_REINDEXER = "org.apache.james:type=component,name=reindexerbean";
 
     @Override
     protected void configure() {
@@ -66,6 +71,8 @@ public class JMXServerModule extends AbstractModule {
         bind(MailboxManagerManagementMBean.class).to(MailboxManagerManagement.class);
         bind(RecipientRewriteTableManagementMBean.class).to(RecipientRewriteTableManagement.class);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
+        bind(ReIndexer.class).annotatedWith(Names.named("reindexer")).to(ReIndexerImpl.class);
+        bind(ReIndexerManagementMBean.class).to(ReIndexerManagement.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JMXModuleConfigurationPerformer.class);
     }
 
@@ -78,6 +85,7 @@ public class JMXServerModule extends AbstractModule {
         private final RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean;
         private final MailboxManagerManagementMBean mailboxManagerManagementMBean;
         private final MailboxCopierManagementMBean mailboxCopierManagementMBean;
+        private final ReIndexerManagementMBean reIndexerManagementMBean;
 
         @Inject
         public JMXModuleConfigurationPerformer(JMXServer jmxServer,
@@ -85,13 +93,15 @@ public class JMXServerModule extends AbstractModule {
                                                UsersRepositoryManagementMBean usersRepositoryManagementMBean,
                                                RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
                                                MailboxManagerManagementMBean mailboxManagerManagementMBean,
-                                               MailboxCopierManagementMBean mailboxCopierManagementMBean) {
+                                               MailboxCopierManagementMBean mailboxCopierManagementMBean,
+                                               ReIndexerManagementMBean reIndexerManagementMBean) {
             this.jmxServer = jmxServer;
             this.domainListManagementMBean = domainListManagementMBean;
             this.usersRepositoryManagementMBean = usersRepositoryManagementMBean;
             this.recipientRewriteTableManagementMBean = recipientRewriteTableManagementMBean;
             this.mailboxManagerManagementMBean = mailboxManagerManagementMBean;
             this.mailboxCopierManagementMBean = mailboxCopierManagementMBean;
+            this.reIndexerManagementMBean = reIndexerManagementMBean;
         }
 
         @Override
@@ -103,6 +113,7 @@ public class JMXServerModule extends AbstractModule {
                 jmxServer.register(JMX_COMPONENT_RECIPIENTREWRITETABLE, recipientRewriteTableManagementMBean);
                 jmxServer.register(JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN, mailboxManagerManagementMBean);
                 jmxServer.register(JMX_COMPONENT_MAILBOXCOPIER, mailboxCopierManagementMBean);
+                jmxServer.register(JMX_COMPONENT_REINDEXER, reIndexerManagementMBean);
             } catch (Exception e) {
                 Throwables.propagate(e);
             }

@@ -265,28 +265,28 @@ public class ServerCmd {
         case REINDEXALL:
             probe.reIndexAll();
             break;
-            case SETSIEVEQUOTA:
-                probe.setSieveQuota(ValueWithUnit.parse(arguments[1]).getConvertedValue());
-                break;
-            case SETSIEVEUSERQUOTA:
-                probe.setSieveQuota(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
-                break;
-            case GETSIEVEQUOTA:
-                System.out.println("Storage space allowed for Sieve scripts by default : "
-                    + formatStorageValue(probe.getSieveQuota()));
-                break;
-            case GETSIEVEUSERQUOTA:
-                System.out.println("Storage space allowed for "
-                    + arguments[1]
-                    + " Sieve scripts : "
-                    + formatStorageValue(probe.getSieveQuota(arguments[1])));
-                break;
-            case REMOVESIEVEQUOTA:
-                probe.removeSieveQuota();
-                break;
-            case REMOVESIEVEUSERQUOTA:
-                probe.removeSieveQuota(arguments[1]);
-                break;
+        case SETSIEVEQUOTA:
+            probe.setSieveQuota(ValueWithUnit.parse(arguments[1]).getConvertedValue());
+            break;
+        case SETSIEVEUSERQUOTA:
+            probe.setSieveQuota(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
+            break;
+        case GETSIEVEQUOTA:
+            System.out.println("Storage space allowed for Sieve scripts by default : "
+                + formatStorageValue(probe.getSieveQuota()));
+            break;
+        case GETSIEVEUSERQUOTA:
+            System.out.println("Storage space allowed for "
+                + arguments[1]
+                + " Sieve scripts : "
+                + formatStorageValue(probe.getSieveQuota(arguments[1])));
+            break;
+        case REMOVESIEVEQUOTA:
+            probe.removeSieveQuota();
+            break;
+        case REMOVESIEVEUSERQUOTA:
+            probe.removeSieveQuota(arguments[1]);
+            break;
         default:
             throw new UnrecognizedCommandException(cmdType.getCommand());
         }
