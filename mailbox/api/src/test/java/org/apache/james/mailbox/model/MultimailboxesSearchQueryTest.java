@@ -34,30 +34,58 @@ public class MultimailboxesSearchQueryTest {
     }
 
     @Test
-    public void buildShouldBuildWhenNoMailboxes() {
-        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, ImmutableSet.<MailboxId>of());
+    public void buildShouldBuildWheninMailboxes() {
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
         MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 
     @Test
     public void buildShouldBuildWhenEmptyMailboxes() {
-        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, ImmutableSet.<MailboxId>of());
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
         MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes().build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 
     @Test
+    public void buildShouldBuildWhenEmptyNotInMailboxes() {
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
+        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).notInMailboxes().build();
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    
+    @Test
     public void buildShouldBuildWhenOneMailbox() {
-        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, ImmutableSet.<MailboxId>of(TestId.of(("id1"))));
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of(TestId.of(("id1")));
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
         MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(TestId.of("id1")).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 
     @Test
-    public void buildShouldBuildWhenTwoMailboxes() {
-        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, ImmutableSet.<MailboxId>of(TestId.of("id1"), TestId.of("id2")));
-        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(TestId.of("id1"), TestId.of("id2")).build();
+    public void buildShouldBuildWhenOneNotInMailbox() {
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of(TestId.of(("id1")));
+        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
+        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).notInMailboxes(TestId.of("id1")).build();
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    
+    @Test
+    public void buildShouldBuildWhenAllDefined() {
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of(TestId.of("id1"));
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of(TestId.of("id2"));
+        MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
+        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(TestId.of("id1")).notInMailboxes(TestId.of("id2")).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 

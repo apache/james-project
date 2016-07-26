@@ -451,7 +451,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         Multimap<MailboxId, Long> results = LinkedHashMultimap.create();
         IndexSearcher searcher = null;
 
-        Query inMailboxes = buildQueryFromMailboxes(searchQuery.getMailboxIds());
+        Query inMailboxes = buildQueryFromMailboxes(searchQuery.getInMailboxes());
         
         try {
             searcher = new IndexSearcher(IndexReader.open(writer, true));

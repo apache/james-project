@@ -36,11 +36,13 @@ public class MultimailboxesSearchQuery {
         
         private final SearchQuery searchQuery;
         private ImmutableSet.Builder<MailboxId> mailboxIds;
+        private ImmutableSet.Builder<MailboxId> notInMailboxIds;
 
         private Builder(SearchQuery searchQuery) {
             Preconditions.checkNotNull(searchQuery);
             this.searchQuery = searchQuery;
             this.mailboxIds = ImmutableSet.builder();
+            this.notInMailboxIds = ImmutableSet.builder();
         }
 
         public Builder inMailboxes(Collection<MailboxId> mailboxIds) {
@@ -52,23 +54,38 @@ public class MultimailboxesSearchQuery {
             return inMailboxes(Arrays.asList(mailboxIds));
         }
         
-        public MultimailboxesSearchQuery build() {
-            return new MultimailboxesSearchQuery(searchQuery, mailboxIds.build());
+        public Builder notInMailboxes(Collection<MailboxId> mailboxIds) {
+            this.notInMailboxIds.addAll(mailboxIds);
+            return this;
         }
         
+        public Builder notInMailboxes(MailboxId... mailboxIds) {
+            return notInMailboxes(Arrays.asList(mailboxIds));
+        }
+
+        public MultimailboxesSearchQuery build() {
+            return new MultimailboxesSearchQuery(searchQuery, mailboxIds.build(), notInMailboxIds.build());
+        }
+
     }
 
     private final SearchQuery searchQuery;
-    private final ImmutableSet<MailboxId> mailboxIds;
+    private final ImmutableSet<MailboxId> inMailboxes;
+    private final ImmutableSet<MailboxId> notInMailboxes;
 
     @VisibleForTesting
-    MultimailboxesSearchQuery(SearchQuery searchQuery, ImmutableSet<MailboxId> mailboxIds) {
+    MultimailboxesSearchQuery(SearchQuery searchQuery, ImmutableSet<MailboxId> inMailboxes, ImmutableSet<MailboxId> notInMailboxes) {
         this.searchQuery = searchQuery;
-        this.mailboxIds = mailboxIds;
+        this.inMailboxes = inMailboxes;
+        this.notInMailboxes = notInMailboxes;
     }
 
-    public ImmutableSet<MailboxId> getMailboxIds() {
-        return mailboxIds;
+    public ImmutableSet<MailboxId> getInMailboxes() {
+        return inMailboxes;
+    }
+    
+    public ImmutableSet<MailboxId> getNotInMailboxes() {
+        return notInMailboxes;
     }
     
     public SearchQuery getSearchQuery() {

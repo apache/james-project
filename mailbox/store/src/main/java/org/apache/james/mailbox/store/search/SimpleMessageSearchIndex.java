@@ -157,13 +157,13 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery) throws MailboxException {
         List<Mailbox> allUserMailboxes = mailboxMapperFactory.getMailboxMapper(session)
                 .findMailboxWithPathLike(new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), WILDCARD));
-        if (searchQuery.getMailboxIds().isEmpty()) {
+        if (searchQuery.getInMailboxes().isEmpty()) {
             return searchMultimap(session, allUserMailboxes, searchQuery.getSearchQuery())
                     .asMap();
         }
         List<Mailbox> queriedMailboxes = new ArrayList<Mailbox>();
         for (Mailbox mailbox: allUserMailboxes) {
-            if (searchQuery.getMailboxIds().contains(mailbox.getMailboxId())) {
+            if (searchQuery.getInMailboxes().contains(mailbox.getMailboxId())) {
                 queriedMailboxes.add(mailbox);
             }
         }

@@ -93,7 +93,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery)
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searcher.search(ImmutableList.of(session.getUser()), searchQuery.getMailboxIds(), searchQuery.getSearchQuery()).asMap();
+        return searcher.search(ImmutableList.of(session.getUser()), searchQuery.getInMailboxes(), searchQuery.getSearchQuery()).asMap();
     }
 
     @Override
