@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -65,6 +67,7 @@ public class ReIndexerImpl implements ReIndexer {
     private final ListeningMessageSearchIndex messageSearchIndex;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
+    @Inject
     public ReIndexerImpl(MailboxManager mailboxManager,
                          ListeningMessageSearchIndex messageSearchIndex,
                          MailboxSessionMapperFactory mailboxSessionMapperFactory) {

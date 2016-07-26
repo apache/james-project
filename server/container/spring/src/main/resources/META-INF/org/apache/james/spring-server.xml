@@ -274,9 +274,7 @@
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaManager" ref="quotaManager"/>
     </bean>
-    <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement">
-        <constructor-arg index="0" ref="reindexer"/>
-    </bean>
+    <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement"/>
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
     <!--
         <bean id="james23importermanagement" class="org.apache.james.container.spring.tool.James23ImporterManagement" />

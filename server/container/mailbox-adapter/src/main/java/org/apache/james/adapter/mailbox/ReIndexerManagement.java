@@ -19,15 +19,19 @@
 
 package org.apache.james.adapter.mailbox;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class ReIndexerManagement implements ReIndexerManagementMBean {
 
-    private final ReIndexer reIndexer;
+    private ReIndexer reIndexer;
 
-    public ReIndexerManagement(ReIndexer reIndexer) {
+    @Inject
+    public void setReIndexer(@Named("reindexer") ReIndexer reIndexer) {
         this.reIndexer = reIndexer;
     }
 

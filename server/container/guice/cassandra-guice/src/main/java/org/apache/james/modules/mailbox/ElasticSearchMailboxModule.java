@@ -33,6 +33,7 @@ import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;
 import org.elasticsearch.client.Client;
@@ -52,6 +53,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     protected void configure() {
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
+        bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
 
         bind(TikaTextExtractor.class).in(Scopes.SINGLETON);
         bind(TextExtractor.class).to(TikaTextExtractor.class);
