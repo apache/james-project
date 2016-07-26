@@ -83,8 +83,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId mailboxId = mailbox.getMailboxId();
+        MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(searchQuery).inMailboxes(mailboxId).build();
         return searcher
-                .search(ImmutableList.of(session.getUser()), ImmutableList.of(mailboxId), searchQuery)
+                .search(ImmutableList.of(session.getUser()), query)
                 .get(mailboxId)
                 .iterator();
     }
@@ -93,7 +94,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery)
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
-        return searcher.search(ImmutableList.of(session.getUser()), searchQuery.getInMailboxes(), searchQuery.getSearchQuery()).asMap();
+        return searcher.search(ImmutableList.of(session.getUser()), searchQuery).asMap();
     }
 
     @Override

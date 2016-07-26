@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -167,17 +168,23 @@ public class GetMessageListMethod implements Method {
         SearchQuery searchQuery = messageListRequest.getFilter()
                 .map(filter -> new FilterToSearchQuery().convert(filter))
                 .orElse(new SearchQuery());
-        Set<MailboxId> inMailboxes = filterToFilterCondition(messageListRequest.getFilter())
-                .flatMap(condition -> Guavate.stream(condition.getInMailboxes()))
-                .flatMap(List::stream)
-                .map(mailboxIdFactory::fromString)
-                .collect(Guavate.toImmutableSet());
+        Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), condition -> condition.getInMailboxes());
+        Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), condition -> condition.getNotInMailboxes());
         return MultimailboxesSearchQuery
                 .from(searchQuery)
                 .inMailboxes(inMailboxes)
+                .notInMailboxes(notInMailboxes)
                 .build();
     }
 
+    private Set<MailboxId> buildFilterMailboxesSet(Optional<Filter> maybeFilter, Function<FilterCondition, Optional<List<String>>> mailboxListExtractor) {
+        return filterToFilterCondition(maybeFilter)
+            .flatMap(condition -> Guavate.stream(mailboxListExtractor.apply(condition)))
+            .flatMap(List::stream)
+            .map(mailboxIdFactory::fromString)
+            .collect(Guavate.toImmutableSet());
+    }
+    
     private Stream<FilterCondition> filterToFilterCondition(Optional<Filter> maybeCondition) {
         return Guavate.stream(maybeCondition)
                 .flatMap(c -> {

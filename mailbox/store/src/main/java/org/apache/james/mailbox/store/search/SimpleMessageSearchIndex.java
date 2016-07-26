@@ -49,6 +49,9 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableMultimap.Builder;
@@ -106,7 +109,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
                 .iterator();
     }
     
-    private Multimap<MailboxId, Long> searchMultimap(MailboxSession session, List<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
+    private Multimap<MailboxId, Long> searchMultimap(MailboxSession session, Iterable<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
         Builder<MailboxId, Long> multimap = ImmutableMultimap.builder();
         for (Mailbox mailbox: mailboxes) {
             multimap.putAll(searchMultimap(session, mailbox, query));
@@ -154,15 +157,21 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     @Override
-    public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery) throws MailboxException {
+    public Map<MailboxId, Collection<Long>> search(MailboxSession session, final MultimailboxesSearchQuery searchQuery) throws MailboxException {
         List<Mailbox> allUserMailboxes = mailboxMapperFactory.getMailboxMapper(session)
                 .findMailboxWithPathLike(new MailboxPath(session.getPersonalSpace(), session.getUser().getUserName(), WILDCARD));
+        FluentIterable<Mailbox> filteredMailboxes = FluentIterable.from(allUserMailboxes).filter(new Predicate<Mailbox>() {
+            @Override
+            public boolean apply(Mailbox input) {
+                return !searchQuery.getNotInMailboxes().contains(input.getMailboxId());
+            }
+        });
         if (searchQuery.getInMailboxes().isEmpty()) {
-            return searchMultimap(session, allUserMailboxes, searchQuery.getSearchQuery())
+            return searchMultimap(session, filteredMailboxes, searchQuery.getSearchQuery())
                     .asMap();
         }
         List<Mailbox> queriedMailboxes = new ArrayList<Mailbox>();
-        for (Mailbox mailbox: allUserMailboxes) {
+        for (Mailbox mailbox: filteredMailboxes) {
             if (searchQuery.getInMailboxes().contains(mailbox.getMailboxId())) {
                 queriedMailboxes.add(mailbox);
             }

@@ -254,7 +254,6 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains("username@domain.tld|mailbox|1"));
     }
 
-    @Ignore("Temporay break inMailboxes/notInMailboxes support")
     @Test
     public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatches() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
@@ -276,7 +275,6 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", empty());
     }
 
-    @Ignore("Temporay break inMailboxes/notInMailboxes support")
     @Test
     public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatchesTwice() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");
@@ -301,7 +299,6 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", empty());
     }
 
-    @Ignore("Temporay break inMailboxes/notInMailboxes support")
     @Test
     public void getMessageListShouldFilterMessagesWhenIdenticalNotInMailboxesAndInmailboxesFilterMatch() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "mailbox");

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.elasticsearch.search;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -36,7 +35,7 @@ import org.apache.james.mailbox.elasticsearch.query.SortConverter;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
-import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -72,21 +71,21 @@ public class ElasticSearchSearcher {
         this.mailboxIdFactory = mailboxIdFactory;
     }
     
-    public Multimap<MailboxId, Long> search(List<User> users, Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
-        return new ScrollIterable(client, getSearchRequestBuilder(client, users, mailboxIds, searchQuery)).stream()
+    public Multimap<MailboxId, Long> search(List<User> users, MultimailboxesSearchQuery query) throws MailboxException {
+        return new ScrollIterable(client, getSearchRequestBuilder(client, users, query)).stream()
             .flatMap(this::transformResponseToUidStream)
             .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
     }
     
-    private SearchRequestBuilder getSearchRequestBuilder(Client client, List<User> users, Collection<MailboxId> mailboxIds, SearchQuery searchQuery) {
-        return searchQuery.getSorts()
+    private SearchRequestBuilder getSearchRequestBuilder(Client client, List<User> users, MultimailboxesSearchQuery query) {
+        return query.getSearchQuery().getSorts()
             .stream()
             .reduce(
                 client.prepareSearch(ElasticSearchIndexer.MAILBOX_INDEX)
                     .setTypes(ElasticSearchIndexer.MESSAGE_TYPE)
                     .setScroll(TIMEOUT)
                     .addFields(JsonMessageConstants.ID, JsonMessageConstants.MAILBOX_ID)
-                    .setQuery(queryConverter.from(searchQuery, users, mailboxIds))
+                    .setQuery(queryConverter.from(users, query))
                     .setSize(size),
                 (searchBuilder, sort) -> searchBuilder.addSort(SortConverter.convertSort(sort)),
                 (partialResult1, partialResult2) -> partialResult1);
