@@ -457,20 +457,20 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     public void sizeGreaterThanShouldReturnUidsOfMessageExceedingTheSpecifiedSize() throws Exception {
-        // Only message 7 is over 10 KB
+        // Only message 6 is over 6.8 KB
         SearchQuery searchQuery = new SearchQuery();
-        searchQuery.andCriteria(SearchQuery.sizeGreaterThan(10000L));
+        searchQuery.andCriteria(SearchQuery.sizeGreaterThan(6800L));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(7L);
+            .containsOnly(6L);
     }
 
     @Test
     public void sizeLessThanShouldReturnUidsOfMessageNotExceedingTheSpecifiedSize() throws Exception {
-        // Only message 2 3 4 5 9 are under 5 KB
+        // Only message 2 3 4 5 7 9 are under 5 KB
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.sizeLessThan(5000L));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsOnly(2L, 3L, 4L, 5L, 9L);
+            .containsOnly(2L, 3L, 4L, 5L, 7l, 9L);
     }
 
     @Test
@@ -825,10 +825,40 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void searchWithFullTextShouldReturnMailsWhenTextBodyMatchesInsensitiveWords() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        // text/plain contains: "We are reviewing work I did for this feature."
+        searchQuery.andCriteria(SearchQuery.textContains("reVieWing"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("a reviewing of the work"));
+        // text/plain contains: "We are reviewing work I did for this feature."
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(3l);
+    }
+
+    @Test
     public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery();
-        searchQuery.andCriteria(SearchQuery.textContains("Regarder"));
+        // text/html contains: "This is a mail with beautifull html content which contains a banana."
+        searchQuery.andCriteria(SearchQuery.textContains("contains a banana"));
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsExactly(7l);
+    }
+
+    @Test
+    public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
+        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.textContains("contain banana"));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(7l);
     }
@@ -837,7 +867,7 @@ public abstract class AbstractMessageSearchIndexTest {
     public void searchWithFullTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery();
-        searchQuery.andCriteria(SearchQuery.textContains("Regarder tendance"));
+        searchQuery.andCriteria(SearchQuery.textContains("beautifull banana"));
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(7l);
     }

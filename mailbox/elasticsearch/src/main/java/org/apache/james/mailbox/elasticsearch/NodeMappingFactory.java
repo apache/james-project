@@ -44,6 +44,7 @@ public class NodeMappingFactory {
     public static final String FIELDS = "fields";
     public static final String RAW = "raw";
     public static final String ANALYZER = "analyzer";
+    public static final String SNOWBALL = "snowball";
     public static final String IGNORE_ABOVE = "ignore_above";
     public static final int LUCENE_LIMIT = 32766;
 
@@ -66,6 +67,7 @@ public class NodeMappingFactory {
         try {
             return jsonBuilder()
                 .startObject()
+
                     .startObject(ElasticSearchIndexer.MESSAGE_TYPE)
                         .startObject(PROPERTIES)
                             .startObject(JsonMessageConstants.ID)
@@ -239,13 +241,8 @@ public class NodeMappingFactory {
 
                             .startObject(JsonMessageConstants.TEXT)
                                 .field(TYPE, STRING)
-                                .startObject(FIELDS)
-                                    .startObject(RAW)
-                                        .field(TYPE, STRING)
-                                        .field(ANALYZER, IndexCreationFactory.CASE_INSENSITIVE)
-                                        .field(IGNORE_ABOVE, LUCENE_LIMIT)
-                                    .endObject()
-                                .endObject()
+                                .field(ANALYZER, SNOWBALL)
+                                .field(IGNORE_ABOVE, LUCENE_LIMIT)
                             .endObject()
                         .endObject()
                     .endObject()
