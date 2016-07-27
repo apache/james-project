@@ -129,9 +129,10 @@ public class DownloadServlet extends HttpServlet {
     }
 
     private void addContentDispositionHeader(Optional<String> optionalName, HttpServletResponse resp) {
-        optionalName.ifPresent(name -> resp.addHeader("Content-Disposition", name));
+        optionalName.ifPresent(name -> resp.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\""));
     }
 
+    
     private MailboxSession getMailboxSession(HttpServletRequest req) {
         return (MailboxSession) req.getAttribute(AuthenticationFilter.MAILBOX_SESSION);
     }

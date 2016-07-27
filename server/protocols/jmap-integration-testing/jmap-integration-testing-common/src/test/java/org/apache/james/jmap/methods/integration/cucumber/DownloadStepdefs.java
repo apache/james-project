@@ -330,6 +330,6 @@ public class DownloadStepdefs {
 
     @Then("^the attachment is named \"([^\"]*)\"$")
     public void assertContentDisposition(String name) throws IOException {
-        assertThat(response.getHeaders("Content-Disposition")).extracting(Header::toString).containsExactly("Content-Disposition: " + name);
+        assertThat(response.getHeaders("Content-Disposition")).extracting(Header::toString).containsExactly("Content-Disposition: attachment; filename=\"" + name + "\"");
     }
 }
