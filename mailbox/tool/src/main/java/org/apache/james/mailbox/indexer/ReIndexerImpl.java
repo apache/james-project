@@ -77,7 +77,7 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     public void reIndex(MailboxPath path) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing", LOGGER);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser(), LOGGER);
         reIndex(path, mailboxSession);
     }
 

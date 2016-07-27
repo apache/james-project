@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -48,6 +49,8 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
+
+import com.google.common.collect.ImmutableList;
 
 public class ReIndexerImplTest {
 
@@ -116,5 +119,43 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), eq(mailbox), eq(message));
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), eq(mailbox));
         verifyNoMoreInteractions(mailboxMapper, mailboxSessionMapperFactory, messageSearchIndex, messageMapper, mailboxMapper);
+    }
+
+    @Test
+    public void mailboxPathUserShouldBeUsedWhenReIndexing() throws Exception {
+        MockMailboxSession systemMailboxSession = new MockMailboxSession("re-indexing");
+        when(mailboxManager.createSystemSession(eq("re-indexing"), any(Logger.class)))
+            .thenReturn(systemMailboxSession);
+        MailboxMapper mailboxMapper = mock(MailboxMapper.class);
+        when(mailboxSessionMapperFactory.getMailboxMapper(systemMailboxSession))
+            .thenReturn(mailboxMapper);
+
+        String user1 = "user1@james.org";
+        MailboxPath user1MailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user1, "Inbox");
+        MockMailboxSession user1MailboxSession = new MockMailboxSession(user1);
+        when(mailboxManager.createSystemSession(eq(user1), any(Logger.class)))
+            .thenReturn(user1MailboxSession);
+        MailboxMapper user1MailboxMapper = mock(MailboxMapper.class);
+        when(mailboxSessionMapperFactory.getMailboxMapper(user1MailboxSession))
+            .thenReturn(user1MailboxMapper);
+        Mailbox user1Mailbox = mock(Mailbox.class);
+        when(user1MailboxMapper.findMailboxByPath(user1MailboxPath))
+            .thenReturn(user1Mailbox);
+        MessageMapper user1MessageMapper = mock(MessageMapper.class);
+        when(mailboxSessionMapperFactory.getMessageMapper(user1MailboxSession))
+            .thenReturn(user1MessageMapper);
+        MailboxMessage user1MailboxMessage = mock(MailboxMessage.class);
+        when(user1MessageMapper.findInMailbox(user1Mailbox, MessageRange.all(), MessageMapper.FetchType.Full, ReIndexerImpl.NO_LIMIT))
+            .thenReturn(ImmutableList.of(user1MailboxMessage).iterator());
+        when(user1MailboxMessage.getUid())
+            .thenReturn(1l);
+
+        when(mailboxManager.list(systemMailboxSession))
+            .thenReturn(ImmutableList.of(user1MailboxPath));
+
+        reIndexer.reIndex();
+
+        verify(messageSearchIndex).deleteAll(user1MailboxSession, user1Mailbox);
+        verify(messageSearchIndex).add(user1MailboxSession, user1Mailbox, user1MailboxMessage);
     }
 }
