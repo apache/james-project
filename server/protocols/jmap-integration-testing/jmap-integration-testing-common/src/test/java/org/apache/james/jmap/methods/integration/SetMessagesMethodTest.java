@@ -753,6 +753,40 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created", hasKey(messageCreationId))
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].subject", equalTo(""));
     }
+    
+    @Test
+    public void setMessageShouldReturnCreatedMessageWithNonASCIICharactersInSubjectWhenPresent() {
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "        \"subject\": \"تصور واضح للعلاقة بين النموذج الرياضي المثالي ومنظومة الظواهر\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+       .when()
+            .post("/jmap")
+       .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].subject", equalTo("تصور واضح للعلاقة بين النموذج الرياضي المثالي ومنظومة الظواهر"));
+    }
 
     @Test
     public void setMessageShouldSupportArbitraryMessageId() {

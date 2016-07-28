@@ -20,12 +20,14 @@
 package org.apache.james.jmap.model.message;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import org.apache.james.mailbox.store.search.SearchUtil;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
@@ -80,7 +82,7 @@ public class HeaderCollection {
         public Builder add(Field field) {
             Preconditions.checkNotNull(field);
             String headerName = field.getName().toLowerCase();
-            String headerValue = field.getBody();
+            String headerValue = DecoderUtil.decodeEncodedWords(field.getBody(), Charsets.ISO_8859_1);
             headers.put(headerName, headerValue);
             handleSpecificHeader(headerName, headerValue);
             return this;
