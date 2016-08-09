@@ -119,7 +119,22 @@
                         &lt;mailet match="HasHeader=headerName" class=&quot;&lt;any-class&gt;&quot;&gt;
                     </code></pre>
                 </p>
-
+                <p>
+                    One can additionally specify a header value associated with the header name. You can do something like :
+                    <pre><code>
+                        &lt;mailet match="HasHeader=headerName=headerValue" class=&quot;&lt;any-class&gt;&quot;&gt;
+                    </code></pre>
+                </p>
+                <p>
+                    You can verify several headers at once. They should all be matching. To do so, separate your conditions using "+" :
+                    <pre><code>
+                        &lt;mailet match="HasHeader=headerName1+headerName2=value" class=&quot;&lt;any-class&gt;&quot;&gt;
+                    </code></pre>
+                </p>
+                <p>
+                    Note: If the header you are matching against is present several time in the received mail, then it is
+                    considered as matching if the specified value is present on one line.
+                </p>
             </subsection>
 
             <subsection name="HasMailAttribute">
