@@ -119,7 +119,7 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
         if (domains != null) {
 
             // create mutable copy, some subclasses return ImmutableList
-            domains = new ArrayList<String>(domains);
+            ArrayList<String> mutableDomains = new ArrayList<String>(domains);
 
             String hostName;
             try {
@@ -131,20 +131,22 @@ public abstract class AbstractDomainList implements DomainList, LogEnabled, Conf
             getLogger().info("Local host is: " + hostName);
 
             if (autoDetect && (!hostName.equals("localhost"))) {
-                domains.add(hostName.toLowerCase(Locale.US));
+                mutableDomains.add(hostName.toLowerCase(Locale.US));
             }
 
             if (autoDetectIP) {
-                domains.addAll(getDomainsIP(domains, dns, getLogger()));
+                mutableDomains.addAll(getDomainsIP(mutableDomains, dns, getLogger()));
             }
 
             if (getLogger().isInfoEnabled()) {
-                for (String domain : domains) {
+                for (String domain : mutableDomains) {
                     getLogger().debug("Handling mail for: " + domain);
                 }
             }
+
+            return ImmutableList.copyOf(mutableDomains);
         }
-        return ImmutableList.copyOf(domains);
+        return ImmutableList.of();// empty list
     }
 
     /**
