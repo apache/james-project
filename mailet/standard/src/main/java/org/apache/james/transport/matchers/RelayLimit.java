@@ -47,6 +47,9 @@ public class RelayLimit extends GenericMatcher {
         } catch (NumberFormatException e) {
             throw new MessagingException("No valid integer: " + getCondition());
         }
+        if (limit <= 0) {
+            throw new MessagingException("Relay limit should be superior to 0");
+        }
     }
 
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
