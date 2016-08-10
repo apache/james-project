@@ -217,7 +217,7 @@
             </subsection>
 
             <subsection name="RecipientIsLocal">
-                <p>Description: Matches mails that are sent to email addresses on local hosts with users that have local acccunts.  Only
+                <p>Description: Matches mails that are sent to email addresses on local hosts with users that have local accounts.  Only
                     matching recipients are returned.</p>
                 <p>Configuration string: None.</p>
             </subsection>
