@@ -45,7 +45,7 @@ public class MaxQuotaConfigurationReader implements Configurable {
         Long defaultMaxMessage = config.configurationAt("maxQuotaManager").getLong("defaultMaxMessage", null);
         Long defaultMaxStorage = config.configurationAt("maxQuotaManager").getLong("defaultMaxStorage", null);
         Map<String, Long> maxMessage = parseMaxMessageConfiguration(config, "maxMessage");
-        Map<String, Long> maxStorage = parseMaxMessageConfiguration(config, "maxMessage");
+        Map<String, Long> maxStorage = parseMaxMessageConfiguration(config, "maxStorage");
         try {
             configureDefaultValues(defaultMaxMessage, defaultMaxStorage);
             configureQuotaRootSpecificValues(maxMessage, maxStorage);
