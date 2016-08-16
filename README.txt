@@ -54,10 +54,10 @@ We need to check the compilation in both Java 6 & Java 8:
 
 * Java 6
 First step, you have to build the Docker image
-$ docker build -t james/project dockerfiles/compilation/java-6
+$ docker build -t james/project:java-6 dockerfiles/compilation/java-6
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project:java-6 -s SHA1
 
 Where:
 
@@ -70,10 +70,10 @@ as it is needed by the container that will run James.
 
 * Java 8
 First step, you have to build the Docker image
-$ docker build -t james/project dockerfiles/compilation/java-8
+$ docker build -t james/project:java-8 dockerfiles/compilation/java-8
 
 In order to run the build, you have to launch the following command:
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project -s SHA1
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/dockerfiles/run/spring/destination:/destination -t james/project:java-8 -s SHA1
 
 Where:
 
