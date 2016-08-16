@@ -21,7 +21,6 @@ package org.apache.james.mailbox.elasticsearch.query;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.notQuery;
 
 import java.util.Collection;
 import java.util.List;
