@@ -31,6 +31,8 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import java.util.Collection;
 
+import com.google.common.base.Objects;
+
 /**
  * Checks whether this message has an attachment
  *
@@ -64,8 +66,7 @@ public class HasAttachment extends GenericMatcher {
                 for (int i = 0; i < multipart.getCount(); i++) {
                     try {
                         Part part = multipart.getBodyPart(i);
-                        String fileName = part.getFileName();
-                        if (fileName != null) {
+                        if (isAttachment(part)) {
                             return mail.getRecipients(); // file found
                         }
                     } catch (MessagingException e) {
@@ -73,8 +74,7 @@ public class HasAttachment extends GenericMatcher {
                     } // ignore any messaging exception and process next bodypart
                 }
             } else {
-                String fileName = message.getFileName();
-                if (fileName != null) {
+                if (isAttachment(message)) {
                     return mail.getRecipients(); // file found
                 }
             }
@@ -88,5 +88,9 @@ public class HasAttachment extends GenericMatcher {
         }
         
         return null; // no attachment found
+    }
+
+    private boolean isAttachment(Part part) throws MessagingException {
+        return Objects.equal(part.getDisposition(), MimeMessage.ATTACHMENT);
     }
 }
