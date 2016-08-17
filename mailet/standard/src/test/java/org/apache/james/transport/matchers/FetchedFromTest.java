@@ -20,7 +20,12 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.FetchedFrom;
+import java.util.Collection;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
+
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
@@ -29,11 +34,6 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
-import java.util.Collection;
 
 public class FetchedFromTest {
 
