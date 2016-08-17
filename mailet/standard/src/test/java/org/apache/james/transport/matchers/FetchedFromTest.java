@@ -86,4 +86,16 @@ public class FetchedFromTest {
 
         assertThat(fakeMail.getMessage().getHeader(FETCH_FROM_HEADER)).isNull();
     }
+
+    @Test
+    public void testHeaderWasNotRemovedIfNotMatched() throws MessagingException {
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(mailAddress1, mailAddress2)
+            .mimeMessage(MailUtil.createMimeMessage(FETCH_FROM_HEADER, WRONG_HEADER_VALUE))
+            .build();
+
+        matcher.match(fakeMail);
+
+        assertThat(fakeMail.getMessage().getHeader(FETCH_FROM_HEADER)).containsExactly(WRONG_HEADER_VALUE);
+    }
 }
