@@ -78,4 +78,16 @@ public class SizeGreaterThanTest {
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1mb", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
     }
+
+    @Test(expected = MessagingException.class)
+    public void initShouldThrowOnNullSize() throws Exception {
+        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=0", FakeMailContext.defaultContext());
+        matcher.init(matcherConfiguration);
+    }
+
+    @Test(expected = MessagingException.class)
+    public void initShouldThrowOnNegativeSize() throws Exception {
+        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=-1", FakeMailContext.defaultContext());
+        matcher.init(matcherConfiguration);
+    }
 }
