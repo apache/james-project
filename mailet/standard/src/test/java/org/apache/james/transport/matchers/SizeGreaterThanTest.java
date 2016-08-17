@@ -17,7 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +69,42 @@ public class SizeGreaterThanTest {
         matcher.init(matcherConfiguration);
 
         assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    public void matchShouldNotMatchMailsWithSpecifiedSize() throws MessagingException {
+        fakeMail.setMessageSize(1024);
+        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
+        matcher.init(matcherConfiguration);
+
+        assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    public void matchShouldMatchMailsWithSizeSuperiorToSpecifiedSize() throws MessagingException {
+        fakeMail.setMessageSize(1025);
+        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
+        matcher.init(matcherConfiguration);
+
+        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress);
+    }
+
+    @Test
+    public void matchShouldReturnNullWhenUnderLimitNoUnit() throws MessagingException {
+        fakeMail.setMessageSize(4);
+        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
+        matcher.init(matcherConfiguration);
+
+        assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    public void matchShouldMatchOverLimitWhenNoUnit() throws MessagingException {
+        fakeMail.setMessageSize(5);
+        FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
+        matcher.init(matcherConfiguration);
+
+        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress);
     }
 
     @Test
