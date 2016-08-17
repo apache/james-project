@@ -109,7 +109,7 @@ public class GetMailboxesMethodTest {
         MailboxManager mockedMailboxManager = mock(MailboxManager.class);
         when(mockedMailboxManager.list(any()))
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
-        when(mockedMailboxManager.getMailbox(any(), any()))
+        when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any()))
             .thenThrow(new MailboxException());
         GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxUtils);
         

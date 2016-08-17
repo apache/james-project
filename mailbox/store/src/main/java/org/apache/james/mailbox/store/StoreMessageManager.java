@@ -51,6 +51,7 @@ import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
@@ -832,5 +833,9 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      */
     protected MailboxACL getResolvedMailboxACL(MailboxSession mailboxSession) throws UnsupportedRightException {
         return aclResolver.applyGlobalACL(mailbox.getACL(), new GroupFolderResolver(mailboxSession).isGroupFolder(mailbox));
+    }
+    
+    public MailboxId getId() {
+        return mailbox.getMailboxId();
     }
 }

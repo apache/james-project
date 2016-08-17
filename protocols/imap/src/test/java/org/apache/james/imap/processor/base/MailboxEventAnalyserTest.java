@@ -56,6 +56,7 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -321,6 +322,9 @@ public class MailboxEventAnalyserTest {
 
                 }
                 
+                public MailboxId getId() {
+                    return null;
+                }
             };
         }
         

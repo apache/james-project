@@ -31,6 +31,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.slf4j.Logger;
@@ -61,12 +62,12 @@ public class MailboxUtils {
     public Optional<Mailbox> mailboxFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
             Optional<Role> role = Role.from(mailboxPath.getName());
-            MessageManager.MetaData mailboxMetaData = getMailboxMetaData(mailboxPath, mailboxSession);
-            String mailboxId = getMailboxId(mailboxPath, mailboxSession);
+            MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+            MessageManager.MetaData mailboxMetaData = getMailboxMetaData(mailbox, mailboxSession);
             return Optional.ofNullable(Mailbox.builder()
-                    .id(mailboxId)
+                    .id(mailbox.getId().serialize())
                     .name(getName(mailboxPath, mailboxSession))
-                    .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession))
+                    .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).map(MailboxId::serialize).orElse(null))
                     .role(role)
                     .unreadMessages(mailboxMetaData.getUnseenCount())
                     .totalMessages(mailboxMetaData.getMessageCount())
@@ -78,16 +79,13 @@ public class MailboxUtils {
         }
     }
 
-    private String getMailboxId(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-        return mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxByPath(mailboxPath)
-                .getMailboxId()
-                .serialize();
+    private MessageManager.MetaData getMailboxMetaData(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
+        return messageManager.getMetaData(DONT_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT);
     }
 
-    private MessageManager.MetaData getMailboxMetaData(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+    private MailboxId getMailboxId(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         return mailboxManager.getMailbox(mailboxPath, mailboxSession)
-                .getMetaData(DONT_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT);
+                .getId();
     }
 
     @VisibleForTesting String getName(MailboxPath mailboxPath, MailboxSession mailboxSession) {
@@ -112,13 +110,13 @@ public class MailboxUtils {
                 .findFirst();
     }
 
-    @VisibleForTesting String getParentIdFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+    @VisibleForTesting Optional<MailboxId> getParentIdFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         List<MailboxPath> levels = mailboxPath.getHierarchyLevels(mailboxSession.getPathDelimiter());
         if (levels.size() <= 1) {
-            return null;
+            return Optional.empty();
         }
         MailboxPath parent = levels.get(levels.size() - 2);
-        return getMailboxId(parent, mailboxSession);
+        return Optional.of(getMailboxId(parent, mailboxSession));
     }
 
     public Optional<Mailbox> mailboxFromMailboxId(String mailboxId, MailboxSession mailboxSession) {

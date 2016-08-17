@@ -30,6 +30,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
@@ -164,6 +165,11 @@ public interface MessageManager {
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
 
 
+    /**
+     * Gets the id of the referenced mailbox
+     */
+    MailboxId getId();
+    
     /**
      * Gets current meta data for the mailbox.<br>
      * Consolidates common calls together to allow improved performance.<br>

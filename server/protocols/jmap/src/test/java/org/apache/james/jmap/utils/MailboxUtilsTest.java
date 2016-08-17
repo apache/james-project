@@ -128,8 +128,8 @@ public class MailboxUtilsTest {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        String id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
-        assertThat(id).isNull();
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
+        assertThat(id).isEmpty();
     }
 
     @Test
@@ -143,8 +143,8 @@ public class MailboxUtilsTest {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        String id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
-        assertThat(id).isEqualTo(parentId.serialize());
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
+        assertThat(id).contains(parentId);
     }
 
     @Test
@@ -160,8 +160,8 @@ public class MailboxUtilsTest {
 
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        String id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
-        assertThat(id).isEqualTo(parentId.serialize());
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, mailboxSession);
+        assertThat(id).contains(parentId);
     }
 
     @Test
