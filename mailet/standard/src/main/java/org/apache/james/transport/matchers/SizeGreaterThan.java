@@ -65,6 +65,9 @@ public class SizeGreaterThan extends GenericMatcher {
         } catch (NumberFormatException e) {
             throw new MessagingException("Invalid amount: " + amount);
         }
+        if (cutoff < 1) {
+            throw new MessagingException("Amount should be strictly superior to 0");
+        }
     }
 
     /*
