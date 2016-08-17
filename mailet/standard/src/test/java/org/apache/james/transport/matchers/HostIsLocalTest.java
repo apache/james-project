@@ -20,7 +20,15 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.HostIsLocal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
@@ -32,14 +40,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 @SuppressWarnings("deprecation")
 public class HostIsLocalTest {
@@ -188,7 +188,7 @@ public class HostIsLocalTest {
                         "Unimplemented mock service");
             }
 
-            public List<String> dnsLookup(String name, RecordType type) throws TemporaryLookupException, LookupException {
+            public List<String> dnsLookup(String name, RecordType type) throws LookupException {
                 throw new UnsupportedOperationException(
                         "Unimplemented mock service");
             }
