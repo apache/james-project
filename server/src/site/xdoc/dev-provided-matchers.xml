@@ -335,7 +335,7 @@
 
             <subsection name="SizeGreaterThan">
                 <p>Description: Matches emails with a total message size (headers and body) greater than the specified limit.
-                    All recipients are returned.</p>
+                    All recipients are returned. Specified limit should be strictly positive.</p>
                 <p>Configuration string: a positive integer followed by an 'm' or a 'k'.  This is the maximum message size permitted
                     specified in megabytes or kilobytes respectively.
                     <pre><code>
