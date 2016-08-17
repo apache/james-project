@@ -54,6 +54,14 @@ public class MockMailboxSession implements MailboxSession{
             public List<Locale> getLocalePreferences() {
                 return new ArrayList<Locale>();
             }
+
+            @Override
+            public boolean isSameUser(String other) {
+                if (username == null) {
+                    return other == null;
+                }
+                return username.equalsIgnoreCase(other);
+            }
         };
     }
     

@@ -37,6 +37,7 @@ import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -111,6 +112,12 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             throws MailboxException, MailboxNotFoundException {      
         Mailbox mailbox = maildirStore.loadMailbox(session, mailboxPath);
         return cacheMailbox(mailbox);
+    }
+    
+    @Override
+    public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
+        MaildirId mailboxId = (MaildirId)id;
+        return getCachedMailbox(mailboxId);
     }
     
     /**

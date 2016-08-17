@@ -115,19 +115,32 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     char getDelimiter();
 
     /**
-     * Gets an session suitable for IMAP.
+     * Gets an object managing the given mailbox.
      * 
      * @param mailboxPath
      *            the Path of the mailbox, not null
      * @param session
      *            the context for this call, not null
-     * @return <code>ImapMailboxSession</code>, not null
      * @throws MailboxException
      *             when the mailbox cannot be opened
      * @throws MailboxNotFoundException
      *             when the given mailbox does not exist
      */
     MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+
+    /**
+     * Gets an object managing the given mailbox.
+     * 
+     * @param mailboxId
+     *            the Id of the mailbox, not null
+     * @param session
+     *            the context for this call, not null
+     * @throws MailboxException
+     *             when the mailbox cannot be opened
+     * @throws MailboxNotFoundException
+     *             when the given mailbox does not exist
+     */
+    MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
     /**
      * Creates a new mailbox. Any intermediary mailboxes missing from the

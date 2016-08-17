@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -95,6 +96,18 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             throw new MailboxNotFoundException(mailboxPath);
         } catch (PersistenceException e) {
             throw new MailboxException("Search of mailbox " + mailboxPath + " failed", e);
+        } 
+    }
+
+    @Override
+    public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
+        JPAId mailboxId = (JPAId)id;
+        try {
+            return (Mailbox) getEntityManager().createNamedQuery("findMailboxById").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
+        } catch (NoResultException e) {
+            throw new MailboxNotFoundException(mailboxId.serialize());
+        } catch (PersistenceException e) {
+            throw new MailboxException("Search of mailbox " + mailboxId.serialize() + " failed", e);
         } 
     }
 

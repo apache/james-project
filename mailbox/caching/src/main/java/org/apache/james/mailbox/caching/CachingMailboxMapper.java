@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -76,12 +77,20 @@ public class CachingMailboxMapper implements MailboxMapper {
 		}
 	}
 
-	@Override
-	public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
-			throws MailboxException {
-		// TODO possible to meaningfully cache it?
-		return underlying.findMailboxWithPathLike(mailboxPath);
-	}
+    @Override
+    public Mailbox findMailboxById(MailboxId mailboxId)
+            throws MailboxException {
+        // TODO possible to meaningfully cache it?
+        return underlying.findMailboxById(mailboxId);
+    }
+
+
+    @Override
+    public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
+            throws MailboxException {
+        // TODO possible to meaningfully cache it?
+        return underlying.findMailboxWithPathLike(mailboxPath);
+    }
 
 	@Override
 	public boolean hasChildren(Mailbox mailbox, char delimiter)

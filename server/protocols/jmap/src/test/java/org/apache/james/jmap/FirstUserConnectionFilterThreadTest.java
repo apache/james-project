@@ -136,6 +136,11 @@ public class FirstUserConnectionFilterThreadTest {
         }
 
         @Override
+        public MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+            return null;
+        }
+
+        @Override
         public void createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         }
 

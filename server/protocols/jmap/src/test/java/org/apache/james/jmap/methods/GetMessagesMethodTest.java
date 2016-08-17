@@ -98,6 +98,11 @@ public class GetMessagesMethodTest {
         public List<Locale> getLocalePreferences() {
             return ImmutableList.of();
         }
+
+        @Override
+        public boolean isSameUser(String username) {
+            return this.username.equalsIgnoreCase(username);
+        }
     }
     
     private static final User ROBERT = new User("robert", "secret");

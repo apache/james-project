@@ -115,6 +115,8 @@ public interface MailboxSession {
          * @return not null, when empty the default local should be used
          */
         List<Locale> getLocalePreferences();
+        
+        boolean isSameUser(String username);
     }
 
     /**

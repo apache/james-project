@@ -28,6 +28,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -70,6 +71,16 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         }
         if (result == null) {
             throw new MailboxNotFoundException(path);
+        } else {
+            return result;
+        }
+    }
+
+    public synchronized Mailbox findMailboxById(MailboxId id) throws MailboxException {
+        InMemoryId mailboxId = (InMemoryId)id;
+        Mailbox result = mailboxesById.get(mailboxId);
+        if (result == null) {
+            throw new MailboxNotFoundException(mailboxId.serialize());
         } else {
             return result;
         }

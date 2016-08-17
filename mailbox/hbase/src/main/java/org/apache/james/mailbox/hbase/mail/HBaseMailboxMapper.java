@@ -36,6 +36,7 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -54,6 +55,7 @@ import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.HBaseNonTransactionalMapper;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -114,6 +116,31 @@ public class HBaseMailboxMapper extends HBaseNonTransactionalMapper implements M
             throw new MailboxException("Search of mailbox " + mailboxPath + " failed", e);
         } finally {
             scanner.close();
+            if (mailboxes != null) {
+                try {
+                    mailboxes.close();
+                } catch (IOException ex) {
+                    throw new MailboxException("Error closing table " + mailboxes, ex);
+                }
+            }
+        }
+    }
+
+    @Override
+    public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
+        HBaseId mailboxId = (HBaseId)id;
+        HTable mailboxes = null;
+        try {
+            mailboxes = new HTable(conf, MAILBOXES_TABLE);
+            Get get = new Get(mailboxId.toBytes());
+            Result result = mailboxes.get(get);
+            if (result == null) {
+                throw new MailboxNotFoundException(mailboxId.serialize());
+            }
+            return mailboxFromResult(result);
+        } catch (IOException ex) {
+            throw new MailboxException("IOException in HBase cluster during get()", ex);
+        } finally {
             if (mailboxes != null) {
                 try {
                     mailboxes.close();

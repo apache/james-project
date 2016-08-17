@@ -68,6 +68,11 @@ public class SetVacationResponseMethodTest {
         public List<Locale> getLocalePreferences() {
             return null;
         }
+
+        @Override
+        public boolean isSameUser(String username) {
+            return USERNAME.equalsIgnoreCase(username);
+        }
     };
     public static final String SUBJECT = "subject";
 

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -399,7 +400,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public org.apache.james.mailbox.MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session)
+    public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session)
             throws MailboxException {
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailboxRow = mapper.findMailboxByPath(mailboxPath);
@@ -411,10 +412,40 @@ public class StoreMailboxManager implements MailboxManager {
         } else {
             session.getLog().debug("Loaded mailbox " + mailboxPath);
 
-            StoreMessageManager m = createMessageManager(mailboxRow, session);
-            m.setFetchBatchSize(fetchBatchSize);
-            return m;
+            StoreMessageManager messageManager = createMessageManager(mailboxRow, session);
+            messageManager.setFetchBatchSize(fetchBatchSize);
+            return messageManager;
         }
+    }
+
+    @Override
+    public MessageManager getMailbox(MailboxId mailboxId, MailboxSession session)
+            throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailboxRow = mapper.findMailboxById(mailboxId);
+
+        if (mailboxRow == null) {
+            session.getLog().info("Mailbox '" + mailboxId.serialize() + "' not found.");
+            throw new MailboxNotFoundException(mailboxId.serialize());
+        }
+        
+        if (! belongsToCurrentUser(mailboxRow, session)) {
+            session.getLog().info("Mailbox '" + mailboxId.serialize() + "' does not belong to user '" + session.getUser() + "' but to '" + mailboxRow.getUser());
+            throw new MailboxNotFoundException(mailboxId.serialize());
+        }
+
+        session.getLog().debug("Loaded mailbox " + mailboxId.serialize());
+
+        StoreMessageManager messageManager = createMessageManager(mailboxRow, session);
+        messageManager.setFetchBatchSize(fetchBatchSize);
+        return messageManager;
+    }
+
+    private boolean belongsToCurrentUser(Mailbox mailbox, MailboxSession session) {
+        if (session.getUser() == null) {
+            return mailbox.getUser() == null;
+        }
+        return session.getUser().isSameUser(mailbox.getUser());
     }
 
     @Override

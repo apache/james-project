@@ -198,4 +198,12 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
         return type;
     }
 
+    @Override
+    public boolean isSameUser(String username) {
+        if (this.userName == null) {
+            return username == null;
+        }
+        return this.userName.equalsIgnoreCase(username);
+    }
+
 }

@@ -338,7 +338,10 @@ public class MailboxEventAnalyserTest {
                 }
             };
         }
-        
+
+        public MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+            return getMailbox((MailboxPath)null, session);
+        }
         
         public char getDelimiter() {
             return '.';

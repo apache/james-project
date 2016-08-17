@@ -263,6 +263,11 @@ public class LSubProcessorTest {
                 public String getUserName() {
                     return "test";
                 }
+
+                @Override
+                public boolean isSameUser(String username) {
+                    return "test".equalsIgnoreCase(username);
+                }
                 
             }));     
             oneOf(manager).subscriptions(with(same(mailboxSession)));will(returnValue(subscriptions));     

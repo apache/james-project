@@ -45,6 +45,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.MailboxBas
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -86,6 +87,17 @@ public class CassandraMailboxMapper implements MailboxMapper {
         ResultSet resultSet = session.execute(select(FIELDS).from(TABLE_NAME).where(eq(PATH, path.toString())));
         if (resultSet.isExhausted()) {
             throw new MailboxNotFoundException(path);
+        } else {
+            return mailbox(resultSet.one());
+        }
+    }
+
+    @Override
+    public Mailbox findMailboxById(MailboxId id) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) id;
+        ResultSet resultSet = session.execute(select(FIELDS).from(TABLE_NAME).where(eq(ID, mailboxId.asUuid())));
+        if (resultSet.isExhausted()) {
+            throw new MailboxNotFoundException(id.serialize());
         } else {
             return mailbox(resultSet.one());
         }

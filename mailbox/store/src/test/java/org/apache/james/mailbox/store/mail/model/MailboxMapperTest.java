@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -248,7 +249,23 @@ public class MailboxMapperTest<T extends MapperProvider> {
         MailboxPath regexPath = new MailboxPath(benwaInboxPath.getNamespace(), benwaInboxPath.getUser(), "INB?X");
         assertThat(mailboxMapper.findMailboxWithPathLike(regexPath)).isEmpty();
     }
+
+    @ContractTest
+    public void findMailboxByIdShouldReturnExistingMailbox() throws MailboxException {
+        saveAll();
+        Mailbox actual = mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId());
+        assertThat(actual).isEqualTo(benwaInboxMailbox);
+    }
     
+    @ContractTest
+    public void findMailboxByIdShouldFailWhenAbsent() throws MailboxException {
+        expected.expect(MailboxNotFoundException.class);
+        saveAll();
+        MailboxId removed = benwaInboxMailbox.getMailboxId();
+        mailboxMapper.delete(benwaInboxMailbox);
+        mailboxMapper.findMailboxById(removed);
+    }
+
     private void saveAll() throws MailboxException{
         mailboxMapper.save(benwaInboxMailbox);
         mailboxMapper.save(benwaWorkMailbox);

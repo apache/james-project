@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -60,6 +61,17 @@ public interface MailboxMapper extends Mapper {
      * @throws MailboxNotFoundException
      */
     Mailbox findMailboxByPath(MailboxPath mailboxName)
+            throws MailboxException, MailboxNotFoundException;
+
+    /**
+     * Return the {@link Mailbox} for the given name
+     * 
+     * @param mailboxId
+     * @return mailbox
+     * @throws MailboxException
+     * @throws MailboxNotFoundException
+     */
+    Mailbox findMailboxById(MailboxId mailboxId)
             throws MailboxException, MailboxNotFoundException;
 
     /**
