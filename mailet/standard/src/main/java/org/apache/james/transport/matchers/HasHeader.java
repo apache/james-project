@@ -26,8 +26,10 @@ import org.apache.mailet.base.GenericMatcher;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -38,73 +40,80 @@ import java.util.StringTokenizer;
  */
 public class HasHeader extends GenericMatcher {
 
-    private LinkedList<String> conditionline_ = new LinkedList<String>();
+    private static final String CONDITION_SEPARATOR = "+";
+    private static final String HEADER_VALUE_SEPARATOR = "=";
 
-    // set headernames and values
+    private interface HeaderCondition {
+        boolean isMatching(MimeMessage mimeMessage) throws MessagingException;
+    }
+
+    private static class HeaderNameCondition implements HeaderCondition {
+        private final String headerName;
+
+        public HeaderNameCondition(String headerName) {
+            this.headerName = headerName;
+        }
+
+        @Override
+        public boolean isMatching(MimeMessage mimeMessage) throws MessagingException {
+            String[] headerArray = mimeMessage.getHeader(headerName);
+            return headerArray != null && headerArray.length > 0;
+        }
+    }
+
+    private static class HeaderValueCondition implements HeaderCondition {
+        private final String headerName;
+        private final String headerValue;
+
+        public HeaderValueCondition(String headerName, String headerValue) {
+            this.headerName = headerName;
+            this.headerValue = headerValue;
+        }
+
+        @Override
+        public boolean isMatching(MimeMessage mimeMessage) throws MessagingException {
+            String[] headerArray = mimeMessage.getHeader(headerName);
+            if (headerArray != null && headerArray.length > 0) {
+                for (String value : headerArray) {
+                    if (headerValue.equals(value)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    private List<HeaderCondition> headerConditions;
+
     public void init() throws MessagingException {
-        StringTokenizer st = new StringTokenizer(getCondition(), "+");
-        conditionline_ = new LinkedList<String>();
+        headerConditions = new ArrayList<HeaderCondition>();
+        StringTokenizer conditionTokenizer = new StringTokenizer(getCondition(), CONDITION_SEPARATOR);
+        while (conditionTokenizer.hasMoreTokens()) {
+            headerConditions.add(parseHeaderCondition(conditionTokenizer.nextToken().trim()));
+        }
+    }
 
-        // separates the headernames from the matchline
-        while (st.hasMoreTokens()) {
-            String condition = st.nextToken().trim();
-            conditionline_.add(condition);
+    private HeaderCondition parseHeaderCondition(String element) throws MessagingException {
+        StringTokenizer valueSeparatorTokenizer = new StringTokenizer(element, HEADER_VALUE_SEPARATOR, false);
+        if (!valueSeparatorTokenizer.hasMoreElements()) {
+            throw new MessagingException("Missing headerName");
+        }
+        String headerName = valueSeparatorTokenizer.nextToken().trim();
+        if (valueSeparatorTokenizer.hasMoreTokens()) {
+           return new HeaderValueCondition(headerName, valueSeparatorTokenizer.nextToken().trim());
+        } else {
+            return new HeaderNameCondition(headerName);
         }
     }
 
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
-        boolean match = false;
-        MimeMessage message = mail.getMessage();
-
-        for (String element : conditionline_) {
-            StringTokenizer st = new StringTokenizer(element, "=", false);
-            String header;
-
-            // read the headername
-            if (st.hasMoreTokens()) {
-                header = st.nextToken().trim();
-            } else {
-                throw new MessagingException("Missing headerName");
-            }
-
-            // try to read headervalue
-            String headerValue;
-            if (st.hasMoreTokens()) {
-                headerValue = st.nextToken().trim();
-            } else {
-                headerValue = null;
-            }
-
-            // find headername in Mailheaders
-            String[] headerArray = message.getHeader(header);
-            if (headerArray != null && headerArray.length > 0) {
-                // if there is the headername specified without the headervalue
-                // only the existence of the headername ist performed
-                if (headerValue != null) {
-                    //
-                    if (headerArray[0].trim().equalsIgnoreCase(headerValue)) {
-                        // headername and value found and match to the condition
-                        match = true;
-                    } else {
-                        // headername and value found but the value does not match the condition
-                        match = false;
-                        // if one condition fails the matcher returns false
-                        break;
-                    }
-                } else {
-                    // just the headername is specified
-                    match = true;
-                }
-            } else {
-                // no headername is found
-                match = false;
-                // if one condition fails the matcher returns false
-                break;
+        for (HeaderCondition headerCondition : headerConditions) {
+            if (!headerCondition.isMatching(mail.getMessage())) {
+                return null;
             }
         }
-
-        return (match) ? mail.getRecipients() : null;
-
+        return mail.getRecipients();
     }
 } 
 
