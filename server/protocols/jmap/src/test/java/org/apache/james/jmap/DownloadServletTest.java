@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,22 +29,22 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.api.SimpleTokenFactory;
 import org.apache.james.jmap.utils.DownloadPath;
+import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.junit.Test;
 
 public class DownloadServletTest {
 
     @Test
-    public void downloadMayFailWhenUnableToCreateAttachmentMapper() throws Exception {
+    public void downloadMayFailWhenUnknownErrorOnAttachmentManager() throws Exception {
         MailboxSession mailboxSession = mock(MailboxSession.class);
-        MailboxSessionMapperFactory mailboxSessionMapperFactory = mock(MailboxSessionMapperFactory.class);
-        when(mailboxSessionMapperFactory.createAttachmentMapper(mailboxSession))
+        AttachmentManager mockedAttachmentManager = mock(AttachmentManager.class);
+        when(mockedAttachmentManager.getAttachment(any(), eq(mailboxSession)))
             .thenThrow(new MailboxException());
         SimpleTokenFactory nullSimpleTokenFactory = null;
 
-        DownloadServlet testee = new DownloadServlet(mailboxSessionMapperFactory, nullSimpleTokenFactory);
+        DownloadServlet testee = new DownloadServlet(mockedAttachmentManager, nullSimpleTokenFactory);
 
         HttpServletResponse resp = mock(HttpServletResponse.class);
         testee.download(mailboxSession, DownloadPath.from("/blobId"), resp);
