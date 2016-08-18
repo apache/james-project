@@ -28,38 +28,35 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.UploadResponse;
+import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 
 public class UploadHandler {
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final AttachmentManager attachmentManager;
     private final ObjectMapper objectMapper;
 
     @Inject
-    private UploadHandler(MailboxSessionMapperFactory mailboxSessionMapperFactory, ObjectMapperFactory objectMapperFactory) {
-        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+    private UploadHandler(AttachmentManager attachmentManager, ObjectMapperFactory objectMapperFactory) {
+        this.attachmentManager = attachmentManager;
         this.objectMapper = objectMapperFactory.forWriting();
     }
 
-    public void handle(String contentType, InputStream content, HttpServletResponse response) throws IOException, MailboxException {
-        UploadResponse storedContent = uploadContent(contentType, content);
+    public void handle(String contentType, InputStream content, MailboxSession mailboxSession, HttpServletResponse response) throws IOException, MailboxException {
+        UploadResponse storedContent = uploadContent(contentType, content, mailboxSession);
         buildResponse(response, storedContent);
     }
 
-    private UploadResponse uploadContent(String contentType, InputStream inputStream) throws IOException, MailboxException {
-        MailboxSession session = null;
-        AttachmentMapper attachmentMapper = mailboxSessionMapperFactory.createAttachmentMapper(session);
+    private UploadResponse uploadContent(String contentType, InputStream inputStream, MailboxSession session) throws IOException, MailboxException {
         Attachment attachment = Attachment.builder()
                 .bytes(ByteStreams.toByteArray(inputStream))
                 .type(contentType)
                 .build();
-        attachmentMapper.storeAttachment(attachment);
+        attachmentManager.storeAttachment(attachment, session);
         return UploadResponse.builder()
                 .blobId(attachment.getAttachmentId().getId())
                 .type(attachment.getType())

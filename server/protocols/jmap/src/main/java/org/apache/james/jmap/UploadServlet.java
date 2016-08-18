@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +53,16 @@ public class UploadServlet extends HttpServlet {
             resp.setStatus(SC_BAD_REQUEST);
         } else {
             try {
-                uploadHandler.handle(contentType, req.getInputStream(), resp);
+                uploadHandler.handle(contentType, req.getInputStream(), getMailboxSession(req), resp);
             } catch (IOException | MailboxException e) {
                 LOGGER.error("Error while uploading content", e);
                 resp.setStatus(SC_INTERNAL_SERVER_ERROR);
             }
         }
     }
+
+    private MailboxSession getMailboxSession(HttpServletRequest req) {
+        return (MailboxSession) req.getAttribute(AuthenticationFilter.MAILBOX_SESSION);
+    }
+
 }
