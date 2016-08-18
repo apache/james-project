@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -57,6 +56,7 @@ import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -65,8 +65,6 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -78,6 +76,9 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.github.fge.lambdas.predicates.ThrowingPredicate;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -93,7 +94,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final MailFactory mailFactory;
     private final MessageFactory messageFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
-    private AttachmentMapperFactory attachmentMapperFactory;
+    private final AttachmentManager attachmentManager;
 
     
     @VisibleForTesting @Inject
@@ -103,14 +104,14 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  MailFactory mailFactory,
                                  MessageFactory messageFactory,
                                  SystemMailboxesProvider systemMailboxesProvider,
-                                 AttachmentMapperFactory attachmentMapperFactory) {
+                                 AttachmentManager attachmentManager) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.mimeMessageConverter = mimeMessageConverter;
         this.mailSpool = mailSpool;
         this.mailFactory = mailFactory;
         this.messageFactory = messageFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
-        this.attachmentMapperFactory = attachmentMapperFactory;
+        this.attachmentManager = attachmentManager;
     }
 
     @Override
@@ -197,24 +198,26 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     @VisibleForTesting void assertAttachmentsExist(CreationMessageEntry entry, MailboxSession session) throws AttachmentsNotFoundException, MailboxException {
         List<Attachment> attachments = entry.getValue().getAttachments();
         if (!attachments.isEmpty()) {
-            AttachmentMapper attachmentMapper = attachmentMapperFactory.getAttachmentMapper(session);
-            List<BlobId> notFounds = listAttachmentsNotFound(attachments, attachmentMapper);
+            List<BlobId> notFounds = listAttachmentsNotFound(attachments, session);
             if (!notFounds.isEmpty()) {
                 throw new AttachmentsNotFoundException(notFounds);
             }
         }
     }
 
-    private List<BlobId> listAttachmentsNotFound(List<Attachment> attachments, AttachmentMapper attachmentMapper) {
+    private List<BlobId> listAttachmentsNotFound(List<Attachment> attachments, MailboxSession session) throws MailboxException {
+        ThrowingPredicate<Attachment> notExists = attachment -> {
+            try {
+                attachmentManager.getAttachment(getAttachmentId(attachment), session);
+                return false;
+            } catch (AttachmentNotFoundException e) {
+                return true;
+            }
+        };
         return attachments.stream()
-            .flatMap(attachment -> {
-                try {
-                    attachmentMapper.getAttachment(getAttachmentId(attachment));
-                    return Stream.of();
-                } catch (AttachmentNotFoundException e) {
-                    return Stream.of(attachment.getBlobId());
-                }
-            }).collect(Guavate.toImmutableList());
+            .filter(Throwing.predicate(notExists).sneakyThrow())
+            .map(Attachment::getBlobId)
+            .collect(Guavate.toImmutableList());
     }
 
     private AttachmentId getAttachmentId(Attachment attachment) {
@@ -318,16 +321,16 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private ImmutableList<MessageAttachment> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
-        AttachmentMapper attachmentMapper = attachmentMapperFactory.getAttachmentMapper(session);
+        ThrowingFunction<Attachment, MessageAttachment> toMessageAttachment = att -> messageAttachment(session, att);
         return attachments.stream()
-            .map(att -> messageAttachment(attachmentMapper, att))
+            .map(Throwing.function(toMessageAttachment).sneakyThrow())
             .collect(Guavate.toImmutableList());
     }
 
-    private MessageAttachment messageAttachment(AttachmentMapper attachmentMapper, Attachment attachment) {
+    private MessageAttachment messageAttachment(MailboxSession session, Attachment attachment) throws MailboxException {
         try {
             return MessageAttachment.builder()
-                    .attachment(attachmentMapper.getAttachment(AttachmentId.from(attachment.getBlobId().getRawValue())))
+                    .attachment(attachmentManager.getAttachment(AttachmentId.from(attachment.getBlobId().getRawValue()), session))
                     .name(attachment.getName().orElse(null))
                     .cid(attachment.getCid().map(Cid::from).orElse(null))
                     .isInline(attachment.isIsInline())

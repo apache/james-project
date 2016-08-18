@@ -57,6 +57,7 @@ import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
+import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -66,8 +67,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -142,8 +141,7 @@ public class SetMessagesCreationProcessorTest {
     private SystemMailboxesProvider fakeSystemMailboxesProvider;
     private MockMailboxSession session;
     private MIMEMessageConverter mimeMessageConverter;
-    private AttachmentMapper mockedAttachmentMapper;
-    private AttachmentMapperFactory mockedAttachmentMapperFactory;
+    private AttachmentManager mockedAttachmentManager;
     private SetMessagesCreationProcessor sut;
 
     @Before
@@ -154,15 +152,13 @@ public class SetMessagesCreationProcessorTest {
                 .thenReturn(mockMapper);
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
-        mockedAttachmentMapperFactory = mock(AttachmentMapperFactory.class);
-        mockedAttachmentMapper = mock(AttachmentMapper.class);
-        when(mockedAttachmentMapperFactory.getAttachmentMapper(any(MailboxSession.class))).thenReturn(mockedAttachmentMapper);
+        mockedAttachmentManager = mock(AttachmentManager.class);
         
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
         session = new MockMailboxSession(USER);
         mimeMessageConverter = new MIMEMessageConverter();
         sut = new SetMessagesCreationProcessor(
-                stubSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentMapperFactory);
+                stubSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager);
     }
 
     @Test
@@ -184,7 +180,7 @@ public class SetMessagesCreationProcessorTest {
                 .thenReturn(stubMapper);
 
         sut = new SetMessagesCreationProcessor(
-                mockSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentMapperFactory) {
+                mockSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager) {
             @Override
             protected MessageWithId createMessageInOutboxAndSend(ValueWithId.CreationMessageEntry createdEntry, MailboxSession session, Mailbox outbox, Function<Long, MessageId> buildMessageIdFromUid) {
                 return new MessageWithId(createdEntry.getCreationId(), FAKE_OUTBOX_MESSAGE);
@@ -204,7 +200,7 @@ public class SetMessagesCreationProcessorTest {
         // Given
         TestSystemMailboxesProvider doNotProvideOutbox = new TestSystemMailboxesProvider(Optional::empty, () -> optionalDrafts);
         SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(
-                stubSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, doNotProvideOutbox, mockedAttachmentMapperFactory);
+                stubSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, doNotProvideOutbox, mockedAttachmentManager);
         // When
         SetMessagesResponse actual = sut.process(createMessageInOutbox, session);
         
@@ -282,10 +278,10 @@ public class SetMessagesCreationProcessorTest {
 
 
     @Test
-    public void assertAttachmentsExistShouldThrowWhenUnknownBlobId() throws AttachmentNotFoundException {
+    public void assertAttachmentsExistShouldThrowWhenUnknownBlobId() throws MailboxException {
         BlobId unknownBlobId = BlobId.of("unknownBlobId");
         AttachmentId unknownAttachmentId = AttachmentId.from(unknownBlobId.getRawValue());
-        when(mockedAttachmentMapper.getAttachment(unknownAttachmentId)).thenThrow(new AttachmentNotFoundException(unknownBlobId.getRawValue()));
+        when(mockedAttachmentManager.getAttachment(unknownAttachmentId, session)).thenThrow(new AttachmentNotFoundException(unknownBlobId.getRawValue()));
         
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
                 new CreationMessageEntry(
@@ -299,14 +295,14 @@ public class SetMessagesCreationProcessorTest {
     }
     
     @Test
-    public void assertAttachmentsExistShouldThrowWhenUnknownBlobIds() throws AttachmentNotFoundException {
+    public void assertAttachmentsExistShouldThrowWhenUnknownBlobIds() throws MailboxException {
         BlobId unknownBlobId1 = BlobId.of("unknownBlobId1");
         BlobId unknownBlobId2 = BlobId.of("unknownBlobId2");
         AttachmentId unknownAttachmentId1 = AttachmentId.from(unknownBlobId1.getRawValue());
         AttachmentId unknownAttachmentId2 = AttachmentId.from(unknownBlobId2.getRawValue());
 
-        when(mockedAttachmentMapper.getAttachment(unknownAttachmentId1)).thenThrow(new AttachmentNotFoundException(unknownBlobId1.getRawValue()));
-        when(mockedAttachmentMapper.getAttachment(unknownAttachmentId2)).thenThrow(new AttachmentNotFoundException(unknownBlobId2.getRawValue()));
+        when(mockedAttachmentManager.getAttachment(unknownAttachmentId1, session)).thenThrow(new AttachmentNotFoundException(unknownBlobId1.getRawValue()));
+        when(mockedAttachmentManager.getAttachment(unknownAttachmentId2, session)).thenThrow(new AttachmentNotFoundException(unknownBlobId2.getRawValue()));
         
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
                 new CreationMessageEntry(
