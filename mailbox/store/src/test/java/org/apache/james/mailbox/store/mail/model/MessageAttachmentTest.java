@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.junit.Test;
 

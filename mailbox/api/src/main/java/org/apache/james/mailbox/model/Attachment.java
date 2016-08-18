@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -32,8 +32,8 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.TestId;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.Cid;
@@ -418,7 +418,7 @@ public class MailboxMessageTest {
                 .build();
         Message testee = messageFactory.fromMailboxMessage(testMail,
                 ImmutableList.of(MessageAttachment.builder()
-                        .attachment(org.apache.james.mailbox.store.mail.model.Attachment.builder()
+                        .attachment(org.apache.james.mailbox.model.Attachment.builder()
                             .attachmentId(AttachmentId.from(blodId.getRawValue()))
                             .bytes(payload.getBytes())
                             .type(type)

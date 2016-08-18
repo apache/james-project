@@ -18,13 +18,15 @@
  ****************************************************************/
 
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.model.Attachment;
+
 import org.junit.Test;
 
 public class AttachmentTest {

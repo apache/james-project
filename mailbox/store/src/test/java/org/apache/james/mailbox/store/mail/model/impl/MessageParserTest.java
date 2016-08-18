@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.apache.james.mailbox.store.mail.model.Attachment;
+import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.junit.Before;
 import org.junit.Test;

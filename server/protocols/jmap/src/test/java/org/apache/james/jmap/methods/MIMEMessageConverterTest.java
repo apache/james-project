@@ -30,7 +30,7 @@ import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
-import org.apache.james.mailbox.store.mail.model.AttachmentId;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.Cid;
 import org.apache.james.mime4j.Charsets;
@@ -366,7 +366,7 @@ public class MIMEMessageConverterTest {
         String text = "123456";
         TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), Charsets.UTF_8);
         MessageAttachment attachment = MessageAttachment.builder()
-                .attachment(org.apache.james.mailbox.store.mail.model.Attachment.builder()
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .bytes(text.getBytes())
                     .type(expectedMimeType)
@@ -412,7 +412,7 @@ public class MIMEMessageConverterTest {
         String text = "123456";
         TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), Charsets.UTF_8);
         MessageAttachment attachment = MessageAttachment.builder()
-                .attachment(org.apache.james.mailbox.store.mail.model.Attachment.builder()
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
                     .attachmentId(AttachmentId.from("blodId"))
                     .bytes(text.getBytes())
                     .type(expectedMimeType)

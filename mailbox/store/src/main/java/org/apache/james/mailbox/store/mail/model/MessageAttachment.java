@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.impl.Cid;
 
 import com.google.common.annotations.VisibleForTesting;
