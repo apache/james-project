@@ -23,6 +23,7 @@ import java.util.Objects;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.javatuples.Triplet;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -65,6 +66,10 @@ public class MessageId {
     
     public long getUid() {
         return uid;
+    }
+    
+    public MessageRange getUidAsRange() {
+        return MessageRange.one(uid);
     }
     
     public MailboxPath getMailboxPath() {

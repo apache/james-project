@@ -19,70 +19,53 @@
 
 package org.apache.james.jmap.methods;
 
-import java.util.Iterator;
 import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.MessageResultIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 
 public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
-    private static final int LIMIT_BY_ONE = 1;
 
-    private final MailboxMapperFactory mailboxMapperFactory;
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final MailboxManager mailboxManager;
 
     @Inject
     @VisibleForTesting
-    SetMessagesDestructionProcessor(MailboxMapperFactory mailboxMapperFactory,
-                                           MailboxSessionMapperFactory mailboxSessionMapperFactory) {
-        this.mailboxMapperFactory = mailboxMapperFactory;
-        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+    SetMessagesDestructionProcessor(MailboxManager mailboxManager) {
+        this.mailboxManager = mailboxManager;
     }
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        MessageMapper messageMapper;
-        try {
-            messageMapper = mailboxSessionMapperFactory.createMessageMapper(mailboxSession);
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
         return request.getDestroy().stream()
-                .map(delete(messageMapper, mailboxSession))
+                .map(delete(mailboxSession))
                 .reduce(SetMessagesResponse.builder(),  SetMessagesResponse.Builder::accumulator, SetMessagesResponse.Builder::combiner)
                 .build();
     }
 
-    private Function<? super MessageId, SetMessagesResponse> delete(MessageMapper messageMapper, MailboxSession mailboxSession) {
+    private Function<? super MessageId, SetMessagesResponse> delete(MailboxSession mailboxSession) {
         return (messageId) -> {
             try {
-                Mailbox mailbox = mailboxMapperFactory
-                        .getMailboxMapper(mailboxSession)
-                        .findMailboxByPath(messageId.getMailboxPath());
-
-                MailboxMessage mailboxMessage = getMailboxMessage(messageMapper, messageId, mailbox);
-
-                messageMapper.delete(mailbox, mailboxMessage);
+                MessageManager messageManager = mailboxManager.getMailbox(messageId.getMailboxPath(), mailboxSession);
+                checkThatMessageExists(messageManager, messageId, mailboxSession);
+                removeMessage(messageManager, messageId, mailboxSession);
                 return SetMessagesResponse.builder().destroyed(messageId).build();
             } catch (MessageNotFoundException e) {
                 return SetMessagesResponse.builder().notDestroyed(messageId,
@@ -103,13 +86,15 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
         };
     }
 
-    private MailboxMessage getMailboxMessage(MessageMapper messageMapper, MessageId messageId, Mailbox mailbox)
-            throws MailboxException, MessageNotFoundException {
-
-        Iterator<MailboxMessage> mailboxMessage = messageMapper.findInMailbox(mailbox, MessageRange.one(messageId.getUid()), MessageMapper.FetchType.Metadata, LIMIT_BY_ONE);
-        if (!mailboxMessage.hasNext()) {
+    private void checkThatMessageExists(MessageManager messageManager, MessageId messageId, MailboxSession mailboxSession) throws MailboxException, MessageNotFoundException {
+        MessageResultIterator messages = messageManager.getMessages(messageId.getUidAsRange(), FetchGroupImpl.MINIMAL, mailboxSession);
+        if (!messages.hasNext()) {
             throw new MessageNotFoundException();
         }
-        return mailboxMessage.next();
+    }
+
+    private void removeMessage(MessageManager messageManager, MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
+        messageManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, messageId.getUidAsRange(), mailboxSession);
+        messageManager.expunge(messageId.getUidAsRange(), mailboxSession);
     }
 }
