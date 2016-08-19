@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.mail.Flags;
 
 import com.google.common.collect.ImmutableSet;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.ValidationResult;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -125,18 +126,16 @@ public class UpdateMessagePatch {
         return getValidationErrors().isEmpty();
     }
 
-    public Flags applyToState(boolean isSeen, boolean isAnswered, boolean isFlagged) {
+    public Flags applyToState(Flags currentFlags) {
         Flags newStateFlags = new Flags();
 
-        boolean shouldMessageBeFlagged = isFlagged().isPresent() && isFlagged().get() || (!isFlagged().isPresent() && isFlagged);
-        if (shouldMessageBeFlagged) {
+        if (isFlagged().orElse(currentFlags.contains(Flags.Flag.FLAGGED))) {
             newStateFlags.add(Flags.Flag.FLAGGED);
         }
-        boolean shouldMessageBeMarkAnswered = isAnswered().isPresent() && isAnswered().get() || (!isAnswered().isPresent() && isAnswered);
-        if (shouldMessageBeMarkAnswered) {
+        if (isAnswered().orElse(currentFlags.contains(Flags.Flag.ANSWERED))) {
             newStateFlags.add(Flags.Flag.ANSWERED);
         }
-        boolean shouldMessageBeMarkSeen = isUnread().isPresent() && !isUnread().get() || (!isUnread().isPresent() && isSeen);
+        boolean shouldMessageBeMarkSeen = isUnread().map(b -> !b).orElse(currentFlags.contains(Flags.Flag.SEEN));
         if (shouldMessageBeMarkSeen) {
             newStateFlags.add(Flags.Flag.SEEN);
         }

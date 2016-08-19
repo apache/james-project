@@ -40,7 +40,7 @@ public class SetMessagesUpdateProcessorTest {
 
     @Test
     public void processShouldReturnEmptyUpdatedWhenRequestHasEmptyUpdate() {
-        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(null, null, null);
+        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(null, null);
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
         SetMessagesResponse result = sut.process(requestWithEmptyUpdate, null);
@@ -64,7 +64,7 @@ public class SetMessagesUpdateProcessorTest {
         when(mockConverter.fromJsonNode(any(ObjectNode.class)))
                 .thenReturn(mockInvalidPatch);
 
-        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter, null, null);
+        SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter, null);
         MessageId requestMessageId = MessageId.of("user|inbox|1");
         SetMessagesRequest requestWithInvalidUpdate = SetMessagesRequest.builder()
                 .update(ImmutableMap.of(requestMessageId, JsonNodeFactory.instance.objectNode()))

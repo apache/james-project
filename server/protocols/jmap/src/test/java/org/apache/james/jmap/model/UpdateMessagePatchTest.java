@@ -49,8 +49,8 @@ public class UpdateMessagePatchTest {
     @Test
     public void applyStateShouldSetFlaggedOnlyWhenUnsetPatchAppliedToFlaggedState() {
         UpdateMessagePatch testee = UpdateMessagePatch.builder().build();
-        boolean isFlaggedSet = true;
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(false, false, isFlaggedSet).getSystemFlags());
+        Flags isFlaggedSet = new Flags(Flags.Flag.FLAGGED);
+        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isFlaggedSet).getSystemFlags());
         assertThat(updatedFlags).containsExactly(Flags.Flag.FLAGGED);
     }
 
@@ -58,24 +58,24 @@ public class UpdateMessagePatchTest {
     @Test
     public void applyStateShouldReturnUnreadFlagWhenUnreadSetOnSeenMessage() {
         UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(true).build();
-        boolean isSeen = true;
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen, false, false).getSystemFlags());
+        Flags isSeen = new Flags(Flags.Flag.SEEN);
+        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
         assertThat(updatedFlags).doesNotContain(Flags.Flag.SEEN);
     }
 
     @Test
     public void applyStateShouldReturnFlaggedWhenEmptyPatchOnFlaggedMessage() {
         UpdateMessagePatch testee = UpdateMessagePatch.builder().build();
-        boolean isFlagged = true;
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(false, false, isFlagged).getSystemFlags());
+        Flags isFlagged = new Flags(Flags.Flag.FLAGGED);
+        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isFlagged).getSystemFlags());
         assertThat(updatedFlags).containsExactly(Flags.Flag.FLAGGED);
     }
 
     @Test
     public void applyStateShouldReturnSeenWhenPatchSetsSeenOnSeenMessage() {
         UpdateMessagePatch testee = UpdateMessagePatch.builder().isUnread(false).build();
-        boolean isSeen = true;
-        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen, false, false).getSystemFlags());
+        Flags isSeen = new Flags(Flags.Flag.SEEN);
+        List<Flags.Flag> updatedFlags = Arrays.asList(testee.applyToState(isSeen).getSystemFlags());
         assertThat(updatedFlags).containsExactly(Flags.Flag.SEEN);
     }
 
