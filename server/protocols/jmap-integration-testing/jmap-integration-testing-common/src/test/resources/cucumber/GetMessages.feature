@@ -44,7 +44,7 @@ Feature: GetMessages method
     And the isUnread of the message is "true"
     And the preview of the message is "testmail"
     And the headers of the message contains:
-      |subject |my test subject |
+      |Subject |my test subject |
     And the date of the message is "2014-10-30T14:12:00Z"
     And the hasAttachment of the message is "false"
     And the list of attachments of the message is empty
@@ -61,8 +61,8 @@ Feature: GetMessages method
     And the isUnread of the message is "true"
     And the preview of the message is <preview>
     And the headers of the message contains:
-      |content-type |text/html        |
-      |subject      |<subject-header> |
+      |Content-Type |text/html        |
+      |Subject      |<subject-header> |
     And the date of the message is "2014-10-30T14:12:00Z"
 
     Examples:
@@ -113,8 +113,8 @@ Feature: GetMessages method
     And the property "isUnread" of the message is null
     And the property "preview" of the message is null
     And the headers of the message contains:
-      |from    |user@domain.tld |
-      |header2 |Header2Content  |
+      |From    |user@domain.tld |
+      |HEADer2 |Header2Content  |
     And the property "date" of the message is null
 
   Scenario: Retrieving message should return not found when id does not match

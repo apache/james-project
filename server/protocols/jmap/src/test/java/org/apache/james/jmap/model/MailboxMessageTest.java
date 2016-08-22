@@ -60,7 +60,8 @@ public class MailboxMessageTest {
     public void setUp() {
         htmlTextExtractor = mock(HtmlTextExtractor.class);
         messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
-        messageFactory = new MessageFactory(messagePreview);
+        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
     }
     
     @Test(expected=IllegalStateException.class)

@@ -37,6 +37,7 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
@@ -102,21 +103,20 @@ public class GetMessagesMethodTest {
     private static final User ROBERT = new User("robert", "secret");
 
     private StoreMailboxManager mailboxManager;
-    private InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private GetMessagesMethod testee;
 
     private MailboxSession session;
     private MailboxPath inboxPath;
     private ClientId clientId;
-    
-    private MessageFactory messageFactory;
 
     @Before
     public void setup() throws MailboxException {
         clientId = ClientId.of("#0");
-        mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
-        messageFactory = new MessageFactory(messagePreview);
+        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
         MockAuthenticator authenticator = new MockAuthenticator();
         authenticator.addUser(ROBERT.username, ROBERT.password);
         UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
@@ -129,32 +129,29 @@ public class GetMessagesMethodTest {
         session = mailboxManager.login(ROBERT.username, ROBERT.password, LOGGER);
         inboxPath = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inboxPath, session);
+        testee = new GetMessagesMethod(mailboxManager, messageFactory);
     }
     
     @Test
     public void processShouldThrowWhenNullRequest() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         GetMessagesRequest request = null;
         assertThatThrownBy(() -> testee.process(request, mock(ClientId.class), mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenNullSession() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         MailboxSession mailboxSession = null;
         assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), mock(ClientId.class), mailboxSession)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenNullClientId() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         ClientId clientId = null;
         assertThatThrownBy(() -> testee.process(mock(GetMessagesRequest.class), clientId, mock(MailboxSession.class))).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void processShouldThrowWhenRequestHasAccountId() {
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         assertThatThrownBy(() -> testee.process(
                 GetMessagesRequest.builder().accountId("abc").build(), mock(ClientId.class), mock(MailboxSession.class))).isInstanceOf(NotImplementedException.class);
     }
@@ -176,7 +173,6 @@ public class GetMessagesMethodTest {
                           new MessageId(ROBERT, inboxPath, message3Uid)))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
         
         assertThat(result).hasSize(1)
@@ -205,7 +201,6 @@ public class GetMessagesMethodTest {
                 .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, messageUid)))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
         
         assertThat(result).hasSize(1)
@@ -229,7 +224,6 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of())
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
@@ -250,7 +244,6 @@ public class GetMessagesMethodTest {
                 .ids(ImmutableList.of(new MessageId(ROBERT, inboxPath, message1Uid)))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         Stream<JmapResponse> result = testee.process(request, clientId, session);
 
         assertThat(result).hasSize(1)
@@ -274,7 +267,6 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.subject);
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
@@ -298,7 +290,6 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.textBody);
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result).hasSize(1)
@@ -325,7 +316,6 @@ public class GetMessagesMethodTest {
 
         Set<MessageProperty> expected = Sets.newHashSet(MessageProperty.id, MessageProperty.headers);
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result)
@@ -351,7 +341,6 @@ public class GetMessagesMethodTest {
                 .properties(ImmutableList.of("headers.from", "headers.heADER2"))
                 .build();
 
-        GetMessagesMethod testee = new GetMessagesMethod(mailboxSessionMapperFactory, mailboxSessionMapperFactory, messageFactory);
         List<JmapResponse> result = testee.process(request, clientId, session).collect(Collectors.toList());
 
         assertThat(result)
@@ -362,6 +351,6 @@ public class GetMessagesMethodTest {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setFilterProvider(actualFilterProvider.setDefaultFilter(SimpleBeanPropertyFilter.serializeAll()));
         String response = objectMapper.writer().writeValueAsString(result.get(0));
-        assertThat(JsonPath.parse(response).<Map<String, String>>read("$.response.list[0].headers")).containsOnly(MapEntry.entry("from", "user@domain.tld"), MapEntry.entry("header2", "Header2Content"));
+        assertThat(JsonPath.parse(response).<Map<String, String>>read("$.response.list[0].headers")).containsOnly(MapEntry.entry("From", "user@domain.tld"), MapEntry.entry("HEADer2", "Header2Content"));
     }
 }

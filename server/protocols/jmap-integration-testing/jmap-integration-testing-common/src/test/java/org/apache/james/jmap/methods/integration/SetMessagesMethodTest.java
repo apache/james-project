@@ -2014,7 +2014,6 @@ public abstract class SetMessagesMethodTest {
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
     }
 
-    @Ignore("We should rework org.apache.james.jmap.model.message.MimePart to handle multipart/alternative and multipart/mixed")
     @Test
     public void attachmentsAndBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextBodyAndHtmlAttachment() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");

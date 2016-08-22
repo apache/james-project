@@ -43,6 +43,7 @@ import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
@@ -112,7 +113,8 @@ public class SetMessagesCreationProcessorTest {
     public void setup() {
         HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
-        messageFactory = new MessageFactory(messagePreview);
+        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
     }
 
     private final CreationMessage.Builder creationMessageBuilder = CreationMessage.builder()

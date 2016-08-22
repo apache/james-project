@@ -27,6 +27,7 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.model.Message;
+import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
@@ -76,7 +77,8 @@ public class MailFactoryTest {
                 TestId.of(2));
         HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
-        MessageFactory messageFactory = new MessageFactory(messagePreview) ;
+        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
         jmapMessage = messageFactory.fromMailboxMessage(mailboxMessage, ImmutableList.of(), x -> MessageId.of("test|test|" + x));
     }
 
