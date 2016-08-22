@@ -17,11 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
-
-import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.store.mail.model.impl.Cid;
+package org.apache.james.mailbox.model;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;

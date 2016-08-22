@@ -17,10 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model.impl;
+package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.model.Cid;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

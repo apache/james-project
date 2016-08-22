@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.impl.Cid;
+import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.junit.Test;
 
 import com.google.common.base.Optional;

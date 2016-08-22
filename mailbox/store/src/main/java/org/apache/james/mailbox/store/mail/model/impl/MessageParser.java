@@ -25,7 +25,8 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.store.mail.model.MessageAttachment;
+import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;

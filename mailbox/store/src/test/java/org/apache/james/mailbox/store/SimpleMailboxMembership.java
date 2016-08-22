@@ -36,9 +36,9 @@ import java.util.Map.Entry;
 import javax.mail.Flags;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.Property;
 
 public class SimpleMailboxMembership implements MailboxMessage {

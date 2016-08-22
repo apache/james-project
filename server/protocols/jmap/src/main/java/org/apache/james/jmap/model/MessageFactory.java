@@ -31,10 +31,10 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.model.message.EMailer;
 import org.apache.james.jmap.model.message.IndexableMessage;
+import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.MessageAttachment;
-import org.apache.james.mailbox.store.mail.model.impl.Cid;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;

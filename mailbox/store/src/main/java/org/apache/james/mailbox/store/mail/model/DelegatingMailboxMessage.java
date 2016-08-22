@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {

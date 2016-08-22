@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.james.mailbox.model.MessageAttachment;
+
 public interface Message {
 
     MessageId getMessageId();

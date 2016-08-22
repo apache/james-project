@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model.impl;
+package org.apache.james.mailbox.model;
 
 
 import com.google.common.base.Objects;
