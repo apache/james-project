@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.mail.Flags;
@@ -27,6 +28,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
@@ -287,6 +289,11 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
         @Override
         public Headers getHeaders() throws MailboxException {
+            throw exception;
+        }
+
+        @Override
+        public List<MessageAttachment> getAttachments() throws MailboxException {
             throw exception;
         }
 

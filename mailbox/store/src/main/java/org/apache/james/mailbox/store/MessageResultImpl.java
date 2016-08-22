@@ -32,6 +32,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -368,6 +369,11 @@ public class MessageResultImpl implements MessageResult {
             headers = new HeadersImpl(message);
         }
         return headers;
+    }
+    
+    @Override
+    public List<MessageAttachment> getAttachments() throws MailboxException {
+        return message.getAttachments();
     }
     
     private final class HeadersImpl implements Headers {

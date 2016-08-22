@@ -60,6 +60,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
@@ -299,6 +300,10 @@ public class MailboxEventAnalyserTest {
                                 public Headers getHeaders() throws MailboxException {
                                     throw new UnsupportedOperationException("Not implemented");
 
+                                }
+                                
+                                public List<MessageAttachment> getAttachments() {
+                                    throw new UnsupportedOperationException("Not implemented");
                                 }
                                 
                             };

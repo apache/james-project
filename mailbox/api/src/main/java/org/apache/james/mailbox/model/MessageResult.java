@@ -21,7 +21,10 @@ package org.apache.james.mailbox.model;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+
+import javax.mail.MessagingException;
 
 import org.apache.james.mailbox.exception.MailboxException;
 
@@ -242,6 +245,8 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
 
     
     Headers getHeaders() throws MailboxException;
+    
+    List<MessageAttachment> getAttachments() throws MailboxException;
     
     /**
      * Describes a path within a multipart MIME message. All implementations
