@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
@@ -34,20 +33,17 @@ import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
+import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
-import org.javatuples.Triplet;
+import org.apache.james.util.streams.Iterators;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -113,8 +109,8 @@ public class GetMessagesMethod implements Method {
     private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
         getMessagesRequest.getAccountId().ifPresent(GetMessagesMethod::notImplemented);
         
-        Function<MessageId, Stream<CompletedMessageResult>> loadMessages = loadMessage(mailboxSession);
-        Function<CompletedMessageResult, Message> convertToJmapMessage = toJmapMessage(mailboxSession);
+        Function<MessageId, Stream<MetaDataWithContent>> loadMessages = loadMessage(mailboxSession);
+        Function<MetaDataWithContent, Message> convertToJmapMessage = Throwing.function(messageFactory::fromMetaDataWithContent).sneakyThrow();
         
         List<Message> result = getMessagesRequest.getIds().stream()
             .flatMap(loadMessages)
@@ -128,110 +124,17 @@ public class GetMessagesMethod implements Method {
         throw new NotImplementedException();
     }
 
-    
-    private Function<CompletedMessageResult, Message> toJmapMessage(MailboxSession mailboxSession) {
-        ThrowingFunction<CompletedMessageResult, Message> function = (completedMessageResult) -> messageFactory.fromMessageResult(
-                completedMessageResult.messageResult,
-                completedMessageResult.attachments,
-                completedMessageResult.mailboxId,
-                uid -> new MessageId(mailboxSession.getUser(), completedMessageResult.mailboxPath , uid));
-        return Throwing.function(function).sneakyThrow();
-    }
-
-    private Function<MessageId, Stream<CompletedMessageResult>> 
-                loadMessage(MailboxSession mailboxSession) {
-
-        return Throwing
-                .function((MessageId messageId) -> {
-                     MailboxPath mailboxPath = messageId.getMailboxPath();
-                     MessageManager messageManager = mailboxManager.getMailbox(messageId.getMailboxPath(), mailboxSession);
-                     return Triplet.with(
-                             messageManager.getMessages(messageId.getUidAsRange(), FetchGroupImpl.FULL_CONTENT, mailboxSession),
-                             mailboxPath,
-                             messageManager.getId()
-                             );
-                })
-                .andThen(Throwing.function((triplet) -> retrieveCompleteMessageResults(triplet, mailboxSession)));
-    }
-    
-    private Stream<CompletedMessageResult> retrieveCompleteMessageResults(Triplet<MessageResultIterator, MailboxPath, MailboxId> value, MailboxSession mailboxSession) throws MailboxException {
-        Iterable<MessageResult> iterable = () -> value.getValue0();
-        Stream<MessageResult> targetStream = StreamSupport.stream(iterable.spliterator(), false);
-
-        MailboxPath mailboxPath = value.getValue1();
-        MailboxId mailboxId = value.getValue2();
-        return targetStream
-                .map(Throwing.function(this::initializeBuilder).sneakyThrow())
-                .map(builder -> builder.mailboxId(mailboxId))
-                .map(builder -> builder.mailboxPath(mailboxPath))
-                .map(builder -> builder.build()); 
-    }
-    
-    private CompletedMessageResult.Builder initializeBuilder(MessageResult message) throws MailboxException {
-        return CompletedMessageResult.builder()
-                .messageResult(message)
-                .attachments(message.getAttachments());
-    }
-
-    private static class CompletedMessageResult {
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static class Builder {
-
-            private MessageResult messageResult;
-            private List<MessageAttachment> attachments;
-            private MailboxPath mailboxPath;
-            private MailboxId mailboxId;
-
-            private Builder() {
-            }
-
-            public Builder messageResult(MessageResult messageResult) {
-                Preconditions.checkArgument(messageResult != null);
-                this.messageResult = messageResult;
-                return this;
-            }
-
-            public Builder attachments(List<MessageAttachment> attachments) {
-                Preconditions.checkArgument(attachments != null);
-                this.attachments = attachments;
-                return this;
-            }
-
-            public Builder mailboxPath(MailboxPath mailboxPath) {
-                Preconditions.checkArgument(mailboxPath != null);
-                this.mailboxPath = mailboxPath;
-                return this;
-            }
-
-            public Builder mailboxId(MailboxId mailboxId) {
-                Preconditions.checkArgument(mailboxId != null);
-                this.mailboxId = mailboxId;
-                return this;
-            }
-
-            public CompletedMessageResult build() {
-                Preconditions.checkState(messageResult != null);
-                Preconditions.checkState(attachments != null);
-                Preconditions.checkState(mailboxPath != null);
-                Preconditions.checkState(mailboxId != null);
-                return new CompletedMessageResult(messageResult, attachments, mailboxPath, mailboxId);
-            }
-        }
-
-        private final MessageResult messageResult;
-        private final List<MessageAttachment> attachments;
-        private final MailboxPath mailboxPath;
-        private final MailboxId mailboxId;
-
-        public CompletedMessageResult(MessageResult messageResult, List<MessageAttachment> attachments, MailboxPath mailboxPath, MailboxId mailboxId) {
-            this.messageResult = messageResult;
-            this.attachments = attachments;
-            this.mailboxPath = mailboxPath;
-            this.mailboxId = mailboxId;
-        }
+    private Function<MessageId, Stream<MetaDataWithContent>> loadMessage(MailboxSession mailboxSession) {
+        ThrowingFunction<MessageId, Stream<MetaDataWithContent>> toMetaDataWithContentStream = (MessageId messageId) -> {
+            MailboxPath mailboxPath = messageId.getMailboxPath();
+            MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+            MessageResultIterator messageResultIterator = messageManager.getMessages(messageId.getUidAsRange(), FetchGroupImpl.FULL_CONTENT, mailboxSession);
+            return Iterators.toStream(messageResultIterator)
+                    .map(Throwing.function(MetaDataWithContent::builderFromMessageResult).sneakyThrow())
+                    .map(builder -> builder.mailboxId(messageManager.getId()))
+                    .map(builder -> builder.messageId(messageId))
+                    .map(MetaDataWithContent.Builder::build);
+        };
+        return Throwing.function(toMetaDataWithContentStream).sneakyThrow();
     }
 }

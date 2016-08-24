@@ -19,6 +19,7 @@
 package org.apache.james.jmap.model;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,6 +43,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -51,6 +54,7 @@ import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.stream.Field;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,45 +75,52 @@ public class MessageFactory {
         this.messageContentExtractor = messageContentExtractor;
     }
 
-    public Message fromMessageResult(MessageResult messageResult,
-            List<MessageAttachment> attachments,
-            MailboxId mailboxId,
-            Function<Long, MessageId> uidToMessageId) throws MailboxException {
-        MessageId messageId = uidToMessageId.apply(messageResult.getUid());
-
-        MessageBuilder parsedMessageResult;
-        MessageContent messageContent;
-        try {
-            parsedMessageResult = MessageBuilder.read(messageResult.getFullContent().getInputStream());
-            messageContent = messageContentExtractor.extract(parsedMessageResult.build());
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message: " + e.getMessage(), e);
-        }
+    public Message fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
+        org.apache.james.mime4j.dom.Message mimeMessage = parse(message);
+        MessageContent messageContent = extractContent(mimeMessage);
 
         return Message.builder()
-                .id(messageId)
-                .blobId(BlobId.of(String.valueOf(messageResult.getUid())))
-                .threadId(messageId.serialize())
-                .mailboxIds(ImmutableList.of(mailboxId.serialize()))
-                .inReplyToMessageId(getHeader(parsedMessageResult, "in-reply-to"))
-                .isUnread(! messageResult.getFlags().contains(Flags.Flag.SEEN))
-                .isFlagged(messageResult.getFlags().contains(Flags.Flag.FLAGGED))
-                .isAnswered(messageResult.getFlags().contains(Flags.Flag.ANSWERED))
-                .isDraft(messageResult.getFlags().contains(Flags.Flag.DRAFT))
-                .subject(Strings.nullToEmpty(parsedMessageResult.getSubject()))
-                .headers(toMap(parsedMessageResult.getFields()))
-                .from(firstFromMailboxList(parsedMessageResult.getFrom()))
-                .to(fromAddressList(parsedMessageResult.getTo()))
-                .cc(fromAddressList(parsedMessageResult.getCc()))
-                .bcc(fromAddressList(parsedMessageResult.getBcc()))
-                .replyTo(fromAddressList(parsedMessageResult.getReplyTo()))
-                .size(parsedMessageResult.getSize())
-                .date(toZonedDateTime(messageResult.getInternalDate()))
+                .id(message.getMessageId())
+                .blobId(BlobId.of(String.valueOf(message.getUid())))
+                .threadId(message.getMessageId().serialize())
+                .mailboxIds(ImmutableList.of(message.getMailboxId().serialize()))
+                .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
+                .isUnread(! message.getFlags().contains(Flags.Flag.SEEN))
+                .isFlagged(message.getFlags().contains(Flags.Flag.FLAGGED))
+                .isAnswered(message.getFlags().contains(Flags.Flag.ANSWERED))
+                .isDraft(message.getFlags().contains(Flags.Flag.DRAFT))
+                .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
+                .headers(toMap(mimeMessage.getHeader().getFields()))
+                .from(firstFromMailboxList(mimeMessage.getFrom()))
+                .to(fromAddressList(mimeMessage.getTo()))
+                .cc(fromAddressList(mimeMessage.getCc()))
+                .bcc(fromAddressList(mimeMessage.getBcc()))
+                .replyTo(fromAddressList(mimeMessage.getReplyTo()))
+                .size(message.getSize())
+                .date(message.getInternalDateAsZonedDateTime())
                 .textBody(messageContent.getTextBody().orElse(null))
                 .htmlBody(messageContent.getHtmlBody().orElse(null))
                 .preview(getPreview(messageContent))
-                .attachments(getAttachments(attachments))
+                .attachments(getAttachments(message.getAttachments()))
                 .build();
+    }
+
+    private org.apache.james.mime4j.dom.Message parse(MetaDataWithContent message) throws MailboxException {
+        try {
+            return MessageBuilder.read(message.getContent())
+                    .setDate(message.getInternalDate(), TimeZone.getTimeZone(UTC_ZONE_ID))
+                    .build();
+        } catch (IOException e) {
+            throw new MailboxException("Unable to parse message: " + e.getMessage(), e);
+        }
+    }
+
+    private MessageContent extractContent(org.apache.james.mime4j.dom.Message mimeMessage) throws MailboxException {
+        try {
+            return messageContentExtractor.extract(mimeMessage);
+        } catch (IOException e) {
+            throw new MailboxException("Unable to extract content: " + e.getMessage(), e);
+        }
     }
 
     public Message fromMailboxMessage(MailboxMessage mailboxMessage,
@@ -242,8 +253,8 @@ public class MessageFactory {
                 .collect(Guavate.toImmutableMap(Map.Entry::getKey, bodyConcatenator));
     }
     
-    private String getHeader(MessageBuilder message, String header) {
-        Field field = message.getField(header);
+    private String getHeader(org.apache.james.mime4j.dom.Message message, String header) {
+        Field field = message.getHeader().getField(header);
         if (field == null) {
             return null;
         }
@@ -260,10 +271,6 @@ public class MessageFactory {
     
     private ZonedDateTime getInternalDate(MailboxMessage mailboxMessage, IndexableMessage im) {
         return ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), UTC_ZONE_ID);
-    }
-
-    private ZonedDateTime toZonedDateTime(Date date) {
-        return ZonedDateTime.ofInstant(date.toInstant(), UTC_ZONE_ID);
     }
 
     private String getTextBody(IndexableMessage im) {
@@ -289,5 +296,166 @@ public class MessageFactory {
                     .cid(attachment.getCid().transform(Cid::getValue).orNull())
                     .isInline(attachment.isInline())
                     .build();
+    }
+
+    public static class MetaDataWithContent implements MessageMetaData {
+        public static Builder builder() {
+            return new Builder();
+        }
+        
+        public static Builder builderFromMessageResult(MessageResult messageResult) throws MailboxException {
+            Builder builder = builder()
+                .uid(messageResult.getUid())
+                .modSeq(messageResult.getModSeq())
+                .flags(messageResult.getFlags())
+                .size(messageResult.getSize())
+                .internalDate(messageResult.getInternalDate())
+                .attachments(messageResult.getAttachments());
+            try {
+                return builder.content(messageResult.getFullContent().getInputStream());
+            } catch (IOException e) {
+                throw new MailboxException("Can't get message full content: " + e.getMessage(), e);
+            }
+        }
+        
+        public static class Builder {
+            private Long uid;
+            private Long modSeq;
+            private Flags flags;
+            private Long size;
+            private Date internalDate;
+            private InputStream content;
+            private List<MessageAttachment> attachments;
+            private MailboxId mailboxId;
+            private MessageId messageId;
+
+            public Builder uid(long uid) {
+                this.uid = uid;
+                return this;
+            }
+            
+            public Builder modSeq(long modSeq) {
+                this.modSeq = modSeq;
+                return this;
+            }
+            
+            public Builder flags(Flags flags) {
+                this.flags = flags;
+                return this;
+            }
+            
+            public Builder size(long size) {
+                this.size = size;
+                return this;
+            }
+            
+            public Builder internalDate(Date internalDate) {
+                this.internalDate = internalDate;
+                return this;
+            }
+            
+            public Builder content(InputStream content) {
+                this.content = content;
+                return this;
+            }
+            
+            public Builder attachments(List<MessageAttachment> attachments) {
+                this.attachments = attachments;
+                return this;
+            }
+            
+            public Builder mailboxId(MailboxId mailboxId) {
+                this.mailboxId = mailboxId;
+                return this;
+            }
+            
+            public Builder messageId(MessageId messageId) {
+                this.messageId = messageId;
+                return this;
+            }
+            
+            public MetaDataWithContent build() {
+                Preconditions.checkArgument(uid != null);
+                if (modSeq == null) {
+                    modSeq = -1L;
+                }
+                Preconditions.checkArgument(flags != null);
+                Preconditions.checkArgument(size != null);
+                Preconditions.checkArgument(internalDate != null);
+                Preconditions.checkArgument(content != null);
+                Preconditions.checkArgument(attachments != null);
+                Preconditions.checkArgument(mailboxId != null);
+                Preconditions.checkArgument(messageId != null);
+                return new MetaDataWithContent(uid, modSeq, flags, size, internalDate, content, attachments, mailboxId, messageId);
+            }
+        }
+
+        private final long uid;
+        private final long modSeq;
+        private final Flags flags;
+        private final long size;
+        private final Date internalDate;
+        private final InputStream content;
+        private final List<MessageAttachment> attachments;
+        private final MailboxId mailboxId;
+        private final MessageId messageId;
+
+        private MetaDataWithContent(long uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, List<MessageAttachment> attachments, MailboxId mailboxId, MessageId messageId) {
+            this.uid = uid;
+            this.modSeq = modSeq;
+            this.flags = flags;
+            this.size = size;
+            this.internalDate = internalDate;
+            this.content = content;
+            this.attachments = attachments;
+            this.mailboxId = mailboxId;
+            this.messageId = messageId;
+        }
+
+        @Override
+        public long getUid() {
+            return uid;
+        }
+
+        @Override
+        public long getModSeq() {
+            return modSeq;
+        }
+
+        @Override
+        public Flags getFlags() {
+            return flags;
+        }
+
+        @Override
+        public long getSize() {
+            return size;
+        }
+
+        @Override
+        public Date getInternalDate() {
+            return internalDate;
+        }
+
+        public ZonedDateTime getInternalDateAsZonedDateTime() {
+            return ZonedDateTime.ofInstant(internalDate.toInstant(), UTC_ZONE_ID);
+        }
+
+        public InputStream getContent() {
+            return content;
+        }
+
+        public List<MessageAttachment> getAttachments() {
+            return attachments;
+        }
+
+        public MailboxId getMailboxId() {
+            return mailboxId;
+        }
+
+        public MessageId getMessageId() {
+            return messageId;
+        }
+
     }
 }

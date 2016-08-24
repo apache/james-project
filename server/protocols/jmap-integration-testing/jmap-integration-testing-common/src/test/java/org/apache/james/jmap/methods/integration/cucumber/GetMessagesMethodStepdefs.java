@@ -281,7 +281,7 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the headers of the message contains:$")
     public void assertHeadersOfTheFirstMessage(DataTable headers) throws Throwable {
-        assertThat(jsonPath.<Map<String, String>>read(FIRST_MESSAGE + ".headers")).isEqualTo(headers.asMap(String.class, String.class));
+        assertThat(jsonPath.<Map<String, String>>read(FIRST_MESSAGE + ".headers")).containsAllEntriesOf(headers.asMap(String.class, String.class));
     }
 
     @Then("^the date of the message is \"([^\"]*)\"$")
