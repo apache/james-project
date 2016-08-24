@@ -19,11 +19,11 @@
 
 package org.apache.james.jmap.model;
 
-import static org.apache.james.jmap.model.CreationMessage.DraftEmailer;
-import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.methods.ValidationResult;
+import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -134,4 +134,14 @@ public class CreationMessageTest {
         assertThat(sut.validate()).isEmpty();
     }
 
+    @Test
+    public void mailboxIdShouldSetASingletonList() {
+        String mailboxId = "123";
+        CreationMessage message = CreationMessage.builder()
+            .headers(ImmutableMap.of())
+            .mailboxId(mailboxId)
+            .build();
+
+        assertThat(message.getMailboxIds()).containsExactly(mailboxId);
+    }
 }
