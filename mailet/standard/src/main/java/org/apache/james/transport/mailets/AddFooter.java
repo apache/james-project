@@ -21,68 +21,160 @@
 
 package org.apache.james.transport.mailets;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.mail.MessagingException;
-import java.util.StringTokenizer;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePart;
 
-/**
- * This mailet will attach text to the end of the message (like a footer).  Right
- * now it only supports simple messages without multiple parts.
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.RFC2822Headers;
+
+import com.google.common.base.Optional;
+
+/*
+ * Takes the message and attaches a footer message to it.  Right now, it only
+ * supports simple messages.  Needs to have additions to make it support
+ * messages with alternate content types or with attachments.
  */
-public class AddFooter extends AbstractAddFooter {
+public class AddFooter extends GenericMailet {
 
-    /**
-     * This is the plain text version of the footer we are going to add
-     */
-    String text = "";
+    private static final String HTML_BR_TAG = "<br />";
+    private static final String CARRIAGE_RETURN = "\r\n";
+    private static final Pattern BODY_CLOSING_TAG = Pattern.compile("((?i:</body>))");
+    private String plainTextFooter;
     
-    /**
-     * Initialize the mailet
-     */
+    @Override
     public void init() throws MessagingException {
-        text = getInitParameter("text");
+        plainTextFooter = getInitParameter("text");
     }
 
-    /**
-     * This is exposed as a method for easy subclassing to provide alternate ways
-     * to get the footer text.
-     *
-     * @return the footer text
-     */
-    public String getFooterText() {
-        return text;
-    }
-
-    /**
-     * This is exposed as a method for easy subclassing to provide alternate ways
-     * to get the footer text.  By default, this will take the footer text,
-     * converting the linefeeds to &lt;br&gt; tags.
-     *
-     * @return the HTML version of the footer text
-     */
-    public String getFooterHTML() {
-        String text = getFooterText();
-        StringBuilder sb = new StringBuilder();
-        StringTokenizer st = new StringTokenizer(text, "\r\n", true);
-        while (st.hasMoreTokens()) {
-            String token = st.nextToken();
-            if (token.equals("\r")) {
-                continue;
-            }
-            if (token.equals("\n")) {
-                sb.append("<br />\n");
-            } else {
-                sb.append(token);
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "AddFooter Mailet";
-    } 
+    }
+    
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        try {
+            MimeMessage message = mail.getMessage();
+
+            if (attachFooter(message)) {
+                message.saveChanges();
+            } else {
+                log("Unable to add footer to mail " + mail.getName());
+            }
+        } catch (UnsupportedEncodingException e) {
+            log("UnsupportedEncoding Unable to add footer to mail "
+                    + mail.getName());
+        } catch (IOException ioe) {
+            throw new MessagingException("Could not read message", ioe);
+        }
+    }
+    
+    private boolean attachFooter(MimePart part) throws MessagingException, IOException {
+        String contentType = part.getContentType();
+
+        if (part.getContent() instanceof String) {
+            Optional<String> content = attachFooterToTextPart(part);
+            if (content.isPresent()) {
+                part.setContent(content.get(), contentType);
+                part.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
+                return true;
+            }
+        }
+
+        if (part.isMimeType("multipart/mixed")
+                || part.isMimeType("multipart/related")) {
+            MimeMultipart multipart = (MimeMultipart) part.getContent();
+            return attachFooterToFirstPart(multipart);
+
+        } else if (part.isMimeType("multipart/alternative")) {
+            MimeMultipart multipart = (MimeMultipart) part.getContent();
+            return attachFooterToAllSubparts(multipart);
+        }
+        //Give up... we won't attach the footer to this MimePart
+        return false;
+    }
+
+    /**
+     * Prepends the content of the MimePart as text to the existing footer
+     *
+     * @param part the MimePart to attach
+     */
+    private String attachFooterToText(String content) throws MessagingException,
+            IOException {
+
+        StringBuilder builder = new StringBuilder(content);
+        ensureTrailingCarriageReturn(content, builder);
+        builder.append(getFooterText());
+        return builder.toString();
+    }
+
+    private void ensureTrailingCarriageReturn(String content, StringBuilder builder) {
+        if (!content.endsWith("\n")) {
+            builder.append(CARRIAGE_RETURN);
+        }
+    }
+
+    /**
+     * Prepends the content of the MimePart as HTML to the existing footer
+     */
+    private String attachFooterToHTML(String content) throws MessagingException,
+            IOException {
+        
+        /* This HTML part may have a closing <BODY> tag.  If so, we
+         * want to insert out footer immediately prior to that tag.
+         */
+        Matcher matcher = BODY_CLOSING_TAG.matcher(content);
+        if (!matcher.find()) {
+            return content + getFooterHTML();
+        }
+        int insertionIndex = matcher.start(matcher.groupCount() - 1);
+        return new StringBuilder()
+                .append(content.substring(0, insertionIndex))
+                .append(getFooterHTML())
+                .append(content.substring(insertionIndex, content.length()))
+                .toString();
+    }
+
+    private Optional<String> attachFooterToTextPart(MimePart part) throws MessagingException, IOException {
+        String content = (String) part.getContent();
+        if (part.isMimeType("text/plain")) {
+            return Optional.of(attachFooterToText(content));
+        } else if (part.isMimeType("text/html")) {
+            return Optional.of(attachFooterToHTML(content));
+        }
+        return Optional.absent();
+    }
+    
+    private boolean attachFooterToFirstPart(MimeMultipart multipart) throws MessagingException, IOException {
+        MimeBodyPart firstPart = (MimeBodyPart) multipart.getBodyPart(0);
+        return attachFooter(firstPart);
+    }
+
+    private boolean attachFooterToAllSubparts(MimeMultipart multipart) throws MessagingException, IOException {
+        int count = multipart.getCount();
+        boolean isFooterAttached = false;
+        for (int index = 0; index < count; index++) {
+            MimeBodyPart mimeBodyPart = (MimeBodyPart) multipart.getBodyPart(index);
+            isFooterAttached |= attachFooter(mimeBodyPart);
+        }
+        return isFooterAttached;
+    }
+
+    private String getFooterText() {
+        return plainTextFooter;
+    }
+
+    private String getFooterHTML() {
+        String text = getFooterText();
+        return HTML_BR_TAG + text.replaceAll(CARRIAGE_RETURN, HTML_BR_TAG);
+    }
 }

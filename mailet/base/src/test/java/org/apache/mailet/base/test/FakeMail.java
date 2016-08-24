@@ -20,7 +20,9 @@
 
 package org.apache.mailet.base.test;
 
+import java.io.ByteArrayInputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -39,6 +41,17 @@ import org.apache.mailet.MailAddress;
 
 public class FakeMail implements Mail {
 
+    public static FakeMail fromMime(String text, String javaEncodingCharset, String javamailDefaultEncodingCharset) throws MessagingException, UnsupportedEncodingException {
+        FakeMail mail = new FakeMail();
+        Properties javamailProperties = new Properties();
+        javamailProperties.setProperty("mail.mime.charset", javamailDefaultEncodingCharset);
+        mail.setMessage(
+                new MimeMessage(
+                    Session.getInstance(javamailProperties),
+                    new ByteArrayInputStream(text.getBytes(javaEncodingCharset))));
+        return mail;
+    }
+    
     public static Builder builder() {
         return new Builder();
     }

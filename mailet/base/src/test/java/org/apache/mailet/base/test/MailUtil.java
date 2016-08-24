@@ -19,14 +19,17 @@
 
 package org.apache.mailet.base.test;
 
-import org.apache.mailet.MailAddress;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
-import java.util.Arrays;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 
 /**
  * some utilities for James unit testing
@@ -77,6 +80,14 @@ public class MailUtil {
         mockedMimeMessage.setText("testtext");
         mockedMimeMessage.saveChanges();
         return mockedMimeMessage;
+    }
+    
+    public static String toString(Mail mail, String charset) throws IOException, MessagingException {
+        ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
+        mail.getMessage().writeTo(
+                rawMessage,
+                new String[] { "Bcc", "Content-Length", "Message-ID" });
+        return rawMessage.toString(charset);
     }
 
 }
