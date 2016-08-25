@@ -98,15 +98,13 @@ public class MailetUtil {
      * otherwise the default value
      */
     public static boolean getInitParameter(MailetConfig config, String name, boolean defaultValue) {
-        final String value = config.getInitParameter(name);
-        final boolean result;
+        String value = config.getInitParameter(name);
         if ("true".equalsIgnoreCase(value)) {
-            result = true;
-        } else if ("false".equalsIgnoreCase(value)){
-            result = false;
-        } else {
-            result = defaultValue;
+            return true;
         }
-        return result;
+        if ("false".equalsIgnoreCase(value)){
+            return false;
+        }
+        return defaultValue;
     }
 }

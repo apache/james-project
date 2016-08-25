@@ -84,6 +84,12 @@ public class MailetUtilTest {
         assertThat(getParameterValued("gubbins", false)).isFalse();
     }
 
+    @Test
+    public void getInitParameterShouldReturnDefaultValueWhenNull() {
+        assertThat(MailetUtil.getInitParameter(config, A_PARAMETER, false)).isFalse();
+        assertThat(MailetUtil.getInitParameter(config, A_PARAMETER, true)).isTrue();
+    }
+
     private boolean getParameterValued(String value, boolean defaultValue) {
         config.clear();
         config.setProperty(A_PARAMETER, value);
