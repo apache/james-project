@@ -24,6 +24,10 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -39,52 +43,33 @@ import javax.mail.internet.MimeMessage;
  */
 public class AddSubjectPrefix extends GenericMailet {
 
-    // prefix to add
-    private String subjectPrefix = null;
+    private String subjectPrefix;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
         subjectPrefix = getInitParameter("subjectPrefix");
 
-        if (subjectPrefix == null || subjectPrefix.equals("")) {
-            throw new MessagingException(
-                    "Please configure a valid subjectPrefix");
+        if (Strings.isNullOrEmpty(subjectPrefix)) {
+            throw new MessagingException("Please configure a valid subjectPrefix");
         }
     }
 
-    /**
-     * Takes the message and adds a prefix to the subject
-     *
-     * @param mail the mail being processed
-     * @throws MessagingException if an error arises during message processing
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
-        String newSubject;
         MimeMessage m = mail.getMessage();
-
-        String subject = m.getSubject();
-
-        if (subject != null) {
-            // m.setSubject(subjectPrefix + " " + subject);
-            newSubject = subjectPrefix + " " + m.getSubject();
-
-        } else {
-            newSubject = subjectPrefix;
-        }
-
+        
+        String newSubject = prefixSubject(m);
+        
         /*
          * Get sure to use the right encoding when add the subjectPrefix..
          * otherwise we get problems with some special chars
          */
-        String rawSubject = m.getHeader(RFC2822Headers.SUBJECT, null);
+        String rawSubject = getFirstSubjectHeader(m);
         String mimeCharset = determineMailHeaderEncodingCharset(rawSubject);
         if (mimeCharset == null) { // most likely ASCII
             // it uses the system charset or the value of the
             // mail.mime.charset property if set
-            m.setSubject(newSubject);
-            return;
+            m.setSubject(newSubject, Charsets.UTF_8.displayName());
         } else { // original charset determined
             String javaCharset = javax.mail.internet.MimeUtility
                     .javaCharset(mimeCharset);
@@ -99,8 +84,23 @@ public class AddSubjectPrefix extends GenericMailet {
                 // damaged");
                 m.setSubject(newSubject); // recover
             }
+            m.saveChanges();
         }
-        m.saveChanges();
+    }
+
+    private String getFirstSubjectHeader(MimeMessage m) throws MessagingException {
+        String delimiter = null;
+        return m.getHeader(RFC2822Headers.SUBJECT, delimiter);
+    }
+
+    private String prefixSubject(MimeMessage m) throws MessagingException {
+        String subject = m.getSubject();
+
+        if (subject != null) {
+            return Joiner.on(' ').join(subjectPrefix, subject);
+        } else {
+            return subjectPrefix;
+        }
     }
 
     public String getMailetInfo() {

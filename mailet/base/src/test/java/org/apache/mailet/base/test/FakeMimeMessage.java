@@ -39,7 +39,6 @@ public class FakeMimeMessage extends MimeMessage {
     private final List<Serializable> m_ccRecepients = new ArrayList<Serializable>();
     private final List<Serializable> m_bccRecepients = new ArrayList<Serializable>();
     private final List<Serializable> m_replyToAddresses = new ArrayList<Serializable>();
-    private String m_subject;
     private int m_iMessageNumber;
     private boolean m_bIsExpunged;
     private Object m_content;
@@ -137,26 +136,6 @@ public class FakeMimeMessage extends MimeMessage {
 
     public void setReplyTo(Address[] addresses) throws MessagingException {
         m_replyToAddresses.addAll(Arrays.asList(addresses));
-    }
-
-    public String getSubject() throws MessagingException {
-        return m_subject;
-    }
-
-    public void setSubject(String subject) throws MessagingException {
-        m_subject = subject;
-    }
-
-    public void setSubject(String subject, String charset) throws MessagingException {
-        if (subject == null) {
-            m_subject = null;
-            return;
-        }
-        try {
-            m_subject = new String(subject.getBytes(charset));
-        } catch (UnsupportedEncodingException e) {
-            throw new MessagingException("setting subject failed", e);
-        }
     }
 
     public Date getSentDate() throws MessagingException {

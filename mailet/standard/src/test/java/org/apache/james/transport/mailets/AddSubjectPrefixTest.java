@@ -31,6 +31,7 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -61,6 +62,24 @@ public class AddSubjectPrefixTest {
         assertThat(mail.getMessage().getSubject()).isEqualTo("JUNIT test");
     }
 
+    
+    @Ignore
+    @Test
+    public void shouldAddPrefixToEncodedSubject() throws MessagingException {
+        mailetConfig.setProperty("subjectPrefix", "Русский");
+        mailet.init(mailetConfig);
+
+        String subject = 
+                "=?iso8859-15?Q?Beno=EEt_TELLIER_vous_a_d=E9pos=E9_des_fichiers?=";
+        MimeMessage mockedMimeMessage = MailUtil.createMimeMessageWithSubject(subject);
+        FakeMail mail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+        
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getSubject()).startsWith("Русский").endsWith("Benoît TELLIER vous a déposé des fichiers");
+    }
+
+    
     @Test
     public void shouldDefinePrefixAsSubjectWhenNoSubject() throws MessagingException {
         mailetConfig.setProperty("subjectPrefix", "JUNIT");
