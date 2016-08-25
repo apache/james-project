@@ -25,26 +25,17 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 
 /**
- * Simplest Mailet which destroys any incoming messages.
- *
+ * Simplest Mailet which destroys any incoming messages
+ * by setting their state to GHOST
  */
 public class Null extends GenericMailet {
 
-    /**
-     * Set this mail to GHOST state, indicating that no further processing 
-     * should take place.
-     *
-     * @param mail the mail to process
-     */
+    @Override
     public void service(Mail mail) {
         mail.setState(Mail.GHOST);
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "Null Mailet";
     }

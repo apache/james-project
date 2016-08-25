@@ -20,54 +20,31 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
-import junit.framework.TestCase;
-
-import org.apache.james.transport.mailets.Null;
-import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
+import org.apache.mailet.base.test.FakeMail;
+import org.junit.Before;
+import org.junit.Test;
 
-public class NullTest extends TestCase {
-
-    private MimeMessage mockedMimeMessage;
-
-    private Mail mockedMail;
+public class NullTest {
 
     private Mailet mailet;
 
-    public NullTest(String arg0) throws UnsupportedEncodingException {
-        super(arg0);
-    }
-
-    private void setupMockedMail(MimeMessage m) throws ParseException {
-        mockedMail = new FakeMail();
-        mockedMail.setMessage(m);
-        mockedMail.setRecipients(Arrays.asList(new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org")));
-
-    }
-
-    private void setupMailet() throws MessagingException {
+    @Before
+    public void setup() {
         mailet = new Null();
     }
 
-    // test if the right state was set
-    public void testNullMailet() throws MessagingException {
-        setupMockedMail(mockedMimeMessage);
-        setupMailet();
+    @Test
+    public void shouldChangeStateToGhost() throws MessagingException {
+        FakeMail mail = new FakeMail();
+        
+        mailet.service(mail);
 
-        mailet.service(mockedMail);
-
-        String PROCESSOR = "ghost";
-        assertEquals(PROCESSOR, mockedMail.getState());
+        assertThat(mail.getState()).isEqualTo("ghost");
     }
 
 }
