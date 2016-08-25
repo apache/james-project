@@ -21,15 +21,14 @@
 
 package org.apache.james.transport.mailets;
 
+import java.io.InputStream;
 import java.util.Enumeration;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
-
-import java.io.InputStream;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * Logs Message Headers and/or Body.
@@ -50,9 +49,6 @@ public class LogMessage extends GenericMailet {
     private int bodyMax = 0;
     private String comment = null;
 
-    /**
-     * Initialize the mailet, loading configuration information.
-     */
     public void init() {
         try {
             passThrough = (getInitParameter("passThrough") == null) ? true : Boolean.valueOf(getInitParameter("passThrough"));
@@ -65,11 +61,11 @@ public class LogMessage extends GenericMailet {
         }
     }
 
-    /**
-     * Log a particular message
-     *
-     * @param mail the mail to process
-     */
+    @Override
+    public String getMailetInfo() {
+        return "LogHeaders Mailet";
+    }
+
     public void service(Mail mail) {
         log("Logging mail " + mail.getName());
         if (comment != null) log(comment);
@@ -112,14 +108,5 @@ public class LogMessage extends GenericMailet {
             headBuffer.append(heads.nextElement().toString()).append("\n");
         }
         return headBuffer.toString();
-    }
-
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
-    public String getMailetInfo() {
-        return "LogHeaders Mailet";
     }
 }
