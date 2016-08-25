@@ -17,27 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.extractor;
+package org.apache.james.mailbox.extractor;
 
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream;
 
-public class ParsedContent {
+public interface TextExtractor {
 
-    private final String textualContent;
-    private final Map<String, List<String>> metadata;
+    ParsedContent extractContent(InputStream inputStream, String contentType, String fileName) throws Exception;
 
-    public ParsedContent(String textualContent, Map<String, List<String>> metadata) {
-        this.textualContent = textualContent;
-        this.metadata = metadata;
-    }
-
-    public String getTextualContent() {
-        return textualContent;
-    }
-
-    public  Map<String, List<String>> getMetadata() {
-        return metadata;
-    }
-    
 }

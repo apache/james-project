@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mime4j.MimeException;

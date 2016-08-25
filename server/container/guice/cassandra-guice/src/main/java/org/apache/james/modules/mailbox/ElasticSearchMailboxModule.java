@@ -32,7 +32,7 @@ import org.apache.james.mailbox.elasticsearch.ClientProviderImpl;
 import org.apache.james.mailbox.elasticsearch.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.tika.extractor.TikaTextExtractor;

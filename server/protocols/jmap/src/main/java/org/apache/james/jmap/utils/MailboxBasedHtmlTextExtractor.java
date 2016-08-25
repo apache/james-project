@@ -6,7 +6,7 @@ import java.io.ByteArrayInputStream;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

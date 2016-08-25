@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.store.extractor.ParsedContent;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.ParsedContent;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.jsoup.Jsoup;
 
 import com.google.common.collect.Maps;

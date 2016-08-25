@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.elasticsearch.json;
 
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import java.io.InputStream;
+
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
 
 public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
 

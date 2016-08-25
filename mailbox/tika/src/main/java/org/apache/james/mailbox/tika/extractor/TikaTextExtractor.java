@@ -26,14 +26,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.james.mailbox.store.extractor.ParsedContent;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.ParsedContent;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
+
+import com.google.common.collect.ImmutableList;
 
 public class TikaTextExtractor implements TextExtractor {
 

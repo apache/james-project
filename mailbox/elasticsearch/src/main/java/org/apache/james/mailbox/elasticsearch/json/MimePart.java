@@ -25,9 +25,9 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.james.mailbox.extractor.ParsedContent;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.extractor.ParsedContent;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
 import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

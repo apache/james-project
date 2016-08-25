@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.mailbox.store.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

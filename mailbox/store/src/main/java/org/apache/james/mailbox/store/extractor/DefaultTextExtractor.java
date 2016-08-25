@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.extractor.ParsedContent;
+import org.apache.james.mailbox.extractor.TextExtractor;
 
 /**
  * A default text extractor that is directly based on the input file provided.
