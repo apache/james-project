@@ -33,7 +33,7 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.james.jmap.methods.ValidationResult;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.MessageManager;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -361,8 +361,8 @@ public class CreationMessage {
         from.filter(f -> !f.hasValidEmail()).ifPresent(f -> errors.add(invalidPropertyFrom));
     }
 
-    public boolean isIn(Mailbox mailbox) {
-        return mailboxIds.contains(mailbox.getMailboxId().serialize());
+    public boolean isIn(MessageManager mailbox) {
+        return mailboxIds.contains(mailbox.getId().serialize());
     }
     
     @JsonDeserialize(builder = DraftEmailer.Builder.class)

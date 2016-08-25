@@ -1024,7 +1024,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(ARGUMENTS + ".created", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.From", equalTo(fromAddress))
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
     }
@@ -1061,7 +1061,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(ARGUMENTS + ".created", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.from", equalTo(fromAddress))
+            .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].headers.From", equalTo(fromAddress))
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.name", equalTo(fromAddress))
             .body(ARGUMENTS + ".created[\""+messageCreationId+"\"].from.email", equalTo(fromAddress));
     }

@@ -53,6 +53,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -249,7 +250,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      */
     public Iterator<Long> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException {
         if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(new StoreMailboxPath(getMailboxEntity()), mailboxSession.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
         }
         Map<Long, MessageMetaData> uids = deleteMarkedInMailbox(set, mailboxSession);
 
@@ -271,7 +272,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         SharedFileInputStream contentIn = null;
 
         if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(new StoreMailboxPath(getMailboxEntity()), mailboxSession.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
         }
 
         try {
@@ -389,7 +390,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
-            return locker.executeWithLock(mailboxSession, new StoreMailboxPath(getMailboxEntity()), new MailboxPathLocker.LockAwareExecution<Long>() {
+            return locker.executeWithLock(mailboxSession, getMailboxPath(), new MailboxPathLocker.LockAwareExecution<Long>() {
 
                 @Override
                 public Long execute() throws MailboxException {
@@ -552,7 +553,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     public Map<Long, Flags> setFlags(final Flags flags, final FlagsUpdateMode flagsUpdateMode, final MessageRange set, MailboxSession mailboxSession) throws MailboxException {
 
         if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(new StoreMailboxPath(getMailboxEntity()), mailboxSession.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
         }
         final SortedMap<Long, Flags> newFlagsByUid = new TreeMap<Long, Flags>();
 
@@ -614,7 +615,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      */
     public List<MessageRange> moveTo(final MessageRange set, final StoreMessageManager toMailbox, final MailboxSession session) throws MailboxException {
         if (!isWriteable(session)) {
-            throw new ReadOnlyException(new StoreMailboxPath(getMailboxEntity()), session.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath(), session.getPathDelimiter());
         }
         if (!toMailbox.isWriteable(session)) {
             throw new ReadOnlyException(new StoreMailboxPath(toMailbox.getMailboxEntity()), session.getPathDelimiter());
@@ -678,7 +679,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     protected List<Long> recent(final boolean reset, MailboxSession mailboxSession) throws MailboxException {
         if (reset) {
             if (!isWriteable(mailboxSession)) {
-                throw new ReadOnlyException(new StoreMailboxPath(getMailboxEntity()), mailboxSession.getPathDelimiter());
+                throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
             }
         }
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
@@ -835,7 +836,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return aclResolver.applyGlobalACL(mailbox.getACL(), new GroupFolderResolver(mailboxSession).isGroupFolder(mailbox));
     }
     
+    @Override
     public MailboxId getId() {
         return mailbox.getMailboxId();
+    }
+    
+    @Override
+    public MailboxPath getMailboxPath() throws MailboxException {
+        return new StoreMailboxPath(getMailboxEntity());
     }
 }

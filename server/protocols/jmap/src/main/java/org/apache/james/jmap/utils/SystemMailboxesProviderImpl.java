@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.utils;
 
-import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -28,24 +26,22 @@ import javax.inject.Inject;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
-import com.github.fge.lambdas.supplier.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 
 public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
 
-    private final MailboxMapperFactory mailboxMapperFactory;
     private final MailboxManager mailboxManager;
 
     @Inject
-    @VisibleForTesting SystemMailboxesProviderImpl(MailboxMapperFactory mailboxMapperFactory, MailboxManager mailboxManager) {
-        this.mailboxMapperFactory = mailboxMapperFactory;
+    @VisibleForTesting SystemMailboxesProviderImpl(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }
 
@@ -55,16 +51,12 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
                 .orElse(false);
     }
 
-    public Stream<Mailbox> listMailboxes(Role aRole, MailboxSession session) {
-        ThrowingSupplier<List<MailboxMetaData>> getAllMailboxes = () -> mailboxManager.search(MailboxQuery.builder(session).privateUserMailboxes().build(), session);
-        Predicate<MailboxPath> hasSpecifiedRole = path -> hasRole(aRole, path);
-        return getAllMailboxes.get().stream()
-                .map(MailboxMetaData::getPath)
-                .filter(hasSpecifiedRole)
-                .map(loadMailbox(session));
-    }
-
-    private ThrowingFunction<MailboxPath, Mailbox> loadMailbox(MailboxSession session) {
-        return path -> mailboxMapperFactory.getMailboxMapper(session).findMailboxByPath(path);
+    public Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) throws MailboxException {
+        ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
+        return mailboxManager.search(MailboxQuery.builder(session).privateUserMailboxes().build(), session)
+            .stream()
+            .map(MailboxMetaData::getPath)
+            .filter(path -> hasRole(aRole, path))
+            .map(Throwing.function(loadMailbox).sneakyThrow());
     }
 }

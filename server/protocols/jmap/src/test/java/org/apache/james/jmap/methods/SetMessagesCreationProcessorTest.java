@@ -22,30 +22,28 @@ package org.apache.james.jmap.methods;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.ZonedDateTime;
+import java.io.InputStream;
+import java.sql.Date;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import javax.mail.Flags;
+
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
-import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.Attachment;
 import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
-import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageContentExtractor;
 import org.apache.james.jmap.model.MessageFactory;
-import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.model.SetError;
@@ -60,6 +58,7 @@ import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -69,53 +68,22 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class SetMessagesCreationProcessorTest {
     
-    private MessageFactory messageFactory;
-
     private static final String USER = "user@example.com";
     private static final String OUTBOX = "outbox";
     private static final TestId OUTBOX_ID = TestId.of(12345);
     private static final String DRAFTS = "drafts";
     private static final TestId DRAFTS_ID = TestId.of(12);
-    private static final String OUTBOX_MESSAGE_ID = Joiner.on('|').join(USER, OUTBOX, "12345");
     private static final String NAMESPACE = "#private";
-    private static final long UID_VALIDITY = 0l;
-    private final Mailbox outbox = new SimpleMailbox(new MailboxPath(NAMESPACE, USER, OUTBOX), UID_VALIDITY, OUTBOX_ID);
-    private final Mailbox drafts = new SimpleMailbox(new MailboxPath(NAMESPACE, USER, DRAFTS), UID_VALIDITY, DRAFTS_ID);
-
-    private static final Message FAKE_OUTBOX_MESSAGE = Message.builder()
-            .id(MessageId.of(OUTBOX_MESSAGE_ID))
-            .blobId(BlobId.of("anything"))
-            .threadId("anything")
-            .mailboxId(OUTBOX_ID.serialize())
-            .headers(ImmutableMap.of())
-            .subject("anything")
-            .size(0)
-            .date(ZonedDateTime.now())
-            .preview("anything")
-            .build();
-    
-    @Before
-    public void setup() {
-        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
-        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
-        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
-    }
 
     private final CreationMessage.Builder creationMessageBuilder = CreationMessage.builder()
             .from(DraftEmailer.builder().name("alice").email("alice@example.com").build())
@@ -133,11 +101,7 @@ public class SetMessagesCreationProcessorTest {
                         .build())
             .build();
 
-    private final Optional<Mailbox> optionalOutbox = Optional.of(outbox);
-    private final Optional<Mailbox> optionalDrafts = Optional.of(drafts);
-
-    private MessageMapper mockMapper;
-    private MailboxSessionMapperFactory stubSessionMapperFactory;
+    private MessageFactory messageFactory;
     private MailSpool mockedMailSpool;
     private MailFactory mockedMailFactory;
     private SystemMailboxesProvider fakeSystemMailboxesProvider;
@@ -145,13 +109,18 @@ public class SetMessagesCreationProcessorTest {
     private MIMEMessageConverter mimeMessageConverter;
     private AttachmentManager mockedAttachmentManager;
     private SetMessagesCreationProcessor sut;
+    private MessageManager outbox;
+    private MessageManager drafts;
+    private Optional<MessageManager> optionalOutbox;
+    private Optional<MessageManager> optionalDrafts;
+
 
     @Before
     public void setUp() throws MailboxException {
-        mockMapper = mock(MessageMapper.class);
-        stubSessionMapperFactory = mock(MailboxSessionMapperFactory.class);
-        when(stubSessionMapperFactory.createMessageMapper(any(MailboxSession.class)))
-                .thenReturn(mockMapper);
+        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
+        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
@@ -159,8 +128,16 @@ public class SetMessagesCreationProcessorTest {
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
         session = new MockMailboxSession(USER);
         mimeMessageConverter = new MIMEMessageConverter();
-        sut = new SetMessagesCreationProcessor(
-                stubSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager);
+        sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager);
+        
+        outbox = mock(MessageManager.class);
+        when(outbox.getId()).thenReturn(OUTBOX_ID);
+        when(outbox.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, OUTBOX));
+        drafts = mock(MessageManager.class);
+        when(drafts.getId()).thenReturn(DRAFTS_ID);
+        when(drafts.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, DRAFTS));
+        optionalOutbox = Optional.of(outbox);
+        optionalDrafts = Optional.of(drafts);
     }
 
     @Test
@@ -181,13 +158,7 @@ public class SetMessagesCreationProcessorTest {
         when(mockSessionMapperFactory.createMessageMapper(any(MailboxSession.class)))
                 .thenReturn(stubMapper);
 
-        sut = new SetMessagesCreationProcessor(
-                mockSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager) {
-            @Override
-            protected MessageWithId createMessageInOutboxAndSend(ValueWithId.CreationMessageEntry createdEntry, MailboxSession session, Mailbox outbox, Function<Long, MessageId> buildMessageIdFromUid) {
-                return new MessageWithId(createdEntry.getCreationId(), FAKE_OUTBOX_MESSAGE);
-            }
-        };
+        sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager);
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
 
@@ -201,8 +172,7 @@ public class SetMessagesCreationProcessorTest {
     public void processShouldReturnErrorWhenOutboxNotFound() {
         // Given
         TestSystemMailboxesProvider doNotProvideOutbox = new TestSystemMailboxesProvider(Optional::empty, () -> optionalDrafts);
-        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(
-                stubSessionMapperFactory, mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, doNotProvideOutbox, mockedAttachmentManager);
+        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, doNotProvideOutbox, mockedAttachmentManager);
         // When
         SetMessagesResponse actual = sut.process(createMessageInOutbox, session);
         
@@ -212,12 +182,12 @@ public class SetMessagesCreationProcessorTest {
     }
 
     @Test
-    public void processShouldCallMessageMapperWhenRequestHasNonEmptyCreate() throws MailboxException {
+    public void processShouldCallAppendMessageWhenRequestHasNonEmptyCreate() throws MailboxException {
         // When
         sut.process(createMessageInOutbox, session);
 
         // Then
-        verify(mockMapper).add(eq(outbox), any(MailboxMessage.class));
+        verify(outbox).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class));
     }
 
     @Test
@@ -321,16 +291,16 @@ public class SetMessagesCreationProcessorTest {
     
     public static class TestSystemMailboxesProvider implements SystemMailboxesProvider {
 
-        private final Supplier<Optional<Mailbox>> outboxSupplier;
-        private final Supplier<Optional<Mailbox>> draftsSupplier;
+        private final Supplier<Optional<MessageManager>> outboxSupplier;
+        private final Supplier<Optional<MessageManager>> draftsSupplier;
 
-        private TestSystemMailboxesProvider(Supplier<Optional<Mailbox>> outboxSupplier,
-                                            Supplier<Optional<Mailbox>> draftsSupplier) {
+        private TestSystemMailboxesProvider(Supplier<Optional<MessageManager>> outboxSupplier,
+                                            Supplier<Optional<MessageManager>> draftsSupplier) {
             this.outboxSupplier = outboxSupplier;
             this.draftsSupplier = draftsSupplier;
         }
 
-        public Stream<Mailbox> listMailboxes(Role aRole, MailboxSession session) {
+        public Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) {
             if (aRole.equals(Role.OUTBOX)) {
                 return outboxSupplier.get().map(o -> Stream.of(o)).orElse(Stream.empty());
             } else if (aRole.equals(Role.DRAFTS)) {

@@ -23,8 +23,9 @@ import java.util.stream.Stream;
 
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxException;
 
 public interface SystemMailboxesProvider {
-    Stream<Mailbox> listMailboxes(Role aRole, MailboxSession session);
+    Stream<MessageManager> listMailboxes(Role aRole, MailboxSession session) throws MailboxException;
 }

@@ -27,26 +27,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
+import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.model.MessageContentExtractor.MessageContent;
-import org.apache.james.jmap.model.message.EMailer;
-import org.apache.james.jmap.model.message.IndexableMessage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
@@ -58,12 +53,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 public class MessageFactory {
 
-    public static final String MULTIVALUED_HEADERS_SEPARATOR = ", ";
     public static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
 
     private final MessagePreviewGenerator messagePreview;
@@ -123,38 +116,6 @@ public class MessageFactory {
         }
     }
 
-    public Message fromMailboxMessage(MailboxMessage mailboxMessage,
-            List<MessageAttachment> attachments,
-            Function<Long, MessageId> uidToMessageId) {
-
-        IndexableMessage im = IndexableMessage.from(mailboxMessage, new DefaultTextExtractor(), UTC_ZONE_ID);
-        MessageId messageId = uidToMessageId.apply(im.getId());
-        return Message.builder()
-                .id(messageId)
-                .blobId(BlobId.of(String.valueOf(im.getId())))
-                .threadId(messageId.serialize())
-                .mailboxIds(ImmutableList.of(im.getMailboxId()))
-                .inReplyToMessageId(getHeaderAsSingleValue(im, "in-reply-to"))
-                .isUnread(im.isUnRead())
-                .isFlagged(im.isFlagged())
-                .isAnswered(im.isAnswered())
-                .isDraft(im.isDraft())
-                .subject(getSubject(im))
-                .headers(toMap(im.getHeaders()))
-                .from(firstElasticSearchEmailers(im.getFrom()))
-                .to(fromElasticSearchEmailers(im.getTo()))
-                .cc(fromElasticSearchEmailers(im.getCc()))
-                .bcc(fromElasticSearchEmailers(im.getBcc()))
-                .replyTo(fromElasticSearchEmailers(im.getReplyTo()))
-                .size(im.getSize())
-                .date(getInternalDate(mailboxMessage, im))
-                .preview(getPreview(im))
-                .textBody(getTextBody(im))
-                .htmlBody(getHtmlBody(im))
-                .attachments(getAttachments(attachments))
-                .build();
-    }
-
     private String getPreview(MessageContent messageContent) {
         if (messageContent.getHtmlBody().isPresent()) {
             return messagePreview.forHTMLBody(messageContent.getHtmlBody());
@@ -162,21 +123,6 @@ public class MessageFactory {
         return messagePreview.forTextBody(messageContent.getTextBody());
     }
 
-    private String getPreview(IndexableMessage im) {
-        Optional<String> bodyHtml = im.getBodyHtml();
-        if (bodyHtml.isPresent()) {
-            return messagePreview.forHTMLBody(bodyHtml);
-        }
-        return messagePreview.forTextBody(im.getBodyText());
-    }
-
-    private String getSubject(IndexableMessage im) {
-        return im.getSubjects()
-                    .stream()
-                    .map(String::trim)
-                    .collect(Collectors.joining(MULTIVALUED_HEADERS_SEPARATOR));
-    }
-    
     private Emailer firstFromMailboxList(MailboxList list) {
         if (list == null) {
             return null;
@@ -211,34 +157,6 @@ public class MessageFactory {
         return mailbox.getAddress();
     }
 
-    private Emailer firstElasticSearchEmailers(Set<EMailer> emailers) {
-        return emailers.stream()
-                    .findFirst()
-                    .map(this::fromElasticSearchEmailer)
-                    .orElse(null);
-    }
-    
-    private ImmutableList<Emailer> fromElasticSearchEmailers(Set<EMailer> emailers) {
-        return emailers.stream()
-                    .map(this::fromElasticSearchEmailer)
-                    .collect(Guavate.toImmutableList());
-    }
-    
-    private Emailer fromElasticSearchEmailer(EMailer emailer) {
-        return Emailer.builder()
-                    .name(emailer.getName())
-                    .email(emailer.getAddress())
-                    .build();
-    }
-    
-    private ImmutableMap<String, String> toMap(Multimap<String, String> multimap) {
-        return multimap
-                .asMap()
-                .entrySet()
-                .stream()
-                .collect(Guavate.toImmutableMap(Map.Entry::getKey, x -> joinOnComma(x.getValue())));
-    }
-    
     private ImmutableMap<String, String> toMap(List<Field> fields) {
         Function<Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
                 .stream()
@@ -261,26 +179,6 @@ public class MessageFactory {
         return field.getBody();
     }
     
-    private String getHeaderAsSingleValue(IndexableMessage im, String header) {
-        return Strings.emptyToNull(joinOnComma(im.getHeaders().get(header)));
-    }
-    
-    private String joinOnComma(Iterable<String> iterable) {
-        return String.join(MULTIVALUED_HEADERS_SEPARATOR, iterable);
-    }
-    
-    private ZonedDateTime getInternalDate(MailboxMessage mailboxMessage, IndexableMessage im) {
-        return ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), UTC_ZONE_ID);
-    }
-
-    private String getTextBody(IndexableMessage im) {
-        return im.getBodyText().map(Strings::emptyToNull).orElse(null);
-    }
-
-    private String getHtmlBody(IndexableMessage im) {
-        return im.getBodyHtml().map(Strings::emptyToNull).orElse(null);
-    }
-
     private List<Attachment> getAttachments(List<MessageAttachment> attachments) {
         return attachments.stream()
                 .map(this::fromMailboxAttachment)
@@ -325,6 +223,7 @@ public class MessageFactory {
             private Long size;
             private Date internalDate;
             private InputStream content;
+            private SharedInputStream sharedContent;
             private List<MessageAttachment> attachments;
             private MailboxId mailboxId;
             private MessageId messageId;
@@ -359,6 +258,11 @@ public class MessageFactory {
                 return this;
             }
             
+            public Builder sharedContent(SharedInputStream sharedContent) {
+                this.sharedContent = sharedContent;
+                return this;
+            }
+            
             public Builder attachments(List<MessageAttachment> attachments) {
                 this.attachments = attachments;
                 return this;
@@ -382,11 +286,11 @@ public class MessageFactory {
                 Preconditions.checkArgument(flags != null);
                 Preconditions.checkArgument(size != null);
                 Preconditions.checkArgument(internalDate != null);
-                Preconditions.checkArgument(content != null);
+                Preconditions.checkArgument(content != null ^ sharedContent != null);
                 Preconditions.checkArgument(attachments != null);
                 Preconditions.checkArgument(mailboxId != null);
                 Preconditions.checkArgument(messageId != null);
-                return new MetaDataWithContent(uid, modSeq, flags, size, internalDate, content, attachments, mailboxId, messageId);
+                return new MetaDataWithContent(uid, modSeq, flags, size, internalDate, content, sharedContent, attachments, mailboxId, messageId);
             }
         }
 
@@ -396,17 +300,19 @@ public class MessageFactory {
         private final long size;
         private final Date internalDate;
         private final InputStream content;
+        private final SharedInputStream sharedContent;
         private final List<MessageAttachment> attachments;
         private final MailboxId mailboxId;
         private final MessageId messageId;
 
-        private MetaDataWithContent(long uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, List<MessageAttachment> attachments, MailboxId mailboxId, MessageId messageId) {
+        private MetaDataWithContent(long uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, MailboxId mailboxId, MessageId messageId) {
             this.uid = uid;
             this.modSeq = modSeq;
             this.flags = flags;
             this.size = size;
             this.internalDate = internalDate;
             this.content = content;
+            this.sharedContent = sharedContent;
             this.attachments = attachments;
             this.mailboxId = mailboxId;
             this.messageId = messageId;
@@ -442,6 +348,11 @@ public class MessageFactory {
         }
 
         public InputStream getContent() {
+            if (sharedContent != null) {
+                long begin = 0;
+                long allContent = -1;
+                return sharedContent.newStream(begin, allContent);
+            }
             return content;
         }
 

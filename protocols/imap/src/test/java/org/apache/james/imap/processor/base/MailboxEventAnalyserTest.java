@@ -330,6 +330,10 @@ public class MailboxEventAnalyserTest {
                 public MailboxId getId() {
                     return null;
                 }
+                
+                public MailboxPath getMailboxPath() {
+                    return null;
+                }
             };
         }
         
