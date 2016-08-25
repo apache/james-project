@@ -19,9 +19,9 @@
 
 package org.apache.mailet.base;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.mailet.base.test.FakeMailetConfig;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,41 +37,51 @@ public class MailetUtilTest {
     }
 
     @Test
-    public void testGetInitParameterParameterIsTrue() {
-        assertTrue(getParameterValued("true", true));
-        assertTrue(getParameterValued("true", false));
-        assertTrue(getParameterValued("TRUE", true));
-        assertTrue(getParameterValued("TRUE", false));
-        assertTrue(getParameterValued("trUE", true));
-        assertTrue(getParameterValued("trUE", false));
+    public void getInitParameterShouldReturnTrueWhenIsValueTrueLowerCase() {
+        assertThat(getParameterValued("true", false)).isTrue();
     }
 
     @Test
-    public void testGetInitParameterParameterIsFalse() {
-        assertFalse(getParameterValued("false", true));
-        assertFalse(getParameterValued("false", false));
-        assertFalse(getParameterValued("FALSE", true));
-        assertFalse(getParameterValued("FALSE", false));
-        assertFalse(getParameterValued("fALSe", true));
-        assertFalse(getParameterValued("fALSe", false));
+    public void getInitParameterShouldReturnTrueWhenIsValueTrueUpperCase() {
+        assertThat(getParameterValued("TRUE", false)).isTrue();
     }
 
     @Test
-    public void testGetInitParameterParameterDefaultsToTrue() {
-        assertTrue(getParameterValued("fals", true));
-        assertTrue(getParameterValued("TRU", true));
-        assertTrue(getParameterValued("FALSEest", true));
-        assertTrue(getParameterValued("", true));
-        assertTrue(getParameterValued("gubbins", true));
+    public void getInitParameterShouldReturnTrueWhenIsValueTrueMixedCase() {
+        assertThat(getParameterValued("trUE", false)).isTrue();
     }
 
     @Test
-    public void testGetInitParameterParameterDefaultsToFalse() {
-        assertFalse(getParameterValued("fals", false));
-        assertFalse(getParameterValued("TRU", false));
-        assertFalse(getParameterValued("FALSEest", false));
-        assertFalse(getParameterValued("", false));
-        assertFalse(getParameterValued("gubbins", false));
+    public void getInitParameterShouldReturnFalseWhenIsValueFalseLowerCase() {
+        assertThat(getParameterValued("false", true)).isFalse();
+    }
+
+    @Test
+    public void getInitParameterShouldReturnFalseWhenIsValueFalseUpperCase() {
+        assertThat(getParameterValued("FALSE", true)).isFalse();
+    }
+
+    @Test
+    public void getInitParameterShouldReturnFalseWhenIsValueFalseMixedCase() {
+        assertThat(getParameterValued("fALSe", true)).isFalse();
+    }
+
+    @Test
+    public void getInitParameterShouldReturnDefaultValueAsTrueWhenBadValue() {
+        assertThat(getParameterValued("fals", true)).isTrue();
+        assertThat(getParameterValued("TRU", true)).isTrue();
+        assertThat(getParameterValued("FALSEest", true)).isTrue();
+        assertThat(getParameterValued("", true)).isTrue();
+        assertThat(getParameterValued("gubbins", true)).isTrue();
+    }
+
+    @Test
+    public void getInitParameterShouldReturnDefaultValueAsFalseWhenBadValue() {
+        assertThat(getParameterValued("fals", false)).isFalse();
+        assertThat(getParameterValued("TRU", false)).isFalse();
+        assertThat(getParameterValued("FALSEest", false)).isFalse();
+        assertThat(getParameterValued("", false)).isFalse();
+        assertThat(getParameterValued("gubbins", false)).isFalse();
     }
 
     private boolean getParameterValued(String value, boolean defaultValue) {
