@@ -22,28 +22,20 @@ package org.apache.james.jmap.send;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 
 public class PostDequeueDecoratorFactory implements MailQueueItemDecoratorFactory {
     private final MailboxManager mailboxManager;
-    private final MessageMapperFactory messageMapperFactory;
-    private final MailboxMapperFactory mailboxMapperFactory;
 
     @Inject
-    public PostDequeueDecoratorFactory(MailboxManager mailboxManager,
-            MessageMapperFactory messageMapperFactory,
-            MailboxMapperFactory mailboxMapperFactory) {
-                this.mailboxManager = mailboxManager;
-                this.messageMapperFactory = messageMapperFactory;
-                this.mailboxMapperFactory = mailboxMapperFactory;
+    public PostDequeueDecoratorFactory(MailboxManager mailboxManager) {
+        this.mailboxManager = mailboxManager;
     }
 
     @Override
     public MailQueueItemDecorator decorate(MailQueueItem mailQueueItem) {
-        return new PostDequeueDecorator(mailQueueItem, mailboxManager, messageMapperFactory, mailboxMapperFactory);
+        return new PostDequeueDecorator(mailQueueItem, mailboxManager);
     }
 
 }

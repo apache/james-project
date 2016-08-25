@@ -32,7 +32,6 @@ import javax.mail.Flags;
 import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
-import org.apache.james.jmap.send.exception.MessageIdNotFoundException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -85,7 +84,7 @@ public class PostDequeueDecoratorTest {
         mockedMailQueueItem = mock(MailQueueItem.class);
         mail = new FakeMail();
         when(mockedMailQueueItem.getMail()).thenReturn(mail);
-        testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager, mailboxSessionMapperFactory, mailboxSessionMapperFactory);
+        testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager);
     }
     
     @Test
@@ -97,16 +96,6 @@ public class PostDequeueDecoratorTest {
         }
 
         verify(mockedMailQueueItem).done(true);
-    }
-    
-    @Test(expected=MessageIdNotFoundException.class)
-    public void doneShouldThrowWhenMetadataHasNotAnExistingMessageId() throws Exception {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME, LOGGER);
-        mailboxManager.createMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
-        mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, MESSAGE_ID);
-        mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, USERNAME);
-
-        testee.done(true);
     }
     
     @Test(expected=MailShouldBeInOutboxException.class)
