@@ -19,12 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.OnlyText;
-import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.Mail;
-import org.apache.mailet.Mailet;
+import java.io.IOException;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -32,8 +28,11 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import java.io.IOException;
-import java.util.Properties;
+import org.apache.mailet.Mail;
+import org.apache.mailet.Mailet;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMailetConfig;
 
 import junit.framework.TestCase;
 
@@ -54,7 +53,7 @@ public class OnlyTextTest extends TestCase {
         Mail mail;
 
         mailet = new OnlyText();
-        mci = new FakeMailetConfig("Test", new FakeMailContext());
+        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mailet.init(mci);
 
         // ----------------
@@ -169,7 +168,7 @@ public class OnlyTextTest extends TestCase {
 
     public void testHtml2Text() throws MessagingException {
         OnlyText mailet = new OnlyText();
-        mailet.init(new FakeMailetConfig("Test", new FakeMailContext()));
+        mailet.init(new FakeMailetConfig("Test", FakeMailContext.defaultContext()));
 
         String html;
         html = "<b>Prova di html</b><br /><p>Un paragrafo</p><LI>e ci mettiamo anche una lista</LI><br>";

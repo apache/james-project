@@ -62,7 +62,7 @@ public class NESSpamCheckTest {
     private void setupMatcher() throws MessagingException {
         setupMockedMimeMessage();
         matcher = new NESSpamCheck();
-        FakeMatcherConfig mci = new FakeMatcherConfig("NESSpamCheck", new FakeMailContext());
+        FakeMatcherConfig mci = new FakeMatcherConfig("NESSpamCheck", FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

@@ -57,7 +57,7 @@ public class SMTPIsAuthNetworkTest {
     private void setupMatcher() throws MessagingException {
         matcher = new SMTPIsAuthNetwork();
         FakeMatcherConfig mci = new FakeMatcherConfig("SMTPIsAuthNetwork",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

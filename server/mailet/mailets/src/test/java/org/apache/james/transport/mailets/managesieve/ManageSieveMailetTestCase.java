@@ -466,7 +466,7 @@ public class ManageSieveMailetTestCase {
         mailet.setSieveParser(sieveParser);
         mailet.setSieveRepository(sieveRepository);
         mailet.setUsersRepository(usersRepository);
-        fakeMailContext = new FakeMailContext();
+        fakeMailContext = FakeMailContext.defaultContext();
         FakeMailetConfig config = new FakeMailetConfig("ManageSieve mailet", fakeMailContext);
         config.setProperty("helpURL", "file:./src/test/resources/help.txt");
         mailet.init(config);

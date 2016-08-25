@@ -57,34 +57,34 @@ public class RelayLimitTest {
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldBeANumber() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=Abc", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=Abc", FakeMailContext.defaultContext()));
     }
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldBeSpecified() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=", FakeMailContext.defaultContext()));
     }
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldNotBeNull() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=0", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=0", FakeMailContext.defaultContext()));
     }
 
     @Test(expected = MessagingException.class)
     public void relayLimitShouldNotBeEqualToZero() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=-1", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=-1", FakeMailContext.defaultContext()));
     }
 
     @Test
     public void matchShouldReturnNullWhenNoReceivedHeader() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
 
         assertThat(testee.match(mail)).isNull();
     }
 
     @Test
     public void matchShouldReturnNullWhenNotEnoughReceivedHeader() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
 
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
 
@@ -93,7 +93,7 @@ public class RelayLimitTest {
 
     @Test
     public void matchShouldReturnAddressWhenEqualToLimit() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
 
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
@@ -103,7 +103,7 @@ public class RelayLimitTest {
 
     @Test
     public void matchShouldReturnAddressWhenOverLimit() throws Exception {
-        testee.init(new FakeMatcherConfig("RelayLimit=2", new FakeMailContext()));
+        testee.init(new FakeMatcherConfig("RelayLimit=2", FakeMailContext.defaultContext()));
 
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");

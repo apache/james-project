@@ -119,7 +119,7 @@ public class StripAttachmentTest {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci.setProperty("directory", "./");
         mci.setProperty("remove", "all");
         mci.setProperty("notpattern", "^(winmail\\.dat$)");
@@ -250,7 +250,7 @@ public class StripAttachmentTest {
             IOException {
         Mailet strip = new StripAttachment();
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci.setProperty("attribute", "my.attribute");
         mci.setProperty("remove", "all");
         mci.setProperty("notpattern", ".*\\.tmp.*");
@@ -258,12 +258,12 @@ public class StripAttachmentTest {
 
         Mailet recover = new RecoverAttachment();
         FakeMailetConfig mci2 = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci2.setProperty("attribute", "my.attribute");
         recover.init(mci2);
 
         Mailet onlyText = new OnlyText();
-        onlyText.init(new FakeMailetConfig("Test", new FakeMailContext()));
+        onlyText.init(new FakeMailetConfig("Test", FakeMailContext.defaultContext()));
 
         MimeMessage message = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -340,7 +340,7 @@ public class StripAttachmentTest {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci.setProperty("directory", "./");
         mci.setProperty("remove", "all");
         mci.setProperty("pattern", ".*\\.tmp");

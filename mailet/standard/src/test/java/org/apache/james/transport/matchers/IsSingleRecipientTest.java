@@ -55,7 +55,7 @@ public class IsSingleRecipientTest {
 
         matcher = new IsSingleRecipient();
         FakeMatcherConfig mci = new FakeMatcherConfig("IsSingleRecipient",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

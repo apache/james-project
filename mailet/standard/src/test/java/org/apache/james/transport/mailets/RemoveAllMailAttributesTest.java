@@ -20,7 +20,10 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.RemoveAllMailAttributes;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -29,10 +32,6 @@ import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 public class RemoveAllMailAttributesTest {
 
@@ -43,7 +42,7 @@ public class RemoveAllMailAttributesTest {
     @Before
     public void setUp() throws Exception {
         mailet = new RemoveAllMailAttributes();
-        FakeMailetConfig mci = new FakeMailetConfig("Test", new FakeMailContext());
+        FakeMailetConfig mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mailet.init(mci);
     }
 

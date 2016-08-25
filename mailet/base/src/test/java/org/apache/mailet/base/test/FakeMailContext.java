@@ -45,6 +45,21 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("deprecation")
 public class FakeMailContext implements MailetContext {
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static FakeMailContext defaultContext() {
+        return builder().build();
+    }
+
+    public static class Builder {
+
+        public FakeMailContext build() {
+            return new FakeMailContext();
+        }
+    }
+
     public static class SentMail {
 
         private final MailAddress sender;
@@ -102,10 +117,14 @@ public class FakeMailContext implements MailetContext {
                 .toString();
         }
     }
-    
-    HashMap<String, Object> attributes = new HashMap<String, Object>();
 
-    List<SentMail> sentMails = new ArrayList<SentMail>();
+    private final HashMap<String, Object> attributes;
+    private final List<SentMail> sentMails;
+
+    private FakeMailContext() {
+        attributes = new HashMap<String, Object>();
+        sentMails = new ArrayList<SentMail>();
+    }
 
     public void bounce(Mail mail, String message) throws MessagingException {
         // trivial implementation

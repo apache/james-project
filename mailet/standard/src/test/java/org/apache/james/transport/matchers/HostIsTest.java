@@ -45,7 +45,7 @@ public class HostIsTest {
         fakeMail = new FakeMail();
 
         matcher = new HostIs();
-        FakeMatcherConfig mci = new FakeMatcherConfig("HostIs=" + JAMES_APACHE_ORG, new FakeMailContext());
+        FakeMatcherConfig mci = new FakeMatcherConfig("HostIs=" + JAMES_APACHE_ORG, FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

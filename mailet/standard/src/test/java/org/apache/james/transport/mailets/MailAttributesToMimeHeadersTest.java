@@ -20,20 +20,19 @@
 
 package org.apache.james.transport.mailets;
 
-import junit.framework.TestCase;
-
-import org.apache.james.transport.mailets.MailAttributesToMimeHeaders;
-import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MailUtil;
-import org.apache.mailet.Mailet;
+import java.io.UnsupportedEncodingException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
-import java.io.UnsupportedEncodingException;
+import org.apache.mailet.Mailet;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.MailUtil;
+
+import junit.framework.TestCase;
 
 public class MailAttributesToMimeHeadersTest extends TestCase {
 
@@ -69,7 +68,7 @@ public class MailAttributesToMimeHeadersTest extends TestCase {
     private void setupMailet() throws MessagingException {
         mailet = new MailAttributesToMimeHeaders();
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci.setProperty("simplemapping", getConfig1());
         String config2 = MAIL_ATTRIBUTE_NAME2 + "; " + HEADER_NAME2;
         mci.setProperty("simplemapping", config2);

@@ -36,7 +36,7 @@ public class FakeMailetConfig implements MailetConfig {
     private final Properties properties;
     
     public FakeMailetConfig() {
-    	this("A Mailet", new FakeMailContext());
+    	this("A Mailet", FakeMailContext.defaultContext());
     }
     
     public FakeMailetConfig(String mailetName, MailetContext mc) {

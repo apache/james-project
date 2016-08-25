@@ -20,7 +20,9 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.SetMimeHeader;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -29,9 +31,6 @@ import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 public class SetMimeHeaderTest {
 
@@ -57,7 +56,7 @@ public class SetMimeHeaderTest {
     public void setUp() throws Exception {
         mailet = new SetMimeHeader();
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci.setProperty("name", HEADER_NAME);
         mci.setProperty("value", HEADER_VALUE);
 

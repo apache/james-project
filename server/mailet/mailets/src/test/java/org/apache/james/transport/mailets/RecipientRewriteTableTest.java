@@ -18,6 +18,18 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.transport.mailets.RecipientRewriteTableMock.mapFrom;
+import static org.apache.james.transport.mailets.RecipientRewriteTableMock.rewriteTableMock;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
@@ -29,31 +41,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Properties;
-
-import static org.apache.james.transport.mailets.RecipientRewriteTableMock.mapFrom;
-import static org.apache.james.transport.mailets.RecipientRewriteTableMock.rewriteTableMock;
-import static org.junit.Assert.assertEquals;
-
 public class RecipientRewriteTableTest {
 
     private org.apache.james.transport.mailets.RecipientRewriteTable table;
 
     @Before
     public void setUp() throws Exception {
-        final FakeMailContext mockMailetContext = new FakeMailContext() {
-
-            @Override
-            public boolean isLocalServer(String serverName) {
-                return serverName.equals("localhost");
-
-            }
-        };
+        final FakeMailContext mockMailetContext = FakeMailContext.defaultContext();
 
         table = createRecipientRewriteMailet(
             rewriteTableMock(mapFrom("test@localhost").to("whatever@localhost", "blah@localhost")),

@@ -20,17 +20,19 @@
 
 package org.apache.james.transport.matchers;
 
-import junit.framework.TestCase;
-import org.apache.mailet.base.test.FakeMimeMessage;
-import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MailUtil;
-import org.apache.mailet.Matcher;
+import java.io.UnsupportedEncodingException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.UnsupportedEncodingException;
+
+import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.apache.mailet.base.test.FakeMimeMessage;
+import org.apache.mailet.base.test.MailUtil;
+
+import junit.framework.TestCase;
 
 public abstract class AbstractSubjectIsTest extends TestCase {
 
@@ -65,7 +67,7 @@ public abstract class AbstractSubjectIsTest extends TestCase {
     protected void setupMatcher() throws MessagingException {
         matcher = createMatcher();
         FakeMatcherConfig mci = new FakeMatcherConfig(getConfigOption()
-                + getSubjectName(), new FakeMailContext());
+                + getSubjectName(), FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

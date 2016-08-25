@@ -20,7 +20,9 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.RemoveMimeHeader;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
@@ -30,9 +32,6 @@ import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 public class RemoveMimeHeaderTest {
 
     private final static String HEADER1 = "header1";
@@ -41,7 +40,7 @@ public class RemoveMimeHeaderTest {
 
     private GenericMailet setupMockedMailet(String name1, String name2) throws MessagingException {
         GenericMailet mailet = new RemoveMimeHeader();
-        FakeMailetConfig mci = new FakeMailetConfig("Test", new FakeMailContext());
+        FakeMailetConfig mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         if (name1 != null) mci.setProperty("name", name1);
         if (name2 != null) mci.setProperty("name", name2);
 

@@ -50,7 +50,7 @@ public class SizeGreaterThanTest {
     private void setupMatcher(String size) throws MessagingException {
         matcher = new SizeGreaterThan();
         FakeMatcherConfig mci = new FakeMatcherConfig("SizeGreaterThan=" + size,
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 
