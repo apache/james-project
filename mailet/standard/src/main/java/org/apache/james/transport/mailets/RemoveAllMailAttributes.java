@@ -21,9 +21,10 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
 import javax.mail.MessagingException;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * This mailet sets removes all attributes set on the Mail instance
@@ -37,26 +38,15 @@ import javax.mail.MessagingException;
  * @since 2.2.0
  */
 public class RemoveAllMailAttributes extends GenericMailet {
-    
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+
+    @Override
     public String getMailetInfo() {
         return "Remove All Mail Attributes Mailet";
     }
 
-    /**
-     * Removes all attributes on the Mail
-     *
-     * @param mail the mail to process
-     *
-     * @throws MessagingException in all cases
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
-        mail.removeAllAttributes ();
+        mail.removeAllAttributes();
     }
-    
 
 }
