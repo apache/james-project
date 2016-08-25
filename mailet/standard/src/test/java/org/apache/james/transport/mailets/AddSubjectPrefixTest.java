@@ -31,7 +31,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -63,7 +62,6 @@ public class AddSubjectPrefixTest {
     }
 
     
-    @Ignore
     @Test
     public void shouldAddPrefixToEncodedSubject() throws MessagingException {
         mailetConfig.setProperty("subjectPrefix", "Русский");
