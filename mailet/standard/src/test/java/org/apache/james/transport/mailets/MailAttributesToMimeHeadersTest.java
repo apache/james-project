@@ -82,4 +82,19 @@ public class MailAttributesToMimeHeadersTest {
         expectedException.expect(MessagingException.class);
         mailet.init(mailetConfig);
     }
+
+    @Test
+    public void shouldThrowAtInitWhenTwoSemicolumnsInConfigurationEntry() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("simplemapping", "first;second;third");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
+
+    @Test
+    public void shouldThrowAtInitWhenNoConfigurationEntry() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
 }
