@@ -21,14 +21,19 @@
 
 package org.apache.james.transport.mailets;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Enumeration;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.io.ByteStreams;
 
 /**
  * Logs Message Headers and/or Body.
@@ -49,15 +54,15 @@ public class LogMessage extends GenericMailet {
     private int bodyMax = 0;
     private String comment = null;
 
+    @Override
     public void init() {
         try {
-            passThrough = (getInitParameter("passThrough") == null) ? true : Boolean.valueOf(getInitParameter("passThrough"));
-            headers = (getInitParameter("headers") == null) ? true : Boolean.valueOf(getInitParameter("headers"));
-            body = (getInitParameter("body") == null) ? true : Boolean.valueOf(getInitParameter("body"));
+            passThrough = getInitParameter("passThrough", true);
+            headers = getInitParameter("headers", true);
+            body = getInitParameter("body", true);
             bodyMax = (getInitParameter("maxBody") == null) ? 0 : Integer.parseInt(getInitParameter("maxBody"));
             comment = getInitParameter("comment");
         } catch (Exception e) {
-            // Ignore exception, default to true
         }
     }
 
@@ -66,27 +71,17 @@ public class LogMessage extends GenericMailet {
         return "LogHeaders Mailet";
     }
 
+    @Override
     public void service(Mail mail) {
         log("Logging mail " + mail.getName());
-        if (comment != null) log(comment);
+        logComment();
         try {
-            if (headers) log(getMessageHeaders(mail.getMessage()));
-            if (body) {
-                int len = bodyMax > 0 ? bodyMax : mail.getMessage().getSize();
-                StringBuilder text = new StringBuilder(len);
-                InputStream is = mail.getMessage().getRawInputStream();
-                byte[] buf = new byte[1024];
-                int read;
-                while (text.length() < len && (read = is.read(buf)) > -1) {
-                    text.append(new String(buf, 0, Math.min(read, len - text.length())));
-                }
-                log(text.toString());
-            }
-        }
-        catch (MessagingException e) {
+            MimeMessage message = mail.getMessage();
+            logHeaders(message);
+            logBody(message);
+        } catch (MessagingException e) {
             log("Error logging message.", e);
-        }
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             log("Error logging message.", e);
         }
         if (!passThrough) {
@@ -94,19 +89,30 @@ public class LogMessage extends GenericMailet {
         }
     }
 
-    /**
-     * Utility method for obtaining a string representation of a
-     * Message's headers
-     * 
-     * @param message
-     */
-    private String getMessageHeaders(MimeMessage message) throws MessagingException {
-        @SuppressWarnings("unchecked")
-        Enumeration<String> heads = message.getAllHeaderLines();
-        StringBuilder headBuffer = new StringBuilder(1024).append("\n");
-        while(heads.hasMoreElements()) {
-            headBuffer.append(heads.nextElement().toString()).append("\n");
+    private void logComment() {
+        if (comment != null) {
+            log(comment);
         }
-        return headBuffer.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void logHeaders(MimeMessage message) throws MessagingException {
+        if (headers) {
+            log("\n");
+            for (String header : Collections.list((Enumeration<String>) message.getAllHeaderLines())) {
+                log(header + "\n");
+            }
+        }
+    }
+
+    private void logBody(MimeMessage message) throws MessagingException, IOException {
+        if (body) {
+            InputStream inputStream = ByteStreams.limit(message.getRawInputStream(), lengthToLog(message));
+            log(IOUtils.toString(inputStream));
+        }
+    }
+
+    private int lengthToLog(MimeMessage message) throws MessagingException {
+        return bodyMax > 0 ? bodyMax : message.getSize();
     }
 }

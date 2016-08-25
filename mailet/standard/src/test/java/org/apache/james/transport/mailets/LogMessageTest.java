@@ -80,12 +80,18 @@ public class LogMessageTest {
     @Test
     public void serviceShouldFailWhenMailHasNoStream() throws Exception {
         mailet.init(mailetConfig);
-        expectedException.expect(NegativeArraySizeException.class);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("subject");
         message.setText("This is a fake mail");
         mailet.service(new FakeMail(message));
+
+        verify(logger).info("Logging mail null");
+        verify(logger).info("\n");
+        verify(logger).info("Subject: subject\n");
+        verify(logger).error("Error logging message.");
+        verify(logger).error("No MimeMessage content");
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
@@ -95,9 +101,9 @@ public class LogMessageTest {
         mailet.service(createMail());
 
         verify(logger).info("Logging mail name");
-        verify(logger).info("\n" +
-                "Subject: subject\n" +
-                "Content-Type: text/plain\n");
+        verify(logger).info("\n");
+        verify(logger).info("Subject: subject\n");
+        verify(logger).info("Content-Type: text/plain\n");
         verify(logger).info("This is a fake mail");
         verifyNoMoreInteractions(logger);
     }
@@ -164,9 +170,9 @@ public class LogMessageTest {
         mailet.service(createMail());
 
         verify(logger).info("Logging mail name");
-        verify(logger).info("\n" +
-                "Subject: subject\n" +
-                "Content-Type: text/plain\n");
+        verify(logger).info("\n");
+        verify(logger).info("Subject: subject\n");
+        verify(logger).info("Content-Type: text/plain\n");
         verifyNoMoreInteractions(logger);
     }
 
@@ -178,9 +184,9 @@ public class LogMessageTest {
         mailet.service(createMail());
 
         verify(logger).info("Logging mail name");
-        verify(logger).info("\n" +
-                "Subject: subject\n" +
-                "Content-Type: text/plain\n");
+        verify(logger).info("\n");
+        verify(logger).info("Subject: subject\n");
+        verify(logger).info("Content-Type: text/plain\n");
         verify(logger).info("Th");
         verifyNoMoreInteractions(logger);
     }
@@ -194,9 +200,9 @@ public class LogMessageTest {
 
         verify(logger).info("Logging mail name");
         verify(logger).info("comment");
-        verify(logger).info("\n" +
-                "Subject: subject\n" +
-                "Content-Type: text/plain\n");
+        verify(logger).info("\n");
+        verify(logger).info("Subject: subject\n");
+        verify(logger).info("Content-Type: text/plain\n");
         verify(logger).info("This is a fake mail");
         verifyNoMoreInteractions(logger);
     }
