@@ -75,6 +75,8 @@ public class MIMEMessageConverter {
     private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
     private static final String FIELD_PARAMETERS_SEPARATOR = ";";
+    private static final String QUOTED_PRINTABLE = "quoted-printable";
+    private static final String BASE64 = "base64";
 
     private final BasicBodyFactory bodyFactory;
 
@@ -103,7 +105,8 @@ public class MIMEMessageConverter {
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
             messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments));
         } else {
-            messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()));
+            messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()))
+                .setContentTransferEncoding(QUOTED_PRINTABLE);
         }
         buildMimeHeaders(messageBuilder, creationMessageEntry.getCreationId(), creationMessageEntry.getValue(), messageAttachments);
         return messageBuilder.build();
@@ -209,6 +212,7 @@ public class MIMEMessageConverter {
                 .use(bodyFactory)
                 .setBody(textBody.get(), Charsets.UTF_8)
                 .setContentType(PLAIN_TEXT_MEDIA_TYPE, UTF_8_CHARSET)
+                .setContentTransferEncoding(QUOTED_PRINTABLE)
                 .build());
         }
     }
@@ -219,6 +223,7 @@ public class MIMEMessageConverter {
                 .use(bodyFactory)
                 .setBody(htmlBody.get(), Charsets.UTF_8)
                 .setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET)
+                .setContentTransferEncoding(QUOTED_PRINTABLE)
                 .build());
         }
     }
@@ -240,7 +245,7 @@ public class MIMEMessageConverter {
             .setBody(new BasicBodyFactory().binaryBody(ByteStreams.toByteArray(att.getAttachment().getStream())))
             .setField(contentTypeField(att))
             .setField(contentDispositionField(att.isInline()))
-            .setContentTransferEncoding("base64");
+            .setContentTransferEncoding(BASE64);
         contentId(builder, att);
         return builder.build();
     }
