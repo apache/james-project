@@ -20,7 +20,6 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.mailet.base.GenericMatcher;
 
 public class SMTPAuthSuccessfulTest extends AbstractHasMailAttributeTest {

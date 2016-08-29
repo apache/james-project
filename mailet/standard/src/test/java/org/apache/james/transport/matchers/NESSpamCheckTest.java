@@ -20,7 +20,11 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.NESSpamCheck;
+import java.util.Collection;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.RFC2822Headers;
@@ -30,10 +34,6 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.Collection;
 
 public class NESSpamCheckTest {
 

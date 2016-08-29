@@ -20,20 +20,21 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.All;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Collection;
+
+import javax.mail.MessagingException;
+
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import java.util.Collection;
 
 public class AllTest {
 

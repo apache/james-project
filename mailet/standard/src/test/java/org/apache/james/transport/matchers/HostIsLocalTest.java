@@ -20,233 +20,75 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.HostIsLocal;
-import org.apache.mailet.HostAddress;
-import org.apache.mailet.LookupException;
-import org.apache.mailet.Mail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import javax.mail.MessagingException;
+
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
-import org.apache.mailet.TemporaryLookupException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
-@SuppressWarnings("deprecation")
 public class HostIsLocalTest {
 
-    private FakeMail mockedMail;
+    public static final String JAMES_APACHE_ORG = "james.apache.org";
+    public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
+    private FakeMail mockedMail;
     private Matcher matcher;
 
-    private final String[] LOCALSERVER = new String[]{"james.apache.org"};
-
-    private MailAddress[] recipients;
-
-    private void setRecipients(MailAddress[] recipients) {
-        this.recipients = recipients;
-    }
-
-    private void setupMockedMail() {
+    @Before
+    public void setUp() throws Exception {
         mockedMail = new FakeMail();
-        mockedMail.setRecipients(Arrays.asList(recipients));
 
-    }
-
-    private void setupMatcher() throws MessagingException {
-
-        MailetContext FakeMailContext = new MailetContext() {
-
-            Collection<String> localServer = new ArrayList<String>(Arrays.asList(LOCALSERVER));
-
-            public void bounce(Mail mail, String message)
-                    throws MessagingException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-
-            }
-
-            public void bounce(Mail mail, String message, MailAddress bouncer)
-                    throws MessagingException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-
-            }
-
-            public Collection<String> getMailServers(String host) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public MailAddress getPostmaster() {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public Object getAttribute(String name) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public Iterator<String> getAttributeNames() {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public int getMajorVersion() {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public int getMinorVersion() {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public String getServerInfo() {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public boolean isLocalServer(String serverName) {
-                return localServer.contains(serverName);
-            }
-
-            public boolean isLocalUser(String userAccount) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public boolean isLocalEmail(MailAddress mailAddress) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void log(String message) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void log(String message, Throwable t) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void removeAttribute(String name) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void sendMail(MimeMessage msg) throws MessagingException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void sendMail(MailAddress sender, Collection<MailAddress> recipients,
-                                 MimeMessage msg) throws MessagingException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void sendMail(MailAddress sender, Collection<MailAddress> recipients,
-                                 MimeMessage msg, String state) throws MessagingException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void sendMail(Mail mail) throws MessagingException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void setAttribute(String name, Object object) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void log(LogLevel level, String message) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public void log(LogLevel level, String message, Throwable t) {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-            public List<String> dnsLookup(String name, RecordType type) throws TemporaryLookupException, LookupException {
-                throw new UnsupportedOperationException(
-                        "Unimplemented mock service");
-            }
-
-
-        };
+        MailetContext mailContext = mock(MailetContext.class);
+        when(mailContext.isLocalServer(JAMES_APACHE_ORG)).thenReturn(true);
+        when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
 
         matcher = new HostIsLocal();
-        FakeMatcherConfig mci = new FakeMatcherConfig("HostIsLocal",
-                FakeMailContext);
+        FakeMatcherConfig mci = new FakeMatcherConfig("HostIsLocal", mailContext);
         matcher.init(mci);
     }
 
     // test if all recipients get returned as matched
     @Test
     public void testHostIsMatchedAllRecipients() throws MessagingException {
-        setRecipients(new MailAddress[]{
-                new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org")});
+        MailAddress mailAddress1 = new MailAddress("test@" + JAMES_APACHE_ORG);
+        MailAddress mailAddress2 = new MailAddress("test2@" + JAMES_APACHE_ORG);
+        mockedMail.setRecipients(ImmutableList.of(
+            mailAddress1,
+            mailAddress2));
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNotNull(matchedRecipients);
-        Assert.assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat( matcher.match(mockedMail)).containsExactly(mailAddress1, mailAddress2);
     }
 
     // test if one recipients get returned as matched
     @Test
     public void testHostIsMatchedOneRecipient() throws MessagingException {
-        setRecipients(new MailAddress[]{
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james.apache.org")});
+        MailAddress matchingAddress = new MailAddress("test2@" +JAMES_APACHE_ORG);
+        mockedMail.setRecipients(ImmutableList.of(
+            new MailAddress("test@" + JAMES2_APACHE_ORG),
+            matchingAddress));
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNotNull(matchedRecipients);
-        Assert.assertEquals(matchedRecipients.size(), 1);
+        assertThat( matcher.match(mockedMail)).containsExactly(matchingAddress);
     }
 
     // test if no recipient get returned cause it not match
     @Test
     public void testHostIsNotMatch() throws MessagingException {
-        setRecipients(new MailAddress[]{
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james2.apache.org")});
+        mockedMail.setRecipients(
+            ImmutableList.of(new MailAddress("test@" + JAMES2_APACHE_ORG),
+            new MailAddress("test2@" + JAMES2_APACHE_ORG)));
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertEquals(matchedRecipients.size(), 0);
+        assertThat(matcher.match(mockedMail)).isEmpty();
     }
 }
