@@ -20,72 +20,118 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
-import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class SetMimeHeaderTest {
 
+    @Rule public ExpectedException expectedException = ExpectedException.none();
+    
     private Mailet mailet;
-
-    private final String HEADER_NAME = "JUNIT";
-
-    private final String HEADER_VALUE = "test-value";
-
-    private String headerName = "defaultHeaderName";
-
-    private String headerValue = "defaultHeaderValue";
-
-    private void setHeaderName(String headerName) {
-        this.headerName = headerName;
-    }
-
-    private void setHeaderValue(String headerValue) {
-        this.headerValue = headerValue;
-    }
 
     @Before
     public void setUp() throws Exception {
         mailet = new SetMimeHeader();
-        FakeMailetConfig mci = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        mci.setProperty("name", HEADER_NAME);
-        mci.setProperty("value", HEADER_VALUE);
-
-        mailet.init(mci);
     }
 
-    // test if the Header was add
     @Test
-    public void testHeaderIsPresent() throws MessagingException {
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessage(headerName, headerValue);
-        FakeMail mockedMail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+    public void shouldAddHeaderToMime() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "header-name");
+        mailetConfig.setProperty("value", "test-value");
+        mailet.init(mailetConfig);
+        
+        MimeMessage mimeMessage = MailUtil.createMimeMessage();
+        Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
-        mailet.service(mockedMail);
+        mailet.service(mail);
 
-        Assert.assertEquals(HEADER_VALUE, mockedMail.getMessage().getHeader(HEADER_NAME)[0]);
-
+        assertThat(mail.getMessage().getHeader("header-name")).containsExactly("test-value");
     }
 
-    // test if the Header was replaced
+    @Ignore("need multivaluated headers in FakeMail")
     @Test
-    public void testHeaderIsReplaced() throws MessagingException {
-        setHeaderName(HEADER_NAME);
-        setHeaderValue(headerValue);
+    public void shouldAddHeaderWhenAlreadyPresent() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "header-name");
+        mailetConfig.setProperty("value", "test-value");
+        mailet.init(mailetConfig);
+        
+        MimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.addHeader("header-name", "first-value");
+        Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessage(headerName, headerValue);
-        FakeMail mockedMail = MailUtil.createMockMail2Recipients(mockedMimeMessage);
+        mailet.service(mail);
 
-        mailet.service(mockedMail);
+        assertThat(mail.getMessage().getHeader("header-name")).containsOnly("test-value", "first-value");
+    }
 
-        Assert.assertEquals(HEADER_VALUE, mockedMail.getMessage().getHeader(HEADER_NAME)[0]);
+    @Test
+    public void shouldNotThrowOnMessagingException() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "header-name");
+        mailetConfig.setProperty("value", "test-value");
+        mailet.init(mailetConfig);
+        
+        Mail mail = mock(Mail.class);
+        when(mail.getMessage()).thenThrow(new MessagingException());
+        mailet.service(mail);
+    }
+    
+    @Test
+    public void shouldThrowWhenNoConfiguration() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
+    
+    @Test
+    public void shouldThrowWhenNoValue() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "correct");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
+    
+    @Test
+    public void shouldThrowWhenNoHeader() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("value", "correct");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
+    
+    @Test
+    public void shouldThrowWhenEmptyValue() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("value", "");
+        mailetConfig.setProperty("name", "correct");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
+    
+    @Test
+    public void shouldThrowWhenEmptyHeader() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "");
+        mailetConfig.setProperty("value", "correct");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
     }
 }
