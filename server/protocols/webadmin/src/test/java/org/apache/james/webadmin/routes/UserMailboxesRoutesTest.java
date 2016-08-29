@@ -41,6 +41,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -549,7 +550,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnUnknownExceptionOnDelete() throws Exception {
-            when(mailboxManager.search(any(), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, MAILBOX_NAME), '.')));
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, MAILBOX_NAME), '.')));
             doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -560,7 +561,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnUnknownExceptionOnSearch() throws Exception {
-            when(mailboxManager.search(any(), any())).thenThrow(new RuntimeException());
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenThrow(new RuntimeException());
 
             when()
                 .delete(MAILBOX_NAME)
@@ -570,7 +571,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnUnknownMailboxExceptionOnDelete() throws Exception {
-            when(mailboxManager.search(any(), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, MAILBOX_NAME), '.')));
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, MAILBOX_NAME), '.')));
             doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -581,7 +582,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnUnknownMailboxExceptionOnSearch() throws Exception {
-            when(mailboxManager.search(any(), any())).thenThrow(new MailboxException());
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenThrow(new MailboxException());
 
             when()
                 .delete(MAILBOX_NAME)
@@ -601,7 +602,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnUnknownExceptionWhenListingMailboxes() throws Exception {
-            doThrow(new RuntimeException()).when(mailboxManager).search(any(), any());
+            doThrow(new RuntimeException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
                 .delete()
@@ -611,7 +612,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnMailboxExceptionWhenListingMailboxes() throws Exception {
-            doThrow(new MailboxException()).when(mailboxManager).search(any(), any());
+            doThrow(new MailboxException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
                 .delete()
@@ -622,7 +623,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldGenerateInternalErrorOnUnknownExceptionWhenRemovingMailboxes() throws Exception {
-            when(mailboxManager.search(any(), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, "any"), '.')));
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, "any"), '.')));
             doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -633,7 +634,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldReturnOkOnMailboxNotFoundExceptionWhenRemovingMailboxes() throws Exception {
-            when(mailboxManager.search(any(), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, "any"), '.')));
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, "any"), '.')));
             doThrow(new MailboxNotFoundException("any")).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -644,7 +645,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void deleteShouldReturnInternalErrorOnMailboxExceptionWhenRemovingMailboxes() throws Exception {
-            when(mailboxManager.search(any(), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, "any"), '.')));
+            when(mailboxManager.search(any(MailboxQuery.class), any())).thenReturn(ImmutableList.of(new SimpleMailboxMetaData(new MailboxPath("#private", USERNAME, "any"), '.')));
             doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -675,7 +676,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void getMailboxesShouldGenerateInternalErrorOnUnknownException() throws Exception {
-            doThrow(new RuntimeException()).when(mailboxManager).search(any(), any());
+            doThrow(new RuntimeException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
                 .get()
@@ -685,7 +686,7 @@ public class UserMailboxesRoutesTest {
 
         @Test
         public void getMailboxesShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
-            doThrow(new MailboxException()).when(mailboxManager).search(any(), any());
+            doThrow(new MailboxException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
                 .get()

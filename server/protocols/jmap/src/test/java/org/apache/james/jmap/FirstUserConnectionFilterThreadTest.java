@@ -18,8 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.james.mailbox.MailboxListener;
@@ -33,10 +35,12 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.store.SimpleMailboxSession;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Test;
@@ -228,6 +232,11 @@ public class FirstUserConnectionFilterThreadTest {
         @Override
         public boolean hasCapability(MailboxCapabilities capability) {
             return false;
+        }
+
+        @Override
+        public Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+            return null;
         }
     }
 }

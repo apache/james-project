@@ -54,7 +54,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,18 +76,16 @@ public class GetMessageListMethod implements Method {
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messageList");
 
     private final MailboxManager mailboxManager;
-    private final MessageSearchIndex messageSearchIndex;
     private final int maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final MailboxUtils mailboxUtils;
     private final Factory mailboxIdFactory;
 
     @Inject
-    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager, MessageSearchIndex messageSearchIndex,
+    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager,
             @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxUtils mailboxUtils, MailboxId.Factory mailboxIdFactory) {
 
         this.mailboxManager = mailboxManager;
-        this.messageSearchIndex = messageSearchIndex;
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
         this.mailboxUtils = mailboxUtils;
@@ -123,7 +120,7 @@ public class GetMessageListMethod implements Method {
         GetMessageListResponse.Builder builder = GetMessageListResponse.builder();
         try {
             MultimailboxesSearchQuery searchQuery = convertToSearchQuery(messageListRequest);
-            Map<MailboxId, Collection<Long>> searchResults = messageSearchIndex.search(mailboxSession, searchQuery);
+            Map<MailboxId, Collection<Long>> searchResults = mailboxManager.search(searchQuery, mailboxSession);
             
             aggregateResults(mailboxSession, searchResults).entries().stream()
                 .sorted(comparatorFor(messageListRequest))

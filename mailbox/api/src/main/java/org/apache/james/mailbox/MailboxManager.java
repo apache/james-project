@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.james.mailbox.exception.BadCredentialsException;
@@ -30,10 +32,12 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.slf4j.Logger;
 
@@ -207,6 +211,17 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @throws MailboxException
      */
     List<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) throws MailboxException;
+
+    /**
+     * Searches for messages matching the given query.
+     * 
+     * @param expression
+     *            not null
+     * @param session
+     *            the context for this call, not null
+     * @throws MailboxException
+     */
+    Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException;
 
     /**
      * Does the given mailbox exist?

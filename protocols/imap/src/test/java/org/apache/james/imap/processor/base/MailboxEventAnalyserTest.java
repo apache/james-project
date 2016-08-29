@@ -66,6 +66,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimeDescriptor;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.Test;
@@ -402,6 +403,11 @@ public class MailboxEventAnalyserTest {
         @Override
         public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session,
                 List<MailboxAnnotation> mailboxAnnotations) throws MailboxException {
+        }
+
+        @Override
+        public Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+            return null;
         }
 
     };
