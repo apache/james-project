@@ -34,7 +34,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -65,7 +64,6 @@ public class SetMimeHeaderTest {
         assertThat(mail.getMessage().getHeader("header-name")).containsExactly("test-value");
     }
 
-    @Ignore("need multivaluated headers in FakeMail")
     @Test
     public void shouldAddHeaderWhenAlreadyPresent() throws MessagingException {
         FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());

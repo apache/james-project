@@ -29,6 +29,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.FakeMimeMessage;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,6 +76,23 @@ public class MailAttributesToMimeHeadersTest {
         assertThat(mockedMail.getMessage().getHeader(HEADER_NAME2)).containsExactly(MAIL_ATTRIBUTE_VALUE2);
     }
 
+    @Test
+    public void shouldAddAttributeIntoHeadersWhenHeaderAlreadyPresent() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1);
+        mailet.init(mailetConfig);
+        
+        FakeMimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.addHeader(HEADER_NAME1, "first value");
+		FakeMail mockedMail = MailUtil.createMockMail2Recipients(mimeMessage);
+        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
+        
+        mailet.service(mockedMail);
+
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME1)).containsExactly("first value", MAIL_ATTRIBUTE_VALUE1);
+    }
+
+    
     @Test
     public void shouldThrowAtInitWhenNoSemicolumnInConfigurationEntry() throws MessagingException {
         FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
