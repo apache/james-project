@@ -71,7 +71,7 @@ public class FetchedFromTest {
         setupMockedMimeMessage();
         matcher = new FetchedFrom();
         FakeMatcherConfig mci = new FakeMatcherConfig("FetchedFrom="
-                + HEADER_VALUE, new FakeMailContext());
+                + HEADER_VALUE, FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

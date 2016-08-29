@@ -19,10 +19,9 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -91,7 +90,7 @@ public class AddFooterTest {
     @Before
     public void setup() {
         mailet = new AddFooter();
-        mailetConfig = new FakeMailetConfig("Test", new FakeMailContext());
+        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
 
     }
     

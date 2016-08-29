@@ -20,7 +20,12 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.ToProcessor;
+import java.util.Arrays;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
@@ -29,11 +34,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
-import java.util.Arrays;
 
 public class ToProcessorTest {
 
@@ -66,7 +66,7 @@ public class ToProcessorTest {
     private void setupMailet() throws MessagingException {
         mailet = new ToProcessor();
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         if (processor != null) {
             mci.setProperty("processor", processor);
         }

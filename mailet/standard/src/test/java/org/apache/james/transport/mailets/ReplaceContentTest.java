@@ -19,7 +19,14 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.ReplaceContent;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
@@ -27,13 +34,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Properties;
 
 public class ReplaceContentTest {
 
@@ -45,7 +45,7 @@ public class ReplaceContentTest {
         Mail mail;
 
         mailet = new ReplaceContent();
-        mci = new FakeMailetConfig("Test", new FakeMailContext());
+        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mci.setProperty("subjectPattern", "/prova/PROVA/i/,/a/e//,/o/o/i/");
         mci.setProperty("bodyPattern", "/prova/PROVA/i/," + "/a/e//,"
                 + "/o/o/i/,/\\u00E8/e'//," + "/prova([^\\/]*?)ble/X$1Y/im/,"
@@ -67,7 +67,7 @@ public class ReplaceContentTest {
         // ------------------
 
         mailet = new ReplaceContent();
-        mci = new FakeMailetConfig("Test", new FakeMailContext());
+        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mci.setProperty("subjectPatternFile", "#/org/apache/james/mailet/standard/mailets/replaceSubject.patterns");
         mailet.init(mci);
 
@@ -84,7 +84,7 @@ public class ReplaceContentTest {
         // ------------------
 
         mailet = new ReplaceContent();
-        mci = new FakeMailetConfig("Test", new FakeMailContext());
+        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mci.setProperty("bodyPattern", "/--messaggio originale--/<quote>/i/,"
                 +
                 // "/<quote>([^\\0]*)(\\r\\n)([^>]+)/<quote>$1$2>$3/imr/,"+
@@ -110,7 +110,7 @@ public class ReplaceContentTest {
         // ------------------
 
         mailet = new ReplaceContent();
-        mci = new FakeMailetConfig("Test", new FakeMailContext());
+        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mci.setProperty("bodyPattern", "/\\u2026/...//");
         mailet.init(mci);
 
@@ -139,7 +139,7 @@ public class ReplaceContentTest {
         Mail mail;
 
         mailet = new ReplaceContent();
-        mci = new FakeMailetConfig("Test", new FakeMailContext());
+        mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
         mci.setProperty("bodyPattern", "/[\\u2018\\u2019\\u201A]/'//,"
                 + "/[\\u201C\\u201D\\u201E]/\"//," + "/[\\x91\\x92\\x82]/'//,"
                 + "/[\\x93\\x94\\x84]/\"//," + "/\\x85/...//," + "/\\x8B/<//,"

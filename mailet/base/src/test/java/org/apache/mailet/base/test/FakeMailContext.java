@@ -35,15 +35,39 @@ import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
+import org.slf4j.Logger;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("deprecation")
 public class FakeMailContext implements MailetContext {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static FakeMailContext defaultContext() {
+        return builder().build();
+    }
+
+    public static class Builder {
+
+        private Logger logger;
+
+        public Builder logger(Logger logger) {
+            this.logger = logger;
+            return this;
+        }
+
+        public FakeMailContext build() {
+            return new FakeMailContext(Optional.fromNullable(logger));
+        }
+    }
 
     public static class SentMail {
 
@@ -102,10 +126,16 @@ public class FakeMailContext implements MailetContext {
                 .toString();
         }
     }
-    
-    HashMap<String, Object> attributes = new HashMap<String, Object>();
 
-    List<SentMail> sentMails = new ArrayList<SentMail>();
+    private final HashMap<String, Object> attributes;
+    private final List<SentMail> sentMails;
+    private final Optional<Logger> logger;
+
+    private FakeMailContext(Optional<Logger> logger) {
+        attributes = new HashMap<String, Object>();
+        sentMails = new ArrayList<SentMail>();
+        this.logger = logger;
+    }
 
     public void bounce(Mail mail, String message) throws MessagingException {
         // trivial implementation
@@ -225,12 +255,28 @@ public class FakeMailContext implements MailetContext {
     }
 
     public void log(LogLevel level, String message) {
-        System.out.println("[" + level + "]" + message);
+        if (logger.isPresent()) {
+            switch (level) {
+            case INFO:
+                logger.get().info(message);
+                break;
+            case WARN:
+                logger.get().warn(message);
+                break;
+            case ERROR:
+                logger.get().error(message);
+                break;
+            default:
+                logger.get().debug(message);
+            }
+        } else {
+            System.out.println("[" + level + "]" + message);
+        }
     }
 
     public void log(LogLevel level, String message, Throwable t) {
-        System.out.println("[" + level + "]" + message);
-        t.printStackTrace(System.out);
+        log(level, message);
+        log(level, t.getMessage());
     }
 
     public List<String> dnsLookup(String name, RecordType type) throws LookupException {

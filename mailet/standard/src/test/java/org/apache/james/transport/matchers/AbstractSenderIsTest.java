@@ -31,13 +31,13 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
-import junit.framework.TestCase;
-
-import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+
+import junit.framework.TestCase;
 
 public abstract class AbstractSenderIsTest extends TestCase {
 
@@ -181,7 +181,7 @@ public abstract class AbstractSenderIsTest extends TestCase {
     protected void setupMatcher() throws MessagingException {
         matcher = createMatcher();
         FakeMatcherConfig mci = new FakeMatcherConfig(getConfigOption()
-                + getConfigValue(), new FakeMailContext());
+                + getConfigValue(), FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

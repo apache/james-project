@@ -18,22 +18,33 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.test.FakeMailContext;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+
+import org.apache.mailet.HostAddress;
+import org.apache.mailet.LookupException;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext;
+import org.apache.mailet.TemporaryLookupException;
+import org.apache.mailet.base.test.FakeMailContext;
 
 /**
  * @since 15.12.12 12:02
  */
-public class RecordingMailContext extends FakeMailContext {
+public class RecordingMailContext implements MailetContext {
 
     private final List<SendMailEvent> sendmails = new LinkedList<SendMailEvent>();
+    private final FakeMailContext context;
+
+    public RecordingMailContext() {
+        context = FakeMailContext.defaultContext();
+    }
 
     @Override
     public boolean isLocalServer(String serverName) {
@@ -116,6 +127,101 @@ public class RecordingMailContext extends FakeMailContext {
         public String getState() {
             return state;
         }
+    }
+
+    @Override
+    public int getMajorVersion() {
+        return context.getMajorVersion();
+    }
+
+    @Override
+    public int getMinorVersion() {
+        return context.getMinorVersion();
+    }
+
+    @Override
+    public String getServerInfo() {
+        return context.getServerInfo();
+    }
+
+    @Override
+    public Iterator<String> getAttributeNames() {
+        return context.getAttributeNames();
+    }
+
+    @Override
+    public Object getAttribute(String name) {
+        return context.getAttribute(name);
+    }
+
+    @Override
+    public void setAttribute(String name, Object value) {
+        context.setAttribute(name, value);
+    }
+
+    @Override
+    public void removeAttribute(String name) {
+        context.removeAttribute(name);
+    }
+
+    @Override
+    public void log(String message) {
+        context.log(message);
+    }
+
+    @Override
+    public void log(String message, Throwable t) {
+        context.log(message, t);
+    }
+
+    @Override
+    public void log(LogLevel level, String message) {
+        context.log(level, message);
+    }
+
+    @Override
+    public void log(LogLevel level, String message, Throwable t) {
+        context.log(level, message, t);
+    }
+
+    @Override
+    public MailAddress getPostmaster() {
+        return context.getPostmaster();
+    }
+
+    @Override
+    public boolean isLocalUser(String userAccount) {
+        return context.isLocalUser(userAccount);
+    }
+
+    @Override
+    public boolean isLocalEmail(MailAddress mailAddress) {
+        return context.isLocalEmail(mailAddress);
+    }
+
+    @Override
+    public Collection<String> getMailServers(String domain) {
+        return context.getMailServers(domain);
+    }
+
+    @Override
+    public Iterator<HostAddress> getSMTPHostAddresses(String domain) {
+        return context.getSMTPHostAddresses(domain);
+    }
+
+    @Override
+    public void bounce(Mail mail, String message) throws MessagingException {
+        context.bounce(mail, message);
+    }
+
+    @Override
+    public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
+        context.bounce(mail, message, bouncer);
+    }
+
+    @Override
+    public List<String> dnsLookup(String name, RecordType type) throws TemporaryLookupException, LookupException {
+        return context.dnsLookup(name, type);
     }
 
 }

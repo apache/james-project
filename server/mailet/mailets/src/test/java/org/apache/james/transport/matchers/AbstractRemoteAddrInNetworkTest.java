@@ -21,10 +21,16 @@ package org.apache.james.transport.matchers;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
+
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.Mail;
@@ -188,7 +194,7 @@ public abstract class AbstractRemoteAddrInNetworkTest {
 
     protected void setupMatcher() throws MessagingException {
 
-        FakeMailContext mmc = new FakeMailContext();
+        FakeMailContext mmc = FakeMailContext.defaultContext();
         matcher = createMatcher();
         matcher.setDNSService(dnsServer);
         FakeMatcherConfig mci = new FakeMatcherConfig(getConfigOption() + getAllowedNetworks(), mmc);

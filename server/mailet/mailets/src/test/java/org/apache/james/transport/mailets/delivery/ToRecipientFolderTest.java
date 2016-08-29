@@ -76,7 +76,7 @@ public class ToRecipientFolderTest {
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
 
-        mailetConfig = new FakeMailetConfig("RecipientFolderTest", new FakeMailContext());
+        mailetConfig = new FakeMailetConfig("RecipientFolderTest", FakeMailContext.defaultContext());
 
         recipientFolder = new ToRecipientFolder();
         recipientFolder.setMailboxManager(mailboxManager);

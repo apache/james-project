@@ -19,7 +19,9 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.RemoveMailAttribute;
+import javax.mail.MessagingException;
+import javax.mail.internet.ParseException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
@@ -27,9 +29,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.ParseException;
 
 public class RemoveMailAttributeTest {
 
@@ -47,7 +46,7 @@ public class RemoveMailAttributeTest {
     private Mailet setupMailet(String attribute) throws MessagingException {
         Mailet mailet = new RemoveMailAttribute();
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         if (attribute != null) {
             mci.setProperty("name", attribute);
         }

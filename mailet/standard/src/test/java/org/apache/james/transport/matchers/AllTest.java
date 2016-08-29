@@ -44,7 +44,7 @@ public class AllTest {
     public void setupMatcher() throws MessagingException {
         matcher = new All();
         FakeMatcherConfig mci = new FakeMatcherConfig("All",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

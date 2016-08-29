@@ -22,15 +22,16 @@ package org.apache.james.transport.matchers;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+
 import javax.mail.MessagingException;
 
-import junit.framework.TestCase;
-
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
+
+import junit.framework.TestCase;
 
 public abstract class AbstractRecipientIsTest extends TestCase {
 
@@ -58,7 +59,7 @@ public abstract class AbstractRecipientIsTest extends TestCase {
     protected void setupMatcher() throws MessagingException {
         matcher = createMatcher();
         FakeMatcherConfig mci = new FakeMatcherConfig("RecipientIs="
-                + getRecipientName(), new FakeMailContext());
+                + getRecipientName(), FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 

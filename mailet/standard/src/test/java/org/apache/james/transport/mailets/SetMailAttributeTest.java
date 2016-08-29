@@ -20,18 +20,18 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.transport.mailets.SetMailAttribute;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import javax.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.mail.MessagingException;
 
 public class SetMailAttributeTest {
 
@@ -48,7 +48,7 @@ public class SetMailAttributeTest {
         mockedMail = MailUtil.createMockMail2Recipients(null);
         mailet = new SetMailAttribute();
         FakeMailetConfig mci = new FakeMailetConfig("Test",
-                new FakeMailContext());
+                FakeMailContext.defaultContext());
         mci.setProperty(ATTRIBUTE_NAME1, "true");
         mci.setProperty(ATTRIBUTE_NAME2, "true");
 

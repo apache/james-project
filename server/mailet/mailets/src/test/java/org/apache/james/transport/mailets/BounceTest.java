@@ -55,7 +55,7 @@ public class BounceTest {
         bounce = new Bounce();
         DNSService dnsService = mock(DNSService.class);
         bounce.setDNSService(dnsService);
-        fakeMailContext = new FakeMailContext();
+        fakeMailContext = FakeMailContext.defaultContext();
 
         when(dnsService.getLocalHost()).thenThrow(new UnknownHostException());
         bounce.init(new FakeMailetConfig(MAILET_NAME, fakeMailContext));

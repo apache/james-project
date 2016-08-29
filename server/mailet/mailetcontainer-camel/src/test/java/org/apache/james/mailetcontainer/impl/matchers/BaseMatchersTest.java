@@ -47,7 +47,7 @@ public class BaseMatchersTest {
 
     void setupCompositeMatcher(String matcherName, Class<? extends GenericCompositeMatcher> matcherClass)
             throws Exception {
-        context = new FakeMailContext();
+        context = FakeMailContext.defaultContext();
         matcher = matcherClass.newInstance();
         FakeMatcherConfig mci = new FakeMatcherConfig(matcherName, context);
         matcher.init(mci);

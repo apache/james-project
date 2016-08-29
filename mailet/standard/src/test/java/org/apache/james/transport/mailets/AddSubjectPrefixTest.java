@@ -45,7 +45,7 @@ public class AddSubjectPrefixTest {
     @Before
     public void setup() {
         mailet = new AddSubjectPrefix();
-        mailetConfig = new FakeMailetConfig("Test", new FakeMailContext());
+        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
     }
     
     @Test
