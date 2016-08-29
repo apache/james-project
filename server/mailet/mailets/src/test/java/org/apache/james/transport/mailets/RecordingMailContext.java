@@ -37,6 +37,7 @@ import org.apache.mailet.base.test.FakeMailContext;
 /**
  * @since 15.12.12 12:02
  */
+@SuppressWarnings("deprecation")
 public class RecordingMailContext implements MailetContext {
 
     private final List<SendMailEvent> sendmails = new LinkedList<SendMailEvent>();
