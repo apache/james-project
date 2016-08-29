@@ -19,24 +19,30 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.base.StringUtils;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailetException;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
+import javax.mail.internet.ParseException;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
+import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.StringUtils;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Replace text contents
@@ -88,202 +94,54 @@ import java.util.regex.Pattern;
  * </p>
  */
 public class ReplaceContent extends GenericMailet {
+
     private static final String PARAMETER_NAME_SUBJECT_PATTERN = "subjectPattern";
     private static final String PARAMETER_NAME_BODY_PATTERN = "bodyPattern";
     private static final String PARAMETER_NAME_SUBJECT_PATTERNFILE = "subjectPatternFile";
     private static final String PARAMETER_NAME_BODY_PATTERNFILE = "bodyPatternFile";
     private static final String PARAMETER_NAME_CHARSET = "charset";
-    
+
     public static final int FLAG_REPEAT = 1;
-    
-    private static class ReplaceConfig {
-        private Pattern[] subjectPatterns;
-        private String[] subjectSubstitutions;
-        private Integer[] subjectFlags;
-        private Pattern[] bodyPatterns;
-        private String[] bodySubstitutions;
-        private Integer[] bodyFlags;
-    }
-    
-    private String charset;
-    private int debug = 0;
-    
-    /**
-     * returns a String describing this mailet.
-     * 
-     * @return A desciption of this mailet
-     */
+
+    private Optional<Charset> charset;
+    private boolean debug;
+    @VisibleForTesting ReplaceConfig replaceConfig;
+
+    @Override
     public String getMailetInfo() {
         return "ReplaceContent";
     }
 
-    /**
-     * @return an array containing Pattern and Substitution of the input stream
-     * @throws MailetException 
-     */
-    protected static PatternBean getPattern(String line) throws MailetException {
-        String[] pieces = StringUtils.split(line, "/");
-        if (pieces.length < 3) throw new MailetException("Invalid expression: " + line);
-        int options = 0;
-        //if (pieces[2].indexOf('x') >= 0) options += Pattern.EXTENDED;
-        if (pieces[2].indexOf('i') >= 0) options += Pattern.CASE_INSENSITIVE;
-        if (pieces[2].indexOf('m') >= 0) options += Pattern.MULTILINE;
-        if (pieces[2].indexOf('s') >= 0) options += Pattern.DOTALL;
-        
-        int flags = 0;
-        if (pieces[2].indexOf('r') >= 0) flags += FLAG_REPEAT;
-        
-        if (pieces[1].contains("\\r")) pieces[1] = pieces[1].replaceAll("\\\\r", "\r");
-        if (pieces[1].contains("\\n")) pieces[1] = pieces[1].replaceAll("\\\\n", "\n");
-        if (pieces[1].contains("\\t")) pieces[1] = pieces[1].replaceAll("\\\\t", "\t");
-
-        return new PatternBean (Pattern.compile(pieces[0], options), pieces[1] , flags);
-    }
-    
-    protected static PatternList getPatternsFromString(String pattern) throws MailetException {
-        pattern = pattern.trim();
-        if (pattern.length() < 2 && !pattern.startsWith("/") && !pattern.endsWith("/")) throw new MailetException("Invalid parameter value: " + PARAMETER_NAME_SUBJECT_PATTERN);
-        pattern = pattern.substring(1, pattern.length() - 1);
-        String[] patternArray = StringUtils.split(pattern, "/,/");
-        
-        PatternList patternList= new PatternList();
-        for (String aPatternArray : patternArray) {
-            PatternBean o = getPattern(aPatternArray);
-            patternList.getPatterns().add(o.getPatterns());
-            patternList.getSubstitutions().add(o.getSubstitutions());
-            patternList.getFlags().add(o.getFlag());
-        }
-        
-        return patternList;
-    }
-
-    protected static PatternList getPatternsFromStream(InputStream stream, String charset) throws MailetException, IOException {
-        PatternList patternList= new PatternList();
-        BufferedReader reader = new BufferedReader(charset != null ? new InputStreamReader(stream, charset) : new InputStreamReader(stream));
-        //BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("q:\\correzioniout"), "utf-8"));
-        
-        String line;
-        while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            if (line.length() > 0 && !line.startsWith("#")) {
-                if (line.length() < 2 && !line.startsWith("/") && !line.endsWith("/")) throw new MailetException("Invalid expression: " + line);
-                PatternBean o = getPattern(line.substring(1, line.length() - 1));
-                patternList.getPatterns().add(o.getPatterns());
-                patternList.getSubstitutions().add(o.getSubstitutions());
-                patternList.getFlags().add(o.getFlag());
-            }
-        }
-        reader.close();
-        return patternList;
-    }
-    
-    /**
-     * @param filepar File path list (or resources if the path starts with #) comma separated
-     */
-    private PatternList getPatternsFromFileList(String filepar) throws MailetException, IOException {
-        PatternList patternList= new PatternList();
-        String[] files = filepar.split(",");
-        for (int i = 0; i < files.length; i++) {
-            files[i] = files[i].trim();
-            if (debug > 0) log("Loading patterns from: " + files[i]);
-            String charset = null;
-            int pc = files[i].lastIndexOf('?');
-            if (pc >= 0) {
-                charset = files[i].substring(pc + 1);
-                files[i] = files[i].substring(0, pc);
-            }
-            InputStream is = null;
-            if (files[i].startsWith("#")) is = getClass().getResourceAsStream(files[i].substring(1));
-            else {
-                File f = new File(files[i]);
-                if (f.isFile()) is = new FileInputStream(f);
-            }
-            if (is != null) {
-                PatternList o = getPatternsFromStream(is, charset);
-                patternList.getPatterns().addAll(o.getPatterns());
-                patternList.getSubstitutions().addAll(o.getSubstitutions());
-                patternList.getFlags().addAll(o.getFlags());
-                is.close();
-            }
-        }
-        return patternList;
-    }
-    
-    protected static String applyPatterns(Pattern[] patterns, String[] substitutions, Integer[] pflags, String text, int debug, GenericMailet logOwner) {
-        for (int i = 0; i < patterns.length; i ++) {
-            int flags = pflags[i];
-            boolean changed;
-            do {
-                changed = false;
-                String replaced = patterns[i].matcher(text).replaceAll(substitutions[i]);
-                if (!replaced.equals(text)) {
-                    if (debug > 0) logOwner.log("Subject rule match: " + patterns[i].pattern());
-                    text = replaced;
-                    changed = true;
-                }
-            } while ((flags & FLAG_REPEAT) > 0 && changed);
-        }
-        
-        return text;
-    }
-    
-
+    @Override
     public void init() throws MailetException {
-        charset = getInitParameter(PARAMETER_NAME_CHARSET);
-        debug = Integer.parseInt(getInitParameter("debug", "0"));
+        charset = initCharset();
+        debug = isDebug();
+        replaceConfig = initPatterns();
     }
-    
+
+    private Optional<Charset> initCharset() {
+        String charsetName = getInitParameter(PARAMETER_NAME_CHARSET);
+        if (Strings.isNullOrEmpty(charsetName)) {
+            return Optional.absent();
+        }
+        return Optional.of(Charset.forName(charsetName));
+    }
+
+    private boolean isDebug() {
+        if (Integer.valueOf(getInitParameter("debug", "0")) == 1) {
+            return true;
+        }
+        return false;
+    }
+
     private ReplaceConfig initPatterns() throws MailetException {
         try {
-            List<Pattern> bodyPatternsList = new ArrayList<Pattern>();
-            List<String> bodySubstitutionsList = new ArrayList<String>();
-            List<Integer> bodyFlagsList = new ArrayList<Integer>();
-            List<Pattern> subjectPatternsList = new ArrayList<Pattern>();
-            List<String> subjectSubstitutionsList = new ArrayList<String>();
-            List<Integer> subjectFlagsList = new ArrayList<Integer>();
-
-            String pattern = getInitParameter(PARAMETER_NAME_SUBJECT_PATTERN);
-            if (pattern != null) {
-                PatternList o = getPatternsFromString(pattern);
-                subjectPatternsList.addAll(o.getPatterns());
-                subjectSubstitutionsList.addAll(o.getSubstitutions());
-                subjectFlagsList.addAll(o.getFlags());
-            }
-            
-            pattern = getInitParameter(PARAMETER_NAME_BODY_PATTERN);
-            if (pattern != null) {
-                PatternList o = getPatternsFromString(pattern);
-                bodyPatternsList.addAll(o.getPatterns());
-                bodySubstitutionsList.addAll(o.getSubstitutions());
-                bodyFlagsList.addAll(o.getFlags());
-            }
-            
-            String filepar = getInitParameter(PARAMETER_NAME_SUBJECT_PATTERNFILE);
-            if (filepar != null) {
-                PatternList o = getPatternsFromFileList(filepar);
-                subjectPatternsList.addAll(o.getPatterns());
-                subjectSubstitutionsList.addAll(o.getSubstitutions());
-                subjectFlagsList.addAll(o.getFlags());
-            }
-        
-            filepar = getInitParameter(PARAMETER_NAME_BODY_PATTERNFILE);
-            if (filepar != null) {
-                PatternList o = getPatternsFromFileList(filepar);
-                bodyPatternsList.addAll(o.getPatterns());
-                bodySubstitutionsList.addAll(o.getSubstitutions());
-                bodyFlagsList.addAll(o.getFlags());
-            }
-            
-            ReplaceConfig rConfig = new ReplaceConfig();
-            rConfig.subjectPatterns = subjectPatternsList.toArray(new Pattern[subjectPatternsList.size()]);
-            rConfig.subjectSubstitutions = subjectSubstitutionsList.toArray(new String[subjectSubstitutionsList.size()]);
-            rConfig.subjectFlags = subjectFlagsList.toArray(new Integer[subjectFlagsList.size()]);
-            rConfig.bodyPatterns = bodyPatternsList.toArray(new Pattern[bodyPatternsList.size()]);
-            rConfig.bodySubstitutions = bodySubstitutionsList.toArray(new String[bodySubstitutionsList.size()]);
-            rConfig.bodyFlags = bodyFlagsList.toArray(new Integer[bodyFlagsList.size()]);
-            
-            return rConfig;
-            
+            ReplaceConfig.Builder builder = ReplaceConfig.builder();
+            initSubjectPattern(builder);
+            initBodyPattern(builder);
+            initSubjectPatternFile(builder);
+            initBodyPatternFile(builder);
+            return builder.build();
         } catch (FileNotFoundException e) {
             throw new MailetException("Failed initialization", e);
             
@@ -296,55 +154,227 @@ public class ReplaceContent extends GenericMailet {
         }
     }
 
-    public void service(Mail mail) throws MailetException {
-        ReplaceConfig rConfig = initPatterns();
+    private void initSubjectPattern(ReplaceConfig.Builder builder) throws MailetException {
+        String pattern = getInitParameter(PARAMETER_NAME_SUBJECT_PATTERN);
+        if (pattern != null) {
+            builder.addAllSubjectReplacingUnits(getPatternsFromString(pattern));
+        }
+    }
+
+    private void initBodyPattern(ReplaceConfig.Builder builder) throws MailetException {
+        String pattern = getInitParameter(PARAMETER_NAME_BODY_PATTERN);
+        if (pattern != null) {
+            builder.addAllBodyReplacingUnits(getPatternsFromString(pattern));
+        }
+    }
+
+    private void initSubjectPatternFile(ReplaceConfig.Builder builder) throws MailetException, IOException {
+        String filePattern = getInitParameter(PARAMETER_NAME_SUBJECT_PATTERNFILE);
+        if (filePattern != null) {
+            builder.addAllSubjectReplacingUnits(getPatternsFromFileList(filePattern));
+        }
+    }
+
+    private void initBodyPatternFile(ReplaceConfig.Builder builder) throws MailetException, IOException {
+        String filePattern = getInitParameter(PARAMETER_NAME_BODY_PATTERNFILE);
+        if (filePattern != null) {
+            builder.addAllBodyReplacingUnits(getPatternsFromFileList(filePattern));
+        }
+    }
+
+    protected static List<ReplacingPattern> getPatternsFromString(String pattern) throws MailetException {
+        String patternProcessing = pattern.trim();
+        ensurePatternIsValid(patternProcessing);
+        patternProcessing = patternProcessing.substring(1, patternProcessing.length() - 1);
+        String[] patternArray = StringUtils.split(patternProcessing, "/,/");
         
-        try {
-            boolean mod = false;
-            boolean contentChanged = false;
-            
-            if (rConfig.subjectPatterns != null && rConfig.subjectPatterns.length > 0) {
-                String subject = mail.getMessage().getSubject();
-                if (subject == null) subject = "";
-                subject = applyPatterns(rConfig.subjectPatterns, rConfig.subjectSubstitutions, rConfig.subjectFlags, subject, debug, this);
-                if (charset != null) mail.getMessage().setSubject(subject, charset);
-                else mail.getMessage().setSubject(subject);
-                mod = true;
+        ImmutableList.Builder<ReplacingPattern> patternList= ImmutableList.builder();
+        for (String aPatternArray : patternArray) {
+            patternList.add(getPattern(aPatternArray));
+        }
+        return patternList.build();
+    }
+
+    protected static List<ReplacingPattern> getPatternsFromStream(InputStream stream, String charset) throws MailetException, IOException {
+        ImmutableList.Builder<ReplacingPattern> patternList= ImmutableList.builder();
+        for (String line: IOUtils.readLines(stream, charset)) {
+            line = line.trim();
+            if (!Strings.isNullOrEmpty(line) && !line.startsWith("#")) {
+                ensurePatternIsValid(line);
+                patternList.add(getPattern(line.substring(1, line.length() - 1)));
             }
-            
-            if (rConfig.bodyPatterns != null && rConfig.bodyPatterns.length > 0) {
-                Object bodyObj = mail.getMessage().getContent();
-                if (bodyObj == null) bodyObj = "";
-                if (bodyObj instanceof String) {
-                    String body = (String) bodyObj;
-                    body = applyPatterns(rConfig.bodyPatterns, rConfig.bodySubstitutions, rConfig.bodyFlags, body, debug, this);
-                    String contentType = mail.getMessage().getContentType();
-                    if (charset != null) {
-                        ContentType ct = new ContentType(contentType);
-                        ct.setParameter("charset", charset);
-                        contentType = ct.toString();
+        }
+        return patternList.build();
+    }
+
+    private static void ensurePatternIsValid(String pattern) throws MailetException {
+        if (pattern.length() < 2 || (!pattern.startsWith("/") && !pattern.endsWith("/"))) {
+            throw new MailetException("Invalid expression: " + pattern);
+        }
+    }
+
+    private static ReplacingPattern getPattern(String line) throws MailetException {
+        String[] pieces = StringUtils.split(line, "/");
+        if (pieces.length < 3) {
+            throw new MailetException("Invalid expression: " + line);
+        }
+        return new ReplacingPattern(Pattern.compile(pieces[0], extractOptions(pieces[2])), 
+                extractRepeat(pieces[2]), 
+                unescapeSubstitutions(pieces[1]));
+    }
+
+    private static int extractOptions(String optionsAsString) {
+        int options = 0;
+        if (optionsAsString.indexOf('i') >= 0) {
+            options += Pattern.CASE_INSENSITIVE;
+        }
+        if (optionsAsString.indexOf('m') >= 0) {
+            options += Pattern.MULTILINE;
+        }
+        if (optionsAsString.indexOf('s') >= 0) {
+            options += Pattern.DOTALL;
+        }
+        return options;
+    }
+
+    private static boolean extractRepeat(String flagsAsString) {
+        if (flagsAsString.indexOf('r') >= 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private static String unescapeSubstitutions(String substitutions) {
+        String unescaped = substitutions;
+        if (unescaped.contains("\\r")) {
+            unescaped = unescaped.replaceAll("\\\\r", "\r");
+        }
+        if (unescaped.contains("\\n")) {
+            unescaped = unescaped.replaceAll("\\\\n", "\n");
+        }
+        if (unescaped.contains("\\t")) {
+            unescaped = unescaped.replaceAll("\\\\t", "\t");
+        }
+        return unescaped;
+    }
+
+    /**
+     * @param filepar File path list (or resources if the path starts with #) comma separated
+     */
+    private List<ReplacingPattern> getPatternsFromFileList(String filepar) throws MailetException, IOException {
+        ImmutableList.Builder<ReplacingPattern> patternList= ImmutableList.builder();
+        String[] files = filepar.split(",");
+        for (String file : files) {
+            file = file.trim();
+            if (debug) {
+                log("Loading patterns from: " + file);
+            }
+            String charset = null;
+            int charsetOffset = file.lastIndexOf('?');
+            if (charsetOffset >= 0) {
+                charset = file.substring(charsetOffset + 1);
+                file = file.substring(0, charsetOffset);
+            }
+            Optional<? extends InputStream> inputStream = retrieveInputStream(file);
+            if (inputStream.isPresent()) {
+                patternList.addAll(getPatternsFromStream(inputStream.get(), charset));
+            }
+        }
+        return patternList.build();
+    }
+
+    private Optional<? extends InputStream> retrieveInputStream(String fileAsString) throws FileNotFoundException {
+        if (fileAsString.startsWith("#")) {
+            return Optional.of(getClass().getResourceAsStream(fileAsString.substring(1)));
+        }
+        File file = new File(fileAsString);
+        if (file.isFile()) {
+            return Optional.of(new FileInputStream(file));
+        }
+        return Optional.absent();
+    }
+    
+    protected static String applyPatterns(List<ReplacingPattern> patterns, String text, boolean debug, GenericMailet logOwner) {
+        for (ReplacingPattern replacingPattern : patterns) {
+            boolean changed;
+            do {
+                changed = false;
+                Matcher matcher = replacingPattern.getMatcher().matcher(text);
+                if (matcher.find()) {
+                    String replaced = matcher.replaceAll(replacingPattern.getSubstitution());
+                    if (debug) {
+                        logOwner.log("Subject rule match: " + replacingPattern.getMatcher());
                     }
-                    mail.getMessage().setContent(body, contentType);
-                    mod = true;
-                    contentChanged = true;
+                    text = replaced;
+                    changed = true;
                 }
+            } while (replacingPattern.isRepeat() && changed);
+        }
+        
+        return text;
+    }
+
+    @Override
+    public void service(Mail mail) throws MailetException {
+        try {
+            boolean subjectChanged = applySubjectReplacingUnits(mail);
+            boolean contentChanged = applyBodyReplacingUnits(mail);
+
+            if (charset.isPresent() && !contentChanged) {
+                mail.getMessage().setContent(mail.getMessage().getContent(), getContentType(mail));
             }
-            
-            if (charset != null && !contentChanged) {
-                ContentType ct = new ContentType(mail.getMessage().getContentType());
-                ct.setParameter("charset", charset);
-                String contentType = mail.getMessage().getContentType();
-                mail.getMessage().setContent(mail.getMessage().getContent(), contentType);
+
+            if (subjectChanged || contentChanged) {
+                mail.getMessage().saveChanges();
             }
-            
-            if (mod) mail.getMessage().saveChanges();
-            
         } catch (MessagingException e) {
             throw new MailetException("Error in replace", e);
             
         } catch (IOException e) {
             throw new MailetException("Error in replace", e);
         }
+    }
+
+    private boolean applySubjectReplacingUnits(Mail mail) throws MessagingException {
+        if (!replaceConfig.getSubjectReplacingUnits().isEmpty()) {
+            String subject = applyPatterns(replaceConfig.getSubjectReplacingUnits(), 
+                    Strings.nullToEmpty(mail.getMessage().getSubject()), debug, this);
+            if (charset.isPresent()) {
+                mail.getMessage().setSubject(subject, charset.get().name());
+            }
+            else {
+                mail.getMessage().setSubject(subject);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean applyBodyReplacingUnits(Mail mail) throws IOException, MessagingException, ParseException {
+        if (!replaceConfig.getBodyReplacingUnits().isEmpty()) {
+            Object bodyObj = mail.getMessage().getContent();
+            if (bodyObj instanceof String) {
+                String body = applyPatterns(replaceConfig.getBodyReplacingUnits(), 
+                        Strings.nullToEmpty((String) bodyObj), debug, this);
+                setContent(mail, body);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void setContent(Mail mail, String body) throws MessagingException, ParseException {
+        mail.getMessage().setContent(body, getContentType(mail));
+    }
+
+    private String getContentType(Mail mail) throws MessagingException, ParseException {
+        String contentTypeAsString = mail.getMessage().getContentType();
+        if (charset.isPresent()) {
+            ContentType contentType = new ContentType(contentTypeAsString);
+            contentType.setParameter("charset", charset.get().name());
+            return contentType.toString();
+        }
+        return contentTypeAsString;
     }
 
 }
