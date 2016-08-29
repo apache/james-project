@@ -21,16 +21,16 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * <p>This mailet sets attributes on the Mail.</p>
@@ -43,52 +43,33 @@ import org.apache.mailet.base.GenericMailet;
  * &lt;/mailet&gt;
  * </code></pre>
  *
- * @version CVS $Revision$ $Date$
  * @since 2.2.0
  */
 public class SetMailAttribute extends GenericMailet {
 
-    private final HashMap<String, String> attributesToSet = new HashMap<String, String>(2);
+    private ImmutableMap<String, String> entries;
     
-    private Set<Map.Entry<String, String>> entries;
-    
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "Set Mail Attribute Mailet";
     }
 
-    /**
-     * Initialize the mailet
-     *
-     * @throws MailetException if the processor parameter is missing
-     */
-    public void init() throws MailetException
-    {
+    @Override
+    public void init() throws MailetException {
+        ImmutableMap.Builder<String, String> attributes = ImmutableMap.builder();
         Iterator<String> iter = getInitParameterNames();
         while (iter.hasNext()) {
             String name = iter.next();
-            String value = getInitParameter (name);
-            attributesToSet.put (name,value);
+            String value = getInitParameter(name);
+            attributes.put(name, value);
         }
-        entries = attributesToSet.entrySet();
+        entries = attributes.build();
     }
 
-    /**
-     * Sets the configured attributes
-     *
-     * @param mail the mail to process
-     *
-     * @throws MessagingException in all cases
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
-        if (entries != null) {
-            for (Map.Entry<String, String> entry : entries) {
-                mail.setAttribute(entry.getKey(), entry.getValue());
-            }
+        for (Map.Entry<String, String> entry : entries.entrySet()) {
+            mail.setAttribute(entry.getKey(), entry.getValue());
         }
     }
     
