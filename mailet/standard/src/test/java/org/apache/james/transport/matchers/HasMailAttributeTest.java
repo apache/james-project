@@ -20,7 +20,6 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.HasMailAttribute;
 import org.apache.mailet.base.GenericMatcher;
 
 public class HasMailAttributeTest extends AbstractHasMailAttributeTest {

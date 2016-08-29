@@ -20,12 +20,12 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.HasMailAttributeWithValue;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.GenericMatcher;
+import java.util.Collection;
 
 import javax.mail.MessagingException;
-import java.util.Collection;
+
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
 public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest {
 

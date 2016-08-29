@@ -17,93 +17,68 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
-import org.apache.james.transport.matchers.HostIs;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import javax.mail.MessagingException;
+
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import javax.mail.MessagingException;
-import java.util.Arrays;
-import java.util.Collection;
+import com.google.common.collect.ImmutableList;
 
 public class HostIsTest {
+    public static final String JAMES_APACHE_ORG = "james.apache.org";
+    public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
-    private FakeMail mockedMail;
-
+    private FakeMail fakeMail;
     private Matcher matcher;
 
-    private MailAddress[] recipients;
+    @Before
+    public void setUp() throws Exception {
+        fakeMail = new FakeMail();
 
-    private void setRecipients(MailAddress[] recipients) {
-        this.recipients = recipients;
-    }
-
-    private void setupMockedMail() {
-        mockedMail = new FakeMail();
-        mockedMail.setRecipients(Arrays.asList(recipients));
-
-    }
-
-    private void setupMatcher() throws MessagingException {
         matcher = new HostIs();
-        String HOST_NAME = "james.apache.org";
-        FakeMatcherConfig mci = new FakeMatcherConfig("HostIs=" + HOST_NAME,
-                new FakeMailContext());
+        FakeMatcherConfig mci = new FakeMatcherConfig("HostIs=" + JAMES_APACHE_ORG, new FakeMailContext());
         matcher.init(mci);
     }
 
     // test if all recipients get returned as matched
     @Test
     public void testHostIsMatchedAllRecipients() throws MessagingException {
-        setRecipients(new MailAddress[]{
-                new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org")});
+        MailAddress mailAddress1 = new MailAddress("test@" + JAMES_APACHE_ORG);
+        MailAddress mailAddress2 = new MailAddress("test2@" + JAMES_APACHE_ORG);
+        fakeMail.setRecipients(ImmutableList.of(
+            mailAddress1,
+            mailAddress2));
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNotNull(matchedRecipients);
-        Assert.assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress1, mailAddress2);
     }
 
     // test if one recipients get returned as matched
     @Test
     public void testHostIsMatchedOneRecipient() throws MessagingException {
-        setRecipients(new MailAddress[]{
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james.apache.org")});
+        MailAddress matchingAddress = new MailAddress("test2@" + JAMES_APACHE_ORG);
+        fakeMail.setRecipients(ImmutableList.of(
+            new MailAddress("test@" + JAMES2_APACHE_ORG),
+            matchingAddress));
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertNotNull(matchedRecipients);
-        Assert.assertEquals(matchedRecipients.size(), 1);
+        assertThat(matcher.match(fakeMail)).containsExactly(matchingAddress);
     }
 
     // test if no recipient get returned cause it not match
     @Test
     public void testHostIsNotMatch() throws MessagingException {
-        setRecipients(new MailAddress[]{
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james2.apache.org")});
+        fakeMail.setRecipients(ImmutableList.of(
+            new MailAddress("test@" + JAMES2_APACHE_ORG),
+            new MailAddress("test2@" + JAMES2_APACHE_ORG)));
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        Assert.assertEquals(matchedRecipients.size(), 0);
+        assertThat(matcher.match(fakeMail)).isEmpty();
     }
 }
