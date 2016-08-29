@@ -21,15 +21,17 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
+import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Remove mime headers
@@ -46,55 +48,32 @@ import org.apache.mailet.MailetException;
  */
 public class RemoveMimeHeader extends GenericMailet {
     
-    /**
-     * Arraylist which holds the headers which should be removed
-     */
-    ArrayList<String> headers = new ArrayList<String>();
+    private List<String> headers;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#init()
-     */
+    @Override
     public void init() throws MailetException {
         String header = getInitParameter("name");
-        if (header != null) {
-            StringTokenizer st = new StringTokenizer(header, ",");
-            while (st.hasMoreTokens()) {
-                headers.add(st.nextToken());
-            }
-        } else {
-            throw new MailetException(
-                    "Invalid config. Please specify atleast one name");
+        if (header == null) {
+            throw new MailetException("Invalid config. Please specify atleast one name");
         }
+        headers = ImmutableList.copyOf(Splitter.on(",").split(header));
     }
-    
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#service(org.apache.mailet.Mail)
-     */
+    @Override
+    public String getMailetInfo() {
+        return "RemoveMimeHeader Mailet";
+    }
+
+    @Override
     public void service(Mail mail) {
         try {
             MimeMessage  message = mail.getMessage();
-        
-            // loop through the headers
             for (String header : headers) {
                 message.removeHeader(header);
             }
-            
             message.saveChanges();
-
         } catch (MessagingException e) {
-            // just log the exception
             log("Unable to remove headers: " + e.getMessage());
         }
-    }
-    
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#getMailetInfo()
-     */
-    public String getMailetInfo() {
-        return "RemoveMimeHeader Mailet";
     }
 }
