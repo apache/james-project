@@ -23,13 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -60,90 +58,53 @@ public class ReplaceContentTest {
     }
 
     @Test
-    public void serviceShouldThrowWhenPatternIsLessThanTwoCharacters() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "a");
-        expectedException.expect(MailetException.class);
-
-        mailet.init(mailetConfig);
-    }
-
-    @Test
-    public void serviceShouldThrowWhenPatternDoesNotStartWithSlash() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "abc/");
-        expectedException.expect(MailetException.class);
-
-        mailet.init(mailetConfig);
-    }
-
-    @Test
-    public void serviceShouldThrowWhenPatternDoesNotEndWithSlash() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/abc");
-        expectedException.expect(MailetException.class);
-
-        mailet.init(mailetConfig);
-    }
-
-    @Test
-    public void serviceShouldUnescapeCarriageReturn() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/a/\\\\r/i/");
-
-        mailet.init(mailetConfig);
-        assertThat(mailet.replaceConfig.getSubjectReplacingUnits()).containsOnly(new ReplacingPattern(Pattern.compile("a"), false, "\\\r"));
-    }
-
-    @Test
-    public void serviceShouldUnescapeLineBreak() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/a/\\\\n/i/");
-
-        mailet.init(mailetConfig);
-        assertThat(mailet.replaceConfig.getSubjectReplacingUnits()).containsOnly(new ReplacingPattern(Pattern.compile("a"), false, "\\\n"));
-    }
-
-    @Test
-    public void serviceShouldUnescapeTabReturn() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/a/\\\\t/i/");
-
-        mailet.init(mailetConfig);
-        assertThat(mailet.replaceConfig.getSubjectReplacingUnits()).containsOnly(new ReplacingPattern(Pattern.compile("a"), false, "\\\t"));
-    }
-
-    @Test
     public void serviceShouldReplaceSubjectWhenMatching() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/prova/PROVA/i/,/a/e//,/o/o/i/");
-        mailetConfig.setProperty("bodyPattern", "/prova/PROVA/i/," + "/a/e//,"
-                + "/o/o/i/,/\\u00E8/e'//," + "/prova([^\\/]*?)ble/X$1Y/im/,"
-                + "/X(.\\n)Y/P$1Q//," + "/\\/\\/,//");
+        mailetConfig.setProperty("subjectPattern", "/test/TEST/i/,/o/a//,/s/s/i/");
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("una prova");
-        message.setText("Sto facendo una prova di scrittura/ \u00E8 solo una prova.\n"
-                + "Bla bla bla bla.\n");
+        message.setSubject("one test");
 
         Mail mail = new FakeMail(message);
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getSubject()).isEqualTo("une PRoVA");
+        assertThat(mail.getMessage().getSubject()).isEqualTo("ane TEsT");
     }
 
     @Test
     public void serviceShouldReplaceBodyWhenMatching() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/prova/PROVA/i/,/a/e//,/o/o/i/");
-        mailetConfig.setProperty("bodyPattern", "/prova/PROVA/i/," + "/a/e//,"
-                + "/o/o/i/,/\\u00E8/e'//," + "/prova([^\\/]*?)ble/X$1Y/im/,"
-                + "/X(.\\n)Y/P$1Q//," + "/\\/\\/,//");
+        mailetConfig.setProperty("bodyPattern", 
+                "/test/TEST/i/," +
+                "/o/a/r/," +
+                "/S/s/r/,/\\u00E8/e'//," +
+                "/test([^\\/]*?)bla/X$1Y/im/," +
+                "/X(.\\n)Y/P$1Q//," +
+                "/\\/\\/,//");
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("una prova");
-        message.setText("Sto facendo una prova di scrittura/ \u00E8 solo una prova.\n"
-                + "Bla bla bla bla.\n");
+        message.setText("This is one simple test/ \u00E8 one simple test.\n"
+                + "Blo blo blo blo.\n");
 
         Mail mail = new FakeMail(message);
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getContent()).isEqualTo("Sto fecendo une PRoVA di scritture, e' solo une P.\n"
-                + "Q ble ble ble.\n");
+        assertThat(mail.getMessage().getContent()).isEqualTo("This is ane simple TEsT, e' ane simple P.\n"
+                + "Q bla bla bla.\n");
+    }
+
+    @Test
+    public void serviceShouldNotLoopWhenCaseInsensitiveAndRepeat() throws Exception {
+        mailetConfig.setProperty("bodyPattern", "/a/a/ir/");
+        mailet.init(mailetConfig);
+
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setText("aaa");
+
+        Mail mail = new FakeMail(message);
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getContent()).isEqualTo("aaa");
     }
 
     @Test
@@ -152,51 +113,48 @@ public class ReplaceContentTest {
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("re: r:ri:una prova");
-        message.setText("Sto facendo una prova di scrittura/ \u00E8 solo una prova.\n"
-                + "Bla bla bla bla.\n");
+        message.setSubject("re: r:ri:one test");
 
         Mail mail = new FakeMail(message);
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getSubject()).isEqualTo("Re: Re: Re: una prova");
+        assertThat(mail.getMessage().getSubject()).isEqualTo("Re: Re: Re: one test");
     }
 
     @Test
     public void serviceShouldRemoveOrAddTextInBody() throws Exception {
-        mailetConfig.setProperty("bodyPattern", "/--messaggio originale--/<quote>/i/,"
+        mailetConfig.setProperty("bodyPattern", "/--original message--/<quote>/i/,"
                 + "/<quote>(.*)(\\r\\n)([^>]+)/<quote>$1$2>$3/imrs/,"
                 + "/<quote>\\r\\n//im/");
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("una prova");
-        message.setText("Prova.\r\n" + "\r\n" + "--messaggio originale--\r\n"
-                + "parte del\r\n" + "messaggio\\ che\\0 deve0 essere\r\n"
-                + "quotato. Vediamo se\r\n" + "ce la fa.");
+        message.setText("Test.\r\n" + "\r\n" + "--original message--\r\n"
+                + "part of\r\n" + "message\\ that\\0 must0 be\r\n"
+                + "quoted. Let's see if\r\n" + "he can do it.");
 
         Mail mail = new FakeMail(message);
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getContent()).isEqualTo("Prova.\r\n" + "\r\n" + ">parte del\r\n"
-                + ">messaggio\\ che\\0 deve0 essere\r\n"
-                + ">quotato. Vediamo se\r\n" + ">ce la fa.");
+        assertThat(mail.getMessage().getContent()).isEqualTo("Test.\r\n" + "\r\n" + ">part of\r\n"
+                + ">message\\ that\\0 must0 be\r\n"
+                + ">quoted. Let's see if\r\n" + ">he can do it.");
     }
 
 
     @Test
     public void serviceShouldReplaceBodyWhenMatchingASCIICharacter() throws Exception {
-        mailetConfig.setProperty("bodyPattern", "/\\u2026/...//");
+        mailetConfig.setProperty("bodyPattern", "/\\u2026/.../r/");
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("una prova");
-        message.setText("Prova \u2026 di replace \u2026");
+        message.setSubject("one test");
+        message.setText("Replacement \u2026 one test \u2026");
 
         Mail mail = new FakeMail(message);
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getContent()).isEqualTo("Prova ... di replace ...");
+        assertThat(mail.getMessage().getContent()).isEqualTo("Replacement ... one test ...");
     }
 
     @Test
@@ -204,11 +162,11 @@ public class ReplaceContentTest {
         String messageSource = "Content-Type: text/plain; charset=\"iso-8859-1\"\r\n"
                 + "Content-Transfer-Encoding: quoted-printable\r\n"
                 + "\r\n"
-                + "=93prova=94 con l=92apice";
+                + "=93test=94 with th=92 apex";
 
         mailetConfig.setProperty("bodyPattern", "/[\\u2018\\u2019\\u201A]/'//,"
                 + "/[\\u201C\\u201D\\u201E]/\"//," + "/[\\x91\\x92\\x82]/'//,"
-                + "/[\\x93\\x94\\x84]/\"//," + "/\\x85/...//," + "/\\x8B/<//,"
+                + "/[\\x93\\x94\\x84]/\"/r/," + "/\\x85/...//," + "/\\x8B/<//,"
                 + "/\\x9B/>//," + "/\\x96/-//," + "/\\x97/--//,");
         mailet.init(mailetConfig);
 
@@ -218,19 +176,19 @@ public class ReplaceContentTest {
         Mail mail = new FakeMail(message);
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getContent()).isEqualTo("\"prova\" con l'apice");
+        assertThat(mail.getMessage().getContent()).isEqualTo("\"test\" with th' apex");
     }
 
     @Test
     public void serviceShouldSetContenTypeWhenInitialized() throws Exception {
-        mailetConfig.setProperty("subjectPattern", "/prova/PROVA/i/,/a/e//,/o/o/i/");
+        mailetConfig.setProperty("subjectPattern", "/test/TEST/i/,/o/a//,/s/s/i/");
         mailetConfig.setProperty("charset", Charsets.UTF_8.name());
         mailet.init(mailetConfig);
 
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setSubject("una prova");
-        message.setText("Sto facendo una prova di scrittura/ \u00E8 solo una prova.\n"
-                + "Bla bla bla bla.\n");
+        message.setSubject("one test");
+        message.setText("This is one simple test/ \u00E8 one simple test.\n"
+                + "Blo blo blo blo.\n");
 
         Mail mail = new FakeMail(message);
         mailet.service(mail);

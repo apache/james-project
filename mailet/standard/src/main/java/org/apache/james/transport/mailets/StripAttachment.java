@@ -171,7 +171,7 @@ public class StripAttachment extends GenericMailet {
                 getInitParameter(DECODE_FILENAME_PARAMETER_NAME),
                 decodeFilename);
         if (getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME) != null) {
-            filenameReplacingPatterns = ReplaceContent
+            filenameReplacingPatterns = new PatternExtractor()
                     .getPatternsFromString(getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME));
         }
 
@@ -287,7 +287,7 @@ public class StripAttachment extends GenericMailet {
                 fileName = MimeUtility.decodeText(fileName);
 
             if (filenameReplacingPatterns != null)
-                fileName = ReplaceContent.applyPatterns(filenameReplacingPatterns, fileName, false, this);
+                fileName = new ContentReplacer(false, this).applyPatterns(filenameReplacingPatterns, fileName);
 
             if (fileNameMatches(fileName)) {
                 if (directoryName != null) {

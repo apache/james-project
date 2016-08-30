@@ -354,11 +354,11 @@ public class StripAttachmentTest {
                         + "/[\u00D7]/x//," + "/[\u00D9\u00DA\u00DB\u00DC]/U//,"
                         + "/[\u00E0\u00E1\u00E2\u00E3\u00E4\u00E5]/a//,"
                         + "/[\u00E6]/ae//,"
-                        + "/[\u00E8\u00E9\u00EA\u00EB]/e//,"
+                        + "/[\u00E8\u00E9\u00EA\u00EB]/e/r/,"
                         + "/[\u00EC\u00ED\u00EE\u00EF]/i//,"
                         + "/[\u00F2\u00F3\u00F4\u00F5\u00F6]/o//,"
                         + "/[\u00F9\u00FA\u00FB\u00FC]/u//,"
-                        + "/[^A-Za-z0-9._-]+/_//");
+                        + "/[^A-Za-z0-9._-]+/_/r/");
 
         mailet.init(mci);
         return mailet;
