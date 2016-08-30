@@ -30,6 +30,7 @@ import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.SubMessage;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -41,7 +42,7 @@ public class ParsingWritingObjectsTest {
     public void parsingJsonShouldWorkOnSubMessage() throws Exception {
         SubMessage expected = SUB_MESSAGE;
 
-        SubMessage subMessage = new ObjectMapperFactory().forParsing()
+        SubMessage subMessage = new ObjectMapperFactory(new InMemoryId.Factory()).forParsing()
             .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/subMessage.json")), SubMessage.class);
 
         assertThat(subMessage).isEqualToComparingFieldByField(expected);
@@ -51,7 +52,7 @@ public class ParsingWritingObjectsTest {
     public void writingJsonShouldWorkOnSubMessage() throws Exception {
         String expected = IOUtils.toString(ClassLoader.getSystemResource("json/subMessage.json"));
 
-        String json = new ObjectMapperFactory().forWriting()
+        String json = new ObjectMapperFactory(new InMemoryId.Factory()).forWriting()
                 .writeValueAsString(SUB_MESSAGE);
 
         assertThatJson(json)
@@ -64,7 +65,7 @@ public class ParsingWritingObjectsTest {
     public void parsingJsonShouldWorkOnMessage() throws Exception {
         Message expected = MESSAGE;
 
-        Message message = new ObjectMapperFactory().forParsing()
+        Message message = new ObjectMapperFactory(new InMemoryId.Factory()).forParsing()
             .readValue(IOUtils.toString(ClassLoader.getSystemResource("json/message.json")), Message.class);
 
         assertThat(message).isEqualToComparingFieldByField(expected);
@@ -78,7 +79,7 @@ public class ParsingWritingObjectsTest {
                 .addFilter(JmapResponseWriterImpl.PROPERTIES_FILTER, SimpleBeanPropertyFilter.serializeAll())
                 .addFilter(GetMessagesMethod.HEADERS_FILTER, SimpleBeanPropertyFilter.serializeAll());
 
-        String json = new ObjectMapperFactory().forWriting()
+        String json = new ObjectMapperFactory(new InMemoryId.Factory()).forWriting()
                 .setFilterProvider(filterProvider)
                 .writeValueAsString(MESSAGE);
 

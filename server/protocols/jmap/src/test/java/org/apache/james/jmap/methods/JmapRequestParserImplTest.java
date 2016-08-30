@@ -21,6 +21,8 @@ package org.apache.james.jmap.methods;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.ProtocolRequest;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,6 +30,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JmapRequestParserImplTest {
+    private JmapRequestParserImpl jmapRequestParserImpl;
+
+    @Before
+    public void setup() {
+        jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory(new InMemoryId.Factory()));
+    }
 
     @Test(expected=IllegalArgumentException.class)
     public void extractJmapRequestShouldThrowWhenNullRequestClass() throws Exception {
@@ -35,7 +43,6 @@ public class JmapRequestParserImplTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory());
         jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), null);
     }
 
@@ -47,7 +54,6 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory());
         jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
 
@@ -58,7 +64,6 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        JmapRequestParserImpl jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory());
         jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
 

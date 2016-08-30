@@ -32,6 +32,8 @@ import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.ProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -44,6 +46,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class JmapResponseWriterImplTest {
+    private JmapResponseWriterImpl jmapResponseWriterImpl;
+
+    @Before
+    public void setup() {
+        jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory(new InMemoryId.Factory()));
+    }
 
     @Ignore
     @Test(expected=IllegalStateException.class)
@@ -52,7 +60,6 @@ public class JmapResponseWriterImplTest {
         String expectedClientId = "#1";
         String expectedId = "myId";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         Stream<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(Stream.of(JmapResponse
                 .builder()
                 .clientId(ClientId.of(expectedClientId))
@@ -73,7 +80,6 @@ public class JmapResponseWriterImplTest {
         ResponseClass responseClass = new ResponseClass();
         responseClass.id = expectedId;
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
@@ -101,7 +107,6 @@ public class JmapResponseWriterImplTest {
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
         Property property = () -> "id";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
@@ -126,7 +131,6 @@ public class JmapResponseWriterImplTest {
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
         Property property = () -> "id";
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         @SuppressWarnings("unused")
         Stream<ProtocolResponse> ignoredResponse = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
@@ -158,8 +162,6 @@ public class JmapResponseWriterImplTest {
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
         Property idProperty = () -> "id";
         Property nameProperty = () -> "name";
-
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
 
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
@@ -210,7 +212,6 @@ public class JmapResponseWriterImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
@@ -234,7 +235,6 @@ public class JmapResponseWriterImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
-        JmapResponseWriterImpl jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory());
         List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
