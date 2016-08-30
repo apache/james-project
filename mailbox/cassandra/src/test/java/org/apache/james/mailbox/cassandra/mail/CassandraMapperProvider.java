@@ -107,6 +107,6 @@ public class CassandraMapperProvider implements MapperProvider {
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
                 cassandra.getTypesProvider()
-            ).getAnnotationMapper(CassandraId.timeBased(), new MockMailboxSession("benwa"));
+            ).getAnnotationMapper(new MockMailboxSession("benwa"));
     }
 }

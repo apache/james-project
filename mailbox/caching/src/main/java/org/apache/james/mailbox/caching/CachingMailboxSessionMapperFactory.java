@@ -56,7 +56,7 @@ public class CachingMailboxSessionMapperFactory extends
     }
 
     @Override
-    public AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession session)
+    public AnnotationMapper createAnnotationMapper(MailboxSession session)
             throws MailboxException {
         throw new NotImplementedException();
     }

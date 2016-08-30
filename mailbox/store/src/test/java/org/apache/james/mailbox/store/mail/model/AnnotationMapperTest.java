@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.junit.After;
 import org.junit.Rule;
@@ -55,14 +56,18 @@ public class AnnotationMapperTest<T extends MapperProvider> {
 
     private IProducer<T> producer;
     private AnnotationMapper annotationMapper;
+    private MailboxId mailboxId;
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
     @Contract.Inject
     public final void setProducer(IProducer<T> producer) throws MailboxException {
+        T newInstance = producer.newInstance();
+
         this.producer = producer;
-        this.annotationMapper = producer.newInstance().createAnnotationMapper();
+        this.annotationMapper = newInstance.createAnnotationMapper();
+        this.mailboxId = newInstance.generateId();
     }
 
     @After
@@ -73,131 +78,131 @@ public class AnnotationMapperTest<T extends MapperProvider> {
     @ContractTest
     public void insertAnnotationShouldThrowExceptionWithNilData() {
         expected.expect(IllegalArgumentException.class);
-        annotationMapper.insertAnnotation(MailboxAnnotation.nil(PRIVATE_KEY));
+        annotationMapper.insertAnnotation(mailboxId, MailboxAnnotation.nil(PRIVATE_KEY));
     }
 
     @ContractTest
     public void insertAnnotationShouldCreateNewAnnotation() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
 
-        assertThat(annotationMapper.getAllAnnotations()).containsExactly(PRIVATE_ANNOTATION);
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).containsExactly(PRIVATE_ANNOTATION);
     }
 
     @ContractTest
     public void insertAnnotationShouldUpdateExistedAnnotation() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION_UPDATE);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION_UPDATE);
 
-        assertThat(annotationMapper.getAllAnnotations()).containsExactly(PRIVATE_ANNOTATION_UPDATE);
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).containsExactly(PRIVATE_ANNOTATION_UPDATE);
     }
 
     @ContractTest
     public void deleteAnnotationShouldDeleteStoredAnnotation() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.deleteAnnotation(PRIVATE_KEY);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.deleteAnnotation(mailboxId, PRIVATE_KEY);
 
-        assertThat(annotationMapper.getAllAnnotations()).isEmpty();
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).isEmpty();
     }
 
     @ContractTest
     public void getEmptyAnnotationsWithNonStoredAnnotations() throws MailboxException {
-        assertThat(annotationMapper.getAllAnnotations()).isEmpty();
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).isEmpty();
     }
 
     @ContractTest
     public void getAllAnnotationsShouldRetrieveStoredAnnotations() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
 
-        assertThat(annotationMapper.getAllAnnotations()).contains(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).contains(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
     }
 
     @ContractTest
     public void getAnnotationsByKeysShouldReturnStoredAnnotationWithFilter() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_CHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeys(ImmutableSet.of(PRIVATE_KEY)))
+        assertThat(annotationMapper.getAnnotationsByKeys(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
             .containsOnly(PRIVATE_ANNOTATION);
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithOneDepthShouldReturnThatEntryAndItsChildren() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_CHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_GRANDCHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(ImmutableSet.of(PRIVATE_KEY)))
+        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
             .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION);
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithAllDepthShouldReturnThatEntryAndAllBelowEntries() throws MailboxException {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_CHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_GRANDCHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(ImmutableSet.of(PRIVATE_KEY)))
+        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
             .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithOneDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() throws Exception {
-        annotationMapper.insertAnnotation(PRIVATE_CHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_GRANDCHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(ImmutableSet.of(PRIVATE_KEY)))
+        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
             .contains(PRIVATE_CHILD_ANNOTATION);
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithAllDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() throws Exception {
-        annotationMapper.insertAnnotation(PRIVATE_CHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_GRANDCHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(ImmutableSet.of(PRIVATE_KEY)))
+        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
             .contains(PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithOneDepthShouldReturnEmptyWithEmptyInputKeys() throws Exception {
-        annotationMapper.insertAnnotation(PRIVATE_CHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_GRANDCHILD_ANNOTATION);
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(ImmutableSet.<MailboxAnnotationKey>of())).isEmpty();
+        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.<MailboxAnnotationKey>of())).isEmpty();
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithOneDepthShouldReturnEmptyIfDoNotFind() throws Exception {
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(ImmutableSet.of(PRIVATE_KEY))).isEmpty();
+        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY))).isEmpty();
     }
 
     @ContractTest
     public void getAnnotationsByKeysWithAllDepthShouldReturnEmptyIfDoNotFind() throws Exception {
-        annotationMapper.insertAnnotation(SHARED_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_USER_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
-        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(ImmutableSet.of(PRIVATE_KEY))).isEmpty();
+        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY))).isEmpty();
     }
 
     @ContractTest
     public void annotationShouldBeCaseInsentive() throws Exception {
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION);
-        annotationMapper.insertAnnotation(PRIVATE_ANNOTATION_WITH_KEY_UPPER);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION_WITH_KEY_UPPER);
 
-        assertThat(annotationMapper.getAllAnnotations()).containsOnly(PRIVATE_ANNOTATION_WITH_KEY_UPPER);
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).containsOnly(PRIVATE_ANNOTATION_WITH_KEY_UPPER);
     }
 }

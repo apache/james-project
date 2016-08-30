@@ -99,8 +99,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     @Override
-    public AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession mailboxSession)
+    public AnnotationMapper createAnnotationMapper(MailboxSession mailboxSession)
             throws MailboxException {
-        return new CassandraAnnotationMapper((CassandraId)mailboxId, session);
+        return new CassandraAnnotationMapper(session);
     }
 }

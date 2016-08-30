@@ -57,7 +57,6 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public AnnotationMapper createAnnotationMapper() throws MailboxException {
-        return new InMemoryMailboxSessionMapperFactory().createAnnotationMapper(InMemoryId.of(random.nextInt()), 
-            new MockMailboxSession("user"));
+        return new InMemoryMailboxSessionMapperFactory().createAnnotationMapper(new MockMailboxSession("user"));
     }
 }

@@ -68,16 +68,16 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         return mapper;
     }
 
-    public AnnotationMapper getAnnotationMapper(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+    public AnnotationMapper getAnnotationMapper(MailboxSession session) throws MailboxException {
         AnnotationMapper mapper = (AnnotationMapper)session.getAttributes().get(ANNOTATIONMAPPER);
         if (mapper == null) {
-            mapper = createAnnotationMapper(mailboxId, session);
+            mapper = createAnnotationMapper(session);
             session.getAttributes().put(ANNOTATIONMAPPER, mapper);
         }
         return mapper;
     }
 
-    public abstract AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession session) throws MailboxException;
+    public abstract AnnotationMapper createAnnotationMapper(MailboxSession session) throws MailboxException;
 
     /**
      * Create a {@link MessageMapper} instance which will get reused during the whole {@link MailboxSession}

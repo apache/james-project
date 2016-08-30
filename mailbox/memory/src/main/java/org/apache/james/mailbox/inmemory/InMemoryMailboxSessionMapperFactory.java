@@ -42,12 +42,14 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final MessageMapper messageMapper;
     private final SubscriptionMapper subscriptionMapper;
     private final AttachmentMapper attachmentMapper;
+    private final AnnotationMapper annotationMapper;
     
     public InMemoryMailboxSessionMapperFactory() {
         mailboxMapper = new InMemoryMailboxMapper();
         messageMapper = new InMemoryMessageMapper(null, new InMemoryUidProvider(), new InMemoryModSeqProvider());
         subscriptionMapper = new InMemorySubscriptionMapper();
         attachmentMapper = new InMemoryAttachmentMapper();
+        annotationMapper = new InMemoryAnnotationMapper();
     }
     
     @Override
@@ -77,9 +79,9 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
-    public AnnotationMapper createAnnotationMapper(MailboxId mailboxId, MailboxSession session)
+    public AnnotationMapper createAnnotationMapper(MailboxSession session)
             throws MailboxException {
-        return new InMemoryAnnotationMapper((InMemoryId)mailboxId);
+        return annotationMapper;
     }
 
 }

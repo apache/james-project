@@ -24,58 +24,64 @@ import java.util.Set;
 
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
 public interface AnnotationMapper extends Mapper {
-
     /**
-     * Return all <code>MailboxAnnotation</code>.
+     * Return all <code>MailboxAnnotation</code> of specific mailbox.
      * The result is not ordered and should not contain duplicate by key
-     * 
+     *
+     * @param mailboxId the selected mailbox
      * @return List<MailboxAnnotation>
      */
-    List<MailboxAnnotation> getAllAnnotations();
+    List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId);
 
     /**
-     * Search all the <code>MailboxAnnotation</code> by the set of annotation's keys. The result is not ordered and should not
+     * Search all the <code>MailboxAnnotation</code> of selected mailbox by the set of annotation's keys. The result is not ordered and should not
      * contain duplicate by key
-     * 
+     *
+     * @param mailboxId the selected mailbox
      * @param keys the set of the key should be filtered
      * @return List<MailboxAnnotation>
      */
-    List<MailboxAnnotation> getAnnotationsByKeys(Set<MailboxAnnotationKey> keys);
+    List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
     /**
-     * Search all the <code>MailboxAnnotation</code> by the set of annotation's keys as well as its children entries 
+     * Search all the <code>MailboxAnnotation</code> of selected mailbox by the set of annotation's keys as well as its children entries
      * The result is not ordered and should not contain duplicate by key
-     * 
+     *
+     * @param mailboxId the selected mailbox
      * @param keys the set of the key should be filtered
      * @return List<MailboxAnnotation>
      */
-    List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(Set<MailboxAnnotationKey> keys);
+    List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
     /**
-     * Search all the <code>MailboxAnnotation</code> by the set of annotation's keys and entries below the keys 
+     * Search all the <code>MailboxAnnotation</code> of selected mailbox by the set of annotation's keys and entries below the keys
      * The result is not ordered and should not contain duplicate by key
-     * 
+     *
+     * @param mailboxId the selected mailbox
      * @param keys the set of the key should be filtered
      * @return List<MailboxAnnotation>
      */
-    List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(Set<MailboxAnnotationKey> keys);
+    List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
     /**
-     * Delete the annotation by its key.
-     * 
+     * Delete the annotation of selected mailbox by its key.
+     *
+     * @param mailboxId the selected mailbox
      * @param key the key of annotation should be deleted
      */
-    void deleteAnnotation(MailboxAnnotationKey key);
+    void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key);
 
     /**
      * - Insert new annotation if it does not exist on store
      * - Update the new value for existed annotation
-     * 
+     *
+     * @param mailboxId the selected mailbox
      * @param mailboxAnnotation the selected annotation
      */
-    void insertAnnotation(MailboxAnnotation mailboxAnnotation);
+    void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
 
 }

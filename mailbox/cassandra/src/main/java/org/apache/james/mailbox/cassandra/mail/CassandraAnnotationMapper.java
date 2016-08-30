@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraAnnotationTable;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 
@@ -49,48 +50,50 @@ import com.google.common.base.Preconditions;
 
 public class CassandraAnnotationMapper extends NonTransactionalMapper implements AnnotationMapper {
 
-    private final CassandraId mailboxId;
     private final Session session;
 
-    public CassandraAnnotationMapper(CassandraId mailboxId, Session session) {
-        this.mailboxId = mailboxId;
+    public CassandraAnnotationMapper(Session session) {
         this.session = session;
     }
 
-    public List<MailboxAnnotation> getAllAnnotations() {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQuery()))
+    public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
+        CassandraId cassandraId = (CassandraId)mailboxId;
+        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQuery(cassandraId)))
             .map(this::toAnnotation)
             .collect(Collectors.toList());
     }
 
-    public List<MailboxAnnotation> getAnnotationsByKeys(Set<MailboxAnnotationKey> keys) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryForKeys(keys)))
+    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
+        CassandraId cassandraId = (CassandraId)mailboxId;
+        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryForKeys(cassandraId, keys)))
             .map(this::toAnnotation)
             .collect(Collectors.toList());
     }
 
-    public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(Set<MailboxAnnotationKey> keys) {
+    public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
+        CassandraId cassandraId = (CassandraId)mailboxId;
         return keys.stream()
-            .flatMap(this::getAnnotationsByKeyWithOneDepth)
+            .flatMap(annotation -> getAnnotationsByKeyWithOneDepth(cassandraId, annotation))
             .collect(Guavate.toImmutableList());
     }
 
-    public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(Set<MailboxAnnotationKey> keys) {
+    public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
+        CassandraId cassandraId = (CassandraId)mailboxId;
         return keys.stream()
-            .flatMap(this::getAnnotationsByKeyWithAllDepth)
+            .flatMap(annotation -> getAnnotationsByKeyWithAllDepth(cassandraId, annotation))
             .collect(Guavate.toImmutableList());
     }
 
-    public void deleteAnnotation(MailboxAnnotationKey key) {
+    public void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key) {
         session.execute(delete().from(CassandraAnnotationTable.TABLE_NAME)
-            .where(eq(CassandraAnnotationTable.MAILBOX_ID, mailboxId.asUuid()))
+            .where(eq(CassandraAnnotationTable.MAILBOX_ID, ((CassandraId) mailboxId).asUuid()))
             .and(eq(CassandraAnnotationTable.KEY, key.asString())));
     }
 
-    public void insertAnnotation(MailboxAnnotation mailboxAnnotation) {
+    public void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         Preconditions.checkArgument(!mailboxAnnotation.isNil());
         session.execute(insertInto(CassandraAnnotationTable.TABLE_NAME)
-            .value(CassandraAnnotationTable.MAILBOX_ID, mailboxId.asUuid())
+            .value(CassandraAnnotationTable.MAILBOX_ID, ((CassandraId) mailboxId).asUuid())
             .value(CassandraAnnotationTable.KEY, mailboxAnnotation.getKey().asString())
             .value(CassandraAnnotationTable.VALUE, mailboxAnnotation.getValue().get()));
     }
@@ -100,20 +103,20 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             row.getString(CassandraAnnotationTable.VALUE));
     }
 
-    private Select.Where getStoredAnnotationsQuery() {
+    private Select.Where getStoredAnnotationsQuery(CassandraId mailboxId) {
         return select(CassandraAnnotationTable.SELECT_FIELDS)
             .from(CassandraAnnotationTable.TABLE_NAME)
             .where(eq(CassandraAnnotationTable.MAILBOX_ID, mailboxId.asUuid()));
     }
 
-    private Select.Where getStoredAnnotationsQueryForKeys(Set<MailboxAnnotationKey> keys) {
-        return getStoredAnnotationsQuery().and(in(CassandraAnnotationTable.KEY, keys.stream()
+    private Select.Where getStoredAnnotationsQueryForKeys(CassandraId mailboxId, Set<MailboxAnnotationKey> keys) {
+        return getStoredAnnotationsQuery(mailboxId).and(in(CassandraAnnotationTable.KEY, keys.stream()
             .map(MailboxAnnotationKey::asString)
             .collect(Guavate.toImmutableList())));
     }
 
-    private Select.Where getStoredAnnotationsQueryLikeKey(String key) {
-        return getStoredAnnotationsQuery()
+    private Select.Where getStoredAnnotationsQueryLikeKey(CassandraId mailboxId, String key) {
+        return getStoredAnnotationsQuery(mailboxId)
             .and(gte(CassandraAnnotationTable.KEY, key))
             .and(lte(CassandraAnnotationTable.KEY, buildNextKey(key)));
     }
@@ -122,13 +125,13 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
         return key + MailboxAnnotationKey.SLASH_CHARACTER + Ascii.MAX;
     }
 
-    private Stream<MailboxAnnotation> getAnnotationsByKeyWithAllDepth(MailboxAnnotationKey key) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(key.asString())))
+    private Stream<MailboxAnnotation> getAnnotationsByKeyWithAllDepth(CassandraId mailboxId, MailboxAnnotationKey key) {
+        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
             .map(this::toAnnotation);
     }
 
-    private Stream<MailboxAnnotation> getAnnotationsByKeyWithOneDepth(MailboxAnnotationKey key) {
-        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(key.asString())))
+    private Stream<MailboxAnnotation> getAnnotationsByKeyWithOneDepth(CassandraId mailboxId, MailboxAnnotationKey key) {
+        return CassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryLikeKey(mailboxId, key.asString())))
             .map(this::toAnnotation)
             .filter(annotation -> isChild(key, annotation));
     }

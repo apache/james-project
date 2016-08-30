@@ -31,6 +31,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
 import com.google.common.base.Function;
@@ -42,12 +43,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Table;
 
 public class InMemoryAnnotationMapper implements AnnotationMapper {
-    private final InMemoryId mailboxId;
     private final Table<InMemoryId, String, String> mailboxesAnnotations;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public InMemoryAnnotationMapper(InMemoryId mailboxId) {
-        this.mailboxId = mailboxId;
+    public InMemoryAnnotationMapper() {
         mailboxesAnnotations = HashBasedTable.create();
     }
 
@@ -78,14 +77,14 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     }
     
     @Override
-    public List<MailboxAnnotation> getAllAnnotations() {
-        return ImmutableList.copyOf(retrieveAllAnnotations(mailboxId));
+    public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
+        return ImmutableList.copyOf(retrieveAllAnnotations((InMemoryId)mailboxId));
     }
 
     @Override
-    public List<MailboxAnnotation> getAnnotationsByKeys(final Set<MailboxAnnotationKey> keys) {
+    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, final Set<MailboxAnnotationKey> keys) {
         return ImmutableList.copyOf(
-            Iterables.filter(retrieveAllAnnotations(mailboxId),
+            Iterables.filter(retrieveAllAnnotations((InMemoryId)mailboxId),
                 new Predicate<MailboxAnnotation>() {
                     @Override
                     public boolean apply(MailboxAnnotation input) {
@@ -95,13 +94,13 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     }
 
     @Override
-    public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(final Set<MailboxAnnotationKey> keys) {
-        return ImmutableList.copyOf(Iterables.filter(retrieveAllAnnotations(mailboxId), getPredicateFilterByAll(keys)));
+    public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, final Set<MailboxAnnotationKey> keys) {
+        return ImmutableList.copyOf(Iterables.filter(retrieveAllAnnotations((InMemoryId)mailboxId), getPredicateFilterByAll(keys)));
     }
 
     @Override
-    public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(final Set<MailboxAnnotationKey> keys) {
-        return ImmutableList.copyOf(Iterables.filter(getAnnotationsByKeysWithAllDepth(keys), getPredicateFilterByOne(keys)));
+    public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, final Set<MailboxAnnotationKey> keys) {
+        return ImmutableList.copyOf(Iterables.filter(getAnnotationsByKeysWithAllDepth(mailboxId, keys), getPredicateFilterByOne(keys)));
     }
 
     private Predicate<MailboxAnnotation> getPredicateFilterByAll(final Set<MailboxAnnotationKey> keys) {
@@ -141,18 +140,18 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
     }
 
     @Override
-    public void insertAnnotation(MailboxAnnotation mailboxAnnotation) {
+    public void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         Preconditions.checkArgument(!mailboxAnnotation.isNil());
         lock.writeLock().lock();
         try {
-            mailboxesAnnotations.put(mailboxId, mailboxAnnotation.getKey().asString(), mailboxAnnotation.getValue().get());
+            mailboxesAnnotations.put((InMemoryId)mailboxId, mailboxAnnotation.getKey().asString(), mailboxAnnotation.getValue().get());
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void deleteAnnotation(MailboxAnnotationKey key) {
+    public void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key) {
         lock.writeLock().lock();
         try {
             mailboxesAnnotations.remove(mailboxId, key.asString());
