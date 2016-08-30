@@ -17,7 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,7 +50,6 @@ public class FetchedFromTest {
         mailAddress2 = new MailAddress("you@apache.org");
     }
 
-    // test if the Header was matched
     @Test
     public void testHeaderIsMatched() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
@@ -62,7 +60,6 @@ public class FetchedFromTest {
         assertThat(matcher.match(fakeMail)).containsExactly(mailAddress1, mailAddress2);
     }
 
-    // test if the Header was not matched
     @Test
     public void testHeaderIsNotMatched() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
@@ -73,7 +70,6 @@ public class FetchedFromTest {
         assertThat(matcher.match(fakeMail)).isNull();
     }
 
-    // test if the Header was removed after matched
     @Test
     public void testHeaderWasRemovedAfterMatched() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
