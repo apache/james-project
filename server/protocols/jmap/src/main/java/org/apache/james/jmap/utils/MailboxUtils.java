@@ -31,13 +31,14 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -46,36 +47,38 @@ public class MailboxUtils {
 
     private static final boolean DONT_RESET_RECENT = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtils.class);
-    private static final String WILDCARD = "%";
 
     private final MailboxManager mailboxManager;
-    private final MailboxMapperFactory mailboxMapperFactory;
 
     @Inject
     @VisibleForTesting
-    public MailboxUtils(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory) {
+    public MailboxUtils(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-        this.mailboxMapperFactory = mailboxMapperFactory;
     }
 
     public Optional<Mailbox> mailboxFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         try {
-            Optional<Role> role = Role.from(mailboxPath.getName());
             MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-            MessageManager.MetaData mailboxMetaData = getMailboxMetaData(mailbox, mailboxSession);
-            return Optional.ofNullable(Mailbox.builder()
-                    .id(mailbox.getId())
-                    .name(getName(mailboxPath, mailboxSession))
-                    .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).orElse(null))
-                    .role(role)
-                    .unreadMessages(mailboxMetaData.getUnseenCount())
-                    .totalMessages(mailboxMetaData.getMessageCount())
-                    .sortOrder(SortOrder.getSortOrder(role))
-                    .build());
+            return mailboxFromMessageManager(mailbox, mailboxSession);
         } catch (MailboxException e) {
-            LOGGER.warn("Cannot find mailbox for :" + mailboxPath.getName(), e);
+            LOGGER.warn("Cannot find mailbox for: " + mailboxPath.getName(), e);
             return Optional.empty();
         }
+    }
+
+    private Optional<Mailbox> mailboxFromMessageManager(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
+        MailboxPath mailboxPath = messageManager.getMailboxPath();
+        Optional<Role> role = Role.from(mailboxPath.getName());
+        MessageManager.MetaData mailboxMetaData = getMailboxMetaData(messageManager, mailboxSession);
+        return Optional.ofNullable(Mailbox.builder()
+                .id(messageManager.getId())
+                .name(getName(mailboxPath, mailboxSession))
+                .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).orElse(null))
+                .role(role)
+                .unreadMessages(mailboxMetaData.getUnseenCount())
+                .totalMessages(mailboxMetaData.getMessageCount())
+                .sortOrder(SortOrder.getSortOrder(role))
+                .build());
     }
 
     private MessageManager.MetaData getMailboxMetaData(MessageManager messageManager, MailboxSession mailboxSession) throws MailboxException {
@@ -98,15 +101,16 @@ public class MailboxUtils {
 
     public Optional<String> getMailboxNameFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxFromId(mailboxId, mailboxSession)
-                .map(org.apache.james.mailbox.store.mail.model.Mailbox::getName);
+                .map(Throwing.function(MessageManager::getMailboxPath).sneakyThrow())
+                .map(MailboxPath::getName);
     }
 
-    private Optional<org.apache.james.mailbox.store.mail.model.Mailbox> getMailboxFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        return mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxWithPathLike(new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), WILDCARD))
-                .stream()
-                .filter(mailbox -> mailbox.getMailboxId().equals(mailboxId))
-                .findFirst();
+    private Optional<MessageManager> getMailboxFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
+        try {
+            return Optional.of(mailboxManager.getMailbox(mailboxId, mailboxSession));
+        } catch (MailboxNotFoundException e) {
+            return Optional.empty();
+        }
     }
 
     @VisibleForTesting Optional<MailboxId> getParentIdFromMailboxPath(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
@@ -119,12 +123,10 @@ public class MailboxUtils {
     }
 
     public Optional<Mailbox> mailboxFromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
+        ThrowingFunction<MessageManager, Optional<Mailbox>> toMailbox = path -> mailboxFromMessageManager(path, mailboxSession);
         try {
             return getMailboxFromId(mailboxId, mailboxSession)
-                .flatMap(jamesMailbox ->
-                    mailboxFromMailboxPath(new MailboxPath(jamesMailbox.getNamespace(), mailboxSession.getUser().getUserName(), jamesMailbox.getName()), 
-                            mailboxSession)
-                );
+                .flatMap(Throwing.function(toMailbox).sneakyThrow());
         } catch (MailboxException e) {
             return Optional.empty();
         }
@@ -144,7 +146,7 @@ public class MailboxUtils {
 
     public boolean hasChildren(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxFromId(mailboxId, mailboxSession)
-                .map(mailbox -> new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()))
+                .map(Throwing.function(MessageManager::getMailboxPath).sneakyThrow())
                 .map(Throwing.function(path -> mailboxManager.hasChildren(path, mailboxSession)))
                 .orElse(false);
     }

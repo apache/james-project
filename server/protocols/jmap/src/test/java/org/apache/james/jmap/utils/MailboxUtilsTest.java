@@ -54,7 +54,7 @@ public class MailboxUtilsTest {
         mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
         user = "user@domain.org";
         mailboxSession = mailboxManager.login(user, "pass", LOGGER);
-        sut = new MailboxUtils(mailboxManager, mailboxMapperFactory);
+        sut = new MailboxUtils(mailboxManager);
     }
 
     @Test

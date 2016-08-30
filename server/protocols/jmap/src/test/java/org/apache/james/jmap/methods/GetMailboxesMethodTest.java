@@ -82,7 +82,7 @@ public class GetMailboxesMethodTest {
         MessageParser messageParser = new MessageParser();
         mailboxManager = new StoreMailboxManager(mailboxMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver, messageParser);
         mailboxManager.init();
-        mailboxUtils = new MailboxUtils(mailboxManager, mailboxMapperFactory);
+        mailboxUtils = new MailboxUtils(mailboxManager);
 
         getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxUtils);
     }
