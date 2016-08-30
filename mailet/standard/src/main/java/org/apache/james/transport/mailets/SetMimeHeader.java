@@ -25,6 +25,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage ;
 
 import org.apache.mailet.base.GenericMailet ;
+
+import com.google.common.base.Strings;
+
 import org.apache.mailet.Mail ;
 
 /**
@@ -41,56 +44,34 @@ import org.apache.mailet.Mail ;
  *
  * @version 1.0.0, 2002-09-11
  */
-public class SetMimeHeader
-       extends GenericMailet {
+public class SetMimeHeader extends GenericMailet {
 
-    /**
-     * The name of the header to be added.
-     */
     private String headerName;
-
-    /**
-     * The value to be set for the header.
-     */
     private String headerValue;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
         headerName = getInitParameter("name");
         headerValue = getInitParameter("value");
         
-        // Check if needed config values are used
-        if (headerName == null || headerName.equals("") || headerValue == null
-                || headerValue.equals("")) {
+        if (Strings.isNullOrEmpty(headerName) || Strings.isNullOrEmpty(headerValue)) {
             throw new MessagingException("Please configure a name and a value");
         }
     }
 
-    /**
-     * Takes the message and adds a header to it.
-     *
-     * @param mail the mail being processed
-     *
-     */
+    @Override
     public void service(Mail mail) {
         try {
             MimeMessage message = mail.getMessage () ;
 
-            //Set the header name and value (supplied at init time).
             message.setHeader(headerName, headerValue);
             message.saveChanges();
         } catch (javax.mail.MessagingException me) {
-            log (me.getMessage());
+            log(me.getMessage());
         }
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "SetMimeHeader Mailet" ;
     }
