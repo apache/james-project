@@ -40,6 +40,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class FakeMail implements Mail {
 
@@ -71,6 +72,11 @@ public class FakeMail implements Mail {
 
         public Builder recipients(List<MailAddress> recipients) {
             this.recipients.addAll(recipients);
+            return this;
+        }
+
+        public Builder recipients(MailAddress... recipients) {
+            this.recipients.addAll(ImmutableList.copyOf(recipients));
             return this;
         }
 
