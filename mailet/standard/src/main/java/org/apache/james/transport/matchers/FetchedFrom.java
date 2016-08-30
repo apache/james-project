@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import org.apache.mailet.base.GenericMatcher;
@@ -27,6 +25,8 @@ import org.apache.mailet.MailAddress;
 
 import javax.mail.internet.MimeMessage;
 import java.util.Collection;
+
+import com.google.common.base.Objects;
 
 /**
  * Matches mail with a header set by Fetchpop X-fetched-from <br>
@@ -38,17 +38,14 @@ import java.util.Collection;
  */
 
 public class FetchedFrom extends GenericMatcher {
-    
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#match(org.apache.mailet.Mail)
-     */
+    public static final String X_FETCHED_FROM = "X-fetched-from";
+
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
         MimeMessage message = mail.getMessage();
-        String fetch = message.getHeader("X-fetched-from", null);
-        if (fetch != null && fetch.equals(getCondition())) {
-            mail.getMessage().removeHeader("X-fetched-from");
+        String fetchHeaderValue = message.getHeader(X_FETCHED_FROM, null);
+        if (Objects.equal(fetchHeaderValue, getCondition())) {
+            mail.getMessage().removeHeader(X_FETCHED_FROM);
             return mail.getRecipients();
         }
         return null;

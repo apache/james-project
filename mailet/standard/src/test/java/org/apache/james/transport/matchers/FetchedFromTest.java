@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class FetchedFromTest {
-    private static final String FETCH_FROM_HEADER = "X-fetched-from";
     private static final String EXPECTED_HEADER_VALUE = "james-user";
     private static final String WRONG_HEADER_VALUE = "defaultHeaderValue";
 
@@ -57,7 +56,7 @@ public class FetchedFromTest {
     public void matchShouldReturnMatchWhenFetchFromHeaderHoldsRightValue() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
             .recipients(mailAddress1, mailAddress2)
-            .mimeMessage(MailUtil.createMimeMessage(FETCH_FROM_HEADER, EXPECTED_HEADER_VALUE))
+            .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, EXPECTED_HEADER_VALUE))
             .build();
 
         assertThat(matcher.match(fakeMail)).containsExactly(mailAddress1, mailAddress2);
@@ -68,7 +67,7 @@ public class FetchedFromTest {
     public void matchShouldReturnNotMatchWhenFetchFromHeaderHoldsWrongValue() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
             .recipients(mailAddress1, mailAddress2)
-            .mimeMessage(MailUtil.createMimeMessage(FETCH_FROM_HEADER, WRONG_HEADER_VALUE))
+            .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, WRONG_HEADER_VALUE))
             .build();
 
         assertThat(matcher.match(fakeMail)).isNull();
@@ -79,23 +78,23 @@ public class FetchedFromTest {
     public void matchShouldRemoveMatchingHeaders() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
             .recipients(mailAddress1, mailAddress2)
-            .mimeMessage(MailUtil.createMimeMessage(FETCH_FROM_HEADER, EXPECTED_HEADER_VALUE))
+            .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, EXPECTED_HEADER_VALUE))
             .build();
 
         matcher.match(fakeMail);
 
-        assertThat(fakeMail.getMessage().getHeader(FETCH_FROM_HEADER)).isNull();
+        assertThat(fakeMail.getMessage().getHeader(FetchedFrom.X_FETCHED_FROM)).isNull();
     }
 
     @Test
     public void matchShouldNotRemoveNonMatchingHeaders() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
             .recipients(mailAddress1, mailAddress2)
-            .mimeMessage(MailUtil.createMimeMessage(FETCH_FROM_HEADER, WRONG_HEADER_VALUE))
+            .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, WRONG_HEADER_VALUE))
             .build();
 
         matcher.match(fakeMail);
 
-        assertThat(fakeMail.getMessage().getHeader(FETCH_FROM_HEADER)).containsExactly(WRONG_HEADER_VALUE);
+        assertThat(fakeMail.getMessage().getHeader(FetchedFrom.X_FETCHED_FROM)).containsExactly(WRONG_HEADER_VALUE);
     }
 }
