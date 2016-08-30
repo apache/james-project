@@ -20,6 +20,10 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -29,97 +33,129 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RemoveMimeHeaderTest {
 
-    private final static String HEADER1 = "header1";
+    private static final String HEADER1 = "header1";
+    private static final String HEADER2 = "header2";
 
-    private final static String HEADER2 = "header2";
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
-    private GenericMailet setupMockedMailet(String name1, String name2) throws MessagingException {
-        GenericMailet mailet = new RemoveMimeHeader();
-        FakeMailetConfig mci = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
-        if (name1 != null) mci.setProperty("name", name1);
-        if (name2 != null) mci.setProperty("name", name2);
+    private GenericMailet mailet;
 
-        mailet.init(mci);
-        return mailet;
-    }
-
-    private MimeMessage getMockedMimeMessage() throws MessagingException {
-        MimeMessage mockedMimeMessage = MailUtil.createMimeMessage();
-        mockedMimeMessage.setHeader(HEADER1, "true");
-        mockedMimeMessage.setHeader(HEADER2, "true");
-        mockedMimeMessage.saveChanges();
-        return mockedMimeMessage;
-    }
-
-    private Mail getMockedMail(MimeMessage message) {
-        Mail m = new FakeMail();
-        m.setMessage(message);
-        return m;
+    @Before
+    public void setup() {
+        mailet = new RemoveMimeHeader();
     }
 
     @Test
-    public void testOneHeaderRemoved() throws MessagingException {
-        GenericMailet mailet = setupMockedMailet(HEADER1, null);
-        Mail mail = getMockedMail(getMockedMimeMessage());
+    public void getMailetInfoShouldReturnValue() {
+        assertThat(mailet.getMailetInfo()).isEqualTo("RemoveMimeHeader Mailet");
+    }
 
-        // Get sure both headers are present
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER1));
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER2));
+    @Test
+    public void serviceShouldRemoveHeaderWhenOneMatching() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", HEADER1);
+        mailet.init(mailetConfig);
+
+        MimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.setHeader(HEADER1, "true");
+        mimeMessage.setHeader(HEADER2, "true");
+        mimeMessage.saveChanges();
+        Mail mail = createMail(mimeMessage);
 
         mailet.service(mail);
 
-        // The first header should be removed
-        Assert.assertNull("Header removed", mail.getMessage().getHeader(HEADER1));
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER2));
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNotNull();
     }
 
     @Test
-    public void testTwoHeaderRemoved() throws MessagingException {
-        GenericMailet mailet = setupMockedMailet(HEADER1, HEADER2);
-        Mail mail = getMockedMail(getMockedMimeMessage());
+    public void serviceShouldRemoveHeadersWhenTwoMatching() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", HEADER1);
+        mailetConfig.setProperty("name", HEADER2);
+        mailet.init(mailetConfig);
 
-        // Get sure both headers are present
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER1));
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER2));
+        MimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.setHeader(HEADER1, "true");
+        mimeMessage.setHeader(HEADER2, "true");
+        mimeMessage.saveChanges();
+        Mail mail = createMail(mimeMessage);
 
         mailet.service(mail);
 
-        // Both header should be removed
-        Assert.assertNull("Header removed", mail.getMessage().getHeader(HEADER1));
-        Assert.assertNull("Header removed", mail.getMessage().getHeader(HEADER2));
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNull();
     }
 
     @Test
-    public void testNoHeaderRemoved() throws MessagingException {
-        GenericMailet mailet = setupMockedMailet("h1", "h2");
-        Mail mail = getMockedMail(getMockedMimeMessage());
+    public void serviceShouldNotRemoveHeaderWhenNoneMatching() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "other1");
+        mailetConfig.setProperty("name", "other2");
+        mailet.init(mailetConfig);
 
-        // Get sure both headers are present
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER1));
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER2));
+        MimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.setHeader(HEADER1, "true");
+        mimeMessage.setHeader(HEADER2, "true");
+        mimeMessage.saveChanges();
+        Mail mail = createMail(mimeMessage);
 
         mailet.service(mail);
 
-        // Both header should be removed
-        Assert.assertNotNull("Header present", mail.getMessage().getHeader(HEADER1));
-        Assert.assertNotNull("header present", mail.getMessage().getHeader(HEADER2));
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNotNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNotNull();
     }
 
     @Test
-    public void testInvalidConfig() throws MessagingException {
-        boolean exception = false;
-        try {
-            setupMockedMailet(null, null);
-        } catch (MessagingException e) {
-            exception = true;
-        }
-        Assert.assertTrue("Exception thrown", exception);
+    public void serviceShouldNotRemoveHeaderWhenEmptyConfig() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "");
+        mailet.init(mailetConfig);
+
+        MimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.setHeader(HEADER1, "true");
+        mimeMessage.setHeader(HEADER2, "true");
+        mimeMessage.saveChanges();
+        Mail mail = createMail(mimeMessage);
+
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNotNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNotNull();
     }
 
+    @Test
+    public void initShouldThrowWhenInvalidConfig() throws MessagingException {
+        expectedException.expect(MessagingException.class);
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailet.init(mailetConfig);
+    }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void serviceShouldNotThrowWhenExceptionOccured() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("name", "");
+        mailet.init(mailetConfig);
+
+        Mail mail = mock(Mail.class);
+        when(mail.getMessage())
+            .thenThrow(MessagingException.class);
+
+        mailet.service(mail);
+    }
+
+    private Mail createMail(MimeMessage message) {
+        Mail mail = new FakeMail();
+        mail.setMessage(message);
+        return mail;
+    }
 }
