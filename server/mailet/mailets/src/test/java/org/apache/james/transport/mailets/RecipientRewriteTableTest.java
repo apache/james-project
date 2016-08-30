@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
+import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
@@ -36,13 +38,14 @@ import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.FakeMimeMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class RecipientRewriteTableTest {
 
+    private static final Session NO_SESSION = null;
+    
     private org.apache.james.transport.mailets.RecipientRewriteTable table;
 
     @Before
@@ -96,7 +99,7 @@ public class RecipientRewriteTableTest {
             a.add(new MailAddress(recipient));
         }
         mail.setRecipients(a);
-        mail.setMessage(new FakeMimeMessage());
+        mail.setMessage(new MimeMessage(NO_SESSION));
         return mail;
     }
 
@@ -117,7 +120,8 @@ public class RecipientRewriteTableTest {
         if (msg == null) {
             msg = context.getSendmails().get(0).getMail().getMessage();
         }
-        if (msg.getRecipients(Message.RecipientType.TO).length == 1) {
+        Address[] mimeMessageRecipients = msg.getRecipients(Message.RecipientType.TO);
+        if (mimeMessageRecipients != null && mimeMessageRecipients.length == 1) {
             assertEquals(msg.getRecipients(Message.RecipientType.TO)[0].toString(), "b@remote.com");
         } else {
             assertEquals(context.getSendmails().get(0).getRecipients().size(), 1);

@@ -18,18 +18,23 @@
  ****************************************************************/
 package org.apache.james.core;
 
-import org.apache.mailet.base.test.FakeMimeMessage;
 import org.apache.mailet.base.test.MailUtil;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mail;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
+
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class MailImplTest extends MailTestAllImplementations {
 
+    private static final Session NO_SESSION = null;
+    
     @Override
     protected Mail createMailImplementation() {
         return new MailImpl();
@@ -60,7 +65,7 @@ public class MailImplTest extends MailTestAllImplementations {
         assertEquals("sender", sender, mail.getSender().toString());
         assertEquals("name", name, mail.getName());
 
-        mail.setMessage(new FakeMimeMessage());
+        mail.setMessage(new MimeMessage(NO_SESSION));
         assertNotNull("message", mail.getMessage());
     }
 
@@ -70,7 +75,7 @@ public class MailImplTest extends MailTestAllImplementations {
         String name = MailUtil.newId();
         String sender = "sender@localhost";
         MailAddress senderMailAddress = new MailAddress(sender);
-        FakeMimeMessage mimeMessage = new FakeMimeMessage();
+        MimeMessage mimeMessage = new MimeMessage(NO_SESSION, new ByteArrayInputStream(new byte[0]));
         MailImpl mail = new MailImpl(name, senderMailAddress, recepients, mimeMessage);
 
         helperTestInitialState(mail);

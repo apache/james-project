@@ -78,7 +78,7 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
                 String value = (String) mail.getAttribute(entry.getKey());
                 if (value != null) {
                     String headerName = entry.getValue();
-                    message.setHeader(headerName, value);
+                    message.addHeader(headerName, value);
                 }
             }
             message.saveChanges();

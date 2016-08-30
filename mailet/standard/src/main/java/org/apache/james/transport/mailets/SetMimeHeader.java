@@ -64,7 +64,7 @@ public class SetMimeHeader extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage () ;
 
-            message.setHeader(headerName, headerValue);
+            message.addHeader(headerName, headerValue);
             message.saveChanges();
         } catch (javax.mail.MessagingException me) {
             log(me.getMessage());

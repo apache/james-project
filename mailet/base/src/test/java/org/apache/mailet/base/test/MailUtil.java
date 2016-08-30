@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
@@ -36,6 +37,8 @@ import org.apache.mailet.MailAddress;
  */
 public class MailUtil {
 
+    private static final Session NO_SESSION = null;
+    
     private static int m_counter = 0;
 
     public static String newId() {
@@ -52,34 +55,30 @@ public class MailUtil {
         return mockedMail;
     }
 
-    public static FakeMimeMessage createMimeMessage() throws MessagingException {
+    public static MimeMessage createMimeMessage() throws MessagingException {
         return createMimeMessage(null, null);
     }
     
-    public static FakeMimeMessage createMimeMessageWithSubject(String subject) throws MessagingException {
-        return createMimeMessage(null, null, subject, 0);
+    public static MimeMessage createMimeMessageWithSubject(String subject) throws MessagingException {
+        return createMimeMessage(null, null, subject);
+    }
+
+    public static MimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
+        return createMimeMessage(headerName, headerValue, "testmail");
     }
     
-    public static FakeMimeMessage createMimeMessage(String subject, int number) throws MessagingException {
-        return createMimeMessage(null, null, subject, number);
-    }
-    
-    public static FakeMimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
-        return createMimeMessage(headerName, headerValue, "testmail", 0);
-    }
-    
-    public static FakeMimeMessage createMimeMessage(String headerName, String headerValue, String subject, int number) throws MessagingException {
+    private static MimeMessage createMimeMessage(String headerName, String headerValue, String subject) throws MessagingException {
         String sender = "test@james.apache.org";
         String rcpt = "test2@james.apache.org";
 
-        FakeMimeMessage mockedMimeMessage = new FakeMimeMessage(number);
-        mockedMimeMessage.setFrom(new InternetAddress(sender));
-        mockedMimeMessage.setRecipients(MimeMessage.RecipientType.TO, rcpt);
-        if (headerName != null) mockedMimeMessage.setHeader(headerName, headerValue);
-        if (subject != null) mockedMimeMessage.setSubject(subject);
-        mockedMimeMessage.setText("testtext");
-        mockedMimeMessage.saveChanges();
-        return mockedMimeMessage;
+        MimeMessage mimeMessage = new MimeMessage(NO_SESSION);
+        mimeMessage.setFrom(new InternetAddress(sender));
+        mimeMessage.setRecipients(MimeMessage.RecipientType.TO, rcpt);
+        if (headerName != null) mimeMessage.setHeader(headerName, headerValue);
+        if (subject != null) mimeMessage.setSubject(subject);
+        mimeMessage.setText("testtext");
+        mimeMessage.saveChanges();
+        return mimeMessage;
     }
     
     public static String toString(Mail mail, String charset) throws IOException, MessagingException {
