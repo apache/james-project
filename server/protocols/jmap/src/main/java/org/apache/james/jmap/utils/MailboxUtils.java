@@ -41,7 +41,6 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 
 public class MailboxUtils {
 
@@ -65,9 +64,9 @@ public class MailboxUtils {
             MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
             MessageManager.MetaData mailboxMetaData = getMailboxMetaData(mailbox, mailboxSession);
             return Optional.ofNullable(Mailbox.builder()
-                    .id(mailbox.getId().serialize())
+                    .id(mailbox.getId())
                     .name(getName(mailboxPath, mailboxSession))
-                    .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).map(MailboxId::serialize).orElse(null))
+                    .parentId(getParentIdFromMailboxPath(mailboxPath, mailboxSession).orElse(null))
                     .role(role)
                     .unreadMessages(mailboxMetaData.getUnseenCount())
                     .totalMessages(mailboxMetaData.getMessageCount())
@@ -97,16 +96,16 @@ public class MailboxUtils {
         return name;
     }
 
-    public Optional<String> getMailboxNameFromId(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
+    public Optional<String> getMailboxNameFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxFromId(mailboxId, mailboxSession)
                 .map(org.apache.james.mailbox.store.mail.model.Mailbox::getName);
     }
 
-    private Optional<org.apache.james.mailbox.store.mail.model.Mailbox> getMailboxFromId(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
+    private Optional<org.apache.james.mailbox.store.mail.model.Mailbox> getMailboxFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return mailboxMapperFactory.getMailboxMapper(mailboxSession)
                 .findMailboxWithPathLike(new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), WILDCARD))
                 .stream()
-                .filter(mailbox -> mailbox.getMailboxId().serialize().equals(mailboxId))
+                .filter(mailbox -> mailbox.getMailboxId().equals(mailboxId))
                 .findFirst();
     }
 
@@ -119,7 +118,7 @@ public class MailboxUtils {
         return Optional.of(getMailboxId(parent, mailboxSession));
     }
 
-    public Optional<Mailbox> mailboxFromMailboxId(String mailboxId, MailboxSession mailboxSession) {
+    public Optional<Mailbox> mailboxFromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
         try {
             return getMailboxFromId(mailboxId, mailboxSession)
                 .flatMap(jamesMailbox ->
@@ -143,15 +142,15 @@ public class MailboxUtils {
         return mailbox.getName();
     }
 
-    public boolean hasChildren(String mailboxId, MailboxSession mailboxSession) throws MailboxException {
+    public boolean hasChildren(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxFromId(mailboxId, mailboxSession)
                 .map(Throwing.function(mailbox -> 
                     mailboxMapperFactory.getMailboxMapper(mailboxSession).hasChildren(mailbox, mailboxSession.getPathDelimiter())))
                 .orElse(false);
     }
 
-    public Optional<MailboxPath> mailboxPathFromMailboxId(String mailboxId, MailboxSession mailboxSession) {
-        Preconditions.checkState(!Strings.isNullOrEmpty(mailboxId), "'mailboxId' is mandatory");
+    public Optional<MailboxPath> mailboxPathFromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
+        Preconditions.checkState(mailboxId != null, "'mailboxId' is mandatory");
         Preconditions.checkState(mailboxSession != null, "'mailboxId' is mandatory");
         return mailboxFromMailboxId(mailboxId, mailboxSession)
                 .map(mailbox -> getMailboxPath(mailbox, mailboxSession));

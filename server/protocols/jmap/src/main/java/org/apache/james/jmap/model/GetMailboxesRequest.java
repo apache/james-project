@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -42,7 +43,7 @@ public class GetMailboxesRequest implements JmapRequest {
 
         private String accountId;
         private Optional<ImmutableSet<MailboxProperty>> properties;
-        private Optional<ImmutableList<String>> ids;
+        private Optional<ImmutableList<MailboxId>> ids;
 
         private Builder() {
             ids = Optional.empty();
@@ -56,7 +57,7 @@ public class GetMailboxesRequest implements JmapRequest {
             return this;
         }
 
-        public Builder ids(List<String> ids) {
+        public Builder ids(List<MailboxId> ids) {
             if (ids != null) {
                 this.ids = Optional.of(ImmutableList.copyOf(ids));
             }
@@ -79,10 +80,10 @@ public class GetMailboxesRequest implements JmapRequest {
     }
 
     private final Optional<String> accountId;
-    private final Optional<ImmutableList<String>> ids;
+    private final Optional<ImmutableList<MailboxId>> ids;
     private final Optional<ImmutableSet<MailboxProperty>> properties;
 
-    private GetMailboxesRequest(Optional<String> accountId, Optional<ImmutableList<String>> ids, Optional<ImmutableSet<MailboxProperty>> properties) {
+    private GetMailboxesRequest(Optional<String> accountId, Optional<ImmutableList<MailboxId>> ids, Optional<ImmutableSet<MailboxProperty>> properties) {
         this.accountId = accountId;
         this.ids = ids;
         this.properties = properties;
@@ -92,7 +93,7 @@ public class GetMailboxesRequest implements JmapRequest {
         return accountId;
     }
 
-    public Optional<ImmutableList<String>> getIds() {
+    public Optional<ImmutableList<MailboxId>> getIds() {
         return ids;
     }
 

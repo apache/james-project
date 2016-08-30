@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
 public class MailboxTest {
@@ -45,36 +46,29 @@ public class MailboxTest {
     }
 
     @Test(expected=IllegalStateException.class)
-    public void buildShouldThrowWhenIdIsEmpty() {
-        Mailbox.builder()
-            .id("")
-            .build();
-    }
-
-    @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenNameIsNull() {
         Mailbox.builder()
-            .id("id")
+            .id(InMemoryId.of(1))
             .build();
     }
 
     @Test(expected=IllegalStateException.class)
     public void buildShouldThrowWhenNameIsEmpty() {
         Mailbox.builder()
-            .id("id")
+            .id(InMemoryId.of(1))
             .name("")
             .build();
     }
 
     @Test
     public void buildShouldWork() {
-        Mailbox expectedMailbox = new Mailbox("id", "name", Optional.of("parentId"), Optional.of(Role.DRAFTS), SortOrder.of(123),
+        Mailbox expectedMailbox = new Mailbox(InMemoryId.of(1), "name", Optional.of(InMemoryId.of(0)), Optional.of(Role.DRAFTS), SortOrder.of(123),
                 true, true, true, true, true, true, true, 456, 789, 741, 852);
 
         Mailbox mailbox = Mailbox.builder()
-            .id("id")
+            .id(InMemoryId.of(1))
             .name("name")
-            .parentId("parentId")
+            .parentId(InMemoryId.of(0))
             .role(Optional.of(Role.DRAFTS))
             .sortOrder(SortOrder.of(123))
             .mustBeOnlyMailbox(true)
@@ -96,7 +90,7 @@ public class MailboxTest {
     @Test
     public void parentIdDefaultValueIsEmpty() {
         Mailbox mailbox = Mailbox.builder()
-            .id("id")
+            .id(InMemoryId.of(0))
             .name("name")
             .build();
 

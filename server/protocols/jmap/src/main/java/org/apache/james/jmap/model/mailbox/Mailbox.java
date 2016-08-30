@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -43,9 +44,9 @@ public class Mailbox {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private String id;
+        private MailboxId id;
         private String name;
-        private Optional<String> parentId;
+        private Optional<MailboxId> parentId;
         private Optional<Role> role;
         private SortOrder sortOrder;
         private boolean mustBeOnlyMailbox;
@@ -64,7 +65,7 @@ public class Mailbox {
             parentId = Optional.empty();
         }
 
-        public Builder id(String id) {
+        public Builder id(MailboxId id) {
             Preconditions.checkNotNull(id);
             this.id = id;
             return this;
@@ -76,7 +77,7 @@ public class Mailbox {
             return this;
         }
 
-        public Builder parentId(String parentId) {
+        public Builder parentId(MailboxId parentId) {
             this.parentId = Optional.ofNullable(parentId);
             return this;
         }
@@ -148,16 +149,16 @@ public class Mailbox {
 
         public Mailbox build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
-            Preconditions.checkState(!Strings.isNullOrEmpty(id), "'id' is mandatory");
+            Preconditions.checkState(id != null, "'id' is mandatory");
 
             return new Mailbox(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, mayRemoveItems, mayCreateChild, mayRename, mayDelete,
                     totalMessages, unreadMessages, totalThreads, unreadThreads);
         }
     }
 
-    private final String id;
+    private final MailboxId id;
     private final String name;
-    private final Optional<String> parentId;
+    private final Optional<MailboxId> parentId;
     private final Optional<Role> role;
     private final SortOrder sortOrder;
     private final boolean mustBeOnlyMailbox;
@@ -172,7 +173,7 @@ public class Mailbox {
     private final long totalThreads;
     private final long unreadThreads;
 
-    @VisibleForTesting Mailbox(String id, String name, Optional<String> parentId, Optional<Role> role, SortOrder sortOrder, boolean mustBeOnlyMailbox,
+    @VisibleForTesting Mailbox(MailboxId id, String name, Optional<MailboxId> parentId, Optional<Role> role, SortOrder sortOrder, boolean mustBeOnlyMailbox,
             boolean mayReadItems, boolean mayAddItems, boolean mayRemoveItems, boolean mayCreateChild, boolean mayRename, boolean mayDelete,
             long totalMessages, long unreadMessages, long totalThreads, long unreadThreads) {
 
@@ -194,7 +195,7 @@ public class Mailbox {
         this.unreadThreads = unreadThreads;
     }
 
-    public String getId() {
+    public MailboxId getId() {
         return id;
     }
 
@@ -202,7 +203,7 @@ public class Mailbox {
         return name;
     }
 
-    public Optional<String> getParentId() {
+    public Optional<MailboxId> getParentId() {
         return parentId;
     }
 

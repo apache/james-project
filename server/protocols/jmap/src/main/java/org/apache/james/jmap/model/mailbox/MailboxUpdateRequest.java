@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -42,7 +43,7 @@ public class MailboxUpdateRequest {
     public static class Builder {
 
         private Optional<String> name;
-        private Optional<String> parentId;
+        private Optional<MailboxId> parentId;
         private Optional<Role> role;
         private Optional<SortOrder> sortOrder;
 
@@ -60,7 +61,7 @@ public class MailboxUpdateRequest {
             return this;
         }
 
-        public Builder parentId(String parentId) {
+        public Builder parentId(MailboxId parentId) {
             if (parentId == null) {
                 this.parentId = null;
             } else {
@@ -86,12 +87,12 @@ public class MailboxUpdateRequest {
     }
 
     private final Optional<String> name;
-    private final Optional<String> parentId;
+    private final Optional<MailboxId> parentId;
     private final Optional<Role> role;
     private final Optional<SortOrder> sortOrder;
 
     @VisibleForTesting
-    MailboxUpdateRequest(Optional<String> name, Optional<String> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
+    MailboxUpdateRequest(Optional<String> name, Optional<MailboxId> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
 
         this.name = name;
         this.parentId = parentId;
@@ -103,7 +104,7 @@ public class MailboxUpdateRequest {
         return name;
     }
 
-    public Optional<String> getParentId() {
+    public Optional<MailboxId> getParentId() {
         return parentId;
     }
 

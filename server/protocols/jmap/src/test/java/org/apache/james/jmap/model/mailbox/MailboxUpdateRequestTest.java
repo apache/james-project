@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.junit.Test;
 
 public class MailboxUpdateRequestTest {
@@ -32,7 +34,7 @@ public class MailboxUpdateRequestTest {
         //Given
         MailboxUpdateRequest testee = MailboxUpdateRequest.builder().name("my box").build() ;
         //When
-        Optional<String> actual = testee.getParentId();
+        Optional<MailboxId> actual = testee.getParentId();
         //Then
         assertThat(actual).isEmpty();
     }
@@ -42,7 +44,7 @@ public class MailboxUpdateRequestTest {
         //Given
         MailboxUpdateRequest testee = MailboxUpdateRequest.builder().name("my box").parentId(null).build() ;
         //When
-        Optional<String> actual = testee.getParentId();
+        Optional<MailboxId> actual = testee.getParentId();
         //Then
         assertThat(actual).isNull();
     }
@@ -50,10 +52,10 @@ public class MailboxUpdateRequestTest {
     @Test
     public void getParentIdShouldReturnParentIdWhenParentIdGiven() throws Exception {
         //Given
-        String expected = "A";
+        InMemoryId expected = InMemoryId.of(123);
         MailboxUpdateRequest testee = MailboxUpdateRequest.builder().parentId(expected).name("my box").build() ;
         //When
-        Optional<String> actual = testee.getParentId();
+        Optional<MailboxId> actual = testee.getParentId();
         //Then
         assertThat(actual).contains(expected);
     }

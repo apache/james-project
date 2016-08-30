@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.ZonedDateTime;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -58,7 +59,7 @@ public class SetMessagesResponseTest {
                 .id(MessageId.of("user|created|1"))
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
-                .mailboxIds(ImmutableList.of("mailboxId"))
+                .mailboxIds(ImmutableList.of(InMemoryId.of(123)))
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
                 .size(123)

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -99,13 +100,13 @@ public class MessageTest {
     @Test
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
         ZonedDateTime currentDate = ZonedDateTime.now();
-        Message expected = new Message(MessageId.of("user|box|1"), BlobId.of("blobId"), "threadId", ImmutableList.of("mailboxId"), Optional.empty(), false, false, false, false, false, ImmutableMap.of("key", "value"), Optional.empty(),
+        Message expected = new Message(MessageId.of("user|box|1"), BlobId.of("blobId"), "threadId", ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, false, false, false, false, ImmutableMap.of("key", "value"), Optional.empty(),
                 ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), "subject", currentDate, 123, "preview", Optional.empty(), Optional.empty(), ImmutableList.of(), ImmutableMap.of());
         Message tested = Message.builder()
                 .id(MessageId.of("user|box|1"))
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
-                .mailboxIds(ImmutableList.of("mailboxId"))
+                .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
                 .headers(ImmutableMap.of("key", "value"))
                 .subject("subject")
                 .size(123)
@@ -129,7 +130,7 @@ public class MessageTest {
             .id(MessageId.of("user|box|1"))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of("mailboxId"))
+            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(123)
@@ -160,7 +161,7 @@ public class MessageTest {
                 MessageId.of("user|box|1"),
                 BlobId.of("blobId"),
                 "threadId",
-                ImmutableList.of("mailboxId"),
+                ImmutableList.of(InMemoryId.of(456)),
                 Optional.of("inReplyToMessageId"), 
                 true,
                 true,
@@ -185,7 +186,7 @@ public class MessageTest {
             .id(MessageId.of("user|box|1"))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of("mailboxId"))
+            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
             .inReplyToMessageId("inReplyToMessageId")
             .isUnread(true)
             .isFlagged(true)
@@ -215,7 +216,7 @@ public class MessageTest {
             .id(MessageId.of("user|box|1"))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of("mailboxId"))
+            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)
@@ -235,7 +236,7 @@ public class MessageTest {
             .id(MessageId.of("user|box|1"))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
-            .mailboxIds(ImmutableList.of("mailboxId"))
+            .mailboxIds(ImmutableList.of(InMemoryId.of(456)))
             .headers(ImmutableMap.of("key", "value"))
             .subject("subject")
             .size(1)

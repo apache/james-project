@@ -36,6 +36,7 @@ import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxQuery;
 
@@ -103,7 +104,7 @@ public class GetMailboxesMethod implements Method {
         }
     }
 
-    private Predicate<? super Mailbox> filterMailboxesById(Optional<ImmutableList<String>> ids) {
+    private Predicate<? super Mailbox> filterMailboxesById(Optional<ImmutableList<MailboxId>> ids) {
         return (mailbox -> ids.map(list -> list.contains(mailbox.getId())).orElse(true));
     }
 

@@ -40,6 +40,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -68,7 +69,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         return responseBuilder.build();
     }
 
-    private void handleUpdate(String mailboxId, MailboxUpdateRequest updateRequest, Builder responseBuilder, MailboxSession mailboxSession) {
+    private void handleUpdate(MailboxId mailboxId, MailboxUpdateRequest updateRequest, Builder responseBuilder, MailboxSession mailboxSession) {
         try {
             validateMailboxName(updateRequest, mailboxSession);
             Mailbox mailbox = getMailbox(mailboxId, mailboxSession);
@@ -91,7 +92,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         } catch (MailboxNotFoundException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
                     .type("notFound")
-                    .description(String.format("The mailbox '%s' was not found", mailboxId))
+                    .description(String.format("The mailbox '%s' was not found", mailboxId.serialize()))
                     .build());
         } catch (MailboxParentNotFoundException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
@@ -122,9 +123,9 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         }
     }
 
-    private Mailbox getMailbox(String mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {
+    private Mailbox getMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {
         return mailboxUtils.mailboxFromMailboxId(mailboxId, mailboxSession)
-                .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
+                .orElseThrow(() -> new MailboxNotFoundException(mailboxId.serialize()));
     }
 
     private void validateMailboxName(MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxNameException {
@@ -154,7 +155,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     private void validateParent(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException, MailboxHasChildException {
 
         if (isParentIdInRequest(updateRequest)) {
-            String newParentId = updateRequest.getParentId().get();
+            MailboxId newParentId = updateRequest.getParentId().get();
             mailboxUtils.mailboxPathFromMailboxId(newParentId, mailboxSession)
                     .orElseThrow(() -> new MailboxParentNotFoundException(newParentId));
             if (mustChangeParent(mailbox.getParentId(), newParentId) && mailboxUtils.hasChildren(mailbox.getId(), mailboxSession)) {
@@ -168,7 +169,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                 && updateRequest.getParentId().isPresent();
     }
 
-    private boolean mustChangeParent(Optional<String> currentParentId, String newParentId) {
+    private boolean mustChangeParent(Optional<MailboxId> currentParentId, MailboxId newParentId) {
         return currentParentId
                 .map(x -> ! x.equals(newParentId))
                 .orElse(true);
@@ -183,7 +184,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     }
 
     private MailboxPath computeNewMailboxPath(Mailbox mailbox, MailboxPath originMailboxPath, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) {
-        Optional<String> parentId = updateRequest.getParentId();
+        Optional<MailboxId> parentId = updateRequest.getParentId();
         if (parentId == null) {
             return new MailboxPath(mailboxSession.getPersonalSpace(), 
                     mailboxSession.getUser().getUserName(), 
@@ -202,7 +203,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         return new MailboxPath(originMailboxPath, newName);
     }
 
-    private MailboxPath computeMailboxPathWithNewParentId(MailboxPath originMailboxPath, String parentMailboxId, MailboxSession mailboxSession) {
+    private MailboxPath computeMailboxPathWithNewParentId(MailboxPath originMailboxPath, MailboxId parentMailboxId, MailboxSession mailboxSession) {
         Optional<MailboxPath> newParentMailboxPath = mailboxUtils.mailboxPathFromMailboxId(parentMailboxId, mailboxSession);
         String lastName = getCurrentMailboxName(originMailboxPath, mailboxSession);
         return new MailboxPath(originMailboxPath, newParentMailboxPath.get().getName() + mailboxSession.getPathDelimiter() + lastName);

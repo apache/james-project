@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
@@ -63,8 +64,6 @@ public class MailboxUtilsTest {
 
         Optional<Mailbox> optionalMailbox = sut.mailboxFromMailboxPath(mailboxPath, mailboxSession);
         assertThat(optionalMailbox).isPresent();
-        Mailbox mailbox = optionalMailbox.get();
-        assertThat(mailbox.getId()).isNotEmpty();
     }
 
     @Test
@@ -111,7 +110,7 @@ public class MailboxUtilsTest {
             .findMailboxByPath(mailboxPath)
             .getMailboxId();
 
-        Optional<String> optionalName = sut.getMailboxNameFromId(mailboxId.serialize(), mailboxSession);
+        Optional<String> optionalName = sut.getMailboxNameFromId(mailboxId, mailboxSession);
         assertThat(optionalName).isPresent();
         String name = optionalName.get();
         assertThat(name).isEqualTo(expected);
@@ -119,7 +118,7 @@ public class MailboxUtilsTest {
 
     @Test
     public void getMailboxNameFromIdShouldReturnEmptyWhenMailboxDoesntExist() throws Exception {
-        Optional<String> optionalName = sut.getMailboxNameFromId("unknown", mailboxSession);
+        Optional<String> optionalName = sut.getMailboxNameFromId(InMemoryId.of(987), mailboxSession);
         assertThat(optionalName).isEmpty();
     }
 
@@ -172,14 +171,14 @@ public class MailboxUtilsTest {
                 .findMailboxByPath(mailboxPath)
                 .getMailboxId();
 
-        Optional<Mailbox> mailbox = sut.mailboxFromMailboxId(mailboxId.serialize(), mailboxSession);
+        Optional<Mailbox> mailbox = sut.mailboxFromMailboxId(mailboxId, mailboxSession);
         assertThat(mailbox).isPresent();
-        assertThat(mailbox.get().getId()).isEqualTo(mailboxId.serialize());
+        assertThat(mailbox.get().getId()).isEqualTo(mailboxId);
     }
 
     @Test
     public void mailboxFromMailboxIdShouldReturnAbsentWhenDoesntExist() throws Exception {
-        Optional<Mailbox> mailbox = sut.mailboxFromMailboxId("123", mailboxSession);
+        Optional<Mailbox> mailbox = sut.mailboxFromMailboxId(InMemoryId.of(123), mailboxSession);
         assertThat(mailbox).isEmpty();
     }
 
@@ -191,14 +190,14 @@ public class MailboxUtilsTest {
                 .findMailboxByPath(mailboxPath)
                 .getMailboxId();
 
-        Optional<MailboxPath> actual = sut.mailboxPathFromMailboxId(mailboxId.serialize(), mailboxSession);
+        Optional<MailboxPath> actual = sut.mailboxPathFromMailboxId(mailboxId, mailboxSession);
         assertThat(actual).isPresent();
         assertThat(actual.get()).isEqualTo(mailboxPath);
     }
 
     @Test
     public void mailboxPathFromMailboxIdShouldReturnAbsentWhenDoesntExist() throws Exception {
-        Optional<MailboxPath> mailboxPath = sut.mailboxPathFromMailboxId("123", mailboxSession);
+        Optional<MailboxPath> mailboxPath = sut.mailboxPathFromMailboxId(InMemoryId.of(123), mailboxSession);
         assertThat(mailboxPath).isEmpty();
     }
 
@@ -209,17 +208,12 @@ public class MailboxUtilsTest {
 
     @Test(expected = IllegalStateException.class)
     public void mailboxPathFromMailboxIdShouldThrowWhenNullMailboxSession() throws Exception {
-        sut.mailboxPathFromMailboxId("A", null);
+        sut.mailboxPathFromMailboxId(InMemoryId.of(123), null);
     }
 
     @Test(expected = IllegalStateException.class)
     public void mailboxPathFromMailboxIdShouldThrowWhenNullMailboxSessionAndMailboxId() throws Exception {
         sut.mailboxPathFromMailboxId(null, null);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void mailboxPathFromMailboxIdShouldReturnAbsentWhenEmptyMailboxId() throws Exception {
-        sut.mailboxPathFromMailboxId("", mailboxSession);
     }
 
     @Test
@@ -231,7 +225,7 @@ public class MailboxUtilsTest {
                 .getMailboxId();
 
         Mailbox mailbox = Mailbox.builder()
-                .id(mailboxId.serialize())
+                .id(mailboxId)
                 .name("myBox")
                 .build();
 
@@ -254,9 +248,9 @@ public class MailboxUtilsTest {
                 .getMailboxId();
 
         Mailbox mailbox = Mailbox.builder()
-                .id(mailboxId.serialize())
+                .id(mailboxId)
                 .name("myBox")
-                .parentId(parentId.serialize())
+                .parentId(parentId)
                 .build();
 
         MailboxPath mailboxPath = sut.getMailboxPath(mailbox, mailboxSession);
@@ -281,9 +275,9 @@ public class MailboxUtilsTest {
                 .getMailboxId();
 
         Mailbox mailbox = Mailbox.builder()
-                .id(mailboxId.serialize())
+                .id(mailboxId)
                 .name("myBox")
-                .parentId(childId.serialize())
+                .parentId(childId)
                 .build();
 
         MailboxPath mailboxPath = sut.getMailboxPath(mailbox, mailboxSession);
@@ -298,7 +292,7 @@ public class MailboxUtilsTest {
                 .findMailboxByPath(mailboxPath)
                 .getMailboxId();
 
-        assertThat(sut.hasChildren(mailboxId.serialize(), mailboxSession)).isFalse();
+        assertThat(sut.hasChildren(mailboxId, mailboxSession)).isFalse();
     }
 
     @Test
@@ -312,6 +306,6 @@ public class MailboxUtilsTest {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.myBox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        assertThat(sut.hasChildren(parentId.serialize(), mailboxSession)).isTrue();
+        assertThat(sut.hasChildren(parentId, mailboxSession)).isTrue();
     }
 }

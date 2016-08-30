@@ -36,7 +36,7 @@ import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -70,7 +70,7 @@ public class MailFactoryTest {
                 .internalDate(new Date())
                 .sharedContent(new SharedByteArrayInputStream(content.getBytes(Charsets.UTF_8)))
                 .attachments(ImmutableList.of())
-                .mailboxId(TestId.of(3))
+                .mailboxId(InMemoryId.of(3))
                 .messageId(MessageId.of("test|test|2"))
                 .build();
         HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());

@@ -22,6 +22,8 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -33,14 +35,14 @@ public class SetMailboxesResponseTest {
     public void builderShouldWork() {
         ImmutableMap<MailboxCreationId, Mailbox> created = ImmutableMap.of(MailboxCreationId.of("1"),
             Mailbox.builder()
-                .id("1")
+                .id(InMemoryId.of(1))
                 .name("myBox")
                 .build());
-        ImmutableList<String> updated = ImmutableList.of("2");
-        ImmutableList<String> destroyed = ImmutableList.of("3");
+        ImmutableList<MailboxId> updated = ImmutableList.of(InMemoryId.of(2));
+        ImmutableList<MailboxId> destroyed = ImmutableList.of(InMemoryId.of(3));
         ImmutableMap<MailboxCreationId, SetError> notCreated = ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type("created").build());
-        ImmutableMap<String, SetError> notUpdated = ImmutableMap.of("4", SetError.builder().type("updated").build());
-        ImmutableMap<String, SetError> notDestroyed  = ImmutableMap.of("5", SetError.builder().type("destroyed").build());
+        ImmutableMap<MailboxId, SetError> notUpdated = ImmutableMap.of(InMemoryId.of(4), SetError.builder().type("updated").build());
+        ImmutableMap<MailboxId, SetError> notDestroyed  = ImmutableMap.of(InMemoryId.of(5), SetError.builder().type("destroyed").build());
         SetMailboxesResponse expected = new SetMailboxesResponse(created, updated, destroyed, notCreated, notUpdated, notDestroyed);
 
         SetMailboxesResponse setMessagesResponse = SetMailboxesResponse.builder()
@@ -61,9 +63,9 @@ public class SetMailboxesResponseTest {
         SetMailboxesResponse.Builder emptyBuilder = SetMailboxesResponse.builder();
         SetMailboxesResponse testee = SetMailboxesResponse.builder()
                 .created(buildMailbox(MailboxCreationId.of("1")))
-                .destroyed("2")
+                .destroyed(InMemoryId.of(2))
                 .notCreated(ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type("type").build()))
-                .notDestroyed(ImmutableMap.of("3", SetError.builder().type("type").build()))
+                .notDestroyed(ImmutableMap.of(InMemoryId.of(3), SetError.builder().type("type").build()))
                 .build();
 
         // When
@@ -74,7 +76,7 @@ public class SetMailboxesResponseTest {
 
     private ImmutableMap<MailboxCreationId, Mailbox> buildMailbox(MailboxCreationId mailboxId) {
         return ImmutableMap.of(mailboxId, Mailbox.builder()
-                .id(mailboxId.getCreationId())
+                .id(InMemoryId.of(Long.valueOf(mailboxId.getCreationId())))
                 .name(mailboxId.getCreationId())
                 .build());
     }
@@ -100,10 +102,10 @@ public class SetMailboxesResponseTest {
     @Test
     public void mergeIntoShouldMergeDestroyedLists() {
         // Given
-        String buildersDestroyedMessageId = "1";
+        InMemoryId buildersDestroyedMessageId = InMemoryId.of(1);
         SetMailboxesResponse.Builder nonEmptyBuilder = SetMailboxesResponse.builder()
                 .destroyed(buildersDestroyedMessageId);
-        String destroyedMessageId = "2";
+        InMemoryId destroyedMessageId = InMemoryId.of(2);
         SetMailboxesResponse testee = SetMailboxesResponse.builder()
                 .destroyed(destroyedMessageId)
                 .build();

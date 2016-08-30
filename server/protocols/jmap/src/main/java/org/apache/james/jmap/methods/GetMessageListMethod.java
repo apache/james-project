@@ -149,7 +149,7 @@ public class GetMessageListMethod implements Method {
     }
 
     private void aggregate(MailboxSession mailboxSession, Multimap<MailboxPath, MessageResult> aggregation, Map.Entry<MailboxId, Collection<Long>> mailboxResults) throws MailboxNotFoundException {
-        MailboxPath mailboxPath = mailboxUtils.mailboxPathFromMailboxId(mailboxResults.getKey().serialize(), mailboxSession)
+        MailboxPath mailboxPath = mailboxUtils.mailboxPathFromMailboxId(mailboxResults.getKey(), mailboxSession)
             .orElseThrow(() -> new MailboxNotFoundException(mailboxResults.getKey().serialize()));
         MessageManager messageManager = getMessageManager(mailboxPath, mailboxSession)
             .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));

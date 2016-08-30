@@ -32,30 +32,36 @@ import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.InMemoryId.Factory;
+import org.apache.james.mailbox.model.MailboxId;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SetMailboxesCreationProcessorTest {
 
     private MailboxUtils mailboxUtils;
+    private Factory mailboxIdFactory;
     private SetMailboxesCreationProcessor sut;
 
     @Before
     public void setup() {
         mailboxUtils = mock(MailboxUtils.class);
-        sut = new SetMailboxesCreationProcessor(mock(MailboxManager.class), mailboxUtils);
+        mailboxIdFactory = new InMemoryId.Factory();
+        sut = new SetMailboxesCreationProcessor(mock(MailboxManager.class), mailboxUtils, mailboxIdFactory);
     }
 
     @Test
     public void processShouldReturnNotCreatedWhenMailboxExceptionOccured() throws Exception {
-        String parentId = "parentId";
+        MailboxCreationId parentId = MailboxCreationId.of("0");
+        MailboxId parentMailboxId = mailboxIdFactory.fromString(parentId.getCreationId());
         MailboxCreationId mailboxCreationId = MailboxCreationId.of("1");
         SetMailboxesRequest request = SetMailboxesRequest.builder()
                 .create(mailboxCreationId, MailboxCreateRequest.builder().name("name").parentId(parentId).build())
                 .build();
 
         MailboxSession mailboxSession = mock(MailboxSession.class);
-        when(mailboxUtils.getMailboxNameFromId(parentId, mailboxSession))
+        when(mailboxUtils.getMailboxNameFromId(parentMailboxId, mailboxSession))
             .thenThrow(new MailboxException());
 
         SetMailboxesResponse setMailboxesResponse = sut.process(request, mailboxSession);

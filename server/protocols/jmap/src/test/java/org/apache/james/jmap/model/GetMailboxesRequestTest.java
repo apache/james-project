@@ -22,6 +22,7 @@ package org.apache.james.jmap.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -50,10 +51,10 @@ public class GetMailboxesRequestTest {
     @Test
     public void idsShouldBePresentWhenListIsNotEmpty() {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
-            .ids(ImmutableList.of("123"))
+            .ids(ImmutableList.of(InMemoryId.of(123)))
             .build();
         assertThat(getMailboxesRequest.getIds()).isPresent();
-        assertThat(getMailboxesRequest.getIds().get()).containsExactly("123");
+        assertThat(getMailboxesRequest.getIds().get()).containsExactly(InMemoryId.of(123));
     }
 
     @Test

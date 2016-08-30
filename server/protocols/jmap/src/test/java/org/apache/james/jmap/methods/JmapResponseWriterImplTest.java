@@ -46,11 +46,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class JmapResponseWriterImplTest {
-    private JmapResponseWriterImpl jmapResponseWriterImpl;
+    private JmapResponseWriterImpl testee;
 
     @Before
     public void setup() {
-        jmapResponseWriterImpl = new JmapResponseWriterImpl(new ObjectMapperFactory(new InMemoryId.Factory()));
+        testee = new JmapResponseWriterImpl(new ObjectMapperFactory(new InMemoryId.Factory()));
     }
 
     @Ignore
@@ -60,7 +60,7 @@ public class JmapResponseWriterImplTest {
         String expectedClientId = "#1";
         String expectedId = "myId";
 
-        Stream<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(Stream.of(JmapResponse
+        Stream<ProtocolResponse> response = testee.formatMethodResponse(Stream.of(JmapResponse
                 .builder()
                 .clientId(ClientId.of(expectedClientId))
                 .response(null)
@@ -80,7 +80,7 @@ public class JmapResponseWriterImplTest {
         ResponseClass responseClass = new ResponseClass();
         responseClass.id = expectedId;
 
-        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+        List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
@@ -107,7 +107,7 @@ public class JmapResponseWriterImplTest {
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));
         Property property = () -> "id";
 
-        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+        List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
@@ -132,7 +132,7 @@ public class JmapResponseWriterImplTest {
         Property property = () -> "id";
 
         @SuppressWarnings("unused")
-        Stream<ProtocolResponse> ignoredResponse = jmapResponseWriterImpl.formatMethodResponse(
+        Stream<ProtocolResponse> ignoredResponse = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                         .builder()
                         .responseName(Method.Response.name("unknownMethod"))
@@ -141,7 +141,7 @@ public class JmapResponseWriterImplTest {
                         .response(responseClass)
                         .build()));
 
-        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+        List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
@@ -163,7 +163,7 @@ public class JmapResponseWriterImplTest {
         Property idProperty = () -> "id";
         Property nameProperty = () -> "name";
 
-        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+        List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                             .builder()
                             .responseName(Method.Response.name("unknownMethod"))
@@ -212,7 +212,7 @@ public class JmapResponseWriterImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
-        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+        List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
                     .clientId(ProtocolRequest.deserialize(nodes).getClientId())
@@ -235,7 +235,7 @@ public class JmapResponseWriterImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)} ;
 
-        List<ProtocolResponse> response = jmapResponseWriterImpl.formatMethodResponse(
+        List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
                     .clientId(ProtocolRequest.deserialize(nodes).getClientId())

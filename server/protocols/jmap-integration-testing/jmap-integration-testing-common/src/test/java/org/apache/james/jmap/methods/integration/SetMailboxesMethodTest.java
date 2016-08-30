@@ -39,6 +39,8 @@ import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -565,11 +567,12 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotDestroyedWhenMailboxDoesntExist() {
+        String nonExistantMailboxId = getRemovedMailboxId().serialize();
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
-                "      \"destroy\": [\"123\"]" +
+                "      \"destroy\": [\"" + nonExistantMailboxId + "\"]" +
                 "    }," +
                 "    \"#0\"" +
                 "  ]" +
@@ -584,9 +587,9 @@ public abstract class SetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".notDestroyed", aMapWithSize(1))
-            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo("123"), Matchers.allOf(
+            .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(nonExistantMailboxId), Matchers.allOf(
                     hasEntry(equalTo("type"), equalTo("notFound")),
-                    hasEntry(equalTo("description"), equalTo("The mailbox '123' was not found.")))));
+                    hasEntry(equalTo("description"), equalTo("The mailbox '" + nonExistantMailboxId + "' was not found.")))));
     }
 
     @Test
@@ -705,14 +708,22 @@ public abstract class SetMailboxesMethodTest {
             .body(ARGUMENTS + ".destroyed", containsInAnyOrder(parentMailboxId, childMailboxId));
     }
 
+    private MailboxId getRemovedMailboxId() {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
+        MailboxId removedId = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved").getMailboxId();
+        jmapServer.serverProbe().deleteMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
+        return removedId;
+    }
+
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenUnknownMailbox() {
+        String unknownMailboxId = getRemovedMailboxId().serialize();
         String requestBody =
                 "[" +
                     "  [ \"setMailboxes\"," +
                     "    {" +
                     "      \"update\": {" +
-                    "        \"unknown-update-id01\" : {" +
+                    "        \"" + unknownMailboxId + "\" : {" +
                     "          \"name\" : \"yolo\"" +
                     "        }" +
                     "      }" +
@@ -729,9 +740,9 @@ public abstract class SetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxesSet"))
-            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo("unknown-update-id01"), Matchers.allOf(
+            .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(unknownMailboxId), Matchers.allOf(
                     hasEntry(equalTo("type"), equalTo("notFound")),
-                    hasEntry(equalTo("description"), containsString("unknown-update-id01")))));
+                    hasEntry(equalTo("description"), containsString(unknownMailboxId)))));
     }
 
     @Test
@@ -1177,13 +1188,14 @@ public abstract class SetMailboxesMethodTest {
         jmapServer.serverProbe().createMailbox("#private", username, "myBox");
         Mailbox mailbox = jmapServer.serverProbe().getMailbox("#private", username, "myBox");
         String mailboxId = mailbox.getMailboxId().serialize();
+        String badParentId = getRemovedMailboxId().serialize();
         String requestBody =
                 "[" +
                     "  [ \"setMailboxes\"," +
                     "    {" +
                     "      \"update\": {" +
                     "        \"" + mailboxId + "\" : {" +
-                    "          \"parentId\" : \"badParent\"" +
+                    "          \"parentId\" : \"" + badParentId + "\"" +
                     "        }" +
                     "      }" +
                     "    }," +
@@ -1201,7 +1213,7 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".notUpdated", hasEntry(equalTo(mailboxId), Matchers.allOf(
                     hasEntry(equalTo("type"), equalTo("notFound")),
-                    hasEntry(equalTo("description"), containsString("badParent")))));
+                    hasEntry(equalTo("description"), containsString(badParentId)))));
     }
 
     @Test

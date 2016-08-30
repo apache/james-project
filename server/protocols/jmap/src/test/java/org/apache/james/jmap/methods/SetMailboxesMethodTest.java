@@ -34,6 +34,8 @@ import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -92,7 +94,7 @@ public class SetMailboxesMethodTest {
         MailboxCreateRequest fooFolder = MailboxCreateRequest.builder().name("fooFolder").build();
         SetMailboxesRequest creationRequest = SetMailboxesRequest.builder().create(creationId, fooFolder).build();
 
-        Mailbox createdfooFolder = Mailbox.builder().name("fooFolder").id("fooId").build();
+        Mailbox createdfooFolder = Mailbox.builder().name("fooFolder").id(InMemoryId.of(123)).build();
         SetMailboxesResponse creationResponse = SetMailboxesResponse.builder().created(creationId, createdfooFolder).build();
         JmapResponse jmapResponse = JmapResponse.builder()
             .response(creationResponse)
@@ -113,7 +115,7 @@ public class SetMailboxesMethodTest {
 
     @Test
     public void processShouldCallDestructorProcessorWhenCreationRequest() {
-        ImmutableList<String> deletions = ImmutableList.of("1");
+        ImmutableList<MailboxId> deletions = ImmutableList.of(InMemoryId.of(1));
         SetMailboxesRequest destructionRequest = SetMailboxesRequest.builder().destroy(deletions).build();
 
         SetMailboxesResponse destructionResponse = SetMailboxesResponse.builder().destroyed(deletions).build();

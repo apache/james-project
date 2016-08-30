@@ -26,6 +26,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -44,8 +45,8 @@ public class SetMailboxesRequest implements JmapRequest {
     public static class Builder {
 
         private final ImmutableMap.Builder<MailboxCreationId, MailboxCreateRequest> create;
-        private final ImmutableMap.Builder<String, MailboxUpdateRequest> update;
-        private final ImmutableList.Builder<String> destroy;
+        private final ImmutableMap.Builder<MailboxId, MailboxUpdateRequest> update;
+        private final ImmutableList.Builder<MailboxId> destroy;
 
         private Builder() {
             create = ImmutableMap.builder();
@@ -71,17 +72,17 @@ public class SetMailboxesRequest implements JmapRequest {
             throw new NotImplementedException();
         }
         
-        public Builder update(String mailboxId, MailboxUpdateRequest mailboxUpdateRequest) {
+        public Builder update(MailboxId mailboxId, MailboxUpdateRequest mailboxUpdateRequest) {
             update.put(mailboxId, mailboxUpdateRequest);
             return this;
         }
         
-        public Builder update(Map<String, MailboxUpdateRequest> updates) {
+        public Builder update(Map<MailboxId, MailboxUpdateRequest> updates) {
             update.putAll(updates);
             return this;
         }
         
-        public Builder destroy(List<String> deletions) {
+        public Builder destroy(List<MailboxId> deletions) {
             destroy.addAll(deletions);
             return this;
         }
@@ -92,11 +93,11 @@ public class SetMailboxesRequest implements JmapRequest {
     }
 
     private final ImmutableMap<MailboxCreationId, MailboxCreateRequest> create;
-    private final ImmutableMap<String, MailboxUpdateRequest> update;
-    private final ImmutableList<String> destroy;
+    private final ImmutableMap<MailboxId, MailboxUpdateRequest> update;
+    private final ImmutableList<MailboxId> destroy;
 
     @VisibleForTesting
-    SetMailboxesRequest(ImmutableMap<MailboxCreationId, MailboxCreateRequest> create, ImmutableMap<String,MailboxUpdateRequest> update, ImmutableList<String> destroy) {
+    SetMailboxesRequest(ImmutableMap<MailboxCreationId, MailboxCreateRequest> create, ImmutableMap<MailboxId,MailboxUpdateRequest> update, ImmutableList<MailboxId> destroy) {
         this.create = create;
         this.update = update;
         this.destroy = destroy;
@@ -106,11 +107,11 @@ public class SetMailboxesRequest implements JmapRequest {
         return create;
     }
 
-    public ImmutableMap<String, MailboxUpdateRequest> getUpdate() {
+    public ImmutableMap<MailboxId,MailboxUpdateRequest> getUpdate() {
         return update;
     }
 
-    public ImmutableList<String> getDestroy() {
+    public ImmutableList<MailboxId> getDestroy() {
         return destroy;
     }
 }

@@ -61,11 +61,11 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.mailet.Mail;
@@ -80,9 +80,9 @@ public class SetMessagesCreationProcessorTest {
     
     private static final String USER = "user@example.com";
     private static final String OUTBOX = "outbox";
-    private static final TestId OUTBOX_ID = TestId.of(12345);
+    private static final InMemoryId OUTBOX_ID = InMemoryId.of(12345);
     private static final String DRAFTS = "drafts";
-    private static final TestId DRAFTS_ID = TestId.of(12);
+    private static final InMemoryId DRAFTS_ID = InMemoryId.of(12);
     private static final String NAMESPACE = "#private";
 
     private final CreationMessage.Builder creationMessageBuilder = CreationMessage.builder()

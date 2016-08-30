@@ -30,20 +30,20 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JmapRequestParserImplTest {
-    private JmapRequestParserImpl jmapRequestParserImpl;
+    private JmapRequestParserImpl testee;
 
     @Before
     public void setup() {
-        jmapRequestParserImpl = new JmapRequestParserImpl(new ObjectMapperFactory(new InMemoryId.Factory()));
+        testee = new JmapRequestParserImpl(new ObjectMapperFactory(new InMemoryId.Factory()));
     }
-
+    
     @Test(expected=IllegalArgumentException.class)
     public void extractJmapRequestShouldThrowWhenNullRequestClass() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), null);
+        testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), null);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
+        testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")} ;
 
-        jmapRequestParserImpl.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
+        testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
     }
 
     private static class RequestClass implements JmapRequest {

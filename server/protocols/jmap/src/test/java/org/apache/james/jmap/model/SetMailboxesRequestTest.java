@@ -24,6 +24,8 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -45,11 +47,11 @@ public class SetMailboxesRequestTest {
     public void builderShouldWork() throws MailboxException {
         //Given
         MailboxCreationId creationId = MailboxCreationId.of("creationId");
-        String mailboxId = "mailboxId";
+        InMemoryId mailboxId = InMemoryId.of(123);
         MailboxCreateRequest mailboxRequest = MailboxCreateRequest.builder()
             .name("mailboxRequest")
             .build();
-        ImmutableList<String> destroy = ImmutableList.of("destroyId");
+        ImmutableList<MailboxId> destroy = ImmutableList.of(InMemoryId.of(456));
         MailboxUpdateRequest mailboxUpdateRequest = MailboxUpdateRequest.builder()
             .name("mailboxUpdateRequest")
             .build();

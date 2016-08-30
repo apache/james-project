@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 
 import org.apache.james.jmap.methods.GetMessagesMethod;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -50,7 +51,7 @@ public class Message {
         private MessageId id;
         private BlobId blobId;
         private String threadId;
-        private ImmutableList<String> mailboxIds;
+        private ImmutableList<MailboxId> mailboxIds;
         private String inReplyToMessageId;
         private boolean isUnread;
         private boolean isFlagged;
@@ -95,11 +96,11 @@ public class Message {
             return this;
         }
 
-        public Builder mailboxId(String mailboxId) {
+        public Builder mailboxId(MailboxId mailboxId) {
             return this.mailboxIds(ImmutableList.of(mailboxId));
         }
 
-        public Builder mailboxIds(List<String> mailboxIds) {
+        public Builder mailboxIds(List<MailboxId> mailboxIds) {
             this.mailboxIds = ImmutableList.copyOf(mailboxIds);
             return this;
         }
@@ -234,7 +235,7 @@ public class Message {
     private final MessageId id;
     private final BlobId blobId;
     private final String threadId;
-    private final ImmutableList<String> mailboxIds;
+    private final ImmutableList<MailboxId> mailboxIds;
     private final Optional<String> inReplyToMessageId;
     private final boolean isUnread;
     private final boolean isFlagged;
@@ -257,7 +258,7 @@ public class Message {
     private final ImmutableList<Attachment> attachments;
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
 
-    @VisibleForTesting Message(MessageId id, BlobId blobId, String threadId, ImmutableList<String> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
+    @VisibleForTesting Message(MessageId id, BlobId blobId, String threadId, ImmutableList<MailboxId> mailboxIds, Optional<String> inReplyToMessageId, boolean isUnread, boolean isFlagged, boolean isAnswered, boolean isDraft, boolean hasAttachment, ImmutableMap<String, String> headers, Optional<Emailer> from,
             ImmutableList<Emailer> to, ImmutableList<Emailer> cc, ImmutableList<Emailer> bcc, ImmutableList<Emailer> replyTo, String subject, ZonedDateTime date, long size, String preview, Optional<String> textBody, Optional<String> htmlBody, ImmutableList<Attachment> attachments,
             ImmutableMap<BlobId, SubMessage> attachedMessages) {
         this.id = id;
@@ -298,7 +299,7 @@ public class Message {
         return threadId;
     }
 
-    public ImmutableList<String> getMailboxIds() {
+    public ImmutableList<MailboxId> getMailboxIds() {
         return mailboxIds;
     }
 

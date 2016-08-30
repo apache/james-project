@@ -101,16 +101,32 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldReturnEmptyWhenIdsDoesntMatch() throws Exception {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "name");
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
+        String removedId = jmapServer.serverProbe().getMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved").getMailboxId().serialize();
+        jmapServer.serverProbe().deleteMailbox(MailboxConstants.USER_NAMESPACE, username, "quicklyRemoved");
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMailboxes\", {\"ids\": [\"notAMailboxId\"]}, \"#0\"]]")
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + removedId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(0));
+    }
+
+    @Test
+    public void getMailboxesShouldReturnErrorWhenInvalidMailboxId() throws Exception {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMailboxes\", {\"ids\": [\"invalid id\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
     }
 
     @Test

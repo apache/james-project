@@ -76,7 +76,7 @@ public class MessageFactory {
                 .id(message.getMessageId())
                 .blobId(BlobId.of(String.valueOf(message.getUid())))
                 .threadId(message.getMessageId().serialize())
-                .mailboxIds(ImmutableList.of(message.getMailboxId().serialize()))
+                .mailboxIds(ImmutableList.of(message.getMailboxId()))
                 .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
                 .isUnread(! message.getFlags().contains(Flags.Flag.SEEN))
                 .isFlagged(message.getFlags().contains(Flags.Flag.FLAGGED))

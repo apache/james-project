@@ -32,10 +32,10 @@ import javax.mail.Flags.Flag;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.store.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MessageFactoryTest {
-    private static final TestId MAILBOX_ID = TestId.of(18L);
+    private static final InMemoryId MAILBOX_ID = InMemoryId.of(18L);
     private static final ZoneId UTC_ZONE_ID = ZoneId.of("Z");
     private static final ZonedDateTime ZONED_DATE = ZonedDateTime.of(2015, 07, 14, 12, 30, 42, 0, UTC_ZONE_ID);
     private static final Date INTERNAL_DATE = Date.from(ZONED_DATE.toInstant());
@@ -145,7 +145,7 @@ public class MessageFactoryTest {
                 .id(MessageId.of("user|box|2"))
                 .blobId(BlobId.of("2"))
                 .threadId("user|box|2")
-                .mailboxIds(ImmutableList.of(MAILBOX_ID.serialize()))
+                .mailboxIds(ImmutableList.of(MAILBOX_ID))
                 .inReplyToMessageId("<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .headers(headersMap)
                 .from(user)

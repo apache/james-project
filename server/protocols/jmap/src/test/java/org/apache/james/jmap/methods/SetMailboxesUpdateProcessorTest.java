@@ -34,6 +34,7 @@ import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,8 +57,8 @@ public class SetMailboxesUpdateProcessorTest {
     @Test
     public void processShouldReturnNotUpdatedWhenMailboxExceptionOccured() throws Exception {
         // Given
-        String mailboxId = "1";
-        String newParentId = "newParentId";
+        InMemoryId mailboxId = InMemoryId.of(1);
+        InMemoryId newParentId = InMemoryId.of(2);
         MailboxPath newParentMailboxPath = new MailboxPath("#private", "user", "newParentName");
         SetMailboxesRequest request = SetMailboxesRequest.builder()
                 .update(mailboxId, MailboxUpdateRequest.builder().parentId(newParentId).build())

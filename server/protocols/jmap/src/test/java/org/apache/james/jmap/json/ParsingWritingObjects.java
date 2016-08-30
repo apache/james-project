@@ -27,6 +27,8 @@ import org.apache.james.jmap.model.Emailer;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.SubMessage;
+import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +39,7 @@ public interface ParsingWritingObjects {
         MessageId MESSAGE_ID = MessageId.of("username|mailbox|1");
         BlobId BLOB_ID = BlobId.of("myBlobId");
         String THREAD_ID = "myThreadId";
-        ImmutableList<String> MAILBOX_IDS = ImmutableList.of("mailboxId1", "mailboxId2");
+        ImmutableList<MailboxId> MAILBOX_IDS = ImmutableList.of(InMemoryId.of(1), InMemoryId.of(2));
         String IN_REPLY_TO_MESSAGE_ID = "myInReplyToMessageId";
         boolean IS_UNREAD = true;
         boolean IS_FLAGGED = true;

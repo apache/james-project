@@ -46,6 +46,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MockAuthenticator;
@@ -149,7 +150,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getId, Mailbox::getName, Mailbox::getUnreadMessages)
-                .containsOnly(Tuple.tuple("1", mailboxPath.getName(), 2L));
+                .containsOnly(Tuple.tuple(InMemoryId.of(1), mailboxPath.getName(), 2L));
     }
 
     @Test
@@ -173,7 +174,7 @@ public class GetMailboxesMethodTest {
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
                 .extracting(Mailbox::getId, Mailbox::getName)
-                .containsOnly(Tuple.tuple("1", mailboxPathToReturn.getName()));
+                .containsOnly(Tuple.tuple(InMemoryId.of(1), mailboxPathToReturn.getName()));
     }
 
     @Test

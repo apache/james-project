@@ -40,11 +40,14 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
 
 public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
@@ -52,24 +55,26 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMailboxesCreationProcessor.class);
 
     private final MailboxManager mailboxManager;
-    private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, String> sortingHierarchicalCollections;
+    private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId> sortingHierarchicalCollections;
     private final MailboxUtils mailboxUtils;
+    private final Factory mailboxIdFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesCreationProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils) {
+    SetMailboxesCreationProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils, MailboxId.Factory mailboxIdFactory) {
         this.mailboxManager = mailboxManager;
         this.sortingHierarchicalCollections =
-            new SortingHierarchicalCollections<>(
-                x -> x.getKey().getCreationId(),
+            new SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId>(
+                x -> x.getKey(),
                 x -> x.getValue().getParentId());
         this.mailboxUtils = mailboxUtils;
+        this.mailboxIdFactory = mailboxIdFactory;
     }
 
     public SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession) {
         SetMailboxesResponse.Builder builder = SetMailboxesResponse.builder();
         try {
-            Map<MailboxCreationId, String> creationIdsToCreatedMailboxId = new HashMap<>();
+            Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId = new HashMap<>();
             sortingHierarchicalCollections.sortFromRootToLeaf(request.getCreate().entrySet())
                 .forEach(entry -> 
                     createMailbox(entry.getKey(), entry.getValue(), mailboxSession, creationIdsToCreatedMailboxId, builder));
@@ -90,7 +95,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     private void createMailbox(MailboxCreationId mailboxCreationId, MailboxCreateRequest mailboxRequest, MailboxSession mailboxSession,
-            Map<MailboxCreationId, String> creationIdsToCreatedMailboxId, SetMailboxesResponse.Builder builder) {
+            Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, SetMailboxesResponse.Builder builder) {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
@@ -134,12 +139,12 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         }
     }
 
-    private MailboxPath getMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, String> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
+    private MailboxPath getMailboxPath(MailboxCreateRequest mailboxRequest, Map<MailboxCreationId, MailboxId> creationIdsToCreatedMailboxId, MailboxSession mailboxSession) throws MailboxException {
         if (mailboxRequest.getParentId().isPresent()) {
-            String parentId = mailboxRequest.getParentId().get();
-            String parentName = mailboxUtils.getMailboxNameFromId(parentId, mailboxSession)
+            MailboxCreationId parentId = mailboxRequest.getParentId().get();
+            String parentName = getMailboxNameFromId(parentId, mailboxSession)
                     .orElseGet(Throwing.supplier(() ->
-                        mailboxUtils.getMailboxNameFromId(creationIdsToCreatedMailboxId.get(MailboxCreationId.of(parentId)), mailboxSession)
+                        mailboxUtils.getMailboxNameFromId(creationIdsToCreatedMailboxId.get(parentId), mailboxSession)
                             .orElseThrow(() -> new MailboxParentNotFoundException(parentId))
                     ));
 
@@ -147,5 +152,19 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                     parentName + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
         }
         return new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), mailboxRequest.getName());
+    }
+
+    private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) {
+        ThrowingFunction<? super MailboxId, Optional<String>> toName = parentId -> mailboxUtils.getMailboxNameFromId(parentId, mailboxSession);
+        return getMailboxIdFromCreationId(creationId)
+                .flatMap(Throwing.function(toName).sneakyThrow());
+    }
+
+    private Optional<MailboxId> getMailboxIdFromCreationId(MailboxCreationId creationId) {
+        try {
+            return Optional.of(mailboxIdFactory.fromString(creationId.getCreationId()));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 }

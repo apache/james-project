@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.model.mailbox.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -38,11 +39,11 @@ public class SetMailboxesResponse implements Method.Response {
     public static class Builder {
 
         private final ImmutableMap.Builder<MailboxCreationId, Mailbox> created;
-        private final ImmutableList.Builder<String> updated;
-        private final ImmutableList.Builder<String> destroyed;
+        private final ImmutableList.Builder<MailboxId> updated;
+        private final ImmutableList.Builder<MailboxId> destroyed;
         private final ImmutableMap.Builder<MailboxCreationId, SetError> notCreated;
-        private final ImmutableMap.Builder<String, SetError> notUpdated;
-        private final ImmutableMap.Builder<String, SetError> notDestroyed;
+        private final ImmutableMap.Builder<MailboxId, SetError> notUpdated;
+        private final ImmutableMap.Builder<MailboxId, SetError> notDestroyed;
 
         private Builder() {
             created = ImmutableMap.builder();
@@ -63,22 +64,22 @@ public class SetMailboxesResponse implements Method.Response {
             return this;
         }
 
-        public Builder updated(String mailboxId) {
+        public Builder updated(MailboxId mailboxId) {
             updated.add(mailboxId);
             return this;
         }
         
-        public Builder updated(List<String> mailboxIds) {
+        public Builder updated(List<MailboxId> mailboxIds) {
             updated.addAll(mailboxIds);
             return this;
         }
         
-        public Builder destroyed(String mailboxId) {
+        public Builder destroyed(MailboxId mailboxId) {
             destroyed.add(mailboxId);
             return this;
         }
         
-        public Builder destroyed(ImmutableList<String> destroyed) {
+        public Builder destroyed(ImmutableList<MailboxId> destroyed) {
             this.destroyed.addAll(destroyed);
             return this;
         }
@@ -93,22 +94,22 @@ public class SetMailboxesResponse implements Method.Response {
             return this;
         }
         
-        public Builder notUpdated(String mailboxId, SetError setError) {
+        public Builder notUpdated(MailboxId mailboxId, SetError setError) {
             notUpdated.put(mailboxId, setError);
             return this;
         }
         
-        public Builder notUpdated(Map<String, SetError> notUpdated) {
+        public Builder notUpdated(Map<MailboxId, SetError> notUpdated) {
             this.notUpdated.putAll(notUpdated);
             return this;
         }
 
-        public Builder notDestroyed(String mailboxId, SetError setError) {
+        public Builder notDestroyed(MailboxId mailboxId, SetError setError) {
             notDestroyed.put(mailboxId, setError);
             return this;
         }
 
-        public Builder notDestroyed(ImmutableMap<String, SetError> notDestroyed) {
+        public Builder notDestroyed(ImmutableMap<MailboxId, SetError> notDestroyed) {
             this.notDestroyed.putAll(notDestroyed);
             return this;
         }
@@ -119,15 +120,15 @@ public class SetMailboxesResponse implements Method.Response {
     }
 
     private final ImmutableMap<MailboxCreationId, Mailbox> created;
-    private final ImmutableList<String> updated;
-    private final ImmutableList<String> destroyed;
+    private final ImmutableList<MailboxId> updated;
+    private final ImmutableList<MailboxId> destroyed;
     private final ImmutableMap<MailboxCreationId, SetError> notCreated;
-    private final ImmutableMap<String, SetError> notUpdated;
-    private final ImmutableMap<String, SetError> notDestroyed;
+    private final ImmutableMap<MailboxId,SetError> notUpdated;
+    private final ImmutableMap<MailboxId,SetError> notDestroyed;
 
     @VisibleForTesting
-    SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created, ImmutableList<String> updated, ImmutableList<String> destroyed,
-            ImmutableMap<MailboxCreationId, SetError> notCreated, ImmutableMap<String, SetError> notUpdated, ImmutableMap<String, SetError> notDestroyed) {
+    SetMailboxesResponse(ImmutableMap<MailboxCreationId, Mailbox> created, ImmutableList<MailboxId> updated, ImmutableList<MailboxId> destroyed,
+            ImmutableMap<MailboxCreationId, SetError> notCreated, ImmutableMap<MailboxId, SetError> notUpdated, ImmutableMap<MailboxId, SetError> notDestroyed) {
         this.created = created;
         this.updated = updated;
         this.destroyed = destroyed;
@@ -140,11 +141,11 @@ public class SetMailboxesResponse implements Method.Response {
         return created;
     }
 
-    public ImmutableList<String> getUpdated() {
+    public ImmutableList<MailboxId> getUpdated() {
         return updated;
     }
 
-    public ImmutableList<String> getDestroyed() {
+    public ImmutableList<MailboxId> getDestroyed() {
         return destroyed;
     }
     
@@ -152,11 +153,11 @@ public class SetMailboxesResponse implements Method.Response {
         return notCreated;
     }
 
-    public ImmutableMap<String, SetError> getNotUpdated() {
+    public ImmutableMap<MailboxId,SetError> getNotUpdated() {
         return notUpdated;
     }
     
-    public ImmutableMap<String, SetError> getNotDestroyed() {
+    public ImmutableMap<MailboxId,SetError> getNotDestroyed() {
         return notDestroyed;
     }
 

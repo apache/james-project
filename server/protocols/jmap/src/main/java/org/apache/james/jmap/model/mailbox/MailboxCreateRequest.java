@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.model.MailboxCreationId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -43,7 +44,7 @@ public class MailboxCreateRequest {
 
         private Optional<String> id;
         private String name;
-        private Optional<String> parentId;
+        private Optional<MailboxCreationId> parentId;
         private Optional<Role> role;
         private Optional<SortOrder> sortOrder;
 
@@ -66,7 +67,7 @@ public class MailboxCreateRequest {
             return this;
         }
 
-        public Builder parentId(String parentId) {
+        public Builder parentId(MailboxCreationId parentId) {
             Preconditions.checkNotNull(parentId);
             this.parentId = Optional.of(parentId);
             return this;
@@ -91,12 +92,12 @@ public class MailboxCreateRequest {
 
     private final Optional<String> id;
     private final String name;
-    private final Optional<String> parentId;
+    private final Optional<MailboxCreationId> parentId;
     private final Optional<Role> role;
     private final Optional<SortOrder> sortOrder;
 
     @VisibleForTesting
-    MailboxCreateRequest(Optional<String> id, String name, Optional<String> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
+    MailboxCreateRequest(Optional<String> id, String name, Optional<MailboxCreationId> parentId, Optional<Role> role, Optional<SortOrder> sortOrder) {
 
         this.id = id;
         this.name = name;
@@ -113,7 +114,7 @@ public class MailboxCreateRequest {
         return name;
     }
 
-    public Optional<String> getParentId() {
+    public Optional<MailboxCreationId> getParentId() {
         return parentId;
     }
 
