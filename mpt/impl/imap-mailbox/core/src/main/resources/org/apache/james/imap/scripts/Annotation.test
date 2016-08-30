@@ -157,3 +157,29 @@ S: a23 BAD SETMETADATA failed. Illegal arguments.
 C: a24 SETMETADATA INBOX (/shared/vendor/token/comment "My token comment")
 S: a24 OK SETMETADATA completed.
 
+######Delete mailbox should delete its annotation#######
+C: m01 CREATE mailboxTest
+S: m01 OK CREATE completed.
+
+C: m02 SETMETADATA mailboxTest (/private/comment "The mailboxTest private comment")
+S: m02 OK SETMETADATA completed.
+
+C: m03 SETMETADATA mailboxTest (/shared/comment "The mailboxTest shared comment")
+S: m03 OK SETMETADATA completed.
+
+C: m04 GETMETADATA "mailboxTest"
+S: \* METADATA "mailboxTest" \(\/private\/comment "The mailboxTest private comment" \/shared\/comment "The mailboxTest shared comment"\)
+S: m04 OK GETMETADATA completed.
+
+C: m05 DELETE mailboxTest
+S: m05 OK DELETE completed.
+
+C: m06 GETMETADATA "mailboxTest"
+S: m06 NO \[TRYCREATE\] GETMETADATA failed. No such mailbox.
+
+C: m07 CREATE mailboxTest
+S: m07 OK CREATE completed.
+
+C: m08 GETMETADATA "mailboxTest"
+S: \* METADATA "mailboxTest"
+S: m08 OK GETMETADATA completed.

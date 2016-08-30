@@ -64,6 +64,7 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -202,6 +203,10 @@ public class StoreMailboxManager implements MailboxManager {
         }
         if (moveBatcher == null) {
             moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
+        }
+        if (hasCapability(MailboxCapabilities.Annotation)) {
+            MailboxSession session = null;
+            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory), session);
         }
     }
 
@@ -491,7 +496,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public void deleteMailbox(final MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         session.getLog().info("deleteMailbox " + mailboxPath);
         final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
