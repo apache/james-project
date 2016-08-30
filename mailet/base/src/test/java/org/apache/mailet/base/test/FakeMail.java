@@ -39,6 +39,10 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 public class FakeMail implements Mail {
 
     public static FakeMail fromMime(String text, String javaEncodingCharset, String javamailDefaultEncodingCharset) throws MessagingException, UnsupportedEncodingException {
@@ -58,17 +62,28 @@ public class FakeMail implements Mail {
 
     public static class Builder {
 
-        private String fileName;
+        private Optional<String> fileName = Optional.absent();
+        private Optional<MimeMessage> mimeMessage = Optional.absent();
         private List<MailAddress> recipients = new ArrayList<MailAddress>();
         private MailAddress sender;
 
         public Builder fileName(String fileName) {
-            this.fileName = fileName;
+            this.fileName = Optional.of(fileName);
+            return this;
+        }
+
+        public Builder mimeMessage(MimeMessage mimeMessage) {
+            this.mimeMessage = Optional.of(mimeMessage);
             return this;
         }
 
         public Builder recipients(List<MailAddress> recipients) {
             this.recipients.addAll(recipients);
+            return this;
+        }
+
+        public Builder recipients(MailAddress... recipients) {
+            this.recipients.addAll(ImmutableList.copyOf(recipients));
             return this;
         }
 
@@ -83,8 +98,14 @@ public class FakeMail implements Mail {
         }
 
         public FakeMail build() throws MessagingException {
+            Preconditions.checkState(!(fileName.isPresent() && mimeMessage.isPresent()), "You can not specify a MimeMessage object when you alredy set Content from a file");
             FakeMail mail = new FakeMail();
-            mail.setMessage(new MimeMessage(Session.getInstance(new Properties()) ,ClassLoader.getSystemResourceAsStream(fileName)));
+            if (fileName.isPresent()) {
+                mail.setMessage(new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream(fileName.get())));
+            }
+            if (mimeMessage.isPresent()) {
+                mail.setMessage(mimeMessage.get());
+            }
             mail.setSender(sender);
             mail.setRecipients(recipients);
             return mail;
