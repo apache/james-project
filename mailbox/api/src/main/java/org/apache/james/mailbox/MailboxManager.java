@@ -428,4 +428,6 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @throws MailboxException in case of selected mailbox does not exist
      */
     void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException;
+    
+    boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 }

@@ -423,6 +423,11 @@ public class MailboxEventAnalyserTest {
             return null;
         }
 
+        @Override
+        public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+            return false;
+        }
+
     };
     
     private final class MyMailboxSession implements MailboxSession {

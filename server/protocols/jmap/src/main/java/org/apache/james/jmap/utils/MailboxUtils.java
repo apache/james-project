@@ -144,8 +144,8 @@ public class MailboxUtils {
 
     public boolean hasChildren(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxFromId(mailboxId, mailboxSession)
-                .map(Throwing.function(mailbox -> 
-                    mailboxMapperFactory.getMailboxMapper(mailboxSession).hasChildren(mailbox, mailboxSession.getPathDelimiter())))
+                .map(mailbox -> new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()))
+                .map(Throwing.function(path -> mailboxManager.hasChildren(path, mailboxSession)))
                 .orElse(false);
     }
 

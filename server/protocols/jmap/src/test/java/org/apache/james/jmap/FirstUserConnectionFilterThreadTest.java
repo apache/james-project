@@ -251,6 +251,11 @@ public class FirstUserConnectionFilterThreadTest {
                 Set<MailboxAnnotationKey> keys) throws MailboxException {
             return null;
         }
+
+        @Override
+        public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+            return false;
+        }
     }
 }
 

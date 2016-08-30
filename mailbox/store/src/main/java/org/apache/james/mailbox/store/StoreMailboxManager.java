@@ -771,4 +771,11 @@ public class StoreMailboxManager implements MailboxManager {
         AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
         return annotationMapper.getAnnotationsByKeysWithAllDepth(keys);
     }
+
+    @Override
+    public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
+        return mapper.hasChildren(mailbox, session.getPathDelimiter());
+    }
 }
