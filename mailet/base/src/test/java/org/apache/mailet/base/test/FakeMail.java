@@ -84,7 +84,7 @@ public class FakeMail implements Mail {
 
         public FakeMail build() throws MessagingException {
             FakeMail mail = new FakeMail();
-            mail.setMessage(new MimeMessage(Session.getInstance(new Properties()) ,ClassLoader.getSystemResourceAsStream(fileName)));
+            mail.setMessage(new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream(fileName)));
             mail.setSender(sender);
             mail.setRecipients(recipients);
             return mail;
