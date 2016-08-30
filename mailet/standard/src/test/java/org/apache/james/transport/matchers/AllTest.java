@@ -20,10 +20,7 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
@@ -39,6 +36,8 @@ import org.junit.Test;
 public class AllTest {
 
     private Matcher matcher;
+    private MailAddress mailAddress1;
+    private MailAddress mailAddress2;
 
     @Before
     public void setupMatcher() throws MessagingException {
@@ -46,17 +45,18 @@ public class AllTest {
         FakeMatcherConfig mci = new FakeMatcherConfig("All",
                 new FakeMailContext());
         matcher.init(mci);
+
+        mailAddress1 = new MailAddress("me@apache.org");
+        mailAddress2 = new MailAddress("you@apache.org");
     }
 
-    // test if all recipients was returned
     @Test
     public void testAllRecipientsReturned() throws MessagingException {
-        FakeMail mockedMail = MailUtil.createMockMail2Recipients(null);
+        FakeMail mockedMail = FakeMail.builder()
+            .recipients(mailAddress1, mailAddress2)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients().size());
+        assertThat(matcher.match(mockedMail)).containsExactly(mailAddress1, mailAddress2);
     }
 
 }
