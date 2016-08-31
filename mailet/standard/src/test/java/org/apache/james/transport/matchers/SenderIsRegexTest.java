@@ -61,6 +61,18 @@ public class SenderIsRegexTest {
     }
 
     @Test
+    public void shouldNotMatchSubParts() throws Exception {
+        matcher.init(new FakeMatcherConfig("SenderIsRegex=test", FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .sender(new MailAddress(SENDER_NAME))
+            .recipient(recipient)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
     public void shouldNotMatchWhenNullSender() throws Exception {
         matcher.init(new FakeMatcherConfig("SenderIsRegex=.*@.*", FakeMailContext.defaultContext()));
 
