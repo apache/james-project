@@ -63,6 +63,17 @@ public class RecipientIsRegexTest {
     }
 
     @Test
+    public void shouldNotMatchPartially() throws MessagingException {
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=test", FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient1)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).isEmpty();
+    }
+
+    @Test
     public void shouldMatchOnlyMatchingPatterns() throws MessagingException {
         matcher.init(new FakeMatcherConfig("RecipientIsRegex=^test@.*", FakeMailContext.defaultContext()));
 
