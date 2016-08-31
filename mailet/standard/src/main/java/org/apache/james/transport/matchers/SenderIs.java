@@ -17,30 +17,51 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericMatcher;
+import java.util.Collection;
+import java.util.Set;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMatcher;
 
-import java.util.Collection;
-import java.util.StringTokenizer;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
-/**
- * Matches mail where the sender is contained in a configurable list.
- * @version 1.0.0, 24/04/1999
- */
 public class SenderIs extends GenericMatcher {
 
-    private Collection<MailAddress> senders;
+    private Set<MailAddress> senders;
+
+    @VisibleForTesting
+    public Set<MailAddress> getSenders() {
+        return senders;
+    }
 
     public void init() throws javax.mail.MessagingException {
-        StringTokenizer st = new StringTokenizer(getCondition(), ", \t", false);
-        senders = new java.util.HashSet<MailAddress>();
-        while (st.hasMoreTokens()) {
-            senders.add(new MailAddress(st.nextToken()));
+        if (Strings.isNullOrEmpty(getCondition())) {
+            throw new MessagingException("SenderIs should have at least one address as parameter");
+        }
+        senders = FluentIterable.from(Splitter.on(", ").split(getCondition())).transform(new Function<String, MailAddress>() {
+            public MailAddress apply(String s) {
+                try {
+                    return new MailAddress(s);
+                } catch (AddressException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        }).toSet();
+        if (senders.size() < 1) {
+            throw new MessagingException("SenderIs should have at least one address as parameter");
         }
     }
 
