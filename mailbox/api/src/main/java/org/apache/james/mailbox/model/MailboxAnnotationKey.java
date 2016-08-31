@@ -31,16 +31,20 @@ public class MailboxAnnotationKey {
 
     private static final CharMatcher NAME_ANNOTATION_PATTERN = CharMatcher.JAVA_LETTER_OR_DIGIT
         .or(CharMatcher.is('/'));
+    public static final int MINIMUM_COMPONENTS = 2;
+    public static final int MINIMUM_COMPONENTS_OF_VENDOR = 4;
+    public static final int SECOND_COMPONENT_INDEX = 1;
+    public static final String VENDOR_COMPONENT = "vendor";
 
     private final String key;
 
     public MailboxAnnotationKey(String key) {
-        Preconditions.checkArgument(isValid(key),
-            "Key must start with '/' and not end with '/' and does not contain charater with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
         this.key = key;
+        Preconditions.checkArgument(isValid(),
+            "Key must start with '/' and not end with '/' and does not contain charater with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
     }
 
-    private boolean isValid(String key) {
+    private boolean isValid() {
         if (StringUtils.isBlank(key)) {
             return false;
         }
@@ -59,7 +63,24 @@ public class MailboxAnnotationKey {
         if (!NAME_ANNOTATION_PATTERN.matchesAllOf(key)) {
             return false;
         }
+        int componentsNo = countComponents();
+        if (isVendorKey() && componentsNo < MINIMUM_COMPONENTS_OF_VENDOR) {
+            return false;
+        }
+        if (componentsNo < MINIMUM_COMPONENTS) {
+            return false;
+        }
         return true;
+    }
+
+    private boolean isVendorKey() {
+        String[] components = StringUtils.split(key, SLASH_CHARACTER);
+
+        if (components.length >= MINIMUM_COMPONENTS &&
+            VENDOR_COMPONENT.equalsIgnoreCase(components[SECOND_COMPONENT_INDEX])) {
+            return true;
+        }
+        return false;
     }
 
     public int countComponents() {
