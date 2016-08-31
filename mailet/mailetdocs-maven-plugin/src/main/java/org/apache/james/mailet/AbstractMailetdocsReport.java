@@ -27,6 +27,8 @@ import java.util.Locale;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.maven.doxia.siterenderer.Renderer;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
@@ -42,25 +44,17 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
     
     /**
      * Directory where reports will go.
-     * 
-     * @parameter expression="${project.reporting.outputDirectory}"
-     * @required
-     * @readonly
      */
+    @Parameter(defaultValue = "${project.reporting.outputDirectory}",
+            required = true)
     private String outputDirectory;
 
-    /**
-     * @parameter default-value="${project}"
-     * @required
-     * @readonly
-     */
+    @Parameter(defaultValue = "${project}", 
+            required = true, 
+            readonly = true)
     private MavenProject project;
 
-    /**
-     * @component
-     * @required
-     * @readonly
-     */
+    @Component
     private Renderer siteRenderer;
 
     /**
