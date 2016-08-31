@@ -17,29 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
+import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.mailet.base.GenericRecipientMatcher;
 import org.apache.mailet.MailAddress;
 
 import java.util.Collection;
 import java.util.StringTokenizer;
 
-/**
- * Matches mail where the recipent is one of a configurable list.
- * @version 1.0.0, 24/04/1999
- */
+import javax.mail.MessagingException;
+
+import com.google.common.base.Strings;
+
 public class RecipientIs extends GenericRecipientMatcher {
 
     private Collection<MailAddress> recipients;
 
     public void init() throws javax.mail.MessagingException {
-        StringTokenizer st = new StringTokenizer(getCondition(), ", \t", false);
-        recipients = new java.util.HashSet<MailAddress>();
-        while (st.hasMoreTokens()) {
-            recipients.add(new MailAddress(st.nextToken()));
+        if (Strings.isNullOrEmpty(getCondition())) {
+            throw new MessagingException("RecipientIs should have a condition  composed of a list of mail addresses");
+        }
+        recipients = MailAddressCollectionReader.read(getCondition());
+        if (recipients.size() < 1) {
+            throw new MessagingException("RecipientIs should have at least one address passed as a condition");
         }
     }
 

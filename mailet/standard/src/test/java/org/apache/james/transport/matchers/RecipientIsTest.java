@@ -22,14 +22,21 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.mail.MessagingException;
+
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RecipientIsTest {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     private RecipientIs matcher;
     private MailAddress recipient1;
@@ -75,5 +82,28 @@ public class RecipientIsTest {
             .build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
+    }
+
+    @Test
+    public void initShouldThrowOnMissingCondition() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIs", FakeMailContext.defaultContext()));
+    }
+
+    @Test
+    public void initShouldThrowOnEmptyCondition() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIs=", FakeMailContext.defaultContext()));
+    }
+
+    @Test
+    public void shouldBeAbleToMatchSeveralAddresses() throws Exception {
+        matcher.init(new FakeMatcherConfig("RecipientIs=" + recipient1.toString() + ", " + recipient3.toString(), FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(recipient1, recipient2, recipient3)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient1, recipient3);
     }
 }
