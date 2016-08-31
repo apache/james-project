@@ -45,7 +45,7 @@ public class UserIs extends GenericRecipientMatcher {
             throw new MessagingException("UserIs should have a condition composed of a list of local parts of mail addresses");
         }
         users = ImmutableSet.copyOf(Splitter.on(", ").split(getCondition()));
-        if (users.size() < 1) {
+        if (users.isEmpty()) {
             throw new MessagingException("UserIs should have at least a user specified");
         }
     }
