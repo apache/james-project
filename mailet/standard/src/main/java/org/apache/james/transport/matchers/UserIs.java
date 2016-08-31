@@ -17,39 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import org.apache.mailet.base.GenericRecipientMatcher;
 import org.apache.mailet.MailAddress;
 
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-/**
- * Matches mail where the user is contained in a configurable list.
- * @version 1.0.0, 24/04/1999
- */
-public class UserIs extends GenericRecipientMatcher {
-    Vector<String> users = null;
+import javax.mail.MessagingException;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
-    public void init() {
-        StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
-        users = new Vector<String>();
-        while (st.hasMoreTokens()) {
-            users.add(st.nextToken());
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+
+public class UserIs extends GenericRecipientMatcher {
+
+    Set<String> users;
+
+    public void init() throws MessagingException {
+        if (Strings.isNullOrEmpty(getCondition())) {
+            throw new MessagingException("UserIs should have a condition composed of a list of local parts of mail addresses");
+        }
+        users = ImmutableSet.copyOf(Splitter.on(", ").split(getCondition()));
+        if (users.size() < 1) {
+            throw new MessagingException("UserIs should have at least a user specified");
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericRecipientMatcher#matchRecipient(org.apache.mailet.MailAddress)
-     */
     public boolean matchRecipient(MailAddress recipient) {
         return users.contains(recipient.getLocalPart());
     }
