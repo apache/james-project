@@ -142,3 +142,18 @@ S: g18 BAD GETMETADATA failed. Illegal arguments.
 
 C: g19 GETMETADATA "INBOX" (MAXSIZE 0) (/private/comment)
 S: g19 BAD GETMETADATA failed. Illegal arguments.
+
+########################End of get annotation############
+
+C: a21 SETMETADATA INBOX (/private "My new comment")
+S: a21 BAD SETMETADATA failed. Illegal arguments.
+
+C: a22 SETMETADATA INBOX (/private/vendor "My new comment")
+S: a22 BAD SETMETADATA failed. Illegal arguments.
+
+C: a23 SETMETADATA INBOX (/private/vendor/token "My new comment")
+S: a23 BAD SETMETADATA failed. Illegal arguments.
+
+C: a24 SETMETADATA INBOX (/shared/vendor/token/comment "My token comment")
+S: a24 OK SETMETADATA completed.
+
