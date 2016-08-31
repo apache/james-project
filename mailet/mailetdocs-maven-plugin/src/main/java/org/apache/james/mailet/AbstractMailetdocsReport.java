@@ -31,6 +31,8 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
+import com.google.common.base.Strings;
+
 /**
  * <p>
  * Base for singleton and aggregate reports on mailets and matchers.
@@ -223,7 +225,10 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
             }
 
             getSink().paragraph();
-            getSink().rawText(descriptor.getClassDocs());
+            String classDocs = descriptor.getClassDocs();
+            if (!Strings.isNullOrEmpty(classDocs)) {
+                getSink().rawText(classDocs);
+            }
             getSink().paragraph_();
 
             getSink().section2_();
