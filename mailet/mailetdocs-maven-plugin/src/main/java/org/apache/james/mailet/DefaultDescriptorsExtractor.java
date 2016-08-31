@@ -24,7 +24,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.mailet.Mailet;
@@ -112,6 +116,8 @@ public class DefaultDescriptorsExtractor {
                 logInterfaces(log, klass, allInterfaces);
             }
 
+        } catch (NoClassDefFoundError e) {
+            log.error("NotFound: " + e.getMessage());
         } catch (ClassNotFoundException e) {
             log.error("NotFound: " + e.getMessage());
         } catch (SecurityException e) {
