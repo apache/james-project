@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import org.apache.mailet.base.GenericMatcher;
@@ -30,6 +28,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.mail.MessagingException;
+
+import com.google.common.base.Strings;
 
 /**
  * <P>Matches mails that are sent by a sender whose address matches a regular expression.</P>
@@ -54,11 +54,12 @@ import javax.mail.MessagingException;
  * @since 2.2.0
  */
 public class SenderIsRegex extends GenericMatcher {
-    Pattern pattern   = null;
+
+    private Pattern pattern;
 
     public void init() throws MessagingException {
         String patternString = getCondition();
-        if ((patternString == null) || (patternString.equals(""))) {
+        if (Strings.isNullOrEmpty(patternString)) {
             throw new MessagingException("Pattern is missing");
         }
         
