@@ -169,10 +169,6 @@
                     <scope>test</scope>
                     <type>test-jar</type>
                 </dependency>
-                <dependency>
-                    <groupId>org.apache.james</groupId>
-                    <artifactId>apache-james-mailbox-store</artifactId>
-                </dependency>
                  <dependency>
                     <groupId>org.apache.james</groupId>
                     <artifactId>apache-james-mailbox-store</artifactId>
@@ -189,6 +185,16 @@
                     <artifactId>apache-mailet-base</artifactId>
                     <scope>test</scope>
                     <type>test-jar</type>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-mime4j-core</artifactId>
+                    <version>${apache-mime4j.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-mime4j-dom</artifactId>
+                    <version>${apache-mime4j.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
