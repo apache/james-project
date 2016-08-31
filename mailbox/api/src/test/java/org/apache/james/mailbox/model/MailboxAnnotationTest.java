@@ -25,10 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.guava.api.Assertions.assertThat;
 
 public class MailboxAnnotationTest {
-    private static final String ASTERISK_CHARACTER = "*";
-
-    private static final String PERCENT_CHARACTER = "%";
-
     private static final MailboxAnnotationKey ANNOTATION_KEY = new MailboxAnnotationKey("/private/comment");
     private static final String ANNOTATION_VALUE = "anyValue";
 

@@ -21,8 +21,6 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -35,7 +33,6 @@ import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 @Contract(MapperProvider.class)
 public class AnnotationMapperTest<T extends MapperProvider> {

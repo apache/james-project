@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Charsets;
 import org.apache.james.protocols.imap.DecodingException;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;

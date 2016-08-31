@@ -29,7 +29,6 @@ import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
 import org.junit.Test;
 
