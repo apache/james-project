@@ -22,30 +22,37 @@ package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.mail.MessagingException;
+
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class SenderIsTest {
 
     private final String SENDER_NAME = "test@james.apache.org";
 
-    private Matcher matcher;
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    private SenderIs matcher;
     private MailAddress recipient;
 
     @Before
     public void setUp() throws Exception {
         matcher = new SenderIs();
-        matcher.init(new FakeMatcherConfig("SenderIs=" + SENDER_NAME, FakeMailContext.defaultContext()));
         recipient = new MailAddress("recipient@james.apache.org");
     }
 
     @Test
     public void shouldMatchWhenGoodSender() throws Exception {
+        matcher.init(new FakeMatcherConfig("SenderIs=" + SENDER_NAME, FakeMailContext.defaultContext()));
+
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
             .sender(new MailAddress(SENDER_NAME))
@@ -56,6 +63,8 @@ public class SenderIsTest {
 
     @Test
     public void shouldNotMatchWhenWrongSender() throws Exception {
+        matcher.init(new FakeMatcherConfig("SenderIs=" + SENDER_NAME, FakeMailContext.defaultContext()));
+
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
             .sender(new MailAddress("other@james.apache.org"))
@@ -66,10 +75,32 @@ public class SenderIsTest {
 
     @Test
     public void shouldNotMatchWhenNullSender() throws Exception {
+        matcher.init(new FakeMatcherConfig("SenderIs=" + SENDER_NAME, FakeMailContext.defaultContext()));
+
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
             .build();
 
         assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    public void senderIsShouldBeConfigurableWithSeveralAddresses() throws Exception {
+        String mailAddress = "any@apache.org";
+        matcher.init(new FakeMatcherConfig("SenderIs=" + mailAddress + ", " + SENDER_NAME, FakeMailContext.defaultContext()));
+
+        assertThat(matcher.getSenders()).containsExactly(new MailAddress(mailAddress), new MailAddress(SENDER_NAME));
+    }
+
+    @Test
+    public void senderIsShouldThrowWhenNoAddressesPassedByConfiguration() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("SenderIs=", FakeMailContext.defaultContext()));
+    }
+
+    @Test
+    public void senderIsShouldThrowWhenNoConfiguration() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("SenderIs", FakeMailContext.defaultContext()));
     }
 }
