@@ -39,7 +39,6 @@ import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.utils.FilterToSearchQuery;
-import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.jmap.utils.SortToComparatorConvertor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -78,17 +77,15 @@ public class GetMessageListMethod implements Method {
     private final MailboxManager mailboxManager;
     private final int maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
-    private final MailboxUtils mailboxUtils;
     private final Factory mailboxIdFactory;
 
     @Inject
     @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager,
-            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxUtils mailboxUtils, MailboxId.Factory mailboxIdFactory) {
+            @Named(MAXIMUM_LIMIT) int maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory) {
 
         this.mailboxManager = mailboxManager;
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
-        this.mailboxUtils = mailboxUtils;
         this.mailboxIdFactory = mailboxIdFactory;
     }
 
@@ -140,7 +137,7 @@ public class GetMessageListMethod implements Method {
         for (Map.Entry<MailboxId, Collection<Long>> mailboxResults: searchResults.entrySet()) {
             try {
                 aggregate(mailboxSession, messages, mailboxResults);
-            } catch (MailboxNotFoundException e) {
+            } catch (MailboxException e) {
                 LOGGER.error("Error retrieving mailbox", e);
                 throw Throwables.propagate(e);
             }
@@ -148,9 +145,8 @@ public class GetMessageListMethod implements Method {
         return messages;
     }
 
-    private void aggregate(MailboxSession mailboxSession, Multimap<MailboxPath, MessageResult> aggregation, Map.Entry<MailboxId, Collection<Long>> mailboxResults) throws MailboxNotFoundException {
-        MailboxPath mailboxPath = mailboxUtils.mailboxPathFromMailboxId(mailboxResults.getKey(), mailboxSession)
-            .orElseThrow(() -> new MailboxNotFoundException(mailboxResults.getKey().serialize()));
+    private void aggregate(MailboxSession mailboxSession, Multimap<MailboxPath, MessageResult> aggregation, Map.Entry<MailboxId, Collection<Long>> mailboxResults) throws MailboxNotFoundException, MailboxException {
+        MailboxPath mailboxPath = mailboxManager.getMailbox(mailboxResults.getKey(), mailboxSession).getMailboxPath();
         MessageManager messageManager = getMessageManager(mailboxPath, mailboxSession)
             .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
         List<MessageResult> mailboxMessages = MessageRange.toRanges(mailboxResults.getValue()).stream()

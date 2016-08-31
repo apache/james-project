@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 
 public class MailboxUtils {
@@ -99,12 +98,6 @@ public class MailboxUtils {
         return name;
     }
 
-    public Optional<String> getMailboxNameFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
-        return getMailboxFromId(mailboxId, mailboxSession)
-                .map(Throwing.function(MessageManager::getMailboxPath).sneakyThrow())
-                .map(MailboxPath::getName);
-    }
-
     private Optional<MessageManager> getMailboxFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         try {
             return Optional.of(mailboxManager.getMailbox(mailboxId, mailboxSession));
@@ -132,29 +125,10 @@ public class MailboxUtils {
         }
     }
 
-    public MailboxPath getMailboxPath(Mailbox mailbox, MailboxSession mailboxSession) {
-        return new MailboxPath(mailboxSession.getPersonalSpace(), mailboxSession.getUser().getUserName(), getMailboxName(mailbox, mailboxSession));
-    }
-
-    private String getMailboxName(Mailbox mailbox, MailboxSession mailboxSession) {
-        if (mailbox.getParentId().isPresent()) {
-            return getMailboxName(mailboxFromMailboxId(mailbox.getParentId().get(), mailboxSession).get(), mailboxSession) +
-                    mailboxSession.getPathDelimiter() + mailbox.getName();
-        }
-        return mailbox.getName();
-    }
-
     public boolean hasChildren(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxFromId(mailboxId, mailboxSession)
                 .map(Throwing.function(MessageManager::getMailboxPath).sneakyThrow())
                 .map(Throwing.function(path -> mailboxManager.hasChildren(path, mailboxSession)))
                 .orElse(false);
-    }
-
-    public Optional<MailboxPath> mailboxPathFromMailboxId(MailboxId mailboxId, MailboxSession mailboxSession) {
-        Preconditions.checkState(mailboxId != null, "'mailboxId' is mandatory");
-        Preconditions.checkState(mailboxSession != null, "'mailboxId' is mandatory");
-        return mailboxFromMailboxId(mailboxId, mailboxSession)
-                .map(mailbox -> getMailboxPath(mailbox, mailboxSession));
     }
 }

@@ -43,6 +43,8 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -156,8 +158,11 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
 
         if (isParentIdInRequest(updateRequest)) {
             MailboxId newParentId = updateRequest.getParentId().get();
-            mailboxUtils.mailboxPathFromMailboxId(newParentId, mailboxSession)
-                    .orElseThrow(() -> new MailboxParentNotFoundException(newParentId));
+            try {
+                mailboxManager.getMailbox(newParentId, mailboxSession);
+            } catch (MailboxNotFoundException e) {
+                throw new MailboxParentNotFoundException(newParentId);
+            }
             if (mustChangeParent(mailbox.getParentId(), newParentId) && mailboxUtils.hasChildren(mailbox.getId(), mailboxSession)) {
                 throw new MailboxHasChildException();
             }
@@ -176,14 +181,14 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     }
 
     private void updateMailbox(Mailbox mailbox, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException {
-        MailboxPath originMailboxPath = mailboxUtils.getMailboxPath(mailbox, mailboxSession);
+        MailboxPath originMailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
         MailboxPath destinationMailboxPath = computeNewMailboxPath(mailbox, originMailboxPath, updateRequest, mailboxSession);
         if (!originMailboxPath.equals(destinationMailboxPath)) {
             mailboxManager.renameMailbox(originMailboxPath, destinationMailboxPath, mailboxSession);
         }
     }
 
-    private MailboxPath computeNewMailboxPath(Mailbox mailbox, MailboxPath originMailboxPath, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) {
+    private MailboxPath computeNewMailboxPath(Mailbox mailbox, MailboxPath originMailboxPath, MailboxUpdateRequest updateRequest, MailboxSession mailboxSession) throws MailboxException {
         Optional<MailboxId> parentId = updateRequest.getParentId();
         if (parentId == null) {
             return new MailboxPath(mailboxSession.getPersonalSpace(), 
@@ -194,8 +199,9 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         MailboxPath modifiedMailboxPath = updateRequest.getName()
                 .map(newName -> computeMailboxPathWithNewName(originMailboxPath, newName))
                 .orElse(originMailboxPath);
+        ThrowingFunction<MailboxId, MailboxPath> computeNewMailboxPath = parentMailboxId -> computeMailboxPathWithNewParentId(modifiedMailboxPath, parentMailboxId, mailboxSession);
         return parentId
-                .map(parentMailboxId -> computeMailboxPathWithNewParentId(modifiedMailboxPath, parentMailboxId, mailboxSession))
+                .map(Throwing.function(computeNewMailboxPath).sneakyThrow())
                 .orElse(modifiedMailboxPath);
     }
 
@@ -203,10 +209,10 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         return new MailboxPath(originMailboxPath, newName);
     }
 
-    private MailboxPath computeMailboxPathWithNewParentId(MailboxPath originMailboxPath, MailboxId parentMailboxId, MailboxSession mailboxSession) {
-        Optional<MailboxPath> newParentMailboxPath = mailboxUtils.mailboxPathFromMailboxId(parentMailboxId, mailboxSession);
+    private MailboxPath computeMailboxPathWithNewParentId(MailboxPath originMailboxPath, MailboxId parentMailboxId, MailboxSession mailboxSession) throws MailboxException {
+        MailboxPath newParentMailboxPath = mailboxManager.getMailbox(parentMailboxId, mailboxSession).getMailboxPath();
         String lastName = getCurrentMailboxName(originMailboxPath, mailboxSession);
-        return new MailboxPath(originMailboxPath, newParentMailboxPath.get().getName() + mailboxSession.getPathDelimiter() + lastName);
+        return new MailboxPath(originMailboxPath, newParentMailboxPath.getName() + mailboxSession.getPathDelimiter() + lastName);
     }
 
     private String getCurrentMailboxName(MailboxPath originMailboxPath, MailboxSession mailboxSession) {

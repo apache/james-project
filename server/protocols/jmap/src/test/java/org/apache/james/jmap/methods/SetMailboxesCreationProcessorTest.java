@@ -43,12 +43,14 @@ public class SetMailboxesCreationProcessorTest {
     private MailboxUtils mailboxUtils;
     private Factory mailboxIdFactory;
     private SetMailboxesCreationProcessor sut;
+    private MailboxManager mailboxManager;
 
     @Before
     public void setup() {
         mailboxUtils = mock(MailboxUtils.class);
+        mailboxManager = mock(MailboxManager.class);
         mailboxIdFactory = new InMemoryId.Factory();
-        sut = new SetMailboxesCreationProcessor(mock(MailboxManager.class), mailboxUtils, mailboxIdFactory);
+        sut = new SetMailboxesCreationProcessor(mailboxManager, mailboxUtils, mailboxIdFactory);
     }
 
     @Test
@@ -61,7 +63,7 @@ public class SetMailboxesCreationProcessorTest {
                 .build();
 
         MailboxSession mailboxSession = mock(MailboxSession.class);
-        when(mailboxUtils.getMailboxNameFromId(parentMailboxId, mailboxSession))
+        when(mailboxManager.getMailbox(parentMailboxId, mailboxSession))
             .thenThrow(new MailboxException());
 
         SetMailboxesResponse setMailboxesResponse = sut.process(request, mailboxSession);

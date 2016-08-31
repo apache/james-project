@@ -33,9 +33,9 @@ import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -59,15 +59,14 @@ public class SetMailboxesUpdateProcessorTest {
         // Given
         InMemoryId mailboxId = InMemoryId.of(1);
         InMemoryId newParentId = InMemoryId.of(2);
-        MailboxPath newParentMailboxPath = new MailboxPath("#private", "user", "newParentName");
         SetMailboxesRequest request = SetMailboxesRequest.builder()
                 .update(mailboxId, MailboxUpdateRequest.builder().parentId(newParentId).build())
                 .build();
         Mailbox mailbox = Mailbox.builder().id(mailboxId).name("name").role(Optional.empty()).build();
         when(mockedMailboxUtils.mailboxFromMailboxId(mailboxId, mockedMailboxSession))
             .thenReturn(Optional.of(mailbox));
-        when(mockedMailboxUtils.mailboxPathFromMailboxId(newParentId, mockedMailboxSession))
-            .thenReturn(Optional.of(newParentMailboxPath));
+        when(mockedMailboxManager.getMailbox(newParentId, mockedMailboxSession))
+            .thenReturn(mock(MessageManager.class));
         when(mockedMailboxUtils.hasChildren(mailboxId, mockedMailboxSession))
             .thenThrow(new MailboxException());
 

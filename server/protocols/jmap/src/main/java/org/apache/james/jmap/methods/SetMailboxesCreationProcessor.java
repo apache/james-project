@@ -40,6 +40,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -144,7 +145,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             MailboxCreationId parentId = mailboxRequest.getParentId().get();
             String parentName = getMailboxNameFromId(parentId, mailboxSession)
                     .orElseGet(Throwing.supplier(() ->
-                        mailboxUtils.getMailboxNameFromId(creationIdsToCreatedMailboxId.get(parentId), mailboxSession)
+                        getMailboxNameFromId(creationIdsToCreatedMailboxId.get(parentId), mailboxSession)
                             .orElseThrow(() -> new MailboxParentNotFoundException(parentId))
                     ));
 
@@ -155,7 +156,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     }
 
     private Optional<String> getMailboxNameFromId(MailboxCreationId creationId, MailboxSession mailboxSession) {
-        ThrowingFunction<? super MailboxId, Optional<String>> toName = parentId -> mailboxUtils.getMailboxNameFromId(parentId, mailboxSession);
+        ThrowingFunction<? super MailboxId, Optional<String>> toName = parentId -> getMailboxNameFromId(parentId, mailboxSession);
         return getMailboxIdFromCreationId(creationId)
                 .flatMap(Throwing.function(toName).sneakyThrow());
     }
@@ -167,4 +168,17 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             return Optional.empty();
         }
     }
+
+    @VisibleForTesting
+    Optional<String> getMailboxNameFromId(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
+        if (mailboxId == null) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath().getName());
+        } catch (MailboxNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
 }

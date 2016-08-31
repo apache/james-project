@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +97,8 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
             Mailbox mailbox = entry.getValue();
             preconditions(mailbox, mailboxSession);
 
-            mailboxManager.deleteMailbox(mailboxUtils.getMailboxPath(mailbox, mailboxSession), mailboxSession);
+            MailboxPath mailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
+            mailboxManager.deleteMailbox(mailboxPath, mailboxSession);
             builder.destroyed(entry.getKey());
         } catch (MailboxHasChildException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
