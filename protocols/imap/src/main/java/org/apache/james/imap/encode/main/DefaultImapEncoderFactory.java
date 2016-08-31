@@ -21,6 +21,7 @@ package org.apache.james.imap.encode.main;
 
 import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.encode.ACLResponseEncoder;
+import org.apache.james.imap.encode.AnnotationResponseEncoder;
 import org.apache.james.imap.encode.AuthenticateResponseEncoder;
 import org.apache.james.imap.encode.CapabilityResponseEncoder;
 import org.apache.james.imap.encode.ContinuationResponseEncoder;
@@ -65,7 +66,8 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
     public static final ImapEncoder createDefaultEncoder(Localizer localizer, boolean neverAddBodyStructureExtensions) {
         final EndImapEncoder endImapEncoder = new EndImapEncoder();
         
-        final MyRightsResponseEncoder myRightsResponseEncoder = new MyRightsResponseEncoder(endImapEncoder); 
+        final AnnotationResponseEncoder annotationResponseEncoder = new AnnotationResponseEncoder(endImapEncoder);
+        final MyRightsResponseEncoder myRightsResponseEncoder = new MyRightsResponseEncoder(annotationResponseEncoder); 
         final ListRightsResponseEncoder listRightsResponseEncoder = new ListRightsResponseEncoder(myRightsResponseEncoder); 
         final ACLResponseEncoder aclResponseEncoder = new ACLResponseEncoder(listRightsResponseEncoder); 
         final NamespaceResponseEncoder namespaceEncoder = new NamespaceResponseEncoder(aclResponseEncoder);

@@ -31,11 +31,7 @@ import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxManager;
-import org.apache.james.mailbox.model.MailboxAnnotation;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MailboxQuery;
+import org.apache.james.mailbox.model.*;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -63,9 +59,16 @@ public class MailboxManagerTest<T extends MailboxManager> {
     public final static String USER_1 = "USER_1";
     public final static String USER_2 = "USER_2";
 
-    private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance("/private/comment", "My private comment");
-    private static final MailboxAnnotation PRIVATE_ANNOTATION_UPDATE = MailboxAnnotation.newInstance("/private/comment", "My updated private comment");
-    private static final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance("/shared/comment", "My shared comment");
+    private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
+    private static final MailboxAnnotationKey PRIVATE_CHILD_KEY = new MailboxAnnotationKey("/private/comment/user");
+    private static final MailboxAnnotationKey PRIVATE_GRANDCHILD_KEY = new MailboxAnnotationKey("/private/comment/user/name");
+    private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
+
+    private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "My private comment");
+    private static final MailboxAnnotation PRIVATE_CHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_CHILD_KEY, "My private comment");
+    private static final MailboxAnnotation PRIVATE_GRANDCHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_GRANDCHILD_KEY, "My private comment");
+    private static final MailboxAnnotation PRIVATE_ANNOTATION_UPDATE = MailboxAnnotation.newInstance(PRIVATE_KEY, "My updated private comment");
+    private static final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance(SHARED_KEY, "My shared comment");
 
     private static final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
 
@@ -264,7 +267,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
         mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION));
 
-        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.nil("/private/comment")));
+        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
         assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEmpty();
     }
 
@@ -319,7 +322,7 @@ public class MailboxManagerTest<T extends MailboxManager> {
 
         mailboxManager.updateAnnotations(inbox, session, ANNOTATIONS);
 
-        assertThat(mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of("/private/comment")))
+        assertThat(mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
             .containsOnly(PRIVATE_ANNOTATION);
     }
 
@@ -330,7 +333,43 @@ public class MailboxManagerTest<T extends MailboxManager> {
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
 
-        mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of("/private/comment"));
+        mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY));
+    }
+
+    @ContractTest
+    public void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws BadCredentialsException, MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+
+        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
+
+        assertThat(mailboxManager.getAnnotationsByKeysWithOneDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
+            .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION);
+    }
+
+    @ContractTest
+    public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws BadCredentialsException, MailboxException {
+        expected.expect(MailboxException.class);
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
+        MailboxPath inbox = MailboxPath.inbox(session);
+
+        mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY));
+    }
+
+    @ContractTest
+    public void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws BadCredentialsException, MailboxException {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+        session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+
+        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
+
+        assertThat(mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
+            .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
 }

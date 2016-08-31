@@ -19,44 +19,31 @@
 
 package org.apache.james.mailbox.model;
 
-import org.apache.commons.lang.StringUtils;
-
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailboxAnnotation {
 
-    private static final CharMatcher NAME_ANNOTATION_PATTERN = CharMatcher.ASCII
-            .and(CharMatcher.inRange('\u0000', '\u0019').negate()).and(CharMatcher.isNot('*'))
-            .and(CharMatcher.isNot('%'));
-    
-    public static final String SLASH_CHARACTER = "/";
-    
-    public static final String TWO_SLASH_CHARACTER = "//";
-    
-    public static MailboxAnnotation nil(String key) {
+    public static MailboxAnnotation nil(MailboxAnnotationKey key) {
         return new MailboxAnnotation(key, Optional.<String> absent());
     }
 
-    public static MailboxAnnotation newInstance(String key, String value) {
+    public static MailboxAnnotation newInstance(MailboxAnnotationKey key, String value) {
         return new MailboxAnnotation(key, Optional.of(value));
     }
 
-    private final String key;
+    private final MailboxAnnotationKey key;
     private final Optional<String> value;
 
-    private MailboxAnnotation(String key, Optional<String> value) {
+    private MailboxAnnotation(MailboxAnnotationKey key, Optional<String> value) {
         Preconditions.checkNotNull(key);
         Preconditions.checkNotNull(value);
-        Preconditions.checkArgument(isValidKey(key), 
-                "Key must start with '/' and not end with '/' and does not contain charater with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
         this.key = key;
         this.value = value;
     }
 
-    public String getKey() {
+    public MailboxAnnotationKey getKey() {
         return key;
     }
 
@@ -64,24 +51,11 @@ public class MailboxAnnotation {
         return value;
     }
 
-    private static boolean isValidKey(String input) {
-        if (StringUtils.isBlank(input)) {
-            return false;
+    public int size() {
+        if (isNil()) {
+            return 0;
         }
-        String key = input.trim();
-        if (!key.startsWith(SLASH_CHARACTER)) {
-            return false;
-        }
-        if (key.contains(TWO_SLASH_CHARACTER)) {
-            return false;
-        }
-        if (key.endsWith(SLASH_CHARACTER)) {
-            return false;
-        }
-        if (!NAME_ANNOTATION_PATTERN.matchesAllOf(key)) {
-            return false;
-        }
-        return true;
+        return value.get().length();
     }
 
     @Override
@@ -102,4 +76,5 @@ public class MailboxAnnotation {
             return false;
         }
     }
+
 }

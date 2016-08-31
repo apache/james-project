@@ -33,6 +33,7 @@ import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
@@ -369,7 +370,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     List<MailboxPath> list(MailboxSession session) throws MailboxException;
 
     /**
-     * Return all mailbox's annotation as the {@link List} of {@link MailboxAnnotation} without order and not duplicated by key
+     * Return all mailbox's annotation as the {@link List} of {@link MailboxAnnotation} without order and
+     * do not contain any two annotations with the same key
      * 
      * @param mailboxPath   the current mailbox
      * @param session       the current session
@@ -379,7 +381,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     /**
-     * Return all mailbox's annotation filter by the list of the keys without order and not duplicated by key
+     * Return all mailbox's annotation filter by the list of the keys without order and
+     * do not contain any two annotations with the same key
      * 
      * @param mailboxPath   the current mailbox
      * @param session       the current session
@@ -387,7 +390,31 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @return              List<MailboxAnnotation>
      * @throws MailboxException in case of selected mailbox does not exist
      */
-    List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<String> keys) throws MailboxException;
+    List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
+
+    /**
+     * Return all mailbox's annotation by the list of the keys and its children entries without order and
+     * do not contain any two annotations with the same key
+     *
+     * @param mailboxPath   the current mailbox
+     * @param session       the current session
+     * @param keys          list of the keys should be filter
+     * @return              List<MailboxAnnotation>
+     * @throws MailboxException in case of selected mailbox does not exist
+     */
+    List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
+
+    /**
+     * Return all mailbox's annotation by the list of the keys and its below entries without order and
+     * do not contain any two annotations with the same key
+     *
+     * @param mailboxPath   the current mailbox
+     * @param session       the current session
+     * @param keys          list of the keys should be filter
+     * @return              List<MailboxAnnotation>
+     * @throws MailboxException in case of selected mailbox does not exist
+     */
+    List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
 
     /**
      * Update the mailbox's annotations. This method can:

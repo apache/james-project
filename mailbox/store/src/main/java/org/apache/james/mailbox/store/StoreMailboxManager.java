@@ -49,6 +49,7 @@ import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -733,7 +734,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<String> keys) 
+    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys)
             throws MailboxException {
         AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
         return annotationMapper.getAnnotationsByKeys(keys);
@@ -755,5 +756,19 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public boolean hasCapability(MailboxCapabilities capability) {
         return getSupportedMailboxCapabilities().contains(capability);
+    }
+
+    @Override
+    public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session,
+            Set<MailboxAnnotationKey> keys) throws MailboxException {
+        AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
+        return annotationMapper.getAnnotationsByKeysWithOneDepth(keys);
+    }
+
+    @Override
+    public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
+            Set<MailboxAnnotationKey> keys) throws MailboxException {
+        AnnotationMapper annotationMapper = getAnnotationMapper(mailboxPath, session);
+        return annotationMapper.getAnnotationsByKeysWithAllDepth(keys);
     }
 }

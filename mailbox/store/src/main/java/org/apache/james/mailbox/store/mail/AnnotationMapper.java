@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
 public interface AnnotationMapper extends Mapper {
@@ -42,14 +43,32 @@ public interface AnnotationMapper extends Mapper {
      * @param keys the set of the key should be filtered
      * @return List<MailboxAnnotation>
      */
-    List<MailboxAnnotation> getAnnotationsByKeys(Set<String> keys);
+    List<MailboxAnnotation> getAnnotationsByKeys(Set<MailboxAnnotationKey> keys);
+
+    /**
+     * Search all the <code>MailboxAnnotation</code> by the set of annotation's keys as well as its children entries 
+     * The result is not ordered and should not contain duplicate by key
+     * 
+     * @param keys the set of the key should be filtered
+     * @return List<MailboxAnnotation>
+     */
+    List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(Set<MailboxAnnotationKey> keys);
+
+    /**
+     * Search all the <code>MailboxAnnotation</code> by the set of annotation's keys and entries below the keys 
+     * The result is not ordered and should not contain duplicate by key
+     * 
+     * @param keys the set of the key should be filtered
+     * @return List<MailboxAnnotation>
+     */
+    List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(Set<MailboxAnnotationKey> keys);
 
     /**
      * Delete the annotation by its key.
      * 
      * @param key the key of annotation should be deleted
      */
-    void deleteAnnotation(String key);
+    void deleteAnnotation(MailboxAnnotationKey key);
 
     /**
      * - Insert new annotation if it does not exist on store
