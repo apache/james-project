@@ -24,11 +24,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.jmap.model.MailboxCreationId;
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
-import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -40,17 +40,16 @@ import org.junit.Test;
 
 public class SetMailboxesCreationProcessorTest {
 
-    private MailboxUtils mailboxUtils;
     private Factory mailboxIdFactory;
+    private MailboxFactory mailboxFactory;
     private SetMailboxesCreationProcessor sut;
     private MailboxManager mailboxManager;
 
     @Before
     public void setup() {
-        mailboxUtils = mock(MailboxUtils.class);
         mailboxManager = mock(MailboxManager.class);
         mailboxIdFactory = new InMemoryId.Factory();
-        sut = new SetMailboxesCreationProcessor(mailboxManager, mailboxUtils, mailboxIdFactory);
+        sut = new SetMailboxesCreationProcessor(mailboxManager, mailboxFactory, mailboxIdFactory);
     }
 
     @Test

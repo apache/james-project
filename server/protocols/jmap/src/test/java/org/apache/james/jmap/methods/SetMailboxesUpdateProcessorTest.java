@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
@@ -43,6 +44,7 @@ public class SetMailboxesUpdateProcessorTest {
 
     private MailboxManager mockedMailboxManager;
     private MailboxUtils mockedMailboxUtils;
+    private MailboxFactory mockedMailboxFactory;
     private MailboxSession mockedMailboxSession;
     private SetMailboxesUpdateProcessor sut;
 
@@ -50,8 +52,9 @@ public class SetMailboxesUpdateProcessorTest {
     public void setup() {
         mockedMailboxManager = mock(MailboxManager.class);
         mockedMailboxUtils = mock(MailboxUtils.class);
+        mockedMailboxFactory = mock(MailboxFactory.class);
         mockedMailboxSession = mock(MailboxSession.class);
-        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager);
+        sut = new SetMailboxesUpdateProcessor(mockedMailboxUtils, mockedMailboxManager, mockedMailboxFactory);
     }
 
     @Test
@@ -63,7 +66,7 @@ public class SetMailboxesUpdateProcessorTest {
                 .update(mailboxId, MailboxUpdateRequest.builder().parentId(newParentId).build())
                 .build();
         Mailbox mailbox = Mailbox.builder().id(mailboxId).name("name").role(Optional.empty()).build();
-        when(mockedMailboxUtils.mailboxFromMailboxId(mailboxId, mockedMailboxSession))
+        when(mockedMailboxFactory.fromMailboxId(mailboxId, mockedMailboxSession))
             .thenReturn(Optional.of(mailbox));
         when(mockedMailboxManager.getMailbox(newParentId, mockedMailboxSession))
             .thenReturn(mock(MessageManager.class));

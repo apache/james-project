@@ -34,10 +34,10 @@ import javax.mail.Flags;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
-import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -71,7 +71,7 @@ public class GetMailboxesMethodTest {
     private GetMailboxesMethod getMailboxesMethod;
     private ClientId clientId;
     private InMemoryMailboxSessionMapperFactory mailboxMapperFactory;
-    private MailboxUtils mailboxUtils;
+    private MailboxFactory mailboxFactory;
 
     @Before
     public void setup() throws Exception {
@@ -82,9 +82,9 @@ public class GetMailboxesMethodTest {
         MessageParser messageParser = new MessageParser();
         mailboxManager = new StoreMailboxManager(mailboxMapperFactory, new MockAuthenticator(), aclResolver, groupMembershipResolver, messageParser);
         mailboxManager.init();
-        mailboxUtils = new MailboxUtils(mailboxManager);
+        mailboxFactory = new MailboxFactory(mailboxManager);
 
-        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxUtils);
+        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxFactory);
     }
 
     @Test
@@ -112,7 +112,7 @@ public class GetMailboxesMethodTest {
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
         when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any()))
             .thenThrow(new MailboxException());
-        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxUtils);
+        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxFactory);
         
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();

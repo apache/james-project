@@ -30,9 +30,9 @@ import javax.inject.Inject;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.MailboxProperty;
 import org.apache.james.jmap.model.mailbox.Mailbox;
-import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -53,12 +53,12 @@ public class GetMailboxesMethod implements Method {
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("mailboxes");
 
     private final MailboxManager mailboxManager; 
-    private final MailboxUtils mailboxUtils;
+    private final MailboxFactory mailboxFactory;
 
     @Inject
-    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxUtils mailboxUtils) {
+    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxFactory mailboxFactory) {
         this.mailboxManager = mailboxManager;
-        this.mailboxUtils = mailboxUtils;
+        this.mailboxFactory = mailboxFactory;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class GetMailboxesMethod implements Method {
             retrieveUserMailboxes(mailboxSession)
                 .stream()
                 .map(MailboxMetaData::getPath)
-                .map(mailboxPath -> mailboxUtils.mailboxFromMailboxPath(mailboxPath, mailboxSession))
+                .map(mailboxPath -> mailboxFactory.fromMailboxPath(mailboxPath, mailboxSession))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .filter(filterMailboxesById(mailboxesRequest.getIds()))

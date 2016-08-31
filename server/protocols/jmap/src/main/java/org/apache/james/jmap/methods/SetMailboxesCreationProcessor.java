@@ -28,13 +28,13 @@ import javax.inject.Inject;
 import org.apache.james.jmap.exceptions.MailboxNameException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
 import org.apache.james.jmap.model.MailboxCreationId;
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.utils.DependencyGraph.CycleDetectedException;
-import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.jmap.utils.SortingHierarchicalCollections;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -57,18 +57,18 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
 
     private final MailboxManager mailboxManager;
     private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId> sortingHierarchicalCollections;
-    private final MailboxUtils mailboxUtils;
+    private final MailboxFactory mailboxFactory;
     private final Factory mailboxIdFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesCreationProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils, MailboxId.Factory mailboxIdFactory) {
+    SetMailboxesCreationProcessor(MailboxManager mailboxManager, MailboxFactory mailboxFactory, MailboxId.Factory mailboxIdFactory) {
         this.mailboxManager = mailboxManager;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId>(
                 x -> x.getKey(),
                 x -> x.getValue().getParentId());
-        this.mailboxUtils = mailboxUtils;
+        this.mailboxFactory = mailboxFactory;
         this.mailboxIdFactory = mailboxIdFactory;
     }
 
@@ -101,7 +101,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = getMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
             mailboxManager.createMailbox(mailboxPath, mailboxSession);
-            Optional<Mailbox> mailbox = mailboxUtils.mailboxFromMailboxPath(mailboxPath, mailboxSession);
+            Optional<Mailbox> mailbox = mailboxFactory.fromMailboxPath(mailboxPath, mailboxSession);
             if (mailbox.isPresent()) {
                 builder.created(mailboxCreationId, mailbox.get());
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());

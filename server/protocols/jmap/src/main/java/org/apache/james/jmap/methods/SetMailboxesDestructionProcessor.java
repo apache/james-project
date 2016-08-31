@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.exceptions.MailboxHasChildException;
 import org.apache.james.jmap.exceptions.SystemMailboxNotUpdatableException;
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
@@ -53,16 +54,18 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
     private final MailboxManager mailboxManager;
     private final SortingHierarchicalCollections<Map.Entry<MailboxId, Mailbox>, MailboxId> sortingHierarchicalCollections;
     private final MailboxUtils mailboxUtils;
+    private final MailboxFactory mailboxFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils) {
+    SetMailboxesDestructionProcessor(MailboxManager mailboxManager, MailboxUtils mailboxUtils, MailboxFactory mailboxFactory) {
         this.mailboxManager = mailboxManager;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<>(
                     Entry::getKey,
                     x -> x.getValue().getParentId());
         this.mailboxUtils = mailboxUtils;
+        this.mailboxFactory = mailboxFactory;
     }
 
     public SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession) {
@@ -79,7 +82,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
     private ImmutableMap<MailboxId, Mailbox> mapDestroyRequests(SetMailboxesRequest request, MailboxSession mailboxSession) {
         ImmutableMap.Builder<MailboxId, Mailbox> idToMailboxBuilder = ImmutableMap.builder(); 
         request.getDestroy().stream()
-            .map(id -> mailboxUtils.mailboxFromMailboxId(id, mailboxSession))
+            .map(id -> mailboxFactory.fromMailboxId(id, mailboxSession))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(mailbox -> idToMailboxBuilder.put(mailbox.getId(), mailbox));

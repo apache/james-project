@@ -27,6 +27,7 @@ import org.apache.james.jmap.exceptions.MailboxHasChildException;
 import org.apache.james.jmap.exceptions.MailboxNameException;
 import org.apache.james.jmap.exceptions.MailboxParentNotFoundException;
 import org.apache.james.jmap.exceptions.SystemMailboxNotUpdatableException;
+import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
@@ -53,12 +54,14 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
 
     private final MailboxUtils mailboxUtils;
     private final MailboxManager mailboxManager;
+    private final MailboxFactory mailboxFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager) {
+    SetMailboxesUpdateProcessor(MailboxUtils mailboxUtils, MailboxManager mailboxManager, MailboxFactory mailboxFactory) {
         this.mailboxUtils = mailboxUtils;
         this.mailboxManager = mailboxManager;
+        this.mailboxFactory = mailboxFactory;
     }
 
     @Override
@@ -126,7 +129,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
     }
 
     private Mailbox getMailbox(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxNotFoundException {
-        return mailboxUtils.mailboxFromMailboxId(mailboxId, mailboxSession)
+        return mailboxFactory.fromMailboxId(mailboxId, mailboxSession)
                 .orElseThrow(() -> new MailboxNotFoundException(mailboxId.serialize()));
     }
 
