@@ -20,18 +20,24 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
-import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.mail.MessagingException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RecipientIsTest {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     private RecipientIs matcher;
 
@@ -48,7 +54,7 @@ public class RecipientIsTest {
             .recipient(ANY_AT_JAMES)
             .build();
 
-       assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
+       assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES);
     }
 
     @Test
@@ -59,7 +65,7 @@ public class RecipientIsTest {
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
-        assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
+        assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES);
     }
 
     @Test
@@ -71,5 +77,28 @@ public class RecipientIsTest {
             .build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
+    }
+
+    @Test
+    public void initShouldThrowOnMissingCondition() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIs", FakeMailContext.defaultContext()));
+    }
+
+    @Test
+    public void initShouldThrowOnEmptyCondition() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIs=", FakeMailContext.defaultContext()));
+    }
+
+    @Test
+    public void shouldBeAbleToMatchSeveralAddresses() throws Exception {
+        matcher.init(new FakeMatcherConfig("RecipientIs=" + ANY_AT_JAMES.toString() + ", " + ANY_AT_JAMES2.toString(), FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES, ANY_AT_JAMES2);
     }
 }
