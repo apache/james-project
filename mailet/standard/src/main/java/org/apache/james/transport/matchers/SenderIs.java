@@ -37,7 +37,7 @@ public class SenderIs extends GenericMatcher {
     private Set<MailAddress> senders;
 
     @VisibleForTesting
-    public Set<MailAddress> getSenders() {
+    Set<MailAddress> getSenders() {
         return senders;
     }
 
