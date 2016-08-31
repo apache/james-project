@@ -20,56 +20,48 @@
 
 package org.apache.james.transport.matchers;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.MessagingException;
-
-import org.apache.james.transport.matchers.SenderIsNull;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-public class SenderIsNullTest extends AbstractSenderIsTest {
+public class SenderIsNullTest {
 
-    public SenderIsNullTest(String arg0) throws UnsupportedEncodingException {
-        super(arg0);
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    private SenderIsNull matcher;
+    private MailAddress recipient;
+
+    @Before
+    public void setUp() throws Exception {
+        matcher = new SenderIsNull();
+        matcher.init(new FakeMatcherConfig("SenderIsNull", FakeMailContext.defaultContext()));
+        recipient = new MailAddress("recipient@james.apache.org");
     }
 
-    // test if matched
-    public void testSenderIsMatchedAllRecipients() throws MessagingException {
-        setSender(null);
+    @Test
+    public void shouldMatchWhenNullSender() throws Exception {
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .build();
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient);
     }
 
-    // test if not matched
-    public void testSenderIsNotMatchedAllRecipients() throws MessagingException {
-        setSender(new MailAddress("t@james.apache.org"));
+    @Test
+    public void shouldNotMatchWhenSenderIsPresent() throws Exception {
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .sender(new MailAddress("other@james.apache.org"))
+            .build();
 
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNull(matchedRecipients);
-    }
-
-    protected Matcher createMatcher() {
-        return new SenderIsNull();
-    }
-
-    protected String getConfigOption() {
-        return "SenderIsNull";
-    }
-
-    protected String getConfigValue() {
-        return "";
+        assertThat(matcher.match(fakeMail)).isNull();
     }
 }
