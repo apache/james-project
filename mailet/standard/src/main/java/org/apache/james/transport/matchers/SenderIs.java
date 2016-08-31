@@ -23,20 +23,14 @@ import java.util.Collection;
 import java.util.Set;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 
+import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class SenderIs extends GenericMatcher {
 
@@ -51,15 +45,7 @@ public class SenderIs extends GenericMatcher {
         if (Strings.isNullOrEmpty(getCondition())) {
             throw new MessagingException("SenderIs should have at least one address as parameter");
         }
-        senders = FluentIterable.from(Splitter.on(", ").split(getCondition())).transform(new Function<String, MailAddress>() {
-            public MailAddress apply(String s) {
-                try {
-                    return new MailAddress(s);
-                } catch (AddressException e) {
-                    throw Throwables.propagate(e);
-                }
-            }
-        }).toSet();
+        senders = MailAddressCollectionReader.read(getCondition());
         if (senders.size() < 1) {
             throw new MessagingException("SenderIs should have at least one address as parameter");
         }
