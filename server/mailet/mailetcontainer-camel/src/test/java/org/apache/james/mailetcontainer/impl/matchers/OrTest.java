@@ -19,41 +19,84 @@
 
 package org.apache.james.mailetcontainer.impl.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_3_OTHER_DOMAIN;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_4_OTHER_DOMAIN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Iterator;
+import com.google.common.collect.ImmutableList;
 
-public class OrTest extends BaseMatchersTest {
+public class OrTest {
 
-    @Override
+    private Or testee;
+    private Matcher matcher1;
+    private Matcher matcher2;
+    private Mail mail;
+
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-        setupCompositeMatcher("Or", Or.class);
+        matcher1 = mock(Matcher.class);
+        matcher2 = mock(Matcher.class);
+
+        testee = new Or();
+
+        mail = FakeMail.builder().recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2, MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_4_OTHER_DOMAIN).build();
     }
 
-    // test if all recipients was returned
     @Test
-    public void testAllRecipientsReturned() throws Exception {
-        setupChild("RecipientIsRegex=test@james.apache.org");
-        setupChild("RecipientIsRegex=test2@james.apache.org");
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients().size());
-
-        // Now ensure they match the actual recipients
-        Iterator<MailAddress> iterator = matchedRecipients.iterator();
-        MailAddress address = iterator.next();
-        assertEquals(address, "test@james.apache.org");
-        address = iterator.next();
-        assertEquals(address, "test2@james.apache.org");
+    public void shouldReturnNoResultWhenNoMatcherSpecified() throws Exception {
+        assertThat(testee.match(mail)).isEmpty();
     }
 
+    @Test
+    public void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
+
+        testee.add(matcher1);
+
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
+    }
+
+    @Test
+    public void shouldReturnUnionWhenTwoMatchers() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
+        when(matcher2.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_2));
+
+        testee.add(matcher1);
+        testee.add(matcher2);
+
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_2);
+    }
+
+    @Test
+    public void shouldAcceptEmptyResults() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
+        when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
+
+        testee.add(matcher1);
+        testee.add(matcher2);
+
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
+    }
+
+    @Test
+    public void shouldAcceptNullResults() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
+        when(matcher2.match(mail)).thenReturn(null);
+
+        testee.add(matcher1);
+        testee.add(matcher2);
+
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
+    }
 }
