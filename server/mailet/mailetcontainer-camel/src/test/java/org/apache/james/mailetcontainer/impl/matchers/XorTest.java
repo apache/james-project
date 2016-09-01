@@ -71,7 +71,7 @@ public class XorTest {
     }
 
     @Test
-    public void shouldPerformXorWhenTwoMatcher() throws Exception {
+    public void shouldPerformXorWhenTwoMatchers() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
         when(matcher2.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
 
