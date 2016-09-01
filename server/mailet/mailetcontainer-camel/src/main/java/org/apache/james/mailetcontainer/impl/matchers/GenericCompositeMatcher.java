@@ -19,12 +19,14 @@
 
 package org.apache.james.mailetcontainer.impl.matchers;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.GenericMatcher;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Abstract base class for CompositeMatchers. This class handles the child
@@ -43,10 +45,10 @@ public abstract class GenericCompositeMatcher extends GenericMatcher implements 
     }
 
     /**
-     * @return Iterator for the child matchers
+     * @return Immutable collection for the child matchers
      */
-    public Iterator<Matcher> iterator() {
-        return matchers.iterator();
+    public List<Matcher> getMatchers() {
+        return ImmutableList.copyOf(matchers);
     }
 
     // the collection used to store the child-matchers
