@@ -150,7 +150,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
             if (matcher instanceof CompositeMatcher) {
                 // we increment the nesting as we have one more child level and
                 // register the child matchers
-                registerMatchers(matcherMBeanName, ((CompositeMatcher) matcher).iterator(), nestingLevel + 1);
+                registerMatchers(matcherMBeanName, ((CompositeMatcher) matcher).getMatchers().iterator(), nestingLevel + 1);
             }
 
         }
