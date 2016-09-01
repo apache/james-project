@@ -29,6 +29,8 @@ import org.apache.mailet.Matcher;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class Xor extends GenericCompositeMatcher {
 
@@ -57,20 +59,12 @@ public class Xor extends GenericCompositeMatcher {
     }
 
     private Collection<MailAddress> performXor(Collection<MailAddress> collection1, Collection<MailAddress> collection2) {
-        ImmutableList.Builder<MailAddress> result = ImmutableList.builder();
-        result.addAll(calculateExternalEnsemble(collection1, collection2));
-        result.addAll(calculateExternalEnsemble(collection2, collection1));
-        return result.build();
-    }
-
-    private Collection<MailAddress> calculateExternalEnsemble(Collection<MailAddress> baseEnsemble, Collection<MailAddress> potentiallyCommonEnsemble) {
-        ImmutableList.Builder<MailAddress> externalEnsemble = ImmutableList.builder();
-        for (MailAddress recipient : baseEnsemble) {
-            if (!potentiallyCommonEnsemble.contains(recipient)) {
-                externalEnsemble.add(recipient);
-            }
-        }
-        return externalEnsemble.build();
+        ImmutableSet<MailAddress> set1 = ImmutableSet.copyOf(collection1);
+        ImmutableSet<MailAddress> set2 = ImmutableSet.copyOf(collection2);
+        return Sets.difference(
+            Sets.union(set1, set2),
+            Sets.intersection(set1, set2))
+            .immutableCopy();
     }
 
 }
