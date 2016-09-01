@@ -38,7 +38,7 @@ public class MailAddressCollectionReader {
 
     public static Set<MailAddress> read(String condition) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(condition));
-        return FluentIterable.from(Splitter.on(", ").split(condition)).transform(new Function<String, MailAddress>() {
+        return FluentIterable.from(Splitter.onPattern(",( |\t)").split(condition)).transform(new Function<String, MailAddress>() {
             @Override
             public MailAddress apply(String s) {
                 try {
