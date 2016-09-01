@@ -28,78 +28,26 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import javax.mail.MessagingException;
 
+import com.google.common.collect.ImmutableSet;
+
 public class Or extends GenericCompositeMatcher {
 
     /**
      * This is the Or CompositeMatcher - consider it to be a union of the
-     * results. If any match results in a full set of recipients the matching is
-     * short-circuited.
+     * results.
      * 
      * @return Collection of Recipient from the Or composition results of the
      *         child matchers.
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> finalResult = null;
-        Matcher matcher;
-        boolean first = true;
-
-        // the size of the complete set of recipients
-        int size = mail.getRecipients().size();
-
-        // Loop through until the finalResult is full or all the child matchers
-        // have been executed
-        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = matcherIter.next();
-            // log("Matching with "
-            // + matcher
-            // .getMatcherConfig()
-            // .getMatcherName()
-            // );
-            Collection<MailAddress> result = matcher.match(mail);
-            if (first) {
-                if (result == null) {
-                    result = new ArrayList<MailAddress>(0);
-                }
-                finalResult = result;
-                first = false;
-            } else {
-                // Check if we need to Or ...
-                // if the finalResult and the subsequent result are the same
-                // collection, then it contains the same recipients
-                // so we can short-circuit building the OR of the two
-                if (finalResult != result) {
-                    if (result != null) {
-                        if (finalResult == null) {
-                            finalResult = result;
-                        } else {
-                            // the two results are different collections, so we
-                            // must OR them
-                            // Ensure that the finalResult only contains one
-                            // copy of the recipients in the result collection
-                            MailAddress recipient;
-                            for (Object aResult : result) {
-                                recipient = (MailAddress) aResult;
-                                if (!finalResult.contains(recipient)) {
-                                    System.out.println(recipient);
-                                    finalResult.add(recipient);
-                                }
-                            }
-                            recipient = null;
-                        }
-                    }
-                }
+        ImmutableSet.Builder<MailAddress> result = ImmutableSet.builder();
+        for (Matcher matcher : getMatchers()) {
+            Collection<MailAddress> matchResult = matcher.match(mail);
+            if (matchResult != null) {
+                result.addAll(matchResult);
             }
-            if (finalResult.size() == size) {
-                // we have a complete set of recipients, no need to OR in
-                // anymore
-                // i.e. short-circuit the Or
-                break;
-            }
-            result = null;
-            matcher = null;
         }
-        // log("OrMatch: end.");
-        return finalResult;
+        return result.build();
     }
 
 }
