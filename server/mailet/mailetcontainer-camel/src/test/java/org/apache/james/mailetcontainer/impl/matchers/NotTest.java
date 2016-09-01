@@ -58,7 +58,7 @@ public class NotTest {
     }
 
     @Test
-    public void shouldReturnNoResultWhenNoMatcherSpecified() throws Exception {
+    public void shouldReturnAllAddressesWhenNoMatcherSpecified() throws Exception {
         assertThat(testee.match(mail)).containsExactly(recipient1, recipient2, recipient3, recipient4);
     }
 
