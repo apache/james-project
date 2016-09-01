@@ -29,6 +29,8 @@ import org.apache.mailet.Mail;
 
 import javax.mail.MessagingException;
 
+import com.google.common.base.Optional;
+
 public class Not extends GenericCompositeMatcher {
 
     /**
@@ -41,19 +43,11 @@ public class Not extends GenericCompositeMatcher {
      *         Matcher(s).
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> finalResult = mail.getRecipients();
-        Matcher matcher;
-        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = (matcherIter.next());
-            // log("Matching with " +
-            // matcher.getMatcherConfig().getMatcherName());
-            Collection<MailAddress> result = matcher.match(mail);
-            if (result == finalResult) {
-                // Not is an empty list
-                finalResult = null;
-            } else if (result != null) {
-                finalResult = new ArrayList<MailAddress>(finalResult);
-                finalResult.removeAll(result);
+        Collection<MailAddress> finalResult = Optional.fromNullable(mail.getRecipients()).or(new ArrayList<MailAddress>());
+        for (Matcher matcher : getMatchers()) {
+            Collection<MailAddress> matcherResult = matcher.match(mail);
+            if (matcherResult != null) {
+                finalResult.removeAll(matcherResult);
             }
         }
         return finalResult;
