@@ -34,7 +34,7 @@ import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -52,7 +52,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of();
     
     private final StoreMailboxManager mailboxManager;
-    private final MockAuthenticator userManager;
+    private final FakeAuthenticator userManager;
     private final MaildirMailboxSessionMapperFactory mailboxSessionMapperFactory;
     
     public static JamesImapHostSystem build() throws Exception {
@@ -60,7 +60,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     }
     
     public MaildirHostSystem() throws MailboxException {
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         MaildirStore store = new MaildirStore(MAILDIR_HOME + "/%user", locker);
         mailboxSessionMapperFactory = new MaildirMailboxSessionMapperFactory(store);

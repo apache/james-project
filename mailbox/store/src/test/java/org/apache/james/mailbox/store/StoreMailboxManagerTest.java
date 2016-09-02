@@ -55,7 +55,7 @@ public class StoreMailboxManagerTest {
         mockedMailboxMapper = mock(MailboxMapper.class);
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
-        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), new MessageParser());
+        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, new FakeAuthenticator(), new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), new MessageParser());
     }
 
     @Test

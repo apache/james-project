@@ -25,7 +25,7 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.runner.RunWith;
 import org.xenei.junit.contract.Contract;
@@ -48,7 +48,7 @@ public class InMemoryMailboxManagerTest {
             MessageParser messageParser = new MessageParser();
 
             InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-            InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new MockAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser);
+            InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, new FakeAuthenticator(), new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser);
 
             try {
                 mailboxManager.init();

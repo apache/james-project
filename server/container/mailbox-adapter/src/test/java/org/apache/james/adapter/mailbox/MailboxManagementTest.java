@@ -28,7 +28,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -53,7 +53,7 @@ public class MailboxManagementTest {
         inMemoryMapperFactory = new InMemoryMailboxSessionMapperFactory();
         StoreMailboxManager mailboxManager = new StoreMailboxManager(
             inMemoryMapperFactory,
-            new MockAuthenticator(),
+            new FakeAuthenticator(),
             new JVMMailboxPathLocker(),
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),

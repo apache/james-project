@@ -47,7 +47,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -69,7 +69,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     private EmbeddedElasticSearch embeddedElasticSearch;
     private Path tempDirectory;
     private StoreMailboxManager mailboxManager;
-    private MockAuthenticator userManager;
+    private FakeAuthenticator userManager;
 
     public boolean addUser(String user, String password) throws Exception {
         userManager.addUser(user, password);
@@ -100,7 +100,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             IndexCreationFactory.createIndex(new TestingClientProvider(embeddedElasticSearch.getNode()).get())
         );
 
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
 
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(

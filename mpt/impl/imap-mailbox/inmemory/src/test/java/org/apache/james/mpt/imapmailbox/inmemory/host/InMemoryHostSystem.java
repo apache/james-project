@@ -35,7 +35,7 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
@@ -56,7 +56,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         Feature.ANNOTATION_SUPPORT);
 
     private InMemoryMailboxManager mailboxManager;
-    private MockAuthenticator userManager;
+    private FakeAuthenticator userManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new InMemoryHostSystem();
@@ -77,7 +77,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     }
     
     private void initFields() throws MailboxException {
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();

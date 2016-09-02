@@ -33,7 +33,7 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.AsynchronousEventDelivery;
@@ -53,7 +53,7 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
     private StoreMailboxManager mailboxManager;
-    private MockAuthenticator userManager;
+    private FakeAuthenticator userManager;
 
     public static JamesImapHostSystem build() throws Exception {
         return new InMemoryEventAsynchronousHostSystem();
@@ -74,7 +74,7 @@ public class InMemoryEventAsynchronousHostSystem extends JamesImapHostSystem {
     }
     
     private void initFields() throws MailboxException {
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();

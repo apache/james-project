@@ -35,7 +35,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
@@ -72,7 +72,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris")));
         storeMailboxManager = new InMemoryMailboxManager(
             mapperFactory,
-            new MockAuthenticator(),
+            new FakeAuthenticator(),
             new JVMMailboxPathLocker(),
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),

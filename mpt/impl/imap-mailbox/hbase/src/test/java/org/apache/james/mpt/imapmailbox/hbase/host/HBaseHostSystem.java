@@ -40,7 +40,7 @@ import org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory;
 import org.apache.james.mailbox.hbase.mail.HBaseModSeqProvider;
 import org.apache.james.mailbox.hbase.mail.HBaseUidProvider;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -64,7 +64,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
     public static Boolean useMiniCluster = true;
     
     private final HBaseMailboxManager mailboxManager;
-    private final MockAuthenticator userManager;
+    private final FakeAuthenticator userManager;
     private MiniHBaseCluster hbaseCluster;
     private final Configuration conf;
 
@@ -89,7 +89,7 @@ public class HBaseHostSystem extends JamesImapHostSystem {
             conf = HBaseConfiguration.create();
         }
 
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
 
         final HBaseModSeqProvider modSeqProvider = new HBaseModSeqProvider(conf);
         final HBaseUidProvider uidProvider = new HBaseUidProvider(conf);

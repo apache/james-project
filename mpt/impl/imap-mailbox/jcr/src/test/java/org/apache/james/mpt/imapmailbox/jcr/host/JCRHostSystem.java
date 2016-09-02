@@ -41,7 +41,7 @@ import org.apache.james.mailbox.jcr.mail.JCRModSeqProvider;
 import org.apache.james.mailbox.jcr.mail.JCRUidProvider;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
@@ -59,7 +59,7 @@ public class JCRHostSystem extends JamesImapHostSystem{
     }
     
     private final JCRMailboxManager mailboxManager;
-    private final MockAuthenticator userManager; 
+    private final FakeAuthenticator userManager; 
 
     private static final String JACKRABBIT_HOME = "target/jackrabbit";
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
@@ -83,7 +83,7 @@ public class JCRHostSystem extends JamesImapHostSystem{
             // Register imap cnd file
             JCRUtils.registerCnd(repository, workspace, user, pass);
             
-            userManager = new MockAuthenticator();
+            userManager = new FakeAuthenticator();
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             JCRUidProvider uidProvider = new JCRUidProvider(locker, sessionRepos);
             JCRModSeqProvider modSeqProvider = new JCRModSeqProvider(locker, sessionRepos);

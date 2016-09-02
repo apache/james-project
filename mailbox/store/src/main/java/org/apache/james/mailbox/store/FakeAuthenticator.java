@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MockAuthenticator implements Authenticator{
+public class FakeAuthenticator implements Authenticator{
 
     private final Map<String, String> users = new HashMap<String, String>();
 
@@ -34,7 +34,7 @@ public class MockAuthenticator implements Authenticator{
     }
     
     public void addUser(String user, String password) {
-        users .put(user, password);
+        users.put(user, password);
     }
 
     public void clear() {

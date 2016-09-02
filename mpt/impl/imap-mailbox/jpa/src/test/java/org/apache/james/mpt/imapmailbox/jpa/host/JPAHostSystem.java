@@ -48,7 +48,7 @@ import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
@@ -69,7 +69,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
     }
     
     private final OpenJPAMailboxManager mailboxManager;
-    private final MockAuthenticator userManager; 
+    private final FakeAuthenticator userManager; 
     private final EntityManagerFactory entityManagerFactory;
 
     public JPAHostSystem() throws Exception {
@@ -112,7 +112,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
                 JPAUserFlag.class.getName() + ";" + 
                 JPASubscription.class.getName() + ")");
         
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
         entityManagerFactory = OpenJPAPersistence.getEntityManagerFactory(properties);
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);

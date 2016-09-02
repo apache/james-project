@@ -45,7 +45,7 @@ import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.MockAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -65,7 +65,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         Feature.ANNOTATION_SUPPORT);
     
     private final CassandraMailboxManager mailboxManager;
-    private final MockAuthenticator userManager;
+    private final FakeAuthenticator userManager;
     private final CassandraCluster cassandraClusterSingleton;
 
     public CassandraHostSystem() throws Exception {
@@ -81,7 +81,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAttachmentModule(),
             new CassandraAnnotationModule());
         cassandraClusterSingleton = CassandraCluster.create(mailboxModule);
-        userManager = new MockAuthenticator();
+        userManager = new FakeAuthenticator();
         com.datastax.driver.core.Session session = cassandraClusterSingleton.getConf();
         CassandraModSeqProvider modSeqProvider = new CassandraModSeqProvider(session);
         CassandraUidProvider uidProvider = new CassandraUidProvider(session);
