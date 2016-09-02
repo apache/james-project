@@ -20,21 +20,18 @@
 package org.apache.james.jmap.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.store.MessageResultImpl;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,6 +39,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class SortToComparatorConvertorTest {
+    private static final Date DATE_2017 = Date.from(ZonedDateTime.parse("2017-10-09T08:07:06+07:00[Asia/Vientiane]").toInstant());
+    private static final Date DATE_2018 = Date.from(ZonedDateTime.parse("2018-10-09T08:07:06+07:00[Asia/Vientiane]").toInstant());
 
     private MailboxPath mailboxPath;
     private Entry firstMessage;
@@ -50,14 +49,14 @@ public class SortToComparatorConvertorTest {
 
     @Before
     public void setup() throws IOException {
-        LocalDate date = LocalDate.now();
-        SimpleMailboxMessage firstMailboxMessage = new SimpleMailboxMessage(new Date(date.toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
-        mailboxPath = new MailboxPath("#private", "user", "path");
-        firstMailboxMessage.setUid(1);
-        firstMessage = new Entry(mailboxPath, new MessageResultImpl(firstMailboxMessage));
-        SimpleMailboxMessage secondMailboxMessage = new SimpleMailboxMessage(new Date(date.plusDays(1).toEpochDay()), 0, 0, null, new Flags(), new PropertyBuilder(), null);
-        secondMailboxMessage.setUid(2);
-        secondMessage = new Entry(mailboxPath, new MessageResultImpl(secondMailboxMessage));
+        MessageResult firstMessageResult = mock(MessageResult.class);
+        when(firstMessageResult.getInternalDate()).thenReturn(DATE_2017);
+        when(firstMessageResult.getUid()).thenReturn(1L);
+        firstMessage = new Entry(mailboxPath, firstMessageResult);
+        MessageResult secondMessageResult = mock(MessageResult.class);
+        when(secondMessageResult.getInternalDate()).thenReturn(DATE_2018);
+        when(secondMessageResult.getUid()).thenReturn(2L);
+        secondMessage = new Entry(mailboxPath, secondMessageResult);
         messages = Lists.newArrayList(firstMessage, secondMessage);
     }
 
@@ -91,9 +90,10 @@ public class SortToComparatorConvertorTest {
 
     @Test
     public void comparatorForShouldChainComparatorsWhenOnlyMultipleElementInList() throws IOException {
-        SimpleMailboxMessage thirdMailboxMessage = new SimpleMailboxMessage(secondMessage.getValue().getInternalDate(), 0, 0, null, new Flags(), new PropertyBuilder(), null);
-        thirdMailboxMessage.setUid(3);
-        Entry thirdMessage = new Entry(mailboxPath, new MessageResultImpl(thirdMailboxMessage));
+        MessageResult thirdMessageResult = mock(MessageResult.class);
+        when(thirdMessageResult.getInternalDate()).thenReturn(DATE_2018);
+        when(thirdMessageResult.getUid()).thenReturn(3L);
+        Entry thirdMessage = new Entry(mailboxPath, thirdMessageResult);
         messages.add(thirdMessage);
 
         Comparator<Entry> comparator = SortToComparatorConvertor.comparatorFor(ImmutableList.of("date asc", "id desc"));

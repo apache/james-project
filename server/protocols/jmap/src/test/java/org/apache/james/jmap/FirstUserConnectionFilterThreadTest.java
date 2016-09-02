@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRight;
@@ -42,7 +43,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
-import org.apache.james.mailbox.store.SimpleMailboxSession;
 import org.apache.james.user.lib.mock.InMemoryUsersRepository;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ public class FirstUserConnectionFilterThreadTest {
     @ThreadedBefore
     public void before() {
         usersRepository = new InMemoryUsersRepository();
-        session = new SimpleMailboxSession(0, "username", null, null, null, ':', null);
+        session = new MockMailboxSession("username");
         mailboxManager = new FakeMailboxManager(session) ;
         sut = new FirstUserConnectionFilter(usersRepository, mailboxManager);
     }

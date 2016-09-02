@@ -20,7 +20,9 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
@@ -42,26 +44,19 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.MessageProperties.MessageProperty;
-import org.apache.james.jmap.utils.HtmlTextExtractor;
-import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.MockAuthenticator;
-import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.assertj.core.api.Condition;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -73,8 +68,6 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethodTest.class);
-    
     private static class User implements org.apache.james.mailbox.MailboxSession.User {
         final String username;
         final String password;
@@ -107,7 +100,7 @@ public class GetMessagesMethodTest {
     
     private static final User ROBERT = new User("robert", "secret");
 
-    private StoreMailboxManager mailboxManager;
+    private MailboxManager mailboxManager;
     private GetMessagesMethod testee;
 
     private MailboxSession session;
@@ -115,23 +108,18 @@ public class GetMessagesMethodTest {
     private ClientId clientId;
 
     @Before
-    public void setup() throws MailboxException {
+    public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
-        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
+        when(messagePreview.forHTMLBody(any())).thenReturn("html preview");
+        when(messagePreview.forTextBody(any())).thenReturn("text preview");
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
-        MockAuthenticator authenticator = new MockAuthenticator();
-        authenticator.addUser(ROBERT.username, ROBERT.password);
-        UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        SimpleGroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MessageParser messageParser = new MessageParser();
-        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, messageParser);
-        mailboxManager.init();
-        
+        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
+        GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
+        mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
 
-        session = mailboxManager.login(ROBERT.username, ROBERT.password, LOGGER);
+        session = new MockMailboxSession(ROBERT.username);
         inboxPath = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inboxPath, session);
         testee = new GetMessagesMethod(mailboxManager, messageFactory);

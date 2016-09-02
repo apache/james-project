@@ -23,11 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -38,7 +36,6 @@ public class MailboxUtilsTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtilsTest.class);
 
     private MailboxManager mailboxManager;
-    private MailboxMapperFactory mailboxMapperFactory;
     private MailboxSession mailboxSession;
     private String user;
     private MailboxUtils sut;
@@ -47,7 +44,6 @@ public class MailboxUtilsTest {
     public void setup() throws Exception {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
-        mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
         user = "user@domain.org";
         mailboxSession = mailboxManager.login(user, "pass", LOGGER);
         sut = new MailboxUtils(mailboxManager);
@@ -56,9 +52,7 @@ public class MailboxUtilsTest {
     public void hasChildrenShouldReturnFalseWhenNoChild() throws Exception {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "myBox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
-        MailboxId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxByPath(mailboxPath)
-                .getMailboxId();
+        MailboxId mailboxId = mailboxManager.getMailbox(mailboxPath, mailboxSession).getId();
 
         assertThat(sut.hasChildren(mailboxId, mailboxSession)).isFalse();
     }
@@ -67,9 +61,7 @@ public class MailboxUtilsTest {
     public void hasChildrenShouldReturnTrueWhenHasAChild() throws Exception {
         MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox");
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
-        MailboxId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxByPath(parentMailboxPath)
-                .getMailboxId();
+        MailboxId parentId = mailboxManager.getMailbox(parentMailboxPath, mailboxSession).getId();
 
         MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.myBox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);

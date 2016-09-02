@@ -53,8 +53,6 @@ import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
-import org.apache.james.jmap.utils.HtmlTextExtractor;
-import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -65,9 +63,6 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -117,9 +112,9 @@ public class SetMessagesCreationProcessorTest {
 
     @Before
     public void setUp() throws MailboxException {
-        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
-        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        when(messagePreview.forTextBody(any())).thenReturn("text preview");
         messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedMailFactory = mock(MailFactory.class);
@@ -153,12 +148,8 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        MessageMapper stubMapper = mock(MessageMapper.class);
-        MailboxSessionMapperFactory mockSessionMapperFactory = mock(MailboxSessionMapperFactory.class);
-        when(mockSessionMapperFactory.createMessageMapper(any(MailboxSession.class)))
-                .thenReturn(stubMapper);
-
         sut = new SetMessagesCreationProcessor(mimeMessageConverter, mockedMailSpool, mockedMailFactory, messageFactory, fakeSystemMailboxesProvider, mockedAttachmentManager);
+
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
 

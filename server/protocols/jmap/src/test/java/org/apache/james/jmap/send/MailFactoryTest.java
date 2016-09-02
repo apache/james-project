@@ -19,6 +19,9 @@
 package org.apache.james.jmap.send;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.Date;
@@ -32,12 +35,9 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
-import org.apache.james.jmap.utils.HtmlTextExtractor;
-import org.apache.james.jmap.utils.MailboxBasedHtmlTextExtractor;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.junit.Before;
@@ -73,8 +73,8 @@ public class MailFactoryTest {
                 .mailboxId(InMemoryId.of(3))
                 .messageId(MessageId.of("test|test|2"))
                 .build();
-        HtmlTextExtractor htmlTextExtractor = new MailboxBasedHtmlTextExtractor(new DefaultTextExtractor());
-        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator(htmlTextExtractor);
+        MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
+        when(messagePreview.forTextBody(any())).thenReturn("text preview");
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         MessageFactory messageFactory = new MessageFactory(messagePreview, messageContentExtractor);
         jmapMessage = messageFactory.fromMetaDataWithContent(message);

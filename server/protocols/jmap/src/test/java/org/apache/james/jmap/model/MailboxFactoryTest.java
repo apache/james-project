@@ -27,11 +27,9 @@ import org.apache.james.jmap.utils.MailboxUtilsTest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -41,7 +39,6 @@ public class MailboxFactoryTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxUtilsTest.class);
 
     private MailboxManager mailboxManager;
-    private MailboxMapperFactory mailboxMapperFactory;
     private MailboxSession mailboxSession;
     private String user;
     private MailboxFactory sut;
@@ -50,7 +47,6 @@ public class MailboxFactoryTest {
     public void setup() throws Exception {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
-        mailboxMapperFactory = new InMemoryMailboxSessionMapperFactory();
         user = "user@domain.org";
         mailboxSession = mailboxManager.login(user, "pass", LOGGER);
         sut = new MailboxFactory(mailboxManager);
@@ -67,9 +63,7 @@ public class MailboxFactoryTest {
     public void mailboxFromMailboxIdShouldReturnPresentWhenExists() throws Exception {
         MailboxPath mailboxPath = new MailboxPath("#private", user, "myBox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
-        MailboxId mailboxId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxByPath(mailboxPath)
-                .getMailboxId();
+        MailboxId mailboxId = mailboxManager.getMailbox(mailboxPath, mailboxSession).getId();
 
         Optional<Mailbox> mailbox = sut.fromMailboxId(mailboxId, mailboxSession);
         assertThat(mailbox).isPresent();
@@ -134,9 +128,7 @@ public class MailboxFactoryTest {
     public void getParentIdFromMailboxPathShouldReturnParentIdWhenChildMailbox() throws Exception {
         MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox");
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
-        MailboxId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxByPath(parentMailboxPath)
-                .getMailboxId();
+        MailboxId parentId = mailboxManager.getMailbox(parentMailboxPath, mailboxSession).getId();
 
         MailboxPath mailboxPath = new MailboxPath("#private", user, "inbox.mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
@@ -152,9 +144,7 @@ public class MailboxFactoryTest {
 
         MailboxPath parentMailboxPath = new MailboxPath("#private", user, "inbox.children");
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
-        MailboxId parentId = mailboxMapperFactory.getMailboxMapper(mailboxSession)
-                .findMailboxByPath(parentMailboxPath)
-                .getMailboxId();
+        MailboxId parentId = mailboxManager.getMailbox(parentMailboxPath, mailboxSession).getId();
 
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
