@@ -25,7 +25,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.Properties;
+
+import javax.activation.DataHandler;
+import javax.mail.Flags;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
+
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -45,20 +59,6 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
-
-import javax.activation.DataHandler;
-import javax.mail.Flags;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.Properties;
 
 public class LocalDeliveryTest {
 
@@ -178,10 +178,11 @@ public class LocalDeliveryTest {
         multipart.addBodyPart(scriptPart);
         message.setContent(multipart);
         message.saveChanges();
-        Mail mail = new FakeMail(message);
-        mail.setState(Mail.DEFAULT);
-        mail.setRecipients(Lists.newArrayList(new MailAddress("receiver@domain.com")));
-        return mail;
+        return FakeMail.builder()
+                .mimeMessage(message)
+                .state(Mail.DEFAULT)
+                .recipient(new MailAddress("receiver@domain.com"))
+                .build();
     }
 
 }

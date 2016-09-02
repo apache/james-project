@@ -52,14 +52,14 @@ public class RemoteAddrInNetworkTest {
         matcher.setDNSService(dnsServer);
         matcher.init(matcherConfig);
         testRecipient = new MailAddress("test@james.apache.org");
-        fakeMail = FakeMail.builder()
-                .recipient(testRecipient)
-                .build();
     }
 
     @Test
     public void shouldMatchWhenOnSameNetwork() throws MessagingException {
-        fakeMail.setRemoteAddr("192.168.200.1");
+        fakeMail = FakeMail.builder()
+                .recipient(testRecipient)
+                .remoteAddr("192.168.200.1")
+                .build();
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
 
@@ -68,7 +68,10 @@ public class RemoteAddrInNetworkTest {
 
     @Test
     public void shouldNotMatchWhenOnDifferentNetwork() throws MessagingException {
-        fakeMail.setRemoteAddr("192.168.1.1");
+        fakeMail = FakeMail.builder()
+                .recipient(testRecipient)
+                .remoteAddr("192.168.1.1")
+                .build();
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
 
@@ -81,6 +84,10 @@ public class RemoteAddrInNetworkTest {
         RemoteAddrInNetwork testee = new RemoteAddrInNetwork();
         testee.init(matcherConfig);
 
+        fakeMail = FakeMail.builder()
+                .recipient(testRecipient)
+                .build();
+
         Collection<MailAddress> actual = testee.match(fakeMail);
 
         assertThat(actual).isNull();
@@ -88,7 +95,10 @@ public class RemoteAddrInNetworkTest {
 
     @Test
     public void shouldNotMatchWhenInvalidAddress() throws MessagingException {
-        fakeMail.setRemoteAddr("invalid");
+        fakeMail = FakeMail.builder()
+                .recipient(testRecipient)
+                .remoteAddr("invalid")
+                .build();
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
 

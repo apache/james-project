@@ -58,8 +58,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.google.common.collect.Lists;
-
 public class ToRecipientFolderTest {
 
     public static final String USER = "receiver@domain.com";
@@ -182,10 +180,11 @@ public class ToRecipientFolderTest {
         multipart.addBodyPart(scriptPart);
         message.setContent(multipart);
         message.saveChanges();
-        Mail mail = new FakeMail(message);
-        mail.setState(Mail.DEFAULT);
-        mail.setRecipients(Lists.newArrayList(new MailAddress(USER)));
-        return mail;
+        return FakeMail.builder()
+                .mimeMessage(message)
+                .state(Mail.DEFAULT)
+                .recipient(new MailAddress(USER))
+                .build();
     }
 
 }

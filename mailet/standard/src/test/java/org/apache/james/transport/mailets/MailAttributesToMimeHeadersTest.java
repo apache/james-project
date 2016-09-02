@@ -55,7 +55,6 @@ public class MailAttributesToMimeHeadersTest {
     public void setup() {
         mailet = new MailAttributesToMimeHeaders();
     }
-    
 
     @Test
     public void shouldPutAttributesIntoHeadersWhenMappingDefined() throws MessagingException {

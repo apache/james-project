@@ -19,17 +19,19 @@
 
 package org.apache.mailet.base;
 
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.test.FakeMail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import org.junit.Test;
 
-import javax.mail.MessagingException;
 import java.util.Arrays;
 import java.util.Collection;
+
+import javax.mail.MessagingException;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.test.FakeMail;
+import org.junit.Test;
 
 public class MatcherInverterTest {
 
@@ -41,8 +43,9 @@ public class MatcherInverterTest {
                 return null;
             }
         });
-        FakeMail mail = new FakeMail();
-        mail.setRecipients(Arrays.asList(new MailAddress("user", "domain")));
+        FakeMail mail = FakeMail.builder()
+                .recipient(new MailAddress("user", "domain"))
+                .build();
 
         assertNotNull("Should match all recipients", inverter.match(mail));
     }
@@ -58,8 +61,9 @@ public class MatcherInverterTest {
                 return mail.getRecipients();
             }
         });
-        FakeMail mail = new FakeMail();
-        mail.setRecipients(Arrays.asList(address1, address2));
+        FakeMail mail = FakeMail.builder()
+                .recipients(address1, address2)
+                .build();
 
         assertNull("Should match all recipients", inverter.match(mail));
     }
@@ -75,8 +79,9 @@ public class MatcherInverterTest {
                 return Arrays.asList(address1);
             }
         });
-        FakeMail mail = new FakeMail();
-        mail.setRecipients(Arrays.asList(address1, address2));
+        FakeMail mail = FakeMail.builder()
+                .recipients(address1, address2)
+                .build();
 
         assertEquals("Should match one recipient", address2.toString(), inverter.match(mail).iterator().next().toString());
     }

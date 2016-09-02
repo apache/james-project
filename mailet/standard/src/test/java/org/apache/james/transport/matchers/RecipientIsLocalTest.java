@@ -31,8 +31,6 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class RecipientIsLocalTest {
 
     public static final String MATCHER_NAME = "matcherName";
@@ -50,8 +48,9 @@ public class RecipientIsLocalTest {
 
         mailAddress1 = new MailAddress("mail1@domain.com");
         mailAddress2 = new MailAddress("mail2@domain.com");
-        mail = new FakeMail();
-        mail.setRecipients(ImmutableList.of(mailAddress1, mailAddress2));
+        mail = FakeMail.builder()
+                .recipients(mailAddress1, mailAddress2)
+                .build();
     }
 
     @Test
@@ -80,6 +79,6 @@ public class RecipientIsLocalTest {
 
     @Test
     public void matchShouldNotMatchMailWithNoRecipient() throws Exception {
-        assertThat(testee.match(new FakeMail())).isEmpty();
+        assertThat(testee.match(FakeMail.defaultFakeMail())).isEmpty();
     }
 }

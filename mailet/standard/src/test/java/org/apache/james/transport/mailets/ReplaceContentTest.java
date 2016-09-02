@@ -65,7 +65,9 @@ public class ReplaceContentTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("one test");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getSubject()).isEqualTo("ane TEsT");
@@ -86,7 +88,9 @@ public class ReplaceContentTest {
         message.setText("This is one simple test/ \u00E8 one simple test.\n"
                 + "Blo blo blo blo.\n");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getContent()).isEqualTo("This is ane simple TEsT, e' ane simple P.\n"
@@ -101,7 +105,9 @@ public class ReplaceContentTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setText("aaa");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getContent()).isEqualTo("aaa");
@@ -115,7 +121,9 @@ public class ReplaceContentTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("re: r:ri:one test");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getSubject()).isEqualTo("Re: Re: Re: one test");
@@ -133,7 +141,9 @@ public class ReplaceContentTest {
                 + "part of\r\n" + "message\\ that\\0 must0 be\r\n"
                 + "quoted. Let's see if\r\n" + "he can do it.");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getContent()).isEqualTo("Test.\r\n" + "\r\n" + ">part of\r\n"
@@ -151,7 +161,9 @@ public class ReplaceContentTest {
         message.setSubject("one test");
         message.setText("Replacement \u2026 one test \u2026");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getContent()).isEqualTo("Replacement ... one test ...");
@@ -173,7 +185,9 @@ public class ReplaceContentTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()),
                 new ByteArrayInputStream(messageSource.getBytes()));
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getContent()).isEqualTo("\"test\" with th' apex");
@@ -190,7 +204,9 @@ public class ReplaceContentTest {
         message.setText("This is one simple test/ \u00E8 one simple test.\n"
                 + "Blo blo blo blo.\n");
 
-        Mail mail = new FakeMail(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertThat(mail.getMessage().getContentType()).isEqualTo("text/plain; charset=UTF-8");

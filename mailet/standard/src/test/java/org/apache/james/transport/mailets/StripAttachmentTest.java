@@ -74,8 +74,9 @@ public class StripAttachmentTest {
         message.setContent(mm);
         message.saveChanges();
 
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
 
         mailet.service(mail);
 
@@ -148,8 +149,9 @@ public class StripAttachmentTest {
         message.setContent(mm);
         message.saveChanges();
 
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
 
         mailet.service(mail);
 
@@ -211,8 +213,9 @@ public class StripAttachmentTest {
         // message.writeTo(System.out);
         // System.out.println("--------------------------\n\n\n");
 
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
 
         mailet.service(mail);
 
@@ -290,8 +293,9 @@ public class StripAttachmentTest {
         message.setSubject("test");
         message.setContent(mm);
         message.saveChanges();
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
+        Mail mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
 
         Assert.assertTrue(mail.getMessage().getContent() instanceof MimeMultipart);
         Assert.assertEquals(3, ((MimeMultipart) mail.getMessage().getContent())

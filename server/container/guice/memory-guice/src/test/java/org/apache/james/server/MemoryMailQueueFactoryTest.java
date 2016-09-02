@@ -89,18 +89,21 @@ public class MemoryMailQueueFactoryTest {
 
     @Test
     public void dequeueShouldWork() throws Exception{
-        Mail mail = new FakeMail();
-        mail.setName(NAME_1);
+        Mail mail = FakeMail.builder()
+                .name(NAME_1)
+                .build();
         memoryMailQueueFactory.getQueue(KEY).enQueue(mail);
         assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail().getName()).startsWith(NAME_1);
     }
 
     @Test
     public void dequeueShouldWorkWithMultipleMessages() throws Exception{
-        Mail mail1 = new FakeMail();
-        Mail mail2 = new FakeMail();
-        mail1.setName(NAME_1);
-        mail2.setName(NAME_2);
+        Mail mail1 = FakeMail.builder()
+                .name(NAME_1)
+                .build();
+        Mail mail2 = FakeMail.builder()
+                .name(NAME_2)
+                .build();
         memoryMailQueueFactory.getQueue(KEY).enQueue(mail1);
         memoryMailQueueFactory.getQueue(KEY).enQueue(mail2);
         assertThat(memoryMailQueueFactory.getQueue(KEY).deQueue().getMail().getName()).startsWith(NAME_2);
@@ -110,8 +113,9 @@ public class MemoryMailQueueFactoryTest {
     @Test(timeout = 20000)
     public void deQueueShouldWaitForAMailToBeEnqueued() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
-        Mail mail = new FakeMail();
-        mail.setName(NAME_1);
+        Mail mail = FakeMail.builder()
+                .name(NAME_1)
+                .build();
         executorService.submit(() -> {
             try {
                 latch.await();

@@ -473,11 +473,11 @@ public class ManageSieveMailetTestCase {
     }
 
     private Mail createUnauthenticatedMail(MimeMessage message) throws Exception {
-        FakeMail mail = new FakeMail();
-        mail.setMessage(message);
-        mail.setSender(new MailAddress(USER));
-        mail.setRecipients(Lists.newArrayList(new MailAddress(SIEVE_LOCALHOST)));
-        return mail;
+        return FakeMail.builder()
+                .mimeMessage(message)
+                .sender(new MailAddress(USER))
+                .recipient(new MailAddress(SIEVE_LOCALHOST))
+                .build();
     }
 
     private Mail createAuthentificatedMail(MimeMessage message) throws Exception {

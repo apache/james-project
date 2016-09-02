@@ -23,7 +23,6 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.ParseException;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
@@ -46,8 +45,8 @@ public class SMTPIsAuthNetworkTest {
         this.isAuthorized = isAuthorized;
     }
 
-    private void setupMockedMail() throws ParseException {
-        mockedMail = MailUtil.createMockMail2Recipients(null);
+    private void setupMockedMail() throws MessagingException {
+        mockedMail = MailUtil.createMockMail2Recipients();
         if (isAuthorized) {
             String MAIL_ATTRIBUTE_NAME = "org.apache.james.SMTPIsAuthNetwork";
             mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME, "true");
