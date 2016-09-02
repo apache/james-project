@@ -189,6 +189,7 @@
         <testcontainers-version>1.1.7</testcontainers-version>
         <guavate.version>1.0.0</guavate.version>
         <metrics.version>3.1.0</metrics.version>
+        <joda.version>2.9.4</joda.version>
     </properties>
 
     <dependencyManagement>
@@ -1499,6 +1500,11 @@
                 <groupId>info.cukes</groupId>
                 <artifactId>cucumber-picocontainer</artifactId>
                 <version>${cucumber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${joda.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.fge</groupId>
