@@ -21,11 +21,13 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.base.GenericMailet;
+import javax.mail.MessagingException;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
+import org.apache.mailet.base.GenericMailet;
 
-import javax.mail.MessagingException;
+import com.google.common.base.Optional;
 
 /**
  * <p>This mailet redirects the mail to the named processor</p>
@@ -42,62 +44,45 @@ import javax.mail.MessagingException;
  */
 public class ToProcessor extends GenericMailet {
 
-    /**
-     * Controls certain log messages
-     */
-    private boolean isDebug = false;
+    private boolean debug;
+    private String processor;
+    private Optional<String> noticeText;
 
-    /**
-     * The name of the processor to which this mailet forwards mail
-     */
-    String processor;
-
-    /**
-     * The error message to attach to the forwarded message
-     */
-    String noticeText = null;
-
-    /**
-     * Initialize the mailet
-     *
-     * @throws MailetException if the processor parameter is missing
-     */
+    @Override
     public void init() throws MailetException {
-        isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
+        debug = isDebug();
         processor = getInitParameter("processor");
         if (processor == null) {
             throw new MailetException("processor parameter is required");
         }
-        noticeText = getInitParameter("notice");
+        noticeText = Optional.fromNullable(getInitParameter("notice"));
     }
 
-    /**
-     * Deliver a mail to the processor.
-     *
-     * @param mail the mail to process
-     *
-     * @throws MessagingException in all cases
-     */
+    private boolean isDebug() {
+        return getInitParameter("debug", false);
+    }
+
+    @Override
+    public String getMailetInfo() {
+        return "ToProcessor Mailet";
+    }
+
+    @Override
     public void service(Mail mail) throws MessagingException {
-        if (isDebug) {
+        if (debug) {
             log(String.format("Sending mail %s to %s", mail, processor));
         }
         mail.setState(processor);
-        if (noticeText != null) {
-            if (mail.getErrorMessage() == null) {
-                mail.setErrorMessage(noticeText);
-            } else {
-                mail.setErrorMessage(String.format("%s\r\n%s", mail.getErrorMessage(), noticeText));
-            }
+        if (noticeText.isPresent()) {
+            setNoticeInErrorMessage(mail);
         }
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
-    public String getMailetInfo() {
-        return "ToProcessor Mailet";
+    private void setNoticeInErrorMessage(Mail mail) {
+        if (mail.getErrorMessage() == null) {
+            mail.setErrorMessage(noticeText.get());
+        } else {
+            mail.setErrorMessage(String.format("%s\r\n%s", mail.getErrorMessage(), noticeText.get()));
+        }
     }
 }

@@ -20,92 +20,116 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Arrays;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mailet;
+import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
 
 public class ToProcessorTest {
 
-    private MimeMessage mockedMimeMessage;
-
-    private Mail mockedMail;
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     private Mailet mailet;
+    private FakeMailetConfig mailetConfig;
+    private Logger logger;
 
-    private String processor = null;
-
-    private String notice = null;
-
-    private void setProcessor(String processor) {
-        this.processor = processor;
-    }
-
-    private void setNotice(String notice) {
-        this.notice = notice;
-    }
-
-    private void setupMockedMail(MimeMessage m) throws ParseException {
-        mockedMail = new FakeMail();
-        mockedMail.setMessage(m);
-        mockedMail.setRecipients(Arrays.asList(new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org")));
-
-    }
-
-    private void setupMailet() throws MessagingException {
+    @Before
+    public void setup() {
         mailet = new ToProcessor();
-        FakeMailetConfig mci = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        if (processor != null) {
-            mci.setProperty("processor", processor);
-        }
-        if (notice != null) {
-            mci.setProperty("notice", notice);
-        }
-        mailet.init(mci);
+        logger = mock(Logger.class);
+        mailetConfig = new FakeMailetConfig("Test", FakeMailContext.builder().logger(logger).build());
     }
 
-    // test if ToProcessor works
     @Test
-    public void testValidToProcessor() throws MessagingException {
-        setProcessor("error");
-        setNotice("error in message");
-        setupMockedMail(mockedMimeMessage);
-        setupMailet();
-
-        mailet.service(mockedMail);
-
-        Assert.assertEquals(processor, mockedMail.getState());
-        Assert.assertEquals(notice, mockedMail.getErrorMessage());
-
+    public void getMailetInfoShouldReturnValue() {
+        assertThat(mailet.getMailetInfo()).isEqualTo("ToProcessor Mailet");
     }
 
-    // test if exception was thrown
     @Test
-    public void testExceptionThrown() throws MessagingException {
-        boolean exceptionThrown = false;
-        setProcessor(null);
-        setNotice("error in message");
-        setupMockedMail(mockedMimeMessage);
+    public void initShouldThrowWhenProcessorIsNotGiven() throws MessagingException {
+        mailetConfig.setProperty("notice", "error in message");
+        expectedException.expect(MailetException.class);
 
-        try {
-            setupMailet();
-            mailet.service(mockedMail);
-        } catch (MessagingException m) {
-            exceptionThrown = true;
-        }
-        Assert.assertTrue(exceptionThrown);
+        mailet.init(mailetConfig);
     }
 
+    @Test
+    public void serviceShouldSetTheStateOfTheMail() throws MessagingException {
+        String processor = "error";
+        mailetConfig.setProperty("processor", processor);
+        mailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
+                .build();
+        mailet.service(mail);
+
+        assertThat(mail.getState()).isEqualTo(processor);
+    }
+
+    @Test
+    public void serviceShouldSetTheErrorMessageOfTheMailWhenNotAlreadySet() throws MessagingException {
+        String processor = "error";
+        mailetConfig.setProperty("processor", processor);
+        String notice = "error in message";
+        mailetConfig.setProperty("notice", notice);
+        mailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
+                .build();
+        mailet.service(mail);
+
+        assertThat(mail.getErrorMessage()).isEqualTo(notice);
+    }
+
+    @Test
+    public void serviceShouldAppendTheErrorMessageOfTheMailWhenSomeErrorMessageOnMail() throws MessagingException {
+        String processor = "error";
+        mailetConfig.setProperty("processor", processor);
+        String notice = "error in message";
+        mailetConfig.setProperty("notice", notice);
+        mailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
+                .build();
+        String initialErrorMessage = "first";
+        mail.setErrorMessage(initialErrorMessage);
+        mailet.service(mail);
+
+        assertThat(mail.getErrorMessage()).isEqualTo(initialErrorMessage + "\r\n" + notice);
+    }
+
+    @Test
+    public void serviceShouldLogWhenDebug() throws MessagingException {
+        mailetConfig.setProperty("processor", "error");
+        mailetConfig.setProperty("notice", "error in message");
+        mailetConfig.setProperty("debug", "true");
+        mailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
+                .build();
+        String initialErrorMessage = "first";
+        mail.setErrorMessage(initialErrorMessage);
+        mailet.service(mail);
+
+        verify(logger).info("Sending mail " + mail +" to error");
+    }
 }
