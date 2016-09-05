@@ -250,7 +250,7 @@ public class DSNBounceTest {
                 "Action: failed\n" +
                 "Status: Delivery error\n" +
                 "Diagnostic-Code: X-James; Delivery error\n" +
-                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000 (UTC)\n";
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
 
         List<SentMail> sentMails = fakeMailContext.getSentMails();
         assertThat(sentMails).hasSize(1);
