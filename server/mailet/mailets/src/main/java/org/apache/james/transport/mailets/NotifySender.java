@@ -19,12 +19,17 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.mailet.MailAddress;
+import java.util.Collection;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
-import java.util.HashSet;
-import java.util.Collection;
+
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetConfig;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -99,61 +104,49 @@ import java.util.Collection;
  */
 public class NotifySender extends AbstractNotify {
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
+            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
+    private static final Set<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableSet.of(SpecialAddress.SENDER);
+
+    private boolean attachStackTrace;
+    private Optional<String> to = Optional.absent();
+
+    @Override
+    public void init(MailetConfig mailetConfig) throws MessagingException {
+        super.init(mailetConfig);
+        attachStackTrace = getInitParameter("attachStackTrace", false);
+        to = Optional.fromNullable(getInitParameter("to"));
+    }
+
+    @Override
     public String getMailetInfo() {
         return "NotifySender Mailet";
     }
 
-    /** Gets the expected init parameters. */
+    @Override
     protected String[] getAllowedInitParameters() {
-        return new String[]{
-                // "static",
-                "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
+        return CONFIGURABLE_PARAMETERS;
     }
 
-    /**
-     * @return <code>SpecialAddress.SENDER</code>, indicating the sender of the
-     *         current mail
-     */
+    @Override
     protected Collection<MailAddress> getRecipients() {
-        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
-        newRecipients.add(SpecialAddress.SENDER);
-        return newRecipients;
+        return RECIPIENT_MAIL_ADDRESSES;
     }
 
-    /**
-     * @return <code>SpecialAddress.UNALTERED</code> if specified or
-     *         <code>SpecialAddress.SENDER</code> if missing
-     */
+    @Override
     protected InternetAddress[] getTo() throws MessagingException {
-        String addressList = getInitParameter("to");
-        InternetAddress[] iaarray = new InternetAddress[1];
-        iaarray[0] = SpecialAddress.SENDER.toInternetAddress();
-        if (addressList != null) {
-            MailAddress specialAddress = getSpecialAddress(addressList, new String[] { "sender", "unaltered", "from" });
+        if (to.isPresent()) {
+            MailAddress specialAddress = getSpecialAddress(to.get(), new String[] { "sender", "unaltered", "from" });
             if (specialAddress != null) {
-                iaarray[0] = specialAddress.toInternetAddress();
-            } else {
-                log("\"to\" parameter ignored, set to sender");
+                return new InternetAddress[] { specialAddress.toInternetAddress() };
             }
+            log("\"to\" parameter ignored, set to sender");
         }
-        return iaarray;
+        return new InternetAddress[] { SpecialAddress.SENDER.toInternetAddress() };
     }
 
-    /**
-     * @return the <code>attachStackTrace</code> init parameter, or the
-     *         <code>attachError</code> init parameter if missing, or false if
-     *         missing
-     */
+    @Override
     protected boolean attachError() throws MessagingException {
-        String parameter = getInitParameter("attachStackTrace");
-        if (parameter == null) {
-            return super.attachError();
-        }
-        return Boolean.valueOf(parameter);
+        return attachStackTrace || super.attachError();
     }
 }
