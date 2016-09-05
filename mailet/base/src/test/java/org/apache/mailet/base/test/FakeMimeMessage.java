@@ -46,7 +46,6 @@ public class FakeMimeMessage extends MimeMessage {
     private String[] m_contentLanguage;
     private String m_fileName;
     private DataHandler m_dataHandler;
-    private final HashMap<String, String> m_contentHeaders = new HashMap<String, String>();
     private final Flags m_setFlags = new Flags();
     private boolean m_doMatch;
 
@@ -290,32 +289,8 @@ public class FakeMimeMessage extends MimeMessage {
         // trivial implementation
     }
 
-    public String[] getHeader(String name) throws MessagingException {
-        String value = m_contentHeaders.get(name);
-        if (value == null) return null;
-        return new String[]{value};
-    }
-
-    public String getHeader(String name, String delimiter) throws MessagingException {
-        String[] header = getHeader(name);
-        if (header == null || header.length == 0) return null;
-        return header[0];
-    }
-
     public void setHeader(String name, String value) throws MessagingException {
         addHeader(name, value);
-    }
-
-    public void addHeader(String name, String value) throws MessagingException {
-        m_contentHeaders.put(name, value);
-    }
-
-    public void removeHeader(String name) throws MessagingException {
-        m_contentHeaders.remove(name);
-    }
-
-    public Enumeration<String> getAllHeaders() throws MessagingException {
-        return Collections.enumeration(m_contentHeaders.values());
     }
 
     public Enumeration<String> getMatchingHeaders(String[] names) throws MessagingException {
@@ -328,38 +303,12 @@ public class FakeMimeMessage extends MimeMessage {
         return Collections.enumeration(matchingHeaders);
     }
 
-    public Enumeration<String> getNonMatchingHeaders(String[] names) throws MessagingException {
-        List<String> existingHeaders = Arrays.asList(names);
-
-        ArrayList<String> nonMatchingHeaders = new ArrayList<String>();
-
-        for (String name : m_contentHeaders.keySet()) {
-            if (existingHeaders.contains(name)) continue;
-            String value = getHeader(name, null);
-            if (value == null) continue;
-            nonMatchingHeaders.add(value);
-        }
-        return Collections.enumeration(nonMatchingHeaders);
-    }
 
     public void addHeaderLine(String headerLine) throws MessagingException {
         int separatorIndex = headerLine.indexOf(":");
         if (separatorIndex < 0) throw new MessagingException("header line does not conform to standard");
 
         addHeader(headerLine.substring(0, separatorIndex), headerLine.substring(separatorIndex, headerLine.length()));
-    }
-
-    public Enumeration<String> getAllHeaderLines() throws MessagingException {
-        return Collections.enumeration(getHeadersAsStrings(m_contentHeaders));
-    }
-
-    private ArrayList<String> getHeadersAsStrings(HashMap<String, String> contentHeaders) {
-        ArrayList<String> headerLines = new ArrayList<String>();
-        for (String key : contentHeaders.keySet()) {
-            String value = contentHeaders.get(key);
-            headerLines.add(key + ":" + value);
-        }
-        return headerLines;
     }
 
     public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
@@ -370,20 +319,6 @@ public class FakeMimeMessage extends MimeMessage {
             matchingHeaders.add(name + ":" + value);
         }
         return Collections.enumeration(matchingHeaders);
-    }
-
-    public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
-        List<String> existingHeaders = names != null ? Arrays.asList(names) : null;
-
-        ArrayList<String> nonMatchingHeaders = new ArrayList<String>();
-
-        for (String name : m_contentHeaders.keySet()) {
-            if (existingHeaders != null && existingHeaders.contains(name)) continue;
-            String value = getHeader(name, null);
-            if (value == null) continue;
-            nonMatchingHeaders.add(name + ":" + value);
-        }
-        return Collections.enumeration(nonMatchingHeaders);
     }
 
     public synchronized Flags getFlags() throws MessagingException {

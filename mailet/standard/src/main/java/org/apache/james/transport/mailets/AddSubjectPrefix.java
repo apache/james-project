@@ -57,6 +57,11 @@ public class AddSubjectPrefix extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         MimeMessage m = mail.getMessage();
         String newSubject = prefixSubject(m);
+        replaceSubject(m, newSubject);
+    }
+
+    private void replaceSubject(MimeMessage m, String newSubject) throws MessagingException {
+        m.setSubject(null);
         m.setSubject(newSubject, Charsets.UTF_8.displayName());
     }
 

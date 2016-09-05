@@ -20,97 +20,99 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.UnsupportedEncodingException;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.apache.mailet.base.test.FakeMimeMessage;
 import org.apache.mailet.base.test.MailUtil;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import junit.framework.TestCase;
+public class MailAttributesToMimeHeadersTest {
 
-public class MailAttributesToMimeHeadersTest extends TestCase {
-
+    @Rule public ExpectedException expectedException = ExpectedException.none();
+    
     private Mailet mailet;
 
     private final String HEADER_NAME1 = "JUNIT";
-
     private final String HEADER_NAME2 = "JUNIT2";
 
     private final String MAIL_ATTRIBUTE_VALUE1 = "test1";
-
     private final String MAIL_ATTRIBUTE_VALUE2 = "test2";
 
     private final String MAIL_ATTRIBUTE_NAME1 = "org.apache.james.test";
-
     private final String MAIL_ATTRIBUTE_NAME2 = "org.apache.james.test2";
 
-    private String config1 = MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1;
-
-    public MailAttributesToMimeHeadersTest(String arg0)
-            throws UnsupportedEncodingException {
-        super(arg0);
-    }
-
-    private void setConfig1(String config1) {
-        this.config1 = config1;
-    }
-
-    private String getConfig1() {
-        return config1;
-    }
-
-    private void setupMailet() throws MessagingException {
+    @Before
+    public void setup() {
         mailet = new MailAttributesToMimeHeaders();
-        FakeMailetConfig mci = new FakeMailetConfig("Test",
-                FakeMailContext.defaultContext());
-        mci.setProperty("simplemapping", getConfig1());
-        String config2 = MAIL_ATTRIBUTE_NAME2 + "; " + HEADER_NAME2;
-        mci.setProperty("simplemapping", config2);
-        mailet.init(mci);
     }
+    
 
-    private FakeMail setupMail(MimeMessage m) throws ParseException {
-        FakeMail mockedMail = MailUtil.createMockMail2Recipients(m);
+    @Test
+    public void shouldPutAttributesIntoHeadersWhenMappingDefined() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1);
+        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME2 + "; " + HEADER_NAME2);
+        mailetConfig.setProperty("simplemapping", "another.attribute" + "; " + "Another-Header");
+        mailet.init(mailetConfig);
+        
+        FakeMail mockedMail = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
         mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
         mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2);
-        return mockedMail;
-    }
-
-    // test if the Headers were added
-    public void testHeadersArePresent() throws MessagingException {
-        FakeMail mockedMail = setupMail(MailUtil.createMimeMessage());
-        setupMailet();
+        mockedMail.setAttribute("unmatched.attribute", "value");
 
         mailet.service(mockedMail);
 
-        assertEquals(MAIL_ATTRIBUTE_VALUE1, mockedMail.getMessage().getHeader(
-                HEADER_NAME1)[0]);
-
-        assertEquals(MAIL_ATTRIBUTE_VALUE2, mockedMail.getMessage().getHeader(
-                HEADER_NAME2)[0]);
-
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME1)).containsExactly(MAIL_ATTRIBUTE_VALUE1);
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME2)).containsExactly(MAIL_ATTRIBUTE_VALUE2);
     }
 
-    // test if exception was thrown
-    public void testInvalidConfig() throws MessagingException {
-        boolean exception = false;
-        FakeMail mockedMail = setupMail(MailUtil.createMimeMessage());
-        setConfig1("test");
+    @Test
+    public void shouldAddAttributeIntoHeadersWhenHeaderAlreadyPresent() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1);
+        mailet.init(mailetConfig);
+        
+        FakeMimeMessage mimeMessage = MailUtil.createMimeMessage();
+        mimeMessage.addHeader(HEADER_NAME1, "first value");
+		FakeMail mockedMail = MailUtil.createMockMail2Recipients(mimeMessage);
+        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
+        
+        mailet.service(mockedMail);
 
-        try {
-            setupMailet();
-            mailet.service(mockedMail);
-        } catch (MessagingException e) {
-            exception = true;
-        }
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME1)).containsExactly("first value", MAIL_ATTRIBUTE_VALUE1);
+    }
 
-        assertTrue(exception);
+    
+    @Test
+    public void shouldThrowAtInitWhenNoSemicolumnInConfigurationEntry() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("simplemapping", "invalidConfigEntry");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
 
+    @Test
+    public void shouldThrowAtInitWhenTwoSemicolumnsInConfigurationEntry() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        mailetConfig.setProperty("simplemapping", "first;second;third");
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
+    }
+
+    @Test
+    public void shouldThrowAtInitWhenNoConfigurationEntry() throws MessagingException {
+        FakeMailetConfig mailetConfig = new FakeMailetConfig("Test", FakeMailContext.defaultContext());
+        expectedException.expect(MessagingException.class);
+        mailet.init(mailetConfig);
     }
 }

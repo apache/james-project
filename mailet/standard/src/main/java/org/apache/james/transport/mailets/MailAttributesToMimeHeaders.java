@@ -21,14 +21,19 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.HashMap;
-import java.util.StringTokenizer;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 /**
  * <p>Convert attributes to headers</p>
@@ -44,55 +49,35 @@ import org.apache.mailet.Mail;
  */
 public class MailAttributesToMimeHeaders extends GenericMailet {
 
-    /**
-     * HashMap which holds the attributeName and headerName
-     */
-    private final HashMap<String, String> map = new HashMap<String, String>();
+    private static final String CONFIGURATION_ERROR_MESSAGE = "Invalid config. Please use \"attributeName; headerName\"";
+    private Map<String, String> mappings;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#init()
-     */
+    @Override
     public void init() throws MessagingException {
         String simplemappings = getInitParameter("simplemapping");
+        Builder<String, String> mappingsBuilder = ImmutableMap.builder();
         if (simplemappings != null) {
-
-            StringTokenizer st = new StringTokenizer(simplemappings, ",");
-            while (st.hasMoreTokens()) {
-
-                String parameters[] = st.nextToken().split(";");
-
-                // Check if we have a valid config
-                if (parameters.length > 2 || parameters.length < 2) {
-                    throw new MessagingException(
-                            "Invalid config. Please use \"attributeName; headerName\"");
-                } else {
-                    // Add it to the map
-                    map.put(parameters[0].trim(), parameters[1].trim());
+            for (String mapping : Splitter.on(',').split(simplemappings)) {
+                List<String> pair = Splitter.on(';').trimResults().splitToList(mapping);
+                if (pair.size() != 2) {
+                    throw new MessagingException(CONFIGURATION_ERROR_MESSAGE);
                 }
+                mappingsBuilder.put(pair.get(0), pair.get(1));
             }
         } else {
-            throw new MessagingException(
-                    "Invalid config. Please use \"attributeName; headerName\"");
+            throw new MessagingException(CONFIGURATION_ERROR_MESSAGE);
         }
+        mappings = mappingsBuilder.build();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMailet#service(org.apache.mailet.Mail)
-     */
+    @Override
     public void service(Mail mail) {
-        MimeMessage message;
         try {
-            message = mail.getMessage();
-
-            for (String key : map.keySet()) {
-                String value = (String) mail.getAttribute(key);
-                String headerName = map.get(key);
-
-                // Check if we have all needed values
-                if (headerName != null && value != null) {
-                    // Add the header
+            MimeMessage message = mail.getMessage();
+            for (Entry<String, String> entry : mappings.entrySet()) {
+                String value = (String) mail.getAttribute(entry.getKey());
+                if (value != null) {
+                    String headerName = entry.getValue();
                     message.setHeader(headerName, value);
                 }
             }

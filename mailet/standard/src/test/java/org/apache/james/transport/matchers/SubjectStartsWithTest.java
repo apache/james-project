@@ -20,56 +20,70 @@
 
 package org.apache.james.transport.matchers;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 
-import org.apache.james.transport.matchers.SubjectStartsWith;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.apache.mailet.base.test.MailUtil;
+import org.junit.Before;
+import org.junit.Test;
 
-public class SubjectStartsWithTest extends AbstractSubjectIsTest {
+public class SubjectStartsWithTest {
 
-    public SubjectStartsWithTest(String arg0)
-            throws UnsupportedEncodingException {
-        super(arg0);
+    private SubjectStartsWith matcher;
+    private MailAddress roger;
+
+    @Before
+    public void setup() throws AddressException {
+        matcher = new SubjectStartsWith();
+        roger = new MailAddress("roger@nasa.org");
     }
+    
+    @Test
+    public void shouldMatchWhenSubjectStartsWithConfiguredValue() throws MessagingException {
+        FakeMail mail = FakeMail.builder()
+                .recipients(roger)
+                .mimeMessage(MailUtil.createMimeMessageWithSubject("testSubject"))
+                .build();
+        
+        FakeMatcherConfig mailetConfig = new FakeMatcherConfig("SubjectIs=test", FakeMailContext.defaultContext());
+        
+        matcher.init(mailetConfig);
 
-    // test if the recipients get returned as matched
-    public void testHostIsMatchedAllRecipients() throws MessagingException {
-        String SUBJECT_NAME = "testSubject";
-        setSubject(SUBJECT_NAME);
-
-        setupAll();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(matcher.match(mail)).containsExactly(roger);
     }
+    
+    @Test
+    public void shouldNotMatchWhenSubjectDoesntStartWithConfiguredValue() throws MessagingException {
+        FakeMail mail = FakeMail.builder()
+                .recipients(roger)
+                .mimeMessage(MailUtil.createMimeMessageWithSubject("foobar"))
+                .build();
+        
+        FakeMatcherConfig mailetConfig = new FakeMatcherConfig("SubjectIs=test", FakeMailContext.defaultContext());
+        
+        matcher.init(mailetConfig);
 
-    // test if no recipient get returned cause it not match
-    public void testHostIsNotMatch() throws MessagingException {
-        setSubject("FOOBAR");
-
-        setupAll();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNull(matchedRecipients);
+        assertThat(matcher.match(mail)).isNull();
     }
+    
 
-    protected Matcher createMatcher() {
-        return new SubjectStartsWith();
-    }
+    @Test
+    public void shouldNotMatchWhenNoSubject() throws MessagingException {
+        FakeMail mail = FakeMail.builder()
+                .recipients(roger)
+                .mimeMessage(MailUtil.createMimeMessageWithSubject(null))
+                .build();
+        
+        FakeMatcherConfig mailetConfig = new FakeMatcherConfig("SubjectIs=test", FakeMailContext.defaultContext());
+        
+        matcher.init(mailetConfig);
 
-    protected String getConfigOption() {
-        return "SubjectIs=";
-    }
-
-    protected String getSubjectName() {
-        return "test";
+        assertThat(matcher.match(mail)).isNull();
     }
 }
