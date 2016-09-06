@@ -268,20 +268,17 @@ package org.apache.james.transport.mailets;
 
 public class Resend extends AbstractRedirect {
 
-    /**
-     * Returns a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
+            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+
+    @Override
     public String getMailetInfo() {
         return "Redirect Mailet";
     }
 
-    /** Gets the expected init parameters. */
+    @Override
     protected String[] getAllowedInitParameters() {
-        return new String[]{
-                // "static",
-                "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+        return CONFIGURABLE_PARAMETERS;
     }
 
 }
