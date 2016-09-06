@@ -29,27 +29,15 @@ import org.apache.mailet.base.GenericMailet;
 
 /**
  * Stores incoming Mail in the specified Repository.<br>
- * If the "passThrough" in confs is true the mail will be returned untouched in
- * the pipe. If false will be destroyed.
- * 
- * @version 1.0.0, 24/04/1999
+ * If the "passThrough" in conf is true the mail will be returned untouched in
+ * the pipe and may be processed by additional mailets. If false will be destroyed.
  */
 public class ToRepository extends GenericMailet {
 
-    /**
-     * The repository where this mailet stores mail.
-     */
     private MailRepository repository;
 
-    /**
-     * Whether this mailet should allow mails to be processed by additional
-     * mailets or mark it as finished.
-     */
     private boolean passThrough = false;
 
-    /**
-     * The path to the repository
-     */
     private String repositoryPath;
 
     private MailRepositoryStore mailStore;
@@ -59,31 +47,30 @@ public class ToRepository extends GenericMailet {
         this.mailStore = mailStore;
     }
 
-    /**
-     * Initialize the mailet, loading configuration information.
-     */
+    @Override
     public void init() throws MessagingException {
         repositoryPath = getInitParameter("repositoryPath");
-        try {
-            passThrough = Boolean.valueOf(getInitParameter("passThrough"));
-        } catch (Exception e) {
-            // Ignore exception, default to false
-        }
+        passThrough = getPassThroughParameter();
+        repository = selectRepository();
+    }
 
+    private boolean getPassThroughParameter() {
         try {
-            repository = mailStore.select(repositoryPath);
+            return getInitParameter("passThrough", false);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private MailRepository selectRepository() throws MessagingException {
+        try {
+            return mailStore.select(repositoryPath);
         } catch (Exception e) {
             throw new MessagingException("Failed to retrieve MailRepository for url " + repositoryPath, e);
         }
-
     }
 
-    /**
-     * Store a mail in a particular repository.
-     * 
-     * @param mail
-     *            the mail to process
-     */
+    @Override
     public void service(Mail mail) throws javax.mail.MessagingException {
         String logBuffer = "Storing mail " + mail.getName() + " in " + repositoryPath;
         log(logBuffer);
@@ -93,11 +80,7 @@ public class ToRepository extends GenericMailet {
         }
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "ToRepository Mailet";
     }
