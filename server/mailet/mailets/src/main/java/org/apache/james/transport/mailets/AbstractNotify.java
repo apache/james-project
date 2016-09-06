@@ -208,32 +208,6 @@ public abstract class AbstractNotify extends AbstractRedirect {
     }
 
     /**
-     * @return the <code>sendingAddress</code> init parameter or the
-     *         <code>sender</code> init parameter or the postmaster address if
-     *         both are missing; possible special addresses returned are
-     *         <code>SpecialAddress.SENDER</code> and
-     *         <code>SpecialAddress.UNALTERED</code>
-     */
-    protected MailAddress getSender() throws MessagingException {
-        String addressString = getInitParameter("sendingAddress", getInitParameter("sender"));
-
-        if (addressString == null) {
-            return getMailetContext().getPostmaster();
-        }
-
-        MailAddress specialAddress = getSpecialAddress(addressString, new String[] { "postmaster", "sender", "unaltered" });
-        if (specialAddress != null) {
-            return specialAddress;
-        }
-
-        try {
-            return new MailAddress(addressString);
-        } catch (Exception e) {
-            throw new MessagingException("Exception thrown in getSender() parsing: " + addressString, e);
-        }
-    }
-
-    /**
      * @return null
      */
     protected String getSubject() {
