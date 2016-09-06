@@ -20,13 +20,17 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.List;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * <p>
@@ -281,142 +285,121 @@ import org.apache.mailet.MailAddress;
 
 public class Redirect extends AbstractRedirect {
 
-    /**
-     * Returns a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
+            "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+    private static final String[] ALLOWED_SPECIALS = new String[]{
+            "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" };
+
+    @Override
     public String getMailetInfo() {
         return "Redirect Mailet";
     }
 
-    /** Gets the expected init parameters. */
+    @Override
     protected String[] getAllowedInitParameters() {
-        return new String[]{ "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };
+        return CONFIGURABLE_PARAMETERS;
     }
 
-    /**
-     * @return the <code>static</code> init parameter
-     */
+    @Override
     protected boolean isStatic() {
         return isStatic;
     }
 
-    /**
-     * @return the <code>inline</code> init parameter
-     */
+    @Override
     protected int getInLineType() {
         return getTypeCode(getInitParameter("inline", "body"));
     }
 
-    /**
-     * @return the <code>recipients</code> init parameter or the postmaster
-     *         address or <code>SpecialAddress.SENDER</code> or
-     *         <code>SpecialAddress.REVERSE_PATH</code> or
-     *         <code>SpecialAddress.UNALTERED</code> or the <code>to</code> init
-     *         parameter if missing or <code>null</code> if also the latter is
-     *         missing
-     */
+    @Override
     protected Collection<MailAddress> getRecipients() throws MessagingException {
-        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
-        String addressList = getInitParameter("recipients", getInitParameter("to"));
-
-        // if nothing was specified, return <code>null</code> meaning no change
-        if (addressList == null) {
+        String recipientsOrTo = getRecipientsOrTo();
+        if (recipientsOrTo == null) {
             return null;
         }
-
-        try {
-            InternetAddress[] iaarray = InternetAddress.parse(addressList, false);
-            for (InternetAddress anIaarray : iaarray) {
-                String addressString = anIaarray.getAddress();
-                MailAddress specialAddress = getSpecialAddress(addressString, new String[]{"postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"});
-                if (specialAddress != null) {
-                    newRecipients.add(specialAddress);
-                } else {
-                    newRecipients.add(new MailAddress(anIaarray));
-                }
-            }
-        } catch (Exception e) {
-            throw new MessagingException("Exception thrown in getRecipients() parsing: " + addressList, e);
-        }
-        if (newRecipients.size() == 0) {
+        if (recipientsOrTo.isEmpty()) {
             throw new MessagingException("Failed to initialize \"recipients\" list; empty <recipients> init parameter found.");
         }
-
-        return newRecipients;
+        ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
+        for (InternetAddress address : extractAddresses(recipientsOrTo)) {
+            builder.add(toMailAddress(address));
+        }
+        return builder.build();
     }
 
-    /**
-     * @return the <code>to</code> init parameter or the postmaster address or
-     *         <code>SpecialAddress.SENDER</code> or
-     *         <code>SpecialAddress.REVERSE_PATH</code> or
-     *         <code>SpecialAddress.UNALTERED</code> or the
-     *         <code>recipients</code> init parameter if missing or
-     *         <code>null</code> if also the latter is missing
-     */
-    protected InternetAddress[] getTo() throws MessagingException {
-        InternetAddress[] iaarray;
-        String addressList = getInitParameter("to", getInitParameter("recipients"));
-
-        // if nothing was specified, return null meaning no change
-        if (addressList == null) {
-            return null;
-        }
-
+    private InternetAddress[] extractAddresses(String addressList) throws MessagingException {
         try {
-            iaarray = InternetAddress.parse(addressList, false);
-            for (int i = 0; i < iaarray.length; ++i) {
-                String addressString = iaarray[i].getAddress();
-                MailAddress specialAddress = getSpecialAddress(addressString, new String[] { "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" });
-                if (specialAddress != null) {
-                    iaarray[i] = specialAddress.toInternetAddress();
-                }
-            }
-        } catch (Exception e) {
-            throw new MessagingException("Exception thrown in getTo() parsing: " + addressList, e);
+            return InternetAddress.parse(addressList, false);
+        } catch (AddressException e) {
+            throw new MessagingException("Exception thrown parsing: " + addressList, e);
         }
-        if (iaarray.length == 0) {
-            throw new MessagingException("Failed to initialize \"to\" list; empty <to> init parameter found.");
-        }
-
-        return iaarray;
     }
 
-    /**
-     * @return the <code>reversePath</code> init parameter or the postmaster
-     *         address or <code>SpecialAddress.SENDER</code> or
-     *         <code>SpecialAddress.NULL</code> or <code>null</code> if missing
-     */
-    protected MailAddress getReversePath() throws MessagingException {
-        String addressString = getInitParameter("reversePath");
-        if (addressString != null) {
-            MailAddress specialAddress = getSpecialAddress(addressString, new String[] { "postmaster", "sender", "null" });
+    private MailAddress toMailAddress(InternetAddress address) throws MessagingException {
+        try {
+            MailAddress specialAddress = getSpecialAddress(address.getAddress(), ALLOWED_SPECIALS);
             if (specialAddress != null) {
                 return specialAddress;
             }
-
-            try {
-                return new MailAddress(addressString);
-            } catch (Exception e) {
-                throw new MessagingException("Exception thrown in getReversePath() parsing: " + addressString, e);
-            }
+            return new MailAddress(address);
+        } catch (Exception e) {
+            throw new MessagingException("Exception thrown parsing: " + address.getAddress());
         }
-
-        return null;
     }
 
-    /**
-     * @return {@link AbstractRedirect#getReversePath()}; if null return
-     *         {@link AbstractRedirect#getSender(Mail)}, meaning the new
-     *         requested sender if any
-     */
+    private String getRecipientsOrTo() throws MessagingException {
+        return getInitParameter("recipients", getInitParameter("to"));
+    }
+
+    @Override
+    protected InternetAddress[] getTo() throws MessagingException {
+        String toOrRecipients = getToOrRecipients();
+        if (toOrRecipients == null) {
+            return null;
+        }
+        if (toOrRecipients.isEmpty()) {
+            throw new MessagingException("Failed to initialize \"recipients\" list; empty <recipients> init parameter found.");
+        }
+        List<InternetAddress> list = Lists.newArrayList();
+        for (InternetAddress address : extractAddresses(toOrRecipients)) {
+            list.add(toMailAddress(address).toInternetAddress());
+        }
+        return list.toArray(new InternetAddress[list.size()]);
+    }
+
+    private String getToOrRecipients() throws MessagingException {
+        return getInitParameter("to", getInitParameter("recipients"));
+    }
+
+    @Override
+    protected MailAddress getReversePath() throws MessagingException {
+        String addressString = getInitParameter("reversePath");
+        if (addressString == null) {
+            return null;
+        }
+
+        MailAddress specialAddress = getSpecialAddress(addressString, new String[] { "postmaster", "sender", "null" });
+        if (specialAddress != null) {
+            return specialAddress;
+        }
+
+        return toMailAddress(addressString);
+    }
+
+    private MailAddress toMailAddress(String addressString) throws MessagingException {
+        try {
+            return new MailAddress(addressString);
+        } catch (Exception e) {
+            throw new MessagingException("Exception thrown in getReversePath() parsing: " + addressString, e);
+        }
+    }
+
+    @Override
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
         MailAddress reversePath = super.getReversePath(originalMail);
-        if (reversePath == null) {
-            reversePath = getSender(originalMail);
+        if (reversePath != null) {
+            return reversePath;
         }
-        return reversePath;
+        return getSender(originalMail);
     }
 
 }
