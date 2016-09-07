@@ -34,7 +34,11 @@ import java.util.Collection;
  * </p>
  */
 public class RemoteAddrNotInNetwork extends AbstractNetworkMatcher {
+    @Override
     public Collection<MailAddress> match(Mail mail) {
-        return matchNetwork(mail.getRemoteAddr()) ? null : mail.getRecipients();
+        if (! matchNetwork(mail.getRemoteAddr())) {
+            return mail.getRecipients();
+        }
+        return null;
     }
 }

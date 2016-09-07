@@ -23,12 +23,15 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.inetnetwork.InetNetworkBuilder;
 import org.apache.james.dnsservice.library.inetnetwork.model.InetNetwork;
+
+import com.google.common.base.Splitter;
 
 /**
  * NetMatcher Class is used to check if an ipAddress match a network.
@@ -37,6 +40,7 @@ import org.apache.james.dnsservice.library.inetnetwork.model.InetNetwork;
  * address or domain name is within a set of subnets.
  */
 public class NetMatcher {
+    public static final String NETS_SEPARATOR = ", ";
 
     /**
      * The DNS Service used to build InetNetworks.
@@ -71,6 +75,12 @@ public class NetMatcher {
      */
     public NetMatcher(Collection<String> nets, DNSService dnsServer) {
         this.dnsServer = dnsServer;
+        initInetNetworks(nets);
+    }
+
+    public NetMatcher(String commaSeparatedNets, DNSService dnsServer) {
+        this.dnsServer = dnsServer;
+        List<String> nets = Splitter.on(NETS_SEPARATOR).splitToList(commaSeparatedNets);
         initInetNetworks(nets);
     }
 

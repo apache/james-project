@@ -58,7 +58,7 @@ public class RemoteAddrInNetworkTest {
     }
 
     @Test
-    public void matchShouldMatchWhenOnSameNetwork() throws MessagingException {
+    public void shouldMatchWhenOnSameNetwork() throws MessagingException {
         fakeMail.setRemoteAddr("192.168.200.1");
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
@@ -67,7 +67,7 @@ public class RemoteAddrInNetworkTest {
     }
 
     @Test
-    public void matchShouldNotMatchWhenOnDifferentNetwork() throws MessagingException {
+    public void shouldNotMatchWhenOnDifferentNetwork() throws MessagingException {
         fakeMail.setRemoteAddr("192.168.1.1");
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
@@ -76,7 +76,7 @@ public class RemoteAddrInNetworkTest {
     }
 
     @Test
-    public void matchShouldNotMatchWhenNoCondition() throws MessagingException {
+    public void shouldNotMatchWhenNoCondition() throws MessagingException {
         FakeMatcherConfig matcherConfig = new FakeMatcherConfig("", FakeMailContext.defaultContext());
         RemoteAddrInNetwork testee = new RemoteAddrInNetwork();
         testee.init(matcherConfig);
@@ -87,7 +87,7 @@ public class RemoteAddrInNetworkTest {
     }
 
     @Test
-    public void matchShouldNotMatchWhenInvalidAddress() throws MessagingException {
+    public void shouldNotMatchWhenInvalidAddress() throws MessagingException {
         fakeMail.setRemoteAddr("invalid");
 
         Collection<MailAddress> actual = matcher.match(fakeMail);

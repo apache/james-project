@@ -18,9 +18,6 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
-import java.util.StringTokenizer;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -41,31 +38,21 @@ import org.apache.mailet.base.GenericMatcher;
  * </p>
  * <p>
  * This abstract network matcher needs to be implemented by a concrete class.<br>
- * The implementing concrete class will call the allowedNetworks or matchNetwork
- * methods.
+ * The implementing concrete class will call the matchNetwork method.
  * </p>
  * 
  * @see org.apache.james.dnsservice.library.netmatcher.NetMatcher
  */
 public abstract class AbstractNetworkMatcher extends GenericMatcher {
 
-    /**
-     * This is a Network Matcher that should be configured to contain authorized
-     * networks
-     */
-    private NetMatcher authorizedNetworks = null;
+    private NetMatcher authorizedNetworks;
 
-    /**
-     * The DNSService
-     */
     private DNSService dnsServer;
 
+    @Override
     public void init() throws MessagingException {
-
-        Collection<String> nets = allowedNetworks();
-
-        if (nets != null) {
-            authorizedNetworks = new NetMatcher(allowedNetworks(), dnsServer) {
+        if (getCondition() != null) {
+            authorizedNetworks = new NetMatcher(getCondition(), dnsServer) {
                 protected void log(String s) {
                     AbstractNetworkMatcher.this.log(s);
                 }
@@ -74,26 +61,10 @@ public abstract class AbstractNetworkMatcher extends GenericMatcher {
         }
     }
 
-    protected Collection<String> allowedNetworks() {
-        Collection<String> networks = null;
-        if (getCondition() != null) {
-            StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
-            networks = new java.util.ArrayList<String>();
-            while (st.hasMoreTokens())
-                networks.add(st.nextToken());
-        }
-        return networks;
-    }
-
     protected boolean matchNetwork(String addr) {
         return authorizedNetworks != null && authorizedNetworks.matchInetNetwork(addr);
     }
 
-    /**
-     * Injection setter for the DNSService.
-     * 
-     * @param dnsService
-     */
     @Inject
     public void setDNSService(DNSService dnsService) {
         this.dnsServer = dnsService;
