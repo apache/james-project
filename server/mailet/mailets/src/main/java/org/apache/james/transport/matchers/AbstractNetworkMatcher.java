@@ -85,10 +85,6 @@ public abstract class AbstractNetworkMatcher extends GenericMatcher {
         return networks;
     }
 
-    protected boolean matchNetwork(java.net.InetAddress addr) {
-        return authorizedNetworks != null && authorizedNetworks.matchInetNetwork(addr);
-    }
-
     protected boolean matchNetwork(String addr) {
         return authorizedNetworks != null && authorizedNetworks.matchInetNetwork(addr);
     }

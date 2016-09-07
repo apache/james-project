@@ -74,4 +74,24 @@ public class RemoteAddrInNetworkTest {
 
         assertThat(actual).isNull();
     }
+
+    @Test
+    public void matchShouldNotMatchWhenNoCondition() throws MessagingException {
+        FakeMatcherConfig matcherConfig = new FakeMatcherConfig("", FakeMailContext.defaultContext());
+        RemoteAddrInNetwork testee = new RemoteAddrInNetwork();
+        testee.init(matcherConfig);
+
+        Collection<MailAddress> actual = testee.match(fakeMail);
+
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void matchShouldNotMatchWhenInvalidAddress() throws MessagingException {
+        fakeMail.setRemoteAddr("invalid");
+
+        Collection<MailAddress> actual = matcher.match(fakeMail);
+
+        assertThat(actual).isNull();
+    }
 }
