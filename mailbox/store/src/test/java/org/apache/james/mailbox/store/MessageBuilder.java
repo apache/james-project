@@ -24,12 +24,13 @@ import java.util.Map;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class MessageBuilder {
     
     public TestId mailboxId = TestId.of(113);
-    public long uid = 776;
+    public MessageUid uid = MessageUid.of(776);
     public Date internalDate = new Date();
     public int size = 8867;
     public Flags flags = new Flags();
@@ -45,7 +46,7 @@ public class MessageBuilder {
         headers.put(field, value);
     }
 
-    public void setKey(int mailboxId, int uid) {
+    public void setKey(int mailboxId, MessageUid uid) {
         this.uid = uid;
         this.mailboxId = TestId.of(mailboxId);
     }

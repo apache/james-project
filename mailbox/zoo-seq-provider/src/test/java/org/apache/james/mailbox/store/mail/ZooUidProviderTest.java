@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.UUID;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -29,6 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
 import com.netflix.curator.framework.CuratorFrameworkFactory;
@@ -163,10 +165,10 @@ public class ZooUidProviderTest {
 	    @Test
 	    public void testNextUid() throws Exception {
 	        System.out.println("Testing nextUid");
-	        long result = uuidProvider.nextUid(null, mailboxUUID);
-	        assertEquals("Next UID is 1", 1, result);
+	        MessageUid result = uuidProvider.nextUid(null, mailboxUUID);
+	        assertEquals("Next UID is 1", 1, result.asLong());
 	        result = longProvider.nextUid(null, mailboxLong);
-	        assertEquals("Next UID is 1", 1, result);
+	        assertEquals("Next UID is 1", 1, result.asLong());
 	    }
 	
 	    /**
@@ -175,10 +177,10 @@ public class ZooUidProviderTest {
 	    @Test
 	    public void testLastUid() throws Exception {
 	        System.out.println("Testing lastUid");
-	        long result = uuidProvider.lastUid(null, mailboxUUID);
-	        assertEquals("Next UID is 0", 0, result);
-	        result = uuidProvider.nextUid(null, mailboxUUID);
-	        assertEquals("Next UID is 1", 1, result);
+	        Optional<MessageUid> result = uuidProvider.lastUid(null, mailboxUUID);
+	        assertEquals("Next UID is empty", Optional.absent(), result);
+	        MessageUid nextResult = uuidProvider.nextUid(null, mailboxUUID);
+	        assertEquals("Next UID is 1", 1, nextResult.asLong());
 	    }
 	
 	    /**
@@ -187,9 +189,9 @@ public class ZooUidProviderTest {
 	    @Test
 	    public void testLongLastUid() throws Exception {
 	        System.out.println("Testing long lastUid");
-	        long result = longProvider.lastUid(null, mailboxLong);
-	        assertEquals("Next UID is 0", 0, result);
-	        result = longProvider.nextUid(null, mailboxLong);
-	        assertEquals("Next UID is 1", 1, result);
+	        Optional<MessageUid> result = longProvider.lastUid(null, mailboxLong);
+	        assertEquals("Next UID is empty", Optional.absent(), result);
+	        MessageUid nextResult = longProvider.nextUid(null, mailboxLong);
+	        assertEquals("Next UID is 1", 1, nextResult.asLong());
 	    }
 	}

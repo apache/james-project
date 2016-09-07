@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.backends.cassandra.utils.LightweightTransactionException;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -50,7 +51,6 @@ import com.google.common.base.Throwables;
 public class CassandraUidProvider implements UidProvider {
     public final static int DEFAULT_MAX_RETRY = 100000;
     private static final Logger LOG = LoggerFactory.getLogger(CassandraUidProvider.class);
-    private static final Uid FIRST_UID = new Uid(0);
 
     private final Session session;
     private final FunctionRunnerWithRetry runner;
@@ -66,12 +66,12 @@ public class CassandraUidProvider implements UidProvider {
     }
 
     @Override
-    public long nextUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        if (findHighestUid(mailboxId).isFirst()) {
-            Optional<Uid> optional = tryInsertUid(mailboxId, FIRST_UID);
+        if (! findHighestUid(mailboxId).isPresent()) {
+            Optional<MessageUid> optional = tryInsertUid(mailboxId, Optional.empty());
             if (optional.isPresent()) {
-                return optional.get().getValue();
+                return optional.get();
             }
         }
 
@@ -79,8 +79,7 @@ public class CassandraUidProvider implements UidProvider {
             return runner.executeAndRetrieveObject(
                 () -> {
                     try {
-                        return tryUpdateUid(mailboxId, findHighestUid(mailboxId))
-                            .map(Uid::getValue);
+                        return tryUpdateUid(mailboxId, findHighestUid(mailboxId));
                     } catch (Exception exception) {
                         LOG.error("Can not retrieve next Uid", exception);
                         throw Throwables.propagate(exception);
@@ -92,66 +91,53 @@ public class CassandraUidProvider implements UidProvider {
     }
 
     @Override
-    public long lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
-        return findHighestUid((CassandraId) mailbox.getMailboxId()).getValue();
+    public com.google.common.base.Optional<MessageUid> lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
+        return findHighestUid((CassandraId) mailbox.getMailboxId());
     }
 
-    private Uid findHighestUid(CassandraId mailboxId) throws MailboxException {
+    private com.google.common.base.Optional<MessageUid> findHighestUid(CassandraId mailboxId) throws MailboxException {
         ResultSet result = session.execute(
             select(NEXT_UID)
                 .from(CassandraMessageUidTable.TABLE_NAME)
                 .where(eq(CassandraMessageUidTable.MAILBOX_ID, mailboxId.asUuid())));
         if (result.isExhausted()) {
-            return FIRST_UID;
+            return com.google.common.base.Optional.absent();
         } else {
-            return new Uid(result.one().getLong(NEXT_UID));
+            return com.google.common.base.Optional.of(MessageUid.of(result.one().getLong(NEXT_UID)));
         }
     }
 
-    private Optional<Uid> tryInsertUid(CassandraId mailboxId, Uid uid) {
-        Uid nextUid = uid.next();
+    private Optional<MessageUid> tryInsertUid(CassandraId mailboxId, Optional<MessageUid> uid) {
+        MessageUid nextUid = uid.map(MessageUid::next).orElse(MessageUid.MIN_VALUE);
         return transactionalStatementToOptionalUid(nextUid,
             insertInto(CassandraMessageUidTable.TABLE_NAME)
-                .value(NEXT_UID, nextUid.getValue())
+                .value(NEXT_UID, nextUid.asLong())
                 .value(CassandraMessageUidTable.MAILBOX_ID, mailboxId.asUuid())
                 .ifNotExists());
     }
 
-    private Optional<Uid> tryUpdateUid(CassandraId mailboxId, Uid uid) {
-        Uid nextUid = uid.next();
-        return transactionalStatementToOptionalUid(nextUid,
-            update(CassandraMessageUidTable.TABLE_NAME)
-                .onlyIf(eq(NEXT_UID, uid.getValue()))
-                .with(set(NEXT_UID, nextUid.getValue()))
-                .where(eq(CassandraMessageUidTable.MAILBOX_ID, mailboxId.asUuid())));
+    private Optional<MessageUid> tryUpdateUid(CassandraId mailboxId, com.google.common.base.Optional<MessageUid> uid) {
+        if (uid.isPresent()) {
+            MessageUid nextUid = uid.get().next();
+            return transactionalStatementToOptionalUid(nextUid,
+                    update(CassandraMessageUidTable.TABLE_NAME)
+                        .onlyIf(eq(NEXT_UID, uid.get().asLong()))
+                        .with(set(NEXT_UID, nextUid.asLong()))
+                        .where(eq(CassandraMessageUidTable.MAILBOX_ID, mailboxId.asUuid())));
+        } else {
+            return transactionalStatementToOptionalUid(MessageUid.MIN_VALUE,
+                    update(CassandraMessageUidTable.TABLE_NAME)
+                    .onlyIf(eq(NEXT_UID, null))
+                    .with(set(NEXT_UID, MessageUid.MIN_VALUE.asLong()))
+                    .where(eq(CassandraMessageUidTable.MAILBOX_ID, mailboxId.asUuid())));
+        }
     }
 
-    private Optional<Uid> transactionalStatementToOptionalUid(Uid uid, BuiltStatement statement) {
+    private Optional<MessageUid> transactionalStatementToOptionalUid(MessageUid uid, BuiltStatement statement) {
         if(session.execute(statement).one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED)) {
             return Optional.of(uid);
         }
         return Optional.empty();
-    }
-
-    private static class Uid {
-
-        private final long value;
-
-        public Uid(long value) {
-            this.value = value;
-        }
-
-        public Uid next() {
-            return new Uid(value + 1);
-        }
-
-        public long getValue() {
-            return value;
-        }
-
-        public boolean isFirst() {
-            return value == FIRST_UID.value;
-        }
     }
 
 }

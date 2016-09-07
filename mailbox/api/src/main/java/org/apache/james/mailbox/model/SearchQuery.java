@@ -30,6 +30,10 @@ import java.util.Set;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.mailbox.MessageUid;
+
+import com.google.common.base.Objects;
+
 /**
  * <p>
  * Models a query used to search for messages. A query is the logical
@@ -466,7 +470,7 @@ public class SearchQuery implements Serializable {
      *            <code>NumericRange</code>'s, not null
      * @return <code>Criterion</code>, not null
      */
-    public static final Criterion uid(NumericRange[] range) {
+    public static final Criterion uid(UidRange[] range) {
         return new UidCriterion(range);
     }
 
@@ -645,7 +649,7 @@ public class SearchQuery implements Serializable {
         return AllCriterion.all();
     }
 
-    private final Set<Long> recentMessageUids = new HashSet<Long>();
+    private final Set<MessageUid> recentMessageUids = new HashSet<MessageUid>();
 
     private final List<Criterion> criterias = new ArrayList<Criterion>();
 
@@ -689,9 +693,9 @@ public class SearchQuery implements Serializable {
      * list of recent mail is maintained in the protocol layer since the
      * mechanics are protocol specific.
      * 
-     * @return mutable <code>Set</code> of <code>Long</code> UIDS
+     * @return mutable <code>Set</code> of <code>MessageUid</code> UIDS
      */
-    public Set<Long> getRecentMessageUids() {
+    public Set<MessageUid> getRecentMessageUids() {
         return recentMessageUids;
     }
 
@@ -701,7 +705,7 @@ public class SearchQuery implements Serializable {
      * @param uids
      *            not null
      */
-    public void addRecentMessageUids(Collection<Long> uids) {
+    public void addRecentMessageUids(Collection<MessageUid> uids) {
         recentMessageUids.addAll(uids);
     }
 
@@ -830,6 +834,68 @@ public class SearchQuery implements Serializable {
 
     }
 
+    /**
+     * Numbers within a particular range. Range includes both high and low
+     * boundaries. May be a single value. {@link Long#MAX_VALUE} represents
+     * unlimited in either direction.
+     */
+    public static final class UidRange implements Serializable {
+
+        private final MessageUid lowValue;
+        private final MessageUid highValue;
+
+        public UidRange(MessageUid value) {
+            super();
+            this.lowValue = value;
+            this.highValue = value;
+        }
+
+        public UidRange(MessageUid lowValue, MessageUid highValue) {
+            super();
+            this.lowValue = lowValue;
+            this.highValue = highValue;
+        }
+
+        public MessageUid getHighValue() {
+            return highValue;
+        }
+
+        public MessageUid getLowValue() {
+            return lowValue;
+        }
+
+        /**
+         * Is the given value in this range?
+         * 
+         * @param value
+         *            value to be tested
+         * @return true if the value is in range, false otherwise
+         */
+        public boolean isIn(MessageUid value) {
+            return lowValue.compareTo(value) <= 0 && highValue.compareTo(value) >= 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(lowValue, highValue);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof UidRange) {
+                UidRange other = (UidRange) obj;
+                return Objects.equal(this.lowValue, other.lowValue)
+                        && Objects.equal(this.highValue, other.highValue);
+            }
+            return false;
+        }
+
+        public String toString() {
+            return new StringBuffer().append(this.lowValue).append("->").append(this.highValue).toString();
+        }
+
+    }
+    
     /**
      * Marker superclass for criteria.
      */
@@ -1545,25 +1611,20 @@ public class SearchQuery implements Serializable {
     public static final class UidCriterion extends Criterion {
         private static final long serialVersionUID = 1L;
 
-        private final InOperator operator;
+        private final UidInOperator operator;
 
-        public UidCriterion(NumericRange[] ranges) {
+        public UidCriterion(UidRange[] ranges) {
             super();
-            this.operator = new InOperator(ranges);
+            this.operator = new UidInOperator(ranges);
         }
 
         /**
          * Gets the filtering operation.
-         * 
-         * @return the <code>InOperator</code>
          */
-        public InOperator getOperator() {
+        public UidInOperator getOperator() {
             return operator;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
             final int PRIME = 31;
@@ -2124,6 +2185,63 @@ public class SearchQuery implements Serializable {
             StringBuffer retValue = new StringBuffer();
 
             retValue.append("InOperator ( ").append("range = ").append(Arrays.toString(this.range)).append(TAB)
+                    .append(" )");
+
+            return retValue.toString();
+        }
+
+    }
+    
+    /**
+     * Search for uids within set of ranges.
+     */
+    public static final class UidInOperator implements Operator {
+        private static final long serialVersionUID = 1L;
+
+        private final UidRange[] ranges;
+
+        public UidInOperator(UidRange[] ranges) {
+            super();
+            this.ranges = ranges;
+        }
+
+        /**
+         * Gets the filtering ranges. Values falling within these ranges will be
+         * selected.
+         * 
+         * @return the <code>UidRange</code>'s search on, not null
+         */
+        public UidRange[] getRange() {
+            return ranges;
+        }
+
+        
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(ranges);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof UidInOperator) {
+                UidInOperator other = (UidInOperator) obj;
+                return Arrays.equals(this.ranges, other.ranges);
+            }
+            return false;
+        }
+
+        /**
+         * Constructs a <code>String</code> with all attributes in name = value
+         * format.
+         * 
+         * @return a <code>String</code> representation of this object.
+         */
+        public String toString() {
+            final String TAB = " ";
+
+            StringBuffer retValue = new StringBuffer();
+
+            retValue.append("UidInOperator ( ").append("range = ").append(Arrays.toString(this.ranges)).append(TAB)
                     .append(" )");
 
             return retValue.toString();

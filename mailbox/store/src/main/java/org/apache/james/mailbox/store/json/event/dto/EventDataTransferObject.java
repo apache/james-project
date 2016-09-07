@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.mailbox.MessageUid;
+
 public class EventDataTransferObject {
 
     public static class Builder {
@@ -31,8 +33,8 @@ public class EventDataTransferObject {
         private EventType type;
         private MailboxDataTransferObject mailbox;
         private MailboxSessionDataTransferObject session;
-        private List<Long> uids;
-        private Map<Long, MessageMetaDataDataTransferObject> metaData;
+        private List<MessageUid> uids;
+        private Map<MessageUid, MessageMetaDataDataTransferObject> metaData;
         private List<UpdatedFlagsDataTransferObject> updatedFlags;
         private MailboxPathDataTransferObject from;
 
@@ -56,12 +58,12 @@ public class EventDataTransferObject {
             return this;
         }
 
-        public Builder uids(List<Long> uids) {
+        public Builder uids(List<MessageUid> uids) {
             this.uids = uids;
             return this;
         }
 
-        public Builder metaData(Map<Long, MessageMetaDataDataTransferObject> metaData) {
+        public Builder metaData(Map<MessageUid, MessageMetaDataDataTransferObject> metaData) {
             this.metaData = metaData;
             return this;
         }
@@ -88,9 +90,9 @@ public class EventDataTransferObject {
     @JsonProperty()
     private MailboxSessionDataTransferObject session;
     @JsonProperty()
-    private List<Long> uids;
+    private List<MessageUid> uids;
     @JsonProperty()
-    private Map<Long, MessageMetaDataDataTransferObject> metaData;
+    private Map<MessageUid, MessageMetaDataDataTransferObject> metaData;
     @JsonProperty()
     private List<UpdatedFlagsDataTransferObject> updatedFlags;
     @JsonProperty()
@@ -101,8 +103,8 @@ public class EventDataTransferObject {
     public EventDataTransferObject(EventType type,
                                    MailboxDataTransferObject mailbox,
                                    MailboxSessionDataTransferObject session,
-                                   List<Long> uids,
-                                   Map<Long, MessageMetaDataDataTransferObject> metaData,
+                                   List<MessageUid> uids,
+                                   Map<MessageUid, MessageMetaDataDataTransferObject> metaData,
                                    List<UpdatedFlagsDataTransferObject> updatedFlags,
                                    MailboxPathDataTransferObject from) {
         this.type = type;
@@ -130,12 +132,12 @@ public class EventDataTransferObject {
     }
 
     @JsonIgnore
-    public List<Long> getUids() {
+    public List<MessageUid> getUids() {
         return uids;
     }
 
     @JsonIgnore
-    public Map<Long, MessageMetaDataDataTransferObject> getMetaDataProxyMap() {
+    public Map<MessageUid, MessageMetaDataDataTransferObject> getMetaDataProxyMap() {
         return metaData;
     }
 

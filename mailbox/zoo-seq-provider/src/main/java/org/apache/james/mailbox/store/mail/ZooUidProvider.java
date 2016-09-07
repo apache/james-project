@@ -19,10 +19,12 @@
 package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
@@ -53,14 +55,14 @@ public class ZooUidProvider implements UidProvider {
     }
 
     @Override
-    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         if (client.getState() == CuratorFrameworkState.STARTED) {
             DistributedAtomicLong uid = new DistributedAtomicLong(client, pathForMailbox(mailbox), retryPolicy);
             try {
                 uid.increment();
                 AtomicValue<Long> value = uid.get();
                 if (value.succeeded()) {
-                    return value.postValue();
+                    return MessageUid.of(value.postValue());
                 }
             } catch (Exception e) {
                 throw new MailboxException("Exception incrementing UID for session " + session, e);
@@ -70,13 +72,17 @@ public class ZooUidProvider implements UidProvider {
     }
 
     @Override
-    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         if (client.getState() == CuratorFrameworkState.STARTED) {
             DistributedAtomicLong uid = new DistributedAtomicLong(client, pathForMailbox(mailbox), retryPolicy);
             try {
                 AtomicValue<Long> value = uid.get();
                 if (value.succeeded()) {
-                    return value.postValue();
+                    Long postValue = value.postValue();
+                    if (postValue == 0) {
+                        return Optional.absent();
+                    }
+                    return Optional.of(MessageUid.of(value.postValue()));
                 }
             } catch (Exception e) {
                 throw new MailboxException("Exception getting last UID for session " + session, e);

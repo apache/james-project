@@ -22,6 +22,7 @@ package org.apache.james.mailbox.indexer.registrations;
 import java.util.List;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
 import org.apache.james.mailbox.indexer.events.ImpactingMessageEvent;
 import org.apache.james.mailbox.indexer.events.MessageDeletedEvent;
@@ -35,11 +36,11 @@ import com.google.common.collect.Multimaps;
 
 public class MailboxRegistration implements MailboxListener {
 
-    private final Multimap<Long, ImpactingMessageEvent> impactingMessageEvents;
+    private final Multimap<MessageUid, ImpactingMessageEvent> impactingMessageEvents;
     private final MailboxPath mailboxPath;
 
     public MailboxRegistration(MailboxPath mailboxPath) {
-        this.impactingMessageEvents = Multimaps.synchronizedMultimap(ArrayListMultimap.<Long, ImpactingMessageEvent>create());
+        this.impactingMessageEvents = Multimaps.synchronizedMultimap(ArrayListMultimap.<MessageUid, ImpactingMessageEvent>create());
         this.mailboxPath = mailboxPath;
     }
 
@@ -53,7 +54,7 @@ public class MailboxRegistration implements MailboxListener {
         return ExecutionMode.SYNCHRONOUS;
     }
 
-    public List<ImpactingMessageEvent> getImpactingEvents(long uid) {
+    public List<ImpactingMessageEvent> getImpactingEvents(MessageUid uid) {
         return ImmutableList.copyOf(impactingMessageEvents.get(uid));
     }
 
@@ -64,7 +65,7 @@ public class MailboxRegistration implements MailboxListener {
                 impactingMessageEvents.put(updatedFlags.getUid(), new FlagsMessageEvent(mailboxPath, updatedFlags.getUid(), updatedFlags.getNewFlags()));
             }
         } else if (event instanceof Expunged) {
-            for (Long uid: ((Expunged) event).getUids()) {
+            for (MessageUid uid: ((Expunged) event).getUids()) {
                 impactingMessageEvents.put(uid, new MessageDeletedEvent(mailboxPath, uid));
             }
         }

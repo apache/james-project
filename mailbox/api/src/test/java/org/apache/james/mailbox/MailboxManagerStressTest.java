@@ -68,7 +68,7 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
         final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 2);
-        final List<Long> uList = new ArrayList<Long>();
+        final List<MessageUid> uList = new ArrayList<MessageUid>();
         final String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username, LoggerFactory.getLogger("Test"));
         mailboxManager.startProcessingRequest(session);
@@ -88,7 +88,7 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
 
             @Override
             public void event(Event event) {
-                long u = ((Added) event).getUids().get(0);
+                MessageUid u = ((Added) event).getUids().get(0);
                 uList.add(u);
             }
         }, session);
@@ -96,7 +96,7 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
         mailboxManager.logout(session, false);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
-        final ConcurrentHashMap<Long, Object> uids = new ConcurrentHashMap<Long, Object>();
+        final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<MessageUid, Object>();
 
         // fire of 1000 append operations
         for (int i = 0; i < APPEND_OPERATIONS; i++) {
@@ -114,7 +114,7 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
 
                         mailboxManager.startProcessingRequest(session);
                         MessageManager m = mailboxManager.getMailbox(path, session);
-                        Long uid = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
+                        MessageUid uid = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
 
                         System.out.println("Append message with uid=" + uid);
                         if (uids.put(uid, new Object()) != null) {

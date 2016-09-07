@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -109,7 +110,7 @@ public class BroadcastDelegatingMailboxListenerIntegrationTest {
     public void mailboxEventListenersShouldBeTriggeredIfRegistered() throws Exception {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
-        final MailboxListener.Event event = new EventFactory().added(mailboxSession, new TreeMap<Long, MessageMetaData>(), simpleMailbox);
+        final MailboxListener.Event event = new EventFactory().added(mailboxSession, new TreeMap<MessageUid, MessageMetaData>(), simpleMailbox);
 
         broadcastDelegatingMailboxListener1.event(event);
 
@@ -122,7 +123,7 @@ public class BroadcastDelegatingMailboxListenerIntegrationTest {
     public void onceEventListenersShouldBeTriggeredOnceAcrossTheCluster() {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
-        final MailboxListener.Event event = new EventFactory().added(mailboxSession, new TreeMap<Long, MessageMetaData>(), simpleMailbox);
+        final MailboxListener.Event event = new EventFactory().added(mailboxSession, new TreeMap<MessageUid, MessageMetaData>(), simpleMailbox);
 
         broadcastDelegatingMailboxListener1.event(event);
 
@@ -135,7 +136,7 @@ public class BroadcastDelegatingMailboxListenerIntegrationTest {
     public void eachEventListenersShouldBeTriggeredOnEachNode() {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
-        final MailboxListener.Event event = new EventFactory().added(mailboxSession, new TreeMap<Long, MessageMetaData>(), simpleMailbox);
+        final MailboxListener.Event event = new EventFactory().added(mailboxSession, new TreeMap<MessageUid, MessageMetaData>(), simpleMailbox);
 
         broadcastDelegatingMailboxListener1.event(event);
 

@@ -35,6 +35,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
@@ -49,6 +50,7 @@ import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
@@ -63,6 +65,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
 
 @RunWith(JMock.class)
 public class SearchProcessorTest {
@@ -87,12 +91,14 @@ public class SearchProcessorTest {
 
     private static final String SUBJECT = "Myriad Harbour";
 
-    private static final IdRange[] IDS = { new IdRange(1),
-            new IdRange(42, 1048) };
+    private static final UidRange[] IDS = { 
+            new UidRange(MessageUid.of(1)),
+            new UidRange(MessageUid.of(42), MessageUid.of(1048)) 
+            };
 
-    private static final SearchQuery.NumericRange[] RANGES = {
-            new SearchQuery.NumericRange(1),
-            new SearchQuery.NumericRange(42, 1048) };
+    private static final SearchQuery.UidRange[] RANGES = {
+            new SearchQuery.UidRange(MessageUid.of(1)),
+            new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(1048)) };
     
     private static final MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
 
@@ -154,13 +160,12 @@ public class SearchProcessorTest {
     public void testSequenceSetUpperUnlimited() throws Exception {
         expectsGetSelectedMailbox();
         final IdRange[] ids = { new IdRange(1, Long.MAX_VALUE) };
-        final SearchQuery.NumericRange[] ranges = { new SearchQuery.NumericRange(
-                42, 100L) };
+        final SearchQuery.UidRange[] ranges = { new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(100)) };
         mockery.checking(new Expectations() {{
         	allowing(selectedMailbox).existsCount();will(returnValue(100L));
-            oneOf(selectedMailbox).uid(with(equal(1)));will(returnValue(42L));
-            allowing(selectedMailbox).getFirstUid(); will(returnValue(1L));
-            allowing(selectedMailbox).getLastUid(); will(returnValue(100L));
+            oneOf(selectedMailbox).uid(with(equal(1)));will(returnValue(Optional.of(MessageUid.of(42))));
+            allowing(selectedMailbox).getFirstUid(); will(returnValue(Optional.of(MessageUid.of(1))));
+            allowing(selectedMailbox).getLastUid(); will(returnValue(Optional.of(MessageUid.of(100))));
 
         }});
         allowUnsolicitedResponses();
@@ -171,14 +176,13 @@ public class SearchProcessorTest {
     public void testSequenceSetMsnRange() throws Exception {
         expectsGetSelectedMailbox();
         final IdRange[] ids = { new IdRange(1, 5) };
-        final SearchQuery.NumericRange[] ranges = { new SearchQuery.NumericRange(
-                42, 1729) };
+        final SearchQuery.UidRange[] ranges = { new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(1729)) };
         mockery.checking(new Expectations() {{
         	allowing(selectedMailbox).existsCount();will(returnValue(2L));
-            oneOf(selectedMailbox).uid(with(equal(1)));will(returnValue(42L));
-            oneOf(selectedMailbox).uid(with(equal(5)));will(returnValue(1729L));
-            allowing(selectedMailbox).getFirstUid(); will(returnValue(1L));
-            allowing(selectedMailbox).getLastUid(); will(returnValue(Long.MAX_VALUE));
+            oneOf(selectedMailbox).uid(with(equal(1)));will(returnValue(Optional.of(MessageUid.of(42L))));
+            oneOf(selectedMailbox).uid(with(equal(5)));will(returnValue(Optional.of(MessageUid.of(1729L))));
+            allowing(selectedMailbox).getFirstUid(); will(returnValue(Optional.of(MessageUid.of(1L))));
+            allowing(selectedMailbox).getLastUid(); will(returnValue(Optional.of(MessageUid.MAX_VALUE)));
         }});
         allowUnsolicitedResponses();
         check(SearchKey.buildSequenceSet(ids), SearchQuery.uid(ranges));
@@ -188,11 +192,10 @@ public class SearchProcessorTest {
     public void testSequenceSetSingleMsn() throws Exception {
         expectsGetSelectedMailbox();
         final IdRange[] ids = { new IdRange(1) };
-        final SearchQuery.NumericRange[] ranges = { new SearchQuery.NumericRange(
-                42) };
+        final SearchQuery.UidRange[] ranges = { new SearchQuery.UidRange(MessageUid.of(42)) };
         mockery.checking(new Expectations() {{
         	allowing(selectedMailbox).existsCount();will(returnValue(1L));
-            exactly(2).of(selectedMailbox).uid(with(equal(1)));will(returnValue(42L));
+            exactly(2).of(selectedMailbox).uid(with(equal(1)));will(returnValue(Optional.of(MessageUid.of(42L))));
         }});
         allowUnsolicitedResponses();
         check(SearchKey.buildSequenceSet(ids), SearchQuery.uid(ranges));
@@ -215,7 +218,7 @@ public class SearchProcessorTest {
             atMost(1).of(selectedMailbox).flagUpdateUids();will(returnValue(Collections.EMPTY_LIST));
             atMost(1).of(selectedMailbox).resetEvents();
             
-            oneOf(selectedMailbox).getRecent();will(returnValue(new ArrayList<Long>()));
+            oneOf(selectedMailbox).getRecent();will(returnValue(new ArrayList<MessageUid>()));
         }});
     }
 
@@ -427,8 +430,8 @@ public class SearchProcessorTest {
     public void testUID() throws Exception {
     	mockery.checking(new Expectations() {{
 
-    		allowing(selectedMailbox).getFirstUid();will(returnValue(1L));
-    		allowing(selectedMailbox).getLastUid();will(returnValue(1048L));
+    		allowing(selectedMailbox).getFirstUid();will(returnValue(Optional.of(MessageUid.of(1))));
+    		allowing(selectedMailbox).getLastUid();will(returnValue(Optional.of(MessageUid.of(1048))));
             allowing(selectedMailbox).existsCount();will(returnValue(1L));
 
             }});
@@ -496,7 +499,7 @@ public class SearchProcessorTest {
             oneOf(mailbox).search(
                     with(equal(query)),
                     with(equal(mailboxSession)));will(
-                            returnValue(new ArrayList<Long>().iterator()));
+                            returnValue(new ArrayList<MessageUid>().iterator()));
             oneOf(responder).respond(with(equal(new SearchResponse(EMPTY, null))));
             allowing(selectedMailbox).getApplicableFlags(); will(returnValue(new Flags()));
             allowing(selectedMailbox).hasNewApplicableFlags(); will(returnValue(false));

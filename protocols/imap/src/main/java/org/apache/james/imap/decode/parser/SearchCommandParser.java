@@ -31,6 +31,7 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
@@ -721,7 +722,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         final SearchKey result;
         nextIsD(request);
         nextIsSpace(request);
-        final IdRange[] range = request.parseIdRange();
+        final UidRange[] range = request.parseUidRange();
         result = SearchKey.buildUidSet(range);
         return result;
     }

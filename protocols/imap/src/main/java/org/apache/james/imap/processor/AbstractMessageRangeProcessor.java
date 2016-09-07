@@ -87,7 +87,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
                             // Disable this as this is now done directly in the scope of the copy operation.
                             // See MAILBOX-85
                             //mailbox.setFlags(new Flags(Flags.Flag.RECENT), true, false, mr, mailboxSession);
-                            resultRanges.add(new IdRange(mr.getUidFrom(), mr.getUidTo()));
+                            resultRanges.add(new IdRange(mr.getUidFrom().asLong(), mr.getUidTo().asLong()));
                         }
                     }
                 }

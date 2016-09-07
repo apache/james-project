@@ -33,6 +33,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -46,6 +47,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MessageRange;
@@ -106,7 +108,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
               
             } 
-            final List<Long> failed = new ArrayList<Long>();
+            final List<MessageUid> failed = new ArrayList<MessageUid>();
+            List<Long> failedMsns = new ArrayList<Long>();
             final List<String> userFlags = Arrays.asList(flags.getUserFlags());
             for (IdRange range : idSet) {
                 final SelectedMailbox selected = session.getSelected();
@@ -117,12 +120,12 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                         // Ok we have a CONDSTORE option so use the CONDSTORE_COMMAND
                         imapCommand = CONDSTORE_COMMAND;
 
-                        List<Long> uids = new ArrayList<Long>();
+                        List<MessageUid> uids = new ArrayList<MessageUid>();
 
                         MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
                         while (results.hasNext()) {
                             MessageResult r = results.next();
-                            long uid = r.getUid();
+                            MessageUid uid = r.getUid();
 
                             boolean fail = false;
 
@@ -152,7 +155,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                                 if (useUids) {
                                     failed.add(uid);
                                 } else {
-                                    failed.add((long) selected.msn(uid));
+                                    failedMsns.add((long)selected.msn(uid));
                                 }
                             }
                         }
@@ -172,27 +175,36 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             
             // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
-            if (failed.isEmpty()) {
+            if (failed.isEmpty() && failedMsns.isEmpty()) {
                 okComplete(imapCommand, tag, responder);
             } else {
-                // Convert the MessageRanges to an array of IdRange. 
-                // TODO: Maybe this should get moved in an util class
-                List<MessageRange> ranges = MessageRange.toRanges(failed);
-                IdRange[] idRanges = new IdRange[ranges.size()];
-                for (int i = 0 ; i < ranges.size(); i++) {
-                    MessageRange r = ranges.get(i);
-                    if (r.getType() == Type.ONE) {
-                        idRanges[i] = new IdRange(r.getUidFrom());
-                    } else {
-                        idRanges[i] = new IdRange(r.getUidFrom(), r.getUidTo());
+                if (useUids) {
+                    List<MessageRange> ranges = MessageRange.toRanges(failed);
+                    UidRange[] idRanges = new UidRange[ranges.size()];
+                    for (int i = 0 ; i < ranges.size(); i++) {
+                        MessageRange r = ranges.get(i);
+                        if (r.getType() == Type.ONE) {
+                            idRanges[i] = new UidRange(r.getUidFrom());
+                        } else {
+                            idRanges[i] = new UidRange(r.getUidFrom(), r.getUidTo());
+                        }
                     }
+                    // we need to return the failed sequences
+                    //
+                    // See RFC4551 3.2. STORE and UID STORE Commands
+                    final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
+                    responder.respond(response);
+                } else {
+                    List<IdRange> ranges = new ArrayList<IdRange>();
+                    for (long msn: failedMsns) {
+                        ranges.add(new IdRange(msn));
+                    }
+                    IdRange[] failedRanges = IdRange.mergeRanges(ranges).toArray(new IdRange[0]);
+                    // See RFC4551 3.2. STORE and UID STORE Commands
+                    final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(failedRanges));
+                    responder.respond(response);
+                    
                 }
-                // we need to return the failed sequences
-                //
-                // See RFC4551 3.2. STORE and UID STORE Commands
-                final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
-                responder.respond(response);
-               
             }
         } catch (MessageRangeException e) {
             if (session.getLog().isDebugEnabled()) {
@@ -238,7 +250,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         }
         
         SelectedMailbox selected = session.getSelected();
-        final Map<Long, Flags> flagsByUid = mailbox.setFlags(flags, mode, messageSet, mailboxSession);
+        final Map<MessageUid, Flags> flagsByUid = mailbox.setFlags(flags, mode, messageSet, mailboxSession);
         // As the STORE command is allowed to create a new "flag/keyword", we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
         // if some new flag/keyword was used
         // See IMAP-303
@@ -253,7 +265,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
         
         if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            final Map<Long, Long> modSeqs = new HashMap<Long, Long>();
+            final Map<MessageUid, Long> modSeqs = new HashMap<MessageUid, Long>();
            
             // Check if we need to also send the the mod-sequences back to the client
             //
@@ -271,8 +283,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
             }
             
-            for (Map.Entry<Long, Flags> entry : flagsByUid.entrySet()) {
-                final long uid = entry.getKey();
+            for (Map.Entry<MessageUid, Flags> entry : flagsByUid.entrySet()) {
+                final MessageUid uid = entry.getKey();
                 final int msn = selected.msn(uid);
 
                 if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
@@ -287,7 +299,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
 
                 final Flags resultFlags = entry.getValue();
-                final Long resultUid;
+                final MessageUid resultUid;
                 
                 // Check if we need to include the uid. T
                 //

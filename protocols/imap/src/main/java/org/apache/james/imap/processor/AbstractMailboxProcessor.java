@@ -31,6 +31,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -49,6 +50,7 @@ import org.apache.james.imap.processor.base.AbstractChainedProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -61,7 +63,8 @@ import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.model.SearchQuery.NumericRange;
+
+import com.google.common.base.Optional;
 
 abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
 
@@ -140,7 +143,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         }
         // Expunged messages
         if (!omitExpunged) {
-            final Collection<Long> expungedUids = selected.expungedUids();
+            final Collection<MessageUid> expungedUids = selected.expungedUids();
             if (!expungedUids.isEmpty()) {
                 // Check if QRESYNC was enabled. If so we MUST use VANISHED responses
                 if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
@@ -164,25 +167,23 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         selected.resetEvents();
     }
 
-    private void addExpungedResponses(SelectedMailbox selected, Collection<Long> expungedUids, ImapProcessor.Responder responder) {
-        for (Long uid : expungedUids) {
-            final long uidValue = uid.longValue();
+    private void addExpungedResponses(SelectedMailbox selected, Collection<MessageUid> expungedUids, ImapProcessor.Responder responder) {
+        for (MessageUid uid : expungedUids) {
 
             // we need to remove the message in the loop to the sequence numbers
             // are updated correctly.
             // See 7.4.1. EXPUNGE Response
-            final int msn = selected.remove(uidValue);
+            final int msn = selected.remove(uid);
             ExpungeResponse response = new ExpungeResponse(msn);
             responder.respond(response);
         }
     }
     
-    private void addVanishedResponse(SelectedMailbox selected, Collection<Long> expungedUids, ImapProcessor.Responder responder) {
-        for (Long uid : expungedUids) {
-            final long uidValue = uid.longValue();
-            selected.remove(uidValue);
+    private void addVanishedResponse(SelectedMailbox selected, Collection<MessageUid> expungedUids, ImapProcessor.Responder responder) {
+        for (MessageUid uid : expungedUids) {
+            selected.remove(uid);
         }
-        IdRange[] uidRange = idRanges(MessageRange.toRanges(expungedUids));
+        UidRange[] uidRange = uidRanges(MessageRange.toRanges(expungedUids));
         responder.respond(new VanishedResponse(uidRange, false));
     }
     
@@ -205,7 +206,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
                 selected.resetNewApplicableFlags();
             }
             
-            final Collection<Long> flagUpdateUids = selected.flagUpdateUids();
+            final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
             if (!flagUpdateUids.isEmpty()) {
                 Iterator<MessageRange> ranges = MessageRange.toRanges(flagUpdateUids).iterator();
                 while(ranges.hasNext()) {
@@ -227,7 +228,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         final MessageResultIterator it = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL,  mailboxSession);
         while (it.hasNext()) {
             MessageResult mr = it.next();
-            final long uid = mr.getUid();
+            final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
                 if (session.getLog().isDebugEnabled()) {
@@ -245,7 +246,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             boolean condstoreEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_CONDSTORE);
 
             final Flags flags = mr.getFlags();
-            final Long uidOut;
+            final MessageUid uidOut;
             if (useUid || qresyncEnabled) {
                 uidOut = uid;
             } else {
@@ -443,67 +444,81 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     /**
      * Return a {@link MessageRange} for the given values. If the MessageRange
      * can not be generated a {@link MailboxException} will get thrown
-     * 
-     * @param selected
-     * @param range
-     * @param useUids
-     * @return range or null
-     * @throws MailboxException
      */
     protected MessageRange messageRange(SelectedMailbox selected, IdRange range, boolean useUids) throws MessageRangeException {
         long lowVal = range.getLowVal();
         long highVal = range.getHighVal();
 
         if (useUids == false) {
-            // Take care of "*" and "*:*" values by return the last message in
-            // the mailbox. See IMAP-289
-            if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                highVal = selected.getLastUid();
-                if (highVal == SelectedMailbox.NO_SUCH_MESSAGE) {
-                    throw new MessageRangeException("Mailbox is empty");
-                }
-                return MessageRange.one(highVal);
-            }
-
-            if (lowVal != Long.MIN_VALUE) {
-                lowVal = selected.uid((int) lowVal);
-                if (lowVal == SelectedMailbox.NO_SUCH_MESSAGE)
-                    throw new MessageRangeException("No message found with msn " + lowVal);
-            } else {
-                lowVal = selected.getFirstUid();
-                if (lowVal == SelectedMailbox.NO_SUCH_MESSAGE) {
-                    throw new MessageRangeException("Mailbox is empty");
-                }
-            }
-            if (highVal != Long.MAX_VALUE) {
-                highVal = selected.uid((int) highVal);
-                if (highVal == SelectedMailbox.NO_SUCH_MESSAGE)
-                    throw new MessageRangeException("No message found with msn " + highVal);
-            } else {
-                highVal = selected.getLastUid();
-                if (highVal == SelectedMailbox.NO_SUCH_MESSAGE) {
-                    throw new MessageRangeException("Mailbox is empty");
-                }
-            }
-            
+            return msnRangeToMessageRange(selected, lowVal, highVal);
         } else {
             if (selected.existsCount() <= 0) {
                 return null;
             }
             // Take care of "*" and "*:*" values by return the last message in
             // the mailbox. See IMAP-289
+            MessageUid lastUid = selected.getLastUid().or(MessageUid.MIN_VALUE);
             if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                return MessageRange.one(selected.getLastUid());
-            } else if (highVal == Long.MAX_VALUE && selected.getLastUid() < lowVal) {
+                return MessageRange.one(lastUid);
+            } else if (highVal == Long.MAX_VALUE && lastUid.compareTo(MessageUid.of(lowVal)) < 0) {
                 // Sequence uid ranges which use *:<uid-higher-then-last-uid>
                 // MUST return at least the highest uid in the mailbox
                 // See IMAP-291
-                return MessageRange.one(selected.getLastUid());
+                return MessageRange.one(lastUid);
             } 
+            return MessageRange.range(MessageUid.of(lowVal), MessageUid.of(highVal));
         }
-        return MessageRange.range(lowVal, highVal);
     }
 
+    private MessageRange msnRangeToMessageRange(SelectedMailbox selected, long lowVal, long highVal)
+            throws MessageRangeException {
+        // Take care of "*" and "*:*" values by return the last message in
+        // the mailbox. See IMAP-289
+        if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
+            Optional<MessageUid> last = selected.getLastUid();
+            if (!last.isPresent()) {
+                throw new MessageRangeException("Mailbox is empty");
+            }
+            return last.get().toRange();
+        }
+
+        MessageUid lowUid = msnlowValToUid(selected, lowVal);
+        MessageUid highUid = msnHighValToUid(selected, highVal);
+        return MessageRange.range(lowUid, highUid);
+    }
+
+    private MessageUid msnlowValToUid(SelectedMailbox selected, long lowVal) throws MessageRangeException {
+        Optional<MessageUid> uid;
+        if (lowVal != Long.MIN_VALUE) {
+            uid = selected.uid((int) lowVal);
+            if (!uid.isPresent()) {
+                throw new MessageRangeException("No message found with msn " + lowVal);
+            }
+        } else {
+            uid = selected.getFirstUid();
+            if (!uid.isPresent()) {
+                throw new MessageRangeException("Mailbox is empty");
+            }
+        }
+        return uid.get();
+    }
+    
+
+    private MessageUid msnHighValToUid(SelectedMailbox selected, long highVal) throws MessageRangeException {
+        Optional<MessageUid> uid;
+        if (highVal != Long.MAX_VALUE) {
+            uid = selected.uid((int) highVal);
+            if (!uid.isPresent()) {
+                throw new MessageRangeException("No message found with msn " + highVal);
+            }
+        } else {
+            uid = selected.getLastUid();
+            if (!uid.isPresent()) {
+                throw new MessageRangeException("Mailbox is empty");
+            }
+        }
+        return uid.get();
+    }
     /**
      * Format MessageRange to RANGE format applying selected folder min & max
      * UIDs constraints
@@ -517,33 +532,33 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
      */
     protected MessageRange normalizeMessageRange(SelectedMailbox selected, MessageRange range) throws MessageRangeException {
         Type rangeType = range.getType();
-        long start;
-        long end;
+        MessageUid start;
+        MessageUid end;
 
         switch (rangeType) {
         case ONE:
             return range;
         case ALL:
-            start = selected.getFirstUid();
-            end = selected.getLastUid();
+            start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
+            end = selected.getLastUid().or(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         case RANGE:
             start = range.getUidFrom();
-            if (start < 1 || start == Long.MAX_VALUE || start < selected.getFirstUid()) {
-                start = selected.getFirstUid();
+            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().or(MessageUid.MIN_VALUE)) < 0) {
+                start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
             }
             end = range.getUidTo();
-            if (end < 1 || end == Long.MAX_VALUE || end > selected.getLastUid()) {
-                end = selected.getLastUid();
+            if (end.equals(MessageUid.MAX_VALUE) || end.compareTo(selected.getLastUid().or(MessageUid.MAX_VALUE)) > 0) {
+                end = selected.getLastUid().or(MessageUid.MAX_VALUE);
             }
             return MessageRange.range(start, end);
         case FROM:
             start = range.getUidFrom();
-            if (start < 1 || start == Long.MAX_VALUE || start < selected.getFirstUid()) {
-                start = selected.getFirstUid();
+            if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().or(MessageUid.MIN_VALUE)) < 0) {
+                start = selected.getFirstUid().or(MessageUid.MIN_VALUE);
             }
-
-            end = selected.getLastUid();
+            
+            end = selected.getLastUid().or(MessageUid.MAX_VALUE);
             return MessageRange.range(start, end);
         default:
             throw new MessageRangeException("Unknown message range type: " + rangeType);
@@ -553,14 +568,6 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     
     /**
      * Send VANISHED responses if needed. 
-     * 
-     * @param session
-     * @param mailbox
-     * @param ranges
-     * @param changedSince
-     * @param metaData
-     * @param responder
-     * @throws MailboxException
      */
     protected void respondVanished(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, long changedSince, MetaData metaData, Responder responder) throws MailboxException {
         // RFC5162 4.2. Server Implementations Storing Minimal State
@@ -575,31 +582,32 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         //      can ignore this data.
         if (metaData.getHighestModSeq() > changedSince) {
             SearchQuery searchQuery = new SearchQuery();
-            NumericRange[] nRanges = new NumericRange[ranges.size()];
-            Set<Long> vanishedUids = new HashSet<Long>();
+            SearchQuery.UidRange[] nRanges = new SearchQuery.UidRange[ranges.size()];
+            Set<MessageUid> vanishedUids = new HashSet<MessageUid>();
             for (int i = 0; i < ranges.size(); i++) {
                 MessageRange r = ranges.get(i);
-                NumericRange nr;
+                SearchQuery.UidRange nr;
                 if (r.getType() == Type.ONE) {
-                    nr = new NumericRange(r.getUidFrom());
+                    nr = new SearchQuery.UidRange(r.getUidFrom());
                 } else {
-                    nr = new NumericRange(r.getUidFrom(), r.getUidTo());
+                    nr = new SearchQuery.UidRange(r.getUidFrom(), r.getUidTo());
                 }
-                long from = nr.getLowValue();
-                long to = nr.getHighValue();
-                while(from <= to) {
-                    vanishedUids.add(from++);
+                MessageUid from = nr.getLowValue();
+                MessageUid to = nr.getHighValue();
+                while(from.compareTo(to) <= 0) {
+                    vanishedUids.add(from);
+                    from = from.next();
                 }
                 nRanges[i] = nr;
                 
             }
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
             searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
-            Iterator<Long> uids = mailbox.search(searchQuery, session);
+            Iterator<MessageUid> uids = mailbox.search(searchQuery, session);
             while(uids.hasNext()) {
                 vanishedUids.remove(uids.next());
             }
-            IdRange[] vanishedIdRanges = idRanges(MessageRange.toRanges(vanishedUids));
+            UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
             responder.respond(new VanishedResponse(vanishedIdRanges, true));
         }
         
@@ -608,17 +616,17 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     
     
     // TODO: Do we need to handle wildcards here ?
-    protected IdRange[] idRanges(Collection<MessageRange> mRanges) {
-        IdRange[] idRanges = new IdRange[mRanges.size()];
+    protected UidRange[] uidRanges(Collection<MessageRange> mRanges) {
+        UidRange[] idRanges = new UidRange[mRanges.size()];
         Iterator<MessageRange> mIt = mRanges.iterator();
         int i = 0;
         while(mIt.hasNext()) {
             MessageRange mr = mIt.next();
-            IdRange ir;
+            UidRange ir;
             if (mr.getType() == Type.ONE) {
-                ir = new IdRange(mr.getUidFrom());
+                ir = new UidRange(mr.getUidFrom());
             } else {
-                ir = new IdRange(mr.getUidFrom(), mr.getUidTo());
+                ir = new UidRange(mr.getUidFrom(), mr.getUidTo());
             }
             idRanges[i++] = ir;
         }

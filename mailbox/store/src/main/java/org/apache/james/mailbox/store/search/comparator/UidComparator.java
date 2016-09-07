@@ -35,7 +35,7 @@ public class UidComparator implements Comparator<MailboxMessage>{
     
     @Override
     public int compare(MailboxMessage o1, MailboxMessage o2) {
-        return (int) (o1.getUid() - o2.getUid());
+        return o1.getUid().compareTo(o2.getUid());
     }
 
     public static Comparator<MailboxMessage> uid(boolean reverse){

@@ -16,16 +16,20 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model.impl;
 
-import java.util.Comparator;
+package org.apache.james.mailbox.store.json;
 
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.TestIdDeserializer;
+import org.apache.james.mailbox.store.event.EventSerializer;
+import org.apache.james.mailbox.store.json.event.EventConverter;
+import org.apache.james.mailbox.store.json.event.MailboxConverter;
 
-public class MessageUidComparator implements Comparator<MailboxMessage> {
+public class MessagePackEventSerializerTest extends EventSerializerTest {
 
     @Override
-    public int compare(MailboxMessage m1, MailboxMessage m2) {
-        return Long.valueOf(m1.getUid()).compareTo(m2.getUid());
+    EventSerializer createSerializer() {
+        return new MessagePackEventSerializer(
+            new EventConverter(
+                new MailboxConverter(new TestIdDeserializer())));
     }
 }

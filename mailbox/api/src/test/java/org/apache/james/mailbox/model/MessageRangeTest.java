@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageRange;
 import org.junit.Test;
 
@@ -30,48 +31,125 @@ public class MessageRangeTest {
 
     @Test
     public void givenSomeNumbersToRangeShouldReturnThreeRanges() {
-        List<MessageRange> ranges = MessageRange.toRanges(Arrays.asList(1L,2L,3L,5L,6L,9L));
+        List<MessageRange> ranges = MessageRange.toRanges(
+                Arrays.asList(
+                        MessageUid.of(1L),
+                        MessageUid.of(2L),
+                        MessageUid.of(3L),
+                        MessageUid.of(5L),
+                        MessageUid.of(6L),
+                        MessageUid.of(9L)));
         assertThat(ranges).containsExactly(
-                MessageRange.range(1, 3), 
-                MessageRange.range(5, 6), 
-                MessageRange.one(9));
+                MessageRange.range(MessageUid.of(1), MessageUid.of(3)), 
+                MessageRange.range(MessageUid.of(5), MessageUid.of(6)), 
+                MessageUid.of(9).toRange());
     }
     
     @Test
     public void givenASingleNumberToRangeShouldReturnOneRange() {
-        List<MessageRange> ranges = MessageRange.toRanges(Arrays.asList(1L));
-        assertThat(ranges).containsExactly(MessageRange.one(1));
+        List<MessageRange> ranges = MessageRange.toRanges(Arrays.asList(MessageUid.of(1L)));
+        assertThat(ranges).containsExactly(MessageUid.of(1).toRange());
     }
     
     // Test for MAILBOX-56
     @Test
     public void testTwoSeqUidToRange() {
-        List<MessageRange> ranges = MessageRange.toRanges(Arrays.asList(1L,2L));
-        assertThat(ranges).containsExactly(MessageRange.range(1, 2));
+        List<MessageRange> ranges = MessageRange.toRanges(Arrays.asList(MessageUid.of(1L), MessageUid.of(2L)));
+        assertThat(ranges).containsExactly(MessageRange.range(MessageUid.of(1), MessageUid.of(2)));
     }
     
     @Test
     public void splitASingletonRangeShouldReturnASingleRange() {
-        MessageRange one = MessageRange.one(1);
+        MessageRange one = MessageUid.of(1).toRange();
         List<MessageRange> ranges = one.split(2);
-        assertThat(ranges).containsExactly(MessageRange.one(1));
+        assertThat(ranges).containsExactly(MessageUid.of(1).toRange());
     }
 
     @Test
     public void splitUnboundedRangeShouldReturnTheSameRange() {
-        MessageRange from = MessageRange.from(1);
+        MessageRange from = MessageRange.from(MessageUid.of(1));
         List<MessageRange> ranges = from.split(2);
-        assertThat(ranges).containsExactly(MessageRange.from(1));
+        assertThat(ranges).containsExactly(MessageRange.from(MessageUid.of(1)));
     }
     
     @Test
     public void splitTenElementsRangeShouldReturn4Ranges() {
-        MessageRange range = MessageRange.range(1,10);
+        MessageRange range = MessageRange.range(MessageUid.of(1),MessageUid.of(10));
         List<MessageRange> ranges = range.split(3);
         assertThat(ranges).containsExactly(
-                MessageRange.range(1, 3), 
-                MessageRange.range(4, 6), 
-                MessageRange.range(7, 9), 
-                MessageRange.one(10));
+                MessageRange.range(MessageUid.of(1), MessageUid.of(3)), 
+                MessageRange.range(MessageUid.of(4), MessageUid.of(6)), 
+                MessageRange.range(MessageUid.of(7), MessageUid.of(9)), 
+                MessageUid.of(10).toRange());
+    }
+
+    @Test
+    public void includeShouldBeTrueWhenAfterFrom() {
+        MessageRange range = MessageRange.from(MessageUid.of(3));
+        boolean actual = range.includes(MessageUid.of(5));
+        assertThat(actual).isTrue();
+    }
+
+    @Test
+    public void includeShouldBeFalseWhenBeforeFrom() {
+        MessageRange range = MessageRange.from(MessageUid.of(3));
+        boolean actual = range.includes(MessageUid.of(1));
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void includeShouldBeTrueWhenEqualsFrom() {
+        MessageRange range = MessageRange.from(MessageUid.of(3));
+        boolean actual = range.includes(MessageUid.of(3));
+        assertThat(actual).isTrue();
+    }
+
+    @Test
+    public void includeShouldBeFalseWhenDifferentOne() {
+        MessageRange range = MessageUid.of(3).toRange();
+        boolean actual = range.includes(MessageUid.of(1));
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void includeShouldBeTrueWhenEqualsOne() {
+        MessageRange range = MessageUid.of(3).toRange();
+        boolean actual = range.includes(MessageUid.of(3));
+        assertThat(actual).isTrue();
+    }
+
+    @Test
+    public void includeShouldBeFalseWhenBeforeRange() {
+        MessageRange range = MessageRange.range(MessageUid.of(3), MessageUid.of(6));
+        boolean actual = range.includes(MessageUid.of(1));
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    public void includeShouldBeTrueWhenEqualsFromRange() {
+        MessageRange range = MessageRange.range(MessageUid.of(3), MessageUid.of(6));
+        boolean actual = range.includes(MessageUid.of(3));
+        assertThat(actual).isTrue();
+    }
+
+    @Test
+    public void includeShouldBeTrueWhenInRange() {
+        MessageRange range = MessageRange.range(MessageUid.of(3), MessageUid.of(6));
+        boolean actual = range.includes(MessageUid.of(4));
+        assertThat(actual).isTrue();
+    }
+
+    @Test
+    public void includeShouldBeTrueWhenEqualsToRange() {
+        MessageRange range = MessageRange.range(MessageUid.of(3), MessageUid.of(6));
+        boolean actual = range.includes(MessageUid.of(6));
+        assertThat(actual).isTrue();
+    }
+
+    @Test
+    public void includeShouldBeFalseWhenAfterRange() {
+        MessageRange range = MessageRange.range(MessageUid.of(3), MessageUid.of(6));
+        boolean actual = range.includes(MessageUid.of(7));
+        assertThat(actual).isFalse();
     }
 }

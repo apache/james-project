@@ -31,6 +31,7 @@ import java.util.TimeZone;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -59,7 +60,7 @@ public class SearchUtilsTest {
 
     MessageBuilder builder;
 
-    Collection<Long> recent;
+    Collection<MessageUid> recent;
     
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.UK);
@@ -72,9 +73,9 @@ public class SearchUtilsTest {
     }
     @Before
     public void setUp() throws Exception {
-        recent = new ArrayList<Long>();
+        recent = new ArrayList<MessageUid>();
         builder = new MessageBuilder();
-        builder.uid = 1009;
+        builder.uid = MessageUid.of(1009);
     }
     
     @Test
@@ -441,32 +442,32 @@ public class SearchUtilsTest {
 
     @Test
     public void testShouldMatchUidRange() throws Exception {
-        builder.setKey(1, 1729);
+        builder.setKey(1, MessageUid.of(1729));
         MailboxMessage row = builder.build();
-        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(1, 1)), row, recent));
-        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(1728, 1728)), row,
+        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1))), row, recent));
+        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1728), MessageUid.of(1728))), row,
                 recent));
-        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(1729, 1729)), row,
+        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1729), MessageUid.of(1729))), row,
                 recent));
-        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(1730, 1730)), row,
+        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1730), MessageUid.of(1730))), row,
                 recent));
-        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(1, 1728)), row,
+        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1728))), row,
                 recent));
-        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(1, 1729)), row,
+        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1729))), row,
                 recent));
-        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(1729, 1800)), row,
+        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1729), MessageUid.of(1800))), row,
                 recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
-                .uid(range(1730, Long.MAX_VALUE)), row, recent));
-        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(1730,
-                Long.MAX_VALUE, 1, 1728)), row, recent));
-        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(1730, Long.MAX_VALUE,
-                1, 1729)), row, recent));
+                .uid(range(MessageUid.of(1730), MessageUid.MAX_VALUE)), row, recent));
+        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1730),
+                MessageUid.MAX_VALUE, MessageUid.of(1), MessageUid.of(1728))), row, recent));
+        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1730), MessageUid.MAX_VALUE,
+                MessageUid.of(1), MessageUid.of(1729))), row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
-                .uid(range(1, 1728, 1800, 1810)), row, recent));
-        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(1, 1, 1729, 1729)),
+                .uid(range(MessageUid.of(1), MessageUid.of(1728), MessageUid.of(1800), MessageUid.of(1810))), row, recent));
+        assertTrue(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1), MessageUid.of(1729), MessageUid.of(1729))),
                 row, recent));
-        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(1, 1, 1800, 1800)),
+        assertFalse(new MessageSearches().isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1), MessageUid.of(1800), MessageUid.of(1800))),
                 row, recent));
     }
 
@@ -565,7 +566,7 @@ public class SearchUtilsTest {
     public void testShouldMatchSeenRecentSet() throws Exception {
         builder.setFlags(false, false, false, false, false, false);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid()));
+        recent.add(row.getUid());
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsSet(Flags.Flag.SEEN),
                 row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsSet(Flags.Flag.FLAGGED),
@@ -584,7 +585,7 @@ public class SearchUtilsTest {
     public void testShouldMatchSeenFlagUnSet() throws Exception {
         builder.setFlags(false, true, true, true, true, true);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid()));
+        recent.add(row.getUid());
         assertTrue(new MessageSearches().isMatch(SearchQuery.flagIsUnSet(Flags.Flag.SEEN),
                 row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
@@ -603,7 +604,7 @@ public class SearchUtilsTest {
     public void testShouldMatchAnsweredFlagUnSet() throws Exception {
         builder.setFlags(true, true, false, true, true, true);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid()));
+        recent.add(row.getUid());
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsUnSet(Flags.Flag.SEEN),
                 row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
@@ -622,7 +623,7 @@ public class SearchUtilsTest {
     public void testShouldMatchFlaggedFlagUnSet() throws Exception {
         builder.setFlags(true, false, true, true, true, true);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid()));
+        recent.add(row.getUid());
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsUnSet(Flags.Flag.SEEN),
                 row, recent));
         assertTrue(new MessageSearches().isMatch(
@@ -641,7 +642,7 @@ public class SearchUtilsTest {
     public void testShouldMatchDraftFlagUnSet() throws Exception {
         builder.setFlags(true, true, true, false, true, true);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid()));
+        recent.add(row.getUid());
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsUnSet(Flags.Flag.SEEN),
                 row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
@@ -660,7 +661,7 @@ public class SearchUtilsTest {
     public void testShouldMatchDeletedFlagUnSet() throws Exception {
         builder.setFlags(true, true, true, true, false, true);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid()));
+        recent.add(row.getUid());
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsUnSet(Flags.Flag.SEEN),
                 row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
@@ -679,7 +680,7 @@ public class SearchUtilsTest {
     public void testShouldMatchSeenRecentUnSet() throws Exception {
         builder.setFlags(true, true, true, true, true, true);
         MailboxMessage row = builder.build();
-        recent.add(new Long(row.getUid() + 1));
+        recent.add(row.getUid().next());
         assertFalse(new MessageSearches().isMatch(SearchQuery.flagIsUnSet(Flags.Flag.SEEN),
                 row, recent));
         assertFalse(new MessageSearches().isMatch(SearchQuery
@@ -737,15 +738,15 @@ public class SearchUtilsTest {
                 SearchQuery.all()), row, recent));
     }
     
-    private SearchQuery.NumericRange[] range(long low, long high) {
-        return new SearchQuery.NumericRange[]{ new SearchQuery.NumericRange(low, high) };
+    private SearchQuery.UidRange[] range(MessageUid low, MessageUid high) {
+        return new SearchQuery.UidRange[]{ new SearchQuery.UidRange(low, high) };
     }
 
-    private SearchQuery.NumericRange[] range(long lowOne, long highOne,
-            long lowTwo, long highTwo) {
-        return new SearchQuery.NumericRange[]{
-                new SearchQuery.NumericRange(lowOne, highOne),
-                new SearchQuery.NumericRange(lowTwo, highTwo) };
+    private SearchQuery.UidRange[] range(MessageUid lowOne, MessageUid highOne,
+            MessageUid lowTwo, MessageUid highTwo) {
+        return new SearchQuery.UidRange[]{
+                new SearchQuery.UidRange(lowOne, highOne),
+                new SearchQuery.UidRange(lowTwo, highTwo) };
     }
     
     

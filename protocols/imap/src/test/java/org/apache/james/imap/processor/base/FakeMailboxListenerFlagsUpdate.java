@@ -23,16 +23,17 @@ import java.util.List;
 
 import org.apache.james.mailbox.MailboxListener.FlagsUpdated;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
 public class FakeMailboxListenerFlagsUpdate extends FlagsUpdated {
 
-    public List<Long> uids;
+    public List<MessageUid> uids;
 
     public List<UpdatedFlags> flags;
 
-    public FakeMailboxListenerFlagsUpdate(MailboxSession session, List<Long> uids, List<UpdatedFlags> flags, MailboxPath path) {
+    public FakeMailboxListenerFlagsUpdate(MailboxSession session, List<MessageUid> uids, List<UpdatedFlags> flags, MailboxPath path) {
         super(session, path);
         this.uids = uids;
         this.flags = flags;
@@ -45,10 +46,8 @@ public class FakeMailboxListenerFlagsUpdate extends FlagsUpdated {
         return flags;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxListener.MessageEvent#getUids()
-     */
-    public List<Long> getUids() {
+    @Override
+    public List<MessageUid> getUids() {
         return uids;
     }
 }

@@ -31,6 +31,7 @@ import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
@@ -72,7 +73,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
 
             final Long messages = messages(statusDataItems, metaData);
             final Long recent = recent(statusDataItems, metaData);
-            final Long uidNext = uidNext(statusDataItems, metaData);
+            final MessageUid uidNext = uidNext(statusDataItems, metaData);
             final Long uidValidity = uidValidity(statusDataItems, metaData);
             final Long unseen = unseen(statusDataItems, metaData);
             final Long highestModSeq = highestModSeq(statusDataItems, metaData);
@@ -126,8 +127,8 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     
-    private Long uidNext(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final Long uidNext;
+    private MessageUid uidNext(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+        final MessageUid uidNext;
         if (statusDataItems.isUidNext()) {
             uidNext = metaData.getUidNext();
         } else {

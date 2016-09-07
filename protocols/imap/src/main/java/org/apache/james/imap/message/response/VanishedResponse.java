@@ -19,34 +19,30 @@
 
 package org.apache.james.imap.message.response;
 
-import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
 
 public class VanishedResponse implements ImapResponseMessage{
 
-    private final IdRange[] uids;
+    private final UidRange[] uids;
     private final boolean earlier;
 
-    public VanishedResponse(IdRange[] uids, boolean earlier) {
+    public VanishedResponse(UidRange[] vanishedIdRanges, boolean earlier) {
         this.earlier = earlier;
-        this.uids = uids;
+        this.uids = vanishedIdRanges;
     }
     
     /**
      * Return the uids which where expunged
-     * 
-     * @return uids
      */
-    public final IdRange[] getUids() {
+    public final UidRange[] getUids() {
         return uids;
     }
     
     /**
      * Return true if the <code>VANISHED</code> response was caused
      * because of an earlier SELECT/EXAMINE (QRESYNC) or UID FETCH (VANISHED)
-     * 
-     * @return earlier
      */
     public final boolean isEarlier() {
         return earlier;

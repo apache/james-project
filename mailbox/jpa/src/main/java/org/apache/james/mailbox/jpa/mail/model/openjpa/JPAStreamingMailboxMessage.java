@@ -31,6 +31,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Table;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -77,7 +78,7 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
     /**
      * Create a copy of the given message
      */
-    public JPAStreamingMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage message) throws MailboxException {
+    public JPAStreamingMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage message) throws MailboxException {
         super(mailbox, uid, modSeq, message);
         try {
             this.content = new SharedByteArrayInputStream(IOUtils.toByteArray(message.getFullContent()));

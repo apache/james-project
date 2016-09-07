@@ -53,6 +53,7 @@ import javax.mail.Flags;
 
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -147,6 +148,7 @@ public class HBaseUtilsTest {
         flags.add("userFlag2");
         HBaseId uuid = HBaseId.of(UUID.randomUUID());
         final SimpleMailboxMessage message = new SimpleMailboxMessage(new Date(), 100, 10, null, flags, new PropertyBuilder(), uuid);
+        message.setUid(MessageUid.of(1));
         Put put = flagsToPut(message, flags);
         //test for the system flags
         assertTrue(put.has(MESSAGES_META_CF, FLAGS_SEEN, MARKER_PRESENT));

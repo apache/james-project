@@ -22,40 +22,23 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
-/**
- * Represent the {@link MessageMetaData} for a message
- * 
- *
- */
+import org.apache.james.mailbox.MessageUid;
+
 public interface MessageMetaData {
 
-    /**
-     * Return the uid of the message which the MessageResult belongs to
-     * 
-     * @return uid
-     */
-    long getUid();
+    MessageUid getUid();
     
     
     /**
      * Return the modify-sequence number of the message. This is kind of optional and the mailbox
      * implementation may not support this. If so it will return -1
-     * 
-     * @return modSeq
      */
     long getModSeq();
 
-    /**
-     * Return the {@link Flags} 
-     * 
-     * @return flags
-     */
     Flags getFlags();
     
     /**
      * Return the size in bytes
-     * 
-     * @return size
      */
     long getSize();
 

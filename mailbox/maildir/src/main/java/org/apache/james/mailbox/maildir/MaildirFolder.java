@@ -46,12 +46,16 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLEntryKey;
 import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
+
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 public class MaildirFolder {
 
@@ -69,7 +73,7 @@ public class MaildirFolder {
     private final File uidFile;
     private final File aclFile;
     
-    private long lastUid = -1;
+    private Optional<MessageUid> lastUid;
     private int messageCount = 0;
     private long uidValidity = -1;
     private MailboxACL acl;
@@ -93,6 +97,7 @@ public class MaildirFolder {
         this.aclFile = new File(rootFolder, ACL_FILE);
         this.locker = locker;
         this.path = path;
+        this.lastUid = Optional.absent();
     }
 
     private MaildirMessageName newMaildirMessageName(MaildirFolder folder, String fullName) {
@@ -181,20 +186,22 @@ public class MaildirFolder {
     
     /**
      * Returns the nextUid value and increases it.
-     * @return nextUid
      */
-    private long getNextUid() {
-        return ++lastUid;
+    private MessageUid getNextUid() {
+        MessageUid nextUid = lastUid.transform(new Function<MessageUid, MessageUid>() {
+            @Override
+            public MessageUid apply(MessageUid input) {
+                return input.next();
+            }}).or(MessageUid.MIN_VALUE);
+        lastUid = Optional.of(nextUid);
+        return nextUid;
     }
     
     /**
      * Returns the last uid used in this mailbox
-     * @param session
-     * @return lastUid
-     * @throws MailboxException
      */
-    public long getLastUid(MailboxSession session) throws MailboxException {
-        if (lastUid == -1) {
+    public Optional<MessageUid> getLastUid(MailboxSession session) throws MailboxException {
+        if (!lastUid.isPresent()) {
             readLastUid(session);
         }
         return lastUid;
@@ -328,7 +335,7 @@ public class MaildirFolder {
      * @return The {@link MaildirMessageName} that belongs to the uid
      * @throws IOException If the uidlist file cannot be found or read
      */
-    public MaildirMessageName getMessageNameByUid(final MailboxSession session, final Long uid) throws MailboxException {
+    public MaildirMessageName getMessageNameByUid(final MailboxSession session, final MessageUid uid) throws MailboxException {
        
         return locker.executeWithLock(session, path, new LockAwareExecution<MaildirMessageName>() {
             
@@ -340,7 +347,7 @@ public class MaildirFolder {
                 try {
                     fileReader = new FileReader(uidList);
                     reader = new BufferedReader(fileReader);
-                    String uidString = String.valueOf(uid);
+                    String uidString = String.valueOf(uid.asLong());
                     String line = reader.readLine(); // the header
                     int lineNumber = 1;
                     while ((line = reader.readLine()) != null) {
@@ -380,13 +387,13 @@ public class MaildirFolder {
      * @return a {@link Map} whith all uids in the given range and associated {@link MaildirMessageName}s
      * @throws MailboxException if there is a problem with the uid list file
      */
-    public SortedMap<Long, MaildirMessageName> getUidMap(final MailboxSession session, final long from, final long to)
+    public SortedMap<MessageUid, MaildirMessageName> getUidMap(final MailboxSession session, final MessageUid from, final MessageUid to)
     throws MailboxException {
-        return locker.executeWithLock(session, path, new LockAwareExecution<SortedMap<Long, MaildirMessageName>>() {
+        return locker.executeWithLock(session, path, new LockAwareExecution<SortedMap<MessageUid, MaildirMessageName>>() {
             
             @Override
-            public SortedMap<Long, MaildirMessageName> execute() throws MailboxException {
-                final SortedMap<Long, MaildirMessageName> uidMap = new TreeMap<Long, MaildirMessageName>();
+            public SortedMap<MessageUid, MaildirMessageName> execute() throws MailboxException {
+                final SortedMap<MessageUid, MaildirMessageName> uidMap = new TreeMap<MessageUid, MaildirMessageName>();
 
                 File uidList = uidFile;
 
@@ -413,11 +420,11 @@ public class MaildirFolder {
         }, true);
     }
     
-    public SortedMap<Long, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, long from, long to)
+    public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, MessageUid from, MessageUid to)
     throws MailboxException {
-        SortedMap<Long, MaildirMessageName> allUids = getUidMap(session, from, to);
-        SortedMap<Long, MaildirMessageName> filteredUids = new TreeMap<Long, MaildirMessageName>();
-        for (Entry<Long, MaildirMessageName> entry : allUids.entrySet()) {
+        SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, from, to);
+        SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<MessageUid, MaildirMessageName>();
+        for (Entry<MessageUid, MaildirMessageName> entry : allUids.entrySet()) {
             if (filter.accept(null, entry.getValue().getFullName()))
                 filteredUids.put(entry.getKey(), entry.getValue());
         }
@@ -436,14 +443,15 @@ public class MaildirFolder {
      * @return A {@link Map} with all uids and associated {@link MaildirMessageName}s
      * @throws MailboxException if there is a problem with the uid list file
      */
-    public SortedMap<Long, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, int limit) throws MailboxException {
-        SortedMap<Long, MaildirMessageName> allUids = getUidMap(session, 0, -1);
-        SortedMap<Long, MaildirMessageName> filteredUids = new TreeMap<Long, MaildirMessageName>();
+    public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, int limit) throws MailboxException {
+        MessageUid to = null;
+        SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, MessageUid.MIN_VALUE, to);
+        SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<MessageUid, MaildirMessageName>();
         int theLimit = limit;
         if (limit < 1)
             theLimit = allUids.size();
         int counter = 0;
-        for (Entry<Long, MaildirMessageName> entry : allUids.entrySet()) {
+        for (Entry<MessageUid, MaildirMessageName> entry : allUids.entrySet()) {
             if (counter >= theLimit)
                 break;
             if (filter.accept(null, entry.getValue().getFullName())) {
@@ -461,15 +469,15 @@ public class MaildirFolder {
      * @return A {@link Map} with all uids and associated {@link MaildirMessageName}s of recent messages
      * @throws MailboxException If there is a problem with the uid list file
      */
-    public SortedMap<Long, MaildirMessageName> getRecentMessages(final MailboxSession session) throws MailboxException {
+    public SortedMap<MessageUid, MaildirMessageName> getRecentMessages(final MailboxSession session) throws MailboxException {
         final String[] recentFiles = getNewFolder().list();
         final LinkedList<String> lines = new LinkedList<String>();
         final int theLimit = recentFiles.length;
-        return locker.executeWithLock(session, path, new LockAwareExecution<SortedMap<Long, MaildirMessageName>>() {
+        return locker.executeWithLock(session, path, new LockAwareExecution<SortedMap<MessageUid, MaildirMessageName>>() {
             
             @Override
-            public SortedMap<Long, MaildirMessageName> execute() throws MailboxException {
-                final SortedMap<Long, MaildirMessageName> recentMessages = new TreeMap<Long, MaildirMessageName>();
+            public SortedMap<MessageUid, MaildirMessageName> execute() throws MailboxException {
+                final SortedMap<MessageUid, MaildirMessageName> recentMessages = new TreeMap<MessageUid, MaildirMessageName>();
 
                 File uidList = uidFile;
 
@@ -482,7 +490,7 @@ public class MaildirFolder {
                         messageCount = curFiles.length + newFiles.length;
                         String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
                         for (String file : allFiles)
-                            lines.add(String.valueOf(getNextUid()) + " " + file);
+                            lines.add(String.valueOf(getNextUid().asLong()) + " " + file);
                         PrintWriter pw = new PrintWriter(uidList);
                         try {
                             pw.println(createUidListHeader());
@@ -525,7 +533,7 @@ public class MaildirFolder {
                                 continue;
                             }
                             
-                            Long uid = Long.valueOf(line.substring(0, gap));
+                            MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
                             String name = line.substring(gap + 1, line.length());
                             for (String recentFile : recentFiles) {
                                 if (recentFile.equals(name)) {
@@ -548,27 +556,25 @@ public class MaildirFolder {
     /**
      * Creates and returns a uid map (uid -> {@link MaildirMessageName}) and writes it to the disk
      * @return The uid map
-     * @throws MailboxException
      */
-    private Map<Long, MaildirMessageName> createUidFile() throws MailboxException {
-        final Map<Long, MaildirMessageName> uidMap = new TreeMap<Long, MaildirMessageName>();
+    private Map<MessageUid, MaildirMessageName> createUidFile() throws MailboxException {
+        final Map<MessageUid, MaildirMessageName> uidMap = new TreeMap<MessageUid, MaildirMessageName>();
         File uidList = uidFile;
         PrintWriter pw = null;
         try {
             if (!uidList.createNewFile())
                 throw new IOException("Could not create file " + uidList);
-            lastUid = 0;
+            lastUid = Optional.absent();
             String[] curFiles = curFolder.list();
             String[] newFiles = newFolder.list();
             messageCount = curFiles.length + newFiles.length;
             String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
             for (String file : allFiles)
                 uidMap.put(getNextUid(), newMaildirMessageName(MaildirFolder.this, file));
-            //uidMap = new TreeMap<Long, MaildirMessageName>(uidMap);
             pw = new PrintWriter(uidList);
             pw.println(createUidListHeader());
-            for (Entry<Long, MaildirMessageName> entry : uidMap.entrySet())
-                pw.println(String.valueOf(entry.getKey()) + " " + entry.getValue().getFullName());
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet())
+                pw.println(String.valueOf(entry.getKey().asLong()) + " " + entry.getValue().getFullName());
         } catch (IOException e) {
             throw new MailboxException("Unable to create uid file", e);
         } finally {
@@ -578,13 +584,13 @@ public class MaildirFolder {
         return uidMap;
     }
     
-    private Map<Long, MaildirMessageName> updateUidFile() throws MailboxException {
-        final Map<Long, MaildirMessageName> uidMap = new TreeMap<Long, MaildirMessageName>();
+    private Map<MessageUid, MaildirMessageName> updateUidFile() throws MailboxException {
+        final Map<MessageUid, MaildirMessageName> uidMap = new TreeMap<MessageUid, MaildirMessageName>();
         File uidList = uidFile;
         String[] curFiles = curFolder.list();
         String[] newFiles = newFolder.list();
         messageCount = curFiles.length + newFiles.length;
-        HashMap<String, Long> reverseUidMap = new HashMap<String, Long>(messageCount);
+        HashMap<String, MessageUid> reverseUidMap = new HashMap<String, MessageUid>(messageCount);
         FileReader fileReader = null;
         BufferedReader reader = null;
         PrintWriter pw = null;
@@ -603,7 +609,7 @@ public class MaildirFolder {
                         // there must be some issues in the file if no gap can be found
                         throw new MailboxException("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
                     }
-                    Long uid = Long.valueOf(line.substring(0, gap));
+                    MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
                     String name = line.substring(gap + 1, line.length());
                     reverseUidMap.put(stripMetaFromName(name), uid);
                 }
@@ -611,15 +617,15 @@ public class MaildirFolder {
             String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
             for (String file : allFiles) {
                 MaildirMessageName messageName = newMaildirMessageName(MaildirFolder.this, file);
-                Long uid = reverseUidMap.get(messageName.getBaseName());
+                MessageUid uid = reverseUidMap.get(messageName.getBaseName());
                 if (uid == null)
                     uid = getNextUid();
                 uidMap.put(uid, messageName);
             }
             pw = new PrintWriter(uidList);
             pw.println(createUidListHeader());
-            for (Entry<Long, MaildirMessageName> entry : uidMap.entrySet())
-                pw.println(String.valueOf(entry.getKey()) + " " + entry.getValue().getFullName());
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet())
+                pw.println(String.valueOf(entry.getKey().asLong()) + " " + entry.getValue().getFullName());
         } catch (IOException e) {
             throw new MailboxException("Unable to update uid file", e);
         } finally {
@@ -630,8 +636,8 @@ public class MaildirFolder {
         return uidMap;
     }
 
-    private Map<Long, MaildirMessageName> readUidFile(MailboxSession session, long from, long to) throws MailboxException {
-        final Map<Long, MaildirMessageName> uidMap = new HashMap<Long, MaildirMessageName>();
+    private Map<MessageUid, MaildirMessageName> readUidFile(MailboxSession session, MessageUid from, MessageUid to) throws MailboxException {
+        final Map<MessageUid, MaildirMessageName> uidMap = new HashMap<MessageUid, MaildirMessageName>();
 
         File uidList = uidFile;
         FileReader fileReader = null;
@@ -654,11 +660,12 @@ public class MaildirFolder {
                     	session.getLog().info("Corrupted entry in uid-file " + uidList + " line " + lineNumber++);
                         continue;
                     }
-
-                    Long uid = Long.valueOf(line.substring(0, gap));
-                    if (uid >= from) {
-                        if (to != -1 && uid > to)
+                    
+                    MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
+                    if (uid.compareTo(from) >= 0) {
+                        if (to != null && uid.compareTo(to) > 0) {
                             break;
+                        }
                         String name = line.substring(gap + 1, line.length());
                         uidMap.put(uid, newMaildirMessageName(MaildirFolder.this, name));
                     }
@@ -677,17 +684,17 @@ public class MaildirFolder {
     
     /**
      * Sorts the given map and returns a subset which is constricted by a lower and an upper limit.
-     * @param source The source map
+     * @param map The source map
      * @param from The lower limit
      * @param to The upper limit; <code>-1</code> disables the upper limit.
      * @return The sorted subset
      */
-    private SortedMap<Long, MaildirMessageName> truncateMap(Map<Long, MaildirMessageName> source, long from, long to) {
-        TreeMap<Long, MaildirMessageName> sortedMap;
-        if (source instanceof TreeMap<?, ?>) sortedMap = (TreeMap<Long, MaildirMessageName>) source;
-        else sortedMap = new TreeMap<Long, MaildirMessageName>(source);
-        if (to != -1)
-            return sortedMap.subMap(from, to + 1);
+    private SortedMap<MessageUid, MaildirMessageName> truncateMap(Map<MessageUid, MaildirMessageName> map, MessageUid from, MessageUid to) {
+        TreeMap<MessageUid, MaildirMessageName> sortedMap;
+        if (map instanceof TreeMap<?, ?>) sortedMap = (TreeMap<MessageUid, MaildirMessageName>) map;
+        else sortedMap = new TreeMap<MessageUid, MaildirMessageName>(map);
+        if (to != null)
+            return sortedMap.subMap(from, to.next());
         return sortedMap.tailMap(from);
     }
     
@@ -710,7 +717,7 @@ public class MaildirFolder {
         if (version != 1)
             throw new IOException("Cannot read uidlists with versions other than 1.");
         int gap2 = line.indexOf(" ", gap1 + 1);
-        lastUid = Long.valueOf(line.substring(gap1 + 1, gap2));
+        lastUid = Optional.of(MessageUid.of(Long.valueOf(line.substring(gap1 + 1, gap2))));
         messageCount = Integer.valueOf(line.substring(gap2 + 1, line.length()));
     }
     
@@ -719,7 +726,14 @@ public class MaildirFolder {
      * @return the line which ought to be the header
      */
     private String createUidListHeader() {
-        return "1 " + String.valueOf(lastUid) + " " + String.valueOf(messageCount);
+        Long last = lastUid.transform(new Function<MessageUid, Long>() {
+            @Override
+            public Long apply(MessageUid input) {
+                return input.asLong();
+            }
+            
+        }).or(0L);
+        return "1 " + String.valueOf(last) + " " + String.valueOf(messageCount);
     }
     
     /**
@@ -741,15 +755,14 @@ public class MaildirFolder {
      * @param session
      * @param name The name of the message's file
      * @return The uid of the message
-     * @throws IOException
      */
-    public long appendMessage(MailboxSession session, final String name) throws MailboxException {
-        return locker.executeWithLock(session, path, new LockAwareExecution<Long>() {
+    public MessageUid appendMessage(MailboxSession session, final String name) throws MailboxException {
+        return locker.executeWithLock(session, path, new LockAwareExecution<MessageUid>() {
             
             @Override
-            public Long execute() throws MailboxException {
+            public MessageUid execute() throws MailboxException {
                 File uidList = uidFile;
-                long uid = -1;
+                MessageUid uid = null;
                 FileReader fileReader = null;
                 BufferedReader reader = null;
                 PrintWriter pw = null;
@@ -765,7 +778,7 @@ public class MaildirFolder {
                         while ((line = reader.readLine()) != null)
                             lines.add(line);
                         uid = getNextUid();
-                        lines.add(String.valueOf(uid) + " " + name);
+                        lines.add(String.valueOf(uid.asLong()) + " " + name);
                         messageCount++;
                         pw = new PrintWriter(uidList);
                         pw.println(createUidListHeader());
@@ -782,8 +795,8 @@ public class MaildirFolder {
                         ArrayList<String> lines = new ArrayList<String>();
                         String[] allFiles = (String[]) ArrayUtils.addAll(curFiles, newFiles);
                         for (String file : allFiles) {
-                            long theUid = getNextUid();
-                            lines.add(String.valueOf(theUid) + " " + file);
+                            MessageUid theUid = getNextUid();
+                            lines.add(String.valueOf(theUid.asLong()) + " " + file);
                             // the listed names already include the message to append
                             if (file.equals(name))
                                 uid = theUid;
@@ -800,7 +813,7 @@ public class MaildirFolder {
                     IOUtils.closeQuietly(reader);
                     IOUtils.closeQuietly(fileReader);
                 }
-                if (uid == -1) {
+                if (uid == null) {
                     throw new MailboxException("Unable to append msg");
                 } else {
                    return uid;
@@ -817,7 +830,7 @@ public class MaildirFolder {
      * @param messageName
      * @throws MailboxException
      */
-    public void update(MailboxSession session, final long uid, final String messageName) throws MailboxException {
+    public void update(MailboxSession session, final MessageUid uid, final String messageName) throws MailboxException {
         locker.executeWithLock(session, path, new LockAwareExecution<Void>() {
             
             @Override
@@ -833,8 +846,9 @@ public class MaildirFolder {
                     readUidListHeader(line);
                     ArrayList<String> lines = new ArrayList<String>();
                     while ((line = reader.readLine()) != null) {
-                        if (uid == Long.valueOf(line.substring(0, line.indexOf(" "))))
-                            line = String.valueOf(uid) + " " + messageName;
+                        if (uid.equals(MessageUid.of(Long.valueOf(line.substring(0, line.indexOf(" ")))))) {
+                            line = String.valueOf(uid.asLong()) + " " + messageName;
+                        }
                         lines.add(line);
                     }
                     writer = new PrintWriter(uidList);
@@ -861,7 +875,7 @@ public class MaildirFolder {
      * @return The {@link MaildirMessageName} of the deleted message
      * @throws MailboxException If the file cannot be deleted of there is a problem with the uid list
      */
-    public MaildirMessageName delete(final MailboxSession session, final long uid) throws MailboxException {        
+    public MaildirMessageName delete(final MailboxSession session, final MessageUid uid) throws MailboxException {        
         return locker.executeWithLock(session, path, new LockAwareExecution<MaildirMessageName>() {
             
             @Override
@@ -888,7 +902,7 @@ public class MaildirFolder {
                             continue;
                         }
                         
-                        if (uid == Long.valueOf(line.substring(0, line.indexOf(" ")))) {
+                        if (uid.equals(MessageUid.of(Long.valueOf(line.substring(0, line.indexOf(" ")))))) {
                             deletedMessage = newMaildirMessageName(MaildirFolder.this, line.substring(gap + 1, line.length()));
                             messageCount--;
                         }

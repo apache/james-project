@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JsonEventSerializer extends JacksonEventSerializer {
 
     public JsonEventSerializer(EventConverter eventConverter) {
-        super(eventConverter, new ObjectMapper());
+        super(eventConverter, configureObjectMapper(new ObjectMapper()));
     }
-
 }

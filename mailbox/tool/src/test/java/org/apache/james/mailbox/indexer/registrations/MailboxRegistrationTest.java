@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
 import org.apache.james.mailbox.indexer.events.MessageDeletedEvent;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -44,7 +45,7 @@ import com.google.common.collect.Lists;
 public class MailboxRegistrationTest {
 
     public static final MailboxPath INBOX = new MailboxPath("#private", "btellier@apache.org", "INBOX");
-    public static final Long UID = 18L;
+    public static final MessageUid UID = MessageUid.of(18);
     public static final int UID_VALIDITY = 45;
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
     public static final MockMailboxSession SESSION = new MockMailboxSession("test");
@@ -68,7 +69,7 @@ public class MailboxRegistrationTest {
 
     @Test
     public void AddedEventsShouldNotBeReported() {
-        TreeMap<Long, MessageMetaData> treeMap = new TreeMap<Long, MessageMetaData>();
+        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date()));
         MailboxListener.Event event = eventFactory.added(SESSION, treeMap, MAILBOX);
         mailboxRegistration.event(event);
@@ -77,7 +78,7 @@ public class MailboxRegistrationTest {
 
     @Test
     public void ExpungedEventsShouldBeReported() {
-        TreeMap<Long, MessageMetaData> treeMap = new TreeMap<Long, MessageMetaData>();
+        TreeMap<MessageUid, MessageMetaData> treeMap = new TreeMap<MessageUid, MessageMetaData>();
         treeMap.put(UID, new SimpleMessageMetaData(UID, MOD_SEQ, new Flags(), SIZE, new Date()));
         MailboxListener.Event event = eventFactory.expunged(SESSION, treeMap, MAILBOX);
         mailboxRegistration.event(event);

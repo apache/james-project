@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import static org.apache.james.mailbox.hbase.HBaseNames.*;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
@@ -31,6 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
 
 /**
  * Unit tests for UidProvider and ModSeqProvider.
@@ -113,12 +117,12 @@ public class HBaseUidAndModSeqProviderTest {
         mapper.save(newBox);
         mailboxList.add(newBox);
         pathsList.add(path);
-
-        long result = uidProvider.lastUid(null, newBox);
-        assertEquals(0, result);
+        MailboxSession session = null;
+        Optional<MessageUid> result = uidProvider.lastUid(session, newBox);
+        assertEquals(Optional.absent(), result);
         for (int i = 1; i < 10; i++) {
-            long uid = uidProvider.nextUid(null, newBox);
-            assertEquals(uid, uidProvider.lastUid(null, newBox));
+            MessageUid uid = uidProvider.nextUid(session, newBox);
+            assertEquals(uid, uidProvider.lastUid(session, newBox).get());
         }
     }
 
@@ -129,11 +133,16 @@ public class HBaseUidAndModSeqProviderTest {
     public void testNextUid() throws Exception {
         LOG.info("nextUid");
         HBaseMailbox mailbox = mailboxList.get(mailboxList.size() / 2);
-        long lastUid = uidProvider.lastUid(null, mailbox);
-        long result;
-        for (int i = (int) lastUid + 1; i < (lastUid + 10); i++) {
-            result = uidProvider.nextUid(null, mailbox);
-            assertEquals(i, result);
+        MailboxSession session = null;
+        Optional<MessageUid> lastUid = uidProvider.lastUid(session, mailbox);
+        for (int i = 0; i < 10; i++) {
+            if (lastUid.isPresent()) {
+                lastUid = Optional.of(lastUid.get().next());
+            } else {
+                lastUid = Optional.of(MessageUid.MIN_VALUE);
+            }
+            MessageUid result = uidProvider.nextUid(session, mailbox);
+            assertEquals(lastUid.get(), result);
         }
     }
 
@@ -149,12 +158,12 @@ public class HBaseUidAndModSeqProviderTest {
         mapper.save(newBox);
         mailboxList.add(newBox);
         pathsList.add(path);
-
-        long result = modSeqProvider.highestModSeq(null, newBox);
+        MailboxSession session = null;
+        long result = modSeqProvider.highestModSeq(session, newBox);
         assertEquals(0, result);
         for (int i = 1; i < 10; i++) {
-            long uid = modSeqProvider.nextModSeq(null, newBox);
-            assertEquals(uid, modSeqProvider.highestModSeq(null, newBox));
+            long uid = modSeqProvider.nextModSeq(session, newBox);
+            assertEquals(uid, modSeqProvider.highestModSeq(session, newBox));
         }
     }
 
@@ -165,10 +174,11 @@ public class HBaseUidAndModSeqProviderTest {
     public void testNextModSeq() throws Exception {
         LOG.info("nextModSeq");
         HBaseMailbox mailbox = mailboxList.get(mailboxList.size() / 2);
-        long lastUid = modSeqProvider.highestModSeq(null, mailbox);
+        MailboxSession session = null;
+        long lastUid = modSeqProvider.highestModSeq(session, mailbox);
         long result;
         for (int i = (int) lastUid + 1; i < (lastUid + 10); i++) {
-            result = modSeqProvider.nextModSeq(null, mailbox);
+            result = modSeqProvider.nextModSeq(session, mailbox);
             assertEquals(i, result);
         }
     }

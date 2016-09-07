@@ -69,6 +69,7 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
 import org.apache.james.mailbox.hbase.mail.HBaseMailboxMessage;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
@@ -215,11 +216,23 @@ public class HBaseUtils {
      * @param uid message uid
      * @return rowkey byte array that can be used with HBase API
      */
-    public static byte[] messageRowKey(HBaseId mailboxUid, long uid) {
+    public static byte[] messageRowKey(HBaseId mailboxUid, MessageUid uid) {
         /**  message uid's are stored in reverse order so we will always have the most recent messages first*/
-        return Bytes.add(mailboxUid.toBytes(), Bytes.toBytes(Long.MAX_VALUE - uid));
+        return Bytes.add(mailboxUid.toBytes(), Bytes.toBytes(Long.MAX_VALUE - uid.asLong()));
     }
 
+    /**
+     * Utility method to build row key min limit from mailbox UUID.
+     * The message uid's are stored in reverse order by substracting the uid value 
+     * from Long.MAX_VALUE. 
+     * @param mailboxUid mailbox UUID
+     * @return rowkey byte array that can be used with HBase API
+     */
+    public static byte[] minMessageRowKey(HBaseId mailboxUid) {
+        return Bytes.add(mailboxUid.toBytes(), Bytes.toBytes(Long.MAX_VALUE));
+    }
+
+    
     /**
      * Utility to build row keys from mailboxUID and a value. The value is added to 
      * the key without any other operations. 
@@ -227,8 +240,8 @@ public class HBaseUtils {
      * @param value
      * @return rowkey byte array that can be used with HBase API
      */
-    public static byte[] customMessageRowKey(HBaseId mailboxUid, long value) {
-        return Bytes.add(mailboxUid.toBytes(), Bytes.toBytes(value));
+    public static byte[] customMessageRowKey(HBaseId mailboxUid, MessageUid value) {
+        return Bytes.add(mailboxUid.toBytes(), Bytes.toBytes(value.asLong()));
     }
 
     /**
@@ -246,7 +259,12 @@ public class HBaseUtils {
         List<Property> propList = new ArrayList<Property>();
         KeyValue[] keys = result.raw();
         String mediaType = null, subType = null;
-        Long modSeq = null, uid, bodyOctets = null, contentOctets = null, textualLineCount = null;
+        MessageUid uid;
+        Long modSeq = null; 
+        Long bodyOctets = null;
+        Long contentOctets = null;
+        Long textualLineCount = null;
+        
         Date internalDate = null;
 
         int i = 0;
@@ -301,7 +319,7 @@ public class HBaseUtils {
             i++;
         }
         HBaseId uuid = HBaseIdFromRowKey(result.getRow());
-        uid = Long.MAX_VALUE - Bytes.toLong(result.getRow(), 16);
+        uid = MessageUid.of(Long.MAX_VALUE - Bytes.toLong(result.getRow(), 16));
         PropertyBuilder props = new PropertyBuilder(propList);
         props.setMediaType(mediaType);
         props.setSubType(subType);

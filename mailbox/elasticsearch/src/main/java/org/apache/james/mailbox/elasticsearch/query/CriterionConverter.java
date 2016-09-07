@@ -228,10 +228,10 @@ public class CriterionConverter {
                     .map(this::uidRangeFilter), BoolQueryBuilder::should));
     }
 
-    private QueryBuilder uidRangeFilter(SearchQuery.NumericRange numericRange) {
+    private QueryBuilder uidRangeFilter(SearchQuery.UidRange numericRange) {
         return rangeQuery(JsonMessageConstants.ID)
-                .lte(numericRange.getHighValue())
-                .gte(numericRange.getLowValue());
+                .lte(numericRange.getHighValue().asLong())
+                .gte(numericRange.getLowValue().asLong());
     }
 
     private QueryBuilder convertHeader(SearchQuery.HeaderCriterion headerCriterion) {

@@ -30,10 +30,13 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+
+import com.google.common.base.Optional;
 /**
  * Message UidProvider for HBase.
  * 
@@ -52,10 +55,9 @@ public class HBaseUidProvider implements UidProvider {
      * @param session the session
      * @param mailbox the mailbox for which to get the last uid
      * @return the last uid used
-     * @throws MailboxException 
      */
     @Override
-    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         HTable mailboxes = null;
         HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
         try {
@@ -68,8 +70,11 @@ public class HBaseUidProvider implements UidProvider {
             if (result == null) {
                 throw new MailboxException("Row or column not found!");
             }
-            long uid = Bytes.toLong(result.getValue(MAILBOX_CF, MAILBOX_LASTUID));
-            return uid;
+            long rawUid = Bytes.toLong(result.getValue(MAILBOX_CF, MAILBOX_LASTUID));
+            if (rawUid == 0) {
+                return Optional.absent();
+            }
+            return Optional.of(MessageUid.of(rawUid));
         } catch (IOException e) {
             throw new MailboxException("lastUid", e);
         } finally {
@@ -92,12 +97,12 @@ public class HBaseUidProvider implements UidProvider {
      * @throws MailboxException 
      */
     @Override
-    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         HTable mailboxes = null;
         HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
         try {
             mailboxes = new HTable(conf, MAILBOXES_TABLE);
-            long newValue = mailboxes.incrementColumnValue(mailboxId.toBytes(), MAILBOX_CF, MAILBOX_LASTUID, 1);
+            MessageUid newValue = MessageUid.of(mailboxes.incrementColumnValue(mailboxId.toBytes(), MAILBOX_CF, MAILBOX_LASTUID, 1));
             mailboxes.close();
             return newValue;
         } catch (IOException e) {

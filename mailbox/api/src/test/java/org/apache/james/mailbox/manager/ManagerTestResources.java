@@ -24,6 +24,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -138,7 +139,7 @@ public class ManagerTestResources {
         appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.RECENT).build());
     }
 
-    public long appendMessage(MessageManager messageManager, MailboxSession session, Flags flags) throws MailboxException, UnsupportedEncodingException {
+    public MessageUid appendMessage(MessageManager messageManager, MailboxSession session, Flags flags) throws MailboxException, UnsupportedEncodingException {
         return messageManager.appendMessage(new ByteArrayInputStream(MockMail.MAIL_TEXT_PLAIN.getBytes("UTF-8")),
             Calendar.getInstance().getTime(), session, true, flags);
     }

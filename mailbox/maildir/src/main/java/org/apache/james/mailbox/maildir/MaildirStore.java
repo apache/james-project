@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -33,6 +34,9 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 public class MaildirStore implements UidProvider, ModSeqProvider {
 
@@ -237,13 +241,15 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
         return getFolderName(mailboxPath.getNamespace(), mailboxPath.getUser(), mailboxPath.getName());
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.UidProvider#nextUid(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
-    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
-            return createMaildirFolder(mailbox).getLastUid(session) +1;
+            return createMaildirFolder(mailbox).getLastUid(session).transform(new Function<MessageUid, MessageUid>() {
+                @Override
+                public MessageUid apply(MessageUid input) {
+                    return input.next();
+                }
+            }).or(MessageUid.MIN_VALUE);
         } catch (MailboxException e) {
             throw new MailboxException("Unable to generate next uid", e);
         }
@@ -264,7 +270,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
        return createMaildirFolder(mailbox).getLastUid(session);
     }
 

@@ -100,7 +100,7 @@ public class MessageMoveTest<T extends MapperProvider> {
         Flags expectedFlags = message1.createFlags();
         expectedFlags.add(Flags.Flag.RECENT);
         assertThat(messageMetaData.getFlags()).isEqualTo(expectedFlags);
-        assertThat(messageMetaData.getUid()).isEqualTo(messageMapper.getLastUid(benwaWorkMailbox));
+        assertThat(messageMetaData.getUid()).isEqualTo(messageMapper.getLastUid(benwaWorkMailbox).get());
         assertThat(messageMetaData.getModSeq()).isEqualTo(messageMapper.getHighestModSeq(benwaWorkMailbox));
     }
 

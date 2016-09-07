@@ -28,6 +28,7 @@ import org.apache.james.imap.encode.MailboxStatusResponseEncoder;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
+import org.apache.james.mailbox.MessageUid;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -66,7 +67,7 @@ public class MailboxStatusResponseEncoderTest  {
     public void testDoEncode() throws Exception {
         final Long messages = new Long(2);
         final Long recent = new Long(3);
-        final Long uidNext = new Long(5);
+        final MessageUid uidNext = MessageUid.of(5);
         final Long uidValidity = new Long(7);
         final Long unseen = new Long(11);
         final String mailbox = "A mailbox named desire";

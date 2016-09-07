@@ -34,6 +34,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageResult;
@@ -120,7 +121,7 @@ public class MailboxEventDispatcherTest {
 
         dispatcher = new MailboxEventDispatcher(collector);
         result = mock(MessageResult.class);
-        when(result.getUid()).thenReturn(23L);
+        when(result.getUid()).thenReturn(MessageUid.of(23));
     }
 
 

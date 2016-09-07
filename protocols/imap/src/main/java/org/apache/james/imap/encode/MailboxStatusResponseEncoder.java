@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
+import org.apache.james.mailbox.MessageUid;
 
 /**
  * Encodes <code>STATUS</code> responses.
@@ -40,7 +41,7 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
         MailboxStatusResponse response = (MailboxStatusResponse) acceptableMessage;
         Long messages = response.getMessages();
         Long recent = response.getRecent();
-        Long uidNext = response.getUidNext();
+        MessageUid uidNext = response.getUidNext();
         Long highestModSeq = response.getHighestModSeq();
         Long uidValidity = response.getUidValidity();
         Long unseen = response.getUnseen();
@@ -65,7 +66,7 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
 
         if (uidNext != null) {
         	composer.message(STATUS_UIDNEXT);
-            final long uidNextValue = uidNext.longValue();
+            final long uidNextValue = uidNext.asLong();
             composer.message(uidNextValue);
         }
         

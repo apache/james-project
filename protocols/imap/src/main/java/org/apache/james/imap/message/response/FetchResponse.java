@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.mailbox.MessageUid;
 
 public final class FetchResponse implements ImapResponseMessage {
 
@@ -33,7 +34,7 @@ public final class FetchResponse implements ImapResponseMessage {
 
     private final Flags flags;
 
-    private final Long uid;
+    private final MessageUid uid;
 
     private final Date internalDate;
 
@@ -49,7 +50,7 @@ public final class FetchResponse implements ImapResponseMessage {
 
     private final Long modSeq;
 
-    public FetchResponse(int messageNumber, Flags flags, Long uid, Long modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements) {
+    public FetchResponse(int messageNumber, Flags flags, MessageUid uid, Long modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements) {
         super();
         this.messageNumber = messageNumber;
         this.flags = flags;
@@ -108,7 +109,7 @@ public final class FetchResponse implements ImapResponseMessage {
      * @return message uid, or null if the <code>FETCH</code> did not include
      *         <code>UID</code>
      */
-    public Long getUid() {
+    public MessageUid getUid() {
         return uid;
     }
 

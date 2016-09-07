@@ -19,12 +19,13 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.guava.api.Assertions.assertThat;
 
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
@@ -35,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Optional;
 
 public class CassandraUidProviderTest {
 
@@ -67,12 +69,12 @@ public class CassandraUidProviderTest {
     @Test
     public void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
         int nbEntries = 100;
-        long result = uidProvider.lastUid(null, mailbox);
-        assertEquals(0, result);
+        Optional<MessageUid> result = uidProvider.lastUid(null, mailbox);
+        assertThat(result).isAbsent();
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        long uid = uidProvider.nextUid(null, mailbox);
-                        assertThat(uid).isEqualTo(uidProvider.lastUid(null, mailbox));
+                        MessageUid uid = uidProvider.nextUid(null, mailbox);
+                        assertThat(uid).isEqualTo(uidProvider.lastUid(null, mailbox).get());
                 })
             );
     }
@@ -80,11 +82,10 @@ public class CassandraUidProviderTest {
     @Test
     public void nextUidShouldIncrementValueByOne() throws Exception {
         int nbEntries = 100;
-        long lastUid = uidProvider.lastUid(null, mailbox);
-        LongStream.range(lastUid + 1, lastUid + nbEntries)
+        LongStream.range(1, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        long result = uidProvider.nextUid(null, mailbox);
-                        assertThat(value).isEqualTo(result);
+                        MessageUid result = uidProvider.nextUid(null, mailbox);
+                        assertThat(value).isEqualTo(result.asLong());
                 })
             );
     }
@@ -94,7 +95,8 @@ public class CassandraUidProviderTest {
         int nbEntries = 100;
         long nbValues = LongStream.range(0, nbEntries)
             .parallel()
-            .map(Throwing.longUnaryOperator(x -> uidProvider.nextUid(null, mailbox)))
+            .mapToObj(x -> x)
+            .map(Throwing.function(x -> uidProvider.nextUid(null, mailbox)))
             .distinct()
             .count();
         assertThat(nbValues).isEqualTo(nbEntries);

@@ -27,10 +27,12 @@ import java.io.ByteArrayOutputStream;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.protocols.imap.DecodingException;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -670,7 +672,7 @@ public class SearchCommandParserSearchKeyTest {
 
     @Test
     public void testShouldParseUid() throws Exception {
-        IdRange[] range = { new IdRange(1) };
+        UidRange[] range = { new UidRange(MessageUid.of(1)) };
         SearchKey key = SearchKey.buildUidSet(range);
         checkValid("UID 1\r\n", key);
         checkValid("Uid 1\r\n", key);

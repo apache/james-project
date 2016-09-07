@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.mail.utils;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 
 public class MessageDeletedDuringFlagsUpdateException extends RuntimeException {
 
-    public MessageDeletedDuringFlagsUpdateException(CassandraId id, long uid) {
+    public MessageDeletedDuringFlagsUpdateException(CassandraId id, MessageUid uid) {
         super("Can not perform flag update as message was deleted for mailbox " + id.serialize() + " and message " + uid);
     }
 }

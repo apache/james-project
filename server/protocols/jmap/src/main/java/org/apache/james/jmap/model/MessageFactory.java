@@ -36,6 +36,7 @@ import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.model.MessageContentExtractor.MessageContent;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
@@ -74,7 +75,7 @@ public class MessageFactory {
 
         return Message.builder()
                 .id(message.getMessageId())
-                .blobId(BlobId.of(String.valueOf(message.getUid())))
+                .blobId(BlobId.of(String.valueOf(message.getUid().asLong())))
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(ImmutableList.of(message.getMailboxId()))
                 .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
@@ -217,7 +218,7 @@ public class MessageFactory {
         }
         
         public static class Builder {
-            private Long uid;
+            private MessageUid uid;
             private Long modSeq;
             private Flags flags;
             private Long size;
@@ -228,7 +229,7 @@ public class MessageFactory {
             private MailboxId mailboxId;
             private MessageId messageId;
 
-            public Builder uid(long uid) {
+            public Builder uid(MessageUid uid) {
                 this.uid = uid;
                 return this;
             }
@@ -294,7 +295,7 @@ public class MessageFactory {
             }
         }
 
-        private final long uid;
+        private final MessageUid uid;
         private final long modSeq;
         private final Flags flags;
         private final long size;
@@ -305,7 +306,7 @@ public class MessageFactory {
         private final MailboxId mailboxId;
         private final MessageId messageId;
 
-        private MetaDataWithContent(long uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, MailboxId mailboxId, MessageId messageId) {
+        private MetaDataWithContent(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, InputStream content, SharedInputStream sharedContent, List<MessageAttachment> attachments, MailboxId mailboxId, MessageId messageId) {
             this.uid = uid;
             this.modSeq = modSeq;
             this.flags = flags;
@@ -319,7 +320,7 @@ public class MessageFactory {
         }
 
         @Override
-        public long getUid() {
+        public MessageUid getUid() {
             return uid;
         }
 

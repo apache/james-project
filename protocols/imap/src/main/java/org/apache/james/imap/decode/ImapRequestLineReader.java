@@ -40,9 +40,11 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SearchResUtil;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.protocols.imap.DecodingException;
 import org.apache.james.protocols.imap.utils.DecoderUtils;
 import org.apache.james.protocols.imap.utils.FastByteArrayOutputStream;
@@ -686,6 +688,39 @@ public abstract class ImapRequestLineReader {
     }
 
     /**
+     * Reads a "message set" argument, and parses into an IdSet. This also support the use of $ as sequence-set as stated in SEARCHRES RFC5182 
+     */
+    public UidRange[] parseUidRange() throws DecodingException {
+        CharacterValidator validator = new MessageSetCharValidator();
+        // Don't fail to parse id ranges which are enclosed by "(..)"
+        // See IMAP-283
+        String nextWord = consumeWord(validator, true);
+
+        int commaPos = nextWord.indexOf(',');
+        if (commaPos == -1) {
+            return new UidRange[] { parseUidRange(nextWord) };
+        }
+
+        ArrayList<UidRange> rangeList = new ArrayList<UidRange>();
+        int pos = 0;
+        while (commaPos != -1) {
+            String range = nextWord.substring(pos, commaPos);
+            UidRange set = parseUidRange(range);
+            rangeList.add(set);
+
+            pos = commaPos + 1;
+            commaPos = nextWord.indexOf(',', pos);
+        }
+        String range = nextWord.substring(pos);
+        rangeList.add(parseUidRange(range));
+
+        // merge the ranges to minimize the needed queries.
+        // See IMAP-211
+        List<UidRange> merged = UidRange.mergeRanges(rangeList);
+        return merged.toArray(new UidRange[merged.size()]);
+    }
+    
+    /**
      * Reads the first non-space character in the current line. This method will continue
      * to resume if meet space character until meet the non-space character.
      *
@@ -745,6 +780,46 @@ public abstract class ImapRequestLineReader {
         }
     }
 
+    /**
+     * Parse a range which use a ":" as delimiter
+     */
+    private UidRange parseUidRange(String range) throws DecodingException {
+        int pos = range.indexOf(':');
+        try {
+            if (pos == -1) {
+
+                // Check if its a single "*" and so should return last message
+                // in mailbox. See IMAP-289
+                if (range.length() == 1 && range.charAt(0) == '*') {
+                    return new UidRange(MessageUid.MAX_VALUE);
+                } else {
+                    long value = parseUnsignedInteger(range);
+                    return new UidRange(MessageUid.of(value));
+                }
+            } else {
+                // Make sure we detect the low and high value
+                // See https://issues.apache.org/jira/browse/IMAP-212
+                long val1 = parseUnsignedInteger(range.substring(0, pos));
+                long val2 = parseUnsignedInteger(range.substring(pos + 1));
+
+                // handle "*:*" ranges. See IMAP-289
+                if (val1 == Long.MAX_VALUE && val2 == Long.MAX_VALUE) {
+                    return new UidRange(MessageUid.MAX_VALUE);
+                } else if (val1 <= val2) {
+                    return new UidRange(MessageUid.of(val1), MessageUid.of(val2));
+                } else if (val1 == Long.MAX_VALUE) {
+                    // *:<num> message range must be converted to <num>:*
+                    // See IMAP-290
+                    return new UidRange(MessageUid.of(val2), MessageUid.MAX_VALUE);
+                } else {
+                    return new UidRange(MessageUid.of(val2), MessageUid.of(val1));
+                }
+            }
+        } catch (NumberFormatException e) {
+            throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "Invalid message set.", e);
+        }
+    }
+    
     private long parseUnsignedInteger(String value) throws DecodingException {
         if (value.length() == 1 && value.charAt(0) == '*') {
             return Long.MAX_VALUE;

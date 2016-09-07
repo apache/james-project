@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.mail.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class DelegatingMailboxMessageTest {
 
     private MailboxMessage buildMessage(int uid) throws Exception {
         MessageBuilder builder = new MessageBuilder();
-        builder.uid = uid;
+        builder.uid = MessageUid.of(uid);
         return builder.build();
     }
 

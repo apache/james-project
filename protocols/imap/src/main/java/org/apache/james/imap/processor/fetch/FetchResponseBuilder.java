@@ -39,6 +39,7 @@ import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.Content;
@@ -51,7 +52,7 @@ public final class FetchResponseBuilder {
 
     private int msn;
 
-    private Long uid;
+    private MessageUid uid;
 
     private Flags flags;
 
@@ -86,8 +87,8 @@ public final class FetchResponseBuilder {
         modSeq = null;
     }
 
-    public void setUid(long uid) {
-        this.uid = uid;
+    public void setUid(MessageUid resultUid) {
+        this.uid = resultUid;
     }
 
     private void setModSeq(long modSeq) {
@@ -105,7 +106,7 @@ public final class FetchResponseBuilder {
 
     public FetchResponse build(FetchData fetch, MessageResult result, MessageManager mailbox, ImapSession session, boolean useUids) throws MessageRangeException, MailboxException {
         final SelectedMailbox selected = session.getSelected();
-        final long resultUid = result.getUid();
+        final MessageUid resultUid = result.getUid();
         final int resultMsn = selected.msn(resultUid);
 
         if (resultMsn == SelectedMailbox.NO_SUCH_MESSAGE)

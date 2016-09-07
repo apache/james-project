@@ -99,7 +99,7 @@ public interface MessageManager {
      * @throws MailboxException
      *             when search fails for other reasons
      */
-    Iterator<Long> search(SearchQuery searchQuery, MailboxSession mailboxSession) throws MailboxException;
+    Iterator<MessageUid> search(SearchQuery searchQuery, MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Expunges messages in the given range from this mailbox.
@@ -112,7 +112,7 @@ public interface MessageManager {
      * @throws MailboxException
      *             if anything went wrong
      */
-    Iterator<Long> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException;
+    Iterator<MessageUid> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Sets flags on messages within the given range. The new flags are returned
@@ -125,7 +125,7 @@ public interface MessageManager {
      * @return new flags indexed by UID
      * @throws MailboxException
      */
-    Map<Long, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException;
+    Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Appends a message to this mailbox. This method must return a higher UID
@@ -146,7 +146,7 @@ public interface MessageManager {
      * @throws MailboxException
      *             when message cannot be appended
      */
-    long appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
+    MessageUid appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
 
     /**
      * Gets messages in the given range. The messages may get fetched under
@@ -234,7 +234,7 @@ public interface MessageManager {
          * 
          * @return the uids flagged RECENT in this mailbox,
          */
-        List<Long> getRecent();
+        List<MessageUid> getRecent();
 
         /**
          * Gets the number of recent messages.
@@ -264,7 +264,7 @@ public interface MessageManager {
          * 
          * @return the uid that will be assigned to the next appended message
          */
-        long getUidNext();
+        MessageUid getUidNext();
 
         /**
          * Return the highest mod-sequence for the mailbox. If this value has
@@ -303,7 +303,7 @@ public interface MessageManager {
          *         unseen messages
          * @see FetchGroup#FIRST_UNSEEN
          */
-        Long getFirstUnseen();
+        MessageUid getFirstUnseen();
 
         /**
          * Is this mailbox writable?

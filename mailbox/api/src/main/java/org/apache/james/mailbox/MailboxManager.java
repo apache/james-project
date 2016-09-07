@@ -235,7 +235,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      *            the context for this call, not null
      * @throws MailboxException
      */
-    Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException;
+    Map<MailboxId, Collection<MessageUid>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException;
 
     /**
      * Does the given mailbox exist?

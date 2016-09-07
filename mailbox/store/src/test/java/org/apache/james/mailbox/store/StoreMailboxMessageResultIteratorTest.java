@@ -32,6 +32,7 @@ import java.util.Set;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -45,6 +46,9 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.assertj.core.api.iterable.Extractor;
 import org.junit.Test;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 
 public class StoreMailboxMessageResultIteratorTest {
 
@@ -84,20 +88,16 @@ public class StoreMailboxMessageResultIteratorTest {
                                                               org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
                 throws MailboxException {
             
-            long start = set.getUidFrom();
-            long end = Math.min(start + limit, set.getUidTo());
-
             List<MailboxMessage> messages = new ArrayList<MailboxMessage>();
-            
-            for (long uid: MessageRange.range(start, end)) {
+            for (MessageUid uid: Iterables.limit(set, limit)) {
                 if (messageRange.includes(uid)) {
                     messages.add(createMessage(uid));
-                }
+                }    
             }
             return messages.iterator();
         }
 
-        private SimpleMailboxMessage createMessage(long uid) {
+        private SimpleMailboxMessage createMessage(MessageUid uid) {
             SimpleMailboxMessage message = new SimpleMailboxMessage(null, 0, 0, new SharedByteArrayInputStream(
                     "".getBytes()), new Flags(), new PropertyBuilder(), TestId.of(1L));
             message.setUid(uid);
@@ -105,7 +105,7 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
+        public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
                 throws MailboxException {
             throw new UnsupportedOperationException();
 
@@ -128,12 +128,12 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public Long findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
+        public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
+        public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
 
         }
@@ -155,7 +155,7 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public long getLastUid(Mailbox mailbox) throws MailboxException {
+        public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 
@@ -173,21 +173,21 @@ public class StoreMailboxMessageResultIteratorTest {
 
     @Test
     public void testBatching() {
-        MessageRange range = MessageRange.range(1, 10);
+        MessageRange range = MessageRange.range(MessageUid.of(1), MessageUid.of(10));
         int batchSize = 3;
         StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
 
         assertThat(it).extracting(new Extractor<MessageResult, Long>(){
             @Override
             public Long extract(MessageResult input) {
-                return input.getUid();
+                return input.getUid().asLong();
             }
         }).containsExactly(1l, 2l, 3l, 4l, 5l, 6l, 7l, 8l, 9l, 10l);
     }
 
     @Test
     public void nextShouldReturnFirstElement() {
-        MessageRange range = MessageRange.one(1);
+        MessageRange range = MessageUid.of(1).toRange();
         int batchSize = 42;
         StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(range), null, range, batchSize, new TestFetchGroup());
         assertThat(iterator.next()).isNotNull();
@@ -195,8 +195,8 @@ public class StoreMailboxMessageResultIteratorTest {
     
     @Test(expected=NoSuchElementException.class)
     public void nextShouldThrowWhenNoElement() {
-        MessageRange messages = MessageRange.one(1);
-        MessageRange findRange = MessageRange.one(2);
+        MessageRange messages = MessageUid.of(1).toRange();
+        MessageRange findRange = MessageUid.of(2).toRange();
         int batchSize = 42;
         StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, new TestFetchGroup());
         iterator.next();
@@ -204,8 +204,8 @@ public class StoreMailboxMessageResultIteratorTest {
     
     @Test
     public void hasNextShouldReturnFalseWhenNoElement() {
-        MessageRange messages = MessageRange.one(1);
-        MessageRange findRange = MessageRange.one(2);
+        MessageRange messages = MessageUid.of(1).toRange();
+        MessageRange findRange = MessageUid.of(2).toRange();
         int batchSize = 42;
         StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, new TestFetchGroup());
         assertThat(iterator.hasNext()).isFalse();

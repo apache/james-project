@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,14 +38,14 @@ public class UpdatedFlagsDataTransferObject {
     }
 
     public UpdatedFlagsDataTransferObject(UpdatedFlags updatedFlags) {
-        this.uid = updatedFlags.getUid();
+        this.uid = updatedFlags.getUid().asLong();
         this.modseq = updatedFlags.getModSeq();
         this.oldFlags = new FlagsDataTransferObject(updatedFlags.getOldFlags());
         this.newFlags = new FlagsDataTransferObject(updatedFlags.getNewFlags());
     }
 
     public UpdatedFlags retrieveUpdatedFlags() {
-        return new UpdatedFlags(uid, modseq, oldFlags.getFlags(), newFlags.getFlags());
+        return new UpdatedFlags(MessageUid.of(uid), modseq, oldFlags.getFlags(), newFlags.getFlags());
     }
 
 }

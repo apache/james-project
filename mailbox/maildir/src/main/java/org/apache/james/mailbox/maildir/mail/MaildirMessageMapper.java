@@ -36,6 +36,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
@@ -62,9 +63,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         this.maildirStore = maildirStore;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#countMessagesInMailbox(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -78,9 +76,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         return newFiles.length + curFiles.length;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#countUnseenMessagesInMailbox(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -94,10 +89,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         return newUnseenMessages.length + unseenMessages.length;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#delete(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
     @Override
     public void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -108,25 +99,20 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#findInMailbox(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      org.apache.james.mailbox.model.MessageRange,
-     *      org.apache.james.mailbox.store.mail.MessageMapper.FetchType, int)
-     */
     @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType fType, int max)
             throws MailboxException {
         final List<MailboxMessage> results;
-        final long from = set.getUidFrom();
-        final long to = set.getUidTo();
+        final MessageUid from = set.getUidFrom();
+        final MessageUid to = set.getUidTo();
         final Type type = set.getType();
         switch (type) {
         default:
         case ALL:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, null, 0, -1, max);
+            results = findMessagesInMailboxBetweenUIDs(mailbox, null, MessageUid.MIN_VALUE, null, max);
             break;
         case FROM:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, null, from, -1, max);
+            results = findMessagesInMailboxBetweenUIDs(mailbox, null, from, null, max);
             break;
         case ONE:
             results = findMessageInMailboxWithUID(mailbox, from);
@@ -139,22 +125,16 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#findRecentMessageUidsInMailbox(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
-    public List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
+    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
-        SortedMap<Long, MaildirMessageName> recentMessageNames = folder.getRecentMessages(mailboxSession);
-        return new ArrayList<Long>(recentMessageNames.keySet());
+        SortedMap<MessageUid, MaildirMessageName> recentMessageNames = folder.getRecentMessages(mailboxSession);
+        return new ArrayList<MessageUid>(recentMessageNames.keySet());
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#findFirstUnseenMessageUid(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
-    public Long findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
+    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
         List<MailboxMessage> result = findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_UNSEEN_MESSAGES, 1);
         if (result.isEmpty()) {
             return null;
@@ -214,7 +194,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
                     updatedFlags.add(new UpdatedFlags(member.getUid(), modSeq, originalFlags, newFlags));
 
-                    long uid = member.getUid();
+                    MessageUid uid = member.getUid();
                     folder.update(mailboxSession, uid, newMessageName);
                 }
             } catch (IOException e) {
@@ -227,11 +207,11 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
+    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
             throws MailboxException {
         List<MailboxMessage> results = new ArrayList<MailboxMessage>();
-        final long from = set.getUidFrom();
-        final long to = set.getUidTo();
+        final MessageUid from = set.getUidFrom();
+        final MessageUid to = set.getUidTo();
         final Type type = set.getType();
         switch (type) {
         default:
@@ -239,7 +219,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             results = findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, -1);
             break;
         case FROM:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, -1,
+            results = findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, null,
                     -1);
             break;
         case ONE:
@@ -250,9 +230,9 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
                     -1);
             break;
         }
-        Map<Long, MessageMetaData> uids = new HashMap<Long, MessageMetaData>();
+        Map<MessageUid, MessageMetaData> uids = new HashMap<MessageUid, MessageMetaData>();
         for (MailboxMessage m : results) {
-            long uid = m.getUid();
+            MessageUid uid = m.getUid();
             uids.put(uid, new SimpleMessageMetaData(m));
             delete(mailbox, m);
         }
@@ -271,13 +251,8 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.AbstractMessageMapper#copy(org.apache
-     *      .james.mailbox.store.mail.model.Mailbox, long, long,
-     *      MailboxMessage)
-     */
     @Override
-    protected MessageMetaData copy(Mailbox mailbox, long uid, long modSeq, MailboxMessage original)
+    protected MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
             throws MailboxException {
         SimpleMailboxMessage theCopy = SimpleMailboxMessage.copy(mailbox.getMailboxId(), original);
         Flags flags = theCopy.createFlags();
@@ -293,7 +268,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     @Override
     protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
-        long uid = 0;
+        MessageUid uid = MessageUid.MIN_VALUE;
         // a new message
         // save file to "tmp" folder
         File tmpFolder = folder.getTmpFolder();
@@ -377,28 +352,28 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
     }
 
-    private List<MailboxMessage> findMessageInMailboxWithUID(Mailbox mailbox, long uid)
+    private List<MailboxMessage> findMessageInMailboxWithUID(Mailbox mailbox, MessageUid from)
             throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         try {
-            MaildirMessageName messageName = folder.getMessageNameByUid(mailboxSession, uid);
+            MaildirMessageName messageName = folder.getMessageNameByUid(mailboxSession, from);
 
             ArrayList<MailboxMessage> messages = new ArrayList<MailboxMessage>();
             if (messageName != null && messageName.getFile().exists()) {
-                messages.add(new MaildirMailboxMessage(mailbox, uid, messageName));
+                messages.add(new MaildirMailboxMessage(mailbox, from, messageName));
             }
             return messages;
 
         } catch (IOException e) {
-            throw new MailboxException("Failure while search for MailboxMessage with uid " + uid + " in Mailbox " + mailbox, e);
+            throw new MailboxException("Failure while search for MailboxMessage with uid " + from + " in Mailbox " + mailbox, e);
         }
     }
 
     private List<MailboxMessage> findMessagesInMailboxBetweenUIDs(Mailbox mailbox, FilenameFilter filter,
-                                                                             long from, long to, int max) throws MailboxException {
+                                                                             MessageUid from, MessageUid to, int max) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         int cur = 0;
-        SortedMap<Long, MaildirMessageName> uidMap = null;
+        SortedMap<MessageUid, MaildirMessageName> uidMap = null;
         try {
             if (filter != null)
                 uidMap = folder.getUidMap(mailboxSession, filter, from, to);
@@ -406,7 +381,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
                 uidMap = folder.getUidMap(mailboxSession, from, to);
 
             ArrayList<MailboxMessage> messages = new ArrayList<MailboxMessage>();
-            for (Entry<Long, MaildirMessageName> entry : uidMap.entrySet()) {
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet()) {
                 messages.add(new MaildirMailboxMessage(mailbox, entry.getKey(), entry.getValue()));
                 if (max != -1) {
                     cur++;
@@ -425,10 +400,10 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         try {
-            SortedMap<Long, MaildirMessageName> uidMap = folder.getUidMap(mailboxSession, filter, limit);
+            SortedMap<MessageUid, MaildirMessageName> uidMap = folder.getUidMap(mailboxSession, filter, limit);
 
             ArrayList<MailboxMessage> filtered = new ArrayList<MailboxMessage>(uidMap.size());
-            for (Entry<Long, MaildirMessageName> entry : uidMap.entrySet())
+            for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet())
                 filtered.add(new MaildirMailboxMessage(mailbox, entry.getKey(), entry.getValue()));
             return filtered;
         } catch (IOException e) {
@@ -437,7 +412,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
     }
 
-    private List<MailboxMessage> findDeletedMessageInMailboxWithUID(Mailbox mailbox, long uid)
+    private List<MailboxMessage> findDeletedMessageInMailboxWithUID(Mailbox mailbox, MessageUid uid)
             throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         try {

@@ -36,6 +36,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Structure;
+import org.apache.james.mailbox.MessageUid;
 import org.slf4j.Logger;
 
 public class FetchResponseEncoder extends AbstractChainedImapEncoder {
@@ -290,10 +291,10 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
     }
 
     private void encodeUid(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
-        final Long uid = fetchResponse.getUid();
+        final MessageUid uid = fetchResponse.getUid();
         if (uid != null) {
             composer.message(ImapConstants.UID);
-            composer.message(uid.longValue());
+            composer.message(uid.asLong());
         }
     }
 

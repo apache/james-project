@@ -34,6 +34,7 @@ import org.apache.james.jmap.send.exception.MailShouldBeInOutboxException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -54,10 +55,10 @@ public class PostDequeueDecoratorTest {
     private static final String OUTBOX = "OUTBOX";
     private static final String SENT = "SENT";
     private static final String USERNAME = "username@domain.tld";
-    private static final long UID = 1;
+    private static final MessageUid UID = MessageUid.of(1);
     private static final MailboxPath OUTBOX_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, OUTBOX);
     private static final MailboxPath SENT_MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, SENT);
-    private static final String MESSAGE_ID = USERNAME + "|" + OUTBOX_MAILBOX_PATH.getName() + "|" + UID;
+    private static final String MESSAGE_ID = USERNAME + "|" + OUTBOX_MAILBOX_PATH.getName() + "|" + UID.asLong();
     
     private MailboxManager mailboxManager;
     private MailQueueItem mockedMailQueueItem;
@@ -93,7 +94,7 @@ public class PostDequeueDecoratorTest {
         mailboxManager.createMailbox(SENT_MAILBOX_PATH, mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(SENT_MAILBOX_PATH, mailboxSession);
         messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
-        MessageId inSentMessageId = MessageId.of(USERNAME + "|" + SENT_MAILBOX_PATH.getName() + "|" + UID);
+        MessageId inSentMessageId = MessageId.of(USERNAME + "|" + SENT_MAILBOX_PATH.getName() + "|" + UID.asLong());
         mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, inSentMessageId.serialize());
         mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, USERNAME);
         
