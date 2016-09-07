@@ -107,11 +107,7 @@ public class StripAttachment extends GenericMailet {
 
     private boolean decodeFilename = false;
 
-    private Pattern[] replaceFilenamePatterns = null;
-
-    private String[] replaceFilenameSubstitutions = null;
-
-    private Integer[] replaceFilenameFlags = null;
+    private List<ReplacingPattern> filenameReplacingPatterns = null;
 
     private static boolean getBooleanParameter(String v, boolean def) {
         return def ? !(v != null && (v.equalsIgnoreCase("false") || v
@@ -175,14 +171,8 @@ public class StripAttachment extends GenericMailet {
                 getInitParameter(DECODE_FILENAME_PARAMETER_NAME),
                 decodeFilename);
         if (getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME) != null) {
-            PatternList pl = ReplaceContent
+            filenameReplacingPatterns = new PatternExtractor()
                     .getPatternsFromString(getInitParameter(REPLACE_FILENAME_PATTERN_PARAMETER_NAME));
-            List<Pattern> patterns = pl.getPatterns();
-            replaceFilenamePatterns = patterns.toArray(new Pattern[patterns.size()]);
-            List<String> substitutions = pl.getSubstitutions();
-            replaceFilenameSubstitutions = substitutions.toArray(new String[substitutions.size()]);
-            List<Integer> flags = pl.getFlags();
-            replaceFilenameFlags = flags.toArray(new Integer[flags.size()]);
         }
 
         String toLog = String.format("StripAttachment is initialised with regex pattern [%s / %s]",
@@ -296,10 +286,8 @@ public class StripAttachment extends GenericMailet {
             if (decodeFilename)
                 fileName = MimeUtility.decodeText(fileName);
 
-            if (replaceFilenamePatterns != null)
-                fileName = ReplaceContent.applyPatterns(
-                        replaceFilenamePatterns, replaceFilenameSubstitutions,
-                        replaceFilenameFlags, fileName, 0, this);
+            if (filenameReplacingPatterns != null)
+                fileName = new ContentReplacer(false, this).applyPatterns(filenameReplacingPatterns, fileName);
 
             if (fileNameMatches(fileName)) {
                 if (directoryName != null) {
