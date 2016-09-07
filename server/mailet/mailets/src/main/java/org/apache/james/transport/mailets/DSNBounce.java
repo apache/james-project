@@ -120,8 +120,8 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected int getAttachmentType() {
-        return getTypeCode(getInitParameter("attachment", "message"));
+    protected TypeCode getAttachmentType() {
+        return TypeCode.from(getInitParameter("attachment", "message"));
     }
 
     @Override
@@ -234,7 +234,7 @@ public class DSNBounce extends AbstractRedirect {
 
         multipart.addBodyPart(createTextMsg(originalMail));
         multipart.addBodyPart(createDSN(originalMail));
-        if (getAttachmentType() != NONE) {
+        if (!getAttachmentType().equals(TypeCode.NONE)) {
             multipart.addBodyPart(createAttachedOriginal(originalMail, getAttachmentType()));
         }
         return multipart;
@@ -328,11 +328,11 @@ public class DSNBounce extends AbstractRedirect {
         return "X-James";
     }
 
-    private MimeBodyPart createAttachedOriginal(Mail originalMail, int attachmentType) throws MessagingException {
+    private MimeBodyPart createAttachedOriginal(Mail originalMail, TypeCode attachmentType) throws MessagingException {
         MimeBodyPart part = new MimeBodyPart();
         MimeMessage originalMessage = originalMail.getMessage();
 
-        if (attachmentType == HEADS) {
+        if (attachmentType.equals(TypeCode.HEADS)) {
             part.setContent(getMessageHeaders(originalMessage), "text/plain");
             part.setHeader("Content-Type", "text/rfc822-headers");
         } else {

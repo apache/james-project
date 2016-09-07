@@ -311,8 +311,8 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
-    protected int getInLineType() {
-        return getTypeCode(getInitParameter("inline", "body"));
+    protected TypeCode getInLineType() {
+        return TypeCode.from(getInitParameter("inline", "body"));
     }
 
     @Override

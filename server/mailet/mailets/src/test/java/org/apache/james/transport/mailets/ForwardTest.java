@@ -116,12 +116,12 @@ public class ForwardTest {
 
     @Test
     public void getInLineTypeShouldReturnUnaltered() {
-        assertThat(forward.getInLineType()).isEqualTo(AbstractRedirect.UNALTERED);
+        assertThat(forward.getInLineType()).isEqualTo(TypeCode.UNALTERED);
     }
 
     @Test
     public void getAttachmentTypeShouldReturnNone() {
-        assertThat(forward.getAttachmentType()).isEqualTo(AbstractRedirect.NONE);
+        assertThat(forward.getAttachmentType()).isEqualTo(TypeCode.NONE);
     }
 
     @Test

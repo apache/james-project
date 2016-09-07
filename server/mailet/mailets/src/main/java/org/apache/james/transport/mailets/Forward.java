@@ -97,13 +97,13 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
-    protected int getInLineType() {
-        return UNALTERED;
+    protected TypeCode getInLineType() {
+        return TypeCode.UNALTERED;
     }
 
     @Override
-    protected int getAttachmentType() {
-        return NONE;
+    protected TypeCode getAttachmentType() {
+        return TypeCode.NONE;
     }
 
     @Override

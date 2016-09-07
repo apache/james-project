@@ -141,7 +141,7 @@ public class RedirectTest {
         FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
         redirect.init(mailetConfig);
 
-        assertThat(redirect.getInLineType()).isEqualTo(AbstractRedirect.BODY);
+        assertThat(redirect.getInLineType()).isEqualTo(TypeCode.BODY);
     }
 
     @Test
@@ -150,7 +150,7 @@ public class RedirectTest {
         mailetConfig.setProperty("inline", "heads");
         redirect.init(mailetConfig);
 
-        assertThat(redirect.getInLineType()).isEqualTo(AbstractRedirect.HEADS);
+        assertThat(redirect.getInLineType()).isEqualTo(TypeCode.HEADS);
     }
 
     @Test

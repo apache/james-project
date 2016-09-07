@@ -19,26 +19,24 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 
 import javax.inject.Inject;
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailImpl;
@@ -50,7 +48,11 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -153,41 +155,61 @@ import com.google.common.base.Throwables;
 
 public abstract class AbstractRedirect extends GenericMailet {
 
+    private static final char LINE_BREAK = '\n';
+
     protected abstract boolean isNotifyMailet();
 
-    /**
-     * Gets the expected init parameters.
-     *
-     * @return null meaning no check
-     */
-    protected String[] getAllowedInitParameters() {
-        return null;
-    }
+    protected abstract String[] getAllowedInitParameters();
 
-    /**
-     * Controls certain log messages.
-     */
     protected boolean isDebug = false;
 
-    /**
-     * Holds the value of the <code>static</code> init parameter.
-     */
     protected boolean isStatic = false;
 
-    private static class AddressMarker {
-        public static final MailAddress SENDER = mailAddressUncheckedException("sender", "address.marker");
-        public static final MailAddress REVERSE_PATH = mailAddressUncheckedException("reverse.path", "address.marker");
-        public static final MailAddress FROM = mailAddressUncheckedException("from", "address.marker");
-        public static final MailAddress REPLY_TO = mailAddressUncheckedException("reply.to", "address.marker");
-        public static final MailAddress TO = mailAddressUncheckedException("to", "address.marker");
-        public static final MailAddress RECIPIENTS = mailAddressUncheckedException("recipients", "address.marker");
-        public static final MailAddress DELETE = mailAddressUncheckedException("delete", "address.marker");
-        public static final MailAddress UNALTERED = mailAddressUncheckedException("unaltered", "address.marker");
-        public static final MailAddress NULL = mailAddressUncheckedException("null", "address.marker");
+    private static enum SpecialAddressKind {
+        SENDER("sender"),
+        REVERSE_PATH("reverse.path"),
+        FROM("from"),
+        REPLY_TO("reply.to"),
+        TO("to"),
+        RECIPIENTS("recipients"),
+        DELETE("delete"),
+        UNALTERED("unaltered"),
+        NULL("null");
 
-        private static MailAddress mailAddressUncheckedException(String localPart, String domain) {
+        private String value;
+
+        private SpecialAddressKind(String value) {
+            this.value = value;
+        }
+
+        public static SpecialAddressKind forValue(String value) {
+            for (SpecialAddressKind kind : values()) {
+                if (kind.value.equals(value)) {
+                    return kind;
+                }
+            }
+            return null;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+    private static class AddressMarker {
+        public static final String ADDRESS_MARKER = "address.marker";
+        public static final MailAddress SENDER = mailAddressUncheckedException(SpecialAddressKind.SENDER, ADDRESS_MARKER);
+        public static final MailAddress REVERSE_PATH = mailAddressUncheckedException(SpecialAddressKind.REVERSE_PATH, ADDRESS_MARKER);
+        public static final MailAddress FROM = mailAddressUncheckedException(SpecialAddressKind.FROM, ADDRESS_MARKER);
+        public static final MailAddress REPLY_TO = mailAddressUncheckedException(SpecialAddressKind.REPLY_TO, ADDRESS_MARKER);
+        public static final MailAddress TO = mailAddressUncheckedException(SpecialAddressKind.TO, ADDRESS_MARKER);
+        public static final MailAddress RECIPIENTS = mailAddressUncheckedException(SpecialAddressKind.RECIPIENTS, ADDRESS_MARKER);
+        public static final MailAddress DELETE = mailAddressUncheckedException(SpecialAddressKind.DELETE, ADDRESS_MARKER);
+        public static final MailAddress UNALTERED = mailAddressUncheckedException(SpecialAddressKind.UNALTERED, ADDRESS_MARKER);
+        public static final MailAddress NULL = mailAddressUncheckedException(SpecialAddressKind.NULL, ADDRESS_MARKER);
+
+        private static MailAddress mailAddressUncheckedException(SpecialAddressKind kind, String domain) {
             try {
-                return new MailAddress(localPart, domain);
+                return new MailAddress(kind.getValue(), domain);
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
@@ -214,22 +236,10 @@ public abstract class AbstractRedirect extends GenericMailet {
     // The values that indicate how to attach the original mail
     // to the new mail.
 
-    protected static final int UNALTERED = 0;
-
-    protected static final int HEADS = 1;
-
-    protected static final int BODY = 2;
-
-    protected static final int ALL = 3;
-
-    protected static final int NONE = 4;
-
-    protected static final int MESSAGE = 5;
-
     private boolean passThrough = false;
     private boolean fakeDomainCheck = true;
-    private int attachmentType = NONE;
-    private int inLineType = BODY;
+    private TypeCode attachmentType = TypeCode.NONE;
+    private TypeCode inLineType = TypeCode.BODY;
     private String messageText;
     private Collection<MailAddress> recipients;
     private MailAddress replyTo;
@@ -287,9 +297,9 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected boolean getPassThrough() {
         if (isNotifyMailet()) {
-            return Boolean.valueOf(getInitParameter("passThrough", "true"));
+            return getInitParameter("passThrough", true);
         }
-        return Boolean.valueOf(getInitParameter("passThrough"));
+        return getInitParameter("passThrough", false);
     }
 
     /**
@@ -310,7 +320,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         missing
      */
     protected boolean getFakeDomainCheck() {
-        return Boolean.valueOf(getInitParameter("fakeDomainCheck"));
+        return getInitParameter("fakeDomainCheck", false);
     }
 
     /**
@@ -341,11 +351,11 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @return the <code>inline</code> init parameter, or <code>UNALTERED</code>
      *         if missing
      */
-    protected int getInLineType() {
+    protected TypeCode getInLineType() {
         if (isNotifyMailet()) {
-            return getTypeCode(getInitParameter("inline", "none"));
+            return TypeCode.from(getInitParameter("inline", "none"));
         }
-        return getTypeCode(getInitParameter("inline", "unaltered"));
+        return TypeCode.from(getInitParameter("inline", "unaltered"));
     }
 
     /**
@@ -354,7 +364,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #getInLineType()}
      */
-    protected int getInLineType(Mail originalMail) throws MessagingException {
+    protected TypeCode getInLineType(Mail originalMail) throws MessagingException {
         return (isStatic()) ? this.inLineType : getInLineType();
     }
 
@@ -378,11 +388,11 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @return the <code>attachment</code> init parameter, or <code>NONE</code>
      *         if missing
      */
-    protected int getAttachmentType() {
+    protected TypeCode getAttachmentType() {
         if (isNotifyMailet()) {
-            return getTypeCode(getInitParameter("attachment", "message"));
+            return TypeCode.from(getInitParameter("attachment", "message"));
         }
-        return getTypeCode(getInitParameter("attachment", "none"));
+        return TypeCode.from(getInitParameter("attachment", "none"));
     }
 
     /**
@@ -391,7 +401,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #getAttachmentType()}
      */
-    protected int getAttachmentType(Mail originalMail) throws MessagingException {
+    protected TypeCode getAttachmentType(Mail originalMail) throws MessagingException {
         return (isStatic()) ? this.attachmentType : getAttachmentType();
     }
 
@@ -425,64 +435,67 @@ public abstract class AbstractRedirect extends GenericMailet {
 
     private String getMessageForNotifyMailets(Mail originalMail) throws MessagingException {
         MimeMessage message = originalMail.getMessage();
-        StringWriter sout = new StringWriter();
-        PrintWriter out = new PrintWriter(sout, true);
+        StringBuffer buffer = new StringBuffer();
 
-        // First add the "local" notice
-        // (either from conf or generic error message)
-        out.println(getMessage());
-        // And then the message from other mailets
+        buffer.append(getMessage()).append(LINE_BREAK);
         if (originalMail.getErrorMessage() != null) {
-            out.println();
-            out.println("Error message below:");
-            out.println(originalMail.getErrorMessage());
+            buffer.append(LINE_BREAK)
+                .append("Error message below:")
+                .append(LINE_BREAK)
+                .append(originalMail.getErrorMessage())
+                .append(LINE_BREAK);
         }
-        out.println();
-        out.println("Message details:");
+        buffer.append(LINE_BREAK)
+            .append("Message details:")
+            .append(LINE_BREAK);
 
         if (message.getSubject() != null) {
-            out.println("  Subject: " + message.getSubject());
+            buffer.append("  Subject: " + message.getSubject())
+                .append(LINE_BREAK);
         }
         if (message.getSentDate() != null) {
-            out.println("  Sent date: " + message.getSentDate());
+            buffer.append("  Sent date: " + message.getSentDate())
+                .append(LINE_BREAK);
         }
-        out.println("  MAIL FROM: " + originalMail.getSender());
-        Iterator<MailAddress> rcptTo = originalMail.getRecipients().iterator();
-        out.println("  RCPT TO: " + rcptTo.next());
-        while (rcptTo.hasNext()) {
-            out.println("           " + rcptTo.next());
-        }
-        String[] addresses;
-        addresses = message.getHeader(RFC2822Headers.FROM);
-        if (addresses != null) {
-            out.print("  From: ");
-            for (String address : addresses) {
-                out.print(address + " ");
+        buffer.append("  MAIL FROM: " + originalMail.getSender())
+            .append(LINE_BREAK);
+
+        boolean firstRecipient = true;
+        for (MailAddress recipient : originalMail.getRecipients()) {
+            if (firstRecipient) {
+                buffer.append("  RCPT TO: " + recipient)
+                    .append(LINE_BREAK);
+                firstRecipient = false;
+            } else {
+                buffer.append("           " + recipient)
+                    .append(LINE_BREAK);
             }
-            out.println();
-        }
-        addresses = message.getHeader(RFC2822Headers.TO);
-        if (addresses != null) {
-            out.print("  To: ");
-            for (String address : addresses) {
-                out.print(address + " ");
-            }
-            out.println();
-        }
-        addresses = message.getHeader(RFC2822Headers.CC);
-        if (addresses != null) {
-            out.print("  CC: ");
-            for (String address : addresses) {
-                out.print(address + " ");
-            }
-            out.println();
-        }
-        out.println("  Size (in bytes): " + message.getSize());
-        if (message.getLineCount() >= 0) {
-            out.println("  Number of lines: " + message.getLineCount());
         }
 
-        return sout.toString();
+        appendAddresses(buffer, "From", message.getHeader(RFC2822Headers.FROM));
+        appendAddresses(buffer, "To", message.getHeader(RFC2822Headers.TO));
+        appendAddresses(buffer, "CC", message.getHeader(RFC2822Headers.CC));
+
+        buffer.append("  Size (in bytes): " + message.getSize())
+            .append(LINE_BREAK);
+        if (message.getLineCount() >= 0) {
+            buffer.append("  Number of lines: " + message.getLineCount())
+                .append(LINE_BREAK);
+        }
+
+        return buffer.toString();
+    }
+
+    private void appendAddresses(StringBuffer buffer, String title, String[] addresses) {
+        if (addresses != null) {
+            buffer.append("  " + title + ": ")
+                .append(LINE_BREAK);
+            for (String address : addresses) {
+                buffer.append(address + " ")
+                    .append(LINE_BREAK);
+            }
+            buffer.append(LINE_BREAK);
+        }
     }
 
     /**
@@ -500,33 +513,40 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         missing
      */
     protected Collection<MailAddress> getRecipients() throws MessagingException {
-        Collection<MailAddress> newRecipients = new HashSet<MailAddress>();
-        String addressList = getInitParameter("recipients");
+        ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
+        String[] allowedSpecials = new String[] { "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" };
+        for (InternetAddress address : extractAddresses(getAddressesFromParameter("recipients"))) {
+            builder.add(toMailAddress(address, allowedSpecials));
+        }
+        return builder.build();
+    }
 
-        // if nothing was specified, return <code>null</code> meaning no change
-        if (addressList == null) {
+    private InternetAddress[] extractAddresses(String addressList) throws MessagingException {
+        try {
+            return InternetAddress.parse(addressList, false);
+        } catch (AddressException e) {
+            throw new MessagingException("Exception thrown parsing: " + addressList, e);
+        }
+    }
+
+    private String getAddressesFromParameter(String parameter) throws MessagingException {
+        String recipients = getInitParameter(parameter);
+        if (Strings.isNullOrEmpty(recipients)) {
             return null;
         }
+        return recipients;
+    }
 
+    private MailAddress toMailAddress(InternetAddress address, String[] allowedSpecials) throws MessagingException {
         try {
-            InternetAddress[] iaarray = InternetAddress.parse(addressList, false);
-            for (InternetAddress anIaarray : iaarray) {
-                String addressString = anIaarray.getAddress();
-                MailAddress specialAddress = getSpecialAddress(addressString, new String[]{"postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"});
-                if (specialAddress != null) {
-                    newRecipients.add(specialAddress);
-                } else {
-                    newRecipients.add(new MailAddress(anIaarray));
-                }
+            MailAddress specialAddress = getSpecialAddress(address.getAddress(), allowedSpecials);
+            if (specialAddress != null) {
+                return specialAddress;
             }
+            return new MailAddress(address);
         } catch (Exception e) {
-            throw new MessagingException("Exception thrown in getRecipients() parsing: " + addressList, e);
+            throw new MessagingException("Exception thrown parsing: " + address.getAddress());
         }
-        if (newRecipients.size() == 0) {
-            throw new MessagingException("Failed to initialize \"recipients\" list; empty <recipients> init parameter found.");
-        }
-
-        return newRecipients;
     }
 
     /**
@@ -538,13 +558,17 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected Collection<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
         Collection<MailAddress> recipients = (isStatic()) ? this.recipients : getRecipients();
         if (recipients != null) {
-            if (recipients.size() == 1 && (recipients.contains(SpecialAddress.UNALTERED) || recipients.contains(SpecialAddress.RECIPIENTS))) {
-                recipients = null;
-            } else {
-                recipients = replaceMailAddresses(originalMail, recipients);
+            if (containsOnlyUnalteredOrRecipients(recipients)) {
+                return null;
             }
+            return replaceMailAddresses(originalMail, recipients);
         }
-        return recipients;
+        return null;
+    }
+
+    private boolean containsOnlyUnalteredOrRecipients(Collection<MailAddress> recipients) {
+        return recipients.size() == 1 && 
+                (recipients.contains(SpecialAddress.UNALTERED) || recipients.contains(SpecialAddress.RECIPIENTS));
     }
 
     /**
@@ -576,32 +600,13 @@ public abstract class AbstractRedirect extends GenericMailet {
         if (isNotifyMailet()) {
             return null;
         }
-
-        InternetAddress[] iaarray;
-        String addressList = getInitParameter("to");
-
-        // if nothing was specified, return null meaning no change
-        if (addressList == null) {
-            return null;
+        ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
+        String[] allowedSpecials = new String[] { "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" };
+        for (InternetAddress address : extractAddresses(getAddressesFromParameter("to"))) {
+            builder.add(toMailAddress(address, allowedSpecials).toInternetAddress());
         }
-
-        try {
-            iaarray = InternetAddress.parse(addressList, false);
-            for (int i = 0; i < iaarray.length; ++i) {
-                String addressString = iaarray[i].getAddress();
-                MailAddress specialAddress = getSpecialAddress(addressString, new String[]{"postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"});
-                if (specialAddress != null) {
-                    iaarray[i] = specialAddress.toInternetAddress();
-                }
-            }
-        } catch (Exception e) {
-            throw new MessagingException("Exception thrown in getTo() parsing: " + addressList, e);
-        }
-        if (iaarray.length == 0) {
-            throw new MessagingException("Failed to initialize \"to\" list; empty <to> init parameter found.");
-        }
-
-        return iaarray;
+        ImmutableList<InternetAddress> addresses = builder.build();
+        return addresses.toArray(new InternetAddress[addresses.size()]);
     }
 
     /**
@@ -615,22 +620,19 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected InternetAddress[] getTo(Mail originalMail) throws MessagingException {
         InternetAddress[] apparentlyTo = (isStatic()) ? this.apparentlyTo : getTo();
         if (apparentlyTo != null) {
-            if (apparentlyTo.length == 1 && (apparentlyTo[0].equals(SpecialAddress.UNALTERED.toInternetAddress()) || apparentlyTo[0].equals(SpecialAddress.TO.toInternetAddress()))) {
-                apparentlyTo = null;
-            } else {
-                Collection<InternetAddress> toList = new ArrayList<InternetAddress>(apparentlyTo.length);
-                Collections.addAll(toList, apparentlyTo);
-                /*
-                 * IMPORTANT: setTo() treats null differently from a zero length
-                 * array, so it's ok to get a zero length array from
-                 * replaceSpecialAddresses
-                 */
-                Collection<InternetAddress> var = replaceInternetAddresses(originalMail, toList);
-                apparentlyTo = var.toArray(new InternetAddress[var.size()]);
+            if (containsOnlyUnalteredOrTo(apparentlyTo)) {
+                return null;
             }
+            Collection<InternetAddress> addresses = replaceInternetAddresses(originalMail, ImmutableList.copyOf(apparentlyTo));
+            return addresses.toArray(new InternetAddress[addresses.size()]);
         }
 
-        return apparentlyTo;
+        return null;
+    }
+
+    private boolean containsOnlyUnalteredOrTo(InternetAddress[] to) {
+        return to.length == 1 && 
+                (to[0].equals(SpecialAddress.UNALTERED.toInternetAddress()) || to[0].equals(SpecialAddress.RECIPIENTS.toInternetAddress()));
     }
 
     /**
@@ -660,22 +662,24 @@ public abstract class AbstractRedirect extends GenericMailet {
             return SpecialAddress.NULL;
         }
 
-        String addressString = getInitParameter("replyTo", getInitParameter("replyto"));
-
-        if (addressString != null) {
-            MailAddress specialAddress = getSpecialAddress(addressString, new String[]{"postmaster", "sender", "null", "unaltered"});
-            if (specialAddress != null) {
-                return specialAddress;
-            }
-
-            try {
-                return new MailAddress(addressString);
-            } catch (Exception e) {
-                throw new MessagingException("Exception thrown in getReplyTo() parsing: " + addressString, e);
-            }
+        String replyTo = getAddressesFromParameterWithReplacementParameter("replyTo", "replyto");
+        if (Strings.isNullOrEmpty(replyTo)) {
+            return null;
         }
 
-        return null;
+        InternetAddress[] extractAddresses = extractAddresses(replyTo);
+        if (extractAddresses == null || extractAddresses.length == 0) {
+            return null;
+        }
+        return toMailAddress(extractAddresses[0], new String[] { "postmaster", "sender", "null", "unaltered" });
+    }
+
+    private String getAddressesFromParameterWithReplacementParameter(String parameter, String replacementParameter) throws MessagingException {
+        String recipients = getInitParameter(parameter, getInitParameter(replacementParameter));
+        if (Strings.isNullOrEmpty(recipients)) {
+            return null;
+        }
+        return recipients;
     }
 
     /**
@@ -689,13 +693,12 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected MailAddress getReplyTo(Mail originalMail) throws MessagingException {
         MailAddress replyTo = (isStatic()) ? this.replyTo : getReplyTo();
         if (replyTo != null) {
-            if (replyTo == SpecialAddress.UNALTERED) {
-                replyTo = null;
-            } else if (replyTo == SpecialAddress.SENDER) {
-                replyTo = originalMail.getSender();
+            if (replyTo.equals(SpecialAddress.UNALTERED)) {
+                return null;
             }
+            return originalMail.getSender();
         }
-        return replyTo;
+        return null;
     }
 
     /**
@@ -708,17 +711,16 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected void setReplyTo(Mail newMail, MailAddress replyTo, Mail originalMail) throws MessagingException {
         if (replyTo != null) {
-            InternetAddress[] iart = null;
-            if (replyTo != SpecialAddress.NULL) {
-                iart = new InternetAddress[1];
-                iart[0] = replyTo.toInternetAddress();
-            }
-
-            // Note: if iart is null will remove the header
-            newMail.getMessage().setReplyTo(iart);
-
-            if (isDebug) {
-                log("replyTo set to: " + replyTo);
+            if (replyTo.equals(SpecialAddress.NULL)) {
+                newMail.getMessage().setReplyTo(null);
+                if (isDebug) {
+                    log("replyTo set to: null");
+                }
+            } else {
+                newMail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
+                if (isDebug) {
+                    log("replyTo set to: " + replyTo);
+                }
             }
         }
     }
@@ -734,21 +736,16 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         missing
      */
     protected MailAddress getReversePath() throws MessagingException {
-        String addressString = getInitParameter("reversePath");
-        if (addressString != null) {
-            MailAddress specialAddress = getSpecialAddress(addressString, new String[]{"postmaster", "sender", "null", "unaltered"});
-            if (specialAddress != null) {
-                return specialAddress;
-            }
-
-            try {
-                return new MailAddress(addressString);
-            } catch (Exception e) {
-                throw new MessagingException("Exception thrown in getReversePath() parsing: " + addressString, e);
-            }
+        String reversePath = getAddressesFromParameter("reversePath");
+        if (Strings.isNullOrEmpty(reversePath)) {
+            return null;
         }
 
-        return null;
+        InternetAddress[] extractAddresses = extractAddresses(reversePath);
+        if (extractAddresses == null || extractAddresses.length == 0) {
+            return null;
+        }
+        return toMailAddress(extractAddresses[0], new String[] { "postmaster", "sender", "null", "unaltered" });
     }
 
     /**
@@ -769,13 +766,17 @@ public abstract class AbstractRedirect extends GenericMailet {
 
         MailAddress reversePath = (isStatic()) ? this.reversePath : getReversePath();
         if (reversePath != null) {
-            if (reversePath == SpecialAddress.UNALTERED || reversePath == SpecialAddress.REVERSE_PATH) {
-                reversePath = null;
-            } else if (reversePath == SpecialAddress.SENDER) {
-                reversePath = null;
+            if (isUnalteredOrReversePathOrSender(reversePath)) {
+                return null;
             }
         }
         return reversePath;
+    }
+
+    private boolean isUnalteredOrReversePathOrSender(MailAddress reversePath) {
+        return reversePath.equals(SpecialAddress.UNALTERED)
+                || reversePath.equals(SpecialAddress.REVERSE_PATH)
+                || reversePath.equals(SpecialAddress.SENDER);
     }
 
     /**
@@ -786,12 +787,16 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected void setReversePath(MailImpl newMail, MailAddress reversePath, Mail originalMail) {
         if (reversePath != null) {
-            if (reversePath == SpecialAddress.NULL) {
-                reversePath = null;
-            }
-            newMail.setSender(reversePath);
-            if (isDebug) {
-                log("reversePath set to: " + reversePath);
+            if (reversePath.equals(SpecialAddress.NULL)) {
+                newMail.setSender(null);
+                if (isDebug) {
+                    log("reversePath set to: null");
+                }
+            } else {
+                newMail.setSender(reversePath);
+                if (isDebug) {
+                    log("reversePath set to: " + reversePath);
+                }
             }
         }
     }
@@ -806,21 +811,16 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         missing
      */
     protected MailAddress getSender() throws MessagingException {
-        String addressString = getInitParameter("sender");
-        if (addressString != null) {
-            MailAddress specialAddress = getSpecialAddress(addressString, new String[]{"postmaster", "sender", "unaltered"});
-            if (specialAddress != null) {
-                return specialAddress;
-            }
-
-            try {
-                return new MailAddress(addressString);
-            } catch (Exception e) {
-                throw new MessagingException("Exception thrown in getSender() parsing: " + addressString, e);
-            }
+        String sender = getAddressesFromParameter("sender");
+        if (Strings.isNullOrEmpty(sender)) {
+            return null;
         }
 
-        return null;
+        InternetAddress[] extractAddresses = extractAddresses(sender);
+        if (extractAddresses == null || extractAddresses.length == 0) {
+            return null;
+        }
+        return toMailAddress(extractAddresses[0], new String[] { "postmaster", "sender", "unaltered" });
     }
 
     /**
@@ -834,11 +834,15 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected MailAddress getSender(Mail originalMail) throws MessagingException {
         MailAddress sender = (isStatic()) ? this.sender : getSender();
         if (sender != null) {
-            if (sender == SpecialAddress.UNALTERED || sender == SpecialAddress.SENDER) {
-                sender = null;
+            if (isUnalteredOrSender(sender)) {
+                return null;
             }
         }
         return sender;
+    }
+
+    private boolean isUnalteredOrSender(MailAddress sender) {
+        return sender.equals(SpecialAddress.UNALTERED) || sender.equals(SpecialAddress.SENDER);
     }
 
     /**
@@ -909,11 +913,8 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
         if (isNotifyMailet()) {
-            String subject = originalMail.getMessage().getSubject();
-            if (subject == null) {
-                subject = "";
-            }
-            if (subjectPrefix == null || subject.indexOf(subjectPrefix) == 0) {
+            String subject = Strings.nullToEmpty(originalMail.getMessage().getSubject());
+            if (subjectPrefix == null || !subject.contains(subjectPrefix)) {
                 newMail.getMessage().setSubject(subject);
             } else {
                 newMail.getMessage().setSubject(subjectPrefix + subject);
@@ -921,29 +922,23 @@ public abstract class AbstractRedirect extends GenericMailet {
         }
 
         String subject = getSubject(originalMail);
-        if ((subjectPrefix != null && subjectPrefix.length() > 0) || subject != null) {
+        if (!Strings.isNullOrEmpty(subjectPrefix) || subject != null) {
+            String newSubject = Strings.nullToEmpty(subject);
             if (subject == null) {
-                subject = originalMail.getMessage().getSubject();
+                newSubject = Strings.nullToEmpty(originalMail.getMessage().getSubject());
             } else {
-                // replacing the subject
                 if (isDebug) {
                     log("subject set to: " + subject);
                 }
             }
-            // Was null in original?
-            if (subject == null) {
-                subject = "";
-            }
 
             if (subjectPrefix != null) {
-                subject = subjectPrefix + subject;
-                // adding a prefix
+                newSubject = subjectPrefix + newSubject;
                 if (isDebug) {
                     log("subjectPrefix set to: " + subjectPrefix);
                 }
             }
-            // newMail.getMessage().setSubject(subject);
-            changeSubject(newMail.getMessage(), subject);
+            changeSubject(newMail.getMessage(), newSubject);
         }
     }
 
@@ -956,7 +951,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @return the <code>attachError</code> init parameter; false if missing
      */
     protected boolean attachError() throws MessagingException {
-        return Boolean.valueOf(getInitParameter("attachError"));
+        return getInitParameter("attachError", false);
     }
 
     /**
@@ -981,7 +976,7 @@ public abstract class AbstractRedirect extends GenericMailet {
         if (isNotifyMailet()) {
             return true;
         }
-        return Boolean.valueOf(getInitParameter("isReply"));
+        return getInitParameter("isReply", false);
     }
 
     /**
@@ -1015,10 +1010,10 @@ public abstract class AbstractRedirect extends GenericMailet {
      * initialization parameter in config.xml, using getX(), if
      * {@link #isStatic()} returns true.
      */
+    @Override
     public void init() throws MessagingException {
-        isDebug = Boolean.valueOf(getInitParameter("debug", "false"));
-
-        isStatic = Boolean.valueOf(getInitParameter("static", "false"));
+        isDebug = getInitParameter("debug", false);
+        isStatic = getInitParameter("static", false);
 
         if (isDebug) {
             log("Initializing");
@@ -1057,6 +1052,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @param originalMail the mail to process and redirect
      * @throws MessagingException if a problem arises formulating the redirected mail
      */
+    @Override
     public void service(Mail originalMail) throws MessagingException {
 
         boolean keepMessageId = false;
@@ -1065,20 +1061,8 @@ public abstract class AbstractRedirect extends GenericMailet {
         // the original untouched
         MailImpl newMail = new MailImpl(originalMail);
         try {
-            // We don't need to use the original Remote Address and Host,
-            // and doing so would likely cause a loop with spam detecting
-            // matchers.
-            try {
-                newMail.setRemoteAddr(dns.getLocalHost().getHostAddress());
-            } catch (UnknownHostException e) {
-                newMail.setRemoteAddr("127.0.0.1");
-
-            }
-            try {
-                newMail.setRemoteHost(dns.getLocalHost().getHostName());
-            } catch (UnknownHostException e) {
-                newMail.setRemoteHost("localhost");
-            }
+            setRemoteAddr(newMail);
+            setRemoteHost(newMail);
 
             if (isDebug) {
                 log("New mail - sender: " + newMail.getSender() + ", recipients: " + arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
@@ -1086,7 +1070,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             }
 
             // Create the message
-            if (getInLineType(originalMail) != UNALTERED) {
+            if (!getInLineType(originalMail).equals(TypeCode.UNALTERED)) {
                 if (isDebug) {
                     log("Alter message");
                 }
@@ -1159,33 +1143,20 @@ public abstract class AbstractRedirect extends GenericMailet {
         }
     }
 
-    /**
-     * A private method to convert types from string to int.
-     *
-     * @param param the string type
-     * @return the corresponding int enumeration
-     */
-    protected int getTypeCode(String param) {
-        param = param.toLowerCase(Locale.US);
-        if (param.compareTo("unaltered") == 0) {
-            return UNALTERED;
+    private void setRemoteAddr(MailImpl newMail) {
+        try {
+            newMail.setRemoteAddr(dns.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            newMail.setRemoteAddr("127.0.0.1");
         }
-        if (param.compareTo("heads") == 0) {
-            return HEADS;
+    }
+
+    private void setRemoteHost(MailImpl newMail) {
+        try {
+            newMail.setRemoteHost(dns.getLocalHost().getHostName());
+        } catch (UnknownHostException e) {
+            newMail.setRemoteHost("localhost");
         }
-        if (param.compareTo("body") == 0) {
-            return BODY;
-        }
-        if (param.compareTo("all") == 0) {
-            return ALL;
-        }
-        if (param.compareTo("none") == 0) {
-            return NONE;
-        }
-        if (param.compareTo("message") == 0) {
-            return MESSAGE;
-        }
-        return NONE;
     }
 
     /**
@@ -1206,7 +1177,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * Utility method for obtaining a string representation of a Message's body
      */
     private String getMessageBody(MimeMessage message) throws Exception {
-        java.io.ByteArrayOutputStream bodyOs = new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream bodyOs = new ByteArrayOutputStream();
         MimeMessageUtil.writeMessageBodyTo(message, bodyOs);
         return bodyOs.toString();
     }
@@ -1223,103 +1194,31 @@ public abstract class AbstractRedirect extends GenericMailet {
         MimeMessage newMessage = newMail.getMessage();
 
         // Copy the relevant headers
-        String[] relevantHeaderNames = {RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH};
-        @SuppressWarnings("unchecked")
-        Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(relevantHeaderNames);
-        while (headerEnum.hasMoreElements()) {
-            newMessage.addHeaderLine((String) headerEnum.nextElement());
-        }
+        copyRelevantHeaders(originalMessage, newMessage);
 
-        StringWriter sout = new StringWriter();
-        PrintWriter out = new PrintWriter(sout, true);
         String head = getMessageHeaders(originalMessage);
-        boolean all = false;
-
-        String messageText = getMessage(originalMail);
-        if (messageText != null) {
-            out.println(messageText);
-        }
-
-        if (isDebug) {
-            log("inline:" + getInLineType(originalMail));
-        }
-        switch (getInLineType(originalMail)) {
-            case ALL: // ALL:
-                all = true;
-            case HEADS: // HEADS:
-                out.println("Message Headers:");
-                out.println(head);
-                if (!all) {
-                    break;
-                }
-            case BODY: // BODY:
-                out.println("Message:");
-                try {
-                    out.println(getMessageBody(originalMessage));
-                } catch (Exception e) {
-                    out.println("body unavailable");
-                }
-                break;
-            default:
-            case NONE: // NONE:
-                break;
-        }
-
         try {
             // Create the message body
             MimeMultipart multipart = new MimeMultipart("mixed");
 
             // Create the message
             MimeMultipart mpContent = new MimeMultipart("alternative");
+            mpContent.addBodyPart(getBodyPart(originalMail, originalMessage, head));
+
             MimeBodyPart contentPartRoot = new MimeBodyPart();
             contentPartRoot.setContent(mpContent);
 
             multipart.addBodyPart(contentPartRoot);
 
-            MimeBodyPart part = new MimeBodyPart();
-            part.setText(sout.toString());
-            part.setDisposition("inline");
-            mpContent.addBodyPart(part);
             if (isDebug) {
                 log("attachmentType:" + getAttachmentType(originalMail));
             }
-            if (getAttachmentType(originalMail) != NONE) {
-                part = new MimeBodyPart();
-                switch (getAttachmentType(originalMail)) {
-                    case HEADS: // HEADS:
-                        part.setText(head);
-                        break;
-                    case BODY: // BODY:
-                        try {
-                            part.setText(getMessageBody(originalMessage));
-                        } catch (Exception e) {
-                            part.setText("body unavailable");
-                        }
-                        break;
-                    case ALL: // ALL:
-                        String textBuffer = head + "\r\nMessage:\r\n" + getMessageBody(originalMessage);
-                        part.setText(textBuffer);
-                        break;
-                    case MESSAGE: // MESSAGE:
-                        part.setContent(originalMessage, "message/rfc822");
-                        break;
-                }
-                if ((originalMessage.getSubject() != null) && (originalMessage.getSubject().trim().length() > 0)) {
-                    part.setFileName(originalMessage.getSubject().trim());
-                } else {
-                    part.setFileName("No Subject");
-                }
-                part.setDisposition("Attachment");
-                multipart.addBodyPart(part);
+            if (!getAttachmentType(originalMail).equals(TypeCode.NONE)) {
+                multipart.addBodyPart(getAttachmentPart(originalMail, originalMessage, head));
             }
-            // if set, attach the original mail's error message
+
             if (attachError(originalMail) && originalMail.getErrorMessage() != null) {
-                part = new MimeBodyPart();
-                part.setContent(originalMail.getErrorMessage(), "text/plain");
-                part.setHeader(RFC2822Headers.CONTENT_TYPE, "text/plain");
-                part.setFileName("Reasons");
-                part.setDisposition(javax.mail.Part.ATTACHMENT);
-                multipart.addBodyPart(part);
+                multipart.addBodyPart(getErrorPart(originalMail));
             }
             newMail.getMessage().setContent(multipart);
             newMail.getMessage().setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
@@ -1329,9 +1228,114 @@ public abstract class AbstractRedirect extends GenericMailet {
         }
     }
 
-    /**
-     * Sets the message id of originalMail into newMail.
-     */
+    private BodyPart getBodyPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
+        MimeBodyPart part = new MimeBodyPart();
+        part.setText(getText(originalMail, originalMessage, head));
+        part.setDisposition("inline");
+        return part;
+    }
+
+    private MimeBodyPart getAttachmentPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
+        MimeBodyPart attachmentPart = new MimeBodyPart();
+        switch (getAttachmentType(originalMail)) {
+            case HEADS:
+                attachmentPart.setText(head);
+                break;
+            case BODY:
+                try {
+                    attachmentPart.setText(getMessageBody(originalMessage));
+                } catch (Exception e) {
+                    attachmentPart.setText("body unavailable");
+                }
+                break;
+            case ALL:
+                attachmentPart.setText(head + "\r\nMessage:\r\n" + getMessageBody(originalMessage));
+                break;
+            case MESSAGE:
+                attachmentPart.setContent(originalMessage, "message/rfc822");
+                break;
+            case NONE:
+                break;
+            case UNALTERED:
+                break;
+        }
+        if ((originalMessage.getSubject() != null) && (originalMessage.getSubject().trim().length() > 0)) {
+            attachmentPart.setFileName(originalMessage.getSubject().trim());
+        } else {
+            attachmentPart.setFileName("No Subject");
+        }
+        attachmentPart.setDisposition("Attachment");
+        return attachmentPart;
+    }
+
+    private MimeBodyPart getErrorPart(Mail originalMail) throws MessagingException {
+        MimeBodyPart errorPart = new MimeBodyPart();
+        errorPart.setContent(originalMail.getErrorMessage(), "text/plain");
+        errorPart.setHeader(RFC2822Headers.CONTENT_TYPE, "text/plain");
+        errorPart.setFileName("Reasons");
+        errorPart.setDisposition(javax.mail.Part.ATTACHMENT);
+        return errorPart;
+    }
+
+    private String getText(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException {
+        StringBuilder builder = new StringBuilder();
+
+        String messageText = getMessage(originalMail);
+        if (messageText != null) {
+            builder.append(messageText)
+                .append(LINE_BREAK);
+        }
+
+        if (isDebug) {
+            log("inline:" + getInLineType(originalMail));
+        }
+        boolean all = false;
+        switch (getInLineType(originalMail)) {
+            case ALL:
+                all = true;
+            case HEADS:
+                builder.append("Message Headers:")
+                    .append(LINE_BREAK)
+                    .append(head)
+                    .append(LINE_BREAK);
+                if (!all) {
+                    break;
+                }
+            case BODY:
+                appendBody(builder, originalMessage);
+                break;
+            case NONE:
+                break;
+            case MESSAGE:
+                break;
+            case UNALTERED:
+                break;
+        }
+        return builder.toString();
+    }
+
+    private void appendBody(StringBuilder builder, MimeMessage originalMessage) {
+        builder.append("Message:")
+            .append(LINE_BREAK);
+        try {
+            builder.append(getMessageBody(originalMessage))
+                .append(LINE_BREAK);
+        } catch (Exception e) {
+            builder.append("body unavailable")
+                .append(LINE_BREAK);
+        }
+    }
+
+    private void copyRelevantHeaders(MimeMessage originalMessage, MimeMessage newMessage) throws MessagingException {
+        @SuppressWarnings("unchecked")
+        Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(
+                new String[] { RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, 
+                        RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH });
+        while (headerEnum.hasMoreElements()) {
+            newMessage.addHeaderLine(headerEnum.nextElement());
+        }
+    }
+
     private void setMessageId(Mail newMail, Mail originalMail) throws MessagingException {
         String messageId = originalMail.getMessage().getMessageID();
         if (messageId != null) {
@@ -1358,61 +1362,57 @@ public abstract class AbstractRedirect extends GenericMailet {
             return null;
         }
 
-        addressString = addressString.toLowerCase(Locale.US);
-        addressString = addressString.trim();
-
-        MailAddress specialAddress = null;
-
-        if (addressString.compareTo("postmaster") == 0) {
-            specialAddress = getMailetContext().getPostmaster();
-        }
-        if (addressString.compareTo("sender") == 0) {
-            specialAddress = SpecialAddress.SENDER;
-        }
-        if (addressString.compareTo("reversepath") == 0) {
-            specialAddress = SpecialAddress.REVERSE_PATH;
-        }
-        if (addressString.compareTo("from") == 0) {
-            specialAddress = SpecialAddress.FROM;
-        }
-        if (addressString.compareTo("replyto") == 0) {
-            specialAddress = SpecialAddress.REPLY_TO;
-        }
-        if (addressString.compareTo("to") == 0) {
-            specialAddress = SpecialAddress.TO;
-        }
-        if (addressString.compareTo("recipients") == 0) {
-            specialAddress = SpecialAddress.RECIPIENTS;
-        }
-        if (addressString.compareTo("delete") == 0) {
-            specialAddress = SpecialAddress.DELETE;
-        }
-        if (addressString.compareTo("unaltered") == 0) {
-            specialAddress = SpecialAddress.UNALTERED;
-        }
-        if (addressString.compareTo("null") == 0) {
-            specialAddress = SpecialAddress.NULL;
-        }
-
-        // if is a special address, must be in the allowedSpecials array
+        MailAddress specialAddress = toMailAddress(addressString);
         if (specialAddress != null) {
-            // check if is an allowed special
-            boolean allowed = false;
-            for (String allowedSpecial1 : allowedSpecials) {
-                String allowedSpecial = allowedSpecial1;
-                allowedSpecial = allowedSpecial.toLowerCase(Locale.US);
-                allowedSpecial = allowedSpecial.trim();
-                if (addressString.compareTo(allowedSpecial) == 0) {
-                    allowed = true;
-                    break;
-                }
-            }
-            if (!allowed) {
+            if (!isAllowed(addressString, allowedSpecials)) {
                 throw new MessagingException("Special (\"magic\") address found not allowed: " + addressString + ", allowed values are \"" + arrayToString(allowedSpecials) + "\"");
             }
         }
-
         return specialAddress;
+    }
+
+    private MailAddress toMailAddress(String addressString) {
+        String lowerCaseTrimed = addressString.toLowerCase(Locale.US).trim();
+        if (lowerCaseTrimed.equals("postmaster")) {
+            return getMailetContext().getPostmaster();
+        }
+        if (lowerCaseTrimed.equals("sender")) {
+            return SpecialAddress.SENDER;
+        }
+        if (lowerCaseTrimed.equals("reversepath")) {
+            return SpecialAddress.REVERSE_PATH;
+        }
+        if (lowerCaseTrimed.equals("from")) {
+            return SpecialAddress.FROM;
+        }
+        if (lowerCaseTrimed.equals("replyto")) {
+            return SpecialAddress.REPLY_TO;
+        }
+        if (lowerCaseTrimed.equals("to")) {
+            return SpecialAddress.TO;
+        }
+        if (lowerCaseTrimed.equals("recipients")) {
+            return SpecialAddress.RECIPIENTS;
+        }
+        if (lowerCaseTrimed.equals("delete")) {
+            return SpecialAddress.DELETE;
+        }
+        if (lowerCaseTrimed.equals("unaltered")) {
+            return SpecialAddress.UNALTERED;
+        }
+        if (lowerCaseTrimed.equals("null")) {
+            return SpecialAddress.NULL;
+        }
+        return null;
+    }
+
+    private boolean isAllowed(String addressString, String[] allowedSpecials) {
+        for (String allowedSpecial : allowedSpecials) {
+            if (addressString.equals(allowedSpecial.toLowerCase(Locale.US).trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1440,7 +1440,9 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     @SuppressWarnings("deprecation")
     protected final boolean senderDomainIsValid(Mail mail) throws MessagingException {
-        return !getFakeDomainCheck(mail) || mail.getSender() == null || getMailetContext().getMailServers(mail.getSender().getDomain()).size() != 0;
+        return !getFakeDomainCheck(mail)
+                || mail.getSender() == null
+                || !getMailetContext().getMailServers(mail.getSender().getDomain()).isEmpty();
     }
 
     /**
@@ -1474,7 +1476,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @throws MessagingException - according to the JavaMail doc most likely this is never
      *                            thrown
      */
-    public static void changeSubject(MimeMessage message, String newValue) throws MessagingException {
+    public void changeSubject(MimeMessage message, String newValue) throws MessagingException {
         String rawSubject = message.getHeader(RFC2822Headers.SUBJECT, null);
         String mimeCharset = determineMailHeaderEncodingCharset(rawSubject);
         if (mimeCharset == null) { // most likely ASCII
@@ -1482,9 +1484,8 @@ public abstract class AbstractRedirect extends GenericMailet {
             // mail.mime.charset property if set
             message.setSubject(newValue);
         } else { // original charset determined
-            String javaCharset = javax.mail.internet.MimeUtility.javaCharset(mimeCharset);
             try {
-                message.setSubject(newValue, javaCharset);
+                message.setSubject(newValue, MimeUtility.javaCharset(mimeCharset));
             } catch (MessagingException e) {
                 // known, but unsupported encoding
                 // this should be logged, the admin may setup a more i18n
@@ -1508,24 +1509,29 @@ public abstract class AbstractRedirect extends GenericMailet {
      *                header was not present (in this case it always return null).
      * @return the MIME charset name or null if no encoding applied
      */
-    static private String determineMailHeaderEncodingCharset(String rawText) {
-        if (rawText == null)
+    @VisibleForTesting String determineMailHeaderEncodingCharset(String rawText) {
+        if (Strings.isNullOrEmpty(rawText)) {
             return null;
+        }
         int iEncodingPrefix = rawText.indexOf("=?");
-        if (iEncodingPrefix == -1)
+        if (iEncodingPrefix == -1) {
             return null;
+        }
         int iCharsetBegin = iEncodingPrefix + 2;
         int iSecondQuestionMark = rawText.indexOf('?', iCharsetBegin);
-        if (iSecondQuestionMark == -1)
+        if (iSecondQuestionMark == -1) {
             return null;
-        // safety checks
-        if (iSecondQuestionMark == iCharsetBegin)
-            return null; // empty charset? impossible
+        }
+        if (iSecondQuestionMark == iCharsetBegin) {
+            return null;
+        }
         int iThirdQuestionMark = rawText.indexOf('?', iSecondQuestionMark + 1);
-        if (iThirdQuestionMark == -1)
-            return null; // there must be one after encoding
-        if (-1 == rawText.indexOf("?=", iThirdQuestionMark + 1))
-            return null; // closing tag
+        if (iThirdQuestionMark == -1) {
+            return null;
+        }
+        if (rawText.indexOf("?=", iThirdQuestionMark + 1) == -1) {
+            return null;
+        }
         return rawText.substring(iCharsetBegin, iSecondQuestionMark);
     }
 
@@ -1549,54 +1555,78 @@ public abstract class AbstractRedirect extends GenericMailet {
      * Any other address is not replaced.
      */
     protected Collection<MailAddress> replaceMailAddresses(Mail mail, Collection<MailAddress> list) {
-        Collection<MailAddress> newList = new HashSet<MailAddress>(list.size());
-        for (Object aList : list) {
-            MailAddress mailAddress = (MailAddress) aList;
-            if (!mailAddress.getDomain().equalsIgnoreCase("address.marker")) {
-                newList.add(mailAddress);
-            } else if (mailAddress == SpecialAddress.SENDER || mailAddress == SpecialAddress.FROM) {
+        ImmutableSet.Builder<MailAddress> builder = ImmutableSet.builder();
+        for (MailAddress mailAddress : list) {
+            if (!isSpecialAddress(mailAddress)) {
+                builder.add(mailAddress);
+                continue;
+            }
+
+            SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
+            if (specialAddressKind == null) {
+                builder.add(mailAddress);
+                continue;
+            }
+            switch (specialAddressKind) {
+            case SENDER:
+            case FROM:
                 MailAddress sender = mail.getSender();
                 if (sender != null) {
-                    newList.add(sender);
+                    builder.add(sender);
                 }
-            } else if (mailAddress == SpecialAddress.REPLY_TO) {
-                int parsedAddressCount = 0;
-                try {
-                    InternetAddress[] replyToArray = (InternetAddress[]) mail.getMessage().getReplyTo();
-                    if (replyToArray != null) {
-                        for (InternetAddress aReplyToArray : replyToArray) {
-                            try {
-                                newList.add(new MailAddress(aReplyToArray));
-                                parsedAddressCount++;
-                            } catch (ParseException pe) {
-                                log("Unable to parse a \"REPLY_TO\" header address in the original message: " + aReplyToArray + "; ignoring.");
-                            }
-                        }
-                    }
-                } catch (MessagingException ae) {
-                    log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
-                }
-                // no address was parsed?
-                if (parsedAddressCount == 0) {
-                    MailAddress sender = mail.getSender();
-                    if (sender != null) {
-                        newList.add(sender);
-                    }
-                }
-            } else if (mailAddress == SpecialAddress.REVERSE_PATH) {
+                break;
+            case REPLY_TO:
+                addReplyToFromMail(builder, mail);
+                break;
+            case REVERSE_PATH:
                 MailAddress reversePath = mail.getSender();
                 if (reversePath != null) {
-                    newList.add(reversePath);
+                    builder.add(reversePath);
                 }
-            } else if (mailAddress == SpecialAddress.RECIPIENTS || mailAddress == SpecialAddress.TO) {
-                newList.addAll(mail.getRecipients());
-            } else if (mailAddress == SpecialAddress.UNALTERED) {
-            } else if (mailAddress == SpecialAddress.NULL) {
-            } else {
-                newList.add(mailAddress);
+                break;
+            case RECIPIENTS:
+            case TO:
+                builder.addAll(mail.getRecipients());
+                break;
+            case UNALTERED:
+            case NULL:
+                break;
+            case DELETE:
+                builder.add(mailAddress);
+                break;
             }
         }
-        return newList;
+        return builder.build();
+    }
+
+    private boolean isSpecialAddress(MailAddress mailAddress) {
+        return mailAddress.getDomain().equalsIgnoreCase(AddressMarker.ADDRESS_MARKER);
+    }
+
+    private void addReplyToFromMail(ImmutableSet.Builder<MailAddress> set, Mail mail) {
+        try {
+            InternetAddress[] replyToArray = (InternetAddress[]) mail.getMessage().getReplyTo();
+            if (replyToArray == null || replyToArray.length == 0) {
+                MailAddress sender = mail.getSender();
+                if (sender != null) {
+                    set.add(sender);
+                }
+            } else {
+                addReplyTo(set, replyToArray);
+            }
+        } catch (MessagingException ae) {
+            log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
+        }
+    }
+
+    private void addReplyTo(ImmutableSet.Builder<MailAddress> set, InternetAddress[] replyToArray) {
+        for (InternetAddress replyTo : replyToArray) {
+            try {
+                set.add(new MailAddress(replyTo));
+            } catch (ParseException pe) {
+                log("Unable to parse a \"REPLY_TO\" header address in the original message: " + replyTo + "; ignoring.");
+            }
+        }
     }
 
     /**
@@ -1619,72 +1649,93 @@ public abstract class AbstractRedirect extends GenericMailet {
      * Any other address is not replaced.<br>
      */
     protected Collection<InternetAddress> replaceInternetAddresses(Mail mail, Collection<InternetAddress> list) throws MessagingException {
-        Collection<InternetAddress> newList = new HashSet<InternetAddress>(list.size());
+        ImmutableSet.Builder<InternetAddress> builder = ImmutableSet.builder();
         for (InternetAddress internetAddress : list) {
             MailAddress mailAddress = new MailAddress(internetAddress);
-            if (!mailAddress.getDomain().equalsIgnoreCase("address.marker")) {
-                newList.add(internetAddress);
-            } else if (internetAddress.equals(SpecialAddress.SENDER.toInternetAddress())) {
+            if (!isSpecialAddress(mailAddress)) {
+                builder.add(internetAddress);
+                continue;
+            }
+
+            SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
+            if (specialAddressKind == null) {
+                builder.add(mailAddress.toInternetAddress());
+                continue;
+            }
+
+            switch (specialAddressKind) {
+            case SENDER:
                 MailAddress sender = mail.getSender();
                 if (sender != null) {
-                    newList.add(sender.toInternetAddress());
+                    builder.add(sender.toInternetAddress());
                 }
-            } else if (internetAddress.equals(SpecialAddress.REVERSE_PATH.toInternetAddress())) {
+                break;
+            case REVERSE_PATH:
                 MailAddress reversePath = mail.getSender();
                 if (reversePath != null) {
-                    newList.add(reversePath.toInternetAddress());
+                    builder.add(reversePath.toInternetAddress());
                 }
-            } else if (internetAddress.equals(SpecialAddress.FROM.toInternetAddress())) {
+                break;
+            case FROM:
                 try {
                     InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();
-                    if (fromArray != null) {
-                        Collections.addAll(newList, fromArray);
-                    } else {
-                        MailAddress reversePath = mail.getSender();
-                        if (reversePath != null) {
-                            newList.add(reversePath.toInternetAddress());
-                        }
-                    }
+                    builder.addAll(allOrSender(mail, fromArray));
                 } catch (MessagingException me) {
                     log("Unable to parse the \"FROM\" header in the original message; ignoring.");
                 }
-            } else if (internetAddress.equals(SpecialAddress.REPLY_TO.toInternetAddress())) {
+                break;
+            case REPLY_TO:
                 try {
                     InternetAddress[] replyToArray = (InternetAddress[]) mail.getMessage().getReplyTo();
-                    if (replyToArray != null) {
-                        Collections.addAll(newList, replyToArray);
-                    } else {
-                        MailAddress reversePath = mail.getSender();
-                        if (reversePath != null) {
-                            newList.add(reversePath.toInternetAddress());
-                        }
-                    }
+                    builder.addAll(allOrSender(mail, replyToArray));
                 } catch (MessagingException me) {
                     log("Unable to parse the \"REPLY_TO\" header in the original message; ignoring.");
                 }
-            } else if (internetAddress.equals(SpecialAddress.TO.toInternetAddress()) || internetAddress.equals(SpecialAddress.RECIPIENTS.toInternetAddress())) {
-                try {
-                    String[] toHeaders = mail.getMessage().getHeader(RFC2822Headers.TO);
-                    if (toHeaders != null) {
-                        for (String toHeader : toHeaders) {
-                            try {
-                                InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
-                                Collections.addAll(newList, originalToInternetAddresses);
-                            } catch (MessagingException ae) {
-                                log("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
-                            }
-                        }
-                    }
-                } catch (MessagingException ae) {
-                    log("Unable to parse the \"TO\" header  in the original message; ignoring.");
-                }
-            } else if (internetAddress.equals(SpecialAddress.UNALTERED.toInternetAddress())) {
-            } else if (internetAddress.equals(SpecialAddress.NULL.toInternetAddress())) {
-            } else {
-                newList.add(internetAddress);
+                break;
+            case TO:
+            case RECIPIENTS:
+                builder.addAll(toHeaders(mail));
+                break;
+            case NULL:
+            case UNALTERED:
+                break;
+            case DELETE:
+                builder.add(internetAddress);
+                break;
             }
         }
-        return newList;
+        return builder.build();
     }
 
+    private ImmutableSet<InternetAddress> allOrSender(Mail mail, InternetAddress[] addresses) {
+        if (addresses != null) {
+            return ImmutableSet.copyOf(addresses);
+        } else {
+            MailAddress reversePath = mail.getSender();
+            if (reversePath != null) {
+                return ImmutableSet.of(reversePath.toInternetAddress());
+            }
+        }
+        return ImmutableSet.of();
+    }
+
+    private ImmutableSet<InternetAddress> toHeaders(Mail mail) {
+        try {
+            String[] toHeaders = mail.getMessage().getHeader(RFC2822Headers.TO);
+            if (toHeaders != null) {
+                for (String toHeader : toHeaders) {
+                    try {
+                        InternetAddress[] originalToInternetAddresses = InternetAddress.parse(toHeader, false);
+                        return ImmutableSet.copyOf(originalToInternetAddresses);
+                    } catch (MessagingException ae) {
+                        log("Unable to parse a \"TO\" header address in the original message: " + toHeader + "; ignoring.");
+                    }
+                }
+            }
+            return ImmutableSet.of();
+        } catch (MessagingException ae) {
+            log("Unable to parse the \"TO\" header  in the original message; ignoring.");
+            return ImmutableSet.of();
+        }
+    }
 }
