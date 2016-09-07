@@ -92,6 +92,11 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
+    protected boolean isNotifyMailet() {
+        return false;
+    }
+
+    @Override
     protected int getInLineType() {
         return UNALTERED;
     }

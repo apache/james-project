@@ -301,6 +301,11 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
+    protected boolean isNotifyMailet() {
+        return false;
+    }
+
+    @Override
     protected boolean isStatic() {
         return isStatic;
     }

@@ -104,7 +104,7 @@ import com.google.common.collect.ImmutableList;
  *
  * @since 2.2.0
  */
-public class Bounce extends AbstractNotify {
+public class Bounce extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError" };
@@ -119,6 +119,11 @@ public class Bounce extends AbstractNotify {
     @Override
     protected String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
+    }
+
+    @Override
+    protected boolean isNotifyMailet() {
+        return true;
     }
 
     @Override

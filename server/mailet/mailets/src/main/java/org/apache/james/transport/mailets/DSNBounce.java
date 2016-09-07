@@ -84,7 +84,7 @@ import com.google.common.collect.ImmutableSet;
  * @see org.apache.james.transport.mailets.AbstractNotify
  */
 
-public class DSNBounce extends AbstractNotify {
+public class DSNBounce extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
     private static final Set<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableSet.of(SpecialAddress.REVERSE_PATH);
@@ -112,6 +112,11 @@ public class DSNBounce extends AbstractNotify {
     @Override
     protected String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
+    }
+
+    @Override
+    protected boolean isNotifyMailet() {
+        return true;
     }
 
     @Override

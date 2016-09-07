@@ -102,7 +102,7 @@ import com.google.common.collect.ImmutableSet;
  * are kept for backward compatibility.
  * </p>
  */
-public class NotifyPostmaster extends AbstractNotify {
+public class NotifyPostmaster extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
@@ -125,6 +125,11 @@ public class NotifyPostmaster extends AbstractNotify {
     @Override
     protected String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
+    }
+
+    @Override
+    protected boolean isNotifyMailet() {
+        return true;
     }
 
     @Override

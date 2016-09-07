@@ -281,4 +281,9 @@ public class Resend extends AbstractRedirect {
         return CONFIGURABLE_PARAMETERS;
     }
 
+    @Override
+    protected boolean isNotifyMailet() {
+        return false;
+    }
+
 }
