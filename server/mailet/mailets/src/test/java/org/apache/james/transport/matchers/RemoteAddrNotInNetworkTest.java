@@ -33,10 +33,10 @@ public class RemoteAddrNotInNetworkTest extends AbstractRemoteAddrInNetworkTest 
 
         setupAll();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(fakeMail);
 
         assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients().size());
+        assertEquals(matchedRecipients.size(), fakeMail.getRecipients().size());
     }
 
     // test if no recipient get returned cause it not match
@@ -46,7 +46,7 @@ public class RemoteAddrNotInNetworkTest extends AbstractRemoteAddrInNetworkTest 
 
         setupAll();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
+        Collection<MailAddress> matchedRecipients = matcher.match(fakeMail);
 
         assertNull(matchedRecipients);
     }

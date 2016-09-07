@@ -18,29 +18,26 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.List;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 
-public abstract class AbstractRemoteAddrInNetworkTest {
+import com.google.common.collect.ImmutableList;
 
-    protected Mail mockedMail;
+public abstract class AbstractRemoteAddrInNetworkTest {
+    protected static List<String> KNOWN_ADDRESSES = ImmutableList.of("192.168.200.0", "255.255.255.0", "192.168.200.1", "192.168.0.1", "192.168.1.1");
+
+    protected Mail fakeMail;
     protected AbstractNetworkMatcher matcher;
     private String remoteAddr;
     private DNSService dnsServer;
@@ -49,128 +46,11 @@ public abstract class AbstractRemoteAddrInNetworkTest {
         this.remoteAddr = remoteAddr;
     }
 
-    protected void setupMockedMail() {
-        mockedMail = new Mail() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public String getName() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public void setName(String newName) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public MimeMessage getMessage() throws MessagingException {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public Collection<MailAddress> getRecipients() {
-                ArrayList<MailAddress> r = new ArrayList<MailAddress>();
-                try {
-                    r = new ArrayList<MailAddress>(Arrays.asList(new MailAddress[]{new MailAddress(
-                                "test@james.apache.org")}));
-                } catch (ParseException e) {
-                }
-                return r;
-            }
-
-            @Override
-            public void setRecipients(Collection<MailAddress> recipients) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public MailAddress getSender() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public String getState() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public String getRemoteHost() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public String getRemoteAddr() {
-                return remoteAddr;
-            }
-
-            @Override
-            public String getErrorMessage() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public void setErrorMessage(String msg) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public void setMessage(MimeMessage message) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public void setState(String state) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public Serializable getAttribute(String name) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public Iterator<String> getAttributeNames() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public boolean hasAttributes() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public Serializable removeAttribute(String name) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public void removeAllAttributes() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public Serializable setAttribute(String name, Serializable object) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public long getMessageSize() throws MessagingException {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public Date getLastUpdated() {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-
-            @Override
-            public void setLastUpdated(Date lastUpdated) {
-                throw new UnsupportedOperationException("Unimplemented mock service");
-            }
-        };
-
+    protected void setupFakeMail() throws MessagingException {
+        fakeMail = FakeMail.builder()
+                        .recipient(new MailAddress("test@james.apache.org"))
+                        .remoteAddr(remoteAddr)
+                        .build();
     }
 
     protected void setupDNSServer() {
@@ -178,11 +58,7 @@ public abstract class AbstractRemoteAddrInNetworkTest {
 
             @Override
             public InetAddress getByName(String host) throws UnknownHostException {
-                if ("192.168.200.0".equals(host)
-                        || "255.255.255.0".equals(host)
-                        || "192.168.200.1".equals(host)
-                        || "192.168.0.1".equals(host)
-                        || "192.168.1.1".equals(host)) {
+                if (KNOWN_ADDRESSES.contains(host)) {
                     // called with an IP it only check formal validity
                     return InetAddress.getByName(host);
                 }
@@ -203,7 +79,7 @@ public abstract class AbstractRemoteAddrInNetworkTest {
 
     protected void setupAll() throws MessagingException {
         setupDNSServer();
-        setupMockedMail();
+        setupFakeMail();
         setupMatcher();
     }
 

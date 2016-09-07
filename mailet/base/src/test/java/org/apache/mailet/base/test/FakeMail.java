@@ -66,6 +66,7 @@ public class FakeMail implements Mail {
         private Optional<MimeMessage> mimeMessage = Optional.absent();
         private List<MailAddress> recipients = new ArrayList<MailAddress>();
         private MailAddress sender;
+        private String remoteAddr;
 
         public Builder fileName(String fileName) {
             this.fileName = Optional.of(fileName);
@@ -97,6 +98,11 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder remoteAddr(String remoteAddr) {
+            this.remoteAddr = remoteAddr;
+            return this;
+        }
+
         public FakeMail build() throws MessagingException {
             Preconditions.checkState(!(fileName.isPresent() && mimeMessage.isPresent()), "You can not specify a MimeMessage object when you alredy set Content from a file");
             FakeMail mail = new FakeMail();
@@ -108,6 +114,7 @@ public class FakeMail implements Mail {
             }
             mail.setSender(sender);
             mail.setRecipients(recipients);
+            mail.setRemoteAddr(remoteAddr);
             return mail;
         }
     }
