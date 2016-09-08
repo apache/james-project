@@ -65,30 +65,39 @@ public class MailAddressCollectionReaderTest {
     }
 
     @Test
-    public void readShouldParseTwoEmail() throws Exception {
+    public void readShouldParseTwoEmailSeparatedByComaOnly() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
-        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + ", " + mailAddress2.toString()))
+        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + "," + mailAddress2.toString()))
             .containsExactly(mailAddress1, mailAddress2);
     }
 
     @Test
-    public void readShouldParseTwoEmailTabSeparated() throws Exception {
+    public void readShouldParseTwoEmailSeparatedBySpaceOnly() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
-        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + ",\t" + mailAddress2.toString()))
+        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + " " + mailAddress2.toString()))
+            .containsExactly(mailAddress1, mailAddress2);
+    }
+
+    @Test
+    public void readShouldParseTwoEmailSeparatedByTabOnly() throws Exception {
+        MailAddress mailAddress1 = new MailAddress("valid@apache.org");
+        MailAddress mailAddress2 = new MailAddress("bis@apache.org");
+
+        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + "\t" + mailAddress2.toString()))
             .containsExactly(mailAddress1, mailAddress2);
     }
 
 
     @Test
-    public void readShouldParseTwoEmailTabAndSpaceCombinaison() throws Exception {
+    public void readShouldParseTwoEmailSeparatorsCombination() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
-        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + ",\t  \t\t \t " + mailAddress2.toString()))
+        assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + ",\t  \t,\t \t " + mailAddress2.toString()))
             .containsExactly(mailAddress1, mailAddress2);
     }
 

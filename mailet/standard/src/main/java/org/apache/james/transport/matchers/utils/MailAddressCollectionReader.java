@@ -27,6 +27,7 @@ import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -38,16 +39,24 @@ public class MailAddressCollectionReader {
 
     public static Set<MailAddress> read(String condition) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(condition));
-        return FluentIterable.from(Splitter.onPattern(",( |\t)").split(condition)).transform(new Function<String, MailAddress>() {
-            @Override
-            public MailAddress apply(String s) {
-                try {
-                    return new MailAddress(s);
-                } catch (AddressException e) {
-                    throw Throwables.propagate(e);
+        return FluentIterable.from(Splitter.onPattern("(,| |\t)")
+            .split(condition))
+            .filter(new Predicate<String>() {
+                @Override
+                public boolean apply(String s) {
+                    return !Strings.isNullOrEmpty(s);
                 }
-            }
-        }).toSet();
+            })
+            .transform(new Function<String, MailAddress>() {
+                @Override
+                public MailAddress apply(String s) {
+                    try {
+                        return new MailAddress(s);
+                    } catch (AddressException e) {
+                        throw Throwables.propagate(e);
+                    }
+                }
+            }).toSet();
     }
 
 }
