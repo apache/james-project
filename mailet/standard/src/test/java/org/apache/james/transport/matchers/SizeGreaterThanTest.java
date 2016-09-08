@@ -19,11 +19,12 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -33,78 +34,94 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.google.common.collect.ImmutableList;
-
 public class SizeGreaterThanTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private FakeMail fakeMail;
     private Matcher matcher;
-    private MailAddress mailAddress;
 
     @Before
     public void setUp() throws Exception {
         matcher = new SizeGreaterThan();
-
-        fakeMail = new FakeMail();
-        mailAddress = new MailAddress("test@email");
-        fakeMail.setRecipients(ImmutableList.of(mailAddress));
     }
 
     @Test
     public void matchShouldMatchWhenMailAboveSize() throws MessagingException {
-        fakeMail.setMessageSize(2000000);
+        Mail mail = FakeMail.builder()
+            .size(2000000)
+            .recipient(MAIL_ADDRESS_1)
+            .build();
+
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1m", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress);
+        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
     }
 
     @Test
     public void matchShouldNotMatchWhenMailUnderSize() throws MessagingException {
-        fakeMail.setMessageSize(200000);
+        Mail mail = FakeMail.builder()
+            .size(200000)
+            .recipient(MAIL_ADDRESS_1)
+            .build();
+
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1m", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(fakeMail)).isNull();
+        assertThat(matcher.match(mail)).isNull();
     }
 
     @Test
     public void matchShouldNotMatchMailsWithSpecifiedSize() throws MessagingException {
-        fakeMail.setMessageSize(1024);
+        Mail mail = FakeMail.builder()
+            .size(1024)
+            .recipient(MAIL_ADDRESS_1)
+            .build();
+
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(fakeMail)).isNull();
+        assertThat(matcher.match(mail)).isNull();
     }
 
     @Test
     public void matchShouldMatchMailsWithSizeSuperiorToSpecifiedSize() throws MessagingException {
-        fakeMail.setMessageSize(1025);
+        Mail mail = FakeMail.builder()
+            .size(1025)
+            .recipient(MAIL_ADDRESS_1)
+            .build();
+
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress);
+        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
     }
 
     @Test
     public void matchShouldReturnNullWhenUnderLimitNoUnit() throws MessagingException {
-        fakeMail.setMessageSize(4);
+        Mail mail = FakeMail.builder()
+            .size(4)
+            .recipient(MAIL_ADDRESS_1)
+            .build();
+
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(fakeMail)).isNull();
+        assertThat(matcher.match(mail)).isNull();
     }
 
     @Test
     public void matchShouldMatchOverLimitWhenNoUnit() throws MessagingException {
-        fakeMail.setMessageSize(5);
+        Mail mail = FakeMail.builder()
+            .size(5)
+            .recipient(MAIL_ADDRESS_1)
+            .build();
+
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress);
+        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
     }
 
     @Test

@@ -20,13 +20,19 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.JAMES2_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_3_OTHER_DOMAIN;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_4_OTHER_DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
@@ -34,20 +40,12 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class HostIsLocalTest {
 
-    public static final String JAMES_APACHE_ORG = "james.apache.org";
-    public static final String JAMES2_APACHE_ORG = "james2.apache.org";
-
-    private FakeMail mockedMail;
     private Matcher matcher;
 
     @Before
     public void setUp() throws Exception {
-        mockedMail = new FakeMail();
-
         MailetContext mailContext = mock(MailetContext.class);
         when(mailContext.isLocalServer(JAMES_APACHE_ORG)).thenReturn(true);
         when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
@@ -57,36 +55,30 @@ public class HostIsLocalTest {
         matcher.init(mci);
     }
 
-    // test if all recipients get returned as matched
     @Test
-    public void testHostIsMatchedAllRecipients() throws MessagingException {
-        MailAddress mailAddress1 = new MailAddress("test@" + JAMES_APACHE_ORG);
-        MailAddress mailAddress2 = new MailAddress("test2@" + JAMES_APACHE_ORG);
-        mockedMail.setRecipients(ImmutableList.of(
-            mailAddress1,
-            mailAddress2));
+    public void shouldMatchAddressesFromLocalDomain() throws MessagingException {
+        Mail mail = FakeMail.builder()
+            .recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2)
+            .build();
 
-        assertThat( matcher.match(mockedMail)).containsExactly(mailAddress1, mailAddress2);
+        assertThat( matcher.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_2);
     }
 
-    // test if one recipients get returned as matched
     @Test
-    public void testHostIsMatchedOneRecipient() throws MessagingException {
-        MailAddress matchingAddress = new MailAddress("test2@" +JAMES_APACHE_ORG);
-        mockedMail.setRecipients(ImmutableList.of(
-            new MailAddress("test@" + JAMES2_APACHE_ORG),
-            matchingAddress));
+    public void shouldMatchOnlyAddressesFromLocalDomain() throws MessagingException {
+        Mail mail = FakeMail.builder()
+            .recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN)
+            .build();
 
-        assertThat( matcher.match(mockedMail)).containsExactly(matchingAddress);
+        assertThat( matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
     }
 
-    // test if no recipient get returned cause it not match
     @Test
-    public void testHostIsNotMatch() throws MessagingException {
-        mockedMail.setRecipients(
-            ImmutableList.of(new MailAddress("test@" + JAMES2_APACHE_ORG),
-            new MailAddress("test2@" + JAMES2_APACHE_ORG)));
+    public void shouldNotMatchAddressesFromDistantDomains() throws MessagingException {
+        Mail mail = FakeMail.builder()
+            .recipients(MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_4_OTHER_DOMAIN)
+            .build();
 
-        assertThat(matcher.match(mockedMail)).isEmpty();
+        assertThat(matcher.match(mail)).isEmpty();
     }
 }

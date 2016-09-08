@@ -20,6 +20,7 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.mailet.MailAddress;
@@ -37,28 +38,26 @@ public class SenderIsNullTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private SenderIsNull matcher;
-    private MailAddress recipient;
 
     @Before
     public void setUp() throws Exception {
         matcher = new SenderIsNull();
         matcher.init(new FakeMatcherConfig("SenderIsNull", FakeMailContext.defaultContext()));
-        recipient = new MailAddress("recipient@james.apache.org");
     }
 
     @Test
     public void shouldMatchWhenNullSender() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-            .recipient(recipient)
+            .recipient(MAIL_ADDRESS_1)
             .build();
 
-        assertThat(matcher.match(fakeMail)).containsExactly(recipient);
+        assertThat(matcher.match(fakeMail)).containsExactly(MAIL_ADDRESS_1);
     }
 
     @Test
     public void shouldNotMatchWhenSenderIsPresent() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
-            .recipient(recipient)
+            .recipient(MAIL_ADDRESS_1)
             .sender(new MailAddress("other@james.apache.org"))
             .build();
 

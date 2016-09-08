@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_3_OTHER_DOMAIN;
+import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_4_OTHER_DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,10 +41,6 @@ public class XorTest {
     private Matcher matcher1;
     private Matcher matcher2;
     private Mail mail;
-    private MailAddress recipient1;
-    private MailAddress recipient2;
-    private MailAddress recipient3;
-    private MailAddress recipient4;
 
     @Before
     public void setUp() throws Exception {
@@ -49,11 +49,7 @@ public class XorTest {
 
         testee = new Xor();
 
-        recipient1 = new MailAddress("any@apahe.org");
-        recipient2 = new MailAddress("other@apahe.org");
-        recipient3 = new MailAddress("bis@apache.org");
-        recipient4 = new MailAddress("yet@apache.org");
-        mail = FakeMail.builder().recipients(recipient1, recipient2, recipient3, recipient4).build();
+        mail = FakeMail.builder().recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2, MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_4_OTHER_DOMAIN).build();
     }
 
     @Test
@@ -63,43 +59,43 @@ public class XorTest {
 
     @Test
     public void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
 
         testee.add(matcher1);
 
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient3);
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
     }
 
     @Test
     public void shouldPerformXorWhenTwoMatchers() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
-        when(matcher2.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
+        when(matcher2.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_2));
 
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient3, recipient2);
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_2);
     }
 
     @Test
     public void shouldAcceptEmptyResults() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
         when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
 
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient3);
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
     }
 
     @Test
     public void shouldAcceptNullResults() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
         when(matcher2.match(mail)).thenReturn(null);
 
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient3);
+        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
     }
 }

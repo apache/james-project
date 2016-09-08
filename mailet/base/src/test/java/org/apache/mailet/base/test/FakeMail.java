@@ -63,9 +63,15 @@ public class FakeMail implements Mail {
     public static class Builder {
 
         private Optional<String> fileName = Optional.absent();
+        private Optional<Long> size = Optional.absent();
         private Optional<MimeMessage> mimeMessage = Optional.absent();
         private List<MailAddress> recipients = new ArrayList<MailAddress>();
         private MailAddress sender;
+
+        public Builder size(long size) {
+            this.size = Optional.of(size);
+            return this;
+        }
 
         public Builder fileName(String fileName) {
             this.fileName = Optional.of(fileName);
@@ -105,6 +111,9 @@ public class FakeMail implements Mail {
             }
             if (mimeMessage.isPresent()) {
                 mail.setMessage(mimeMessage.get());
+            }
+            if (size.isPresent()) {
+                mail.setMessageSize(size.get());
             }
             mail.setSender(sender);
             mail.setRecipients(recipients);

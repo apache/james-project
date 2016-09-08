@@ -17,42 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.mailet.base;
 
-package org.apache.james.transport.matchers;
+import javax.mail.internet.AddressException;
 
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.mailet.MailAddress;
 
-import javax.mail.MessagingException;
+import com.google.common.base.Throwables;
 
-import org.apache.mailet.Mail;
-import org.apache.mailet.Matcher;
-import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+public class MailAddressFixture {
 
-public class AllTest {
 
-    private Matcher matcher;
+    public static final String JAMES_APACHE_ORG = "james.apache.org";
+    public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
-    @Before
-    public void setupMatcher() throws MessagingException {
-        matcher = new All();
-        FakeMatcherConfig mci = new FakeMatcherConfig("All",
-                FakeMailContext.defaultContext());
-        matcher.init(mci);
+    public static final MailAddress MAIL_ADDRESS_1 = createMailAddress("any@" + JAMES_APACHE_ORG);
+    public static final MailAddress MAIL_ADDRESS_2 = createMailAddress("other@" + JAMES_APACHE_ORG);
+    public static final MailAddress MAIL_ADDRESS_3_OTHER_DOMAIN = createMailAddress("any@" + JAMES2_APACHE_ORG);
+    public static final MailAddress MAIL_ADDRESS_4_OTHER_DOMAIN = createMailAddress("other@" + JAMES2_APACHE_ORG);
+
+    private static MailAddress createMailAddress(String mailAddress) {
+        try {
+            return new MailAddress(mailAddress);
+        } catch (AddressException e) {
+            throw Throwables.propagate(e);
+        }
     }
-
-    @Test
-    public void testAllRecipientsReturned() throws MessagingException {
-        Mail mail = FakeMail.builder()
-            .recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2)
-            .build();
-
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_2, MAIL_ADDRESS_2);
-    }
-
 }
