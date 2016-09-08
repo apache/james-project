@@ -53,7 +53,7 @@ public class AndTest {
 
     @Test
     public void shouldNotMatchWhenNoChild() throws Exception {
-        assertThat(testee.match(mail)).isNull();
+        assertThat(testee.match(mail)).isEmpty();
     }
 
     @Test
@@ -84,7 +84,7 @@ public class AndTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).isNull();
+        assertThat(testee.match(mail)).isEmpty();
     }
 
     @Test
@@ -95,6 +95,6 @@ public class AndTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).isNull();
+        assertThat(testee.match(mail)).isEmpty();
     }
 }

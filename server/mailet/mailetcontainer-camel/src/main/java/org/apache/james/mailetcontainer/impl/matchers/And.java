@@ -50,19 +50,15 @@ public class And extends GenericCompositeMatcher {
         return computeIntersection(individualMatchedResults);
     }
 
-    private Collection<MailAddress> computeIntersection(List<Set<MailAddress>> individualMatchedResults) {
+    private Set<MailAddress> computeIntersection(List<Set<MailAddress>> individualMatchedResults) {
         if (individualMatchedResults.size() == 0) {
-            return null;
+            return ImmutableSet.of();
         }
         if (individualMatchedResults.size() == 1) {
             return individualMatchedResults.get(0);
         }
-        Set<MailAddress> temporaryResult = ImmutableSet.copyOf(individualMatchedResults.get(0));
-        List<Set<MailAddress>> followingResults = individualMatchedResults.subList(1, individualMatchedResults.size());
-        for(Set<MailAddress> matchedAddresses: followingResults) {
-            temporaryResult = Sets.intersection(temporaryResult, matchedAddresses);
-        }
-        return temporaryResult;
+        return Sets.intersection(individualMatchedResults.get(0),
+            computeIntersection(individualMatchedResults.subList(1, individualMatchedResults.size())));
     }
 
     private List<Set<MailAddress>> performMatchOnMatchers(Mail mail) throws MessagingException {
