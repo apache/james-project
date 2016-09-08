@@ -19,14 +19,14 @@
 
 package org.apache.james.mailetcontainer.impl.matchers;
 
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.Mail;
-import org.apache.mailet.Matcher;
-
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.ArrayList;
+import java.util.HashSet;
+
 import javax.mail.MessagingException;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.Matcher;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -40,14 +40,17 @@ public class Or extends GenericCompositeMatcher {
      *         child matchers.
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        ImmutableSet.Builder<MailAddress> result = ImmutableSet.builder();
+        HashSet<MailAddress> result = new HashSet<MailAddress>();
         for (Matcher matcher : getMatchers()) {
             Collection<MailAddress> matchResult = matcher.match(mail);
             if (matchResult != null) {
                 result.addAll(matchResult);
             }
+            if (result.size() == mail.getRecipients().size()) {
+                break;
+            }
         }
-        return result.build();
+        return ImmutableSet.copyOf(result);
     }
 
 }
