@@ -50,7 +50,7 @@ public class Or extends GenericCompositeMatcher {
                 break;
             }
         }
-        return ImmutableSet.copyOf(result);
+        return result;
     }
 
 }
