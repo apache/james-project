@@ -19,16 +19,16 @@
 
 package org.apache.james.transport.mailets;
 
-import com.google.common.base.Throwables;
-
-import org.apache.james.core.MailImpl;
-import org.apache.james.core.MimeMessageUtil;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.GenericMailet;
-import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.RFC822DateFormat;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.mail.Message;
@@ -40,16 +40,16 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Locale;
+import org.apache.james.core.MailImpl;
+import org.apache.james.core.MimeMessageUtil;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.RFC2822Headers;
+import org.apache.mailet.base.DateFormats;
+
+import com.google.common.base.Throwables;
 
 /**
  * <p>
@@ -237,8 +237,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     private InternetAddress[] apparentlyTo;
     private boolean attachError = false;
     private boolean isReply = false;
-
-    private final RFC822DateFormat rfc822DateFormat = new RFC822DateFormat();
 
     protected DNSService dns;
 
@@ -1013,7 +1011,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             setSubjectPrefix(newMail, getSubjectPrefix(originalMail), originalMail);
 
             if (newMail.getMessage().getHeader(RFC2822Headers.DATE) == null) {
-                newMail.getMessage().setHeader(RFC2822Headers.DATE, rfc822DateFormat.format(new Date()));
+                newMail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(new Date()));
             }
 
             setReplyTo(newMail, getReplyTo(originalMail), originalMail);

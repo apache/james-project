@@ -54,7 +54,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.RFC822DateFormat;
+import org.apache.mailet.base.DateFormats;
 
 /**
  * <p>
@@ -131,9 +131,6 @@ public class WhiteListManager extends GenericMailet {
     private String selectBySender;
     private String insert;
     private String deleteByPK;
-
-    /** The date format object used to generate RFC 822 compliant date headers. */
-    private final RFC822DateFormat rfc822DateFormat = new RFC822DateFormat();
 
     private DataSource datasource;
 
@@ -701,7 +698,7 @@ public class WhiteListManager extends GenericMailet {
 
             // Set additional headers
             if (reply.getHeader(RFC2822Headers.DATE) == null) {
-                reply.setHeader(RFC2822Headers.DATE, rfc822DateFormat.format(new java.util.Date()));
+                reply.setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(new java.util.Date()));
             }
             String subject = message.getSubject();
             if (subject == null) {

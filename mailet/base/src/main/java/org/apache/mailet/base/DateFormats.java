@@ -22,17 +22,12 @@ package org.apache.mailet.base;
 
 import java.util.Locale;
 
-/**
- * A thread-safe date formatting class to produce dates formatted in accord with the
- * specifications of section 3.2 of RFC 2980.
- *
- */
-public class RFC2980DateFormat extends SynchronizedDateFormat {
+import org.apache.commons.lang.time.FastDateFormat;
 
-    /**
-     * Constructor for RFC2980DateFormat
-     */
-    public RFC2980DateFormat() {
-        super("yyyyMMddHHmmss", Locale.ENGLISH);
-    }
+public interface DateFormats {
+    FastDateFormat RFC822_DATE_FORMAT = FastDateFormat.getInstance("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
+    FastDateFormat RFC977_SHORT_DATE_FORMAT = FastDateFormat.getInstance("yyMMdd HHmmss", Locale.US);
+    FastDateFormat RFC977_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMdd HHmmss", Locale.US);
+    FastDateFormat RFC2980_LONG_DATE_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmss", Locale.US);
 }
+

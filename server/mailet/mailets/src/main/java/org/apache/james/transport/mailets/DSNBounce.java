@@ -19,21 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import org.apache.james.core.MailImpl;
-import org.apache.james.protocols.smtp.dsn.DSNStatus;
-import org.apache.james.transport.util.Patterns;
-import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.RFC822DateFormat;
-import org.apache.mailet.base.mail.MimeMultipartReport;
-
-import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ConnectException;
@@ -45,6 +30,22 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.core.MailImpl;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
+import org.apache.james.transport.util.Patterns;
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.RFC2822Headers;
+import org.apache.mailet.base.DateFormats;
+import org.apache.mailet.base.mail.MimeMultipartReport;
 
 /**
  * <p>
@@ -87,8 +88,6 @@ import java.util.regex.Pattern;
  */
 
 public class DSNBounce extends AbstractNotify {
-
-    private static final RFC822DateFormat rfc822DateFormat = new RFC822DateFormat();
 
     public static final String STATUS_PATTERN_STRING = ".*\\s*([245]\\.\\d{1,3}\\.\\d{1,3}).*\\s*";
     public static final String DIAG_PATTERN_STRING = "^\\d{3}\\s.*$";
@@ -193,7 +192,7 @@ public class DSNBounce extends AbstractNotify {
             setTo(newMail, getTo(originalMail), originalMail);
             setSubjectPrefix(newMail, getSubjectPrefix(originalMail), originalMail);
             if (newMail.getMessage().getHeader(RFC2822Headers.DATE) == null) {
-                newMail.getMessage().setHeader(RFC2822Headers.DATE, rfc822DateFormat.format(new Date()));
+                newMail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(new Date()));
             }
             setReplyTo(newMail, getReplyTo(originalMail), originalMail);
             setReversePath(newMail, getReversePath(originalMail), originalMail);
@@ -355,7 +354,7 @@ public class DSNBounce extends AbstractNotify {
             out.println("Diagnostic-Code: " + diagnosticType + "; " + diagnosticCode);
 
             // optional: last attempt
-            out.println("Last-Attempt-Date: " + rfc822DateFormat.format(originalMail.getLastUpdated()));
+            out.println("Last-Attempt-Date: " + DateFormats.RFC822_DATE_FORMAT.format(originalMail.getLastUpdated()));
 
             // optional: retry until
             // only for 'delayed' reports .. but we don't report this (at least
