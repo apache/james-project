@@ -20,12 +20,12 @@ package org.apache.james.mailetcontainer.impl.matchers;
  ****************************************************************/
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
-import org.apache.mailet.MailAddress;
-import org.apache.mailet.Mail;
 import javax.mail.MessagingException;
+
+import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 
 import com.google.common.collect.ImmutableList;
@@ -46,11 +46,11 @@ public class And extends GenericCompositeMatcher {
      *         child Matchers.
      */
     public Collection<MailAddress> match(final Mail mail) throws MessagingException {
-        List<Set<MailAddress>> individualMatchedResults = performMatchOnMatchers(mail);
+        ImmutableList<Set<MailAddress>> individualMatchedResults = performMatchOnMatchers(mail);
         return computeIntersection(individualMatchedResults);
     }
 
-    private Set<MailAddress> computeIntersection(List<Set<MailAddress>> individualMatchedResults) {
+    private Set<MailAddress> computeIntersection(ImmutableList<Set<MailAddress>> individualMatchedResults) {
         if (individualMatchedResults.size() == 0) {
             return ImmutableSet.of();
         }
@@ -61,7 +61,7 @@ public class And extends GenericCompositeMatcher {
             computeIntersection(individualMatchedResults.subList(1, individualMatchedResults.size())));
     }
 
-    private List<Set<MailAddress>> performMatchOnMatchers(Mail mail) throws MessagingException {
+    private ImmutableList<Set<MailAddress>> performMatchOnMatchers(Mail mail) throws MessagingException {
         ImmutableList.Builder<Set<MailAddress>> builder = ImmutableList.builder();
         for (Matcher matcher : getMatchers()) {
             Collection<MailAddress> matchedMailAddress = matcher.match(mail);
