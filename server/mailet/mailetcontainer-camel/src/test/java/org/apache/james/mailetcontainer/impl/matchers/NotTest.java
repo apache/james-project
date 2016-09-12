@@ -59,7 +59,7 @@ public class NotTest {
 
     @Test
     public void shouldReturnAllAddressesWhenNoMatcherSpecified() throws Exception {
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient2, recipient3, recipient4);
+        assertThat(testee.match(mail)).containsOnly(recipient1, recipient2, recipient3, recipient4);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class NotTest {
 
         testee.add(matcher1);
 
-        assertThat(testee.match(mail)).containsExactly(recipient2, recipient4);
+        assertThat(testee.match(mail)).containsOnly(recipient2, recipient4);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class NotTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient4);
+        assertThat(testee.match(mail)).containsOnly(recipient4);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class NotTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient2, recipient4);
+        assertThat(testee.match(mail)).containsOnly(recipient2, recipient4);
     }
 
     @Test
@@ -101,6 +101,6 @@ public class NotTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient2, recipient4);
+        assertThat(testee.match(mail)).containsOnly(recipient2, recipient4);
     }
 }
