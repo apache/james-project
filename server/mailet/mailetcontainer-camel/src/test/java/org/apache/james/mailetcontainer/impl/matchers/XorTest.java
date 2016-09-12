@@ -63,7 +63,7 @@ public class XorTest {
 
         testee.add(matcher1);
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
+        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class XorTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_2);
+        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_2);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class XorTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
+        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
     }
 
     @Test
@@ -96,6 +96,6 @@ public class XorTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
+        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN);
     }
 }
