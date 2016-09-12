@@ -29,7 +29,6 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class Not extends GenericCompositeMatcher {
@@ -51,6 +50,6 @@ public class Not extends GenericCompositeMatcher {
                 finalResult.removeAll(matcherResult);
             }
         }
-        return ImmutableList.copyOf(finalResult);
+        return finalResult;
     }
 }
