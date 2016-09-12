@@ -43,4 +43,10 @@ public class MailboxAnnotation extends BaseSelectedInbox {
         Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
         scriptTest("Annotation", Locale.US);
     }
+
+    @Test
+    public void testAnnotationWithLimitationUS() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
+        scriptTest("AnnotationWithLimitation", Locale.US);
+    }
 }
