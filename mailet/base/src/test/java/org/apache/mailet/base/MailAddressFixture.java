@@ -31,10 +31,10 @@ public class MailAddressFixture {
     public static final String JAMES_APACHE_ORG = "james.apache.org";
     public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
-    public static final MailAddress MAIL_ADDRESS_1 = createMailAddress("any@" + JAMES_APACHE_ORG);
-    public static final MailAddress MAIL_ADDRESS_2 = createMailAddress("other@" + JAMES_APACHE_ORG);
-    public static final MailAddress MAIL_ADDRESS_3_OTHER_DOMAIN = createMailAddress("any@" + JAMES2_APACHE_ORG);
-    public static final MailAddress MAIL_ADDRESS_4_OTHER_DOMAIN = createMailAddress("other@" + JAMES2_APACHE_ORG);
+    public static final MailAddress ANY_AT_JAMES = createMailAddress("any@" + JAMES_APACHE_ORG);
+    public static final MailAddress OTHER_AT_JAMES = createMailAddress("other@" + JAMES_APACHE_ORG);
+    public static final MailAddress ANY_AT_JAMES2 = createMailAddress("any@" + JAMES2_APACHE_ORG);
+    public static final MailAddress OTHER_AT_JAMES2 = createMailAddress("other@" + JAMES2_APACHE_ORG);
 
     private static MailAddress createMailAddress(String mailAddress) {
         try {

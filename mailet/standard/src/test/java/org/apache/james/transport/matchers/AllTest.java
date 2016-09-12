@@ -20,8 +20,8 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
@@ -49,10 +49,10 @@ public class AllTest {
     @Test
     public void testAllRecipientsReturned() throws MessagingException {
         Mail mail = FakeMail.builder()
-            .recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2)
+            .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_2, MAIL_ADDRESS_2);
+        assertThat(matcher.match(mail)).containsExactly(OTHER_AT_JAMES, OTHER_AT_JAMES);
     }
 
 }

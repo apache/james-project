@@ -20,10 +20,10 @@
 package org.apache.james.transport.matchers;
 
 import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_3_OTHER_DOMAIN;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_4_OTHER_DOMAIN;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
@@ -50,25 +50,25 @@ public class HostIsTest {
     @Test
     public void shouldMatchWhenRightDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
-            .recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2)
+            .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1, MAIL_ADDRESS_2);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES, OTHER_AT_JAMES);
     }
 
     @Test
     public void shouldMatchOnlyWhenRightDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
-            .recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN)
+            .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
             .build();
 
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
     public void shouldNotMatchWhenWrongDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
-            .recipients(MAIL_ADDRESS_3_OTHER_DOMAIN, MAIL_ADDRESS_4_OTHER_DOMAIN)
+            .recipients(ANY_AT_JAMES2, OTHER_AT_JAMES2)
             .build();
 
         assertThat(matcher.match(mail)).isEmpty();

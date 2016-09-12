@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,7 +48,7 @@ public class HasAttachmentTest {
 
         mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mail = FakeMail.builder()
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .mimeMessage(mimeMessage)
             .build();
     }

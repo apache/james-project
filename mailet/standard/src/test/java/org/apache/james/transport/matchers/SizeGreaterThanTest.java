@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
@@ -50,20 +50,20 @@ public class SizeGreaterThanTest {
     public void matchShouldMatchWhenMailAboveSize() throws MessagingException {
         Mail mail = FakeMail.builder()
             .size(2000000)
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .build();
 
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1m", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
     public void matchShouldNotMatchWhenMailUnderSize() throws MessagingException {
         Mail mail = FakeMail.builder()
             .size(200000)
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .build();
 
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1m", FakeMailContext.defaultContext());
@@ -76,7 +76,7 @@ public class SizeGreaterThanTest {
     public void matchShouldNotMatchMailsWithSpecifiedSize() throws MessagingException {
         Mail mail = FakeMail.builder()
             .size(1024)
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .build();
 
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
@@ -89,20 +89,20 @@ public class SizeGreaterThanTest {
     public void matchShouldMatchMailsWithSizeSuperiorToSpecifiedSize() throws MessagingException {
         Mail mail = FakeMail.builder()
             .size(1025)
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .build();
 
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=1k", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
     public void matchShouldReturnNullWhenUnderLimitNoUnit() throws MessagingException {
         Mail mail = FakeMail.builder()
             .size(4)
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .build();
 
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
@@ -115,13 +115,13 @@ public class SizeGreaterThanTest {
     public void matchShouldMatchOverLimitWhenNoUnit() throws MessagingException {
         Mail mail = FakeMail.builder()
             .size(5)
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .build();
 
         FakeMatcherConfig matcherConfiguration = new FakeMatcherConfig("SizeGreaterThan=4", FakeMailContext.defaultContext());
         matcher.init(matcherConfiguration);
 
-        assertThat(matcher.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test

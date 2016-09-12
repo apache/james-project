@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_2;
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_3_OTHER_DOMAIN;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,7 +48,7 @@ public class AndTest {
 
         testee = new And();
 
-        mail = FakeMail.builder().recipients(MAIL_ADDRESS_1, MAIL_ADDRESS_2, MAIL_ADDRESS_3_OTHER_DOMAIN).build();
+        mail = FakeMail.builder().recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2).build();
     }
 
     @Test
@@ -58,27 +58,27 @@ public class AndTest {
 
     @Test
     public void shouldMatchWhenSingleUnderlyingMatcherMatch() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES));
 
         testee.add(matcher1);
 
-        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1);
+        assertThat(testee.match(mail)).containsOnly(ANY_AT_JAMES);
     }
 
     @Test
     public void shouldMatchWhenTwoUnderlyingMatcherMatch() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_2));
-        when(matcher2.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_3_OTHER_DOMAIN));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
+        when(matcher2.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
 
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1);
+        assertThat(testee.match(mail)).containsOnly(ANY_AT_JAMES);
     }
 
     @Test
     public void shouldMatchWhenAtLeastOneUnderlyingMatcherDoNotMatch() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_2));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
         when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
 
         testee.add(matcher1);
@@ -89,7 +89,7 @@ public class AndTest {
 
     @Test
     public void shouldSupportNull() throws Exception {
-        when(matcher1.match(mail)).thenReturn(ImmutableList.of(MAIL_ADDRESS_1, MAIL_ADDRESS_2));
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
         when(matcher2.match(mail)).thenReturn(null);
 
         testee.add(matcher1);

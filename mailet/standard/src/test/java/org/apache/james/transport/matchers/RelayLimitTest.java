@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.MAIL_ADDRESS_1;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Properties;
@@ -47,7 +47,7 @@ public class RelayLimitTest {
         testee = new RelayLimit();
         mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mail = FakeMail.builder()
-            .recipient(MAIL_ADDRESS_1)
+            .recipient(ANY_AT_JAMES)
             .mimeMessage(mimeMessage)
             .build();
     }
@@ -95,7 +95,7 @@ public class RelayLimitTest {
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(testee.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class RelayLimitTest {
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(testee.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
 }
