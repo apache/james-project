@@ -43,6 +43,7 @@ import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -62,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 public class SetAnnotationProcessorTest {
 
     private static final String TAG = "TAG";
+    private static final int FIRST_ELEMENT_INDEX = 0;
 
     @InjectMocks
     private SetAnnotationProcessor processor;
@@ -157,5 +159,19 @@ public class SetAnnotationProcessorTest {
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
 
         assertThat(humanTextCaptor.getAllValues()).containsOnly(HumanReadableText.COMPLETED);
+    }
+
+    @Test
+    public void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
+        when(mockImapSession.getLog()).thenReturn(log);
+
+        doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(MAILBOX_ANNOTATIONS));
+
+        processor.process(request, mockResponder, mockImapSession);
+
+        verify(mockStatusResponseFactory, times(1)).taggedNo(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
+
+        assertThat(humanTextCaptor.getAllValues().get(FIRST_ELEMENT_INDEX).getKey()).isEqualTo(HumanReadableText.MAILBOX_ANNOTATION_KEY);
+
     }
 }

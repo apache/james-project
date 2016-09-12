@@ -33,6 +33,7 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -63,6 +64,9 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
         } catch (MailboxNotFoundException e) {
             session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+        } catch (AnnotationException e) {
+            session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
+            no(command, tag, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
             session.getLog().info(command.getName() + " failed for mailbox " + mailboxName, e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
