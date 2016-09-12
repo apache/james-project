@@ -20,127 +20,96 @@
 
 package org.apache.james.transport.matchers;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
-import junit.framework.AssertionFailedError;
-
-import org.apache.james.transport.matchers.RecipientIsRegex;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-public class RecipientIsRegexTest extends AbstractRecipientIsTest {
+public class RecipientIsRegexTest {
 
-    private String regex = ".*";
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
-    public RecipientIsRegexTest(String arg0)
-            throws UnsupportedEncodingException {
-        super(arg0);
+    private RecipientIsRegex matcher;
+    private MailAddress recipient1;
+    private MailAddress recipient2;
+    private MailAddress recipient3;
+
+    @Before
+    public void setUp() throws Exception {
+        matcher = new RecipientIsRegex();
+        recipient1 = new MailAddress("test@james.apache.org");
+        recipient2 = new MailAddress("other@james.apache.org");
+        recipient3 = new MailAddress("bis@james.apache.org");
     }
 
-    private void setRegex(String regex) {
-        this.regex = regex;
+    @Test
+    public void shouldMatchOneAddress() throws MessagingException {
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=.*@.*", FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient1)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient1);
     }
 
-    // test if the recipients get returned as matched
-    public void testRegexIsMatchedAllRecipients() throws MessagingException {
-        setRecipients(new MailAddress[] { new MailAddress(
-                "test@james.apache.org") });
-        setRegex(".*@.*");
+    @Test
+    public void shouldNotMatchPartially() throws MessagingException {
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=test", FakeMailContext.defaultContext()));
 
-        setupAll();
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient1)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
-    // test if one recipients get returned as matched
-    public void testRegexIsMatchedOneRecipient() throws MessagingException {
-        setRecipients(new MailAddress[] {
-                new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org") });
-        setRegex("^test@.*");
+    @Test
+    public void shouldMatchOnlyMatchingPatterns() throws MessagingException {
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=^test@.*", FakeMailContext.defaultContext()));
 
-        setupAll();
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(recipient1, recipient3)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), 1);
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient1);
     }
 
-    // test if no recipient get returned cause it not match
-    public void testRegexIsNotMatch() throws MessagingException {
-        setRecipients(new MailAddress[] {
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james2.apache.org") });
-        setRegex(".*\\+");
+    @Test
+    public void shouldNotMatchNonMatchingPatterns() throws MessagingException {
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=.*\\+", FakeMailContext.defaultContext()));
 
-        setupAll();
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(recipient1, recipient3)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertEquals(matchedRecipients.size(), 0);
+        assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
-    // test if an exception was thrown cause the regex was invalid
+    @Test
     public void testRegexIsNotMatchedCauseError() throws MessagingException {
-        Collection<MailAddress> matchedRecipients = null;
-        String invalidRegex = "(!(";
-        String regexException = null;
-        String exception = "Malformed pattern: " + invalidRegex;
-
-        setRecipients(new MailAddress[] {
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james2.apache.org") });
-        setRegex(invalidRegex);
-
-        try {
-            setupAll();
-            matchedRecipients = matcher.match(mockedMail);
-        } catch (MessagingException m) {
-            regexException = m.getMessage();
-        }
-
-        assertNull(matchedRecipients);
-        try {
-            assertEquals(exception, regexException);
-        } catch (AssertionFailedError e) {
-            // NOTE the expected exception changes when the project is built/run
-            // against non java 1.4 jvm. 
-            assertEquals(exception+" (org.apache.oro.text.regex.MalformedPatternException: Unmatched parentheses.)", regexException);
-        }
-
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=(.", FakeMailContext.defaultContext()));
     }
 
-    // test if an exception was thrown cause the regex was invalid
+    @Test
     public void testThrowExceptionWithEmptyPattern() throws MessagingException {
-        boolean catchException = false;
-
-        setRecipients(new MailAddress[] {
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james2.apache.org") });
-        setRegex("");
-
-        try {
-            setupAll();
-        } catch (MessagingException m) {
-            catchException = true;
-        }
-        assertTrue(catchException);
-
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex=", FakeMailContext.defaultContext()));
     }
 
-    protected String getRecipientName() {
-        return regex;
-    }
-
-    protected Matcher createMatcher() {
-        return new RecipientIsRegex();
+    @Test
+    public void testThrowExceptionWithNoCondition() throws MessagingException {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIsRegex", FakeMailContext.defaultContext()));
     }
 }

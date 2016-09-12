@@ -19,7 +19,8 @@
 
 package org.apache.james.mailetcontainer.impl.matchers;
 
-import java.util.Iterator;
+import java.util.List;
+
 import org.apache.mailet.Matcher;
 
 /**
@@ -54,9 +55,9 @@ import org.apache.mailet.Matcher;
 public interface CompositeMatcher extends Matcher {
 
     /**
-     * @return Iterator if child Matchers
+     * @return Immutable list for the child matchers
      */
-    Iterator<Matcher> iterator();
+    List<Matcher> getMatchers();
 
     /**
      * Add a child matcher to this composite matcher. This is called by

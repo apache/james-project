@@ -18,47 +18,86 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.matchers;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.mail.MessagingException;
-import java.util.Collection;
+import com.google.common.collect.ImmutableList;
 
-public class AndTest extends BaseMatchersTest {
+public class AndTest {
 
-    @Override
+    private And testee;
+    private Matcher matcher1;
+    private Matcher matcher2;
+    private Mail mail;
+    private MailAddress recipient1;
+    private MailAddress recipient2;
+    private MailAddress recipient3;
+
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-        setupCompositeMatcher("And", And.class);
-    }
+        matcher1 = mock(Matcher.class);
+        matcher2 = mock(Matcher.class);
 
-    // test if all recipients was returned
-    @Test
-    public void testAndIntersectSameTwice() throws MessagingException {
-        setupChild("RecipientIs=test@james.apache.org");
-        setupChild("RecipientIs=test@james.apache.org");
-        setupChild("All");
+        testee = new And();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(1, matchedRecipients.size());
-        MailAddress address = (MailAddress) matchedRecipients.iterator().next();
-        assertEquals(address.toString(), "test@james.apache.org");
+        recipient1 = new MailAddress("any@apahe.org");
+        recipient2 = new MailAddress("other@apahe.org");
+        recipient3 = new MailAddress("bis@apache.org");
+        mail = FakeMail.builder().recipients(recipient1, recipient2, recipient3).build();
     }
 
     @Test
-    public void testAndNoIntersect() throws MessagingException {
-        setupChild("RecipientIs=test@james.apache.org");
-        setupChild("RecipientIs=test2@james.apache.org");
+    public void shouldNotMatchWhenNoChild() throws Exception {
+        assertThat(testee.match(mail)).isNull();
+    }
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
+    @Test
+    public void shouldMatchWhenSingleUnderlyingMatcherMatch() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1));
 
-        assertNotNull(matchedRecipients);
-        assertEquals(0, matchedRecipients.size());
+        testee.add(matcher1);
+
+        assertThat(testee.match(mail)).containsExactly(recipient1);
+    }
+
+    @Test
+    public void shouldMatchWhenTwoUnderlyingMatcherMatch() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
+        when(matcher2.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
+
+        testee.add(matcher1);
+        testee.add(matcher2);
+
+        assertThat(testee.match(mail)).containsExactly(recipient1);
+    }
+
+    @Test
+    public void shouldMatchWhenAtLeastOneUnderlyingMatcherDoNotMatch() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
+        when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
+
+        testee.add(matcher1);
+        testee.add(matcher2);
+
+        assertThat(testee.match(mail)).isNull();
+    }
+
+    @Test
+    public void shouldSupportNull() throws Exception {
+        when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
+        when(matcher2.match(mail)).thenReturn(null);
+
+        testee.add(matcher1);
+        testee.add(matcher2);
+
+        assertThat(testee.match(mail)).isNull();
     }
 }

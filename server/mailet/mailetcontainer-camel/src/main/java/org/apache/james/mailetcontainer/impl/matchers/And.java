@@ -20,13 +20,17 @@ package org.apache.james.mailetcontainer.impl.matchers;
  ****************************************************************/
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mail;
 import javax.mail.MessagingException;
 import org.apache.mailet.Matcher;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 /**
  * This matcher performs And conjunction between the two recipients
@@ -41,64 +45,37 @@ public class And extends GenericCompositeMatcher {
      * @return Collection of Recipient from the And composition results of the
      *         child Matchers.
      */
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> finalResult = null;
-        Matcher matcher;
-        boolean first = true;
-        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = (matcherIter.next());
-            Collection<MailAddress> result = matcher.match(mail);
+    public Collection<MailAddress> match(final Mail mail) throws MessagingException {
+        List<Set<MailAddress>> individualMatchedResults = performMatchOnMatchers(mail);
+        return computeIntersection(individualMatchedResults);
+    }
 
-            if (result == null) {
-                // short-circuit
-                // log("Matching with " +
-                // matcher.getMatcherConfig().getMatcherName() +
-                // " result.size()=0");
-                return new ArrayList<MailAddress>(0);
-            }
-            if (result.size() == 0) {
-                return result;
-            }
-
-            // log("Matching with " +
-            // matcher.getMatcherConfig().getMatcherName() +
-            // " result.size()="+result.size());
-
-            if (first) {
-                finalResult = result;
-                first = false;
-            } else {
-                // Check if we need to And ...
-                // if the finalResult and the subsequent result are the same
-                // collection, then it contains the same recipients
-                // so we can short-circuit building the AND of the two
-                if (finalResult != result) {
-                    // the two results are different collections, so we AND
-                    // them
-                    // Ensure that the finalResult only contains recipients
-                    // in the result collection
-                    Collection<MailAddress> newResult = new ArrayList<MailAddress>();
-                    MailAddress recipient;
-                    for (Object aFinalResult : finalResult) {
-                        recipient = (MailAddress) aFinalResult;
-                        // log("recipient="+recipient.toString());
-                        if (result.contains(recipient)) {
-                            newResult.add(recipient);
-                        }
-                    }
-                    recipient = null;
-                    // basically the finalResult gets replaced with a
-                    // smaller result
-                    // otherwise finalResult would have been equal to result
-                    // (in all cases)
-                    finalResult = newResult;
-                }
-            }
-            result = null;
+    private Collection<MailAddress> computeIntersection(List<Set<MailAddress>> individualMatchedResults) {
+        if (individualMatchedResults.size() == 0) {
+            return null;
         }
-        matcher = null;
-        // log("answer is "+finalResult.toString());
-        return finalResult;
+        if (individualMatchedResults.size() == 1) {
+            return individualMatchedResults.get(0);
+        }
+        Set<MailAddress> temporaryResult = ImmutableSet.copyOf(individualMatchedResults.get(0));
+        List<Set<MailAddress>> followingResults = individualMatchedResults.subList(1, individualMatchedResults.size());
+        for(Set<MailAddress> matchedAddresses: followingResults) {
+            temporaryResult = Sets.intersection(temporaryResult, matchedAddresses);
+        }
+        return temporaryResult;
+    }
+
+    private List<Set<MailAddress>> performMatchOnMatchers(Mail mail) throws MessagingException {
+        ImmutableList.Builder<Set<MailAddress>> builder = ImmutableList.builder();
+        for (Matcher matcher : getMatchers()) {
+            Collection<MailAddress> matchedMailAddress = matcher.match(mail);
+            if (matchedMailAddress != null && !matchedMailAddress.isEmpty()) {
+                builder.add(ImmutableSet.copyOf(matchedMailAddress));
+            } else {
+                return ImmutableList.of();
+            }
+        }
+        return builder.build();
     }
 
 }

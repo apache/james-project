@@ -20,13 +20,15 @@
 package org.apache.james.mailetcontainer.impl.matchers;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.ArrayList;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Mail;
 import javax.mail.MessagingException;
 import org.apache.mailet.Matcher;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 public class Xor extends GenericCompositeMatcher {
 
@@ -40,54 +42,35 @@ public class Xor extends GenericCompositeMatcher {
      */
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> finalResult = null;
-        Matcher matcher;
         boolean first = true;
-        for (Iterator<Matcher> matcherIter = iterator(); matcherIter.hasNext();) {
-            matcher = matcherIter.next();
-            Collection<MailAddress> result = matcher.match(mail);
-            if (result == null) {
-                result = new ArrayList<MailAddress>(0);
-            }
-            // log("Matching with " +
-            // matcher.getMatcherConfig().getMatcherName() +
-            // " result="+result.toString() );
+        for (Matcher matcher: getMatchers()) {
+            Collection<MailAddress> matchedAddresses = Optional.fromNullable(matcher.match(mail)).or(new ArrayList<MailAddress>());
 
             if (first) {
-                finalResult = result;
+                finalResult = matchedAddresses;
                 first = false;
             } else {
-                // Check if we need to Xor ...
-                // if the finalResult and the subsequent result are the same
-                // collection, then it contains the same recipients
-                // so we can short-circuit building the XOR and return an empty
-                // set
-                if (finalResult == result) {
-                    // the XOR of the same collection is empty
-                    finalResult.clear();
-                    // log("same collection - so clear");
-                } else {
-                    // the two results are different collections, so we XOR them
-                    // Ensure that the finalResult does not contain recipients
-                    // in the result collection
-                    MailAddress recipient;
-                    for (Object aResult : result) {
-                        recipient = (MailAddress) (aResult);
-                        if (!finalResult.contains(recipient)) {
-                            finalResult.add(recipient);
-                        } else {
-                            finalResult.remove(recipient);
-                        }
-                    }
-                    recipient = null;
-                    // log("xor recipients into new finalResult="+finalResult);
-                }
-                // basically the finalResult gets replaced with a smaller result
-                // otherwise finalResult would have been equal to result (in all
-                // cases)
+                finalResult = performXor(finalResult, matchedAddresses);
             }
-            result = null;
         }
         return finalResult;
+    }
+
+    private Collection<MailAddress> performXor(Collection<MailAddress> collection1, Collection<MailAddress> collection2) {
+        ImmutableList.Builder<MailAddress> result = ImmutableList.builder();
+        result.addAll(calculateExternalEnsemble(collection1, collection2));
+        result.addAll(calculateExternalEnsemble(collection2, collection1));
+        return result.build();
+    }
+
+    private Collection<MailAddress> calculateExternalEnsemble(Collection<MailAddress> baseEnsemble, Collection<MailAddress> potentiallyCommonEnsemble) {
+        ImmutableList.Builder<MailAddress> externalEnsemble = ImmutableList.builder();
+        for (MailAddress recipient : baseEnsemble) {
+            if (!potentiallyCommonEnsemble.contains(recipient)) {
+                externalEnsemble.add(recipient);
+            }
+        }
+        return externalEnsemble.build();
     }
 
 }

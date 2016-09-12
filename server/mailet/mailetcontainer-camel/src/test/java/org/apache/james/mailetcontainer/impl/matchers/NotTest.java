@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailetcontainer.impl.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,9 +32,9 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class XorTest {
+public class NotTest {
 
-    private Xor testee;
+    private Not testee;
     private Matcher matcher1;
     private Matcher matcher2;
     private Mail mail;
@@ -47,7 +48,7 @@ public class XorTest {
         matcher1 = mock(Matcher.class);
         matcher2 = mock(Matcher.class);
 
-        testee = new Xor();
+        testee = new Not();
 
         recipient1 = new MailAddress("any@apahe.org");
         recipient2 = new MailAddress("other@apahe.org");
@@ -58,27 +59,27 @@ public class XorTest {
 
     @Test
     public void shouldReturnNoResultWhenNoMatcherSpecified() throws Exception {
-        assertThat(testee.match(mail)).isNull();
+        assertThat(testee.match(mail)).containsExactly(recipient1, recipient2, recipient3, recipient4);
     }
 
     @Test
-    public void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
+    public void shouldNegateWhenOneMatcher() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
 
         testee.add(matcher1);
 
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient3);
+        assertThat(testee.match(mail)).containsExactly(recipient2, recipient4);
     }
 
     @Test
-    public void shouldPerformXorWhenTwoMatcher() throws Exception {
+    public void shouldNegateUnionWhenTwoMatchers() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
         when(matcher2.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
 
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient3, recipient2);
+        assertThat(testee.match(mail)).containsExactly(recipient4);
     }
 
     @Test
@@ -89,7 +90,7 @@ public class XorTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient3);
+        assertThat(testee.match(mail)).containsExactly(recipient2, recipient4);
     }
 
     @Test
@@ -100,6 +101,6 @@ public class XorTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(recipient1, recipient3);
+        assertThat(testee.match(mail)).containsExactly(recipient2, recipient4);
     }
 }

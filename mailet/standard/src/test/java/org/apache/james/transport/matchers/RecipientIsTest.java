@@ -20,69 +20,90 @@
 
 package org.apache.james.transport.matchers;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.transport.matchers.RecipientIs;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.Matcher;
+import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMailContext;
+import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-public class RecipientIsTest extends AbstractRecipientIsTest {
+public class RecipientIsTest {
 
-    public RecipientIsTest(String arg0) throws UnsupportedEncodingException {
-        super(arg0);
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    private RecipientIs matcher;
+    private MailAddress recipient1;
+    private MailAddress recipient2;
+    private MailAddress recipient3;
+
+    @Before
+    public void setUp() throws Exception {
+        matcher = new RecipientIs();
+        recipient1 = new MailAddress("test@james.apache.org");
+        recipient2 = new MailAddress("other@james.apache.org");
+        recipient3 = new MailAddress("bis@james.apache.org");
     }
 
-    protected String getRecipientName() {
-        return "test@james.apache.org";
+    @Test
+    public void shouldMatchCorrespondingAddres() throws Exception {
+        matcher.init(new FakeMatcherConfig("RecipientIs=" + recipient1.toString(), FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient1)
+            .build();
+
+       assertThat(matcher.match(fakeMail)).containsExactly(recipient1);
     }
 
-    // test if the recipients get returned as matched
-    public void testHostIsMatchedAllRecipients() throws MessagingException {
-        setRecipients(new MailAddress[] { new MailAddress(
-                "test@james.apache.org") });
+    @Test
+    public void shouldOnlyMatchCorrespondingAddress() throws Exception {
+        matcher.init(new FakeMatcherConfig("RecipientIs=" + recipient1.toString(), FakeMailContext.defaultContext()));
 
-        setupMockedMail();
-        setupMatcher();
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(recipient1, recipient2)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient1);
     }
 
-    // test if one recipients get returned as matched
-    public void testHostIsMatchedOneRecipient() throws MessagingException {
-        setRecipients(new MailAddress[] {
-                new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org") });
+    @Test
+    public void shouldNotMatchUnrelatedAddresses() throws Exception {
+        matcher.init(new FakeMatcherConfig("RecipientIs=" + recipient1.toString(), FakeMailContext.defaultContext()));
 
-        setupAll();
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(recipient2, recipient3)
+            .build();
 
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), 1);
+        assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
-    // test if no recipient get returned cause it not match
-    public void testHostIsNotMatch() throws MessagingException {
-        setRecipients(new MailAddress[] {
-                new MailAddress("test@james2.apache.org"),
-                new MailAddress("test2@james2.apache.org") });
-
-        setupMockedMail();
-        setupMatcher();
-
-        Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
-
-        assertEquals(matchedRecipients.size(), 0);
+    @Test
+    public void initShouldThrowOnMissingCondition() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIs", FakeMailContext.defaultContext()));
     }
 
-    protected Matcher createMatcher() {
-        return new RecipientIs();
+    @Test
+    public void initShouldThrowOnEmptyCondition() throws Exception {
+        expectedException.expect(MessagingException.class);
+        matcher.init(new FakeMatcherConfig("RecipientIs=", FakeMailContext.defaultContext()));
+    }
+
+    @Test
+    public void shouldBeAbleToMatchSeveralAddresses() throws Exception {
+        matcher.init(new FakeMatcherConfig("RecipientIs=" + recipient1.toString() + ", " + recipient3.toString(), FakeMailContext.defaultContext()));
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipients(recipient1, recipient2, recipient3)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient1, recipient3);
     }
 }
