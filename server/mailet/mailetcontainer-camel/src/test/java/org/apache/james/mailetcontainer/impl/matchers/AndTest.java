@@ -62,7 +62,7 @@ public class AndTest {
 
         testee.add(matcher1);
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class AndTest {
         testee.add(matcher1);
         testee.add(matcher2);
 
-        assertThat(testee.match(mail)).containsExactly(MAIL_ADDRESS_1);
+        assertThat(testee.match(mail)).containsOnly(MAIL_ADDRESS_1);
     }
 
     @Test
