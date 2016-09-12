@@ -28,6 +28,7 @@ import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.base.BaseSelectedInbox;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
 public class MailboxAnnotation extends BaseSelectedInbox {
@@ -38,15 +39,23 @@ public class MailboxAnnotation extends BaseSelectedInbox {
         super(system);
     }
 
+    @Before
+    public void setup() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
+    }
+
     @Test
     public void testAnnotationUS() throws Exception {
-        Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
         scriptTest("Annotation", Locale.US);
     }
 
     @Test
     public void testAnnotationWithLimitationUS() throws Exception {
-        Assume.assumeTrue(system.supports(ImapFeatures.Feature.ANNOTATION_SUPPORT));
         scriptTest("AnnotationWithLimitation", Locale.US);
+    }
+
+    @Test
+    public void testAnnotationWithBinaryValue() throws Exception {
+        scriptTest("AnnotationWithBinaryData", Locale.US);
     }
 }
