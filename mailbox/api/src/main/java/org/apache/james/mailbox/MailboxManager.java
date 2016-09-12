@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -442,7 +443,11 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      * @param mailboxAnnotations    the list of annotation should be insert/udpate/delete
      * @throws MailboxException in case of selected mailbox does not exist
      */
-    void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException;
+    void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException, AnnotationException;
     
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+
+    void setLimitOfAnnotations(int limitOfAnnotations);
+
+    void setLimitAnnotationSize(int limitAnnotationSize);
 }

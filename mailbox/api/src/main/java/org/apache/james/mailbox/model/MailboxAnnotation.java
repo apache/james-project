@@ -25,7 +25,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 public class MailboxAnnotation {
-
     public static MailboxAnnotation nil(MailboxAnnotationKey key) {
         return new MailboxAnnotation(key, Optional.<String> absent());
     }

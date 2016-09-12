@@ -17,33 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox.exception;
 
-/**
- * Constants which are used within the mailbox api and implementations
- * 
- *
- */
-public interface MailboxConstants {
+public class AnnotationException extends MailboxException {
+    public AnnotationException() {
+        super();
+    }
 
-    /**
-     * The char which is used to prefix a namespace
-     */
-    char NAMESPACE_PREFIX_CHAR = '#';
+    public AnnotationException(String message) {
+        super(message);
+    }
 
-    /** The namespace used for store user inboxes */
-    String USER_NAMESPACE = NAMESPACE_PREFIX_CHAR + "private";
-
-    /** The default delimiter used to seperated parent/child folders */
-    char DEFAULT_DELIMITER = '.';
-
-    /** The name of the INBOX */
-    String INBOX = "INBOX";
-
-    /** The limitation of annotation data */
-    int DEFAULT_LIMIT_ANNOTATION_SIZE = 1024;
-
-    /** The maximum number of annotations on a mailbox */
-    int DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX = 10;
-
+    public AnnotationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
