@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Ascii;
+import com.google.common.base.Optional;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraAnnotationTable;
@@ -98,6 +99,20 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .value(CassandraAnnotationTable.VALUE, mailboxAnnotation.getValue().get()));
     }
 
+    @Override
+    public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        CassandraId cassandraId = (CassandraId)mailboxId;
+        Optional<Row> row = Optional.fromNullable(session.execute(getStoredAnnotationsQueryByKey(cassandraId, mailboxAnnotation.getKey().asString()))
+            .one());
+        return row.isPresent();
+    }
+
+    @Override
+    public int countAnnotations(MailboxId mailboxId) {
+        CassandraId cassandraId = (CassandraId)mailboxId;
+        return session.execute(getStoredAnnotationsQuery(cassandraId)).getAvailableWithoutFetching();
+    }
+
     private MailboxAnnotation toAnnotation(Row row) {
         return MailboxAnnotation.newInstance(new MailboxAnnotationKey(row.getString(CassandraAnnotationTable.KEY)),
             row.getString(CassandraAnnotationTable.VALUE));
@@ -120,7 +135,12 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .and(gte(CassandraAnnotationTable.KEY, key))
             .and(lte(CassandraAnnotationTable.KEY, buildNextKey(key)));
     }
-    
+
+    private Select.Where getStoredAnnotationsQueryByKey(CassandraId mailboxId, String key) {
+        return getStoredAnnotationsQuery(mailboxId)
+            .and(eq(CassandraAnnotationTable.KEY, key));
+    }
+
     private String buildNextKey(String key) {
         return key + MailboxAnnotationKey.SLASH_CHARACTER + Ascii.MAX;
     }

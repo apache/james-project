@@ -446,8 +446,4 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
     void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException, AnnotationException;
     
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
-
-    void setLimitOfAnnotations(int limitOfAnnotations);
-
-    void setLimitAnnotationSize(int limitAnnotationSize);
 }

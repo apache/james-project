@@ -385,9 +385,8 @@ public class MailboxManagerTest<T extends MailboxManager> {
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inbox, session);
-        mailboxManager.setLimitAnnotationSize(10);
 
-        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "DataMoreThan10")));
+        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "The limitation of data is less than 30")));
     }
 
     @ContractTest
@@ -396,11 +395,11 @@ public class MailboxManagerTest<T extends MailboxManager> {
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inbox, session);
-        mailboxManager.setLimitOfAnnotations(2);
 
         ImmutableList.Builder<MailboxAnnotation> builder = ImmutableList.builder();
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment1"), "AnyValue"));
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment2"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment3"), "AnyValue"));
 
         mailboxManager.updateAnnotations(inbox, session, builder.build());
     }
@@ -412,12 +411,12 @@ public class MailboxManagerTest<T extends MailboxManager> {
         session = mailboxManager.createSystemSession(USER_2, LoggerFactory.getLogger("Test"));
         MailboxPath inbox = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inbox, session);
-        mailboxManager.setLimitOfAnnotations(2);
 
         ImmutableList.Builder<MailboxAnnotation> builder = ImmutableList.builder();
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment1"), "AnyValue"));
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment2"), "AnyValue"));
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment3"), "AnyValue"));
+        builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment4"), "AnyValue"));
 
         mailboxManager.updateAnnotations(inbox, session, builder.build());
     }}

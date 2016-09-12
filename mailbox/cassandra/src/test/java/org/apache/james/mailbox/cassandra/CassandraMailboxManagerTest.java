@@ -20,6 +20,10 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.mailbox.acl.GroupMembershipResolver;
+import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
+import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -46,6 +50,8 @@ import com.google.common.base.Throwables;
 @RunWith(ContractSuite.class)
 @ContractImpl(CassandraMailboxManager.class)
 public class CassandraMailboxManagerTest {
+    private static final int LIMIT_ANNOTATIONS = 3;
+    private static final int LIMIT_ANNOTATION_SIZE = 30;
 
     private static final CassandraCluster CASSANDRA = CassandraCluster.create(new CassandraModuleComposite(
         new CassandraAclModule(),
@@ -72,7 +78,12 @@ public class CassandraMailboxManagerTest {
                 CASSANDRA.getTypesProvider(),
                 messageIdFactory);
 
-            CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, null, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory);
+            MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
+            GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
+            MessageParser messageParser = new MessageParser();
+
+            CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, null, new NoMailboxPathLocker(), aclResolver, groupMembershipResolver, 
+                    messageParser, messageIdFactory, LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
             try {
                 manager.init();
             } catch (MailboxException e) {

@@ -84,4 +84,18 @@ public interface AnnotationMapper extends Mapper {
      */
     void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
 
+    /**
+     * Checking the current annotation of selected mailbox exists on store or not. It's checked by annotation key, not by its value.
+     *
+     * @param mailboxId the selected mailbox
+     * @param mailboxAnnotation current annotation should be checked
+     * @return boolean should be 'true' if it already existed on store
+     */
+    boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
+
+    /**
+     * Getting total number of current annotation on mailbox
+     *
+     */
+    int countAnnotations(MailboxId mailboxId);
 }

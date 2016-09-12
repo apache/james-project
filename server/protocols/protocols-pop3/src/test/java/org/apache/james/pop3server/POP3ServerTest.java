@@ -726,7 +726,7 @@ public class POP3ServerTest {
                     return false;
                 }
             }
-        }, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory());
+        }, aclResolver, groupMembershipResolver, messageParser, new DefaultMessageId.Factory(), MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
         mailboxManager.init();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);
