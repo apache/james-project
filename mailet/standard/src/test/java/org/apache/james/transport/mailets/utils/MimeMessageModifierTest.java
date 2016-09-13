@@ -17,47 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.transport.mailets.utils;
 
-package org.apache.james.transport.mailets;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.MessagingException;
+import java.util.Properties;
 
-import org.apache.james.transport.mailets.utils.MimeMessageModifier;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
-import com.google.common.base.Strings;
+import org.junit.Test;
 
-/**
- * Add an prefix (tag) to the subject of a message <br>
- * <br>
- * <p/>
- * Sample Configuration: <br>
- * <pre><code>
- * &lt;mailet match="RecipientIs=robot@james.apache.org" class="TagMessage"&gt;
- * &lt;subjectPrefix&gt;[robot]&lt;/subjectPrefix&gt; &lt;/mailet&gt; <br>
- * </code></pre>
- */
-public class AddSubjectPrefix extends GenericMailet {
+public class MimeMessageModifierTest {
 
-    private String subjectPrefix;
+    @Test
+    public void addSubjectPrefixShouldAddPrefixToSubjectWhenSubjectIsPresent() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setSubject("subject");
 
-    @Override
-    public void init() throws MessagingException {
-        subjectPrefix = getInitParameter("subjectPrefix");
+        new MimeMessageModifier(message).addSubjectPrefix("my");
 
-        if (Strings.isNullOrEmpty(subjectPrefix)) {
-            throw new MessagingException("Please configure a valid subjectPrefix");
-        }
+        assertThat(message.getSubject()).isEqualTo("my subject");
     }
 
-    @Override
-    public void service(Mail mail) throws MessagingException {
-        new MimeMessageModifier(mail.getMessage()).addSubjectPrefix(subjectPrefix);
-    }
+    @Test
+    public void addSubjectPrefixShouldSetPrefixAsSubjectWhenSubjectIsAbsent() throws Exception {
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
 
-    @Override
-    public String getMailetInfo() {
-        return "AddSubjectPrefix Mailet";
+        new MimeMessageModifier(message).addSubjectPrefix("my");
+
+        assertThat(message.getSubject()).isEqualTo("my");
     }
 }

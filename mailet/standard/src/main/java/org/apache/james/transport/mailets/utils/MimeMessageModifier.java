@@ -17,47 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-package org.apache.james.transport.mailets;
+package org.apache.james.transport.mailets.utils;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
-import org.apache.james.transport.mailets.utils.MimeMessageModifier;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 
-import com.google.common.base.Strings;
+public class MimeMessageModifier {
 
-/**
- * Add an prefix (tag) to the subject of a message <br>
- * <br>
- * <p/>
- * Sample Configuration: <br>
- * <pre><code>
- * &lt;mailet match="RecipientIs=robot@james.apache.org" class="TagMessage"&gt;
- * &lt;subjectPrefix&gt;[robot]&lt;/subjectPrefix&gt; &lt;/mailet&gt; <br>
- * </code></pre>
- */
-public class AddSubjectPrefix extends GenericMailet {
+    private final MimeMessage message;
 
-    private String subjectPrefix;
+    public MimeMessageModifier(MimeMessage message) {
+        this.message = message;
+    }
 
-    @Override
-    public void init() throws MessagingException {
-        subjectPrefix = getInitParameter("subjectPrefix");
-
-        if (Strings.isNullOrEmpty(subjectPrefix)) {
-            throw new MessagingException("Please configure a valid subjectPrefix");
+    public void addSubjectPrefix(String subjectPrefix) throws MessagingException {
+        String newSubject = prefixSubject(message, subjectPrefix);
+        replaceSubject(message, newSubject);
+    }
+    
+    private void replaceSubject(MimeMessage message, String newSubject) throws MessagingException {
+        message.setSubject(null);
+        message.setSubject(newSubject, Charsets.UTF_8.displayName());
+    }
+    
+    private String prefixSubject(MimeMessage message, String subjectPrefix) throws MessagingException {
+        String subject = message.getSubject();
+    
+        if (subject != null) {
+            return Joiner.on(' ').join(subjectPrefix, subject);
+        } else {
+            return subjectPrefix;
         }
-    }
-
-    @Override
-    public void service(Mail mail) throws MessagingException {
-        new MimeMessageModifier(mail.getMessage()).addSubjectPrefix(subjectPrefix);
-    }
-
-    @Override
-    public String getMailetInfo() {
-        return "AddSubjectPrefix Mailet";
     }
 }
