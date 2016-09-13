@@ -65,62 +65,6 @@ public class AbstractRedirectTest {
     }
 
     @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextIsNull() {
-        String charset = testee.determineMailHeaderEncodingCharset(null);
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextIsEmpty() {
-        String charset = testee.determineMailHeaderEncodingCharset("");
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextDoesNotContainEncodingPrefix() {
-        String charset = testee.determineMailHeaderEncodingCharset("iso-8859-2?Q?leg=FAjabb_pr=F3ba_l=F5elemmel?=");
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextDoesNotContainSecondQuestionMark() {
-        String charset = testee.determineMailHeaderEncodingCharset("=?iso-8859-2");
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextDoesNotContainCharset() {
-        String charset = testee.determineMailHeaderEncodingCharset("=??");
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextDoesNotContainThirdQuestionMark() {
-        String charset = testee.determineMailHeaderEncodingCharset("=?iso-8859-2?");
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnNullWhenRawTextDoesNotContainClosingTag() {
-        String charset = testee.determineMailHeaderEncodingCharset("=?iso-8859-2?Q?leg=FAjabb_pr=F3ba_l=F5elemmel");
-
-        assertThat(charset).isNull();
-    }
-
-    @Test
-    public void determineMailHeaderEncodingCharsetShouldReturnCharsetWhenRawTextIsWellFormatted() {
-        String charset = testee.determineMailHeaderEncodingCharset("=?iso-8859-2?Q?leg=FAjabb_pr=F3ba_l=F5elemmel?=");
-
-        assertThat(charset).isEqualTo("iso-8859-2");
-    }
-
-    @Test
     public void replaceMailAddressesShouldReturnEmptyWhenEmptyList() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .build();

@@ -48,7 +48,7 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1291,14 +1291,14 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     public void changeSubject(MimeMessage message, String newValue) throws MessagingException {
         String rawSubject = message.getHeader(RFC2822Headers.SUBJECT, null);
-        String mimeCharset = determineMailHeaderEncodingCharset(rawSubject);
-        if (mimeCharset == null) { // most likely ASCII
+        Optional<String> mimeCharset = new CharsetFromSubjectMailHeader().parse(rawSubject);
+        if (!mimeCharset.isPresent()) { // most likely ASCII
             // it uses the system charset or the value of the
             // mail.mime.charset property if set
             message.setSubject(newValue);
         } else { // original charset determined
             try {
-                message.setSubject(newValue, MimeUtility.javaCharset(mimeCharset));
+                message.setSubject(newValue, MimeUtility.javaCharset(mimeCharset.get()));
             } catch (MessagingException e) {
                 // known, but unsupported encoding
                 // this should be logged, the admin may setup a more i18n
@@ -1308,44 +1308,6 @@ public abstract class AbstractRedirect extends GenericMailet {
                 message.setSubject(newValue); // recover
             }
         }
-    }
-
-    /**
-     * It attempts to determine the charset used to encode an "unstructured" RFC
-     * 822 header (like Subject). The encoding is specified in RFC 2047. If it
-     * cannot determine or the the text is not encoded then it returns null.
-     * <p/>
-     * Here is an example raw text: Subject:
-     * =?iso-8859-2?Q?leg=FAjabb_pr=F3ba_l=F5elemmel?=
-     *
-     * @param rawText the raw (not decoded) value of the header. Null means that the
-     *                header was not present (in this case it always return null).
-     * @return the MIME charset name or null if no encoding applied
-     */
-    @VisibleForTesting String determineMailHeaderEncodingCharset(String rawText) {
-        if (Strings.isNullOrEmpty(rawText)) {
-            return null;
-        }
-        int iEncodingPrefix = rawText.indexOf("=?");
-        if (iEncodingPrefix == -1) {
-            return null;
-        }
-        int iCharsetBegin = iEncodingPrefix + 2;
-        int iSecondQuestionMark = rawText.indexOf('?', iCharsetBegin);
-        if (iSecondQuestionMark == -1) {
-            return null;
-        }
-        if (iSecondQuestionMark == iCharsetBegin) {
-            return null;
-        }
-        int iThirdQuestionMark = rawText.indexOf('?', iSecondQuestionMark + 1);
-        if (iThirdQuestionMark == -1) {
-            return null;
-        }
-        if (rawText.indexOf("?=", iThirdQuestionMark + 1) == -1) {
-            return null;
-        }
-        return rawText.substring(iCharsetBegin, iSecondQuestionMark);
     }
 
     /**
