@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
 

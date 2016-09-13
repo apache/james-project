@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets;
+package org.apache.james.transport.mailets.redirect;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,8 +28,10 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.transport.mailets.AbstractRedirect.SpecialAddress;
+import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.AbstractRedirect.SpecialAddress;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
@@ -141,7 +143,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .build();
@@ -153,7 +155,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchFrom() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .build();
@@ -186,11 +188,11 @@ public class AbstractRedirectTest {
     @Test
     public void replaceMailAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setReplyTo(InternetAddress.parse("user@james.org, user2@james.org"));
+        message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
         FakeMail mail = FakeMail.from(message);
 
-        MailAddress expectedReplyTo = new MailAddress("user", "james.org");
-        MailAddress expectedReplyTo2 = new MailAddress("user2", "james.org");
+        MailAddress expectedReplyTo = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress expectedReplyTo2 = MailAddressFixture.OTHER_AT_JAMES;
 
         Collection<MailAddress> addresses = testee.replaceMailAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO));
 
@@ -199,7 +201,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
@@ -212,7 +214,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceMailAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .build();
@@ -234,8 +236,8 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceMailAddressesShouldReturnRecipientsWhenAddressesMatchRecipients() throws Exception {
-        MailAddress recipient = new MailAddress("user", "james.org");
-        MailAddress recipient2 = new MailAddress("user2", "james.org");
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress recipient2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .recipients(recipient, recipient2)
                 .build();
@@ -247,8 +249,8 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceMailAddressesShouldReturnRecipientsWhenAddressesMatchTo() throws Exception {
-        MailAddress recipient = new MailAddress("user", "james.org");
-        MailAddress recipient2 = new MailAddress("user2", "james.org");
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress recipient2 = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .recipients(recipient, recipient2)
                 .build();
@@ -327,7 +329,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchSender() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .build();
@@ -339,8 +341,8 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnFromWhenAddressesMatchFrom() throws Exception {
-        MailAddress from = new MailAddress("user", "james.org");
-        MailAddress from2 = new MailAddress("user2", "james.org");
+        MailAddress from = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress from2 = MailAddressFixture.OTHER_AT_JAMES;
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.addFrom(new InternetAddress[] { from.toInternetAddress(), from2.toInternetAddress() });
         FakeMail mail = FakeMail.from(message);
@@ -352,7 +354,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchFromAndNoFrom() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
                 .sender(sender)
@@ -386,11 +388,11 @@ public class AbstractRedirectTest {
     @Test
     public void replaceInternetAddressesShouldReturnReplyToWhenAddressesMatchReplyTo() throws Exception {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.setReplyTo(InternetAddress.parse("user@james.org, user2@james.org"));
+        message.setReplyTo(InternetAddress.parse(MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString()));
         FakeMail mail = FakeMail.from(message);
 
-        MailAddress expectedReplyTo = new MailAddress("user", "james.org");
-        MailAddress expectedReplyTo2 = new MailAddress("user2", "james.org");
+        MailAddress expectedReplyTo = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress expectedReplyTo2 = MailAddressFixture.OTHER_AT_JAMES;
 
         Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.REPLY_TO.toInternetAddress()));
 
@@ -399,7 +401,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReplyToAndNoReplyTo() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties())))
@@ -412,7 +414,7 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnSenderWhenAddressesMatchReversePath() throws Exception {
-        MailAddress sender = new MailAddress("user", "james.org");
+        MailAddress sender = MailAddressFixture.ANY_AT_JAMES;
         FakeMail mail = FakeMail.builder()
                 .sender(sender)
                 .build();
@@ -434,10 +436,10 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnToWhenAddressesMatchRecipients() throws Exception {
-        MailAddress to = new MailAddress("user", "james.org");
-        MailAddress to2 = new MailAddress("user2", "james.org");
+        MailAddress to = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.addHeader(RFC2822Headers.TO, "user@james.org, user2@james.org");
+        message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES.toString());
         FakeMail mail = FakeMail.from(message);
 
         Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
@@ -447,10 +449,10 @@ public class AbstractRedirectTest {
 
     @Test
     public void replaceInternetAddressesShouldReturnToWhenAddressesMatchTo() throws Exception {
-        MailAddress to = new MailAddress("user", "james.org");
-        MailAddress to2 = new MailAddress("user2", "james.org");
+        MailAddress to = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress to2 = MailAddressFixture.OTHER_AT_JAMES;
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.addHeader(RFC2822Headers.TO, "user@james.org, user2@james.org");
+        message.addHeader(RFC2822Headers.TO, MailAddressFixture.ANY_AT_JAMES.toString() + ", " + MailAddressFixture.OTHER_AT_JAMES);
         FakeMail mail = FakeMail.from(message);
 
         Collection<InternetAddress> addresses = testee.replaceInternetAddresses(mail, ImmutableList.of(SpecialAddress.TO.toInternetAddress()));
@@ -491,7 +493,7 @@ public class AbstractRedirectTest {
     }
 
     @Test
-    public void replaceInternetAddressesShouldSameListWhenAddressesMatchDelete() throws Exception {
+    public void replaceInternetAddressesShouldReturnSameListWhenAddressesMatchDelete() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .build();
 

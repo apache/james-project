@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+
 /**
  * <p>
  * A mailet providing configurable redirection services.

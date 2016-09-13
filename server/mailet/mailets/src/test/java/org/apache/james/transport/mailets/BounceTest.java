@@ -31,6 +31,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.transport.mailets.Bounce;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;

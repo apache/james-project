@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets;
+package org.apache.james.transport.mailets.redirect;
 
 import java.io.ByteArrayOutputStream;
 import java.net.UnknownHostException;
@@ -42,6 +42,7 @@ import javax.mail.internet.ParseException;
 import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.transport.mailets.Redirect;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
@@ -221,7 +222,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * dynamic values that later will be resolved ("late bound") by a
      * "getX(Mail)" or "setX(Mail, Tx, Mail)".
      */
-    protected static class SpecialAddress {
+    public static class SpecialAddress {
         public static final MailAddress SENDER = AddressMarker.SENDER;
         public static final MailAddress REVERSE_PATH = AddressMarker.REVERSE_PATH;
         public static final MailAddress FROM = AddressMarker.FROM;

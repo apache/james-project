@@ -31,6 +31,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;

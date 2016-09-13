@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets;
+package org.apache.james.transport.mailets.redirect;
 import java.util.Locale;
 
 public enum TypeCode {
