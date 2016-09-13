@@ -20,6 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.InitParameters;
+import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 
 /**
  * <p>

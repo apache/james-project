@@ -51,7 +51,6 @@ import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -166,77 +165,6 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected boolean isDebug = false;
 
     protected boolean isStatic = false;
-
-    private static enum SpecialAddressKind {
-        SENDER("sender"),
-        REVERSE_PATH("reverse.path"),
-        FROM("from"),
-        REPLY_TO("reply.to"),
-        TO("to"),
-        RECIPIENTS("recipients"),
-        DELETE("delete"),
-        UNALTERED("unaltered"),
-        NULL("null");
-
-        private String value;
-
-        private SpecialAddressKind(String value) {
-            this.value = value;
-        }
-
-        public static SpecialAddressKind forValue(String value) {
-            for (SpecialAddressKind kind : values()) {
-                if (kind.value.equals(value)) {
-                    return kind;
-                }
-            }
-            return null;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-    private static class AddressMarker {
-        public static final String ADDRESS_MARKER = "address.marker";
-        public static final MailAddress SENDER = mailAddressUncheckedException(SpecialAddressKind.SENDER, ADDRESS_MARKER);
-        public static final MailAddress REVERSE_PATH = mailAddressUncheckedException(SpecialAddressKind.REVERSE_PATH, ADDRESS_MARKER);
-        public static final MailAddress FROM = mailAddressUncheckedException(SpecialAddressKind.FROM, ADDRESS_MARKER);
-        public static final MailAddress REPLY_TO = mailAddressUncheckedException(SpecialAddressKind.REPLY_TO, ADDRESS_MARKER);
-        public static final MailAddress TO = mailAddressUncheckedException(SpecialAddressKind.TO, ADDRESS_MARKER);
-        public static final MailAddress RECIPIENTS = mailAddressUncheckedException(SpecialAddressKind.RECIPIENTS, ADDRESS_MARKER);
-        public static final MailAddress DELETE = mailAddressUncheckedException(SpecialAddressKind.DELETE, ADDRESS_MARKER);
-        public static final MailAddress UNALTERED = mailAddressUncheckedException(SpecialAddressKind.UNALTERED, ADDRESS_MARKER);
-        public static final MailAddress NULL = mailAddressUncheckedException(SpecialAddressKind.NULL, ADDRESS_MARKER);
-
-        private static MailAddress mailAddressUncheckedException(SpecialAddressKind kind, String domain) {
-            try {
-                return new MailAddress(kind.getValue(), domain);
-            } catch (Exception e) {
-                throw Throwables.propagate(e);
-            }
-        }
-    }
-
-    /**
-     * Class containing "special addresses" constants. Such addresses mean
-     * dynamic values that later will be resolved ("late bound") by a
-     * "getX(Mail)" or "setX(Mail, Tx, Mail)".
-     */
-    public static class SpecialAddress {
-        public static final MailAddress SENDER = AddressMarker.SENDER;
-        public static final MailAddress REVERSE_PATH = AddressMarker.REVERSE_PATH;
-        public static final MailAddress FROM = AddressMarker.FROM;
-        public static final MailAddress REPLY_TO = AddressMarker.REPLY_TO;
-        public static final MailAddress TO = AddressMarker.TO;
-        public static final MailAddress RECIPIENTS = AddressMarker.RECIPIENTS;
-        public static final MailAddress DELETE = AddressMarker.DELETE;
-        public static final MailAddress UNALTERED = AddressMarker.UNALTERED;
-        public static final MailAddress NULL = AddressMarker.NULL;
-    }
-
-    // The values that indicate how to attach the original mail
-    // to the new mail.
 
     private boolean passThrough = false;
     private boolean fakeDomainCheck = true;
@@ -1530,7 +1458,7 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected Collection<MailAddress> replaceMailAddresses(Mail mail, Collection<MailAddress> list) {
         ImmutableSet.Builder<MailAddress> builder = ImmutableSet.builder();
         for (MailAddress mailAddress : list) {
-            if (!isSpecialAddress(mailAddress)) {
+            if (!SpecialAddress.isSpecialAddress(mailAddress)) {
                 builder.add(mailAddress);
                 continue;
             }
@@ -1570,10 +1498,6 @@ public abstract class AbstractRedirect extends GenericMailet {
             }
         }
         return builder.build();
-    }
-
-    private boolean isSpecialAddress(MailAddress mailAddress) {
-        return mailAddress.getDomain().equalsIgnoreCase(AddressMarker.ADDRESS_MARKER);
     }
 
     private void addReplyToFromMail(ImmutableSet.Builder<MailAddress> set, Mail mail) {
@@ -1625,7 +1549,7 @@ public abstract class AbstractRedirect extends GenericMailet {
         ImmutableSet.Builder<InternetAddress> builder = ImmutableSet.builder();
         for (InternetAddress internetAddress : list) {
             MailAddress mailAddress = new MailAddress(internetAddress);
-            if (!isSpecialAddress(mailAddress)) {
+            if (!SpecialAddress.isSpecialAddress(mailAddress)) {
                 builder.add(internetAddress);
                 continue;
             }

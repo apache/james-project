@@ -35,6 +35,9 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailImpl;
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.InitParameters;
+import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.util.Patterns;
 import org.apache.mailet.Mail;
