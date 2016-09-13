@@ -43,9 +43,13 @@ public class RedirectMailetInitParameters implements InitParameters {
     }
 
     private final GenericMailet mailet;
+    private final Optional<TypeCode> defaultAttachmentType;
+    private final Optional<TypeCode> defaultInLineType;
 
-    private RedirectMailetInitParameters(GenericMailet mailet) {
+    private RedirectMailetInitParameters(GenericMailet mailet, Optional<TypeCode> defaultAttachmentType, Optional<TypeCode> defaultInLineType) {
         this.mailet = mailet;
+        this.defaultAttachmentType = defaultAttachmentType;
+        this.defaultInLineType = defaultInLineType;
     }
 
     @Override
@@ -60,12 +64,12 @@ public class RedirectMailetInitParameters implements InitParameters {
 
     @Override
     public TypeCode getInLineType() {
-        return TypeCode.from(mailet.getInitParameter("inline", "unaltered"));
+        return defaultInLineType.or(TypeCode.from(mailet.getInitParameter("inline", "unaltered")));
     }
 
     @Override
     public TypeCode getAttachmentType() {
-        return TypeCode.from(mailet.getInitParameter("attachment", "none"));
+        return defaultAttachmentType.or(TypeCode.from(mailet.getInitParameter("attachment", "none")));
     }
 
     @Override

@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableSet;
  * A notice text can be specified, and in such case will be inserted into the
  * notification inline text.<br>
  * If the notified message has an "error message" set, it will be inserted into
- * the notification inline text. If the <code>attachStackTrace</code> init
+ * the notification inline text. If the <code>attachError</code> init
  * parameter is set to true, such error message will be attached to the
  * notification message.<br>
  * The notified messages are attached in their entirety (headers and content)
@@ -104,7 +104,7 @@ import com.google.common.collect.ImmutableSet;
  * </code>
  * </pre>
  * <p>
- * <i>notice</i>, <i>sendingAddress</i> and <i>attachStackTrace</i> can be used
+ * <i>notice</i>, <i>sendingAddress</i> and <i>attachError</i> can be used
  * instead of <i>message</i>, <i>sender</i> and <i>attachError</i>; such names
  * are kept for backward compatibility.
  * </p>
@@ -112,17 +112,15 @@ import com.google.common.collect.ImmutableSet;
 public class NotifySender extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
-            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
+            "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to" };
     private static final Set<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableSet.of(SpecialAddress.SENDER);
     private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("sender", "unaltered", "from");
 
-    private boolean attachStackTrace;
     private Optional<String> to = Optional.absent();
 
     @Override
     public void init(MailetConfig mailetConfig) throws MessagingException {
         super.init(mailetConfig);
-        attachStackTrace = getInitParameter("attachStackTrace", false);
         to = Optional.fromNullable(getInitParameter("to"));
     }
 
@@ -163,10 +161,5 @@ public class NotifySender extends AbstractRedirect {
             log("\"to\" parameter ignored, set to sender");
         }
         return new InternetAddress[] { SpecialAddress.SENDER.toInternetAddress() };
-    }
-
-    @Override
-    protected boolean attachError() throws MessagingException {
-        return attachStackTrace || super.attachError();
     }
 }

@@ -68,7 +68,7 @@ public class NotifyPostmasterTest {
 
     @Test
     public void getAllowedInitParametersShouldReturnTheParameters() {
-        assertThat(notifyPostmaster.getAllowedInitParameters()).containsOnly("debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to");
+        assertThat(notifyPostmaster.getAllowedInitParameters()).containsOnly("debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "to");
     }
 
     @Test
@@ -121,31 +121,5 @@ public class NotifyPostmasterTest {
         notifyPostmaster.init(mailetConfig);
 
         assertThat(notifyPostmaster.getTo()).containsOnly(postmaster.toInternetAddress());
-    }
-
-    @Test
-    public void attachErrorShouldReturnFalseWhenDefaultValue() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        notifyPostmaster.init(mailetConfig);
-
-        assertThat(notifyPostmaster.attachError()).isFalse();
-    }
-
-    @Test
-    public void attachErrorShouldReturnTrueWhenAttachErrorIsTrue() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("attachError", "true");
-        notifyPostmaster.init(mailetConfig);
-
-        assertThat(notifyPostmaster.attachError()).isTrue();
-    }
-
-    @Test
-    public void attachErrorShouldReturnTrueWhenAttachStackTraceIsTrue() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("attachStackTrace", "true");
-        notifyPostmaster.init(mailetConfig);
-
-        assertThat(notifyPostmaster.attachError()).isTrue();
     }
 }

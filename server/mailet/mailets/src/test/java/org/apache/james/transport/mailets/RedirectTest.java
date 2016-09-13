@@ -112,49 +112,6 @@ public class RedirectTest {
     }
 
     @Test
-    public void isStaticShouldReturnFalseWhenDefault() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        redirect.init(mailetConfig);
-
-        assertThat(redirect.isStatic()).isFalse();
-    }
-
-    @Test
-    public void isStaticShouldReturnTrueWhenInitParameterIsTrue() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("static", "true");
-        redirect.init(mailetConfig);
-
-        assertThat(redirect.isStatic()).isTrue();
-    }
-
-    @Test
-    public void isStaticShouldReturnFalseWhenInitParameterIsFalse() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("static", "false");
-        redirect.init(mailetConfig);
-
-        assertThat(redirect.isStatic()).isFalse();
-    }
-
-    @Test
-    public void getInLineTypeShouldReturnBodyValueWhenDefault() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        redirect.init(mailetConfig);
-
-        assertThat(redirect.getInLineType()).isEqualTo(TypeCode.BODY);
-    }
-
-    @Test
-    public void getInLineTypeShouldReturnHeadsValueWhenInlineIsEqualToHeads() throws Exception {
-        FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
-        mailetConfig.setProperty("inline", "heads");
-        redirect.init(mailetConfig);
-
-        assertThat(redirect.getInLineType()).isEqualTo(TypeCode.HEADS);
-    }
-
-    @Test
     public void getRecipientsShouldThrowWhenUnparsableRecipientsAddress() throws Exception {
         FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
         mailetConfig.setProperty("recipients", "user@james@org");

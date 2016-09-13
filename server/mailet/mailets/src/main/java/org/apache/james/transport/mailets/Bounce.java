@@ -51,7 +51,7 @@ import com.google.common.collect.ImmutableList;
  * A notice text can be specified, and in such case will be inserted into the
  * notification inline text.<br>
  * If the notified message has an "error message" set, it will be inserted into
- * the notification inline text. If the <code>attachStackTrace</code> init
+ * the notification inline text. If the <code>attachError</code> init
  * parameter is set to true, such error message will be attached to the
  * notification message.<br>
  * <p>
@@ -155,7 +155,7 @@ public class Bounce extends AbstractRedirect {
         if (originalMail.getSender() == null) {
             passThrough(originalMail);
         } else {
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + originalMail.getSender().toString());
             }
             super.service(originalMail);
@@ -163,10 +163,10 @@ public class Bounce extends AbstractRedirect {
     }
 
     private void passThrough(Mail originalMail) throws MessagingException {
-        if (isDebug) {
+        if (getInitParameters().isDebug()) {
             log("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
         }
-        if (!getPassThrough(originalMail)) {
+        if (!getInitParameters().getPassThrough()) {
             originalMail.setState(Mail.GHOST);
         }
     }

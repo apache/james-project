@@ -95,7 +95,7 @@ public class Forward extends AbstractRedirect {
 
     @Override
     protected InitParameters getInitParameters() {
-        return RedirectMailetInitParameters.from(this);
+        return RedirectMailetInitParameters.from(this, Optional.of(TypeCode.NONE), Optional.<TypeCode> absent());
     }
 
     @Override
@@ -106,21 +106,6 @@ public class Forward extends AbstractRedirect {
     @Override
     protected boolean isNotifyMailet() {
         return false;
-    }
-
-    @Override
-    protected TypeCode getInLineType() {
-        return TypeCode.UNALTERED;
-    }
-
-    @Override
-    protected TypeCode getAttachmentType() {
-        return TypeCode.NONE;
-    }
-
-    @Override
-    protected String getMessage() {
-        return "";
     }
 
     @Override
@@ -180,25 +165,5 @@ public class Forward extends AbstractRedirect {
     @Override
     protected MailAddress getSender() throws MessagingException {
         return null;
-    }
-
-    @Override
-    protected String getSubject() {
-        return null;
-    }
-
-    @Override
-    protected String getSubjectPrefix() {
-        return null;
-    }
-
-    @Override
-    protected boolean attachError() {
-        return false;
-    }
-
-    @Override
-    protected boolean isReply() {
-        return false;
     }
 }

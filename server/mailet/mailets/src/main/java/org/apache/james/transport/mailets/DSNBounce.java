@@ -130,11 +130,6 @@ public class DSNBounce extends AbstractRedirect {
     }
 
     @Override
-    protected TypeCode getAttachmentType() {
-        return TypeCode.from(getInitParameter("attachment", "message"));
-    }
-
-    @Override
     protected Collection<MailAddress> getRecipients() {
         return RECIPIENT_MAIL_ADDRESSES;
     }
@@ -152,10 +147,10 @@ public class DSNBounce extends AbstractRedirect {
     @Override
     public void service(Mail originalMail) throws MessagingException {
         if (originalMail.getSender() == null) {
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
             }
-            if (!getPassThrough(originalMail)) {
+            if (!getInitParameters().getPassThrough()) {
                 originalMail.setState(Mail.GHOST);
             }
             return;
@@ -168,7 +163,7 @@ public class DSNBounce extends AbstractRedirect {
             newMail.setRemoteAddr(getRemoteAddr());
             newMail.setRecipients(getSenderAsList(originalMail));
 
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("New mail - sender: " + newMail.getSender() + ", recipients: " + arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }
@@ -178,12 +173,12 @@ public class DSNBounce extends AbstractRedirect {
             // Set additional headers
             setRecipients(newMail, getRecipients(originalMail), originalMail);
             setTo(newMail, getTo(originalMail), originalMail);
-            setSubjectPrefix(newMail, getSubjectPrefix(originalMail), originalMail);
+            setSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail);
             newMail.getMessage().setHeader(RFC2822Headers.DATE, getDateHeader(originalMail));
             setReplyTo(newMail, getReplyTo(originalMail), originalMail);
             setReversePath(newMail, getReversePath(originalMail), originalMail);
             setSender(newMail, getSender(originalMail), originalMail);
-            setIsReply(newMail, isReply(originalMail), originalMail);
+            setIsReply(newMail, getInitParameters().isReply(), originalMail);
 
             newMail.getMessage().saveChanges();
             getMailetContext().sendMail(newMail);
@@ -191,7 +186,7 @@ public class DSNBounce extends AbstractRedirect {
             newMail.dispose();
         }
 
-        if (!getPassThrough(originalMail)) {
+        if (!getInitParameters().getPassThrough()) {
             originalMail.setState(Mail.GHOST);
         }
     }
@@ -222,7 +217,7 @@ public class DSNBounce extends AbstractRedirect {
 
     private List<MailAddress> getSenderAsList(Mail originalMail) {
         MailAddress reversePath = originalMail.getSender();
-        if (isDebug) {
+        if (getInitParameters().isDebug()) {
             log("Processing a bounce request for a message with a reverse path.  The bounce will be sent to " + reversePath);
         }
 
@@ -244,8 +239,8 @@ public class DSNBounce extends AbstractRedirect {
 
         multipart.addBodyPart(createTextMsg(originalMail));
         multipart.addBodyPart(createDSN(originalMail));
-        if (!getAttachmentType().equals(TypeCode.NONE)) {
-            multipart.addBodyPart(createAttachedOriginal(originalMail, getAttachmentType()));
+        if (!getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
+            multipart.addBodyPart(createAttachedOriginal(originalMail, getInitParameters().getAttachmentType()));
         }
         return multipart;
     }

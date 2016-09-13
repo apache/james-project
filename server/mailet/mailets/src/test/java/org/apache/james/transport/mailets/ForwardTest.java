@@ -92,6 +92,7 @@ public class ForwardTest {
     @Test
     public void initShouldThrowWhenNoForwardToParameters() throws Exception {
         FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("isStatic", "true");
         expectedException.expect(MessagingException.class);
 
         forward.init(mailetConfig);
@@ -100,6 +101,7 @@ public class ForwardTest {
     @Test
     public void initShouldThrowWhenUnparsableForwardToAddress() throws Exception {
         FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("isStatic", "true");
         mailetConfig.setProperty("forwardTo", "user@james@org");
         expectedException.expect(MessagingException.class);
 
@@ -109,25 +111,11 @@ public class ForwardTest {
     @Test
     public void initShouldThrowWhenForwardToIsEmpty() throws Exception {
         FakeMailetConfig mailetConfig = new FakeMailetConfig(MAILET_NAME, fakeMailContext);
+        mailetConfig.setProperty("isStatic", "true");
         mailetConfig.setProperty("forwardTo", "");
         expectedException.expect(MessagingException.class);
 
         forward.init(mailetConfig);
-    }
-
-    @Test
-    public void getInLineTypeShouldReturnUnaltered() {
-        assertThat(forward.getInLineType()).isEqualTo(TypeCode.UNALTERED);
-    }
-
-    @Test
-    public void getAttachmentTypeShouldReturnNone() {
-        assertThat(forward.getAttachmentType()).isEqualTo(TypeCode.NONE);
-    }
-
-    @Test
-    public void getMessageShouldReturnEmptyString() {
-        assertThat(forward.getMessage()).isEmpty();
     }
 
     @Test
@@ -148,26 +136,6 @@ public class ForwardTest {
     @Test
     public void getSenderShouldReturnNull() throws Exception {
         assertThat(forward.getSender()).isNull();
-    }
-
-    @Test
-    public void getSubjectShouldReturnNull() throws Exception {
-        assertThat(forward.getSubject()).isNull();
-    }
-
-    @Test
-    public void getSubjectPrefixShouldReturnNull() throws Exception {
-        assertThat(forward.getSubjectPrefix()).isNull();
-    }
-
-    @Test
-    public void attachErrorShouldReturnFalse() throws Exception {
-        assertThat(forward.attachError()).isFalse();
-    }
-
-    @Test
-    public void isReplyShouldReturnFalse() throws Exception {
-        assertThat(forward.isReply()).isFalse();
     }
 
     @Test

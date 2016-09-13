@@ -33,6 +33,7 @@ import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -301,7 +302,7 @@ public class Redirect extends AbstractRedirect {
 
     @Override
     protected InitParameters getInitParameters() {
-        return RedirectMailetInitParameters.from(this);
+        return RedirectMailetInitParameters.from(this, Optional.<TypeCode> absent(), Optional.of(TypeCode.BODY));
     }
 
     @Override
@@ -312,16 +313,6 @@ public class Redirect extends AbstractRedirect {
     @Override
     protected boolean isNotifyMailet() {
         return false;
-    }
-
-    @Override
-    protected boolean isStatic() {
-        return isStatic;
-    }
-
-    @Override
-    protected TypeCode getInLineType() {
-        return TypeCode.from(getInitParameter("inline", "body"));
     }
 
     @Override

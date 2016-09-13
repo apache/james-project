@@ -162,180 +162,11 @@ public abstract class AbstractRedirect extends GenericMailet {
 
     protected abstract String[] getAllowedInitParameters();
 
-    protected boolean isDebug = false;
-
-    protected boolean isStatic = false;
-
-    private boolean passThrough = false;
-    private boolean fakeDomainCheck = true;
-    private TypeCode attachmentType = TypeCode.NONE;
-    private TypeCode inLineType = TypeCode.BODY;
-    private String messageText;
-    private Collection<MailAddress> recipients;
-    private MailAddress replyTo;
-    private MailAddress reversePath;
-    private MailAddress sender;
-    private String subject;
-    private String subjectPrefix;
-    private InternetAddress[] apparentlyTo;
-    private boolean attachError = false;
-    private boolean isReply = false;
-
     protected DNSService dns;
 
     @Inject
     public void setDNSService(DNSService dns) {
         this.dns = dns;
-    }
-
-    /**
-     * <p>
-     * Gets the <code>static</code> property.
-     * </p>
-     * <p>
-     * Return true to reduce calls to getTo, getSender, getRecipients,
-     * getReplyTo, getReversePath amd getMessage where these values don't change
-     * (eg hard coded, or got at startup from the mailet config); return false
-     * where any of these methods generate their results dynamically eg in
-     * response to the message being processed, or by reference to a repository
-     * of users.
-     * </p>
-     * <p>
-     * It is now (from version 2.2) somehow obsolete, as should be always true
-     * because the "good practice" is to use "getX()" methods statically, and
-     * use instead "getX(Mail)" methods for dynamic situations. A false value is
-     * now meaningful only for subclasses of {@link Redirect} older than version
-     * 2.2 that were relying on this.
-     * </p>
-     * <p/>
-     * <p>
-     * Is a "getX()" method.
-     * </p>
-     *
-     * @return true, as normally "getX()" methods shouls be static
-     */
-    protected boolean isStatic() {
-        return true;
-    }
-
-    /**
-     * Gets the <code>passThrough</code> property. Return true to allow the
-     * original message to continue through the processor, false to GHOST it. Is
-     * a "getX()" method.
-     *
-     * @return the <code>passThrough</code> init parameter, or false if missing
-     */
-    protected boolean getPassThrough() {
-        return getInitParameters().getPassThrough();
-    }
-
-    /**
-     * Gets the <code>passThrough</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #getPassThrough()}
-     */
-    protected boolean getPassThrough(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.passThrough : getPassThrough();
-    }
-
-    /**
-     * Gets the <code>fakeDomainCheck</code> property. Return true to check if
-     * the sender domain is valid. Is a "getX()" method.
-     *
-     * @return the <code>fakeDomainCheck</code> init parameter, or true if
-     *         missing
-     */
-    protected boolean getFakeDomainCheck() {
-        return getInitParameters().getFakeDomainCheck();
-    }
-
-    /**
-     * Gets the <code>fakeDomainCheck</code> property, built dynamically using
-     * the original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #getFakeDomainCheck()}
-     */
-    protected boolean getFakeDomainCheck(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.fakeDomainCheck : getFakeDomainCheck();
-    }
-
-    /**
-     * Gets the <code>inline</code> property. May return one of the following
-     * values to indicate how to append the original message to build the new
-     * message:
-     * <ul>
-     * <li><code>UNALTERED</code> : original message is the new message body</li>
-     * <li><code>BODY</code> : original message body is appended to the new
-     * message</li>
-     * <li><code>HEADS</code> : original message headers are appended to the new
-     * message</li>
-     * <li><code>ALL</code> : original is appended with all headers</li>
-     * <li><code>NONE</code> : original is not appended</li>
-     * </ul>
-     * Is a "getX()" method.
-     *
-     * @return the <code>inline</code> init parameter, or <code>UNALTERED</code>
-     *         if missing
-     */
-    protected TypeCode getInLineType() {
-        return getInitParameters().getInLineType();
-    }
-
-    /**
-     * Gets the <code>inline</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #getInLineType()}
-     */
-    protected TypeCode getInLineType(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.inLineType : getInLineType();
-    }
-
-    /**
-     * Gets the <code>attachment</code> property. May return one of the
-     * following values to indicate how to attach the original message to the
-     * new message:
-     * <ul>
-     * <li><code>BODY</code> : original message body is attached as plain text
-     * to the new message</li>
-     * <li><code>HEADS</code> : original message headers are attached as plain
-     * text to the new message</li>
-     * <li><code>ALL</code> : original is attached as plain text with all
-     * headers</li>
-     * <li><code>MESSAGE</code> : original message is attached as type
-     * message/rfc822, a complete mail message.</li>
-     * <li><code>NONE</code> : original is not attached</li>
-     * </ul>
-     * Is a "getX()" method.
-     *
-     * @return the <code>attachment</code> init parameter, or <code>NONE</code>
-     *         if missing
-     */
-    protected TypeCode getAttachmentType() {
-        return getInitParameters().getAttachmentType();
-    }
-
-    /**
-     * Gets the <code>attachment</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #getAttachmentType()}
-     */
-    protected TypeCode getAttachmentType(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.attachmentType : getAttachmentType();
-    }
-
-    /**
-     * Gets the <code>message</code> property. Returns a message to which the
-     * original message can be attached/appended to build the new message. Is a
-     * "getX()" method.
-     *
-     * @return the <code>message</code> init parameter or an empty string if
-     *         missing
-     */
-    protected String getMessage() {
-        return getInitParameters().getMessage();
     }
 
     /**
@@ -346,9 +177,9 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected String getMessage(Mail originalMail) throws MessagingException {
         if (isNotifyMailet()) {
-            return new NotifyMailetsMessage().generateMessage(getMessage(), originalMail);
+            return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
         }
-        return (isStatic()) ? this.messageText : getMessage();
+        return getInitParameters().getMessage();
     }
 
     /**
@@ -383,7 +214,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @return {@link #replaceMailAddresses} on {@link #getRecipients()},
      */
     protected Collection<MailAddress> getRecipients(Mail originalMail) throws MessagingException {
-        Collection<MailAddress> recipients = (isStatic()) ? this.recipients : getRecipients();
+        Collection<MailAddress> recipients = getRecipients();
         if (recipients != null) {
             if (containsOnlyUnalteredOrRecipients(recipients)) {
                 return null;
@@ -405,7 +236,7 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected void setRecipients(Mail newMail, Collection<MailAddress> recipients, Mail originalMail) {
         if (recipients != null) {
             newMail.setRecipients(recipients);
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("recipients set to: " + arrayToString(recipients.toArray()));
             }
         }
@@ -447,7 +278,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      * @return {@link #replaceInternetAddresses} on {@link #getRecipients()},
      */
     protected InternetAddress[] getTo(Mail originalMail) throws MessagingException {
-        InternetAddress[] apparentlyTo = (isStatic()) ? this.apparentlyTo : getTo();
+        InternetAddress[] apparentlyTo = getTo();
         if (apparentlyTo != null) {
             if (containsOnlyUnalteredOrTo(apparentlyTo)) {
                 return null;
@@ -471,7 +302,7 @@ public abstract class AbstractRedirect extends GenericMailet {
     protected void setTo(Mail newMail, InternetAddress[] to, Mail originalMail) throws MessagingException {
         if (to != null) {
             newMail.getMessage().setRecipients(Message.RecipientType.TO, to);
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("apparentlyTo set to: " + arrayToString(to));
             }
         }
@@ -514,7 +345,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.SENDER</code> with the original mail sender
      */
     protected MailAddress getReplyTo(Mail originalMail) throws MessagingException {
-        MailAddress replyTo = (isStatic()) ? this.replyTo : getReplyTo();
+        MailAddress replyTo = getReplyTo();
         if (replyTo != null) {
             if (replyTo.equals(SpecialAddress.UNALTERED)) {
                 return null;
@@ -536,12 +367,12 @@ public abstract class AbstractRedirect extends GenericMailet {
         if (replyTo != null) {
             if (replyTo.equals(SpecialAddress.NULL)) {
                 newMail.getMessage().setReplyTo(null);
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("replyTo set to: null");
                 }
             } else {
                 newMail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("replyTo set to: " + replyTo);
                 }
             }
@@ -589,7 +420,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             return getSender(originalMail);
         }
 
-        MailAddress reversePath = (isStatic()) ? this.reversePath : getReversePath();
+        MailAddress reversePath = getReversePath();
         if (reversePath != null) {
             if (isUnalteredOrReversePathOrSender(reversePath)) {
                 return null;
@@ -614,12 +445,12 @@ public abstract class AbstractRedirect extends GenericMailet {
         if (reversePath != null) {
             if (reversePath.equals(SpecialAddress.NULL)) {
                 newMail.setSender(null);
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("reversePath set to: null");
                 }
             } else {
                 newMail.setSender(reversePath);
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("reversePath set to: " + reversePath);
                 }
             }
@@ -659,7 +490,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.SENDER</code> if applicable with null
      */
     protected MailAddress getSender(Mail originalMail) throws MessagingException {
-        MailAddress sender = (isStatic()) ? this.sender : getSender();
+        MailAddress sender = getSender();
         if (sender != null) {
             if (isUnalteredOrSender(sender)) {
                 return null;
@@ -680,51 +511,10 @@ public abstract class AbstractRedirect extends GenericMailet {
         if (sender != null) {
             newMail.getMessage().setFrom(sender.toInternetAddress());
 
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("sender set to: " + sender);
             }
         }
-    }
-
-    /**
-     * Gets the <code>subject</code> property. Returns a string for the new
-     * message subject. Is a "getX()" method.
-     *
-     * @return the <code>subject</code> init parameter or null if missing
-     */
-    protected String getSubject() {
-        return getInitParameters().getSubject();
-    }
-
-    /**
-     * Gets the <code>subject</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #getSubject()}
-     */
-    protected String getSubject(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.subject : getSubject();
-    }
-
-    /**
-     * Gets the <code>prefix</code> property. Returns a prefix for the new
-     * message subject. Is a "getX()" method.
-     *
-     * @return the <code>prefix</code> init parameter or an empty string if
-     *         missing
-     */
-    protected String getSubjectPrefix() {
-        return getInitParameters().getSubjectPrefix();
-    }
-
-    /**
-     * Gets the <code>subjectPrefix</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #getSubjectPrefix()}
-     */
-    protected String getSubjectPrefix(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.subjectPrefix : getSubjectPrefix();
     }
 
     /**
@@ -737,69 +527,25 @@ public abstract class AbstractRedirect extends GenericMailet {
             new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
         }
 
-        String subject = getSubject(originalMail);
+        String subject = getInitParameters().getSubject();
         if (!Strings.isNullOrEmpty(subjectPrefix) || subject != null) {
             String newSubject = Strings.nullToEmpty(subject);
             if (subject == null) {
                 newSubject = Strings.nullToEmpty(originalMail.getMessage().getSubject());
             } else {
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("subject set to: " + subject);
                 }
             }
 
             if (subjectPrefix != null) {
                 newSubject = subjectPrefix + newSubject;
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("subjectPrefix set to: " + subjectPrefix);
                 }
             }
             changeSubject(newMail.getMessage(), newSubject);
         }
-    }
-
-    /**
-     * Gets the <code>attachError</code> property. Returns a boolean indicating
-     * whether to append a description of any error to the main body part of the
-     * new message, if getInlineType does not return "UNALTERED". Is a "getX()"
-     * method.
-     *
-     * @return the <code>attachError</code> init parameter; false if missing
-     */
-    protected boolean attachError() throws MessagingException {
-        return getInitParameters().isAttachError();
-    }
-
-    /**
-     * Gets the <code>attachError</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #attachError()}
-     */
-    protected boolean attachError(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.attachError : attachError();
-    }
-
-    /**
-     * Gets the <code>isReply</code> property. Returns a boolean indicating
-     * whether the new message must be considered a reply to the original
-     * message, setting the IN_REPLY_TO header of the new message to the id of
-     * the original message. Is a "getX()" method.
-     *
-     * @return the <code>isReply</code> init parameter; false if missing
-     */
-    protected boolean isReply() {
-        return getInitParameters().isReply();
-    }
-
-    /**
-     * Gets the <code>isReply</code> property, built dynamically using the
-     * original Mail object. Is a "getX(Mail)" method.
-     *
-     * @return {@link #isReply()}
-     */
-    protected boolean isReply(Mail originalMail) throws MessagingException {
-        return (isStatic()) ? this.isReply : isReply();
     }
 
     /**
@@ -811,7 +557,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             String messageId = originalMail.getMessage().getMessageID();
             if (messageId != null) {
                 newMail.getMessage().setHeader(RFC2822Headers.IN_REPLY_TO, messageId);
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("IN_REPLY_TO set to: " + messageId);
                 }
             }
@@ -825,10 +571,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     @Override
     public void init() throws MessagingException {
-        isDebug = getInitParameters().isDebug();
-        isStatic = getInitParameters().isStatic();
-
-        if (isDebug) {
+        if (getInitParameters().isDebug()) {
             log("Initializing");
         }
 
@@ -862,14 +605,14 @@ public abstract class AbstractRedirect extends GenericMailet {
             setRemoteAddr(newMail);
             setRemoteHost(newMail);
 
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("New mail - sender: " + newMail.getSender() + ", recipients: " + arrayToString(newMail.getRecipients().toArray()) + ", name: " + newMail.getName() + ", remoteHost: " + newMail.getRemoteHost() + ", remoteAddr: " + newMail.getRemoteAddr() + ", state: " + newMail.getState()
                         + ", lastUpdated: " + newMail.getLastUpdated() + ", errorMessage: " + newMail.getErrorMessage());
             }
 
             // Create the message
-            if (!getInLineType(originalMail).equals(TypeCode.UNALTERED)) {
-                if (isDebug) {
+            if (!getInitParameters().getInLineType().equals(TypeCode.UNALTERED)) {
+                if (getInitParameters().isDebug()) {
                     log("Alter message");
                 }
                 newMail.setMessage(new MimeMessage(Session.getDefaultInstance(System.getProperties(), null)));
@@ -880,7 +623,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             } else {
                 // if we need the original, create a copy of this message to
                 // redirect
-                if (getPassThrough(originalMail)) {
+                if (getInitParameters().getPassThrough()) {
                     newMail.setMessage(new MimeMessage(originalMail.getMessage()) {
                         protected void updateHeaders() throws MessagingException {
                             if (getMessageID() == null)
@@ -891,7 +634,7 @@ public abstract class AbstractRedirect extends GenericMailet {
                         }
                     });
                 }
-                if (isDebug) {
+                if (getInitParameters().isDebug()) {
                     log("Message resent unaltered.");
                 }
                 keepMessageId = true;
@@ -903,7 +646,7 @@ public abstract class AbstractRedirect extends GenericMailet {
 
             setTo(newMail, getTo(originalMail), originalMail);
 
-            setSubjectPrefix(newMail, getSubjectPrefix(originalMail), originalMail);
+            setSubjectPrefix(newMail, getInitParameters().getSubjectPrefix(), originalMail);
 
             if (newMail.getMessage().getHeader(RFC2822Headers.DATE) == null) {
                 newMail.getMessage().setHeader(RFC2822Headers.DATE, DateFormats.RFC822_DATE_FORMAT.format(new Date()));
@@ -915,7 +658,7 @@ public abstract class AbstractRedirect extends GenericMailet {
 
             setSender(newMail, getSender(originalMail), originalMail);
 
-            setIsReply(newMail, isReply(originalMail), originalMail);
+            setIsReply(newMail, getInitParameters().isReply(), originalMail);
 
             newMail.getMessage().saveChanges();
             newMail.removeAllAttributes();
@@ -936,7 +679,7 @@ public abstract class AbstractRedirect extends GenericMailet {
             newMail.dispose();
         }
 
-        if (!getPassThrough(originalMail)) {
+        if (!getInitParameters().getPassThrough()) {
             originalMail.setState(Mail.GHOST);
         }
     }
@@ -1008,14 +751,14 @@ public abstract class AbstractRedirect extends GenericMailet {
 
             multipart.addBodyPart(contentPartRoot);
 
-            if (isDebug) {
-                log("attachmentType:" + getAttachmentType(originalMail));
+            if (getInitParameters().isDebug()) {
+                log("attachmentType:" + getInitParameters().getAttachmentType());
             }
-            if (!getAttachmentType(originalMail).equals(TypeCode.NONE)) {
+            if (!getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
                 multipart.addBodyPart(getAttachmentPart(originalMail, originalMessage, head));
             }
 
-            if (attachError(originalMail) && originalMail.getErrorMessage() != null) {
+            if (getInitParameters().isAttachError() && originalMail.getErrorMessage() != null) {
                 multipart.addBodyPart(getErrorPart(originalMail));
             }
             newMail.getMessage().setContent(multipart);
@@ -1035,7 +778,7 @@ public abstract class AbstractRedirect extends GenericMailet {
 
     private MimeBodyPart getAttachmentPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
         MimeBodyPart attachmentPart = new MimeBodyPart();
-        switch (getAttachmentType(originalMail)) {
+        switch (getInitParameters().getAttachmentType()) {
             case HEADS:
                 attachmentPart.setText(head);
                 break;
@@ -1084,11 +827,11 @@ public abstract class AbstractRedirect extends GenericMailet {
                 .append(LINE_BREAK);
         }
 
-        if (isDebug) {
-            log("inline:" + getInLineType(originalMail));
+        if (getInitParameters().isDebug()) {
+            log("inline:" + getInitParameters().getInLineType());
         }
         boolean all = false;
-        switch (getInLineType(originalMail)) {
+        switch (getInitParameters().getInLineType()) {
             case ALL:
                 all = true;
             case HEADS:
@@ -1138,7 +881,7 @@ public abstract class AbstractRedirect extends GenericMailet {
         String messageId = originalMail.getMessage().getMessageID();
         if (messageId != null) {
             newMail.getMessage().setHeader(RFC2822Headers.MESSAGE_ID, messageId);
-            if (isDebug) {
+            if (getInitParameters().isDebug()) {
                 log("MESSAGE_ID restored to: " + messageId);
             }
         }
@@ -1169,7 +912,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     @SuppressWarnings("deprecation")
     protected final boolean senderDomainIsValid(Mail mail) throws MessagingException {
-        return !getFakeDomainCheck(mail)
+        return !getInitParameters().getFakeDomainCheck()
                 || mail.getSender() == null
                 || !getMailetContext().getMailServers(mail.getSender().getDomain()).isEmpty();
     }
