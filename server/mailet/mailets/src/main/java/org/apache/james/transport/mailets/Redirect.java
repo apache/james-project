@@ -298,6 +298,11 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
+    protected InitParameters getInitParameters() {
+        return new RedirectMailetInitParameters(this);
+    }
+
+    @Override
     protected String[] getAllowedInitParameters() {
         return CONFIGURABLE_PARAMETERS;
     }
