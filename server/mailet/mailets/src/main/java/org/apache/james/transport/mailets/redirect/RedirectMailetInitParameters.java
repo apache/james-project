@@ -21,13 +21,30 @@ package org.apache.james.transport.mailets.redirect;
 
 import org.apache.mailet.base.GenericMailet;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 public class RedirectMailetInitParameters implements InitParameters {
 
+    public static InitParameters from(GenericMailet mailet) {
+        RedirectMailetInitParameters initParameters = new RedirectMailetInitParameters(mailet, Optional.<TypeCode> absent(), Optional.<TypeCode> absent());
+        if (initParameters.isStatic()) {
+            return LoadedOnceInitParameters.from(initParameters);
+        }
+        return initParameters;
+    }
+
+    public static InitParameters from(GenericMailet mailet, Optional<TypeCode> defaultAttachmentType, Optional<TypeCode> defaultInLineType) {
+        RedirectMailetInitParameters initParameters = new RedirectMailetInitParameters(mailet, defaultAttachmentType, defaultAttachmentType);
+        if (initParameters.isStatic()) {
+            return LoadedOnceInitParameters.from(initParameters);
+        }
+        return initParameters;
+    }
+
     private final GenericMailet mailet;
 
-    public RedirectMailetInitParameters(GenericMailet mailet) {
+    private RedirectMailetInitParameters(GenericMailet mailet) {
         this.mailet = mailet;
     }
 
@@ -122,5 +139,10 @@ public class RedirectMailetInitParameters implements InitParameters {
     @Override
     public boolean isStatic() {
         return mailet.getInitParameter("static", false);
+    }
+
+    @Override
+    public String asString() {
+        return InitParametersSerializer.serialize(this);
     }
 }

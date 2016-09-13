@@ -19,39 +19,27 @@
 
 package org.apache.james.transport.mailets.redirect;
 
-public interface InitParameters {
+import com.google.common.base.MoreObjects;
 
-    boolean getPassThrough();
+public class InitParametersSerializer {
 
-    boolean getFakeDomainCheck();
-
-    TypeCode getInLineType();
-
-    TypeCode getAttachmentType();
-
-    String getMessage();
-
-    String getSubject();
-
-    String getSubjectPrefix();
-
-    boolean isAttachError();
-
-    boolean isReply();
-
-    String getRecipients();
-
-    String getTo();
-
-    String getReversePath();
-
-    String getSender();
-
-    String getReplyTo();
-
-    boolean isDebug();
-
-    boolean isStatic();
-
-    String asString();
+    public static String serialize(InitParameters initParameters) {
+        return MoreObjects.toStringHelper(initParameters.getClass())
+                .add("static", initParameters.isStatic())
+                .add("passThrough", initParameters.getPassThrough())
+                .add("fakeDomainCheck", initParameters.getFakeDomainCheck())
+                .add("sender", initParameters.getSender())
+                .add("replyTo", initParameters.getReplyTo())
+                .add("reversePath", initParameters.getReversePath())
+                .add("message", initParameters.getMessage())
+                .add("recipients", initParameters.getRecipients())
+                .add("subject", initParameters.getSubject())
+                .add("subjectPrefix", initParameters.getSubjectPrefix())
+                .add("apparentlyTo", initParameters.getTo())
+                .add("attachError", initParameters.isAttachError())
+                .add("isReply", initParameters.isReply())
+                .add("attachmentType", initParameters.getAttachmentType())
+                .add("inLineType", initParameters.getInLineType())
+                .toString();
+    }
 }

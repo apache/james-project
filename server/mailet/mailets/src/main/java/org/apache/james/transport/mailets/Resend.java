@@ -282,7 +282,7 @@ public class Resend extends AbstractRedirect {
 
     @Override
     protected InitParameters getInitParameters() {
-        return new RedirectMailetInitParameters(this);
+        return RedirectMailetInitParameters.from(this);
     }
 
     @Override

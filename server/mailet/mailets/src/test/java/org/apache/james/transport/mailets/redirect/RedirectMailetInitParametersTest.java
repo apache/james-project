@@ -35,7 +35,6 @@ import org.junit.Test;
 public class RedirectMailetInitParametersTest {
 
     private GenericMailet mailet;
-    private RedirectMailetInitParameters testee;
 
     @Before
     public void setup() {
@@ -45,7 +44,6 @@ public class RedirectMailetInitParametersTest {
             public void service(Mail mail) throws MessagingException {
             }
         };
-        testee = new RedirectMailetInitParameters(mailet);
     }
 
     @Test
@@ -54,6 +52,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("passThrough", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean passThrough = testee.getPassThrough();
         assertThat(passThrough).isTrue();
@@ -65,6 +64,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("passThrough", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean passThrough = testee.getPassThrough();
         assertThat(passThrough).isFalse();
@@ -75,6 +75,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean passThrough = testee.getPassThrough();
         assertThat(passThrough).isFalse();
@@ -86,6 +87,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("fakeDomainCheck", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean fakeDomainCheck = testee.getFakeDomainCheck();
         assertThat(fakeDomainCheck).isTrue();
@@ -97,6 +99,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("fakeDomainCheck", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean fakeDomainCheck = testee.getFakeDomainCheck();
         assertThat(fakeDomainCheck).isFalse();
@@ -107,6 +110,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean fakeDomainCheck = testee.getFakeDomainCheck();
         assertThat(fakeDomainCheck).isFalse();
@@ -118,6 +122,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("inline", "none");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         TypeCode inLineType = testee.getInLineType();
         assertThat(inLineType).isEqualTo(TypeCode.NONE);
@@ -128,6 +133,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         TypeCode inLineType = testee.getInLineType();
         assertThat(inLineType).isEqualTo(TypeCode.UNALTERED);
@@ -139,6 +145,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("attachment", "unaltered");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         TypeCode attachmentType = testee.getAttachmentType();
         assertThat(attachmentType).isEqualTo(TypeCode.UNALTERED);
@@ -149,6 +156,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         TypeCode attachmentType = testee.getAttachmentType();
         assertThat(attachmentType).isEqualTo(TypeCode.NONE);
@@ -160,6 +168,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("message", "my message");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String message = testee.getMessage();
         assertThat(message).isEqualTo("my message");
@@ -170,6 +179,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String message = testee.getMessage();
         assertThat(message).isEqualTo("");
@@ -181,6 +191,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("subject", "my subject");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String subject = testee.getSubject();
         assertThat(subject).isEqualTo("my subject");
@@ -191,6 +202,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String subject = testee.getSubject();
         assertThat(subject).isNull();
@@ -202,6 +214,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("prefix", "my prefix");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String prefix = testee.getSubjectPrefix();
         assertThat(prefix).isEqualTo("my prefix");
@@ -212,6 +225,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String prefix = testee.getSubjectPrefix();
         assertThat(prefix).isNull();
@@ -223,6 +237,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("attachError", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean attachError = testee.isAttachError();
         assertThat(attachError).isTrue();
@@ -234,6 +249,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("attachError", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean attachError = testee.isAttachError();
         assertThat(attachError).isFalse();
@@ -244,6 +260,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean attachError = testee.isAttachError();
         assertThat(attachError).isFalse();
@@ -255,6 +272,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("isReply", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean isReply = testee.isReply();
         assertThat(isReply).isTrue();
@@ -266,6 +284,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("isReply", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean isReply = testee.isReply();
         assertThat(isReply).isFalse();
@@ -276,6 +295,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean isReply = testee.isReply();
         assertThat(isReply).isFalse();
@@ -287,6 +307,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("recipients", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String recipients = testee.getRecipients();
         assertThat(recipients).isEqualTo("user@james.org, user2@james.org");
@@ -298,6 +319,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("recipients", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String recipients = testee.getRecipients();
         assertThat(recipients).isNull();
@@ -308,6 +330,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String recipients = testee.getRecipients();
         assertThat(recipients).isNull();
@@ -319,6 +342,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("to", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String to = testee.getTo();
         assertThat(to).isEqualTo("user@james.org, user2@james.org");
@@ -330,6 +354,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("to", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String to = testee.getTo();
         assertThat(to).isNull();
@@ -340,6 +365,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String to = testee.getTo();
         assertThat(to).isNull();
@@ -351,6 +377,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("reversePath", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String reversePath = testee.getReversePath();
         assertThat(reversePath).isEqualTo("user@james.org, user2@james.org");
@@ -362,6 +389,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("reversePath", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String reversePath = testee.getReversePath();
         assertThat(reversePath).isNull();
@@ -372,6 +400,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String reversePath = testee.getReversePath();
         assertThat(reversePath).isNull();
@@ -383,6 +412,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("sender", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String sender = testee.getSender();
         assertThat(sender).isEqualTo("user@james.org, user2@james.org");
@@ -394,6 +424,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("sender", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String sender = testee.getSender();
         assertThat(sender).isNull();
@@ -404,6 +435,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String sender = testee.getSender();
         assertThat(sender).isNull();
@@ -415,6 +447,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("replyTo", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isEqualTo("user@james.org, user2@james.org");
@@ -426,6 +459,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("replyto", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isEqualTo("user@james.org, user2@james.org");
@@ -437,6 +471,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("replyTo", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isNull();
@@ -447,6 +482,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isNull();
@@ -458,6 +494,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("debug", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean debug = testee.isDebug();
         assertThat(debug).isTrue();
@@ -469,6 +506,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("debug", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean debug = testee.isDebug();
         assertThat(debug).isFalse();
@@ -479,6 +517,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean debug = testee.isDebug();
         assertThat(debug).isFalse();
@@ -490,6 +529,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("static", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean isStatic = testee.isStatic();
         assertThat(isStatic).isTrue();
@@ -501,6 +541,7 @@ public class RedirectMailetInitParametersTest {
         properties.put("static", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean isStatic = testee.isStatic();
         assertThat(isStatic).isFalse();
@@ -511,6 +552,7 @@ public class RedirectMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = RedirectMailetInitParameters.from(mailet);
 
         boolean isStatic = testee.isStatic();
         assertThat(isStatic).isFalse();

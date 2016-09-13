@@ -836,24 +836,9 @@ public abstract class AbstractRedirect extends GenericMailet {
         // allowedInitParameters
         checkInitParameters(getAllowedInitParameters());
 
-        if (isStatic()) {
-            passThrough = getPassThrough();
-            fakeDomainCheck = getFakeDomainCheck();
-            attachmentType = getAttachmentType();
-            inLineType = getInLineType();
-            messageText = getMessage();
-            recipients = getRecipients();
-            replyTo = getReplyTo();
-            reversePath = getReversePath();
-            sender = getSender();
-            subject = getSubject();
-            subjectPrefix = getSubjectPrefix();
-            apparentlyTo = getTo();
-            attachError = attachError();
-            isReply = isReply();
-            if (isDebug) {
-                String logBuffer = "static" + ", passThrough=" + passThrough + ", fakeDomainCheck=" + fakeDomainCheck + ", sender=" + sender + ", replyTo=" + replyTo + ", reversePath=" + reversePath + ", message=" + messageText + ", recipients=" + arrayToString(recipients == null ? null : recipients.toArray()) + ", subject=" + subject + ", subjectPrefix=" + subjectPrefix + ", apparentlyTo=" + arrayToString(apparentlyTo) + ", attachError=" + attachError + ", isReply=" + isReply + ", attachmentType=" + attachmentType + ", inLineType=" + inLineType + " ";
-                log(logBuffer);
+        if (getInitParameters().isStatic()) {
+            if (getInitParameters().isDebug()) {
+                log(getInitParameters().asString());
             }
         }
     }

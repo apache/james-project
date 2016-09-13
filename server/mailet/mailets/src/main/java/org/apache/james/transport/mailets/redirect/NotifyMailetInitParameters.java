@@ -25,9 +25,17 @@ import com.google.common.base.Strings;
 
 public class NotifyMailetInitParameters implements InitParameters {
 
+    public static InitParameters from(GenericMailet mailet) {
+        NotifyMailetInitParameters initParameters = new NotifyMailetInitParameters(mailet);
+        if (initParameters.isStatic()) {
+            return LoadedOnceInitParameters.from(initParameters);
+        }
+        return initParameters;
+    }
+
     private final GenericMailet mailet;
 
-    public NotifyMailetInitParameters(GenericMailet mailet) {
+    private NotifyMailetInitParameters(GenericMailet mailet) {
         this.mailet = mailet;
     }
 
@@ -122,5 +130,10 @@ public class NotifyMailetInitParameters implements InitParameters {
     @Override
     public boolean isStatic() {
         return mailet.getInitParameter("static", false);
+    }
+
+    @Override
+    public String asString() {
+        return InitParametersSerializer.serialize(this);
     }
 }

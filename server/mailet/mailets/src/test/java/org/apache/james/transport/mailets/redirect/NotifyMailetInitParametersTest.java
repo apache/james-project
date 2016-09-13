@@ -35,7 +35,6 @@ import org.junit.Test;
 public class NotifyMailetInitParametersTest {
 
     private GenericMailet mailet;
-    private NotifyMailetInitParameters testee;
 
     @Before
     public void setup() {
@@ -45,7 +44,6 @@ public class NotifyMailetInitParametersTest {
             public void service(Mail mail) throws MessagingException {
             }
         };
-        testee = new NotifyMailetInitParameters(mailet);
     }
 
     @Test
@@ -54,6 +52,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("passThrough", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean passThrough = testee.getPassThrough();
         assertThat(passThrough).isTrue();
@@ -65,6 +64,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("passThrough", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean passThrough = testee.getPassThrough();
         assertThat(passThrough).isFalse();
@@ -75,6 +75,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean passThrough = testee.getPassThrough();
         assertThat(passThrough).isTrue();
@@ -86,6 +87,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("fakeDomainCheck", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean fakeDomainCheck = testee.getFakeDomainCheck();
         assertThat(fakeDomainCheck).isTrue();
@@ -97,6 +99,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("fakeDomainCheck", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean fakeDomainCheck = testee.getFakeDomainCheck();
         assertThat(fakeDomainCheck).isFalse();
@@ -107,6 +110,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean fakeDomainCheck = testee.getFakeDomainCheck();
         assertThat(fakeDomainCheck).isFalse();
@@ -118,6 +122,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("inline", "unaltered");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         TypeCode inLineType = testee.getInLineType();
         assertThat(inLineType).isEqualTo(TypeCode.UNALTERED);
@@ -128,6 +133,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         TypeCode inLineType = testee.getInLineType();
         assertThat(inLineType).isEqualTo(TypeCode.NONE);
@@ -139,6 +145,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("attachment", "unaltered");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         TypeCode attachmentType = testee.getAttachmentType();
         assertThat(attachmentType).isEqualTo(TypeCode.UNALTERED);
@@ -149,6 +156,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         TypeCode attachmentType = testee.getAttachmentType();
         assertThat(attachmentType).isEqualTo(TypeCode.MESSAGE);
@@ -160,6 +168,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("notice", "my notice");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String message = testee.getMessage();
         assertThat(message).isEqualTo("my notice");
@@ -171,6 +180,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("message", "my message");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String message = testee.getMessage();
         assertThat(message).isEqualTo("my message");
@@ -181,6 +191,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String message = testee.getMessage();
         assertThat(message).isEqualTo("We were unable to deliver the attached message because of an error in the mail server.");
@@ -191,6 +202,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String subject = testee.getSubject();
         assertThat(subject).isNull();
@@ -202,6 +214,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("prefix", "my prefix");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String prefix = testee.getSubjectPrefix();
         assertThat(prefix).isEqualTo("my prefix");
@@ -212,6 +225,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String prefix = testee.getSubjectPrefix();
         assertThat(prefix).isEqualTo("Re:");
@@ -223,6 +237,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("attachError", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean attachError = testee.isAttachError();
         assertThat(attachError).isTrue();
@@ -234,6 +249,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("attachError", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean attachError = testee.isAttachError();
         assertThat(attachError).isFalse();
@@ -244,6 +260,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean attachError = testee.isAttachError();
         assertThat(attachError).isFalse();
@@ -254,6 +271,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean isReply = testee.isReply();
         assertThat(isReply).isTrue();
@@ -265,6 +283,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("recipients", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String recipients = testee.getRecipients();
         assertThat(recipients).isEqualTo("user@james.org, user2@james.org");
@@ -276,6 +295,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("recipients", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String recipients = testee.getRecipients();
         assertThat(recipients).isNull();
@@ -286,6 +306,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String recipients = testee.getRecipients();
         assertThat(recipients).isNull();
@@ -297,6 +318,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("to", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String to = testee.getTo();
         assertThat(to).isEqualTo("user@james.org, user2@james.org");
@@ -308,6 +330,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("to", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String to = testee.getTo();
         assertThat(to).isNull();
@@ -318,6 +341,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String to = testee.getTo();
         assertThat(to).isNull();
@@ -329,6 +353,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("reversePath", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String reversePath = testee.getReversePath();
         assertThat(reversePath).isEqualTo("user@james.org, user2@james.org");
@@ -340,6 +365,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("reversePath", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String reversePath = testee.getReversePath();
         assertThat(reversePath).isNull();
@@ -350,6 +376,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String reversePath = testee.getReversePath();
         assertThat(reversePath).isNull();
@@ -361,6 +388,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("sender", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String sender = testee.getSender();
         assertThat(sender).isEqualTo("user@james.org, user2@james.org");
@@ -372,6 +400,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("sender", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String sender = testee.getSender();
         assertThat(sender).isNull();
@@ -382,6 +411,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String sender = testee.getSender();
         assertThat(sender).isNull();
@@ -393,6 +423,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("replyTo", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isEqualTo("user@james.org, user2@james.org");
@@ -404,6 +435,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("replyto", "user@james.org, user2@james.org");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isEqualTo("user@james.org, user2@james.org");
@@ -415,6 +447,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("replyTo", "");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isNull();
@@ -425,6 +458,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         String replyTo = testee.getReplyTo();
         assertThat(replyTo).isNull();
@@ -436,6 +470,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("debug", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean debug = testee.isDebug();
         assertThat(debug).isTrue();
@@ -447,6 +482,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("debug", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean debug = testee.isDebug();
         assertThat(debug).isFalse();
@@ -457,6 +493,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean debug = testee.isDebug();
         assertThat(debug).isFalse();
@@ -468,6 +505,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("static", "true");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean isStatic = testee.isStatic();
         assertThat(isStatic).isTrue();
@@ -479,6 +517,7 @@ public class NotifyMailetInitParametersTest {
         properties.put("static", "false");
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean isStatic = testee.isStatic();
         assertThat(isStatic).isFalse();
@@ -489,6 +528,7 @@ public class NotifyMailetInitParametersTest {
         Properties properties = new Properties();
         FakeMailetConfig mailetConfig = new FakeMailetConfig("mailet", FakeMailContext.defaultContext(), properties);
         mailet.init(mailetConfig);
+        InitParameters testee = NotifyMailetInitParameters.from(mailet);
 
         boolean isStatic = testee.isStatic();
         assertThat(isStatic).isFalse();

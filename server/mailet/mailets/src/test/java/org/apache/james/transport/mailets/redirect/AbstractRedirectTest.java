@@ -60,7 +60,7 @@ public class AbstractRedirectTest {
 
         @Override
         protected InitParameters getInitParameters() {
-            return new RedirectMailetInitParameters(this);
+            return RedirectMailetInitParameters.from(this);
         }
     }
 

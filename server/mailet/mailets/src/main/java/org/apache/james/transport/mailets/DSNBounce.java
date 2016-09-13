@@ -116,7 +116,7 @@ public class DSNBounce extends AbstractRedirect {
 
     @Override
     protected InitParameters getInitParameters() {
-        return new NotifyMailetInitParameters(this);
+        return NotifyMailetInitParameters.from(this);
     }
 
     @Override
