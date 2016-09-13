@@ -24,14 +24,13 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Locale;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -432,39 +431,13 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected Collection<MailAddress> getRecipients() throws MessagingException {
         ImmutableList.Builder<MailAddress> builder = ImmutableList.builder();
-        String[] allowedSpecials = new String[] { "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" };
-        for (InternetAddress address : extractAddresses(getAddressesFromParameter("recipients"))) {
-            builder.add(toMailAddress(address, allowedSpecials));
+        List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+                .extract(getInitParameters().getRecipients());
+        for (MailAddress address : mailAddresses) {
+            builder.add(address);
         }
         return builder.build();
-    }
-
-    private InternetAddress[] extractAddresses(String addressList) throws MessagingException {
-        try {
-            return InternetAddress.parse(addressList, false);
-        } catch (AddressException e) {
-            throw new MessagingException("Exception thrown parsing: " + addressList, e);
-        }
-    }
-
-    private String getAddressesFromParameter(String parameter) throws MessagingException {
-        String recipients = getInitParameter(parameter);
-        if (Strings.isNullOrEmpty(recipients)) {
-            return null;
-        }
-        return recipients;
-    }
-
-    private MailAddress toMailAddress(InternetAddress address, String[] allowedSpecials) throws MessagingException {
-        try {
-            MailAddress specialAddress = getSpecialAddress(address.getAddress(), allowedSpecials);
-            if (specialAddress != null) {
-                return specialAddress;
-            }
-            return new MailAddress(address);
-        } catch (Exception e) {
-            throw new MessagingException("Exception thrown parsing: " + address.getAddress());
-        }
     }
 
     /**
@@ -519,9 +492,11 @@ public abstract class AbstractRedirect extends GenericMailet {
             return null;
         }
         ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
-        String[] allowedSpecials = new String[] { "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" };
-        for (InternetAddress address : extractAddresses(getAddressesFromParameter("to"))) {
-            builder.add(toMailAddress(address, allowedSpecials).toInternetAddress());
+        List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+                .extract(getInitParameters().getTo());
+        for (MailAddress address : mailAddresses) {
+            builder.add(address.toInternetAddress());
         }
         ImmutableList<InternetAddress> addresses = builder.build();
         return addresses.toArray(new InternetAddress[addresses.size()]);
@@ -585,11 +560,13 @@ public abstract class AbstractRedirect extends GenericMailet {
             return null;
         }
 
-        InternetAddress[] extractAddresses = extractAddresses(replyTo);
-        if (extractAddresses == null || extractAddresses.length == 0) {
+        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+                .extract(replyTo);
+        if (extractAddresses.isEmpty()) {
             return null;
         }
-        return toMailAddress(extractAddresses[0], new String[] { "postmaster", "sender", "null", "unaltered" });
+        return extractAddresses.get(0);
     }
 
     /**
@@ -651,11 +628,13 @@ public abstract class AbstractRedirect extends GenericMailet {
             return null;
         }
 
-        InternetAddress[] extractAddresses = extractAddresses(reversePath);
-        if (extractAddresses == null || extractAddresses.length == 0) {
+        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+                .extract(reversePath);
+        if (extractAddresses.isEmpty()) {
             return null;
         }
-        return toMailAddress(extractAddresses[0], new String[] { "postmaster", "sender", "null", "unaltered" });
+        return extractAddresses.get(0);
     }
 
     /**
@@ -726,11 +705,13 @@ public abstract class AbstractRedirect extends GenericMailet {
             return null;
         }
 
-        InternetAddress[] extractAddresses = extractAddresses(sender);
-        if (extractAddresses == null || extractAddresses.length == 0) {
+        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "unaltered"))
+                .extract(sender);
+        if (extractAddresses.isEmpty()) {
             return null;
         }
-        return toMailAddress(extractAddresses[0], new String[] { "postmaster", "sender", "unaltered" });
+        return extractAddresses.get(0);
     }
 
     /**
@@ -1245,75 +1226,6 @@ public abstract class AbstractRedirect extends GenericMailet {
                 log("MESSAGE_ID restored to: " + messageId);
             }
         }
-    }
-
-    /**
-     * Returns the {@link SpecialAddress} that corresponds to an init parameter
-     * value. The init parameter value is checked against a String[] of allowed
-     * values. The checks are case insensitive.
-     *
-     * @param addressString   the string to check if is a special address
-     * @param allowedSpecials a String[] with the allowed special addresses
-     * @return a SpecialAddress if found, null if not found or addressString is
-     *         null
-     * @throws MessagingException if is a special address not in the allowedSpecials array
-     */
-    protected final MailAddress getSpecialAddress(String addressString, String[] allowedSpecials) throws MessagingException {
-        if (addressString == null) {
-            return null;
-        }
-
-        MailAddress specialAddress = toMailAddress(addressString);
-        if (specialAddress != null) {
-            if (!isAllowed(addressString, allowedSpecials)) {
-                throw new MessagingException("Special (\"magic\") address found not allowed: " + addressString + ", allowed values are \"" + arrayToString(allowedSpecials) + "\"");
-            }
-        }
-        return specialAddress;
-    }
-
-    private MailAddress toMailAddress(String addressString) {
-        String lowerCaseTrimed = addressString.toLowerCase(Locale.US).trim();
-        if (lowerCaseTrimed.equals("postmaster")) {
-            return getMailetContext().getPostmaster();
-        }
-        if (lowerCaseTrimed.equals("sender")) {
-            return SpecialAddress.SENDER;
-        }
-        if (lowerCaseTrimed.equals("reversepath")) {
-            return SpecialAddress.REVERSE_PATH;
-        }
-        if (lowerCaseTrimed.equals("from")) {
-            return SpecialAddress.FROM;
-        }
-        if (lowerCaseTrimed.equals("replyto")) {
-            return SpecialAddress.REPLY_TO;
-        }
-        if (lowerCaseTrimed.equals("to")) {
-            return SpecialAddress.TO;
-        }
-        if (lowerCaseTrimed.equals("recipients")) {
-            return SpecialAddress.RECIPIENTS;
-        }
-        if (lowerCaseTrimed.equals("delete")) {
-            return SpecialAddress.DELETE;
-        }
-        if (lowerCaseTrimed.equals("unaltered")) {
-            return SpecialAddress.UNALTERED;
-        }
-        if (lowerCaseTrimed.equals("null")) {
-            return SpecialAddress.NULL;
-        }
-        return null;
-    }
-
-    private boolean isAllowed(String addressString, String[] allowedSpecials) {
-        for (String allowedSpecial : allowedSpecials) {
-            if (addressString.equals(allowedSpecial.toLowerCase(Locale.US).trim())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

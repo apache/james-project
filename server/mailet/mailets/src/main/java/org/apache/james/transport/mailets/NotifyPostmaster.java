@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -31,6 +32,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -109,6 +111,7 @@ public class NotifyPostmaster extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{
             "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "notice", "sender", "sendingAddress", "prefix", "attachError", "attachStackTrace", "to" };
+    private static final List<String> ALLOWED_SPECIALS = ImmutableList.of("postmaster", "unaltered");
 
     private boolean attachStackTrace;
     private Optional<String> to = Optional.absent();
@@ -148,9 +151,11 @@ public class NotifyPostmaster extends AbstractRedirect {
     @Override
     protected InternetAddress[] getTo() throws MessagingException {
         if (to.isPresent()) {
-            MailAddress specialAddress = getSpecialAddress(to.get(), new String[] { "postmaster", "unaltered" });
-            if (specialAddress != null) {
-                return new InternetAddress[] { specialAddress.toInternetAddress() };
+            Optional<MailAddress> specialAddress = AddressExtractor.withContext(getMailetContext())
+                    .allowedSpecials(ALLOWED_SPECIALS)
+                    .getSpecialAddress(to.get());
+            if (specialAddress.isPresent()) {
+                return new InternetAddress[] { specialAddress.get().toInternetAddress() };
             }
             log("\"to\" parameter ignored, set to postmaster");
         }

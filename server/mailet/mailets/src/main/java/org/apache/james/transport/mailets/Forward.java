@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -31,6 +32,7 @@ import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -82,8 +84,8 @@ public class Forward extends AbstractRedirect {
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "debug", "passThrough", "fakeDomainCheck", "forwardto", "forwardTo" };
-    private static final String[] ALLOWED_SPECIALS = new String[]{
-            "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null" };
+    private static final List<String> ALLOWED_SPECIALS = ImmutableList.of(
+            "postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null");
 
     @Override
     public String getMailetInfo() {
@@ -139,9 +141,11 @@ public class Forward extends AbstractRedirect {
 
     private MailAddress toMailAddress(InternetAddress address) throws MessagingException {
         try {
-            MailAddress specialAddress = getSpecialAddress(address.getAddress(), ALLOWED_SPECIALS);
-            if (specialAddress != null) {
-                return specialAddress;
+            Optional<MailAddress> specialAddress = AddressExtractor.withContext(getMailetContext())
+                    .allowedSpecials(ALLOWED_SPECIALS)
+                    .getSpecialAddress(address.getAddress());
+            if (specialAddress.isPresent()) {
+                return specialAddress.get();
             }
             return new MailAddress(address);
         } catch (Exception e) {
