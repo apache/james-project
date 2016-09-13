@@ -345,74 +345,9 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected String getMessage(Mail originalMail) throws MessagingException {
         if (isNotifyMailet()) {
-            return getMessageForNotifyMailets(originalMail);
+            return new NotifyMailetsMessage().generateMessage(getMessage(), originalMail);
         }
         return (isStatic()) ? this.messageText : getMessage();
-    }
-
-    private String getMessageForNotifyMailets(Mail originalMail) throws MessagingException {
-        MimeMessage message = originalMail.getMessage();
-        StringBuffer buffer = new StringBuffer();
-
-        buffer.append(getMessage()).append(LINE_BREAK);
-        if (originalMail.getErrorMessage() != null) {
-            buffer.append(LINE_BREAK)
-                .append("Error message below:")
-                .append(LINE_BREAK)
-                .append(originalMail.getErrorMessage())
-                .append(LINE_BREAK);
-        }
-        buffer.append(LINE_BREAK)
-            .append("Message details:")
-            .append(LINE_BREAK);
-
-        if (message.getSubject() != null) {
-            buffer.append("  Subject: " + message.getSubject())
-                .append(LINE_BREAK);
-        }
-        if (message.getSentDate() != null) {
-            buffer.append("  Sent date: " + message.getSentDate())
-                .append(LINE_BREAK);
-        }
-        buffer.append("  MAIL FROM: " + originalMail.getSender())
-            .append(LINE_BREAK);
-
-        boolean firstRecipient = true;
-        for (MailAddress recipient : originalMail.getRecipients()) {
-            if (firstRecipient) {
-                buffer.append("  RCPT TO: " + recipient)
-                    .append(LINE_BREAK);
-                firstRecipient = false;
-            } else {
-                buffer.append("           " + recipient)
-                    .append(LINE_BREAK);
-            }
-        }
-
-        appendAddresses(buffer, "From", message.getHeader(RFC2822Headers.FROM));
-        appendAddresses(buffer, "To", message.getHeader(RFC2822Headers.TO));
-        appendAddresses(buffer, "CC", message.getHeader(RFC2822Headers.CC));
-
-        buffer.append("  Size (in bytes): " + message.getSize())
-            .append(LINE_BREAK);
-        if (message.getLineCount() >= 0) {
-            buffer.append("  Number of lines: " + message.getLineCount())
-                .append(LINE_BREAK);
-        }
-
-        return buffer.toString();
-    }
-
-    private void appendAddresses(StringBuffer buffer, String title, String[] addresses) {
-        if (addresses != null) {
-            buffer.append("  " + title + ": ")
-                .append(LINE_BREAK);
-            for (String address : addresses) {
-                buffer.append(address + " ")
-                    .append(LINE_BREAK);
-            }
-            buffer.append(LINE_BREAK);
-        }
     }
 
     /**
