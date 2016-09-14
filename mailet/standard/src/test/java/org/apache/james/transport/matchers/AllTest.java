@@ -52,7 +52,7 @@ public class AllTest {
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
-        assertThat(matcher.match(mail)).containsExactly(OTHER_AT_JAMES, OTHER_AT_JAMES);
+        assertThat(matcher.match(mail)).containsOnly(ANY_AT_JAMES, OTHER_AT_JAMES);
     }
 
 }
