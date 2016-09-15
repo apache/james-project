@@ -74,6 +74,11 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder size(long size) {
+            this.size = Optional.of(size);
+            return this;
+        }
+
         public Builder fileName(String fileName) {
             this.fileName = Optional.of(fileName);
             return this;
