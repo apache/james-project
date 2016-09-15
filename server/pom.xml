@@ -72,6 +72,7 @@
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-camel</module>
         <module>mailet/mailets</module>
+        <module>mailet/integration-testing</module>
 
         <module>dns-service/dnsservice-api</module>
         <module>dns-service/dnsservice-dnsjava</module>
