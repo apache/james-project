@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+
+  james:
+    depends_on:
+      - elasticsearch
+      - cassandra
+    entrypoint: bash -c "java -Dworking.directory=/root/ -jar james-server.jar"
+    image: linagora/james-project:latest
+    container_name: james
+    hostname: james.local
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+
+  elasticsearch:
+    image: elasticsearch:2.2.1
+
+  cassandra:
+    image: cassandra:2.2.3
+    ports:
+      - "9042:9042"

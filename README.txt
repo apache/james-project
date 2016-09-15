@@ -7,6 +7,33 @@ This is the parent module for all Apache James artifacts. It contains useful val
 * Maven plugins managemnt section with common plugins used in the project
 * URL's and mailing-lists definitions for the project
 
+How to try James
+================
+Requirements: docker & docker-compose installed.
+
+When try James by this way, you will use the last state of James.
+It will be configured to run with Cassandra & ElasticSearch.
+All those three components will be started with a single command.
+
+First, you need to build the image:
+$ docker-compose -f dockerfiles/run/docker-compose.yml build
+
+Then, you just have to start the services:
+$ docker-compose -f dockerfiles/run/docker-compose.yml up
+
+Wait a few seconds in order to have all those services up, you will see a such log when James is available:
+james           | Started : true
+
+Then, a default domain has been created: james.local
+$ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
+james.local
+
+James will respond to IMAP port 143 and SMTP port 25.
+You have to create users before playing, you may also create other domains...
+Follow the 'Useful commands' section for more information about James CLI.
+
+
+
 How to build and publish the website
 ====================================
 
