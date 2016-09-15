@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Properties;
@@ -28,7 +29,6 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -36,23 +36,20 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class RelayLimitTest {
 
     private RelayLimit testee;
-    private MailAddress mailAddress;
     private Mail mail;
     private MimeMessage mimeMessage;
 
     @Before
     public void setUp() throws Exception {
         testee = new RelayLimit();
-        mailAddress = new MailAddress("mail@domain.com");
-        mail = new FakeMail();
-        mail.setRecipients(ImmutableList.of(mailAddress));
         mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mail.setMessage(mimeMessage);
+        mail = FakeMail.builder()
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(mimeMessage)
+            .build();
     }
 
     @Test(expected = MessagingException.class)
@@ -98,7 +95,7 @@ public class RelayLimitTest {
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
 
-        assertThat(testee.match(mail)).containsExactly(mailAddress);
+        assertThat(testee.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
@@ -109,7 +106,7 @@ public class RelayLimitTest {
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
         mimeMessage.addHeader(RFC2822Headers.RECEIVED, "any");
 
-        assertThat(testee.match(mail)).containsExactly(mailAddress);
+        assertThat(testee.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
 }

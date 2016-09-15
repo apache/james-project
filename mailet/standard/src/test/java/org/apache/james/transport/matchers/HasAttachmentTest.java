@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,12 +32,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class HasAttachmentTest {
 
@@ -49,9 +47,10 @@ public class HasAttachmentTest {
         testee = new HasAttachment();
 
         mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        mail = new FakeMail();
-        mail.setRecipients(ImmutableList.of(new MailAddress("me@james.apache.org")));
-        mail.setMessage(mimeMessage);
+        mail = FakeMail.builder()
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(mimeMessage)
+            .build();
     }
 
     @Test

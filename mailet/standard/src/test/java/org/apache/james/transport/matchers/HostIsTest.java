@@ -19,11 +19,16 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.MailAddress;
+import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -31,54 +36,41 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class HostIsTest {
-    public static final String JAMES_APACHE_ORG = "james.apache.org";
-    public static final String JAMES2_APACHE_ORG = "james2.apache.org";
 
-    private FakeMail fakeMail;
-    private Matcher matcher;
+   private Matcher matcher;
 
     @Before
     public void setUp() throws Exception {
-        fakeMail = new FakeMail();
-
         matcher = new HostIs();
         FakeMatcherConfig mci = new FakeMatcherConfig("HostIs=" + JAMES_APACHE_ORG, FakeMailContext.defaultContext());
         matcher.init(mci);
     }
 
-    // test if all recipients get returned as matched
     @Test
-    public void testHostIsMatchedAllRecipients() throws MessagingException {
-        MailAddress mailAddress1 = new MailAddress("test@" + JAMES_APACHE_ORG);
-        MailAddress mailAddress2 = new MailAddress("test2@" + JAMES_APACHE_ORG);
-        fakeMail.setRecipients(ImmutableList.of(
-            mailAddress1,
-            mailAddress2));
+    public void shouldMatchWhenRightDomain() throws MessagingException {
+        Mail mail = FakeMail.builder()
+            .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
+            .build();
 
-        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress1, mailAddress2);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES, OTHER_AT_JAMES);
     }
 
-    // test if one recipients get returned as matched
     @Test
-    public void testHostIsMatchedOneRecipient() throws MessagingException {
-        MailAddress matchingAddress = new MailAddress("test2@" + JAMES_APACHE_ORG);
-        fakeMail.setRecipients(ImmutableList.of(
-            new MailAddress("test@" + JAMES2_APACHE_ORG),
-            matchingAddress));
+    public void shouldMatchOnlyWhenRightDomain() throws MessagingException {
+        Mail mail = FakeMail.builder()
+            .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
+            .build();
 
-        assertThat(matcher.match(fakeMail)).containsExactly(matchingAddress);
+        assertThat(matcher.match(mail)).containsExactly(ANY_AT_JAMES);
     }
 
-    // test if no recipient get returned cause it not match
     @Test
-    public void testHostIsNotMatch() throws MessagingException {
-        fakeMail.setRecipients(ImmutableList.of(
-            new MailAddress("test@" + JAMES2_APACHE_ORG),
-            new MailAddress("test2@" + JAMES2_APACHE_ORG)));
+    public void shouldNotMatchWhenWrongDomain() throws MessagingException {
+        Mail mail = FakeMail.builder()
+            .recipients(ANY_AT_JAMES2, OTHER_AT_JAMES2)
+            .build();
 
-        assertThat(matcher.match(fakeMail)).isEmpty();
+        assertThat(matcher.match(mail)).isEmpty();
     }
 }

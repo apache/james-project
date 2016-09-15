@@ -20,11 +20,12 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
-import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -35,29 +36,24 @@ import org.junit.Test;
 public class IsSingleRecipientTest {
 
     private Matcher matcher;
-    private MailAddress mailAddress1;
-    private MailAddress mailAddress2;
 
     @Before
     public void setUp() throws MessagingException {
         matcher = new IsSingleRecipient();
         FakeMatcherConfig matcherConfig = new FakeMatcherConfig("IsSingleRecipient", FakeMailContext.defaultContext());
         matcher.init(matcherConfig);
-
-        mailAddress1 = new MailAddress("test@james.apache.org");
-        mailAddress2 = new MailAddress("test2@james.apache.org");
     }
 
     @Test
     public void matchShouldMatchOneRecipientsEmails() throws MessagingException {
-        FakeMail fakeMail = FakeMail.builder().recipient(mailAddress1).build();
+        FakeMail fakeMail = FakeMail.builder().recipient(ANY_AT_JAMES).build();
 
-        assertThat(matcher.match(fakeMail)).containsExactly(mailAddress1);
+        assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
     public void matchShouldNotMatchMultiRecipientsEMail() throws MessagingException {
-        FakeMail fakeMail = FakeMail.builder().recipients(mailAddress1, mailAddress2).build();
+        FakeMail fakeMail = FakeMail.builder().recipients(ANY_AT_JAMES, OTHER_AT_JAMES).build();
 
         assertThat(matcher.match(fakeMail)).isNull();
     }
