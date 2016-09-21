@@ -31,6 +31,7 @@ import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
+import org.slf4j.Logger;
 
 @SuppressWarnings("deprecation")
 public class MockMailContext implements MailetContext {
@@ -157,5 +158,10 @@ public class MockMailContext implements MailetContext {
     @Override
     public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
         return null; // trivial implementation
+    }
+
+    @Override
+    public Logger getLogger() {
+        return null;
     }
 }

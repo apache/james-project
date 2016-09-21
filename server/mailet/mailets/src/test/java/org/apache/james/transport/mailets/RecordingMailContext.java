@@ -33,6 +33,7 @@ import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.TemporaryLookupException;
 import org.apache.mailet.base.test.FakeMailContext;
+import org.slf4j.Logger;
 
 /**
  * @since 15.12.12 12:02
@@ -225,4 +226,8 @@ public class RecordingMailContext implements MailetContext {
         return context.dnsLookup(name, type);
     }
 
+    @Override
+    public Logger getLogger() {
+        return context.getLogger();
+    }
 }

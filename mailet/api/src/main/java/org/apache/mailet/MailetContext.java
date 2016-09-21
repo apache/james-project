@@ -20,11 +20,14 @@
 
 package org.apache.mailet;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.slf4j.Logger;
 
 /**
  * Defines a set of methods that can be used to interact with the mailet
@@ -367,4 +370,6 @@ public interface MailetContext {
      * @since Mailet API v2.5
      */
     List<String> dnsLookup(String name, RecordType type) throws TemporaryLookupException, LookupException;
+
+    Logger getLogger();
 }

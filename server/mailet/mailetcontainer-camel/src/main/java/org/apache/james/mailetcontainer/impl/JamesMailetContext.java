@@ -484,4 +484,9 @@ public class JamesMailetContext implements MailetContext, LogEnabled, Configurab
             throw new ConfigurationException("Unable to access DomainList", e);
         }
     }
+
+    @Override
+    public Logger getLogger() {
+        return log;
+    }
 }
