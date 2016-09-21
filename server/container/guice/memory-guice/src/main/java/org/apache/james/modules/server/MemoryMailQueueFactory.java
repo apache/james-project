@@ -25,6 +25,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailImpl;
 import org.apache.james.queue.api.MailQueue;
@@ -32,6 +33,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
 
@@ -78,10 +80,17 @@ public class MemoryMailQueueFactory implements MailQueueFactory {
         @Override
         public void enQueue(Mail mail) throws MailQueueException {
             try {
-                mailItems.addFirst(new MemoryMailQueueItem(new MailImpl(mail)));
+                mailItems.addFirst(new MemoryMailQueueItem(cloneMail(mail)));
             } catch (MessagingException e) {
                 throw new MailQueueException("Error while copying mail " + mail.getName(), e);
             }
+        }
+
+        private Mail cloneMail(Mail mail) throws MessagingException {
+            MailImpl mailImpl = new MailImpl(mail);
+            Optional.ofNullable(mail.getMessage())
+                    .ifPresent(Throwing.consumer(message -> mailImpl.setMessage(new MimeMessage(message))));
+            return mailImpl;
         }
 
         @Override
