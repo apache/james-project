@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.guava.api.Assertions.assertThat;
 
 import java.util.List;
 
@@ -61,6 +62,13 @@ public class MessageParserTest {
         assertThat(attachments).hasSize(1);
         Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
         assertThat(attachments.get(0).getName()).isEqualTo(expectedName);
+    }
+
+    @Test
+    public void getAttachmentsShouldRetrieveAttachmentNameWhenOneContainingNonASCIICharacters() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/messageWithNonASCIIFilenameAttachment.eml"));
+        assertThat(attachments).hasSize(1);
+        assertThat(attachments.get(0).getName()).contains("ديناصور.odt");
     }
 
     @Test
