@@ -31,6 +31,7 @@ import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetP
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
+import org.apache.mailet.base.MailetPipelineLogging;
 import org.slf4j.Logger;
 
 /**
@@ -61,6 +62,7 @@ public class CamelProcessor implements Processor {
         long start = System.currentTimeMillis();
         MessagingException ex = null;
         try {
+            MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);
         } catch (MessagingException me) {
             ex = me;
@@ -85,6 +87,7 @@ public class CamelProcessor implements Processor {
             }
 
         } finally {
+            MailetPipelineLogging.logEndOfMailetProcess(mailet, mail);
             List<MailetProcessorListener> listeners = processor.getListeners();
             long complete = System.currentTimeMillis() - start;
             for (MailetProcessorListener listener : listeners) {
