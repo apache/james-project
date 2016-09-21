@@ -33,6 +33,8 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.EncoderUtil;
+import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.apache.james.mime4j.dom.FieldParser;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
@@ -259,13 +261,17 @@ public class MIMEMessageConverter {
     private ContentTypeField contentTypeField(MessageAttachment att) {
         Builder<String, String> parameters = ImmutableMap.<String, String> builder();
         if (att.getName().isPresent()) {
-            parameters.put("name", att.getName().get());
+            parameters.put("name", encode(att.getName().get()));
         }
         String type = att.getAttachment().getType();
         if (type.contains(FIELD_PARAMETERS_SEPARATOR)) {
             return Fields.contentType(contentTypeWithoutParameters(type), parameters.build());
         }
         return Fields.contentType(type, parameters.build());
+    }
+
+    private String encode(String name) {
+        return EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
     }
 
     private String contentTypeWithoutParameters(String type) {
