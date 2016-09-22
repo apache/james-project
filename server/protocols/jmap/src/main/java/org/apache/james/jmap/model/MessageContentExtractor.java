@@ -21,6 +21,7 @@ package org.apache.james.jmap.model;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
@@ -30,6 +31,7 @@ import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 
 public class MessageContentExtractor {
     
@@ -53,10 +55,32 @@ public class MessageContentExtractor {
     }
 
     private MessageContent parseMultipart(Entity entity, Multipart multipart) throws IOException {
-        if ("multipart/alternative".equals(entity.getMimeType())) {
-            return parseMultipartAlternative(multipart);
+        MessageContent messageContent = parseMultipartContent(entity, multipart);
+        if (!messageContent.isEmpty()) {
+            return messageContent;
         }
-        return parseMultipartMixed(multipart);
+        return parseFirstFoundMultipart(multipart);
+    }
+
+    private MessageContent parseMultipartContent(Entity entity, Multipart multipart) throws IOException {
+        switch(entity.getMimeType()) {
+        case "multipart/alternative":
+            return parseMultipartAlternative(multipart);
+        case "multipart/related":
+            return parseMultipartRelated(multipart);
+        default:
+            return parseMultipartMixed(multipart);
+        }
+    }
+
+    private MessageContent parseFirstFoundMultipart(Multipart multipart) throws IOException {
+        ThrowingFunction<Entity, MessageContent> parseMultipart = firstPart -> parseMultipart(firstPart, (Multipart)firstPart.getBody());
+        return multipart.getBodyParts()
+            .stream()
+            .filter(part -> part.getBody() instanceof Multipart)
+            .findFirst()
+            .map(Throwing.function(parseMultipart).sneakyThrow())
+            .orElse(MessageContent.empty());
     }
 
     private String asString(TextBody textBody) throws IOException {
@@ -67,12 +91,8 @@ public class MessageContentExtractor {
         List<Entity> parts = multipart.getBodyParts();
         if (! parts.isEmpty()) {
             Entity firstPart = parts.get(0);
-            if (firstPart.getBody() instanceof Multipart && "multipart/alternative".equals(firstPart.getMimeType())) {
-                return parseMultipartAlternative((Multipart)firstPart.getBody());
-            } else {
-                if (firstPart.getBody() instanceof TextBody) {
-                    return parseTextBody(firstPart, (TextBody)firstPart.getBody());
-                }
+            if (firstPart.getBody() instanceof TextBody) {
+                return parseTextBody(firstPart, (TextBody)firstPart.getBody());
             }
         }
         return MessageContent.empty();
@@ -81,6 +101,15 @@ public class MessageContentExtractor {
     private MessageContent parseMultipartAlternative(Multipart multipart) throws IOException {
         Optional<String> textBody = getFirstMatchingTextBody(multipart, "text/plain");
         Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
+        return new MessageContent(textBody, htmlBody);
+    }
+
+    private MessageContent parseMultipartRelated(Multipart multipart) throws IOException {
+        Optional<String> textBody = Optional.empty();
+        Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
+        if (! htmlBody.isPresent()) {
+            textBody = getFirstMatchingTextBody(multipart, "text/plain");
+        }
         return new MessageContent(textBody, htmlBody);
     }
 
@@ -122,6 +151,20 @@ public class MessageContentExtractor {
 
         public Optional<String> getHtmlBody() {
             return htmlBody;
+        }
+        
+        public boolean isEmpty() {
+            return equals(empty());
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other == null || !(other instanceof MessageContent)) {
+                return false;
+            }
+            MessageContent otherMessageContent = (MessageContent)other;
+            return Objects.equals(this.textBody, otherMessageContent.textBody)
+                    && Objects.equals(this.htmlBody, otherMessageContent.htmlBody);
         }
     }
 }

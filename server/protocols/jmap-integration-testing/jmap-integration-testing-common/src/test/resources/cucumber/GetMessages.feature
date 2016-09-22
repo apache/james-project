@@ -188,3 +188,14 @@ Feature: GetMessages method
     And the preview of the message is "blabla\nbloblo\n"
     And the textBody of the message is "/blabla/\n*bloblo*\n"
     And the htmlBody of the message is "<i>blabla</i>\n<b>bloblo</b>\n"
+
+  Scenario: Retrieving message should return image and html body when multipart/alternative where first part is multipart/related with html and image
+    Given the user has a multipart/related message in "inbox" mailbox
+    When the user ask for messages "["username@domain.tld|inbox|1"]"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachment
+    And the preview of the message is "multipart/related content"
+    And the property "textBody" of the message is null
+    And the htmlBody of the message is "<html>multipart/related content</html>\n"

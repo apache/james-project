@@ -168,4 +168,34 @@ public class MessageContentExtractorTest {
         assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
         assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
     }
+
+    @Test
+    public void extractShouldReturnHtmlWhenMultipartRelated() throws IOException {
+        Multipart multipart = MultipartBuilder.create("related")
+                .addBodyPart(htmlPart)
+                .build();
+        Message message = MessageBuilder.create()
+                .setBody(multipart)
+                .build();
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).isEmpty();
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+    }
+
+    @Test
+    public void extractShouldReturnHtmlAndTextWhenMultipartAlternativeAndFirstPartIsMultipartRelated() throws IOException {
+        BodyPart multipartRelated = BodyPartBuilder.create()
+            .setBody(MultipartBuilder.create("related")
+                    .addBodyPart(htmlPart)
+                    .build())
+            .build();
+        Multipart multipartAlternative = MultipartBuilder.create("alternative")
+                .addBodyPart(multipartRelated)
+                .build();
+        Message message = MessageBuilder.create()
+                .setBody(multipartAlternative)
+                .build();
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+    }
 }

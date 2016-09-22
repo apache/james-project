@@ -136,6 +136,11 @@ public class GetMessagesMethodStepdefs {
         appendMessage("eml/htmlAndTextMultipartWithOneAttachment.eml");
     }
 
+    @Given("^the user has a multipart/related message in \"([^\"]*)\" mailbox$")
+    public void appendMultipartRelated(String arg1) throws Throwable {
+        appendMessage("eml/multipartRelated.eml");
+    }
+
     private void appendMessage(String emlFileName) throws Exception {
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.lastConnectedUser, 
