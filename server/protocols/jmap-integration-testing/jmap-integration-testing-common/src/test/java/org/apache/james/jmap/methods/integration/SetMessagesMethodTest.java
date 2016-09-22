@@ -37,7 +37,6 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -1773,6 +1772,193 @@ public abstract class SetMessagesMethodTest {
             .body(secondAttachment + ".size", equalTo((int) attachment2.getSize()))
             .body(secondAttachment + ".cid", equalTo("123456789"))
             .body(secondAttachment + ".isInline", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldReturnAttachmentsWithNonASCIINames() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        Attachment attachment = Attachment.builder()
+                .bytes("attachment".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment);
+        Attachment attachment2 = Attachment.builder()
+                .bytes("attachment2".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment2);
+        Attachment attachment3 = Attachment.builder()
+                .bytes("attachment3".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment3);
+
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\":" +
+                "      {" +
+                "        \"" + messageCreationId  + "\" : "+
+                "        {" +
+                "          \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "          \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+                "          \"subject\": \"Message with three attachments with non ASCII name\"," +
+                "          \"textBody\": \"Test body\"," +
+                "          \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "          \"attachments\":" +
+                "          [" +
+                "            {" +
+                "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+                "              \"type\" : \"" + attachment.getType() + "\", " +
+                "              \"size\" : " + attachment.getSize() + "," +
+                "              \"name\" : \"ديناصور.png\", " +
+                "              \"isInline\" : false" +
+                "            }," +
+                "            {" +
+                "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+                "              \"type\" : \"" + attachment2.getType() + "\", " +
+                "              \"size\" : " + attachment2.getSize() + "," +
+                "              \"name\" : \"эволюционировать.png\", " +
+                "              \"isInline\" : false" +
+                "            }," +
+                "            {" +
+                "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
+                "              \"type\" : \"" + attachment3.getType() + "\", " +
+                "              \"size\" : " + attachment3.getSize() + "," +
+                "              \"name\" : \"进化还是不.png\"," +
+                "              \"isInline\" : false" +
+                "            }" +
+                "          ]" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        String createdPath = ARGUMENTS + ".created[\""+messageCreationId+"\"]";
+        String firstAttachment = createdPath + ".attachments[0]";
+        String secondAttachment = createdPath + ".attachments[1]";
+        String thirdAttachment = createdPath + ".attachments[2]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(createdPath + ".attachments", hasSize(3))
+            .body(firstAttachment + ".name", equalTo("ديناصور.png"))
+            .body(secondAttachment + ".name", equalTo("эволюционировать.png"))
+            .body(thirdAttachment + ".name", equalTo("进化还是不.png"));
+    }
+
+    @Test
+    public void filenamesAttachmentsWithNonASCIICharactersShouldBeRetrievedWhenChainingSetMessagesAndGetMessages() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        Attachment attachment = Attachment.builder()
+                .bytes("attachment".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment);
+
+        Attachment attachment2 = Attachment.builder()
+                .bytes("attachment2".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment2);
+
+        Attachment attachment3 = Attachment.builder()
+                .bytes("attachment3".getBytes(Charsets.UTF_8))
+                .type("application/octet-stream")
+                .build();
+        uploadAttachment(attachment3);
+
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\":" +
+                "      {" +
+                "        \"" + messageCreationId  + "\" : "+
+                "        {" +
+                "          \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "          \"to\": [{ \"name\": \"BOB\", \"email\": \"" + fromAddress + "\"}]," +
+                "          \"subject\": \"Message with three attachments with non ASCII name\"," +
+                "          \"textBody\": \"Test body\"," +
+                "          \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "          \"attachments\":" +
+                "          [" +
+                "            {" +
+                "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+                "              \"type\" : \"" + attachment.getType() + "\", " +
+                "              \"size\" : " + attachment.getSize() + "," +
+                "              \"name\" : \"ديناصور.png\", " +
+                "              \"isInline\" : false" +
+                "            }," +
+                "            {" +
+                "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+                "              \"type\" : \"" + attachment2.getType() + "\", " +
+                "              \"size\" : " + attachment2.getSize() + "," +
+                "              \"name\" : \"эволюционировать.png\", " +
+                "              \"isInline\" : false" +
+                "            }," +
+                "            {" +
+                "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
+                "              \"type\" : \"" + attachment3.getType() + "\", " +
+                "              \"size\" : " + attachment3.getSize() + "," +
+                "              \"name\" : \"进化还是不.png\"," +
+                "              \"isInline\" : false" +
+                "            }" +
+                "          ]" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap").then();
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+        String firstAttachment = message + ".attachments[0]";
+        String secondAttachment = message + ".attachments[1]";
+        String thirdAttachment = message + ".attachments[2]";
+        String presumedMessageId = "username@domain.tld|INBOX|1";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".attachments", hasSize(3))
+            .body(firstAttachment + ".name", equalTo("ديناصور.png"))
+            .body(secondAttachment + ".name",  equalTo("эволюционировать.png"))
+            .body(thirdAttachment + ".name", equalTo("进化还是不.png"));
     }
 
     private void uploadAttachment(Attachment attachment) throws IOException {

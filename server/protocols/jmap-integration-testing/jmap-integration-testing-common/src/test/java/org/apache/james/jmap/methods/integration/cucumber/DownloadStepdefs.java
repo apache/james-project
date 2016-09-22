@@ -41,7 +41,9 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.AttachmentAccessToken;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mime4j.codec.DecoderUtil;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -63,6 +65,7 @@ public class DownloadStepdefs {
     private static final String INVALID_ATTACHMENT_TOKEN = "usera@domain.tld_"
             + "2015-06-29T13:41:22.124Z_"
             + "DiZa0O14MjLWrAA8P6MG35Gt5CBp7mt5U1EH/M++rIoZK7nlGJ4dPW0dvZD7h4m3o5b/Yd8DXU5x2x4+s0HOOKzD7X0RMlsU7JHJMNLvTvRGWF/C+MUyC8Zce7DtnRVPEQX2uAZhL2PBABV07Vpa8kH+NxoS9CL955Bc1Obr4G+KN2JorADlocFQA6ElXryF5YS/HPZSvq1MTC6aJIP0ku8WRpRnbwgwJnn26YpcHXcJjbkCBtd9/BhlMV6xNd2hTBkfZmYdoNo+UKBaXWzLxAlbLuxjpxwvDNJfOEyWFPgHDoRvzP+G7KzhVWjanHAHrhF0GilEa/MKpOI1qHBSwA==";
+    private static final String UTF8_CONTENT_DIPOSITION_START = "Content-Disposition: attachment; filename*=\"";
 
     private final UserStepdefs userStepdefs;
     private final MainStepdefs mainStepdefs;
@@ -330,6 +333,27 @@ public class DownloadStepdefs {
 
     @Then("^the attachment is named \"([^\"]*)\"$")
     public void assertContentDisposition(String name) throws IOException {
-        assertThat(response.getHeaders("Content-Disposition")).extracting(Header::toString).containsExactly("Content-Disposition: attachment; filename=\"" + name + "\"");
+        if (!CharMatcher.ASCII.matchesAllOf(name)) {
+            assertEncodedFilenameMatches(name);
+        } else {
+            assertThat(response.getFirstHeader("Content-Disposition").getValue()).isEqualTo("attachment; filename=\"" + name + "\"");
+        }
+    }
+
+    private void assertEncodedFilenameMatches(String name) {
+        String contentDispositionHeader = response.getHeaders("Content-Disposition")[0].toString();
+        assertThat(contentDispositionHeader).startsWith(UTF8_CONTENT_DIPOSITION_START);
+
+        String expectedFilename = decode(extractFilename(contentDispositionHeader));
+        assertThat(name).isEqualTo(expectedFilename);
+    }
+
+    private String extractFilename(String contentDispositionHeader) {
+        return contentDispositionHeader.substring(UTF8_CONTENT_DIPOSITION_START.length(), 
+                contentDispositionHeader.length() - 1);
+    }
+
+    private String decode(String name) {
+        return DecoderUtil.decodeEncodedWords(name, Charsets.UTF_8);
     }
 }

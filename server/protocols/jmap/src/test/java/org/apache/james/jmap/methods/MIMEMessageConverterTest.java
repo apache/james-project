@@ -34,11 +34,14 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.Charsets;
+import org.apache.james.mime4j.codec.EncoderUtil;
+import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.stream.Field;
 import org.junit.Test;
@@ -469,5 +472,52 @@ public class MIMEMessageConverterTest {
         // Then
         String actual = new String(convert, Charsets.US_ASCII);
         assertThat(actual).contains(expectedEncodedContent);
+    }
+
+    @Test
+    public void convertToMimeShouldAddAttachmentAndContainsIndicationAboutTheWayToEncodeFilenamesAttachmentInTheInputStreamWhenSending() {
+        // Given
+        MIMEMessageConverter sut = new MIMEMessageConverter();
+
+        CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+        String expectedCID = "cid";
+        String expectedMimeType = "image/png";
+        String text = "123456";
+        String name = "ديناصور.png";
+        String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
+        MessageAttachment attachment = MessageAttachment.builder()
+                .name(name)
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes(text.getBytes())
+                    .type(expectedMimeType)
+                    .build())
+                .cid(Cid.from(expectedCID))
+                .isInline(true)
+                .build();
+
+        // When
+        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+
+        // Then
+        assertThat(result.getBody()).isInstanceOf(Multipart.class);
+        assertThat(result.isMultipart()).isTrue();
+        Multipart typedResult = (Multipart)result.getBody();
+        assertThat(typedResult.getBodyParts()).hasSize(2);
+
+        Entity attachmentPart = typedResult.getBodyParts().get(1);
+        String filename = getNameParameterValue(attachmentPart);
+        assertThat(filename).isEqualTo(expectedName);
+    }
+
+    private String getNameParameterValue(Entity attachmentPart) {
+        return ((ContentTypeField) attachmentPart.getHeader().getField("Content-Type")).getParameter("name");
     }
 }

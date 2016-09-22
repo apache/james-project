@@ -28,6 +28,8 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.MessageWriter;
@@ -129,7 +131,14 @@ public class MessageParser {
         return contentTypeField.transform(new Function<ContentTypeField, Optional<String>>() {
             @Override
             public Optional<String> apply(ContentTypeField field) {
-                return Optional.fromNullable(field.getParameter("name"));
+                return Optional.fromNullable(field.getParameter("name"))
+                  .transform(
+                          new Function<String, String>() {
+                              public String apply(String input) {
+                                  DecodeMonitor monitor = null;
+                                  return DecoderUtil.decodeEncodedWords(input, monitor);
+                              }
+                          });
             }
         }).or(Optional.<String> absent());
     }
