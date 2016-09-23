@@ -51,7 +51,7 @@ Step 3: Compile
 
   * Compile the Guice Cassandra project
   
-<i>$ mvn package -DskipTests -am -pl server/container/cassandra-guice</i>
+<i>$ mvn package -DskipTests -am -pl server/container/guice/cassandra-guice</i>
 
 Step 3: Deploy
 ##############
@@ -59,12 +59,12 @@ Step 3: Deploy
 3.1. Deploy Cassandra (optional)
 You may skip this part if you already have a running Cassandra on your network.
 
-<i>$ docker run --name=cassandra cassandra</i>
+<i>$ docker run --name=cassandra cassandra:2.2.3</i>
 
 3.2. Deploy ElasticSearch (optional)
 You may skip this part if you already have a running ElasticSearch on your network.
 
-<i>$ docker run --name=elasticsearch elasticsearch:1.5.2</i>
+<i>$ docker run --name=elasticsearch elasticsearch:2.2.1</i>
 
 Step 4: Configure
 #################
