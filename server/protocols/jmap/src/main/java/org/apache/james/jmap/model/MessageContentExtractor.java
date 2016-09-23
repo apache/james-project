@@ -20,7 +20,6 @@
 package org.apache.james.jmap.model;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -65,11 +64,9 @@ public class MessageContentExtractor {
     private MessageContent parseMultipartContent(Entity entity, Multipart multipart) throws IOException {
         switch(entity.getMimeType()) {
         case "multipart/alternative":
-            return parseMultipartAlternative(multipart);
-        case "multipart/related":
-            return parseMultipartRelated(multipart);
+            return retrieveHtmlAndPlainTextContent(multipart);
         default:
-            return parseMultipartMixed(multipart);
+            return retrieveFirstHtmlOrPlainTextContent(multipart);
         }
     }
 
@@ -87,24 +84,13 @@ public class MessageContentExtractor {
         return IOUtils.toString(textBody.getInputStream(), textBody.getMimeCharset());
     }
 
-    private MessageContent parseMultipartMixed(Multipart multipart) throws IOException {
-        List<Entity> parts = multipart.getBodyParts();
-        if (! parts.isEmpty()) {
-            Entity firstPart = parts.get(0);
-            if (firstPart.getBody() instanceof TextBody) {
-                return parseTextBody(firstPart, (TextBody)firstPart.getBody());
-            }
-        }
-        return MessageContent.empty();
-    }
-
-    private MessageContent parseMultipartAlternative(Multipart multipart) throws IOException {
+    private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {
         Optional<String> textBody = getFirstMatchingTextBody(multipart, "text/plain");
         Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
         return new MessageContent(textBody, htmlBody);
     }
 
-    private MessageContent parseMultipartRelated(Multipart multipart) throws IOException {
+    private MessageContent retrieveFirstHtmlOrPlainTextContent(Multipart multipart) throws IOException {
         Optional<String> textBody = Optional.empty();
         Optional<String> htmlBody = getFirstMatchingTextBody(multipart, "text/html");
         if (! htmlBody.isPresent()) {
@@ -117,11 +103,16 @@ public class MessageContentExtractor {
         return multipart.getBodyParts()
                 .stream()
                 .filter(part -> mimeType.equals(part.getMimeType()))
+                .filter(this::isNotAttachment)
                 .map(Entity::getBody)
                 .filter(TextBody.class::isInstance)
                 .map(TextBody.class::cast)
                 .findFirst()
                 .map(Throwing.function(this::asString).sneakyThrow());
+    }
+
+    private boolean isNotAttachment(Entity part) {
+        return part.getDispositionType() == null;
     }
 
     public static class MessageContent {

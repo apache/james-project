@@ -39,17 +39,23 @@ public class MessageContentExtractorTest {
     private static final String BINARY_CONTENT = "binary";
     private static final String TEXT_CONTENT = "text content";
     private static final String HTML_CONTENT = "<b>html</b> content";
+    private static final String ATTACHMENT_CONTENT = "attachment content";
 
     private MessageContentExtractor testee;
 
     private BodyPart htmlPart;
     private BodyPart textPart;
+    private BodyPart textAttachment;
 
     @Before
     public void setup() throws IOException {
         testee = new MessageContentExtractor();
         textPart = BodyPartBuilder.create().setBody(TEXT_CONTENT, "plain", Charsets.UTF_8).build();
         htmlPart = BodyPartBuilder.create().setBody(HTML_CONTENT, "html", Charsets.UTF_8).build();
+        textAttachment = BodyPartBuilder.create()
+                .setBody(ATTACHMENT_CONTENT, "plain", Charsets.UTF_8)
+                .setContentDisposition("attachment")
+                .build();
     }
 
     @Test
@@ -123,16 +129,30 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnFirstPartOnlyWhenMultipartMixedAndFirstPartIsText() throws IOException {
+    public void extractShouldReturnFirstNonAttachmentPartWhenMultipartMixed() throws IOException {
         Multipart multipart = MultipartBuilder.create("mixed")
-                .addBodyPart(textPart)
+                .addBodyPart(textAttachment)
                 .addBodyPart(htmlPart)
+                .addBodyPart(textPart)
                 .build();
         Message message = MessageBuilder.create()
                 .setBody(multipart)
                 .build();
         MessageContent actual = testee.extract(message);
-        assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+        assertThat(actual.getTextBody()).isEmpty();
+    }
+
+    @Test
+    public void extractShouldReturnEmptyWhenMultipartMixedAndFirstPartIsATextAttachment() throws IOException {
+        Multipart multipart = MultipartBuilder.create("mixed")
+                .addBodyPart(textAttachment)
+                .build();
+        Message message = MessageBuilder.create()
+                .setBody(multipart)
+                .build();
+        MessageContent actual = testee.extract(message);
+        assertThat(actual.getTextBody()).isEmpty();
         assertThat(actual.getHtmlBody()).isEmpty();
     }
 

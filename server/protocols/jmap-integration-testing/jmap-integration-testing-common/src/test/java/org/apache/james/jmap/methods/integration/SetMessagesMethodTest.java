@@ -2265,4 +2265,66 @@ public abstract class SetMessagesMethodTest {
             .body(firstAttachment + ".type", equalTo("text/html"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
     }
+    @Test
+    public void attachmentAndEmptyBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextAttachmentWithoutMailBody() throws Exception {
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+
+        Attachment attachment = Attachment.builder()
+                .bytes(("some text").getBytes(Charsets.UTF_8))
+                .type("text/plain; charset=UTF-8")
+                .build();
+        uploadTextAttachment(attachment);
+
+        String messageCreationId = "creationId";
+        String fromAddress = username;
+        String outboxId = getOutboxId(accessToken);
+        String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\","+
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+                "        \"subject\": \"Message with an attachment\"," +
+                "        \"mailboxIds\": [\"" + outboxId + "\"], " +
+                "        \"attachments\": [" +
+                "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+                "               \"type\" : \"" + attachment.getType() + "\", " +
+                "               \"size\" : " + attachment.getSize() + ", " +
+                "               \"isInline\" : false }" +
+                "           ]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until( () -> isAnyMessageFoundInInbox(accessToken));
+
+        String firstMessage = ARGUMENTS + ".list[0]";
+        String firstAttachment = firstMessage + ".attachments[0]";
+        String presumedMessageId = "username@domain.tld|INBOX|1";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + presumedMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(firstMessage + ".textBody", isEmptyOrNullString())
+            .body(firstMessage + ".htmlBody", isEmptyOrNullString())
+            .body(firstMessage + ".attachments", hasSize(1))
+            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".type", equalTo("text/plain"))
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
+    }
 }
