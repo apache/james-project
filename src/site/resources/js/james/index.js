@@ -75,6 +75,10 @@ function initIndexPage() {
         switchLogo('logo-call/james-logo-9.png');
     });
     
+    $('#james-logo-10-preview').click(function() {
+        switchLogo('logo-call/james-logo-10.png');
+    });
+    
     if (window.location.hash == '#logo') {
     	selectLogoTab();
     }
