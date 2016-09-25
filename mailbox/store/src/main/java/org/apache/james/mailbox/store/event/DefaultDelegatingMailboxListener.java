@@ -20,6 +20,9 @@
 package org.apache.james.mailbox.store.event;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
@@ -36,6 +39,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     private final MailboxListenerRegistry registry;
     private final EventDelivery eventDelivery;
+    Set<MailboxListener> addedListenerSet = Collections.newSetFromMap(new ConcurrentHashMap<MailboxListener, Boolean>());
 
     @Override
     public ListenerType getType() {
@@ -69,7 +73,11 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         if (listener.getType() != ListenerType.EACH_NODE && listener.getType() != ListenerType.ONCE) {
             throw new MailboxException(listener.getClass().getCanonicalName() + " registered on global event dispatching while its listener type was " + listener.getType());
         }
-        registry.addGlobalListener(listener);
+
+        if (!addedListenerSet.contains(listener)) {
+            registry.addGlobalListener(listener);
+            addedListenerSet.add(listener);
+        }
     }
 
     @Override
