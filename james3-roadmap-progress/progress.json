@@ -1,0 +1,119 @@
+{
+ "name": "3.0 release",
+ "children": [
+   {
+     "name" : "Remove design violation by using only mailbox-api from jmap",
+     "completion" : 100,
+     "complexity" : 10
+   },
+   {
+     "name" : "Make a marketing James 3.0 website",
+     "completion" : 15.12,
+     "complexity" : 10
+   },
+   {
+     "name" : "Assign a unique Id to message entity (and handle move and move to trash)",
+     "completion" : 20.5,
+     "complexity" : 10
+   },
+   {
+     "name" : "deploy James @ Linagora",
+     "completion" : 11,
+     "complexity" : 10
+   },
+   {
+     "name" : "write Gatling load and endurance testing",
+     "completion" : 10,
+     "complexity" : 10
+   },
+   {
+     "name" : "implement hasAttachment in search",
+     "completion" : 12,
+     "complexity" : 10
+   },
+   {
+     "name" : "publish a completion status documentation along James 3.0 release notes",
+     "completion" : 13,
+     "complexity" : 10
+   },
+   {
+     "name" : "Finish Vacation partial update (PR pending)",
+     "completion" : 14,
+     "complexity" : 10
+   },
+   {
+     "name" : "INBOX-298 : handle generated-bodyText property in jmap messages",
+     "completion" : 15,
+     "complexity" : 10
+   },
+   {
+     "name" : "Complete IMAP METADATA implementation",
+     "completion" : 80,
+     "complexity" : 5
+   },
+   {
+     "name" : "Make use of Docker 1.12 and swarm capabilities to speedup build",
+     "completion" : 18,
+     "complexity" : 10
+   },
+   {
+     "name" : "cleanup james public repositories and tag frequently",
+     "completion" : 17,
+     "complexity" : 10
+   },
+   {
+     "name" : "handle PR build on apache github repository",
+     "completion" : 16,
+     "complexity" : 10
+   },
+   {
+     "name" : "sanitize every supported mailets",
+     "completion" : 19,
+     "complexity" : 10
+   },
+   {
+     "name" : "re-submit a new James logo for contest",
+     "completion" : 50,
+     "complexity" : 10
+   },
+   {
+     "name" : "make sure default (JPA + ES) backends work well",
+     "completion" : 21,
+     "complexity" : 10
+   },
+   {
+     "name" : "Implement a Guice JPA + ES module",
+     "completion" : 22,
+     "complexity" : 10
+   },
+   {
+     "name" : "make a security audit",
+     "completion" : 23,
+     "complexity" : 10
+   },
+   {
+     "name" : "bug triaging",
+     "completion" : 24,
+     "complexity" : 10
+   },
+  {
+   "name": "Mailet refactor",
+   "children": [
+      {"name": "RemoveMailAttributes", "completion": 80, "complexity" : 1},
+      {"name": "RecipientRewriteTable", "completion": 80, "complexity" : 5}
+     ],
+     "complexity" : 40
+    },
+  {
+   "name": "Matcher refactor",
+   "children": [
+      {"name": "Matcher A", "completion": 50, "complexity" : 11},
+      {"name": "Matcher B", "completion": 30, "complexity" : 11},
+      {"name": "Matcher C", "completion": 50, "complexity" : 11},
+      {"name": "Matcher D", "completion": 0, "complexity" : 11}
+     ],
+     "complexity" : 50
+    }
+ ]
+}
+
