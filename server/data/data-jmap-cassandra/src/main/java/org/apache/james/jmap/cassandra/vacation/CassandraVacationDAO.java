@@ -27,6 +27,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import javax.inject.Inject;
@@ -39,7 +40,6 @@ import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.cassandra.vacation.tables.CassandraVacationTable;
-import org.apache.james.util.FunctionGenerator;
 import org.apache.james.util.ValuePatch;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -55,7 +55,7 @@ public class CassandraVacationDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement readStatement;
     private final UserType zonedDateTimeUserType;
-    private final FunctionGenerator<VacationPatch, Insert> insertGeneratorPipeline;
+    private final BiFunction<VacationPatch, Insert, Insert> insertGeneratorPipeline;
 
     @Inject
     public CassandraVacationDAO(Session session, CassandraTypesProvider cassandraTypesProvider) {
@@ -67,16 +67,16 @@ public class CassandraVacationDAO {
             .where(eq(CassandraVacationTable.ACCOUNT_ID,
                 bindMarker(CassandraVacationTable.ACCOUNT_ID))));
 
-        insertGeneratorPipeline = ImmutableList.<FunctionGenerator<VacationPatch, Insert>>of(
-            patch -> applyPatchForField(CassandraVacationTable.SUBJECT, patch.getSubject()),
-            patch -> applyPatchForField(CassandraVacationTable.HTML, patch.getHtmlBody()),
-            patch -> applyPatchForField(CassandraVacationTable.TEXT, patch.getTextBody()),
-            patch -> applyPatchForField(CassandraVacationTable.IS_ENABLED, patch.getIsEnabled()),
-            patch -> applyPatchForFieldZonedDateTime(CassandraVacationTable.FROM_DATE, patch.getFromDate()),
-            patch -> applyPatchForFieldZonedDateTime(CassandraVacationTable.TO_DATE, patch.getToDate()))
+        insertGeneratorPipeline = ImmutableList.of(
+            applyPatchForField(CassandraVacationTable.SUBJECT, VacationPatch::getSubject),
+            applyPatchForField(CassandraVacationTable.HTML, VacationPatch::getHtmlBody),
+            applyPatchForField(CassandraVacationTable.TEXT, VacationPatch::getTextBody),
+            applyPatchForField(CassandraVacationTable.IS_ENABLED, VacationPatch::getIsEnabled),
+            applyPatchForFieldZonedDateTime(CassandraVacationTable.FROM_DATE, VacationPatch::getFromDate),
+            applyPatchForFieldZonedDateTime(CassandraVacationTable.TO_DATE, VacationPatch::getToDate))
             .stream()
-            .reduce(FunctionGenerator::composeGeneratedFunctions)
-            .get();
+            .reduce((vacation, insert) -> insert, 
+                    (a, b) -> (vacation, insert) -> b.apply(vacation, a.apply(vacation, insert)));
     }
 
     public CompletableFuture<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
@@ -108,23 +108,25 @@ public class CassandraVacationDAO {
     }
 
     private Insert createSpecificUpdate(VacationPatch vacationPatch, Insert baseInsert) {
-        return insertGeneratorPipeline
-            .apply(vacationPatch)
-            .apply(baseInsert);
+        return insertGeneratorPipeline.apply(vacationPatch, baseInsert);
     }
 
-    public <T> Function<Insert, Insert> applyPatchForField(String field, ValuePatch<T> valuePatch) {
-        return valuePatch.mapNotKeptToOptional(optionalValue -> applyPatchForField(field, optionalValue))
-            .orElse(Function.identity());
+    public <T> BiFunction<VacationPatch, Insert, Insert> applyPatchForField(String field, Function<VacationPatch, ValuePatch<T>> getter) {
+        return (vacation, insert) -> 
+            getter.apply(vacation)
+                .mapNotKeptToOptional(optionalValue -> applyPatchForField(field, optionalValue, insert))
+                .orElse(insert);
     }
 
-    public Function<Insert, Insert> applyPatchForFieldZonedDateTime(String field, ValuePatch<ZonedDateTime> valuePatch) {
-        return valuePatch.mapNotKeptToOptional(optionalValue -> applyPatchForField(field, convertToUDTOptional(optionalValue)))
-            .orElse(Function.identity());
+    public BiFunction<VacationPatch, Insert, Insert> applyPatchForFieldZonedDateTime(String field, Function<VacationPatch, ValuePatch<ZonedDateTime>> getter) {
+        return (vacation, insert) -> 
+            getter.apply(vacation)
+                .mapNotKeptToOptional(optionalValue -> applyPatchForField(field, convertToUDTOptional(optionalValue), insert))
+                .orElse(insert);
     }
 
-    private <T> Function<Insert, Insert> applyPatchForField(String field, Optional<T> value) {
-        return insert -> insert.value(field, value.orElse(null));
+    private <T> Insert applyPatchForField(String field, Optional<T> value, Insert insert) {
+        return insert.value(field, value.orElse(null));
     }
 
     private Optional<UDTValue> convertToUDTOptional(Optional<ZonedDateTime> zonedDateTimeOptional) {
