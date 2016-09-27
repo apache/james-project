@@ -40,7 +40,7 @@ import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.cassandra.vacation.tables.CassandraVacationTable;
 import org.apache.james.util.FunctionGenerator;
-import org.apache.james.util.PatchedValue;
+import org.apache.james.util.ValuePatch;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -113,13 +113,13 @@ public class CassandraVacationDAO {
             .apply(baseInsert);
     }
 
-    public <T> Function<Insert, Insert> applyPatchForField(String field, PatchedValue<T> patchedValue) {
-        return patchedValue.mapNotKeptToOptional(optionalValue -> applyPatchForField(field, optionalValue))
+    public <T> Function<Insert, Insert> applyPatchForField(String field, ValuePatch<T> valuePatch) {
+        return valuePatch.mapNotKeptToOptional(optionalValue -> applyPatchForField(field, optionalValue))
             .orElse(Function.identity());
     }
 
-    public Function<Insert, Insert> applyPatchForFieldZonedDateTime(String field, PatchedValue<ZonedDateTime> patchedValue) {
-        return patchedValue.mapNotKeptToOptional(optionalValue -> applyPatchForField(field, convertToUDTOptional(optionalValue)))
+    public Function<Insert, Insert> applyPatchForFieldZonedDateTime(String field, ValuePatch<ZonedDateTime> valuePatch) {
+        return valuePatch.mapNotKeptToOptional(optionalValue -> applyPatchForField(field, convertToUDTOptional(optionalValue)))
             .orElse(Function.identity());
     }
 

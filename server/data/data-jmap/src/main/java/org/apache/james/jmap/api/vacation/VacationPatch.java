@@ -23,7 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.util.PatchedValue;
+import org.apache.james.util.ValuePatch;
 
 import com.google.common.base.Preconditions;
 
@@ -35,85 +35,85 @@ public class VacationPatch {
 
     public static Builder builderFrom(Vacation vacation) {
         return VacationPatch.builder()
-            .subject(PatchedValue.ofOptional(vacation.getSubject()))
-            .textBody(PatchedValue.ofOptional(vacation.getTextBody()))
-            .htmlBody(PatchedValue.ofOptional(vacation.getHtmlBody()))
-            .fromDate(PatchedValue.ofOptional(vacation.getFromDate()))
-            .toDate(PatchedValue.ofOptional(vacation.getToDate()))
-            .isEnabled(PatchedValue.modifyTo(vacation.isEnabled()));
+            .subject(ValuePatch.ofOptional(vacation.getSubject()))
+            .textBody(ValuePatch.ofOptional(vacation.getTextBody()))
+            .htmlBody(ValuePatch.ofOptional(vacation.getHtmlBody()))
+            .fromDate(ValuePatch.ofOptional(vacation.getFromDate()))
+            .toDate(ValuePatch.ofOptional(vacation.getToDate()))
+            .isEnabled(ValuePatch.modifyTo(vacation.isEnabled()));
     }
 
     public static class Builder {
-        private PatchedValue<String> subject = PatchedValue.keep();
-        private PatchedValue<String> textBody = PatchedValue.keep();
-        private PatchedValue<String> htmlBody = PatchedValue.keep();
-        private PatchedValue<ZonedDateTime> toDate = PatchedValue.keep();
-        private PatchedValue<ZonedDateTime> fromDate = PatchedValue.keep();
-        private PatchedValue<Boolean> isEnabled = PatchedValue.keep();
+        private ValuePatch<String> subject = ValuePatch.keep();
+        private ValuePatch<String> textBody = ValuePatch.keep();
+        private ValuePatch<String> htmlBody = ValuePatch.keep();
+        private ValuePatch<ZonedDateTime> toDate = ValuePatch.keep();
+        private ValuePatch<ZonedDateTime> fromDate = ValuePatch.keep();
+        private ValuePatch<Boolean> isEnabled = ValuePatch.keep();
 
-        public Builder subject(PatchedValue<String> subject) {
+        public Builder subject(ValuePatch<String> subject) {
             Preconditions.checkNotNull(subject);
             this.subject = subject;
             return this;
         }
 
         public Builder subject(String subject) {
-            this.subject = PatchedValue.modifyTo(subject);
+            this.subject = ValuePatch.modifyTo(subject);
             return this;
         }
 
-        public Builder textBody(PatchedValue<String> textBody) {
+        public Builder textBody(ValuePatch<String> textBody) {
             Preconditions.checkNotNull(textBody);
             this.textBody = textBody;
             return this;
         }
 
         public Builder textBody(String textBody) {
-            this.textBody = PatchedValue.modifyTo(textBody);
+            this.textBody = ValuePatch.modifyTo(textBody);
             return this;
         }
 
-        public Builder htmlBody(PatchedValue<String> htmlBody) {
+        public Builder htmlBody(ValuePatch<String> htmlBody) {
             Preconditions.checkNotNull(htmlBody);
             this.htmlBody = htmlBody;
             return this;
         }
 
         public Builder htmlBody(String htmlBody) {
-            this.htmlBody = PatchedValue.modifyTo(htmlBody);
+            this.htmlBody = ValuePatch.modifyTo(htmlBody);
             return this;
         }
 
-        public Builder toDate(PatchedValue<ZonedDateTime> toDate) {
+        public Builder toDate(ValuePatch<ZonedDateTime> toDate) {
             Preconditions.checkNotNull(toDate);
             this.toDate = toDate;
             return this;
         }
 
         public Builder toDate(ZonedDateTime toDate) {
-            this.toDate = PatchedValue.modifyTo(toDate);
+            this.toDate = ValuePatch.modifyTo(toDate);
             return this;
         }
 
-        public Builder fromDate(PatchedValue<ZonedDateTime> fromDate) {
+        public Builder fromDate(ValuePatch<ZonedDateTime> fromDate) {
             Preconditions.checkNotNull(fromDate);
             this.fromDate = fromDate;
             return this;
         }
 
         public Builder fromDate(ZonedDateTime fromDate) {
-            this.fromDate = PatchedValue.modifyTo(fromDate);
+            this.fromDate = ValuePatch.modifyTo(fromDate);
             return this;
         }
 
-        public Builder isEnabled(PatchedValue<Boolean> isEnabled) {
+        public Builder isEnabled(ValuePatch<Boolean> isEnabled) {
             Preconditions.checkNotNull(isEnabled);
             this.isEnabled = isEnabled;
             return this;
         }
 
         public Builder isEnabled(Boolean isEnabled) {
-            this.isEnabled = PatchedValue.modifyTo(isEnabled);
+            this.isEnabled = ValuePatch.modifyTo(isEnabled);
             return this;
         }
 
@@ -122,15 +122,15 @@ public class VacationPatch {
         }
     }
 
-    private final PatchedValue<String> subject;
-    private final PatchedValue<String> textBody;
-    private final PatchedValue<String> htmlBody;
-    private final PatchedValue<ZonedDateTime> toDate;
-    private final PatchedValue<ZonedDateTime> fromDate;
-    private final PatchedValue<Boolean> isEnabled;
+    private final ValuePatch<String> subject;
+    private final ValuePatch<String> textBody;
+    private final ValuePatch<String> htmlBody;
+    private final ValuePatch<ZonedDateTime> toDate;
+    private final ValuePatch<ZonedDateTime> fromDate;
+    private final ValuePatch<Boolean> isEnabled;
 
-    private VacationPatch(PatchedValue<String> subject, PatchedValue<String> textBody, PatchedValue<String> htmlBody,
-                          PatchedValue<ZonedDateTime> toDate, PatchedValue<ZonedDateTime> fromDate, PatchedValue<Boolean> isEnabled) {
+    private VacationPatch(ValuePatch<String> subject, ValuePatch<String> textBody, ValuePatch<String> htmlBody,
+                          ValuePatch<ZonedDateTime> toDate, ValuePatch<ZonedDateTime> fromDate, ValuePatch<Boolean> isEnabled) {
         Preconditions.checkState(!isEnabled.isRemoved());
         this.subject = subject;
         this.textBody = textBody;
@@ -140,27 +140,27 @@ public class VacationPatch {
         this.isEnabled = isEnabled;
     }
 
-    public PatchedValue<String> getSubject() {
+    public ValuePatch<String> getSubject() {
         return subject;
     }
 
-    public PatchedValue<String> getTextBody() {
+    public ValuePatch<String> getTextBody() {
         return textBody;
     }
 
-    public PatchedValue<String> getHtmlBody() {
+    public ValuePatch<String> getHtmlBody() {
         return htmlBody;
     }
 
-    public PatchedValue<ZonedDateTime> getToDate() {
+    public ValuePatch<ZonedDateTime> getToDate() {
         return toDate;
     }
 
-    public PatchedValue<ZonedDateTime> getFromDate() {
+    public ValuePatch<ZonedDateTime> getFromDate() {
         return fromDate;
     }
 
-    public PatchedValue<Boolean> getIsEnabled() {
+    public ValuePatch<Boolean> getIsEnabled() {
         return isEnabled;
     }
 

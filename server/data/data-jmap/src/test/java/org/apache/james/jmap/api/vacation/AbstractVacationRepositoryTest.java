@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.james.util.PatchedValue;
+import org.apache.james.util.ValuePatch;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -201,7 +201,7 @@ public abstract class AbstractVacationRepositoryTest {
 
         // When
         vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
-            .subject(PatchedValue.remove())
+            .subject(ValuePatch.remove())
             .build())
             .join();
 
@@ -228,7 +228,7 @@ public abstract class AbstractVacationRepositoryTest {
 
         // When
         vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
-            .textBody(PatchedValue.remove())
+            .textBody(ValuePatch.remove())
             .build())
             .join();
 
@@ -255,7 +255,7 @@ public abstract class AbstractVacationRepositoryTest {
 
         // When
         vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
-            .htmlBody(PatchedValue.remove())
+            .htmlBody(ValuePatch.remove())
             .build())
             .join();
 
@@ -282,7 +282,7 @@ public abstract class AbstractVacationRepositoryTest {
 
         // When
         vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
-            .toDate(PatchedValue.remove())
+            .toDate(ValuePatch.remove())
             .build())
             .join();
 
@@ -309,7 +309,7 @@ public abstract class AbstractVacationRepositoryTest {
 
         // When
         vacationRepository.modifyVacation(ACCOUNT_ID, VacationPatch.builder()
-            .fromDate(PatchedValue.remove())
+            .fromDate(ValuePatch.remove())
             .build())
             .join();
 

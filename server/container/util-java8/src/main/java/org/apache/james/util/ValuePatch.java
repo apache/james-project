@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 
-public class PatchedValue<T> {
+public class ValuePatch<T> {
 
     private enum State {
         KEEP,
@@ -34,33 +34,33 @@ public class PatchedValue<T> {
         MODIFY
     }
 
-    public static <T> PatchedValue<T> modifyTo(T value) {
+    public static <T> ValuePatch<T> modifyTo(T value) {
         Preconditions.checkNotNull(value);
-        return new PatchedValue<>(value, State.MODIFY);
+        return new ValuePatch<>(value, State.MODIFY);
     }
 
-    public static <T> PatchedValue<T> ofNullable(T value) {
+    public static <T> ValuePatch<T> ofNullable(T value) {
         return ofOptional(Optional.ofNullable(value));
     }
 
-    public static <T> PatchedValue<T> ofOptional(Optional<T> value) {
+    public static <T> ValuePatch<T> ofOptional(Optional<T> value) {
         Preconditions.checkNotNull(value);
-        return value.map(PatchedValue::modifyTo)
-            .orElse(PatchedValue.remove());
+        return value.map(ValuePatch::modifyTo)
+            .orElse(ValuePatch.remove());
     }
 
-    public static <T> PatchedValue<T> remove() {
-        return new PatchedValue<>(null, State.REMOVE);
+    public static <T> ValuePatch<T> remove() {
+        return new ValuePatch<>(null, State.REMOVE);
     }
 
-    public static <T> PatchedValue<T> keep() {
-        return new PatchedValue<>(null, State.KEEP);
+    public static <T> ValuePatch<T> keep() {
+        return new ValuePatch<>(null, State.KEEP);
     }
 
     private final T value;
     private final State state;
 
-    private PatchedValue(T value, State state) {
+    private ValuePatch(T value, State state) {
         this.value = value;
         this.state = state;
     }
@@ -109,8 +109,8 @@ public class PatchedValue<T> {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof PatchedValue) {
-            PatchedValue<?> that = (PatchedValue<?>) o;
+        if (o instanceof ValuePatch) {
+            ValuePatch<?> that = (ValuePatch<?>) o;
             return Objects.equals(this.value, that.value) &&
                 Objects.equals(this.state, that.state);
         } else {

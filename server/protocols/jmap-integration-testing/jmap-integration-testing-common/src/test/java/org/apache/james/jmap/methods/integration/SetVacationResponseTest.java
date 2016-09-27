@@ -34,7 +34,7 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
-import org.apache.james.util.PatchedValue;
+import org.apache.james.util.ValuePatch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -212,7 +212,7 @@ public abstract class SetVacationResponseTest {
     public void setVacationResponseShouldAllowResets() {
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
             VacationPatch.builder()
-                .textBody(PatchedValue.modifyTo("any value"))
+                .textBody(ValuePatch.modifyTo("any value"))
                 .build());
 
         String bodyRequest = "[[" +
@@ -250,7 +250,7 @@ public abstract class SetVacationResponseTest {
         String subject = "any subject";
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
             VacationPatch.builder()
-                .textBody(PatchedValue.modifyTo(textBody))
+                .textBody(ValuePatch.modifyTo(textBody))
                 .build());
 
         String bodyRequest = "[[" +
@@ -290,7 +290,7 @@ public abstract class SetVacationResponseTest {
     public void setVacationResponseShouldAllowPartialUpdates() {
         jmapServer.serverProbe().modifyVacation(AccountId.fromString(USER),
             VacationPatch.builder()
-                .textBody(PatchedValue.modifyTo("any value"))
+                .textBody(ValuePatch.modifyTo("any value"))
                 .build());
 
         String newTextBody = "Awesome text message 2";

@@ -27,7 +27,7 @@ import java.util.Optional;
 
 import org.junit.Test;
 
-public class PatchedValueTest {
+public class ValuePatchTest {
 
     public static final int REPLACEMENT_VALUE = 24;
     public static final Optional<Integer> REPLACEMENT = Optional.of(REPLACEMENT_VALUE);
@@ -36,158 +36,158 @@ public class PatchedValueTest {
 
     @Test
     public void keepShouldProduceKeptValues() {
-        assertThat(PatchedValue.<Integer>keep().isKept()).isTrue();
+        assertThat(ValuePatch.<Integer>keep().isKept()).isTrue();
     }
 
     @Test
     public void keepShouldThrowOnGet() {
-        assertThatThrownBy(() -> PatchedValue.<Integer>keep().get()).isInstanceOf(NoSuchElementException.class);
+        assertThatThrownBy(() -> ValuePatch.<Integer>keep().get()).isInstanceOf(NoSuchElementException.class);
     }
 
     @Test
     public void keepShouldNotBeModified() {
-        assertThat(PatchedValue.<Integer>keep().isModified()).isFalse();
+        assertThat(ValuePatch.<Integer>keep().isModified()).isFalse();
     }
 
     @Test
     public void keepShouldNotBeRemoved() {
-        assertThat(PatchedValue.<Integer>keep().isRemoved()).isFalse();
+        assertThat(ValuePatch.<Integer>keep().isRemoved()).isFalse();
     }
 
     @Test
     public void removeShouldNotBeKept() {
-        assertThat(PatchedValue.<Integer>remove().isKept()).isFalse();
+        assertThat(ValuePatch.<Integer>remove().isKept()).isFalse();
     }
 
     @Test
     public void removeShouldBeRemoved() {
-        assertThat(PatchedValue.<Integer>remove().isRemoved()).isTrue();
+        assertThat(ValuePatch.<Integer>remove().isRemoved()).isTrue();
     }
 
     @Test
     public void removedShouldNotBeModified() {
-        assertThat(PatchedValue.<Integer>remove().isModified()).isFalse();
+        assertThat(ValuePatch.<Integer>remove().isModified()).isFalse();
     }
 
     @Test
     public void removeShouldThrowOnGet() {
-        assertThatThrownBy(() -> PatchedValue.<Integer>remove().get()).isInstanceOf(NoSuchElementException.class);
+        assertThatThrownBy(() -> ValuePatch.<Integer>remove().get()).isInstanceOf(NoSuchElementException.class);
     }
 
     @Test
     public void ofNullableShouldBeEquivalentToRemoveWhenNullParameter() {
-        assertThat(PatchedValue.<Integer>ofNullable(null)).isEqualTo(PatchedValue.<Integer>remove());
+        assertThat(ValuePatch.<Integer>ofNullable(null)).isEqualTo(ValuePatch.<Integer>remove());
     }
 
     @Test
     public void ofNullableShouldBeEquivalentToModifyWhenNonNullParameter() {
-        assertThat(PatchedValue.ofNullable(VALUE)).isEqualTo(PatchedValue.modifyTo(VALUE));
+        assertThat(ValuePatch.ofNullable(VALUE)).isEqualTo(ValuePatch.modifyTo(VALUE));
     }
 
     @Test
     public void modifyToShouldNotBeKept() {
-        assertThat(PatchedValue.modifyTo(VALUE).isKept()).isFalse();
+        assertThat(ValuePatch.modifyTo(VALUE).isKept()).isFalse();
     }
 
     @Test
     public void modifyToShouldNotBeRemoved() {
-        assertThat(PatchedValue.modifyTo(VALUE).isRemoved()).isFalse();
+        assertThat(ValuePatch.modifyTo(VALUE).isRemoved()).isFalse();
     }
 
     @Test
     public void modifyToShouldBeModified() {
-        assertThat(PatchedValue.modifyTo(VALUE).isModified()).isTrue();
+        assertThat(ValuePatch.modifyTo(VALUE).isModified()).isTrue();
     }
 
     @Test
     public void modifyToShouldThrowOnNullValue() {
-        assertThatThrownBy(() -> PatchedValue.modifyTo(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ValuePatch.modifyTo(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void modifyToShouldBeRetrievedByGet() {
-        assertThat(PatchedValue.modifyTo(VALUE).get()).isEqualTo(VALUE);
+        assertThat(ValuePatch.modifyTo(VALUE).get()).isEqualTo(VALUE);
     }
 
     @Test
     public void ofOptionalShouldThrowOnNullValue() {
-        assertThatThrownBy(() -> PatchedValue.ofOptional(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ValuePatch.ofOptional(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void ofOptionalShouldBeEquivalentToModifyToWhenPresent() {
-        assertThat(PatchedValue.ofOptional(OPTIONAL_OF_VALUE)).isEqualTo(PatchedValue.modifyTo(VALUE));
+        assertThat(ValuePatch.ofOptional(OPTIONAL_OF_VALUE)).isEqualTo(ValuePatch.modifyTo(VALUE));
     }
 
     @Test
     public void ofOptionalShouldBeEquivalentToRemoveWhenEmpty() {
-        assertThat(PatchedValue.ofOptional(Optional.empty())).isEqualTo(PatchedValue.remove());
+        assertThat(ValuePatch.ofOptional(Optional.empty())).isEqualTo(ValuePatch.remove());
     }
 
     @Test
     public void notKeptOrElseShouldReturnElseWhenKept() {
-        assertThat(PatchedValue.<Integer>keep().notKeptOrElse(REPLACEMENT)).isEqualTo(REPLACEMENT);
+        assertThat(ValuePatch.<Integer>keep().notKeptOrElse(REPLACEMENT)).isEqualTo(REPLACEMENT);
     }
 
     @Test
     public void notKeptOrElseShouldReturnEmptyWhenRemoved() {
-        assertThat(PatchedValue.<Integer>remove().notKeptOrElse(REPLACEMENT)).isEqualTo(Optional.empty());
+        assertThat(ValuePatch.<Integer>remove().notKeptOrElse(REPLACEMENT)).isEqualTo(Optional.empty());
     }
 
     @Test
     public void notKeptOrElseShouldReturnOptionalWhenModified() {
-        assertThat(PatchedValue.modifyTo(VALUE).notKeptOrElse(REPLACEMENT)).isEqualTo(OPTIONAL_OF_VALUE);
+        assertThat(ValuePatch.modifyTo(VALUE).notKeptOrElse(REPLACEMENT)).isEqualTo(OPTIONAL_OF_VALUE);
     }
 
     @Test
     public void toOptionalShouldReturnElseWhenKept() {
-        assertThat(PatchedValue.<Integer>keep().toOptional()).isEqualTo(Optional.empty());
+        assertThat(ValuePatch.<Integer>keep().toOptional()).isEqualTo(Optional.empty());
     }
 
     @Test
     public void toOptionalShouldReturnEmptyWhenRemoved() {
-        assertThat(PatchedValue.<Integer>remove().toOptional()).isEqualTo(Optional.empty());
+        assertThat(ValuePatch.<Integer>remove().toOptional()).isEqualTo(Optional.empty());
     }
 
     @Test
     public void toOptionalShouldReturnOptionalWhenModified() {
-        assertThat(PatchedValue.modifyTo(VALUE).toOptional()).isEqualTo(OPTIONAL_OF_VALUE);
+        assertThat(ValuePatch.modifyTo(VALUE).toOptional()).isEqualTo(OPTIONAL_OF_VALUE);
     }
 
     @Test
     public void getOrElseShouldReturnReplacementWhenKept() {
-        assertThat(PatchedValue.<Integer>keep().getOrElse(REPLACEMENT_VALUE)).isEqualTo(REPLACEMENT_VALUE);
+        assertThat(ValuePatch.<Integer>keep().getOrElse(REPLACEMENT_VALUE)).isEqualTo(REPLACEMENT_VALUE);
     }
 
     @Test
     public void getOrElseShouldReturnReplacementWhenRemoved() {
-        assertThat(PatchedValue.<Integer>remove().getOrElse(REPLACEMENT_VALUE)).isEqualTo(REPLACEMENT_VALUE);
+        assertThat(ValuePatch.<Integer>remove().getOrElse(REPLACEMENT_VALUE)).isEqualTo(REPLACEMENT_VALUE);
     }
 
     @Test
     public void getOrElseShouldReturnValueWhenPresent() {
-        assertThat(PatchedValue.modifyTo(VALUE).getOrElse(REPLACEMENT_VALUE)).isEqualTo(VALUE);
+        assertThat(ValuePatch.modifyTo(VALUE).getOrElse(REPLACEMENT_VALUE)).isEqualTo(VALUE);
     }
 
     @Test
     public void getOrElseShouldReturnNullWhenKeptAndNullSpecified() {
-        assertThat(PatchedValue.<Integer>keep().getOrElse(null)).isNull();
+        assertThat(ValuePatch.<Integer>keep().getOrElse(null)).isNull();
     }
 
     @Test
     public void getOrElseShouldReturnNullWhenRemovedAndNullSpecified() {
-        assertThat(PatchedValue.<Integer>remove().getOrElse(null)).isNull();
+        assertThat(ValuePatch.<Integer>remove().getOrElse(null)).isNull();
     }
 
     @Test
     public void getOrElseShouldReturnValueWhenPresentAndNullSpecified() {
-        assertThat(PatchedValue.modifyTo(VALUE).getOrElse(null)).isEqualTo(VALUE);
+        assertThat(ValuePatch.modifyTo(VALUE).getOrElse(null)).isEqualTo(VALUE);
     }
 
     @Test
     public void mapNotKeptToValueShouldPreserveKept() {
         assertThat(
-            PatchedValue.<Integer>keep()
+            ValuePatch.<Integer>keep()
                 .mapNotKeptToOptional(optional -> optional.map(i -> i + 1).orElse(REPLACEMENT_VALUE)))
             .isEmpty();
     }
@@ -195,7 +195,7 @@ public class PatchedValueTest {
     @Test
     public void mapNotKeptToValueShouldTransformOf() {
         assertThat(
-            PatchedValue.modifyTo(VALUE)
+            ValuePatch.modifyTo(VALUE)
                 .mapNotKeptToOptional(optional -> optional.map(i -> i + 1).orElse(REPLACEMENT_VALUE)))
             .contains(VALUE + 1);
     }
@@ -203,7 +203,7 @@ public class PatchedValueTest {
     @Test
     public void mapNotKeptToValueShouldTransformRemoved() {
         assertThat(
-            PatchedValue.<Integer>remove()
+            ValuePatch.<Integer>remove()
                 .mapNotKeptToOptional(optional -> optional.map(i -> i + 1).orElse(REPLACEMENT_VALUE)))
             .contains(REPLACEMENT_VALUE);
     }
@@ -211,7 +211,7 @@ public class PatchedValueTest {
     @Test
     public void mapNotKeptToValueShouldThrowWhenNull() {
         assertThatThrownBy(
-            () -> PatchedValue.modifyTo(12)
+            () -> ValuePatch.modifyTo(12)
                 .mapNotKeptToOptional(any -> null)
                 .isPresent())
             .isInstanceOf(NullPointerException.class);
