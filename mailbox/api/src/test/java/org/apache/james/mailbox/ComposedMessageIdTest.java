@@ -17,18 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.table;
+package org.apache.james.mailbox;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.junit.Test;
 
-public interface MessageIdToImapUid {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    String TABLE_NAME = "imapUidTable";
+public class ComposedMessageIdTest {
 
-    String MOD_SEQ = "modSeq";
-
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, MOD_SEQ,
-            Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS };
+    @Test
+    public void composedMessageIdShouldRespectBeanContract() {
+        EqualsVerifier.forClass(ComposedMessageId.class)
+            .verify();
+    }
 }

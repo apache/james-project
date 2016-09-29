@@ -16,19 +16,33 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox.cassandra.mail;
 
-package org.apache.james.mailbox;
+import javax.mail.Flags;
 
-import org.apache.james.mailbox.model.ComposedMessageId;
-import org.junit.Test;
+import org.apache.james.mailbox.cassandra.table.Flag;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import com.datastax.driver.core.Row;
 
-public class BeansTest {
+public class FlagsExtractor {
 
-    @Test
-    public void beanShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ComposedMessageId.class)
-            .verify();
+    private final Row row;
+
+    public FlagsExtractor(Row row) {
+        this.row = row;
     }
+
+    public Flags getFlags() {
+        Flags flags = new Flags();
+        for (String flag : Flag.ALL) {
+            if (row.getBool(flag)) {
+                flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
+            }
+        }
+        row.getSet(Flag.USER_FLAGS, String.class)
+            .stream()
+            .forEach(flags::add);
+        return flags;
+    }
+
 }

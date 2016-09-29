@@ -39,6 +39,7 @@ import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
+import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -57,13 +58,31 @@ public class CassandraMessageModule implements CassandraModule {
                     .ifNotExists()
                     .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
                     .addClusteringColumn(CassandraMessageIds.MAILBOX_ID, timeuuid())
-                    .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())),
+                    .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
+                    .addColumn(MessageIdToImapUid.MOD_SEQ, bigint())
+                    .addColumn(Flag.ANSWERED, cboolean())
+                    .addColumn(Flag.DELETED, cboolean())
+                    .addColumn(Flag.DRAFT, cboolean())
+                    .addColumn(Flag.FLAGGED, cboolean())
+                    .addColumn(Flag.RECENT, cboolean())
+                    .addColumn(Flag.SEEN, cboolean())
+                    .addColumn(Flag.USER, cboolean())
+                    .addColumn(Flag.USER_FLAGS, set(text()))),
             new CassandraTable(CassandraMessageIdTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageIdTable.TABLE_NAME)
                     .ifNotExists()
                     .addPartitionKey(CassandraMessageIds.MAILBOX_ID, timeuuid())
                     .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
-                    .addColumn(CassandraMessageIds.MESSAGE_ID, timeuuid())),
+                    .addColumn(CassandraMessageIds.MESSAGE_ID, timeuuid())
+                    .addColumn(CassandraMessageIdTable.MOD_SEQ, bigint())
+                    .addColumn(Flag.ANSWERED, cboolean())
+                    .addColumn(Flag.DELETED, cboolean())
+                    .addColumn(Flag.DRAFT, cboolean())
+                    .addColumn(Flag.FLAGGED, cboolean())
+                    .addColumn(Flag.RECENT, cboolean())
+                    .addColumn(Flag.SEEN, cboolean())
+                    .addColumn(Flag.USER, cboolean())
+                    .addColumn(Flag.USER_FLAGS, set(text()))),
 
             new CassandraTable(CassandraMessageTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
@@ -73,18 +92,9 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageTable.BODY_START_OCTET, cint())
                     .addColumn(CassandraMessageTable.BODY_OCTECTS, bigint())
                     .addColumn(CassandraMessageTable.TEXTUAL_LINE_COUNT, bigint())
-                    .addColumn(CassandraMessageTable.MOD_SEQ, bigint())
                     .addColumn(CassandraMessageTable.FULL_CONTENT_OCTETS, bigint())
                     .addColumn(CassandraMessageTable.BODY_CONTENT, blob())
                     .addColumn(CassandraMessageTable.HEADER_CONTENT, blob())
-                    .addColumn(CassandraMessageTable.Flag.ANSWERED, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.DELETED, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.DRAFT, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.FLAGGED, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.RECENT, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.SEEN, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.USER, cboolean())
-                    .addColumn(CassandraMessageTable.Flag.USER_FLAGS, set(text()))
                     .addUDTListColumn(CassandraMessageTable.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageTable.ATTACHMENTS))
                     .addUDTListColumn(CassandraMessageTable.PROPERTIES, SchemaBuilder.frozen(CassandraMessageTable.PROPERTIES))));
         index = Collections.emptyList();

@@ -27,6 +27,9 @@ import com.google.common.collect.ImmutableSet;
 public class MultimailboxesSearchQueryTest {
 
     private static final SearchQuery EMPTY_QUERY = new SearchQuery();
+    private static final TestId.Factory FACTORY = new TestId.Factory();
+    private static final MailboxId ID_1 = FACTORY.fromString("1");
+    private static final MailboxId ID_2 = FACTORY.fromString("2");
 
     @Test(expected=NullPointerException.class)
     public void buildShouldThrowWhenQueryIsNull() {
@@ -35,8 +38,8 @@ public class MultimailboxesSearchQueryTest {
 
     @Test
     public void buildShouldBuildWheninMailboxes() {
-        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
-        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.of();
         MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
         MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
@@ -44,8 +47,8 @@ public class MultimailboxesSearchQueryTest {
 
     @Test
     public void buildShouldBuildWhenEmptyMailboxes() {
-        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
-        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.of();
         MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
         MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes().build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
@@ -53,8 +56,8 @@ public class MultimailboxesSearchQueryTest {
 
     @Test
     public void buildShouldBuildWhenEmptyNotInMailboxes() {
-        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
-        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.of();
         MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
         MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).notInMailboxes().build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
@@ -63,29 +66,29 @@ public class MultimailboxesSearchQueryTest {
     
     @Test
     public void buildShouldBuildWhenOneMailbox() {
-        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of(TestId.of(("id1")));
-        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of();
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.of(ID_1);
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.of();
         MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
-        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(TestId.of("id1")).build();
+        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(ID_1).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 
     @Test
     public void buildShouldBuildWhenOneNotInMailbox() {
-        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of();
-        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of(TestId.of(("id1")));
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.of();
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.of(ID_1);
         MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
-        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).notInMailboxes(TestId.of("id1")).build();
+        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).notInMailboxes(ID_1).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 
     
     @Test
     public void buildShouldBuildWhenAllDefined() {
-        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.<MailboxId>of(TestId.of("id1"));
-        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.<MailboxId>of(TestId.of("id2"));
+        ImmutableSet<MailboxId> inMailboxes = ImmutableSet.of(ID_1);
+        ImmutableSet<MailboxId> notInMailboxes = ImmutableSet.of(ID_2);
         MultimailboxesSearchQuery expected = new MultimailboxesSearchQuery(EMPTY_QUERY, inMailboxes, notInMailboxes);
-        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(TestId.of("id1")).notInMailboxes(TestId.of("id2")).build();
+        MultimailboxesSearchQuery actual = MultimailboxesSearchQuery.from(EMPTY_QUERY).inMailboxes(ID_1).notInMailboxes(ID_2).build();
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 

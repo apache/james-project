@@ -16,19 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.util;
 
-package org.apache.james.mailbox.cassandra.table;
+import java.util.Optional;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+public class OptionalConverter {
 
-public interface MessageIdToImapUid {
+    public static <T> Optional<T> fromGuava(com.google.common.base.Optional<T> guava) {
+        return Optional.ofNullable(guava.orNull());
+    }
 
-    String TABLE_NAME = "imapUidTable";
-
-    String MOD_SEQ = "modSeq";
-
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, MOD_SEQ,
-            Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS };
+    public static <T> com.google.common.base.Optional<T> toGuava(Optional<T> java) {
+        return com.google.common.base.Optional.fromNullable(java.orElse(null));
+    }
 }

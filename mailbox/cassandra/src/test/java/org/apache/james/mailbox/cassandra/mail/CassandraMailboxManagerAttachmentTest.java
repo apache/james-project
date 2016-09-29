@@ -57,15 +57,14 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
 
     public CassandraMailboxManagerAttachmentTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        CassandraMessageIdToImapUidDAO messageIdToImapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory);
         mailboxSessionMapperFactory = new CassandraMailboxSessionMapperFactory(
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
                 cassandra.getTypesProvider(),
-                new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), messageIdFactory, messageIdToImapUidDAO),
+                new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), messageIdFactory),
                 new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory),
-                messageIdToImapUidDAO);
+                new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory));
         Authenticator noAuthenticator = null;
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, new NoMailboxPathLocker(), new MessageParser(), messageIdFactory); 
         mailboxManager.init();

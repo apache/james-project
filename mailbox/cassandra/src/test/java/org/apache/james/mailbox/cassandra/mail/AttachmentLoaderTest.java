@@ -25,36 +25,24 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.UidProvider;
 import org.assertj.core.data.MapEntry;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableList;
 
-public class CassandraMessageMapperTest {
+public class AttachmentLoaderTest {
 
     private AttachmentMapper attachmentMapper;
-    private CassandraMessageMapper testee;
+    private AttachmentLoader testee;
 
     @Before
     public void setup() {
-        Session session = mock(Session.class);
-        UidProvider uidProvider = mock(UidProvider.class);
-        ModSeqProvider modSeqProvider = mock(ModSeqProvider.class);
-        MailboxSession mailboxSession = mock(MailboxSession.class);
-        int maxRetires = 3;
         attachmentMapper = mock(AttachmentMapper.class);
-        CassandraMessageDAO messageDAO = mock(CassandraMessageDAO.class);
-        CassandraMessageIdDAO messageIdDAO = mock(CassandraMessageIdDAO.class);
-        CassandraMessageIdToImapUidDAO imapUidDAO = mock(CassandraMessageIdToImapUidDAO.class);
-        testee = new CassandraMessageMapper(session, uidProvider, modSeqProvider, mailboxSession, maxRetires, attachmentMapper, messageDAO, messageIdDAO, imapUidDAO);
+        testee = new AttachmentLoader(attachmentMapper);
     }
 
     @Test

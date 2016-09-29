@@ -27,5 +27,8 @@ public interface CassandraMessageIdTable {
 
     String TABLE_NAME = "messageIdTable";
 
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID };
+    String MOD_SEQ = "modSeq";
+
+    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, MOD_SEQ,
+            Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS};
 }
