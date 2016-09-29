@@ -499,6 +499,20 @@ public class MessageMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
+    public void copiedMessageShouldNotChangeTheFlagsOnOriginalMessage() throws MailboxException {
+        saveMessages();
+        messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
+        assertThat(
+            messageMapper.findInMailbox(benwaWorkMailbox,
+                MessageRange.one(message6.getUid()),
+                MessageMapper.FetchType.Metadata,
+                LIMIT
+            ).next()
+            .isRecent()
+        ).isFalse();
+    }
+
+    @ContractTest
     public void flagsReplacementShouldReplaceStoredMessageFlags() throws MailboxException {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));

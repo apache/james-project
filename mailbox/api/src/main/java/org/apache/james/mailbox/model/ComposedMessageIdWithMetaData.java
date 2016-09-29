@@ -26,16 +26,17 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-public class ComposedMessageIdWithFlags {
+public class ComposedMessageIdWithMetaData {
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
-       
+
         private ComposedMessageId composedMessageId;
         private Flags flags;
+        private Long modSeq;
 
         private Builder() {
         }
@@ -50,19 +51,27 @@ public class ComposedMessageIdWithFlags {
             return this;
         }
 
-        public ComposedMessageIdWithFlags build() {
+        public Builder modSeq(long modSeq) {
+            this.modSeq = modSeq;
+            return this;
+        }
+
+        public ComposedMessageIdWithMetaData build() {
             Preconditions.checkNotNull(composedMessageId, "'composedMessageId' is mandatory");
             Preconditions.checkNotNull(flags, "'flags' is mandatory");
-            return new ComposedMessageIdWithFlags(composedMessageId, flags);
+            Preconditions.checkNotNull(modSeq, "'modSeq' is mandatory");
+            return new ComposedMessageIdWithMetaData(composedMessageId, flags, modSeq);
         }
     }
 
     private final ComposedMessageId composedMessageId;
     private final Flags flags;
+    private final long modSeq;
 
-    public ComposedMessageIdWithFlags(ComposedMessageId composedMessageId, Flags flags) {
+    public ComposedMessageIdWithMetaData(ComposedMessageId composedMessageId, Flags flags, long modSeq) {
         this.composedMessageId = composedMessageId;
         this.flags = flags;
+        this.modSeq = modSeq;
     }
 
     public ComposedMessageId getComposedMessageId() {
@@ -73,19 +82,28 @@ public class ComposedMessageIdWithFlags {
         return flags;
     }
 
+    public long getModSeq() {
+        return modSeq;
+    }
+
+    public boolean isMatching(MessageId messageId) {
+        return getComposedMessageId().getMessageId().equals(messageId);
+    }
+
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof ComposedMessageIdWithFlags) {
-            ComposedMessageIdWithFlags other = (ComposedMessageIdWithFlags) o;
+        if (o instanceof ComposedMessageIdWithMetaData) {
+            ComposedMessageIdWithMetaData other = (ComposedMessageIdWithMetaData) o;
             return Objects.equal(composedMessageId, other.composedMessageId)
-                && Objects.equal(flags, other.flags);
+                && Objects.equal(flags, other.flags)
+                && Objects.equal(modSeq, other.modSeq);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(composedMessageId, flags);
+        return Objects.hashCode(composedMessageId, flags, modSeq);
     }
 
     @Override
@@ -93,6 +111,7 @@ public class ComposedMessageIdWithFlags {
         return MoreObjects.toStringHelper(this)
             .add("composedMessageId", composedMessageId)
             .add("flags", flags)
+            .add("modSeq", modSeq)
             .toString();
     }
 }

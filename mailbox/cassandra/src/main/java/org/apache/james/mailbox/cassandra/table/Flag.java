@@ -16,19 +16,31 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.cassandra.table;
 
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import javax.mail.Flags;
 
-public interface MessageIdToImapUid {
+import com.google.common.collect.ImmutableMap;
 
-    String TABLE_NAME = "imapUidTable";
+public interface Flag {
 
-    String MOD_SEQ = "modSeq";
+    String ANSWERED = "flagAnswered";
+    String DELETED = "flagDeleted";
+    String DRAFT = "flagDraft";
+    String RECENT = "flagRecent";
+    String SEEN = "flagSeen";
+    String FLAGGED = "flagFlagged";
+    String USER = "flagUser";
+    String USER_FLAGS = "userFlags";
+    String[] ALL = { ANSWERED, DELETED, DRAFT, RECENT, SEEN, FLAGGED, USER };
 
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, MOD_SEQ,
-            Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS };
+    ImmutableMap<String, Flags.Flag> JAVAX_MAIL_FLAG = ImmutableMap.<String, Flags.Flag>builder()
+        .put(ANSWERED, Flags.Flag.ANSWERED)
+        .put(DELETED, Flags.Flag.DELETED)
+        .put(DRAFT, Flags.Flag.DRAFT)
+        .put(RECENT, Flags.Flag.RECENT)
+        .put(SEEN, Flags.Flag.SEEN)
+        .put(FLAGGED, Flags.Flag.FLAGGED)
+        .put(USER, Flags.Flag.USER)
+        .build();
 }
