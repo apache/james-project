@@ -50,9 +50,10 @@ public abstract class AbstractRecipientIsTest extends TestCase {
         this.recipients = recipients;
     }
 
-    protected void setupMockedMail() {
-        mockedMail = new FakeMail();
-        mockedMail.setRecipients(Arrays.asList(recipients));
+    protected void setupMockedMail() throws MessagingException {
+        mockedMail = FakeMail.builder()
+                .recipients(Arrays.asList(recipients))
+                .build();
 
     }
 

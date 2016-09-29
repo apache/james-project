@@ -935,11 +935,12 @@ public class SieveMailetTest {
             message.addHeader(header.name, header.value);
         }
         message.saveChanges();
-        FakeMail mail = new FakeMail(message);
-        mail.setState(Mail.DEFAULT);
-        mail.setRecipients(Lists.newArrayList(new MailAddress("receiver@domain.com")));
-        mail.setSender(new MailAddress("sender@any.com"));
-        return mail;
+        return FakeMail.builder()
+                .mimeMessage(message)
+                .state(Mail.DEFAULT)
+                .recipient(new MailAddress("receiver@domain.com"))
+                .sender(new MailAddress("sender@any.com"))
+                .build();
     }
 
 }

@@ -63,7 +63,9 @@ public class OnlyTextTest extends TestCase {
         message.setText("Questa \u00E8 una prova");
         message.saveChanges();
 
-        mail = new FakeMail(message);
+        mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
@@ -88,7 +90,9 @@ public class OnlyTextTest extends TestCase {
         message.setContent(mp);
         message.saveChanges();
 
-        mail = new FakeMail(message);
+        mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
@@ -119,7 +123,9 @@ public class OnlyTextTest extends TestCase {
         message.setContent(mpext);
         message.saveChanges();
 
-        mail = new FakeMail(message);
+        mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
@@ -134,7 +140,9 @@ public class OnlyTextTest extends TestCase {
                 "text/html");
         message.saveChanges();
 
-        mail = new FakeMail(message);
+        mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());
@@ -157,7 +165,9 @@ public class OnlyTextTest extends TestCase {
         message.setContent(mp);
         message.saveChanges();
 
-        mail = new FakeMail(message);
+        mail = FakeMail.builder()
+                .mimeMessage(message)
+                .build();
         mailet.service(mail);
 
         assertEquals("prova", mail.getMessage().getSubject());

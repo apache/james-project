@@ -61,10 +61,10 @@ public class VacationReplyTest {
         originalSender = new MailAddress("distant@apache.org");
         originalRecipient = new MailAddress("benwa@apache.org");
 
-        mail = new FakeMail();
-
-        mail.setMessage(new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream("spamMail.eml")));
-        mail.setSender(originalSender);
+        mail = FakeMail.builder()
+                .mimeMessage(new MimeMessage(Session.getInstance(new Properties()), ClassLoader.getSystemResourceAsStream("spamMail.eml")))
+                .sender(originalSender)
+                .build();
 
         mimeMessageBodyGenerator = mock(MimeMessageBodyGenerator.class);
         generatedBody = new MimeMessage(Session.getInstance(new Properties()));
@@ -128,7 +128,7 @@ public class VacationReplyTest {
 
     @Test(expected = NullPointerException.class)
     public void vacationReplyShouldThrowOnNullOriginalEMailAddress() throws Exception {
-        VacationReply.builder(new FakeMail())
+        VacationReply.builder(FakeMail.defaultFakeMail())
             .receivedMailRecipient(null);
     }
 

@@ -40,11 +40,10 @@ public class NullTest {
 
     @Test
     public void shouldChangeStateToGhost() throws MessagingException {
-        FakeMail mail = new FakeMail();
+        FakeMail mail = FakeMail.builder().build();
         
         mailet.service(mail);
 
         assertThat(mail.getState()).isEqualTo("ghost");
     }
-
 }

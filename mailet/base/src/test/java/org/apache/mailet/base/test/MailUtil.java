@@ -21,13 +21,11 @@ package org.apache.mailet.base.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -45,14 +43,20 @@ public class MailUtil {
         m_counter++;
         return "MockMailUtil-ID-" + m_counter;
     }
-    
-    public static FakeMail createMockMail2Recipients(MimeMessage m) throws ParseException {
-        FakeMail mockedMail = new FakeMail();
-        mockedMail.setName(newId());
-        mockedMail.setMessage(m);
-        mockedMail.setRecipients(Arrays.asList(new MailAddress("test@james.apache.org"),
-                new MailAddress("test2@james.apache.org")));
-        return mockedMail;
+
+    public static FakeMail createMockMail2Recipients() throws MessagingException {
+        return FakeMail.builder()
+                .name(newId())
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
+                .build();
+    }
+
+    public static FakeMail createMockMail2Recipients(MimeMessage message) throws MessagingException {
+        return FakeMail.builder()
+                .name(newId())
+                .mimeMessage(message)
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
+                .build();
     }
 
     public static MimeMessage createMimeMessage() throws MessagingException {

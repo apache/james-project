@@ -23,8 +23,6 @@ package org.apache.james.transport.matchers;
 import java.util.Collection;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.ParseException;
 
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
@@ -37,7 +35,6 @@ import org.apache.mailet.base.test.MailUtil;
 import junit.framework.TestCase;
 
 public abstract class AbstractHasMailAttributeTest extends TestCase {
-    protected MimeMessage mockedMimeMessage;
 
     protected FakeMail mockedMail;
 
@@ -63,8 +60,8 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
         this.mailAttributeValue = mailAttributeValue;
     }
 
-    protected void setupMockedMail(MimeMessage m) throws ParseException {
-        mockedMail = MailUtil.createMockMail2Recipients(m);
+    protected void setupMockedMail() throws MessagingException {
+        mockedMail = MailUtil.createMockMail2Recipients();
         mockedMail.setAttribute(mailAttributeName,
                 mailAttributeValue);
     }
@@ -95,7 +92,7 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
     }
 
     protected void setupAll() throws MessagingException {
-        setupMockedMail(mockedMimeMessage);
+        setupMockedMail();
         setupMatcher();
     }
 

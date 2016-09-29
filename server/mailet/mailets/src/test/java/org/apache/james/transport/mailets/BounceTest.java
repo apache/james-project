@@ -66,10 +66,11 @@ public class BounceTest {
 
     @Test
     public void bounceShouldReturnAMailToTheSenderWithoutAttributes() throws Exception {
-        FakeMail mail = new FakeMail();
-        mail.setSender(senderMailAddress);
-        mail.setName(MAILET_NAME);
-        mail.setRecipients(Lists.newArrayList(recipientMailAddress));
+        FakeMail mail = FakeMail.builder()
+                .sender(senderMailAddress)
+                .name(MAILET_NAME)
+                .recipient(recipientMailAddress)
+                .build();
         MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         mimeMessage.setText("My content");
         mail.setMessage(mimeMessage);

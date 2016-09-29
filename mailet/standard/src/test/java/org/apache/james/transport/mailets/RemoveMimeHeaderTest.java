@@ -153,9 +153,9 @@ public class RemoveMimeHeaderTest {
         mailet.service(mail);
     }
 
-    private Mail createMail(MimeMessage message) {
-        Mail mail = new FakeMail();
-        mail.setMessage(message);
-        return mail;
+    private Mail createMail(MimeMessage message) throws MessagingException {
+        return FakeMail.builder()
+                .mimeMessage(message)
+                .build();
     }
 }

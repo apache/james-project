@@ -54,7 +54,7 @@ public class MailSpoolTest {
 
     @Test
     public void sendShouldEnQueueTheMail() throws Exception {
-        FakeMail mail = new FakeMail();
+        FakeMail mail = FakeMail.defaultFakeMail();
 
         mailSpool.send(mail, new MailMetadata(MessageId.of("a|b|1"), "user"));
 

@@ -51,7 +51,7 @@ public class RemoveAllMailAttributesTest {
 
     @Test
     public void serviceShouldRemoveAllMailAttributes() throws MessagingException {
-        mail = MailUtil.createMockMail2Recipients(null);
+        mail = MailUtil.createMockMail2Recipients();
         mail.setAttribute("org.apache.james.test.junit", "true");
 
         mailet.service(mail);
@@ -61,7 +61,7 @@ public class RemoveAllMailAttributesTest {
 
     @Test
     public void serviceShouldRemoveAllMailAttributesWhenNone() throws MessagingException {
-        mail = MailUtil.createMockMail2Recipients(null);
+        mail = MailUtil.createMockMail2Recipients();
 
         mailet.service(mail);
 

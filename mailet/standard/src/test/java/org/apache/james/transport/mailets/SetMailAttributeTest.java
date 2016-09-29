@@ -22,7 +22,11 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Properties;
+
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
@@ -53,7 +57,7 @@ public class SetMailAttributeTest {
 
         mailet.init(mailetConfig);
 
-        Mail mail = MailUtil.createMockMail2Recipients(null);
+        Mail mail = MailUtil.createMockMail2Recipients(new MimeMessage(Session.getDefaultInstance(new Properties())));
         
         mailet.service(mail);
 
@@ -67,7 +71,7 @@ public class SetMailAttributeTest {
      
         mailet.init(mailetConfig);
 
-        Mail mail = MailUtil.createMockMail2Recipients(null);
+        Mail mail = MailUtil.createMockMail2Recipients(new MimeMessage(Session.getDefaultInstance(new Properties())));
         
         mailet.service(mail);
 
@@ -81,7 +85,7 @@ public class SetMailAttributeTest {
         
         mailet.init(mailetConfig);
         
-        Mail mail = MailUtil.createMockMail2Recipients(null);
+        Mail mail = MailUtil.createMockMail2Recipients(new MimeMessage(Session.getDefaultInstance(new Properties())));
         mail.setAttribute("org.apache.james.junit1", "foo");
         
         mailet.service(mail);

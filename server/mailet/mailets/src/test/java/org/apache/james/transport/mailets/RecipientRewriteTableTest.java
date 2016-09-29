@@ -22,7 +22,6 @@ import static org.apache.james.transport.mailets.RecipientRewriteTableMock.mapFr
 import static org.apache.james.transport.mailets.RecipientRewriteTableMock.rewriteTableMock;
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -30,6 +29,7 @@ import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
@@ -41,6 +41,10 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Function;
+import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 
 public class RecipientRewriteTableTest {
 
@@ -93,14 +97,21 @@ public class RecipientRewriteTableTest {
      * @throws MessagingException
      */
     private Mail createMail(String[] recipients) throws MessagingException {
-        Mail mail = new FakeMail();
-        ArrayList<MailAddress> a = new ArrayList<MailAddress>(recipients.length);
-        for (String recipient : recipients) {
-            a.add(new MailAddress(recipient));
-        }
-        mail.setRecipients(a);
-        mail.setMessage(new MimeMessage(NO_SESSION));
-        return mail;
+        return FakeMail.builder()
+                .recipients(FluentIterable.of(recipients)
+                        .transform(new Function<String, MailAddress>() {
+
+                            @Override
+                            public MailAddress apply(String recipient) {
+                                try {
+                                    return new MailAddress(recipient);
+                                } catch (AddressException e) {
+                                    throw Throwables.propagate(e);
+                                }
+                            }
+                        }).toList())
+                .mimeMessage(new MimeMessage(NO_SESSION))
+                .build();
     }
 
     @Test

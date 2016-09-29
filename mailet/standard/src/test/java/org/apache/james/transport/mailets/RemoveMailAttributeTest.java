@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
@@ -36,11 +35,11 @@ public class RemoveMailAttributeTest {
 
     public static final String MAIL_ATTRIBUTE_NAME2 = "org.apache.james.test.junit2";
 
-    private Mail setupMockedMail() throws ParseException {
-        Mail mockedMail = new FakeMail();
-        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME1, "true");
-        mockedMail.setAttribute(MAIL_ATTRIBUTE_NAME2, "true");
-        return mockedMail;
+    private Mail createMail() throws MessagingException {
+        return FakeMail.builder()
+                .attribute(MAIL_ATTRIBUTE_NAME1, "true")
+                .attribute(MAIL_ATTRIBUTE_NAME2, "true")
+                .build();
     }
 
     private Mailet setupMailet(String attribute) throws MessagingException {
@@ -58,7 +57,7 @@ public class RemoveMailAttributeTest {
 
     @Test
     public void testRemoveMailAttribute() throws MessagingException {
-        Mail m = setupMockedMail();
+        Mail m = createMail();
         Mailet mailet = setupMailet(MAIL_ATTRIBUTE_NAME1);
 
         // check if the mail has a attribute

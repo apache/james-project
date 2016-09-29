@@ -45,7 +45,6 @@ import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 
 public class LogMessageTest {
 
@@ -84,7 +83,9 @@ public class LogMessageTest {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         message.setSubject("subject");
         message.setText("This is a fake mail");
-        mailet.service(new FakeMail(message));
+        mailet.service(FakeMail.builder()
+                .mimeMessage(message)
+                .build());
 
         verify(logger).info("Logging mail null");
         verify(logger).info("\n");
@@ -210,11 +211,12 @@ public class LogMessageTest {
     private FakeMail createMail() throws MessagingException, AddressException {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()),
                 new ByteArrayInputStream("Subject: subject\r\nContent-Type: text/plain\r\n\r\nThis is a fake mail".getBytes(Charsets.UTF_8)));
-        FakeMail mail = new FakeMail(message);
-        mail.setName("name");
-        mail.setState(Mail.DEFAULT);
-        mail.setRecipients(Lists.newArrayList(new MailAddress("receiver@domain.com")));
-        mail.setSender(new MailAddress("sender@any.com"));
-        return mail;
+        return FakeMail.builder()
+                .mimeMessage(message)
+                .name("name")
+                .state(Mail.DEFAULT)
+                .recipient(new MailAddress("receiver@domain.com"))
+                .sender(new MailAddress("sender@any.com"))
+                .build();
     }
 }

@@ -60,7 +60,7 @@ public class IsSingleRecipientTest {
 
     @Test
     public void matchShouldNotMatchMailWithNotRecipients() throws MessagingException {
-        FakeMail fakeMail = FakeMail.builder().build();
+        FakeMail fakeMail = FakeMail.defaultFakeMail();
 
         assertThat(matcher.match(fakeMail)).isNull();
     }
