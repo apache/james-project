@@ -35,6 +35,32 @@
             </div>
         </div>
 
+        <section name="Version 3.0-beta5">
+
+            <p>Released October 2016</p>
+
+            <p>The Apache James project is happy to announce the release
+                of version 3.0-beta5 of its modular mail server.</p>
+
+            <p>We thank all Users for their feedback and tests and we encourage anyone to
+                <a href="http://james.apache.org/download.cgi#Apache_James_Server">download</a>
+                and discover our Beta 5 release.</p>
+
+            <ul>What have been done in James 3.0-beta5 :
+                <li>Introduce Guice as an alternative to Spring</li>
+                <li>Create a search index based on ElasticSearch</li>
+                <li>New IMAP extensions including <a href="https://tools.ietf.org/html/rfc5464">Metadata</a>, <a href="https://tools.ietf.org/html/rfc2087">Quotas</a>, optional command MOVE</li>
+                <li>New Cassandra backend (still experimental)</li>
+                <li>Introduction of <a href="http://jmap.io/">JMAP</a> protocol (experimental)</li>
+                <li>Introduction of <a href="https://tools.ietf.org/html/rfc5804">ManageSIEVE</a></li>
+                <li>Correction on <a href="https://tools.ietf.org/html/rfc5173">SIEVE Body extension</a>, addition of <a href="https://tools.ietf.org/html/rfc5230">Vacation extension</a></li>
+            </ul>
+
+            <p>If you're interested in contributing to the James project, please subscribe to the James
+                <a href="http://james.apache.org/mail.html">mailing lists</a>.</p>
+
+        </section>
+
         <section name="Version 3.0-beta4">
 
             <p>Released April 2012</p>
