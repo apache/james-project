@@ -871,14 +871,13 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.james</groupId>
-                <artifactId>apache-jsieve-mailet</artifactId>
-                <version>${jsieve.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.activation</groupId>
-                        <artifactId>activation</artifactId>
-                    </exclusion>
-                </exclusions>
+                <artifactId>apache-mime4j-dom</artifactId>
+                <version>${apache-mime4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-mime4j-james-utils</artifactId>
+                <version>${apache-mime4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.mail</groupId>
@@ -987,7 +986,7 @@
                         <groupId>xerces</groupId>
                         <artifactId>xerces</artifactId>
                     </exclusion>
-                    <exclusion>
+                    <exclusion>Mime4J
                         <groupId>xml-apis</groupId>
                         <artifactId>xml-apis</artifactId>
                     </exclusion>
