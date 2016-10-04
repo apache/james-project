@@ -23,8 +23,8 @@
     <parent>
         <artifactId>apache-james-mailbox</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>0.6-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <version>3.0.0-beta5-SNAPSHOT</version>
+        <relativePath>..</relativePath>
     </parent>
 
     <artifactId>apache-james-mailbox-api</artifactId>

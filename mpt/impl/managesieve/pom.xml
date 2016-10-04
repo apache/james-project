@@ -23,7 +23,7 @@
     <parent>
         <artifactId>apache-james-mpt</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>0.2-SNAPSHOT</version>
+        <version>3.0.0-beta5-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -56,12 +56,7 @@
             <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-james-mpt-managesieve-core</artifactId>
-                <version>0.2-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-data-memory</artifactId>
-                <version>${james.version}</version>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
