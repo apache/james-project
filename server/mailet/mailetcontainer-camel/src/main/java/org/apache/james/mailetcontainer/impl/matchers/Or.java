@@ -28,8 +28,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.Matcher;
 
-import com.google.common.collect.ImmutableSet;
-
 public class Or extends GenericCompositeMatcher {
 
     /**

@@ -27,7 +27,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.JPAMessageMapper;
 import org.apache.james.mailbox.jpa.user.JPASubscriptionMapper;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
