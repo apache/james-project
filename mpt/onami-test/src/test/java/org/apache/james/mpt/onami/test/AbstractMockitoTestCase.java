@@ -26,20 +26,17 @@ import org.apache.james.mpt.onami.test.annotation.MockType;
 import org.apache.james.mpt.onami.test.data.Service;
 import org.mockito.Mockito;
 
-@MockFramework( MockType.MOCKITO )
-abstract public class AbstractMockitoTestCase
-    extends AbstractEmptyTestCase
-{
+@MockFramework(MockType.MOCKITO)
+abstract public class AbstractMockitoTestCase extends AbstractEmptyTestCase {
 
     // Create and inject a Provided EasyMock
-    @Mock( providedBy = "getMock" )
+    @Mock(providedBy = "getMock")
     protected Service providedMock;
 
     // @MockProvider
-    public static Service getMock()
-    {
+    public static Service getMock() {
         // Create the mock object and inject the dependency via Google-guice into HelloWorld
-        return Mockito.mock( Service.class );
+        return Mockito.mock(Service.class);
     }
 
 }

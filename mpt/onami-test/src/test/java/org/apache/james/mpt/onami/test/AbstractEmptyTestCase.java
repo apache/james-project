@@ -28,15 +28,13 @@ import org.junit.BeforeClass;
 /**
  * Utility class. Just for logging initialization.
  */
-abstract public class AbstractEmptyTestCase
-{
+abstract public class AbstractEmptyTestCase {
 
     @BeforeClass
     public static void initLogging()
-        throws Exception
-    {
-        LogManager.getLogManager().readConfiguration( new FileInputStream(
-                                                                           new File(
-                                                                                     "src/test/resources/log4j.properties" ) ) );
+        throws Exception {
+        LogManager.getLogManager().readConfiguration(new FileInputStream(
+            new File(
+                "src/test/resources/log4j.properties")));
     }
 }

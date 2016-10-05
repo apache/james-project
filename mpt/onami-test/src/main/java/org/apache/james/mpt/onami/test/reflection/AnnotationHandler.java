@@ -28,18 +28,17 @@ import java.lang.reflect.AnnotatedElement;
  * @param <A> whatever annotation type
  * @param <E> the element annotated with an annotation type
  */
-public interface AnnotationHandler<A extends Annotation, E extends AnnotatedElement>
-{
+public interface AnnotationHandler<A extends Annotation, E extends AnnotatedElement> {
 
     /**
      * Invoked when {@link ClassVisitor} found an annotation into a class.
      *
      * @param annotation handled annotation
-     * @param element the element annotated with input annotation
+     * @param element    the element annotated with input annotation
      * @throws HandleException if an error occurs while processing the annotated element
-     *         and the related annotation
+     *                         and the related annotation
      */
-    void handle( A annotation, E element )
+    void handle(A annotation, E element)
         throws HandleException;
 
 }

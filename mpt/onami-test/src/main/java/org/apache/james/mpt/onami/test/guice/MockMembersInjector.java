@@ -31,9 +31,7 @@ import com.google.inject.MembersInjector;
  *
  * @param <T> type to inject members of
  */
-public class MockMembersInjector<T>
-    implements MembersInjector<T>
-{
+public class MockMembersInjector<T> implements MembersInjector<T> {
 
     private final Field field;
 
@@ -41,38 +39,31 @@ public class MockMembersInjector<T>
 
     /**
      * Create a new instance.
-     * 
-     * @param field the field that has to be injected.
-     * @param mockedObjects  the map of mocked object.
+     *
+     * @param field         the field that has to be injected.
+     * @param mockedObjects the map of mocked object.
      */
-    public MockMembersInjector( final Field field, Map<Field, Object> mockedObjects )
-    {
+    public MockMembersInjector(final Field field, Map<Field, Object> mockedObjects) {
         this.field = field;
         this.mockedObjects = mockedObjects;
-        AccessController.doPrivileged( new PrivilegedAction<Void>()
-        {
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
 
-            public Void run()
-            {
-                field.setAccessible( true );
+            public Void run() {
+                field.setAccessible(true);
                 return null;
             }
 
-        } );
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    public void injectMembers( T t )
-    {
-        try
-        {
-            field.set( t, mockedObjects.get( field ) );
-        }
-        catch ( IllegalAccessException e )
-        {
-            throw new RuntimeException( e );
+    public void injectMembers(T t) {
+        try {
+            field.set(t, mockedObjects.get(field));
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 

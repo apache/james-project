@@ -23,18 +23,15 @@ import org.apache.james.mpt.onami.test.annotation.Mock;
 import org.apache.james.mpt.onami.test.data.Service;
 import org.easymock.EasyMock;
 
-abstract public class AbstractMockTestCase
-    extends AbstractEmptyTestCase
-{
+abstract public class AbstractMockTestCase extends AbstractEmptyTestCase {
 
     // Create and inject a Provided EasyMock
-    @Mock( providedBy = "getMock" )
+    @Mock(providedBy = "getMock")
     protected Service providedMock;
 
-    public static Service getMock()
-    {
+    public static Service getMock() {
         // Create the mock object and inject the dependency via Google-guice into HelloWorld
-        return EasyMock.createNiceMock( Service.class );
+        return EasyMock.createNiceMock(Service.class);
     }
 
 }

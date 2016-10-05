@@ -36,11 +36,9 @@ import org.apache.james.mpt.onami.test.reflection.HandleException;
  * @param <A> whatever annotation type
  * @see org.apache.onami.test.reflection.ClassVisitor
  */
-public final class GuiceInjectableClassHandler<A extends Annotation>
-    implements AnnotationHandler<A, AccessibleObject>
-{
+public final class GuiceInjectableClassHandler<A extends Annotation> implements AnnotationHandler<A, AccessibleObject> {
 
-    private static final Logger LOGGER = Logger.getLogger( GuiceInjectableClassHandler.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(GuiceInjectableClassHandler.class.getName());
 
     /**
      * Contains the guice injectable classes founded, after inspection.
@@ -53,31 +51,26 @@ public final class GuiceInjectableClassHandler<A extends Annotation>
      *
      * @return {@link Class} array.
      */
-    public Class<?>[] getClasses()
-    {
-        return classes.toArray( new Class<?>[classes.size()] );
+    public Class<?>[] getClasses() {
+        return classes.toArray(new Class<?>[classes.size()]);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void handle( A annotation, AccessibleObject element )
-        throws HandleException
-    {
+    public void handle(A annotation, AccessibleObject element)
+        throws HandleException {
         Class<?> type = null;
 
-        if ( element instanceof Member )
-        {
-            type = ( (Member) element ).getDeclaringClass();
+        if (element instanceof Member) {
+            type = ((Member) element).getDeclaringClass();
         }
 
-        if ( type != null && !classes.contains( type ) )
-        {
-            if ( LOGGER.isLoggable( Level.FINER ) )
-            {
-                LOGGER.finer( "   Found injectable type: " + type );
+        if (type != null && !classes.contains(type)) {
+            if (LOGGER.isLoggable(Level.FINER)) {
+                LOGGER.finer("   Found injectable type: " + type);
             }
-            classes.add( type );
+            classes.add(type);
         }
     }
 

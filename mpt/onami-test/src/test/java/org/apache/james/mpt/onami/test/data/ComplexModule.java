@@ -21,21 +21,17 @@ package org.apache.james.mpt.onami.test.data;
 
 import com.google.inject.AbstractModule;
 
-public class ComplexModule
-    extends AbstractModule
-{
+public class ComplexModule extends AbstractModule {
 
     private final String name;
 
-    public ComplexModule( String name )
-    {
+    public ComplexModule(String name) {
         this.name = name;
     }
 
     @Override
-    protected void configure()
-    {
-        bind( WhoIm.class ).toInstance( new WhoIm( name ) );
+    protected void configure() {
+        bind(WhoIm.class).toInstance(new WhoIm(name));
     }
 
 }

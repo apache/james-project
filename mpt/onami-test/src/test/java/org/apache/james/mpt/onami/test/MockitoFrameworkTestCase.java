@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.onami.test;
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.onami.test.annotation.Mock;
 import org.apache.james.mpt.onami.test.data.HelloWorld;
 import org.apache.james.mpt.onami.test.data.TelephonService;
@@ -27,12 +29,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Inject;
-
-@RunWith( OnamiRunner.class )
-public class MockitoFrameworkTestCase
-    extends AbstractMockitoTestCase
-{
+@RunWith(OnamiRunner.class)
+public class MockitoFrameworkTestCase extends AbstractMockitoTestCase {
 
     /*
      * Any NON-static filed will be injected before run each tests.
@@ -44,17 +42,15 @@ public class MockitoFrameworkTestCase
     private TelephonService service;
 
     @BeforeClass
-    public static void setUpClass()
-    {
+    public static void setUpClass() {
     }
 
     @Test
-    public void testInjectNotStatic()
-    {
-        Assert.assertNotNull( helloWorldNotStatic );
-        Assert.assertEquals( "Hello World!!!!", helloWorldNotStatic.sayHallo() );
-        Assert.assertNotNull( service );
-        Assert.assertNotNull( providedMock );
+    public void testInjectNotStatic() {
+        Assert.assertNotNull(helloWorldNotStatic);
+        Assert.assertEquals("Hello World!!!!", helloWorldNotStatic.sayHallo());
+        Assert.assertNotNull(service);
+        Assert.assertNotNull(providedMock);
     }
 
 }

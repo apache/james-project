@@ -22,25 +22,24 @@ package org.apache.james.mpt.onami.test.annotation;
 /**
  * Enumeration class to specifies the preferred mock object.
  */
-public enum MockObjType
-{
+public enum MockObjType {
 
-    /** 
+    /**
      * @see EasyMock.createMock
      */
     EASY_MOCK_NORMAL,
-    
-    /** 
+
+    /**
      * @see EasyMock.createStrictMock
      */
     EASY_MOCK_STRICT,
-    
-    /** 
+
+    /**
      * @see EasyMock.createNiceMock
      */
     EASY_MOCK_NICE,
-    
-    /** 
+
+    /**
      * Use default mock creation mode
      */
     DEFAULT

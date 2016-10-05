@@ -27,24 +27,23 @@ import org.apache.james.mpt.onami.test.annotation.MockObjType;
  * @see org.apache.onami.test.mock.framework.EasyMockFramework
  * @see org.apache.onami.test.mock.framework.MockitoFramework
  */
-public interface MockEngine
-{
+public interface MockEngine {
 
     /**
      * Reset the mock objects
      *
      * @param objects to reset.
      */
-    void resetMock( Object... objects );
+    void resetMock(Object... objects);
 
     /**
      * Create a typed mock
      *
-     * @param <T> Class to mock
-     * @param cls Class to mock
+     * @param <T>  Class to mock
+     * @param cls  Class to mock
      * @param type the {@link MockObjType}
      * @return the mock object
      */
-    <T> T createMock( Class<T> cls, MockObjType type );
+    <T> T createMock(Class<T> cls, MockObjType type);
 
 }

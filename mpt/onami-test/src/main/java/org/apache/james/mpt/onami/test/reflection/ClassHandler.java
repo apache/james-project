@@ -26,8 +26,6 @@ import java.lang.annotation.Annotation;
  *
  * @param <A> whatever annotation type
  */
-public interface ClassHandler<A extends Annotation>
-    extends AnnotationHandler<A, Class<?>>
-{
+public interface ClassHandler<A extends Annotation> extends AnnotationHandler<A, Class<?>> {
 
 }

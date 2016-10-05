@@ -30,54 +30,43 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 
-@RunWith( OnamiRunner.class )
-@GuiceModules( SimpleModule.class )
-abstract public class AbstractTestCase
-    extends AbstractEmptyTestCase
-{
+@RunWith(OnamiRunner.class)
+@GuiceModules(SimpleModule.class)
+abstract public class AbstractTestCase extends AbstractEmptyTestCase {
 
     @GuiceProvidedModules
-    public static Module genericModule()
-    {
-        return new AbstractModule()
-        {
+    public static Module genericModule() {
+        return new AbstractModule() {
             @Override
-            protected void configure()
-            {
-                bind( String.class ).annotatedWith( Names.named( "test.info.inject" ) ).toInstance( "JUnice = JUnit + Guice" );
+            protected void configure() {
+                bind(String.class).annotatedWith(Names.named("test.info.inject")).toInstance("JUnice = JUnit + Guice");
             }
         };
     }
 
     @GuiceProvidedModules
-    public static Iterable<Module> genericModule2()
-    {
-        AbstractModule a = new AbstractModule()
-        {
+    public static Iterable<Module> genericModule2() {
+        AbstractModule a = new AbstractModule() {
             @Override
-            protected void configure()
-            {
-                bind( String.class ).annotatedWith( Names.named( "test.info.inject2" ) ).toInstance( "JUnice = JUnit + Guice Iterable" );
+            protected void configure() {
+                bind(String.class).annotatedWith(Names.named("test.info.inject2")).toInstance("JUnice = JUnit + Guice Iterable");
             }
         };
 
         ArrayList<Module> al = new ArrayList<Module>();
-        al.add( a );
+        al.add(a);
         return al;
     }
 
     @GuiceProvidedModules
-    public static Module[] genericModule3()
-    {
-        AbstractModule a = new AbstractModule()
-        {
+    public static Module[] genericModule3() {
+        AbstractModule a = new AbstractModule() {
             @Override
-            protected void configure()
-            {
-                bind( String.class ).annotatedWith( Names.named( "test.info.inject3" ) ).toInstance( "JUnice = JUnit + Guice Array" );
+            protected void configure() {
+                bind(String.class).annotatedWith(Names.named("test.info.inject3")).toInstance("JUnice = JUnit + Guice Array");
             }
         };
-        return new Module[] { a };
+        return new Module[]{a};
     }
 
 }

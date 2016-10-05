@@ -29,10 +29,9 @@ import com.google.inject.Module;
 /**
  * Annotate your class to define a list of Google Guice {@link Module} whit default constructor.
  */
-@Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.TYPE )
-public @interface GuiceModules
-{
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface GuiceModules {
 
     /**
      * List of Google Guice {@link Module}.

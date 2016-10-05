@@ -27,8 +27,6 @@ import java.lang.reflect.Method;
  *
  * @param <A> whatever annotation type
  */
-public interface MethodHandler<A extends Annotation>
-    extends AnnotationHandler<A, Method>
-{
+public interface MethodHandler<A extends Annotation> extends AnnotationHandler<A, Method> {
 
 }

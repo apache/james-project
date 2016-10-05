@@ -57,11 +57,9 @@ import com.google.inject.name.Names;
  * into the test class.
  * </p>
  */
-public class GuiceMockModule
-    extends AbstractModule
-{
+public class GuiceMockModule extends AbstractModule {
 
-    private static final Logger LOGGER = Logger.getLogger( GuiceMockModule.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(GuiceMockModule.class.getName());
 
     final Map<Field, Object> mockedFields;
 
@@ -71,54 +69,42 @@ public class GuiceMockModule
      * @param mockedFields the map of mock fileds.
      */
 
-    public GuiceMockModule( final Map<Field, Object> mockedFields )
-    {
+    public GuiceMockModule(final Map<Field, Object> mockedFields) {
         this.mockedFields = mockedFields;
     }
 
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings("unchecked")
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         final Multimap<Type, Field> fieldsByType = HashMultimap.create();
 
-        for ( final Entry<Field, Object> entry : this.mockedFields.entrySet() )
-        {
-            fieldsByType.put( entry.getKey().getGenericType(), entry.getKey() );
+        for (final Entry<Field, Object> entry : this.mockedFields.entrySet()) {
+            fieldsByType.put(entry.getKey().getGenericType(), entry.getKey());
         }
 
-        for ( final Type type : fieldsByType.keySet() )
-        {
-            final Collection<Field> fields = fieldsByType.get( type );
+        for (final Type type : fieldsByType.keySet()) {
+            final Collection<Field> fields = fieldsByType.get(type);
 
             boolean isTypeConflicts = false;
-            if ( fields.size() != 1 )
-            {
-                isTypeConflicts = checkTypeConflict( fields );
+            if (fields.size() != 1) {
+                isTypeConflicts = checkTypeConflict(fields);
             }
 
-            checkState( !isTypeConflicts, "   Found multiple annotation @%s for type: %s; binding skipped!.",
-                        Mock.class.getSimpleName(), type );
-            for ( final Field field : fields )
-            {
-                final TypeLiteral literal = TypeLiteral.get( type );
-                final Mock annoBy = field.getAnnotation( Mock.class );
-                final Object mock = this.mockedFields.get( field );
-                if ( annoBy.annotatedWith() != Mock.NoAnnotation.class )
-                {
-                    bind( literal ).annotatedWith( annoBy.annotatedWith() ).toInstance( mock );
+            checkState(!isTypeConflicts, "   Found multiple annotation @%s for type: %s; binding skipped!.",
+                Mock.class.getSimpleName(), type);
+            for (final Field field : fields) {
+                final TypeLiteral literal = TypeLiteral.get(type);
+                final Mock annoBy = field.getAnnotation(Mock.class);
+                final Object mock = this.mockedFields.get(field);
+                if (annoBy.annotatedWith() != Mock.NoAnnotation.class) {
+                    bind(literal).annotatedWith(annoBy.annotatedWith()).toInstance(mock);
+                } else if (!"".equals(annoBy.namedWith())) {
+                    bind(literal).annotatedWith(Names.named(annoBy.namedWith())).toInstance(mock);
+                } else {
+                    bind(literal).toInstance(mock);
                 }
-                else if ( !"".equals( annoBy.namedWith() ) )
-                {
-                    bind( literal ).annotatedWith( Names.named( annoBy.namedWith() ) ).toInstance( mock );
-                }
-                else
-                {
-                    bind( literal ).toInstance( mock );
-                }
-                if ( LOGGER.isLoggable( Level.FINER ) )
-                {
-                    LOGGER.finer( "    Created binding for: " + type + " " + annoBy );
+                if (LOGGER.isLoggable(Level.FINER)) {
+                    LOGGER.finer("    Created binding for: " + type + " " + annoBy);
                 }
             }
         }
@@ -128,50 +114,38 @@ public class GuiceMockModule
      * @param fields
      * @return
      */
-    private boolean checkTypeConflict( Collection<Field> fields )
-    {
+    private boolean checkTypeConflict(Collection<Field> fields) {
         final List<Class<?>> listAnnotatedType = new ArrayList<Class<?>>();
         final List<String> listNamedType = new ArrayList<String>();
         int numOfSimpleType = 0;
 
-        for ( Field field : fields )
-        {
-            final Mock annoBy = field.getAnnotation( Mock.class );
+        for (Field field : fields) {
+            final Mock annoBy = field.getAnnotation(Mock.class);
 
-            if ( annoBy.annotatedWith() == Mock.NoAnnotation.class && "".equals( annoBy.namedWith() ) )
-            {
+            if (annoBy.annotatedWith() == Mock.NoAnnotation.class && "".equals(annoBy.namedWith())) {
                 numOfSimpleType++;
             }
-            if ( numOfSimpleType > 1 )
-            {
-                LOGGER.finer( "Found multiple simple type" );
+            if (numOfSimpleType > 1) {
+                LOGGER.finer("Found multiple simple type");
                 return true;
             }
 
-            if ( annoBy.annotatedWith() != Mock.NoAnnotation.class )
-            {
-                if ( !listAnnotatedType.contains( annoBy.annotatedWith() ) )
-                {
-                    listAnnotatedType.add( annoBy.annotatedWith() );
-                }
-                else
-                {
+            if (annoBy.annotatedWith() != Mock.NoAnnotation.class) {
+                if (!listAnnotatedType.contains(annoBy.annotatedWith())) {
+                    listAnnotatedType.add(annoBy.annotatedWith());
+                } else {
                     // found two fields with same annotation
-                    LOGGER.finer( "Found multiple annotatedBy type" );
+                    LOGGER.finer("Found multiple annotatedBy type");
                     return true;
                 }
             }
 
-            if ( !"".equals( annoBy.namedWith() ) )
-            {
-                if ( !listNamedType.contains( annoBy.namedWith() ) )
-                {
-                    listNamedType.add( annoBy.namedWith() );
-                }
-                else
-                {
+            if (!"".equals(annoBy.namedWith())) {
+                if (!listNamedType.contains(annoBy.namedWith())) {
+                    listNamedType.add(annoBy.namedWith());
+                } else {
                     // found two fields with same named annotation
-                    LOGGER.finer( "Found multiple namedWith type" );
+                    LOGGER.finer("Found multiple namedWith type");
                     return true;
                 }
             }

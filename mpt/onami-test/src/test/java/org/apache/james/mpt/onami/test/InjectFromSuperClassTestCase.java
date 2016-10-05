@@ -19,39 +19,37 @@
 
 package org.apache.james.mpt.onami.test;
 
+import javax.inject.Inject;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.inject.Inject;
 import com.google.inject.name.Named;
 
-public class InjectFromSuperClassTestCase
-    extends AbstractTestCase
-{
+public class InjectFromSuperClassTestCase extends AbstractTestCase {
 
     @Inject
-    @Named( "test.info.inject" )
+    @Named("test.info.inject")
     private String info;
 
     @Inject
-    @Named( "test.info.inject2" )
+    @Named("test.info.inject2")
     private String infoFromIterable;
 
     @Inject
-    @Named( "test.info.inject3" )
+    @Named("test.info.inject3")
     private String infoFromArray;
 
     @Test
-    public void testInjectFromSuperClass()
-    {
-        Assert.assertNotNull( info );
-        Assert.assertEquals( "JUnice = JUnit + Guice", info );
+    public void testInjectFromSuperClass() {
+        Assert.assertNotNull(info);
+        Assert.assertEquals("JUnice = JUnit + Guice", info);
 
-        Assert.assertNotNull( infoFromIterable );
-        Assert.assertEquals( "JUnice = JUnit + Guice Iterable", infoFromIterable );
+        Assert.assertNotNull(infoFromIterable);
+        Assert.assertEquals("JUnice = JUnit + Guice Iterable", infoFromIterable);
 
-        Assert.assertNotNull( infoFromArray );
-        Assert.assertEquals( "JUnice = JUnit + Guice Array", infoFromArray );
+        Assert.assertNotNull(infoFromArray);
+        Assert.assertEquals("JUnice = JUnit + Guice Array", infoFromArray);
     }
 
 }

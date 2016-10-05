@@ -32,24 +32,21 @@ import org.mockito.Mockito;
  * @see MockEngine
  */
 public class MockitoFramework
-    implements MockEngine
-{
+    implements MockEngine {
 
     /**
      * {@inheritDoc}
      */
-    public void resetMock( Object... objects )
-    {
-        Mockito.reset( objects );
+    public void resetMock(Object... objects) {
+        Mockito.reset(objects);
     }
 
     /**
      * {@inheritDoc}
      */
-    public <T> T createMock( Class<T> cls, MockObjType type )
-    {
-        checkArgument( DEFAULT == type, "Unsupported mock type '%s' for Mockito Framework.", type );
-        return Mockito.mock( cls );
+    public <T> T createMock(Class<T> cls, MockObjType type) {
+        checkArgument(DEFAULT == type, "Unsupported mock type '%s' for Mockito Framework.", type);
+        return Mockito.mock(cls);
     }
 
 }

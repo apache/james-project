@@ -33,37 +33,31 @@ import org.apache.james.mpt.onami.test.reflection.HandleException;
  * @see org.apache.onami.test.reflection.ClassVisitor
  * @see MockFramework
  */
-public final class MockFrameworkHandler
-    implements ClassHandler<MockFramework>
-{
+public final class MockFrameworkHandler implements ClassHandler<MockFramework> {
 
-    private static final Logger LOGGER = Logger.getLogger( MockFrameworkHandler.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(MockFrameworkHandler.class.getName());
 
     private MockType mockType;
 
     /**
      * @return the mockType
      */
-    public MockType getMockType()
-    {
+    public MockType getMockType() {
         return mockType;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void handle( MockFramework annotation, Class<?> element )
-        throws HandleException
-    {
-        if ( mockType != null && mockType != annotation.value() )
-        {
-            throw new HandleException( "Inconsistent mock framework found. " + "Mock framework already set [set: "
-                + mockType + " now found: " + annotation.value() + "]" );
+    public void handle(MockFramework annotation, Class<?> element)
+        throws HandleException {
+        if (mockType != null && mockType != annotation.value()) {
+            throw new HandleException("Inconsistent mock framework found. " + "Mock framework already set [set: "
+                + mockType + " now found: " + annotation.value() + "]");
         }
 
-        if ( LOGGER.isLoggable( Level.FINER ) )
-        {
-            LOGGER.finer( "  Found MockFramework: " + annotation.value() );
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.finer("  Found MockFramework: " + annotation.value());
         }
 
         mockType = annotation.value();

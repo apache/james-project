@@ -27,17 +27,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 
-@RunWith( OnamiRunner.class )
-public class ServiceMockProviderTest
-{
+@RunWith(OnamiRunner.class)
+public class ServiceMockProviderTest {
 
-    @Mock( providedBy = "providerMethod", providerClass = ServiceMockProvider.class )
+    @Mock(providedBy = "providerMethod", providerClass = ServiceMockProvider.class)
     private Service service;
 
     @Test
-    public void test()
-    {
-        Assert.assertNotNull( service );
+    public void test() {
+        Assert.assertNotNull(service);
     }
 
 }

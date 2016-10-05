@@ -27,10 +27,9 @@ import java.lang.annotation.Target;
 /**
  * Annotate test class to specify you favorite mock framework.
  */
-@Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.TYPE )
-public @interface MockFramework
-{
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface MockFramework {
 
     /**
      * Type of mock that JUnice has to create.

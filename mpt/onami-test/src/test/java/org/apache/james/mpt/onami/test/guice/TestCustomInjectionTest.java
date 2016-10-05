@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.onami.test.guice;
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.onami.test.OnamiRunner;
 import org.apache.james.mpt.onami.test.annotation.GuiceModules;
 import org.apache.james.mpt.onami.test.annotation.Mock;
@@ -32,12 +34,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Inject;
-
-@RunWith( OnamiRunner.class )
-@GuiceModules( ServiceModule.class )
-public class TestCustomInjectionTest
-{
+@RunWith(OnamiRunner.class)
+@GuiceModules(ServiceModule.class)
+public class TestCustomInjectionTest {
 
     @Mock
     private static Service service;
@@ -49,34 +48,31 @@ public class TestCustomInjectionTest
     private HelloWorld helloWorld;
 
     @BeforeClass
-    public static void setUp()
-    {
-        Assert.assertNotNull( service );
+    public static void setUp() {
+        Assert.assertNotNull(service);
         // service.go();
     }
 
     @Test
     public void test()
-        throws Exception
-    {
-        Assert.assertNotNull( service );
-        Assert.assertNotNull( telephonService );
-        Assert.assertNotNull( helloWorld );
+        throws Exception {
+        Assert.assertNotNull(service);
+        Assert.assertNotNull(telephonService);
+        Assert.assertNotNull(helloWorld);
     }
 
     @Test
     public void testOverideModule()
-        throws Exception
-    {
-        Assert.assertNotNull( service );
-        Assert.assertNotNull( telephonService );
-        Assert.assertEquals( "It's real class", telephonService.getTelephonNumber() );
+        throws Exception {
+        Assert.assertNotNull(service);
+        Assert.assertNotNull(telephonService);
+        Assert.assertEquals("It's real class", telephonService.getTelephonNumber());
 
-        EasyMock.expect( service.go() ).andReturn( "Mocked injected class" );
-        EasyMock.replay( service );
+        EasyMock.expect(service.go()).andReturn("Mocked injected class");
+        EasyMock.replay(service);
 
-        Assert.assertEquals( "Mocked injected class", helloWorld.sayHalloByService() );
-        EasyMock.verify( service );
+        Assert.assertEquals("Mocked injected class", helloWorld.sayHalloByService());
+        EasyMock.verify(service);
     }
 
 }

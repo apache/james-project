@@ -21,15 +21,12 @@ package org.apache.james.mpt.onami.test.data;
 
 import com.google.inject.AbstractModule;
 
-public class ServiceModule
-    extends AbstractModule
-{
+public class ServiceModule extends AbstractModule {
 
     @Override
-    protected void configure()
-    {
-        bind( Service.class ).to( ServiceImpl.class ).asEagerSingleton();
-        bind( TelephonService.class ).to( TelephonServiceImpl.class ).asEagerSingleton();
+    protected void configure() {
+        bind(Service.class).to(ServiceImpl.class).asEagerSingleton();
+        bind(TelephonService.class).to(TelephonServiceImpl.class).asEagerSingleton();
     }
 
 }

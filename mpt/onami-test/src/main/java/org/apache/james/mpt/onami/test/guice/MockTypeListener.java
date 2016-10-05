@@ -42,9 +42,7 @@ import com.google.inject.spi.TypeListener;
  * @see MockMembersInjector
  * @see Mock
  */
-public class MockTypeListener
-    implements TypeListener
-{
+public class MockTypeListener implements TypeListener {
 
     private final Map<Field, Object> mockedObjects;
 
@@ -53,34 +51,27 @@ public class MockTypeListener
      *
      * @param mockedObjects a map of mocked objects
      */
-    public MockTypeListener( Map<Field, Object> mockedObjects )
-    {
+    public MockTypeListener(Map<Field, Object> mockedObjects) {
         this.mockedObjects = mockedObjects;
     }
 
     /**
      * {@inheritDoc}
      */
-    public <I> void hear( final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter )
-    {
-        try
-        {
+    public <I> void hear(final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
+        try {
             new ClassVisitor()
-            .registerHandler( Mock.class, new AnnotationHandler<Mock, Field>()
-            {
+                .registerHandler(Mock.class, new AnnotationHandler<Mock, Field>() {
 
-                public void handle( Mock annotation, Field field )
-                    throws HandleException
-                {
-                    typeEncounter.register( new MockMembersInjector<I>( field, mockedObjects ) );
-                }
+                    public void handle(Mock annotation, Field field)
+                        throws HandleException {
+                        typeEncounter.register(new MockMembersInjector<I>(field, mockedObjects));
+                    }
 
-            } )
-            .visit( typeLiteral.getRawType() );
-        }
-        catch ( HandleException e )
-        {
-            typeEncounter.addError( e );
+                })
+                .visit(typeLiteral.getRawType());
+        } catch (HandleException e) {
+            typeEncounter.addError(e);
         }
     }
 

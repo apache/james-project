@@ -20,6 +20,8 @@
 package org.apache.james.mpt.onami.test;
 
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.onami.test.annotation.GuiceModules;
 import org.apache.james.mpt.onami.test.annotation.GuiceProvidedModules;
 import org.apache.james.mpt.onami.test.data.ComplexModule;
@@ -30,13 +32,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Inject;
 import com.google.inject.Module;
 
-@RunWith( OnamiRunner.class )
-@GuiceModules( SimpleModule.class )
-public class InjectStaticSimpleTestCase
-{
+@RunWith(OnamiRunner.class)
+@GuiceModules(SimpleModule.class)
+public class InjectStaticSimpleTestCase {
 
     /*
      * Any static filed will be injecteded once before creation of SimpleTest Class
@@ -48,23 +48,20 @@ public class InjectStaticSimpleTestCase
     public static WhoIm whoIm;
 
     @GuiceProvidedModules
-    public static Module createComplexModule()
-    {
-        return new ComplexModule( "Marco Speranza" );
+    public static Module createComplexModule() {
+        return new ComplexModule("Marco Speranza");
     }
 
     @Test
-    public void testHelloWorld()
-    {
-        Assert.assertNotNull( helloWorld );
-        Assert.assertEquals( "Hello World!!!!", helloWorld.sayHallo() );
+    public void testHelloWorld() {
+        Assert.assertNotNull(helloWorld);
+        Assert.assertEquals("Hello World!!!!", helloWorld.sayHallo());
     }
 
     @Test
-    public void testWhoIm()
-    {
-        Assert.assertNotNull( whoIm );
-        Assert.assertEquals( "Marco Speranza", whoIm.sayWhoIm() );
+    public void testWhoIm() {
+        Assert.assertNotNull(whoIm);
+        Assert.assertEquals("Marco Speranza", whoIm.sayWhoIm());
     }
 
 }

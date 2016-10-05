@@ -29,17 +29,15 @@ import java.lang.annotation.Target;
 /**
  * Annotate your filed into which {@link org.apache.onami.test.GuiceMockModule} will create and inject the mock object.
  */
-@Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.FIELD )
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
 @Inherited
-public @interface Mock
-{
+public @interface Mock {
 
     /**
      * Annotation class used to mark that no annotation binding is defined.
      */
-    public static @interface NoAnnotation
-    {
+    public static @interface NoAnnotation {
     }
 
     /**

@@ -19,8 +19,7 @@
 
 package org.apache.james.mpt.onami.test.data;
 
-public interface TelephonService
-{
+public interface TelephonService {
 
     String getTelephonNumber();
 

@@ -19,18 +19,15 @@
 
 package org.apache.james.mpt.onami.test.data;
 
-public class WhoIm
-{
+public class WhoIm {
 
     private final String name;
 
-    public WhoIm( String name )
-    {
+    public WhoIm(String name) {
         this.name = name;
     }
 
-    public String sayWhoIm()
-    {
+    public String sayWhoIm() {
         return name;
     }
 

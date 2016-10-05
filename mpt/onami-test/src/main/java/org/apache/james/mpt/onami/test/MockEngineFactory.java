@@ -26,17 +26,15 @@ import org.apache.james.mpt.onami.test.mock.framework.MockitoFramework;
 
 /**
  * Factory class to create the mock framework.
- * 
+ *
  * @see org.apache.onami.test.annotation.MockFramework
  */
-final class MockEngineFactory
-{
+final class MockEngineFactory {
 
     /**
      * Hidden constructor, this class must not be instantiated directly.
      */
-    private MockEngineFactory()
-    {
+    private MockEngineFactory() {
         // do nothing
     }
 
@@ -44,14 +42,12 @@ final class MockEngineFactory
      * Mock factory constructor. <br>
      * Supported framewors: <li> {@link MockType}.EASY_MOCK <li> {@link MockType}.MOCKITO <br>
      *
-     * @see MockType
      * @param type of mock framework to create.
      * @return An instance of mock framework.
+     * @see MockType
      */
-    public static MockEngine getMockEngine(MockType type )
-    {
-        switch ( type )
-        {
+    public static MockEngine getMockEngine(MockType type) {
+        switch (type) {
             case EASY_MOCK:
                 return new EasyMockFramework();
 
@@ -59,7 +55,7 @@ final class MockEngineFactory
                 return new MockitoFramework();
 
             default:
-                throw new IllegalArgumentException( "Unrecognized MockType '" + type.name() + "'" );
+                throw new IllegalArgumentException("Unrecognized MockType '" + type.name() + "'");
         }
     }
 

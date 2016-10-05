@@ -20,11 +20,9 @@
 package org.apache.james.mpt.onami.test.data;
 
 public class TelephonServiceImpl
-    implements TelephonService
-{
+    implements TelephonService {
 
-    public String getTelephonNumber()
-    {
+    public String getTelephonNumber() {
         return "It's real class";
     }
 

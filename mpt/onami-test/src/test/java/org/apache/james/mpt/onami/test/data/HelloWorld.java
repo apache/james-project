@@ -21,43 +21,37 @@ package org.apache.james.mpt.onami.test.data;
 
 import java.util.List;
 
-import com.google.inject.Inject;
-
 import javax.inject.Singleton;
 
-@Singleton
-public class HelloWorld
-{
+import com.google.inject.Inject;
 
-    @Inject( optional = true )
+@Singleton
+public class HelloWorld {
+
+    @Inject(optional = true)
     private Service service;
 
-    @Inject( optional = true )
+    @Inject(optional = true)
     private TelephonService telephon;
 
-    @Inject( optional = true )
+    @Inject(optional = true)
     private List<Service> services;
 
-    public String sayHallo()
-    {
+    public String sayHallo() {
         return "Hello World!!!!";
     }
 
-    public String sayHalloByService()
-    {
+    public String sayHalloByService() {
         return service.go();
     }
 
-    public void callHelloWorldTelephon()
-    {
+    public void callHelloWorldTelephon() {
         String number = telephon.getTelephonNumber();
-        service.call( number );
+        service.call(number);
     }
 
-    public void sayHalloByServiceLists()
-    {
-        for ( Service service : services )
-        {
+    public void sayHalloByServiceLists() {
+        for (Service service : services) {
             service.go();
         }
     }

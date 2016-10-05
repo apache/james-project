@@ -27,17 +27,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 
-@RunWith( OnamiRunner.class )
-public class MockTypeTestCase
-{
+@RunWith(OnamiRunner.class)
+public class MockTypeTestCase {
 
-    @Mock( type = MockObjType.EASY_MOCK_STRICT )
+    @Mock(type = MockObjType.EASY_MOCK_STRICT)
     Service service;
 
     @Test
-    public void test()
-    {
-        Assert.assertNotNull( service );
+    public void test() {
+        Assert.assertNotNull(service);
     }
 
 }

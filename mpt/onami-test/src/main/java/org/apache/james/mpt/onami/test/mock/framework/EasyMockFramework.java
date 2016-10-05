@@ -28,37 +28,32 @@ import org.easymock.EasyMock;
  *
  * @see MockEngine
  */
-public class EasyMockFramework
-    implements MockEngine
-{
+public class EasyMockFramework implements MockEngine {
 
     /**
      * {@inheritDoc}
      */
-    public void resetMock( Object... objects )
-    {
-        EasyMock.reset( objects );
+    public void resetMock(Object... objects) {
+        EasyMock.reset(objects);
     }
 
     /**
      * {@inheritDoc}
      */
-    public <T> T createMock( Class<T> cls, MockObjType type )
-    {
-        switch ( type )
-        {
+    public <T> T createMock(Class<T> cls, MockObjType type) {
+        switch (type) {
             case EASY_MOCK_NICE:
-                return EasyMock.createNiceMock( cls );
+                return EasyMock.createNiceMock(cls);
 
             case EASY_MOCK_STRICT:
-                return EasyMock.createStrictMock( cls );
+                return EasyMock.createStrictMock(cls);
 
             case EASY_MOCK_NORMAL:
             case DEFAULT:
-                return EasyMock.createMock( cls );
+                return EasyMock.createMock(cls);
 
             default:
-                throw new IllegalArgumentException( "Unsupported mock type '" + type + "' for Easy-Mock Framework." );
+                throw new IllegalArgumentException("Unsupported mock type '" + type + "' for Easy-Mock Framework.");
         }
     }
 

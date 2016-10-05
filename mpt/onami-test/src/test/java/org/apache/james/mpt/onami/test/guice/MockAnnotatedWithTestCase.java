@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.onami.test.guice;
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.onami.test.OnamiRunner;
 import org.apache.james.mpt.onami.test.annotation.Mock;
 import org.apache.james.mpt.onami.test.data.HelloWordAnnotated;
@@ -29,19 +31,16 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Inject;
+@RunWith(OnamiRunner.class)
+public class MockAnnotatedWithTestCase {
 
-@RunWith( OnamiRunner.class )
-public class MockAnnotatedWithTestCase
-{
-
-    @Mock( annotatedWith = TestAnnotation.class )
+    @Mock(annotatedWith = TestAnnotation.class)
     private Service service2;
 
     @Mock
     private Service service;
 
-    @Mock( namedWith = "test.named" )
+    @Mock(namedWith = "test.named")
     private Service serviceNamed;
 
     @Inject
@@ -49,28 +48,26 @@ public class MockAnnotatedWithTestCase
 
     @Test
     public void test()
-        throws Exception
-    {
-        Assert.assertNotNull( service2 );
-        Assert.assertNotNull( service );
-        Assert.assertNotNull( serviceNamed );
+        throws Exception {
+        Assert.assertNotNull(service2);
+        Assert.assertNotNull(service);
+        Assert.assertNotNull(serviceNamed);
     }
 
     @Test
     public void test3()
-        throws Exception
-    {
-        Assert.assertNotNull( service2 );
-        Assert.assertNotNull( serviceNamed );
+        throws Exception {
+        Assert.assertNotNull(service2);
+        Assert.assertNotNull(serviceNamed);
 
-        EasyMock.expect( service2.go() ).andReturn( "Mocked injected class annotated" ).anyTimes();
-        EasyMock.expect( serviceNamed.go() ).andReturn( "Mocked injected class named" ).anyTimes();
-        EasyMock.replay( service2, serviceNamed );
+        EasyMock.expect(service2.go()).andReturn("Mocked injected class annotated").anyTimes();
+        EasyMock.expect(serviceNamed.go()).andReturn("Mocked injected class named").anyTimes();
+        EasyMock.replay(service2, serviceNamed);
 
-        Assert.assertEquals( "Mocked injected class annotated", service2.go() );
-        Assert.assertEquals( "Mocked injected class annotated", seviceImplAnnotated.go() );
-        Assert.assertEquals( "Mocked injected class named", seviceImplAnnotated.getNamed() );
-        EasyMock.verify( service2 );
+        Assert.assertEquals("Mocked injected class annotated", service2.go());
+        Assert.assertEquals("Mocked injected class annotated", seviceImplAnnotated.go());
+        Assert.assertEquals("Mocked injected class named", seviceImplAnnotated.getNamed());
+        EasyMock.verify(service2);
     }
 
 }

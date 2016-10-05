@@ -22,6 +22,8 @@ package org.apache.james.mpt.onami.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.onami.test.annotation.Mock;
 import org.apache.james.mpt.onami.test.data.HelloWorld;
 import org.apache.james.mpt.onami.test.data.Service;
@@ -32,13 +34,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.inject.AbstractModule;
-import javax.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
 
-@RunWith( OnamiRunner.class )
-public class InjectDependingMockObjectTestCase
-{
+@RunWith(OnamiRunner.class)
+public class InjectDependingMockObjectTestCase {
 
     @Mock
     static private Service service;
@@ -49,39 +49,34 @@ public class InjectDependingMockObjectTestCase
     private HelloWorld helloWorld;
 
     @Before
-    public void setUp()
-    {
+    public void setUp() {
         final List<Service> list = new ArrayList<Service>();
-        list.add( service );
+        list.add(service);
 
-        AbstractModule listAbstractModule = new AbstractModule()
-        {
+        AbstractModule listAbstractModule = new AbstractModule() {
             @Override
-            protected void configure()
-            {
-                bind( new TypeLiteral<List<Service>>()
-                {
-                } ).toInstance( list );
+            protected void configure() {
+                bind(new TypeLiteral<List<Service>>() {
+                }).toInstance(list);
             }
         };
 
-        Injector cInjector = injector.createChildInjector( listAbstractModule );
-        helloWorld = cInjector.getInstance( HelloWorld.class );
+        Injector cInjector = injector.createChildInjector(listAbstractModule);
+        helloWorld = cInjector.getInstance(HelloWorld.class);
         // required for optional dependencies
-        cInjector.injectMembers( helloWorld );
+        cInjector.injectMembers(helloWorld);
     }
 
     @Test
-    public void testMock()
-    {
-        Assert.assertNotNull( helloWorld );
-        Assert.assertNotNull( service );
-        EasyMock.expect( service.go() ).andReturn( "Ciao" );
+    public void testMock() {
+        Assert.assertNotNull(helloWorld);
+        Assert.assertNotNull(service);
+        EasyMock.expect(service.go()).andReturn("Ciao");
         EasyMock.expectLastCall().once();
 
-        EasyMock.replay( service );
+        EasyMock.replay(service);
         helloWorld.sayHalloByServiceLists();
-        EasyMock.verify( service );
+        EasyMock.verify(service);
     }
 
 }

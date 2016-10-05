@@ -37,12 +37,11 @@ import com.google.common.collect.Multimap;
  * Visit the input class and all super classes and invokes handler to register annotations.
  * </p>
  */
-public final class ClassVisitor
-{
+public final class ClassVisitor {
 
     private static final String JAVA_PACKAGE = "java";
 
-    private static final Logger LOGGER = Logger.getLogger( ClassVisitor.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(ClassVisitor.class.getName());
 
     private final Multimap<Class<? extends Annotation>, AnnotationHandler<? extends Annotation, ? extends AnnotatedElement>> handlers =
         ArrayListMultimap.create();
@@ -50,58 +49,50 @@ public final class ClassVisitor
     /**
      * Registers an annotation handler.
      *
-     * @param <A> whatever annotation type
+     * @param <A>            whatever annotation type
      * @param annotationType the annotation class to handle
-     * @param handler the related annotation handler
+     * @param handler        the related annotation handler
      * @return the current {@code ClassVisitor} instance
      */
-    public <A extends Annotation> ClassVisitor registerHandler( Class<A> annotationType,
-                                                                AnnotationHandler<A, ? extends AnnotatedElement> handler )
-    {
-        handlers.put( annotationType, handler );
+    public <A extends Annotation> ClassVisitor registerHandler(Class<A> annotationType,
+                                                               AnnotationHandler<A, ? extends AnnotatedElement> handler) {
+        handlers.put(annotationType, handler);
         return this;
     }
 
     /**
      * Visits all fields, methods and super classes of the input class.
      *
-     * @param <T> any type
-     * @param type The type 
+     * @param <T>  any type
+     * @param type The type
      * @throws HandleException when an error occurs.
      */
-    public <T> void visit( final Class<? super T> type )
-        throws HandleException
-    {
-        checkArgument( type != null, "Type to be visited cannot be null" );
+    public <T> void visit(final Class<? super T> type)
+        throws HandleException {
+        checkArgument(type != null, "Type to be visited cannot be null");
 
-        if ( LOGGER.isLoggable( Level.FINER ) )
-        {
-            LOGGER.finer( "  Visit class: " + type );
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.finer("  Visit class: " + type);
         }
 
-        if ( type.getPackage() != null && type.getPackage().getName().startsWith( JAVA_PACKAGE ) )
-        {
+        if (type.getPackage() != null && type.getPackage().getName().startsWith(JAVA_PACKAGE)) {
             return;
         }
 
-        handle( type );
-        handle( type.getDeclaredFields() );
-        handle( type.getDeclaredMethods() );
+        handle(type);
+        handle(type.getDeclaredFields());
+        handle(type.getDeclaredMethods());
 
-        visit( (Class<? super T>) type.getSuperclass() );
+        visit((Class<? super T>) type.getSuperclass());
     }
 
-    @SuppressWarnings( "unchecked" )
-    private void handle( AnnotatedElement... elements )
-        throws HandleException
-    {
-        for ( AnnotatedElement element : elements )
-        {
-            for ( Annotation annotation : element.getAnnotations() )
-            {
-                for ( AnnotationHandler<? extends Annotation, ? extends AnnotatedElement> handler : handlers.get( annotation.annotationType() ) )
-                {
-                    ( (AnnotationHandler<Annotation, AnnotatedElement>) handler ).handle( annotation, element );
+    @SuppressWarnings("unchecked")
+    private void handle(AnnotatedElement... elements)
+        throws HandleException {
+        for (AnnotatedElement element : elements) {
+            for (Annotation annotation : element.getAnnotations()) {
+                for (AnnotationHandler<? extends Annotation, ? extends AnnotatedElement> handler : handlers.get(annotation.annotationType())) {
+                    ((AnnotationHandler<Annotation, AnnotatedElement>) handler).handle(annotation, element);
                 }
             }
         }

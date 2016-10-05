@@ -19,35 +19,32 @@
 
 package org.apache.james.mpt.onami.test;
 
+import javax.inject.Inject;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.inject.AbstractModule;
-import javax.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
-@RunWith( OnamiRunner.class )
-public class InjectModuleClassTestCase
-    extends AbstractModule
-{
+@RunWith(OnamiRunner.class)
+public class InjectModuleClassTestCase extends AbstractModule {
 
     @Override
-    public void configure()
-    {
-        bind( Integer.class ).annotatedWith( Names.named( "numeber.version" ) ).toInstance( 10 );
+    public void configure() {
+        bind(Integer.class).annotatedWith(Names.named("numeber.version")).toInstance(10);
     }
 
     @Inject
-    @Named( "numeber.version" )
+    @Named("numeber.version")
     private Integer version;
 
     @Test
-    public void testInjectModuleClass()
-    {
-        Assert.assertNotNull( version );
-        Assert.assertEquals( 10, version.intValue() );
+    public void testInjectModuleClass() {
+        Assert.assertNotNull(version);
+        Assert.assertEquals(10, version.intValue());
     }
 
 }

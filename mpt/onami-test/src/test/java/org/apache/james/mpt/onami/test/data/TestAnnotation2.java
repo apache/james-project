@@ -25,8 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import javax.inject.Qualifier;
 
 @Qualifier
-@Retention( RetentionPolicy.RUNTIME )
-public @interface TestAnnotation2
-{
+@Retention(RetentionPolicy.RUNTIME)
+public @interface TestAnnotation2 {
 
 }

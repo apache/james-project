@@ -24,13 +24,12 @@ package org.apache.james.mpt.onami.test.annotation;
  *
  * @see MockFramework
  */
-public enum MockType
-{
+public enum MockType {
     /**
      * Identify the Easy Mock framework
      */
-    EASY_MOCK, 
-    
+    EASY_MOCK,
+
     /**
      * Identify the Mockito framework
      */

@@ -35,41 +35,32 @@ import com.google.inject.Module;
  *
  * @see org.apache.onami.test.reflection.ClassVisitor
  */
-public final class GuiceModuleHandler
-    implements ClassHandler<GuiceModules>
-{
+public final class GuiceModuleHandler implements ClassHandler<GuiceModules> {
 
-    private static final Logger LOGGER = Logger.getLogger( GuiceModuleHandler.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(GuiceModuleHandler.class.getName());
 
     private final List<Module> modules = new ArrayList<Module>();
 
     /**
      * @return the modules
      */
-    public List<Module> getModules()
-    {
+    public List<Module> getModules() {
         return modules;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void handle( GuiceModules annotation, Class<?> element )
-        throws HandleException
-    {
-        for ( Class<? extends Module> module : annotation.value() )
-        {
-            if ( LOGGER.isLoggable( Level.FINER ) )
-            {
-                LOGGER.finer( "   Try to create module: " + module );
+    public void handle(GuiceModules annotation, Class<?> element)
+        throws HandleException {
+        for (Class<? extends Module> module : annotation.value()) {
+            if (LOGGER.isLoggable(Level.FINER)) {
+                LOGGER.finer("   Try to create module: " + module);
             }
-            try
-            {
-                modules.add( module.newInstance() );
-            }
-            catch ( Exception e )
-            {
-                throw new HandleException( e );
+            try {
+                modules.add(module.newInstance());
+            } catch (Exception e) {
+                throw new HandleException(e);
             }
         }
     }

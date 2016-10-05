@@ -20,6 +20,8 @@
 package org.apache.james.mpt.onami.test;
 
 
+import javax.inject.Inject;
+
 import org.apache.james.mpt.onami.test.annotation.GuiceModules;
 import org.apache.james.mpt.onami.test.data.HelloWorld;
 import org.apache.james.mpt.onami.test.data.SimpleModule;
@@ -28,12 +30,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Inject;
-
-@RunWith( OnamiRunner.class )
-@GuiceModules( SimpleModule.class )
-public class SimpleTest
-{
+@RunWith(OnamiRunner.class)
+@GuiceModules(SimpleModule.class)
+public class SimpleTest {
 
     /*
      * Any NON-static filed will be injecteded before run each tests.
@@ -42,15 +41,13 @@ public class SimpleTest
     private HelloWorld helloWorldNotStatic;
 
     @BeforeClass
-    public static void setUpClass()
-    {
+    public static void setUpClass() {
     }
 
     @Test
-    public void testInjectNotStatic()
-    {
-        Assert.assertNotNull( helloWorldNotStatic );
-        Assert.assertEquals( "Hello World!!!!", helloWorldNotStatic.sayHallo() );
+    public void testInjectNotStatic() {
+        Assert.assertNotNull(helloWorldNotStatic);
+        Assert.assertEquals("Hello World!!!!", helloWorldNotStatic.sayHallo());
     }
 
 }

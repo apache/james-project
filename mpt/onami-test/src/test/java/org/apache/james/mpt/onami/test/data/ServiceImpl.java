@@ -19,17 +19,13 @@
 
 package org.apache.james.mpt.onami.test.data;
 
-public class ServiceImpl
-    implements Service
-{
+public class ServiceImpl implements Service {
 
-    public void call( String value )
-    {
+    public void call(String value) {
         // do nothing
     }
 
-    public String go()
-    {
+    public String go() {
         return "It's real class";
     }
 

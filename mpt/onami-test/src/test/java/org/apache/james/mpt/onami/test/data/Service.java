@@ -19,11 +19,10 @@
 
 package org.apache.james.mpt.onami.test.data;
 
-public interface Service
-{
+public interface Service {
 
     String go();
 
-    void call( String value );
+    void call(String value);
 
 }

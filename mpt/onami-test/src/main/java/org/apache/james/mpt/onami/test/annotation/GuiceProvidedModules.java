@@ -36,9 +36,8 @@ import java.lang.annotation.Target;
  * <li>com.google.inject.Module[]</li>
  * </p>
  */
-@Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.METHOD )
-public @interface GuiceProvidedModules
-{
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface GuiceProvidedModules {
 
 }
