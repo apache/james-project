@@ -44,9 +44,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapAuthentication;
@@ -58,6 +60,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.util.ZeroedInputStream;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -2329,4 +2332,135 @@ public abstract class SetMessagesMethodTest {
             .body(firstAttachment + ".type", equalTo("text/plain"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
     }
+    @Test
+    public void setMessageShouldVerifyHeaderOfMessageInInbox() throws Exception {
+        String toUsername = "username1@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(toUsername, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, "inbox");
+
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + toUsername + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+        ;
+        accessToken = JmapAuthentication.authenticateJamesUser(toUsername, password);
+        String inboxMailboxId = getMailboxId(accessToken, Role.INBOX);
+
+        calmlyAwait.atMost(60, TimeUnit.SECONDS).until( () -> messageInMailboxHasHeaders(inboxMailboxId, "username1@domain.tld|INBOX|1", buildExpectedHeaders()));
+
+    }
+
+    @Test
+    public void setMessageShouldVerifyHeaderOfMessageInSent() throws Exception {
+        String toUsername = "username1@" + USERS_DOMAIN;
+        String password = "password";
+        jmapServer.serverProbe().addUser(toUsername, password);
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, "inbox");
+
+        jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
+        String messageCreationId = "user|inbox|1";
+        String fromAddress = username;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\","+
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + toUsername + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+        ;
+        String sentMailboxId = getMailboxId(accessToken, Role.SENT);
+
+        calmlyAwait.atMost(60, TimeUnit.SECONDS).until( () -> messageInMailboxHasHeaders(sentMailboxId, "username@domain.tld|sent|1", buildExpectedHeaders()));
+
+    }
+
+    private ImmutableList<String> buildExpectedHeaders() {
+        return ImmutableList.<String>builder()
+                .add("Sender")
+                .add("Content-Transfer-Encoding")
+                .add("From")
+                .add("To")
+                .add("MIME-Version")
+                .add("Subject")
+                .add("Content-Type")
+                .add("Message-ID")
+                .add("Date")
+                .build();
+    }
+
+    private boolean messageInMailboxHasHeaders(String mailboxId, String messageId, ImmutableList<String> expectedHeaders) {
+        try {
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", "
+                    + "{"
+                    + "\"fetchMessages\": true, "
+                    + "\"fetchMessageProperties\": [\"headers\"], "
+                    + "\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]} "
+                    + "}, \"#0\"]]")
+                .when()
+                    .post("/jmap")
+                .then()
+                    .statusCode(200)
+                    .body(ARGUMENTS + ".messageIds", contains(messageId))
+                    .body(SECOND_NAME, equalTo("messages"))
+                    .body(SECOND_ARGUMENTS + ".list[0]", hasEntry(equalTo("headers"), allHeadersMatcher(expectedHeaders)))
+            ;
+            return true;
+        } catch(AssertionError e) {
+            e.printStackTrace();
+            return false;
+        }
+
+    }
+
+    private Matcher<Map<? extends String, ? extends String>> allHeadersMatcher(ImmutableList<String> expectedHeaders) {
+        return Matchers.allOf(expectedHeaders.stream()
+                .map(header -> hasEntry(equalTo(header), not(isEmptyOrNullString())))
+                .collect(Collectors.toList()));
+    }
+
 }
