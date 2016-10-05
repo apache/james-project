@@ -19,9 +19,12 @@
 
 package org.apache.james.transport.mailets;
 
+import javax.mail.MessagingException;
+
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
+import org.apache.mailet.Mail;
 
 /**
  * <p>
@@ -293,6 +296,11 @@ public class Resend extends AbstractRedirect {
     @Override
     protected boolean isNotifyMailet() {
         return false;
+    }
+
+    @Override
+    protected String getMessage(Mail originalMail) throws MessagingException {
+        return getInitParameters().getMessage();
     }
 
 }

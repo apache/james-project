@@ -31,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Optional;
@@ -106,6 +107,11 @@ public class Forward extends AbstractRedirect {
     @Override
     protected boolean isNotifyMailet() {
         return false;
+    }
+
+    @Override
+    protected String getMessage(Mail originalMail) throws MessagingException {
+        return getInitParameters().getMessage();
     }
 
     @Override

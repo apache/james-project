@@ -24,10 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collection;
 import java.util.Properties;
 
+import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
@@ -61,6 +63,11 @@ public class AbstractRedirectTest {
         @Override
         protected InitParameters getInitParameters() {
             return RedirectMailetInitParameters.from(this);
+        }
+
+        @Override
+        protected String getMessage(Mail originalMail) throws MessagingException {
+            return getInitParameters().getMessage();
         }
     }
 

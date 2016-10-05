@@ -28,6 +28,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
+import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -133,6 +134,11 @@ public class Bounce extends AbstractRedirect {
     @Override
     protected boolean isNotifyMailet() {
         return true;
+    }
+
+    @Override
+    protected String getMessage(Mail originalMail) throws MessagingException {
+        return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
     }
 
     @Override

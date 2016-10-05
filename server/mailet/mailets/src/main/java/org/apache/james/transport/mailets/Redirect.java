@@ -316,6 +316,11 @@ public class Redirect extends AbstractRedirect {
     }
 
     @Override
+    protected String getMessage(Mail originalMail) throws MessagingException {
+        return getInitParameters().getMessage();
+    }
+
+    @Override
     protected Collection<MailAddress> getRecipients() throws MessagingException {
         String recipientsOrTo = getRecipientsOrTo();
         if (recipientsOrTo == null) {

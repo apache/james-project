@@ -37,6 +37,7 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
+import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.TypeCode;
 import org.apache.james.transport.util.Patterns;
@@ -127,6 +128,11 @@ public class DSNBounce extends AbstractRedirect {
     @Override
     protected boolean isNotifyMailet() {
         return true;
+    }
+
+    @Override
+    protected String getMessage(Mail originalMail) throws MessagingException {
+        return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
     }
 
     @Override

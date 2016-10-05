@@ -175,12 +175,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *
      * @return {@link #getMessage()}
      */
-    protected String getMessage(Mail originalMail) throws MessagingException {
-        if (isNotifyMailet()) {
-            return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
-        }
-        return getInitParameters().getMessage();
-    }
+    protected abstract String getMessage(Mail originalMail) throws MessagingException;
 
     /**
      * Gets the <code>recipients</code> property. Returns the collection of
