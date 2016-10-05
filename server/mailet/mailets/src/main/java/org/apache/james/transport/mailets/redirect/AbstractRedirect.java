@@ -42,7 +42,6 @@ import org.apache.james.core.MailImpl;
 import org.apache.james.core.MimeMessageUtil;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.Redirect;
-import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.base.DateFormats;
@@ -475,11 +474,33 @@ public abstract class AbstractRedirect extends GenericMailet {
      * <i>originalMail</i> to <i>subjectPrefix</i>. Is a "setX(Mail, Tx, Mail)"
      * method.
      */
-    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        if (isNotifyMailet()) {
-            new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
-        }
+    protected abstract void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
+//        if (isNotifyMailet()) {
+//            new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
+//        }
+//
+//        String subject = getInitParameters().getSubject();
+//        if (!Strings.isNullOrEmpty(subjectPrefix) || subject != null) {
+//            String newSubject = Strings.nullToEmpty(subject);
+//            if (subject == null) {
+//                newSubject = Strings.nullToEmpty(originalMail.getMessage().getSubject());
+//            } else {
+//                if (getInitParameters().isDebug()) {
+//                    log("subject set to: " + subject);
+//                }
+//            }
+//
+//            if (subjectPrefix != null) {
+//                newSubject = subjectPrefix + newSubject;
+//                if (getInitParameters().isDebug()) {
+//                    log("subjectPrefix set to: " + subjectPrefix);
+//                }
+//            }
+//            changeSubject(newMail.getMessage(), newSubject);
+//        }
+//    }
 
+    protected Optional<String> getNewSubject(String subjectPrefix, Mail originalMail) throws MessagingException {
         String subject = getInitParameters().getSubject();
         if (!Strings.isNullOrEmpty(subjectPrefix) || subject != null) {
             String newSubject = Strings.nullToEmpty(subject);
@@ -497,10 +518,10 @@ public abstract class AbstractRedirect extends GenericMailet {
                     log("subjectPrefix set to: " + subjectPrefix);
                 }
             }
-            changeSubject(newMail.getMessage(), newSubject);
+            return Optional.of(newSubject);
         }
+        return Optional.absent();
     }
-
     /**
      * Sets the "In-Reply-To:" header of <i>newMail</i> to the "Message-Id:" of
      * <i>originalMail</i>, if <i>isReply</i> is true.

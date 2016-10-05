@@ -415,4 +415,12 @@ public class Redirect extends AbstractRedirect {
         return reversePath;
     }
 
+    @Override
+    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        Optional<String> newSubject = getNewSubject(subjectPrefix, originalMail);
+        if (newSubject.isPresent()) {
+            changeSubject(newMail.getMessage(), newSubject.get());
+        }
+    }
+
 }

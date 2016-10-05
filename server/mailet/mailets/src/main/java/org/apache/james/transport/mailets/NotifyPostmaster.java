@@ -31,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
@@ -177,6 +178,11 @@ public class NotifyPostmaster extends AbstractRedirect {
     @Override
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
         return getSender(originalMail);
+    }
+
+    @Override
+    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
     }
 
 }

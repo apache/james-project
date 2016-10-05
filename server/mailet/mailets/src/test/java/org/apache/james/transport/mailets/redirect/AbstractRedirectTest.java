@@ -84,6 +84,10 @@ public class AbstractRedirectTest {
         protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
             return null;
         }
+
+        @Override
+        protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        }
     }
 
     @Test

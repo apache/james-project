@@ -40,6 +40,7 @@ import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.TypeCode;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.james.transport.util.Patterns;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
@@ -153,6 +154,11 @@ public class DSNBounce extends AbstractRedirect {
     @Override
     protected MailAddress getReversePath(Mail originalMail) {
         return SpecialAddress.NULL;
+    }
+
+    @Override
+    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
     }
 
     @Override

@@ -31,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -349,6 +350,14 @@ public class Resend extends AbstractRedirect {
             }
         }
         return reversePath;
+    }
+
+    @Override
+    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        Optional<String> newSubject = getNewSubject(subjectPrefix, originalMail);
+        if (newSubject.isPresent()) {
+            changeSubject(newMail.getMessage(), newSubject.get());
+        }
     }
 
 }

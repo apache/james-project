@@ -177,4 +177,12 @@ public class Forward extends AbstractRedirect {
     protected MailAddress getSender() throws MessagingException {
         return null;
     }
+
+    @Override
+    protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
+        Optional<String> newSubject = getNewSubject(subjectPrefix, originalMail);
+        if (newSubject.isPresent()) {
+            changeSubject(newMail.getMessage(), newSubject.get());
+        }
+    }
 }
