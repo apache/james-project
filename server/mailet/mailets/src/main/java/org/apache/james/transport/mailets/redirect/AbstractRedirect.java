@@ -249,20 +249,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.TO</code> or <code>null</code> if missing
      */
-    protected InternetAddress[] getTo() throws MessagingException {
-        if (isNotifyMailet()) {
-            return null;
-        }
-        ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
-        List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
-                .extract(getInitParameters().getTo());
-        for (MailAddress address : mailAddresses) {
-            builder.add(address.toInternetAddress());
-        }
-        ImmutableList<InternetAddress> addresses = builder.build();
-        return addresses.toArray(new InternetAddress[addresses.size()]);
-    }
+    protected abstract InternetAddress[] getTo() throws MessagingException;
 
     /**
      * Gets the <code>to</code> property, built dynamically using the original

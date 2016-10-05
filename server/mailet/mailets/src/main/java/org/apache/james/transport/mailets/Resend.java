@@ -19,12 +19,19 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.List;
+
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 
 import org.apache.james.transport.mailets.redirect.AbstractRedirect;
+import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailAddress;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -301,6 +308,19 @@ public class Resend extends AbstractRedirect {
     @Override
     protected String getMessage(Mail originalMail) throws MessagingException {
         return getInitParameters().getMessage();
+    }
+
+    @Override
+    protected InternetAddress[] getTo() throws MessagingException {
+      ImmutableList.Builder<InternetAddress> builder = ImmutableList.builder();
+      List<MailAddress> mailAddresses = AddressExtractor.withContext(getMailetContext())
+              .allowedSpecials(ImmutableList.of("postmaster", "sender", "from", "replyTo", "reversePath", "unaltered", "recipients", "to", "null"))
+              .extract(getInitParameters().getTo());
+      for (MailAddress address : mailAddresses) {
+          builder.add(address.toInternetAddress());
+      }
+      ImmutableList<InternetAddress> addresses = builder.build();
+      return addresses.toArray(new InternetAddress[addresses.size()]);
     }
 
 }

@@ -69,6 +69,11 @@ public class AbstractRedirectTest {
         protected String getMessage(Mail originalMail) throws MessagingException {
             return getInitParameters().getMessage();
         }
+
+        @Override
+        protected InternetAddress[] getTo() throws MessagingException {
+            return null;
+        }
     }
 
     @Test
