@@ -32,8 +32,8 @@ import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.ConfigurationProviderModule;
 import org.apache.james.modules.server.DNSServiceModule;
+import org.apache.james.onami.lifecycle.PreDestroyModule;
 import org.apache.james.utils.GuiceServerProbe;
-import org.apache.onami.lifecycle.jsr250.PreDestroyModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

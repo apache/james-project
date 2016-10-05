@@ -27,12 +27,12 @@ import org.apache.james.jmap.JMAPServer;
 import org.apache.james.modules.CommonServicesModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.ProtocolsModule;
+import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.apache.james.utils.ExtendedServerProbe;
 import org.apache.james.utils.GuiceServerProbe;
 import org.apache.james.webadmin.Port;
 import org.apache.james.webadmin.WebAdminServer;
-import org.apache.onami.lifecycle.core.Stager;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
