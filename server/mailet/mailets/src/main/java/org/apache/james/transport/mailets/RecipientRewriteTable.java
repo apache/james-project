@@ -19,24 +19,24 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.lib.Mappings;
-import org.apache.mailet.MailAddress;
+import org.apache.james.domainlist.api.DomainList;
+import org.apache.mailet.Mail;
+import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Mailet which should get used when using RecipientRewriteTable-Store to
  * implementations for mappings of forwards and aliases.
  */
-public class RecipientRewriteTable extends AbstractRecipientRewriteTableMailet {
-    private org.apache.james.rrt.api.RecipientRewriteTable vut;
+public class RecipientRewriteTable extends GenericMailet {
+    private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
+    private final DomainList domainList;
+    private RecipientRewriteTableProcessor processor;
 
     /**
      * Sets the virtual table store.
@@ -45,35 +45,37 @@ public class RecipientRewriteTable extends AbstractRecipientRewriteTableMailet {
      *            the vutStore to set, possibly null
      */
     @Inject
-    public final void setRecipientRewriteTable(org.apache.james.rrt.api.RecipientRewriteTable vut) {
-        this.vut = vut;
+    public RecipientRewriteTable(org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore, DomainList domainList) {
+        this.virtualTableStore = virtualTableStore;
+        this.domainList = domainList;
     }
 
-    /**
-     * @see org.apache.james.transport.mailets.AbstractRecipientRewriteTableMailet#processMail(MailAddress, MailAddress, MimeMessage)
-     */
-    public Collection<MailAddress> processMail(MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
-        try {
-            Mappings mappings = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
+    @Override
+    public void init() throws MessagingException {
+        processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext());
+    }
 
-            if (mappings != null) {
-                return handleMappings(mappings, sender, recipient, message);
-            }
-        } catch (ErrorMappingException e) {
-            String errorBuffer = "A problem as occoured trying to alias and forward user " + recipient + ": " + e.getMessage();
-            throw new MessagingException(errorBuffer);
-        } catch (RecipientRewriteTableException e) {
-            throw new MessagingException("Unable to access RecipientRewriteTable", e);
+
+    /**
+     * The service rewrite the recipient list of mail. The method should:
+     * - Set Return-Path and remove all other Return-Path headers from the mail's message. This only works because there is a placeholder inserted by MimeMessageWrapper
+     * - If there were errors, we redirect the email to the ERROR processor. In order for this server to meet the requirements of the SMTP
+     * specification, mails on the ERROR processor must be returned to the sender. Note that this email doesn't include any details
+     * regarding the details of the failure(s). In the future we may wish to address this.
+     * - Set the mail's state to <code>Mail.GHOST</code> if the recipients be empty after rewriting.
+     */
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        Preconditions.checkNotNull(mail);
+        MimeMessage message = mail.getMessage();
+
+        if (message != null) {
+            processor.processMail(mail);
         }
 
-        Collection<MailAddress> rcpts = new ArrayList<MailAddress>();
-        rcpts.add(recipient);
-        return rcpts;
     }
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#getMailetInfo()
-     */
+    @Override
     public String getMailetInfo() {
         return "RecipientRewriteTable Mailet";
     }
