@@ -74,6 +74,11 @@ public class AbstractRedirectTest {
         protected InternetAddress[] getTo() throws MessagingException {
             return null;
         }
+
+        @Override
+        protected MailAddress getReplyTo() throws MessagingException {
+            return null;
+        }
     }
 
     @Test

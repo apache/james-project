@@ -30,6 +30,7 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.NotifyMailetsMessage;
+import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 import org.apache.mailet.MailetConfig;
@@ -166,6 +167,11 @@ public class NotifyPostmaster extends AbstractRedirect {
             log("\"to\" parameter ignored, set to postmaster");
         }
         return new InternetAddress[] { getMailetContext().getPostmaster().toInternetAddress() };
+    }
+
+    @Override
+    protected MailAddress getReplyTo() throws MessagingException {
+        return SpecialAddress.NULL;
     }
 
 }

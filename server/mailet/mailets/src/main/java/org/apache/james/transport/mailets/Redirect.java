@@ -34,6 +34,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -364,6 +365,22 @@ public class Redirect extends AbstractRedirect {
 
     private String getToOrRecipients() throws MessagingException {
         return getInitParameter("to", getInitParameter("recipients"));
+    }
+
+    @Override
+    protected MailAddress getReplyTo() throws MessagingException {
+        String replyTo = getInitParameters().getReplyTo();
+        if (Strings.isNullOrEmpty(replyTo)) {
+            return null;
+        }
+
+        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+                .extract(replyTo);
+        if (extractAddresses.isEmpty()) {
+            return null;
+        }
+        return extractAddresses.get(0);
     }
 
     @Override

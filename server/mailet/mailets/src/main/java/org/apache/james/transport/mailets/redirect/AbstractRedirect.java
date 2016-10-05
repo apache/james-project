@@ -299,24 +299,7 @@ public abstract class AbstractRedirect extends GenericMailet {
      *         <code>SpecialAddress.UNALTERED</code> or
      *         <code>SpecialAddress.NULL</code> or <code>null</code> if missing
      */
-    protected MailAddress getReplyTo() throws MessagingException {
-        if (isNotifyMailet()) {
-            return SpecialAddress.NULL;
-        }
-
-        String replyTo = getInitParameters().getReplyTo();
-        if (Strings.isNullOrEmpty(replyTo)) {
-            return null;
-        }
-
-        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
-                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
-                .extract(replyTo);
-        if (extractAddresses.isEmpty()) {
-            return null;
-        }
-        return extractAddresses.get(0);
-    }
+    protected abstract MailAddress getReplyTo() throws MessagingException;
 
     /**
      * Gets the <code>replyTo</code> property, built dynamically using the

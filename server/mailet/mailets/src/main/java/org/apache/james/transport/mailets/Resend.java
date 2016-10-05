@@ -31,6 +31,7 @@ import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -321,6 +322,22 @@ public class Resend extends AbstractRedirect {
       }
       ImmutableList<InternetAddress> addresses = builder.build();
       return addresses.toArray(new InternetAddress[addresses.size()]);
+    }
+
+    @Override
+    protected MailAddress getReplyTo() throws MessagingException {
+        String replyTo = getInitParameters().getReplyTo();
+        if (Strings.isNullOrEmpty(replyTo)) {
+            return null;
+        }
+
+        List<MailAddress> extractAddresses = AddressExtractor.withContext(getMailetContext())
+                .allowedSpecials(ImmutableList.of("postmaster", "sender", "null", "unaltered"))
+                .extract(replyTo);
+        if (extractAddresses.isEmpty()) {
+            return null;
+        }
+        return extractAddresses.get(0);
     }
 
 }

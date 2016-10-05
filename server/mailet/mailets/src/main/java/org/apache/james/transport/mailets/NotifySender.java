@@ -169,4 +169,9 @@ public class NotifySender extends AbstractRedirect {
         }
         return new InternetAddress[] { SpecialAddress.SENDER.toInternetAddress() };
     }
+
+    @Override
+    protected MailAddress getReplyTo() throws MessagingException {
+        return SpecialAddress.NULL;
+    }
 }

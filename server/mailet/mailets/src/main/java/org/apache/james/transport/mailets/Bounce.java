@@ -152,6 +152,11 @@ public class Bounce extends AbstractRedirect {
     }
 
     @Override
+    protected MailAddress getReplyTo() throws MessagingException {
+        return SpecialAddress.NULL;
+    }
+
+    @Override
     protected MailAddress getReversePath(Mail originalMail) {
         return SpecialAddress.NULL;
     }
