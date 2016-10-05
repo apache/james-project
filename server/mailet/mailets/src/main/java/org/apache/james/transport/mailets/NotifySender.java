@@ -174,4 +174,9 @@ public class NotifySender extends AbstractRedirect {
     protected MailAddress getReplyTo() throws MessagingException {
         return SpecialAddress.NULL;
     }
+
+    @Override
+    protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
+        return getSender(originalMail);
+    }
 }

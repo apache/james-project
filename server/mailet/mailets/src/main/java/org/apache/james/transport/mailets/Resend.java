@@ -340,4 +340,15 @@ public class Resend extends AbstractRedirect {
         return extractAddresses.get(0);
     }
 
+    @Override
+    protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
+        MailAddress reversePath = getReversePath();
+        if (reversePath != null) {
+            if (isUnalteredOrReversePathOrSender(reversePath)) {
+                return null;
+            }
+        }
+        return reversePath;
+    }
+
 }

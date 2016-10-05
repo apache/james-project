@@ -169,6 +169,11 @@ public class Forward extends AbstractRedirect {
     }
 
     @Override
+    protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
+        return null;
+    }
+
+    @Override
     protected MailAddress getSender() throws MessagingException {
         return null;
     }

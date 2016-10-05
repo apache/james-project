@@ -398,11 +398,21 @@ public class Redirect extends AbstractRedirect {
 
     @Override
     protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
-        MailAddress reversePath = super.getReversePath(originalMail);
+        MailAddress reversePath = retrieveReversePath();
         if (reversePath != null) {
             return reversePath;
         }
         return getSender(originalMail);
+    }
+
+    private MailAddress retrieveReversePath() throws MessagingException {
+        MailAddress reversePath = getReversePath();
+        if (reversePath != null) {
+            if (isUnalteredOrReversePathOrSender(reversePath)) {
+                return null;
+            }
+        }
+        return reversePath;
     }
 
 }

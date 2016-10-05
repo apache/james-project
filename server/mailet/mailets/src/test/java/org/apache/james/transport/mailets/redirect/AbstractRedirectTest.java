@@ -79,6 +79,11 @@ public class AbstractRedirectTest {
         protected MailAddress getReplyTo() throws MessagingException {
             return null;
         }
+
+        @Override
+        protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
+            return null;
+        }
     }
 
     @Test

@@ -174,4 +174,9 @@ public class NotifyPostmaster extends AbstractRedirect {
         return SpecialAddress.NULL;
     }
 
+    @Override
+    protected MailAddress getReversePath(Mail originalMail) throws MessagingException {
+        return getSender(originalMail);
+    }
+
 }
