@@ -55,8 +55,8 @@
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.onami</groupId>
-            <artifactId>org.apache.onami.test</artifactId>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-james-mpt-onami-test</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.managesieve.file;
 
+import org.apache.james.mpt.onami.test.OnamiSuite;
+import org.apache.james.mpt.onami.test.annotation.GuiceModules;
 import org.apache.james.mpt.testsuite.AuthenticateTest;
 import org.apache.james.mpt.testsuite.CapabilityTest;
 import org.apache.james.mpt.testsuite.CheckScriptTest;
@@ -33,8 +35,6 @@ import org.apache.james.mpt.testsuite.RenameScriptTest;
 import org.apache.james.mpt.testsuite.SetActiveTest;
 import org.apache.james.mpt.testsuite.StartTlsTest;
 import org.apache.james.mpt.testsuite.UnauthenticatedTest;
-import org.apache.onami.test.OnamiSuite;
-import org.apache.onami.test.annotation.GuiceModules;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 

@@ -195,8 +195,8 @@
                     <version>18.0</version>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.onami</groupId>
-                    <artifactId>org.apache.onami.test</artifactId>
+                    <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mpt-onami-test</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.cassandraunit</groupId>
@@ -270,6 +270,10 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.james</groupId>
+                    <artifactId>apache-james-mpt-onami-test</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>james-server-cassandra-guice</artifactId>
                 </dependency>
                 <dependency>
@@ -288,10 +292,6 @@
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                     <version>18.0</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.onami</groupId>
-                    <artifactId>org.apache.onami.test</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.cassandraunit</groupId>

@@ -19,7 +19,7 @@
 package org.apache.james.mpt.imapmailbox.jcr;
 
 import org.apache.james.mpt.imapmailbox.AbstractMailboxTest;
-import org.apache.onami.test.annotation.GuiceModules;
+import org.apache.james.mpt.onami.test.annotation.GuiceModules;
 import org.junit.Ignore;
 
 @Ignore("JWC-130 : JCR mailbox does not correctly release resources + append problems")

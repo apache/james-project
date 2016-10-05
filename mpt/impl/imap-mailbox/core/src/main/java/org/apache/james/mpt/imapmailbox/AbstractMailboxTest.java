@@ -40,7 +40,7 @@ import org.apache.james.mpt.imapmailbox.suite.SelectedInbox;
 import org.apache.james.mpt.imapmailbox.suite.SelectedState;
 import org.apache.james.mpt.imapmailbox.suite.UidSearch;
 import org.apache.james.mpt.imapmailbox.suite.UserFlagsSupport;
-import org.apache.onami.test.OnamiSuite;
+import org.apache.james.mpt.onami.test.OnamiSuite;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite.SuiteClasses;
 
