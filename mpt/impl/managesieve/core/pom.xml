@@ -23,7 +23,7 @@
     <parent>
         <artifactId>apache-james-mpt-managesieve</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>0.2-SNAPSHOT</version>
+        <version>3.0.0-beta5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -43,7 +43,6 @@
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
             <artifactId>protocols-managesieve</artifactId>
-            <version>1.6.4-SNAPSHOT</version>
         </dependency>
 
 

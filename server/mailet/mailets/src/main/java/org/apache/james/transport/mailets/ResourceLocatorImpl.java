@@ -21,9 +21,9 @@ package org.apache.james.transport.mailets;
 
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
+import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.jsieve.mailet.ResourceLocator;
 import org.joda.time.DateTime;
 
 import javax.mail.MessagingException;

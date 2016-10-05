@@ -24,11 +24,10 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>1.8.3-SNAPSHOT</version>
+        <version>3.0.0-beta5-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-mailet</artifactId>
-    <version>2.5.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache James :: Mailets parent and aggregator</name>
