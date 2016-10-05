@@ -24,34 +24,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DefaultStagerTestCase
-{
+public class DefaultStagerTestCase {
 
     @Test
-    public void stagerShouldStageObjectsRegisteredWhileStaging()
-    {
-        final Stager<TestAnnotationA> stager =
-                new DefaultStager<TestAnnotationA>( TestAnnotationA.class );
+    public void stagerShouldStageObjectsRegisteredWhileStaging() {
+        final Stager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class);
         final AtomicBoolean staged = new AtomicBoolean();
-        stager.register( new Stageable()
-        {
+        stager.register(new Stageable() {
             @Override
-            public void stage( StageHandler stageHandler )
-            {
-                stager.register( new Stageable()
-                {
+            public void stage(StageHandler stageHandler) {
+                stager.register(new Stageable() {
                     @Override
-                    public void stage( StageHandler stageHandler )
-                    {
-                        staged.set( true );
+                    public void stage(StageHandler stageHandler) {
+                        staged.set(true);
                     }
-                } );
+                });
             }
-        } );
+        });
 
         stager.stage();
 
-        Assert.assertTrue( staged.get() );
+        Assert.assertTrue(staged.get());
     }
 
     /*
@@ -61,45 +54,34 @@ public class DefaultStagerTestCase
      * 3. the thread blocks on the lock in DefaultStager.register()
      */
     @Test
-    public void stagerShouldNotDeadlockWhileStagingObjectChains()
-    {
+    public void stagerShouldNotDeadlockWhileStagingObjectChains() {
         final AtomicBoolean staged = new AtomicBoolean();
-        final Stager<TestAnnotationA> stager =
-                new DefaultStager<TestAnnotationA>( TestAnnotationA.class );
-        stager.register( new Stageable()
-        {
+        final Stager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class);
+        stager.register(new Stageable() {
             @Override
-            public void stage( StageHandler stageHandler )
-            {
-                Thread thread = new Thread( new Runnable()
-                {
+            public void stage(StageHandler stageHandler) {
+                Thread thread = new Thread(new Runnable() {
                     @Override
-                    public void run()
-                    {
-                        stager.register( new Stageable()
-                        {
+                    public void run() {
+                        stager.register(new Stageable() {
                             @Override
-                            public void stage( StageHandler stageHandler )
-                            {
-                                staged.set( true );
+                            public void stage(StageHandler stageHandler) {
+                                staged.set(true);
                             }
-                        } );
+                        });
                     }
-                } );
+                });
                 thread.start();
-                try
-                {
+                try {
                     thread.join();
-                }
-                catch ( InterruptedException e )
-                {
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
-        } );
+        });
 
         stager.stage();
 
-        Assert.assertTrue( staged.get() );
+        Assert.assertTrue(staged.get());
     }
 }

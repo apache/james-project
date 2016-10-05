@@ -30,9 +30,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Default {@link Stager} implementation.
  */
-public class DefaultStager<A extends Annotation>
-    implements DisposingStager<A>
-{
+public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
     private final Class<A> stage;
 
     /**
@@ -43,37 +41,31 @@ public class DefaultStager<A extends Annotation>
     /**
      * @param stage the annotation that specifies this stage
      */
-    public DefaultStager( Class<A> stage )
-    {
-        this( stage, Order.FIRST_IN_FIRST_OUT );
+    public DefaultStager(Class<A> stage) {
+        this(stage, Order.FIRST_IN_FIRST_OUT);
     }
 
-	/**
+    /**
      * @param stage the annotation that specifies this stage
      * @param mode  execution order
      */
-    public DefaultStager( Class<A> stage, Order mode )
-    {
+    public DefaultStager(Class<A> stage, Order mode) {
         this.stage = stage;
 
         Queue<Stageable> localStageables;
-        switch ( mode )
-        {
-            case FIRST_IN_FIRST_OUT:
-            {
+        switch (mode) {
+            case FIRST_IN_FIRST_OUT: {
                 localStageables = new ArrayDeque<Stageable>();
                 break;
             }
 
-            case FIRST_IN_LAST_OUT:
-            {
-                localStageables = Collections.asLifoQueue( new ArrayDeque<Stageable>() );
+            case FIRST_IN_LAST_OUT: {
+                localStageables = Collections.asLifoQueue(new ArrayDeque<Stageable>());
                 break;
             }
 
-            default:
-            {
-                throw new IllegalArgumentException( "Unknown mode: " + mode );
+            default: {
+                throw new IllegalArgumentException("Unknown mode: " + mode);
             }
         }
         stageables = localStageables;
@@ -83,11 +75,9 @@ public class DefaultStager<A extends Annotation>
      * {@inheritDoc}
      */
     @Override
-    public void register( Stageable stageable )
-    {
-        synchronized ( stageables )
-        {
-            stageables.add( stageable );
+    public void register(Stageable stageable) {
+        synchronized (stageables) {
+            stageables.add(stageable);
         }
     }
 
@@ -95,9 +85,8 @@ public class DefaultStager<A extends Annotation>
      * {@inheritDoc}
      */
     @Override
-    public <T extends ExecutorService> T register( T executorService )
-    {
-        register( new ExecutorServiceStageable( executorService ) );
+    public <T extends ExecutorService> T register(T executorService) {
+        register(new ExecutorServiceStageable(executorService));
         return executorService;
     }
 
@@ -105,9 +94,8 @@ public class DefaultStager<A extends Annotation>
      * {@inheritDoc}
      */
     @Override
-    public <T extends Closeable> T register( T closeable )
-    {
-        register( new CloseableStageable( closeable ) );
+    public <T extends Closeable> T register(T closeable) {
+        register(new CloseableStageable(closeable));
         return closeable;
     }
 
@@ -115,34 +103,28 @@ public class DefaultStager<A extends Annotation>
      * {@inheritDoc}
      */
     @Override
-    public void stage()
-    {
-        stage( null );
+    public void stage() {
+        stage(null);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void stage( StageHandler stageHandler )
-    {
-        if ( stageHandler == null )
-        {
+    public void stage(StageHandler stageHandler) {
+        if (stageHandler == null) {
             stageHandler = new NoOpStageHandler();
         }
 
-        while ( true )
-        {
+        while (true) {
             Stageable stageable;
-            synchronized ( stageables )
-            {
+            synchronized (stageables) {
                 stageable = stageables.poll();
             }
-            if ( stageable == null )
-            {
+            if (stageable == null) {
                 break;
             }
-            stageable.stage( stageHandler );
+            stageable.stage(stageHandler);
         }
     }
 
@@ -150,16 +132,14 @@ public class DefaultStager<A extends Annotation>
      * {@inheritDoc}
      */
     @Override
-    public Class<A> getStage()
-    {
+    public Class<A> getStage() {
         return stage;
     }
 
     /**
      * specifies ordering for a {@link DefaultStager}
      */
-    public static enum Order
-    {
+    public static enum Order {
         /**
          * FIFO
          */
@@ -171,43 +151,33 @@ public class DefaultStager<A extends Annotation>
         FIRST_IN_LAST_OUT
     }
 
-    private static class CloseableStageable extends AbstractStageable<Closeable>
-    {
+    private static class CloseableStageable extends AbstractStageable<Closeable> {
 
-        public CloseableStageable( Closeable closeable )
-        {
-            super( closeable );
+        public CloseableStageable(Closeable closeable) {
+            super(closeable);
         }
 
         @Override
-        protected void doStage() throws Exception
-        {
+        protected void doStage() throws Exception {
             object.close();
         }
 
     }
 
-    private static class ExecutorServiceStageable extends AbstractStageable<ExecutorService>
-    {
+    private static class ExecutorServiceStageable extends AbstractStageable<ExecutorService> {
 
-        public ExecutorServiceStageable( ExecutorService executor )
-        {
-            super( executor );
+        public ExecutorServiceStageable(ExecutorService executor) {
+            super(executor);
         }
 
         @Override
-        protected void doStage() throws Exception
-        {
+        protected void doStage() throws Exception {
             object.shutdown();
-            try
-            {
-                if ( !object.awaitTermination( 1, TimeUnit.MINUTES ) )
-                {
+            try {
+                if (!object.awaitTermination(1, TimeUnit.MINUTES)) {
                     object.shutdownNow();
                 }
-            }
-            catch ( InterruptedException e )
-            {
+            } catch (InterruptedException e) {
                 object.shutdownNow();
                 Thread.currentThread().interrupt();
             }

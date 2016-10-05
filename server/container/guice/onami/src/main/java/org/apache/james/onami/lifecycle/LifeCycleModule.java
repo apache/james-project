@@ -19,6 +19,15 @@
 
 package org.apache.james.onami.lifecycle;
 
+import static com.google.inject.matcher.Matchers.any;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
@@ -26,30 +35,18 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import static com.google.inject.matcher.Matchers.any;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-
 /**
  * Guice module to register methods to be invoked after injection is complete.
  */
-public abstract class LifeCycleModule
-    extends AbstractModule
-{
+public abstract class LifeCycleModule extends AbstractModule {
 
     /**
      * Binds lifecycle listener.
      *
      * @param annotation the lifecycle annotation to be searched.
      */
-    protected final void bindLifeCycle( Class<? extends Annotation> annotation )
-    {
-        bindLifeCycle( annotation, any() );
+    protected final void bindLifeCycle(Class<? extends Annotation> annotation) {
+        bindLifeCycle(annotation, any());
     }
 
     /**
@@ -58,60 +55,38 @@ public abstract class LifeCycleModule
      * @param annotation  the lifecycle annotation to be searched.
      * @param typeMatcher the filter for injectee types.
      */
-    protected final void bindLifeCycle( Class<? extends Annotation> annotation, Matcher<? super TypeLiteral<?>> typeMatcher )
-    {
-        bindLifeCycle( asList( annotation ), typeMatcher );
+    protected final void bindLifeCycle(Class<? extends Annotation> annotation, Matcher<? super TypeLiteral<?>> typeMatcher) {
+        bindLifeCycle(asList(annotation), typeMatcher);
     }
 
     /**
      * Binds lifecycle listener.
      *
-     * @param annotations  the lifecycle annotations to be searched in the order to be searched.
+     * @param annotations the lifecycle annotations to be searched in the order to be searched.
      * @param typeMatcher the filter for injectee types.
      */
-    protected final void bindLifeCycle( List<? extends Class<? extends Annotation>> annotations, Matcher<? super TypeLiteral<?>> typeMatcher )
-    {
-        bindListener( typeMatcher, new AbstractMethodTypeListener( annotations )
-        {
-
+    protected final void bindLifeCycle(List<? extends Class<? extends Annotation>> annotations, Matcher<? super TypeLiteral<?>> typeMatcher) {
+        bindListener(typeMatcher, new AbstractMethodTypeListener(annotations) {
             @Override
-            protected <I> void hear( final Method method, TypeLiteral<I> parentType, TypeEncounter<I> encounter,
-                                     final Class<? extends Annotation> annotationType )
-            {
-                encounter.register( new InjectionListener<I>()
-                {
-
+            protected <I> void hear(final Method method, TypeLiteral<I> parentType, TypeEncounter<I> encounter, final Class<? extends Annotation> annotationType) {
+                encounter.register(new InjectionListener<I>() {
                     @Override
-                    public void afterInjection( I injectee )
-                    {
-                        try
-                        {
-                            method.invoke( injectee );
-                        }
-                        catch ( IllegalArgumentException e )
-                        {
+                    public void afterInjection(I injectee) {
+                        try {
+                            method.invoke(injectee);
+                        } catch (IllegalArgumentException e) {
                             // should not happen, anyway...
+                            throw new ProvisionException(format("Method @%s %s requires arguments", annotationType.getName(), method), e);
+                        } catch (IllegalAccessException e) {
+                            throw new ProvisionException(format("Impossible to access to @%s %s on %s", annotationType.getName(), method, injectee), e);
+                        } catch (InvocationTargetException e) {
                             throw new ProvisionException(
-                                format( "Method @%s %s requires arguments", annotationType.getName(), method ), e );
-                        }
-                        catch ( IllegalAccessException e )
-                        {
-                            throw new ProvisionException(
-                                format( "Impossible to access to @%s %s on %s", annotationType.getName(), method,
-                                        injectee ), e );
-                        }
-                        catch ( InvocationTargetException e )
-                        {
-                            throw new ProvisionException(
-                                format( "An error occurred while invoking @%s %s on %s", annotationType.getName(),
-                                        method, injectee ), e.getCause() );
+                                format("An error occurred while invoking @%s %s on %s", annotationType.getName(), method, injectee), e.getCause());
                         }
                     }
-
-                } );
+                });
             }
-
-        } );
+        });
     }
 
 }

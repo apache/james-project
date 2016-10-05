@@ -19,67 +19,41 @@
 
 package org.apache.james.onami.lifecycle;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class StagingOrderTestCase
-{
+import org.junit.Assert;
+import org.junit.Test;
+
+public class StagingOrderTestCase {
     @Test
-    public void testFifo()
-    {
-        List<Integer> order = new ArrayList<Integer>();
-        DefaultStager<TestAnnotationA> stager = makeStager( order, DefaultStager.Order.FIRST_IN_FIRST_OUT );
+    public void testFifo() {
+        List<Integer> order = new ArrayList<>();
+        DefaultStager<TestAnnotationA> stager = makeStager(order, DefaultStager.Order.FIRST_IN_FIRST_OUT);
         stager.stage();
 
-        Assert.assertEquals( Arrays.asList( 1, 2, 3 ), order );
+        Assert.assertEquals(Arrays.asList(1, 2, 3), order);
     }
 
     @Test
-    public void testFilo()
-    {
-        List<Integer> order = new ArrayList<Integer>();
-        DefaultStager<TestAnnotationA> stager = makeStager( order, DefaultStager.Order.FIRST_IN_LAST_OUT );
+    public void testFilo() {
+        List<Integer> order = new ArrayList<>();
+        DefaultStager<TestAnnotationA> stager = makeStager(order, DefaultStager.Order.FIRST_IN_LAST_OUT);
         stager.stage();
 
-        Assert.assertEquals( Arrays.asList( 3, 2, 1 ), order );
+        Assert.assertEquals(Arrays.asList(3, 2, 1), order);
     }
 
-    private DefaultStager<TestAnnotationA> makeStager( final List<Integer> order, DefaultStager.Order stagingOrder )
-    {
-        Stageable stageable1 = new Stageable()
-        {
-            @Override
-            public void stage( StageHandler stageHandler )
-            {
-                order.add( 1 );
-            }
-        };
-        Stageable stageable2 = new Stageable()
-        {
-            @Override
-            public void stage( StageHandler stageHandler )
-            {
-                order.add( 2 );
-            }
-        };
-        Stageable stageable3 = new Stageable()
-        {
-            @Override
-            public void stage( StageHandler stageHandler )
-            {
-                order.add( 3 );
-            }
-        };
+    private DefaultStager<TestAnnotationA> makeStager(final List<Integer> order, DefaultStager.Order stagingOrder) {
+        Stageable stageable1 = stageHandler -> order.add(1);
+        Stageable stageable2 = stageHandler -> order.add(2);
+        Stageable stageable3 = stageHandler -> order.add(3);
 
-        DefaultStager<TestAnnotationA> stager =
-            new DefaultStager<TestAnnotationA>( TestAnnotationA.class, stagingOrder );
-        stager.register( stageable1 );
-        stager.register( stageable2 );
-        stager.register( stageable3 );
+        DefaultStager<TestAnnotationA> stager = new DefaultStager<TestAnnotationA>(TestAnnotationA.class, stagingOrder);
+        stager.register(stageable1);
+        stager.register(stageable2);
+        stager.register(stageable3);
         return stager;
     }
 }

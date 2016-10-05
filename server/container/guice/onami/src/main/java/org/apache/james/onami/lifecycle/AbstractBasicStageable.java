@@ -24,17 +24,14 @@ package org.apache.james.onami.lifecycle;
  *
  * @author Mikhail Mazursky
  */
-public abstract class AbstractBasicStageable<S>
-    implements Stageable
-{
+public abstract class AbstractBasicStageable<S> implements Stageable {
 
     /**
      * Object to stage.
      */
     protected final S object;
 
-    protected AbstractBasicStageable( S object )
-    {
+    protected AbstractBasicStageable(S object) {
         this.object = object;
     }
 
@@ -42,8 +39,7 @@ public abstract class AbstractBasicStageable<S>
      * {@inheritDoc}
      */
     @Override
-    public final String toString()
-    {
+    public final String toString() {
         return object.toString();
     }
 

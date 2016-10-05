@@ -24,31 +24,24 @@ package org.apache.james.onami.lifecycle;
  *
  * @author Mikhail Mazursky
  */
-public abstract class AbstractStageable<S>
-    extends AbstractBasicStageable<S>
-{
+public abstract class AbstractStageable<S> extends AbstractBasicStageable<S> {
 
-    protected AbstractStageable( S object )
-    {
-        super( object );
+    protected AbstractStageable(S object) {
+        super(object);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public final void stage( StageHandler stageHandler )
-    {
-        try
-        {
+    public final void stage(StageHandler stageHandler) {
+        try {
             doStage();
-        }
-        catch ( Throwable e )
-        {
-            stageHandler.onError( object, e );
+        } catch (Throwable e) {
+            stageHandler.onError(object, e);
             return;
         }
-        stageHandler.onSuccess( object );
+        stageHandler.onSuccess(object);
     }
 
     /**

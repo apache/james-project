@@ -22,15 +22,14 @@ package org.apache.james.onami.lifecycle;
 /**
  * A {@link StageHandler} instance is used to track staging progresses.
  */
-public interface StageHandler
-{
+public interface StageHandler {
 
     /**
      * Tracks the input injectee successfully staged the resources.
      *
      * @param injectee the injectee to be staged
      */
-    <I> void onSuccess( I injectee );
+    <I> void onSuccess(I injectee);
 
     /**
      * Tracks an error occurred while the input injectee staged the resources.
@@ -38,6 +37,6 @@ public interface StageHandler
      * @param injectee the injectee to be staged
      * @param error    the exception occurred
      */
-    <I, E extends Throwable> void onError( I injectee, E error );
+    <I, E extends Throwable> void onError(I injectee, E error);
 
 }

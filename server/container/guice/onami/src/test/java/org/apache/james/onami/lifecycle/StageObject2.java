@@ -21,25 +21,21 @@ package org.apache.james.onami.lifecycle;
 
 import javax.inject.Inject;
 
-public class StageObject2
-{
+public class StageObject2 {
     private final StringBuilder str;
 
     @Inject
-    public StageObject2( StringBuilder str )
-    {
+    public StageObject2(StringBuilder str) {
         this.str = str;
     }
 
     @TestAnnotationA
-    public void stageA()
-    {
-        str.append( "2a" );
+    public void stageA() {
+        str.append("2a");
     }
 
     @TestAnnotationB
-    public void stageB()
-    {
-        str.append( "2b" );
+    public void stageB() {
+        str.append("2b");
     }
 }

@@ -28,9 +28,7 @@ import java.security.PrivilegedAction;
  * A {@link StageableMethod} is a reference to a stageable injectee
  * and related method to release resources.
  */
-final class StageableMethod
-    extends AbstractBasicStageable<Object>
-{
+final class StageableMethod extends AbstractBasicStageable<Object> {
 
     /**
      * The method to be invoked to stage resources.
@@ -43,9 +41,8 @@ final class StageableMethod
      * @param stageMethod the method to be invoked to stage resources.
      * @param injectee    the target injectee has to stage the resources.
      */
-    StageableMethod( Method stageMethod, Object injectee )
-    {
-        super( injectee );
+    StageableMethod(Method stageMethod, Object injectee) {
+        super(injectee);
         this.stageMethod = stageMethod;
     }
 
@@ -53,34 +50,24 @@ final class StageableMethod
      * {@inheritDoc}
      */
     @Override
-    public final void stage( StageHandler stageHandler )
-    {
-        try
-        {
-            AccessController.doPrivileged( new PrivilegedAction<Void>()
-            {
-
+    public final void stage(StageHandler stageHandler) {
+        try {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
                 @Override
-                public Void run()
-                {
-                    stageMethod.setAccessible( true );
+                public Void run() {
+                    stageMethod.setAccessible(true);
                     return null;
                 }
-
-            } );
-            stageMethod.invoke( object );
-        }
-        catch ( InvocationTargetException e )
-        {
-            stageHandler.onError( object, e.getCause() );
+            });
+            stageMethod.invoke(object);
+        } catch (InvocationTargetException e) {
+            stageHandler.onError(object, e.getCause());
+            return;
+        } catch (Throwable e) {
+            stageHandler.onError(object, e);
             return;
         }
-        catch ( Throwable e )
-        {
-            stageHandler.onError( object, e );
-            return;
-        }
-        stageHandler.onSuccess( object );
+        stageHandler.onSuccess(object);
     }
 
 }

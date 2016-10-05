@@ -28,8 +28,7 @@ import java.util.concurrent.ExecutorService;
  *
  * @author Mikhail Mazursky
  */
-public interface DisposingStager<A extends Annotation> extends Stager<A>
-{
+public interface DisposingStager<A extends Annotation> extends Stager<A> {
 
     /**
      * Register an {@link java.util.concurrent.ExecutorService} to be staged.
@@ -37,7 +36,7 @@ public interface DisposingStager<A extends Annotation> extends Stager<A>
      * @param executorService object to be staged to dispose resources.
      * @return Staged object
      */
-    <T extends ExecutorService> T register( T executorService );
+    <T extends ExecutorService> T register(T executorService);
 
     /**
      * Register a {@link java.io.Closeable} to be staged.
@@ -45,6 +44,6 @@ public interface DisposingStager<A extends Annotation> extends Stager<A>
      * @param closeable object to be staged to dispose resources.
      * @return Staged object
      */
-    <T extends Closeable> T register( T closeable );
+    <T extends Closeable> T register(T closeable);
 
 }

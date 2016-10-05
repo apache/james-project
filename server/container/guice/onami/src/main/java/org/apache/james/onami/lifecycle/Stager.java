@@ -31,15 +31,14 @@ import java.lang.annotation.Annotation;
  * Implementations must be thread-safe because registration can be done from
  * any thread.
  */
-public interface Stager<A extends Annotation>
-{
+public interface Stager<A extends Annotation> {
 
     /**
      * Register a {@link Stageable} to stage resources.
      *
      * @param stageable object to be invoked to stage resources.
      */
-    void register( Stageable stageable );
+    void register(Stageable stageable);
 
     /**
      * Stages resources invoking {@link Stageable#stage(StageHandler)}.
@@ -52,7 +51,7 @@ public interface Stager<A extends Annotation>
      * @param stageHandler the {@link StageHandler} instance that tracks progresses.
      * @since 0.2.0
      */
-    void stage( StageHandler stageHandler );
+    void stage(StageHandler stageHandler);
 
     /**
      * Returns the annotation that represents this stage.

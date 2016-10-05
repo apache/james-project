@@ -22,16 +22,13 @@ package org.apache.james.onami.lifecycle;
 /**
  * NOP {@code StageHandler} implementation.
  */
-public final class NoOpStageHandler
-    implements StageHandler
-{
+public final class NoOpStageHandler implements StageHandler {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <I, E extends Throwable> void onError( I injectee, E error )
-    {
+    public <I, E extends Throwable> void onError(I injectee, E error) {
         // do nothing
     }
 
@@ -39,8 +36,7 @@ public final class NoOpStageHandler
      * {@inheritDoc}
      */
     @Override
-    public <I> void onSuccess( I injectee )
-    {
+    public <I> void onSuccess(I injectee) {
         // do nothing
     }
 

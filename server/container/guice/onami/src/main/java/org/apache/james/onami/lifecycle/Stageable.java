@@ -22,8 +22,7 @@ package org.apache.james.onami.lifecycle;
 /**
  * Object that knows how to stage some resources.
  */
-public interface Stageable
-{
+public interface Stageable {
 
     /**
      * Stage allocated resources, tracking progresses in the
@@ -31,7 +30,7 @@ public interface Stageable
      *
      * @param stageHandler the handler to track progresses.
      */
-    void stage( StageHandler stageHandler );
+    void stage(StageHandler stageHandler);
 
     /**
      * @return Description of a stageable resource.

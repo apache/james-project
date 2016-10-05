@@ -19,20 +19,18 @@
 
 package org.apache.james.onami.lifecycle;
 
-import com.google.inject.TypeLiteral;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import com.google.inject.TypeLiteral;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
+
 /**
  * A Guice {@code TypeListener} to hear annotated methods with lifecycle annotations.
  */
-abstract class AbstractMethodTypeListener
-    implements TypeListener
-{
+abstract class AbstractMethodTypeListener implements TypeListener {
 
     /**
      * The {@code java} package constants.
@@ -49,8 +47,7 @@ abstract class AbstractMethodTypeListener
      *
      * @param annotationTypes the lifecycle annotations to search on methods in the order to be searched.
      */
-    public AbstractMethodTypeListener( List<? extends Class<? extends Annotation>> annotationTypes )
-    {
+    public AbstractMethodTypeListener(List<? extends Class<? extends Annotation>> annotationTypes) {
         this.annotationTypes = annotationTypes;
     }
 
@@ -58,9 +55,8 @@ abstract class AbstractMethodTypeListener
      * {@inheritDoc}
      */
     @Override
-    public final <I> void hear( TypeLiteral<I> type, TypeEncounter<I> encounter )
-    {
-        hear( type, type.getRawType(), encounter );
+    public final <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
+        hear(type, type.getRawType(), encounter);
     }
 
     /**
@@ -70,32 +66,26 @@ abstract class AbstractMethodTypeListener
      * @param klass      encountered by Guice.
      * @param encounter  the injection context.
      */
-    private <I> void hear( final TypeLiteral<I> parentType, Class<? super I> klass, TypeEncounter<I> encounter )
-    {
+    private <I> void hear(final TypeLiteral<I> parentType, Class<? super I> klass, TypeEncounter<I> encounter) {
         Package pkg;
-        if ( klass == null || ( ( pkg = klass.getPackage() ) != null && pkg.getName().startsWith( JAVA_PACKAGE ) ) )
-        {
+        if (klass == null || ((pkg = klass.getPackage()) != null && pkg.getName().startsWith(JAVA_PACKAGE))) {
             return;
         }
 
-        for ( Class<? extends Annotation> annotationType : annotationTypes )
-        {
-            for ( Method method : klass.getDeclaredMethods() )
-            {
-                if ( method.isAnnotationPresent( annotationType ) )
-                {
-                    if ( method.getParameterTypes().length != 0 )
-                    {
-                        encounter.addError( "Annotated methods with @%s must not accept any argument, found %s",
-                                            annotationType.getName(), method );
+        for (Class<? extends Annotation> annotationType : annotationTypes) {
+            for (Method method : klass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(annotationType)) {
+                    if (method.getParameterTypes().length != 0) {
+                        encounter.addError("Annotated methods with @%s must not accept any argument, found %s",
+                            annotationType.getName(), method);
                     }
 
-                    hear( method, parentType, encounter, annotationType );
+                    hear(method, parentType, encounter, annotationType);
                 }
             }
         }
 
-        hear( parentType, klass.getSuperclass(), encounter );
+        hear(parentType, klass.getSuperclass(), encounter);
     }
 
     /**
@@ -106,7 +96,6 @@ abstract class AbstractMethodTypeListener
      * @param encounter      the injection context.
      * @param annotationType the annotation type that was specified.
      */
-    protected abstract <I> void hear( Method method, TypeLiteral<I> parentType, TypeEncounter<I> encounter,
-                                      Class<? extends Annotation> annotationType );
+    protected abstract <I> void hear(Method method, TypeLiteral<I> parentType, TypeEncounter<I> encounter, Class<? extends Annotation> annotationType);
 
 }

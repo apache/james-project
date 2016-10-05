@@ -25,15 +25,14 @@ import com.google.inject.TypeLiteral;
  * Container for mapping a {@link Stageable} to the parent type
  * that created it. Useful in specialty Stage containers.
  */
-public interface StageableTypeMapper
-{
+public interface StageableTypeMapper {
 
     /**
      * Register a new {@link Stageable} with the type that created it
      *
-     * @param stageable stageable
-     * @param parentType     the owning type being heard
+     * @param stageable  stageable
+     * @param parentType the owning type being heard
      */
-    <I> void registerType( Stageable stageable, TypeLiteral<I> parentType );
+    <I> void registerType(Stageable stageable, TypeLiteral<I> parentType);
 
 }

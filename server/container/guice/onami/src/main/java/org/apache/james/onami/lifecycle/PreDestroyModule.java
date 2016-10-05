@@ -19,9 +19,9 @@
 
 package org.apache.james.onami.lifecycle;
 
-import com.google.inject.TypeLiteral;
-
 import javax.annotation.PreDestroy;
+
+import com.google.inject.TypeLiteral;
 
 /**
  * Guice module to register methods to be invoked when {@link org.apache.onami.lifecycle.core.Stager#stage()} is invoked.
@@ -30,22 +30,17 @@ import javax.annotation.PreDestroy;
  *
  * @author Mikhail Mazursky
  */
-public class PreDestroyModule
-    extends LifeCycleStageModule
-{
+public class PreDestroyModule extends LifeCycleStageModule {
 
-    private final DisposingStager<PreDestroy> stager = new DefaultStager<PreDestroy>(
-        PreDestroy.class, DefaultStager.Order.FIRST_IN_LAST_OUT );
+    private final DisposingStager<PreDestroy> stager = new DefaultStager<PreDestroy>(PreDestroy.class, DefaultStager.Order.FIRST_IN_LAST_OUT);
 
     @Override
-    protected void configureBindings()
-    {
-        bindStager( stager );
-        bind( new TypeLiteral<DisposingStager<PreDestroy>>() {} ).toInstance( stager );
+    protected void configureBindings() {
+        bindStager(stager);
+        bind(new TypeLiteral<DisposingStager<PreDestroy>>() {}).toInstance(stager);
     }
 
-    public DisposingStager<PreDestroy> getStager()
-    {
+    public DisposingStager<PreDestroy> getStager() {
         return stager;
     }
 

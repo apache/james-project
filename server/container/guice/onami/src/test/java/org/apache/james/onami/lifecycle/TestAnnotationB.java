@@ -19,15 +19,14 @@
 
 package org.apache.james.onami.lifecycle;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Retention( RUNTIME )
-@Target( METHOD )
-public @interface TestAnnotationB
-{
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface TestAnnotationB {
 
 }

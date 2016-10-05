@@ -22,55 +22,46 @@ package org.apache.james.onami.lifecycle;
 import javax.inject.Singleton;
 
 @Singleton
-public class MultiLifeCycleObject
-{
+public class MultiLifeCycleObject {
     private final StringBuilder str = new StringBuilder();
 
     @TestAnnotationC
-    public void foo()
-    {
-        str.append( "c" );
+    public void foo() {
+        str.append("c");
     }
 
     @TestAnnotationA
-    public void aaa()
-    {
-        str.append( "a" );
+    public void aaa() {
+        str.append("a");
     }
 
     @TestAnnotationB
-    public void bbb()
-    {
-        str.append( "b" );
+    public void bbb() {
+        str.append("b");
     }
 
     @TestAnnotationA
-    public void mmm()
-    {
-        str.append( "a" );
+    public void mmm() {
+        str.append("a");
     }
 
     @TestAnnotationB
-    public void nnn()
-    {
-        str.append( "b" );
+    public void nnn() {
+        str.append("b");
     }
 
     @TestAnnotationB
-    public void qqq()
-    {
-        str.append( "b" );
+    public void qqq() {
+        str.append("b");
     }
 
     @TestAnnotationA
-    public void zzz()
-    {
-        str.append( "a" );
+    public void zzz() {
+        str.append("a");
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return str.toString();
     }
 }

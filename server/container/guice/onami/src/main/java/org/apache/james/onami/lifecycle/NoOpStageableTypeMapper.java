@@ -21,13 +21,10 @@ package org.apache.james.onami.lifecycle;
 
 import com.google.inject.TypeLiteral;
 
-class NoOpStageableTypeMapper
-    implements StageableTypeMapper
-{
+class NoOpStageableTypeMapper implements StageableTypeMapper {
 
     @Override
-    public <I> void registerType( Stageable stageable, TypeLiteral<I> parentType )
-    {
+    public <I> void registerType(Stageable stageable, TypeLiteral<I> parentType) {
         // NOP
     }
 
