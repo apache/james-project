@@ -96,21 +96,21 @@ public class MailboxAnnotationKeyTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void keyMustContainAtLeastTwoComponents() throws Exception {
-        MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private");
+        new MailboxAnnotationKey("/private");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void keyVendorShouldThrowsExceptionWithTwoComponents() throws Exception {
-        MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private/vendor");
+        new MailboxAnnotationKey("/private/vendor");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void keyVendorShouldThrowsExceptionWithThreeComponents() throws Exception {
-        MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/shared/vendor/token");
+        new MailboxAnnotationKey("/shared/vendor/token");
     }
 
     @Test
     public void keyVendorShouldOKWithFourComponents() throws Exception {
-        MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/shared/vendor/token/comment");
+        new MailboxAnnotationKey("/shared/vendor/token/comment");
     }
 }

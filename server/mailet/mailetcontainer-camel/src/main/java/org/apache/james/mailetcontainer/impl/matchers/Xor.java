@@ -28,7 +28,6 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Matcher;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 

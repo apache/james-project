@@ -21,7 +21,6 @@ package org.apache.james.jmap.memory.vacation;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.jmap.api.vacation.AccountId;

@@ -44,32 +44,32 @@ public class VacationPatchTest {
 
     @Test
     public void fromDateShouldThrowNPEOnNullInput() {
-        assertThatThrownBy(() -> VacationPatch.builder().fromDate((ValuePatch) null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> VacationPatch.builder().fromDate((ValuePatch<ZonedDateTime>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void toDateShouldThrowNPEOnNullInput() {
-        assertThatThrownBy(() -> VacationPatch.builder().toDate((ValuePatch) null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> VacationPatch.builder().toDate((ValuePatch<ZonedDateTime>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void textBodyShouldThrowNPEOnNullInput() {
-        assertThatThrownBy(() -> VacationPatch.builder().textBody((ValuePatch) null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> VacationPatch.builder().textBody((ValuePatch<String>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void htmlBodyShouldThrowNPEOnNullInput() {
-        assertThatThrownBy(() -> VacationPatch.builder().htmlBody((ValuePatch) null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> VacationPatch.builder().htmlBody((ValuePatch<String>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void subjectShouldThrowNPEOnNullInput() {
-        assertThatThrownBy(() -> VacationPatch.builder().subject((ValuePatch) null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> VacationPatch.builder().subject((ValuePatch<String>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void isEnabledShouldThrowNPEOnNullInput() {
-        assertThatThrownBy(() -> VacationPatch.builder().isEnabled((ValuePatch) null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> VacationPatch.builder().isEnabled((ValuePatch<Boolean>) null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
