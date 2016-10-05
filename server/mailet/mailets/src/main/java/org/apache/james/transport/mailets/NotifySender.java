@@ -143,11 +143,6 @@ public class NotifySender extends AbstractRedirect {
     }
 
     @Override
-    protected boolean isNotifyMailet() {
-        return true;
-    }
-
-    @Override
     protected String getMessage(Mail originalMail) throws MessagingException {
         return new NotifyMailetsMessage().generateMessage(getInitParameters().getMessage(), originalMail);
     }

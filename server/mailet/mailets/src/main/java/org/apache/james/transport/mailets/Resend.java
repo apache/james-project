@@ -303,11 +303,6 @@ public class Resend extends AbstractRedirect {
     }
 
     @Override
-    protected boolean isNotifyMailet() {
-        return false;
-    }
-
-    @Override
     protected String getMessage(Mail originalMail) throws MessagingException {
         return getInitParameters().getMessage();
     }

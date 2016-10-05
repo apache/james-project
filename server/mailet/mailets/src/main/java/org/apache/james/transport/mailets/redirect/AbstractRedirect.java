@@ -156,7 +156,6 @@ public abstract class AbstractRedirect extends GenericMailet {
 
     private static final char LINE_BREAK = '\n';
 
-    protected abstract boolean isNotifyMailet();
     protected abstract InitParameters getInitParameters();
 
     protected abstract String[] getAllowedInitParameters();
@@ -475,30 +474,6 @@ public abstract class AbstractRedirect extends GenericMailet {
      * method.
      */
     protected abstract void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
-//        if (isNotifyMailet()) {
-//            new MimeMessageModifier(originalMail.getMessage()).addSubjectPrefix(subjectPrefix);
-//        }
-//
-//        String subject = getInitParameters().getSubject();
-//        if (!Strings.isNullOrEmpty(subjectPrefix) || subject != null) {
-//            String newSubject = Strings.nullToEmpty(subject);
-//            if (subject == null) {
-//                newSubject = Strings.nullToEmpty(originalMail.getMessage().getSubject());
-//            } else {
-//                if (getInitParameters().isDebug()) {
-//                    log("subject set to: " + subject);
-//                }
-//            }
-//
-//            if (subjectPrefix != null) {
-//                newSubject = subjectPrefix + newSubject;
-//                if (getInitParameters().isDebug()) {
-//                    log("subjectPrefix set to: " + subjectPrefix);
-//                }
-//            }
-//            changeSubject(newMail.getMessage(), newSubject);
-//        }
-//    }
 
     protected Optional<String> getNewSubject(String subjectPrefix, Mail originalMail) throws MessagingException {
         String subject = getInitParameters().getSubject();

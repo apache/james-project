@@ -51,11 +51,6 @@ public class AbstractRedirectTest {
     private class TesteeRedirect extends AbstractRedirect {
 
         @Override
-        protected boolean isNotifyMailet() {
-            return false;
-        }
-
-        @Override
         protected String[] getAllowedInitParameters() {
             return null;
         }
