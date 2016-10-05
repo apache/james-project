@@ -47,6 +47,7 @@
         <module>impl/managesieve</module>
         <module>impl/smtp</module>
         <module>mavenplugin</module>
+        <module>onami-test</module>
     </modules>
 
     <issueManagement>
