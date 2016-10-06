@@ -180,6 +180,10 @@
 
       <subsection name="News">
         <ul>
+          <li>Oct/2016 - <ul>
+          <li><a href="newsarchive.html#20161001">We choosed a new logo! <img src='images/james-logo.png' alt='New James logo'/></a></li>
+          </ul>
+          </li>
           <li>Sep/2016 - <ul>
           <li><a href="newsarchive.html#20160901"><strong>Apache James Server 3.0</strong> We are currently working on the release.</a></li>
           </ul>
