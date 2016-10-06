@@ -50,6 +50,10 @@ To deploy the technical reports use the "-Psite-reports" profile.
 For wagon-ssh-external configuration see
 http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html
 
+You can alternatively use a docker container to build the website :
+
+    $ docker build -t james/site dockerfiles/site                                                       
+    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master                                     
 
 Howto release via maven release plugin
 ======================================
