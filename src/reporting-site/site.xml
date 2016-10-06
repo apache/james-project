@@ -31,14 +31,14 @@
 
     <bannerLeft>
         <name>James Server</name>
-        <src>images/logos/james-server-logo.gif</src>
+        <src>images/logos/james-logo.png</src>
         <href>http://james.apache.org/index.html</href>
-        <alt>james-project-logo.gif</alt>
+        <alt>james-logo.png</alt>
     </bannerLeft>
 
     <bannerRight>
         <name>The Apache Software Foundation</name>
-        <src>images/logos/asf-logo-reduced.gif</src>
+        <src>images/asf_logo_small.png</src>
         <href>http://www.apache.org/index.html</href>
     </bannerRight>
 

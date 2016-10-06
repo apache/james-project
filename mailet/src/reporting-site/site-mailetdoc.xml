@@ -21,9 +21,9 @@
 
     <bannerLeft>
         <name>JAMES MailetDocs Maven Plugin</name>
-        <src>/images/logos/james-mailetdocs-logo.gif</src>
+        <src>images/logos/james-logo.png</src>
         <href>http://james.apache.org/mailet/index.html</href>
-        <alt>james-mailetdocs-logo.gif</alt>
+        <alt>james-logo.png</alt>
     </bannerLeft>
 
     <body>

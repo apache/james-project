@@ -21,9 +21,9 @@
 
     <bannerLeft>
         <name>JAMES MPT</name>
-        <src>images/logo/james-mpt-logo.gif</src>
+        <src>images/logos/james-logo.png</src>
         <href>http://james.apache.org/mpt/index.html</href>
-        <alt>james-mpt-logo.gif</alt>
+        <alt>james-logo.png</alt>
     </bannerLeft>
 
     <body>

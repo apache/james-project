@@ -36,6 +36,14 @@
     <version>3.0.0-beta5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-skin</artifactId>
+            <version>1.7</version>
+        </dependency>
+    </dependencies>
+
     <name>Apache James Project</name>
     <description>
         The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP and POP3 Mail

@@ -27,9 +27,9 @@
 
   <bannerLeft>
     <name>James Server</name>
-    <src>images/logos/james-server-logo.gif</src>
+    <src>images/logos/james-logo.png</src>
     <href>http://james.apache.org/server/index.html</href>
-    <alt>james-server-logo.gif</alt>
+    <alt>james-logo.png</alt>
   </bannerLeft>
   
   <body>

@@ -87,47 +87,29 @@
         <section name='Further Information'>
             <ul>
                 <li>
-                    <a href='api/index.html'>
-                        <img src='images/logos/james-mailetapi-logo.gif' alt='Mailet API logo'/>
-                    </a>
-                    <br/>
+                    <a href='api/index.html'>Mailet API</a>
                     describes the API implemented by Mailets
                 </li>
                 <li>
-                    <a href='base/index.html'>
-                        <img src='images/logos/james-mailet-base-logo.gif' alt='Mailet Base logo'/>
-                    </a>
-                    <br/>
+                    <a href='base/index.html'>Mailet Base</a>
                     is a basic toolkit aimed at developers of Mailet implementations
                 </li>
                 <li>
-                    <a href='standard/index.html'>
-                        <img src='images/logos/james-standard-mailets-logo.gif' alt='Standard Mailets logo'/>
-                    </a>
-                    <br/>
+                    <a href='standard/index.html'>Standard Mailets</a>
                     is a collection of basic Mailets with minimal dependencies
                 </li>
                 <li>
-                    <a href='crypto/index.html'>
-                        <img src='images/logos/james-crypto-mailets-logo.gif' alt='Crypto Mailets logo'/>
-                    </a>
-                    <br/>
+                    <a href='crypto/index.html'>Crypto Mailets</a>
                     contains cryptographic Mailets which can be used to sign and verify signatures
                 </li>
                 <li>
-                    <a href='http://james.apache.org/jsieve/mailet/index.html'>
-                        <img src='http://james.apache.org/jsieve/mailet/images/james-jsieve-logo.gif' alt='JSieve log'/>
-                    </a>
-                    <br/>
+                    <a href='http://james.apache.org/jsieve/mailet/index.html'>JSieve</a>
                     contains mailets using the
                     <a href='http://www.ietf.org/rfc/rfc3028.txt'>Sieve</a>
                     mail filter language
                 </li>
                 <li>
-                    <a href='mailetdocs-maven-plugin/index.html'>
-                        <img src='images/logos/james-mailetdocs-logo.gif' alt='Mailetdocs logo'/>
-                    </a>
-                    <br/>
+                    <a href='mailetdocs-maven-plugin/index.html'>Mailetdocs</a>
                     generates catelogs and documentation for mailets.
                 </li>
             </ul>
