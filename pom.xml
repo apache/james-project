@@ -36,14 +36,6 @@
     <version>3.0.0-beta5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-skin</artifactId>
-            <version>1.7</version>
-        </dependency>
-    </dependencies>
-
     <name>Apache James Project</name>
     <description>
         The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP and POP3 Mail
@@ -560,7 +552,7 @@
         -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <target.jdk>1.6</target.jdk>
-        <james-skin.version>1.7</james-skin.version>
+        <james-skin.version>1.8</james-skin.version>
         <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
