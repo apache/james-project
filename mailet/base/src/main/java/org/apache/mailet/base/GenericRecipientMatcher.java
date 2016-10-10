@@ -20,13 +20,15 @@
 
 package org.apache.mailet.base;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
-import java.util.Collection;
-import java.util.Vector;
+import com.google.common.collect.ImmutableList;
 
 /**
  * GenericMatcher makes writing recipient based matchers easier. It provides
@@ -47,13 +49,13 @@ public abstract class GenericRecipientMatcher extends GenericMatcher {
      * @return Collection the Collection of MailAddress objects that have been matched
      */
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> matching = new Vector<MailAddress>();
-        for (MailAddress rec : mail.getRecipients()) {
-            if (matchRecipient(rec)) {
-                matching.add(rec);
+        Collection<MailAddress> matching = new ArrayList<MailAddress>();
+        for (MailAddress recipient : mail.getRecipients()) {
+            if (matchRecipient(recipient)) {
+                matching.add(recipient);
             }
         }
-        return matching;
+        return ImmutableList.copyOf(matching);
     }
 
     /**

@@ -1218,8 +1218,10 @@ public abstract class SetMessagesMethodTest {
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, username, "sent");
         // Recipient
         String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String bccRecipient = "bob@" + USERS_DOMAIN;
         String password = "password";
         jmapServer.serverProbe().addUser(recipientAddress, password);
+        jmapServer.serverProbe().addUser(bccRecipient, password);
         jmapServer.serverProbe().createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, "inbox");
         await();
         AccessToken recipientToken = JmapAuthentication.authenticateJamesUser(recipientAddress, password);
@@ -1233,7 +1235,7 @@ public abstract class SetMessagesMethodTest {
                 "      \"create\": { \"" + messageCreationId  + "\" : {" +
                 "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
-                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + USERS_DOMAIN + "\"}]," +
+                "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"" + bccRecipient + "\"}]," +
                 "        \"cc\": [{ \"name\": \"ALICE\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
                 "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +

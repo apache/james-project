@@ -56,7 +56,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
      * @see org.apache.mailet.base.GenericMailet#service(org.apache.mailet.Mail)
      */
     public void service(Mail mail) throws MessagingException {
-        Collection<MailAddress> recipients = mail.getRecipients();
+        Collection<MailAddress> recipients = new ArrayList<MailAddress>(mail.getRecipients());
         Collection<MailAddress> errors = new Vector<MailAddress>();
 
         MimeMessage message = mail.getMessage();
@@ -104,7 +104,7 @@ public abstract class AbstractRecipientRewriteTableMailet extends GenericMailet 
             // In the future we may wish to address this.
             getMailetContext().sendMail(mail.getSender(), errors, message, Mail.ERROR);
         }
-
+        mail.setRecipients(recipients);
         if (recipients.size() == 0) {
             // We always consume this message
             mail.setState(Mail.GHOST);

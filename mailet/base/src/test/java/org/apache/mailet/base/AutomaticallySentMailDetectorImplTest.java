@@ -21,6 +21,7 @@ package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -35,6 +36,26 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.Test;
 
 public class AutomaticallySentMailDetectorImplTest {
+
+    @Test
+    public void nullSenderMailsShouldBeConsideredAsAutomaticMails() throws Exception {
+        assertThat(
+            new AutomaticallySentMailDetectorImpl()
+                .isAutomaticallySent(FakeMail.builder()
+                    .build()))
+            .isTrue();
+    }
+
+    @Test
+    public void nonNullSenderMailsShouldNotBeConsideredAsAutomaticMails() throws Exception {
+        assertThat(
+            new AutomaticallySentMailDetectorImpl()
+                .isAutomaticallySent(FakeMail.builder()
+                    .sender(MailAddressFixture.ANY_AT_JAMES)
+                    .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream("".getBytes())))
+                    .build()))
+            .isFalse();
+    }
 
     @Test
     public void ownerIsAMailingListPrefix() throws Exception {

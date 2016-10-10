@@ -46,7 +46,8 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             "List-Archive" };
 
     public boolean isAutomaticallySent(Mail mail) throws MessagingException {
-        return isMailingList(mail) ||
+        return mail.getSender() == null ||
+            isMailingList(mail) ||
             isAutoSubmitted(mail) ||
             isMdnSentAutomatically(mail);
     }
