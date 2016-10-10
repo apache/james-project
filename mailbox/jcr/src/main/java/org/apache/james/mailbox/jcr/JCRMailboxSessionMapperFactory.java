@@ -73,6 +73,11 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     }
 
     @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
         return new JCRSubscriptionMapper(repository, session, DEFAULT_SCALING);
     }
@@ -102,8 +107,4 @@ public class JCRMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
         return modSeqProvider;
     }
 
-    @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
-    }
 }

@@ -60,6 +60,11 @@ public class MaildirMailboxSessionMapperFactory extends
     }
 
     @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session)
             throws SubscriptionException {
         return new MaildirSubscriptionMapper(store);
@@ -88,9 +93,4 @@ public class MaildirMailboxSessionMapperFactory extends
         throw new NotImplementedException();
     }
 
-
-    @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
-    }
 }

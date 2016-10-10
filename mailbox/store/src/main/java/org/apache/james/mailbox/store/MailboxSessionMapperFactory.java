@@ -62,6 +62,15 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         return mapper;
     }
 
+    public MessageIdMapper getMessageIdMapper(MailboxSession session) throws MailboxException {
+        MessageIdMapper mapper = (MessageIdMapper) session.getAttributes().get(MESSAGEIDMAPPER);
+        if (mapper == null) {
+            mapper = createMessageIdMapper(session);
+            session.getAttributes().put(MESSAGEIDMAPPER, mapper);
+        }
+        return mapper;
+    }
+
     public AttachmentMapper getAttachmentMapper(MailboxSession session) throws MailboxException {
         AttachmentMapper mapper = (AttachmentMapper) session.getAttributes().get(ATTACHMENTMAPPER);
         if (mapper == null) {
@@ -90,6 +99,9 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
      * @throws MailboxException
      */
     public abstract MessageMapper createMessageMapper(MailboxSession session) throws MailboxException;
+
+
+    public abstract MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException;
 
     public abstract AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException;
 

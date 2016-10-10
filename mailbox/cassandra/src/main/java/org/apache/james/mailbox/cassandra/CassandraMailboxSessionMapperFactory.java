@@ -79,6 +79,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession mailboxSession) throws MailboxException {
+        return null;
+    }
+
+    @Override
     public MailboxMapper createMailboxMapper(MailboxSession mailboxSession) {
         return new CassandraMailboxMapper(session, typesProvider, maxRetry);
     }

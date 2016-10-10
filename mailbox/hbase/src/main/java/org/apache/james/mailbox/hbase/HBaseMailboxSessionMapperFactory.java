@@ -140,6 +140,11 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
     }
 
     @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) throws MailboxException {
         return new HBaseMailboxMapper(this.conf);
     }
@@ -184,8 +189,4 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
         throw new NotImplementedException();
     }
 
-    @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
-    }
 }

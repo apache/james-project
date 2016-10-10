@@ -69,6 +69,11 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     }
 
     @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
+        throw new NotImplementedException();
+    }
+
+    @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
         return new JPASubscriptionMapper(entityManagerFactory);
     }
@@ -103,8 +108,4 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
         return modSeqProvider;
     }
 
-    @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
-    }
 }

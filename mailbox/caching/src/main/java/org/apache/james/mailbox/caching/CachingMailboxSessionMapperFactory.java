@@ -22,7 +22,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * 
  */
 public class CachingMailboxSessionMapperFactory extends
-		MailboxSessionMapperFactory {
+        MailboxSessionMapperFactory {
 
 	private final MailboxSessionMapperFactory underlying;
 	private final MailboxByPathCache mailboxByPathCache;
@@ -40,17 +40,17 @@ public class CachingMailboxSessionMapperFactory extends
 		return new CachingMessageMapper(underlying.createMessageMapper(session), mailboxMetadataCache);
 	}
 
-	@Override
-	public MailboxMapper createMailboxMapper(MailboxSession session)
-			throws MailboxException {
-		return new CachingMailboxMapper(underlying.createMailboxMapper(session), mailboxByPathCache);
-	}
+    @Override
+    public MailboxMapper createMailboxMapper(MailboxSession session)
+            throws MailboxException {
+        return new CachingMailboxMapper(underlying.createMailboxMapper(session), mailboxByPathCache);
+    }
 
-	@Override
-	public SubscriptionMapper createSubscriptionMapper(MailboxSession session)
-			throws SubscriptionException {
-		return underlying.createSubscriptionMapper(session);
-	}
+    @Override
+    public SubscriptionMapper createSubscriptionMapper(MailboxSession session)
+            throws SubscriptionException {
+        return underlying.createSubscriptionMapper(session);
+    }
 
     @Override
     public AttachmentMapper createAttachmentMapper(MailboxSession session) throws MailboxException {

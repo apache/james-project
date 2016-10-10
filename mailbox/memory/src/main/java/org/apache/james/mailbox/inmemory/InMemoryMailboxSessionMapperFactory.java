@@ -70,6 +70,11 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) {
+        return null;
+    }
+
+    @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException {
         return subscriptionMapper;
     }
@@ -101,8 +106,4 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
         return modSeqProvider;
     }
 
-    @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
-    }
 }
