@@ -35,6 +35,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
@@ -74,6 +75,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     public CassandraMessageMapper createMessageMapper(MailboxSession mailboxSession) {
         return new CassandraMessageMapper(session, uidProvider, modSeqProvider, null, maxRetry, 
                 typesProvider, createAttachmentMapper(mailboxSession), messageIdFactory);
+    }
+
+    @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession mailboxSession) throws MailboxException {
+        return null;
     }
 
     @Override

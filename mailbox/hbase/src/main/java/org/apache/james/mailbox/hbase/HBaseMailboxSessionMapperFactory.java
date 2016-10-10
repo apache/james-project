@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.NoopAttachmentMapper;
@@ -136,6 +137,11 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) throws MailboxException {
         return new HBaseMessageMapper(session, uidProvider, modSeqProvider, messageIdFactory, this.conf);
+    }
+
+    @Override
+    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
+        throw new NotImplementedException();
     }
 
     @Override
