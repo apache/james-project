@@ -32,6 +32,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
@@ -86,7 +87,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
             .andReturn(user);
 
         Mailbox mailbox = control.createMock(Mailbox.class);
-        long messageId = 1;
+        MessageUid messageId = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
         MailboxMessage message = mockedMessage(messageId);
@@ -100,7 +101,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         control.verify();
     }
 
-    private MailboxMessage mockedMessage(long messageId) throws IOException {
+    private MailboxMessage mockedMessage(MessageUid messageId) throws IOException {
         MailboxMessage message = control.createMock(MailboxMessage.class);
         expect(message.getUid()).andReturn(messageId).anyTimes();
         return message;
@@ -115,7 +116,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
         Mailbox mailbox = control.createMock(Mailbox.class);
         
-        long messageId = 1;
+        MessageUid messageId = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         MailboxMessage message = mockedMessage(messageId);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
@@ -133,7 +134,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void deleteShouldWork() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
         Mailbox mailbox = control.createMock(Mailbox.class);
-        long messageId = 1;
+        MessageUid messageId = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId);
         
@@ -151,11 +152,11 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void deleteShouldWorkWhenMultipleMessageIds() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
         Mailbox mailbox = control.createMock(Mailbox.class);
-        long messageId1 = 1;
-        long messageId2 = 2;
-        long messageId3 = 3;
-        long messageId4 = 4;
-        long messageId5 = 5;
+        MessageUid messageId1 = MessageUid.of(1);
+        MessageUid messageId2 = MessageUid.of(2);
+        MessageUid messageId3 = MessageUid.of(3);
+        MessageUid messageId4 = MessageUid.of(4);
+        MessageUid messageId5 = MessageUid.of(5);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId).times(5);
 
@@ -173,7 +174,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
     public void deleteShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         MailboxSession session = control.createMock(MailboxSession.class);
         Mailbox mailbox = control.createMock(Mailbox.class);
-        long messageId = 1;
+        MessageUid messageId = MessageUid.of(1);
         TestId mailboxId = TestId.of(12);
         expect(mailbox.getMailboxId()).andReturn(mailboxId).times(2);
         
@@ -193,7 +194,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
         Mailbox mailbox = control.createMock(Mailbox.class);
 
         Flags flags = new Flags();
-        long messageId = 1;
+        MessageUid messageId = MessageUid.of(1);
         UpdatedFlags updatedFlags = new UpdatedFlags(messageId, MODSEQ, flags, flags);
         TestId mailboxId = TestId.of(12);
 
@@ -216,7 +217,7 @@ public class ElasticSearchListeningMailboxMessageSearchIndexTest {
 
         Mailbox mailbox = control.createMock(Mailbox.class);
         Flags flags = new Flags();
-        long messageId = 1;
+        MessageUid messageId = MessageUid.of(1);
         UpdatedFlags updatedFlags = new UpdatedFlags(messageId, MODSEQ, flags, flags);
         TestId mailboxId = TestId.of(12);
 

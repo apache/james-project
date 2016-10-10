@@ -1,11 +1,13 @@
 package org.apache.james.mailbox.caching.guava;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.caching.MailboxMetadataCache;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 /**
  * Guava-based implementation of MailboxMetadataCache.
@@ -18,15 +20,15 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
 	// TODO these can probably be instantiated more elegant way
 	private final Cache<MailboxId, Long> cacheCountMessagesInMailbox = BUILDER.build();
 	private final Cache<MailboxId, Long> cacheCountUnseenMessagesInMailbox = BUILDER.build();
-	private final Cache<MailboxId, Long> cacheFindFirstUnseenMessageUid = BUILDER.build();
-	private final Cache<MailboxId, Long> cacheGetLastUid = BUILDER.build();
+	private final Cache<MailboxId, MessageUid> cacheFindFirstUnseenMessageUid = BUILDER.build();
+	private final Cache<MailboxId, Optional<MessageUid>> cacheGetLastUid = BUILDER.build();
 	private final Cache<MailboxId, Long> cacheGetHighestModSeq = BUILDER.build();
 
-	private final MetadataCacheWrapper countMessagesInMailboxWrapper = new CountMessagesInMailboxWrapper(cacheCountMessagesInMailbox);
-	private final MetadataCacheWrapper countUnseenMessagesInMailboxWrapper = new CountUnseenMessagesInMailboxWrapper(cacheCountUnseenMessagesInMailbox);
-	private final MetadataCacheWrapper findFirstUnseenMessageUid = new FindFirstUnseenMessageUidWrapper(cacheFindFirstUnseenMessageUid);
-	private final MetadataCacheWrapper highestModSeqWrapper = new HighestModseqCacheWrapper(cacheGetHighestModSeq);
-	private final MetadataCacheWrapper lastUidWrapper = new LastUidCacheWrapper(cacheGetLastUid);
+	private final MetadataCacheWrapper<Long> countMessagesInMailboxWrapper = new CountMessagesInMailboxWrapper(cacheCountMessagesInMailbox);
+	private final MetadataCacheWrapper<Long> countUnseenMessagesInMailboxWrapper = new CountUnseenMessagesInMailboxWrapper(cacheCountUnseenMessagesInMailbox);
+	private final MetadataCacheWrapper<MessageUid> findFirstUnseenMessageUid = new FindFirstUnseenMessageUidWrapper(cacheFindFirstUnseenMessageUid);
+	private final MetadataCacheWrapper<Long> highestModSeqWrapper = new HighestModseqCacheWrapper(cacheGetHighestModSeq);
+	private final MetadataCacheWrapper<Optional<MessageUid>> lastUidWrapper = new LastUidCacheWrapper(cacheGetLastUid);
 	
 	@Override
 	public long countMessagesInMailbox(Mailbox mailbox, MessageMapper underlying) throws MailboxException {
@@ -40,13 +42,13 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
 	}
 	
 	@Override
-	public Long findFirstUnseenMessageUid(Mailbox mailbox, MessageMapper underlying)
+	public MessageUid findFirstUnseenMessageUid(Mailbox mailbox, MessageMapper underlying)
 			throws MailboxException {
 		return findFirstUnseenMessageUid.get(mailbox, underlying);
 	}
 	
 	@Override
-	public long getLastUid(Mailbox mailbox, MessageMapper underlying) throws MailboxException {
+	public Optional<MessageUid> getLastUid(Mailbox mailbox, MessageMapper underlying) throws MailboxException {
 		return lastUidWrapper.get(mailbox, underlying);
 
 	}
@@ -66,9 +68,9 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
 	}
 
 	
-	abstract class MetadataCacheWrapper extends GuavaCacheWrapper<Mailbox, Long, MessageMapper, MailboxId, MailboxException> {
+	abstract class MetadataCacheWrapper<Value> extends GuavaCacheWrapper<Mailbox, Value, MessageMapper, MailboxId, MailboxException> {
 
-		public MetadataCacheWrapper(Cache<MailboxId, Long> cache) {
+		public MetadataCacheWrapper(Cache<MailboxId, Value> cache) {
 			super(cache);
 		}
 
@@ -79,7 +81,7 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
 		
 	}
 
-	class CountMessagesInMailboxWrapper extends MetadataCacheWrapper {
+	class CountMessagesInMailboxWrapper extends MetadataCacheWrapper<Long> {
 
 		public CountMessagesInMailboxWrapper(Cache<MailboxId, Long> cache) {
 			super(cache);
@@ -92,7 +94,7 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
 
 	}
 	
-	class CountUnseenMessagesInMailboxWrapper extends MetadataCacheWrapper {
+	class CountUnseenMessagesInMailboxWrapper extends MetadataCacheWrapper<Long> {
 
 		public CountUnseenMessagesInMailboxWrapper(Cache<MailboxId, Long> cache) {
 			super(cache);
@@ -105,30 +107,30 @@ public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements Mai
 
 	}
 
-	class FindFirstUnseenMessageUidWrapper extends MetadataCacheWrapper {
+	class FindFirstUnseenMessageUidWrapper extends MetadataCacheWrapper<MessageUid> {
 
-		public FindFirstUnseenMessageUidWrapper(Cache<MailboxId, Long> cache) {
+		public FindFirstUnseenMessageUidWrapper(Cache<MailboxId, MessageUid> cache) {
 			super(cache);
 		}
 		@Override
-		public Long load(Mailbox mailbox, MessageMapper underlying)
+		public MessageUid load(Mailbox mailbox, MessageMapper underlying)
 				throws MailboxException {
 			return underlying.findFirstUnseenMessageUid(mailbox);
 		}
 
 	}
 
-	class LastUidCacheWrapper extends MetadataCacheWrapper {
-		public LastUidCacheWrapper(Cache<MailboxId, Long> cache) {
+	class LastUidCacheWrapper extends MetadataCacheWrapper<Optional<MessageUid>> {
+		public LastUidCacheWrapper(Cache<MailboxId, Optional<MessageUid>> cache) {
 			super(cache);
 		}
 		@Override
-		public Long load(Mailbox mailbox, MessageMapper underlying) throws MailboxException {
+		public Optional<MessageUid> load(Mailbox mailbox, MessageMapper underlying) throws MailboxException {
 			return underlying.getLastUid(mailbox);
 		}
 	}
 
-	class HighestModseqCacheWrapper extends MetadataCacheWrapper {
+	class HighestModseqCacheWrapper extends MetadataCacheWrapper<Long> {
 		public HighestModseqCacheWrapper(Cache<MailboxId, Long> cache) {
 			super(cache);
 		}

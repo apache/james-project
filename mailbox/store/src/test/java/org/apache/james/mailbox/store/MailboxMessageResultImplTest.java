@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,9 +43,9 @@ public class MailboxMessageResultImplTest {
     public void initNames() throws Exception
     {
         Date dateAB = new Date();
-        MailboxMessage msgA = buildMessage(100, dateAB);
-        MailboxMessage msgB = buildMessage(100, dateAB);
-        MailboxMessage msgC = buildMessage(200, new Date());
+        MailboxMessage msgA = buildMessage(MessageUid.of(100), dateAB);
+        MailboxMessage msgB = buildMessage(MessageUid.of(100), dateAB);
+        MailboxMessage msgC = buildMessage(MessageUid.of(200), new Date());
         
         msgResultA = new MessageResultImpl(msgA);
         msgResultACopy = new MessageResultImpl(msgA);
@@ -53,7 +54,7 @@ public class MailboxMessageResultImplTest {
     }
 
 
-    private MailboxMessage buildMessage(int uid, Date aDate) throws Exception {
+    private MailboxMessage buildMessage(MessageUid uid, Date aDate) throws Exception {
         MessageBuilder builder = new MessageBuilder();
         builder.uid = uid;
         builder.internalDate = aDate;

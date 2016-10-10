@@ -21,16 +21,17 @@ package org.apache.james.mailbox.store.mail.model;
 
 import java.util.Map;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.assertj.core.api.AbstractAssert;
 
-public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<Long, MessageMetaData>> {
+public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<MessageUid, MessageMetaData>> {
 
-    public MetadataMapAssert(Map<Long, MessageMetaData> actual) {
+    public MetadataMapAssert(Map<MessageUid, MessageMetaData> actual) {
         super(actual, MetadataMapAssert.class);
     }
 
-    public static MetadataMapAssert assertThat(Map<Long, MessageMetaData> actual) {
+    public static MetadataMapAssert assertThat(Map<MessageUid, MessageMetaData> actual) {
         return new MetadataMapAssert(actual);
     }
 
@@ -43,7 +44,7 @@ public class MetadataMapAssert extends AbstractAssert<MetadataMapAssert, Map<Lon
 
     public MetadataMapAssert containsMetadataForMessages(MailboxMessage... messages) {
         for(MailboxMessage message : messages) {
-            if (actual.get(message.getUid()).getUid() != message.getUid()) {
+            if (! actual.get(message.getUid()).getUid().equals(message.getUid())) {
                 failWithMessage("Expected UID stored in MessageMetadata to be <%s> but was <%s>", actual.get(message.getUid()).getUid(), message.getUid());
             }
             if (!actual.get(message.getUid()).getInternalDate().equals(message.getInternalDate())) {

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -118,7 +119,7 @@ public class IndexableMessage {
             .collect(Collectors.joining(" "));
     }
 
-    private Long id;
+    private MessageUid id;
     private String mailboxId;
     private List<String> users;
     private long modSeq;
@@ -149,7 +150,7 @@ public class IndexableMessage {
 
     @JsonProperty(JsonMessageConstants.ID)
     public Long getId() {
-        return id;
+        return id.asLong();
     }
 
     @JsonProperty(JsonMessageConstants.MAILBOX_ID)

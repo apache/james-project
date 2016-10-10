@@ -40,6 +40,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.SessionType;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -639,7 +640,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+    public Map<MailboxId, Collection<MessageUid>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
         return index.search(session, expression);
     }
 

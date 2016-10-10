@@ -19,8 +19,11 @@
 package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+
+import com.google.common.base.Optional;
 
 /**
  * Take care of provide uids for a given {@link Mailbox}. Be aware that implementations
@@ -34,21 +37,11 @@ public interface UidProvider {
      * Return the next uid which can be used while append a MailboxMessage to the {@link Mailbox}.
      * Its important that the returned uid is higher then the last used and that the next call of this method does return a higher
      * one
-     * 
-     * @param session
-     * @param mailbox
-     * @return nextUid
-     * @throws MailboxException
      */
-    long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
     
     /**
      * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
-     * 
-     * @param session
-     * @param mailbox
-     * @return lastUid
-     * @throws MailboxException
      */
-    long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
 }

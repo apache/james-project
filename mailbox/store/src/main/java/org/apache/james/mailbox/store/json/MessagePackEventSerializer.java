@@ -28,8 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * MailboxMessage Pack ( http://msgpack.org/ ) Event Serializer
  */
 public class MessagePackEventSerializer extends JacksonEventSerializer {
-
     public MessagePackEventSerializer(EventConverter eventConverter) {
-        super(eventConverter, new ObjectMapper(new MessagePackFactory()));
+        super(eventConverter, configureObjectMapper(new ObjectMapper(new MessagePackFactory())));
     }
 }

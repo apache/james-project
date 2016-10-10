@@ -3,6 +3,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -11,6 +12,8 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+
+import com.google.common.base.Optional;
 
 /**
  * A MessageMapper implementation that uses a MailboxMetadataCache to cache the information
@@ -46,7 +49,7 @@ public class CachingMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(
+    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(
             Mailbox mailbox, MessageRange set) throws MailboxException {
         invalidateMetadata(mailbox);
         return underlying.expungeMarkedForDeletionInMailbox(mailbox, set);
@@ -73,13 +76,13 @@ public class CachingMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Long findFirstUnseenMessageUid(Mailbox mailbox)
+    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox)
             throws MailboxException {
         return cache.findFirstUnseenMessageUid(mailbox, underlying);
     }
 
     @Override
-    public List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox)
+    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox)
             throws MailboxException {
         // TODO can be meaningfully cached?
         return underlying.findRecentMessageUidsInMailbox(mailbox);
@@ -110,7 +113,7 @@ public class CachingMessageMapper implements MessageMapper {
     }
 
     @Override
-    public long getLastUid(Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
         return cache.getLastUid(mailbox, underlying);
     }
 

@@ -21,6 +21,7 @@ package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
 /**
@@ -33,11 +34,11 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
     private final boolean condstore;
     private final Long lastKnownUidValidity;
     private final Long knownModSeq;
-    private final IdRange[] uidSet;
-    private final IdRange[] knownUidSet;
+    private final UidRange[] uidSet;
+    private final UidRange[] knownUidSet;
     private final IdRange[] knownSequenceSet;
 
-    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, IdRange[] uidSet, IdRange[] knownUidSet, IdRange[] knownSequenceSet, String tag) {
+    public AbstractMailboxSelectionRequest(ImapCommand command, String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, String tag) {
         super(tag, command);
         this.mailboxName = mailboxName;
         this.condstore = condstore;
@@ -93,10 +94,8 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
     /**
      * Return the known uid set or null if it was not given. This is a OPTIONAL parameter when
      * using the <code>QRESYNC</code> option. 
-     * 
-     * @return uidSet
      */
-    public final IdRange[] getUidSet() {
+    public final UidRange[] getUidSet() {
         return uidSet;
     }
     
@@ -114,10 +113,8 @@ public abstract class AbstractMailboxSelectionRequest extends AbstractImapReques
     /**
      * Return the known uid set or null if it was not given. This known uid set has the corresponding message numbers in {@link #getKnownSequenceSet()}. This is a OPTIONAL parameter when
      * using the <code>QRESYNC</code> option. 
-     * 
-     * @return knownUidSet
      */
-    public final IdRange[] getKnownUidSet() {
+    public final UidRange[] getKnownUidSet() {
         return knownUidSet;
     }
 }

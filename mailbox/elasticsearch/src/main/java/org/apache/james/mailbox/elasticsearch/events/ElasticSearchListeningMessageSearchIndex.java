@@ -31,6 +31,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
@@ -80,7 +81,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
     
     @Override
-    public Iterator<Long> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+    public Iterator<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId mailboxId = mailbox.getMailboxId();
         MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(searchQuery).inMailboxes(mailboxId).build();
@@ -91,7 +92,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
     
     @Override
-    public Map<MailboxId, Collection<Long>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery)
+    public Map<MailboxId, Collection<MessageUid>> search(MailboxSession session, MultimailboxesSearchQuery searchQuery)
             throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return searcher.search(ImmutableList.of(session.getUser()), searchQuery).asMap();
@@ -107,7 +108,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, List<Long> expungedUids) throws MailboxException {
+    public void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException {
         try {
             indexer.deleteMessages(expungedUids.stream()
                 .map(uid ->  indexIdFor(mailbox, uid))
@@ -152,7 +153,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         }
     }
 
-    private String indexIdFor(Mailbox mailbox, long messageId) {
+    private String indexIdFor(Mailbox mailbox, MessageUid messageId) {
         return String.join(ID_SEPARATOR, mailbox.getMailboxId().serialize(), String.valueOf(messageId));
     }
     

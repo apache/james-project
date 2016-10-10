@@ -24,35 +24,45 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+
+import com.google.common.base.Optional;
 
 public class InMemoryUidProvider implements UidProvider{
 
     private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<InMemoryId, AtomicLong>();
     
     @Override
-    public long nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        return getLast((InMemoryId) mailbox.getMailboxId()).incrementAndGet();
+    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        InMemoryId mailboxId = (InMemoryId) mailbox.getMailboxId();
+        AtomicLong uid = getLast(mailboxId);
+        if (uid != null) {
+            return MessageUid.of(uid.incrementAndGet());
+        }
+        AtomicLong initialUid = new AtomicLong(MessageUid.MIN_VALUE.asLong());
+        AtomicLong previousUid = map.putIfAbsent(mailboxId, initialUid);
+        if (previousUid != null) {
+            return MessageUid.of(previousUid.incrementAndGet());
+        } else {
+            return MessageUid.MIN_VALUE;
+        }
     }
 
     @Override
-    public long lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        return getLast((InMemoryId) mailbox.getMailboxId()).get();
+    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        AtomicLong last = getLast((InMemoryId) mailbox.getMailboxId());
+        if (last == null) {
+            return Optional.absent();
+        }
+        return Optional.of(MessageUid.of(last.get()));
     }
     
     private AtomicLong getLast(InMemoryId id) {
-        AtomicLong uid = map.get(id);
-        if (uid == null) {
-            uid = new AtomicLong(0);
-            AtomicLong u = map.putIfAbsent(id, uid);
-            if (u != null) {
-                uid = u;
-            }
-        }
-        return uid;
+        return map.get(id);
     }
 
 }

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
@@ -37,11 +38,6 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
-    /**
-     * @see org.apache.james.imap.encode.base.AbstractChainedImapEncoder#doEncode
-     * (org.apache.james.imap.api.ImapMessage, org.apache.james.imap.encode.ImapResponseComposer,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         ESearchResponse response = (ESearchResponse) acceptableMessage;
         String tag = response.getTag();
@@ -49,6 +45,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         long max = response.getMaxUid();
         long count = response.getCount();
         IdRange[] all = response.getAll();
+        UidRange[] allUids = response.getAllUids();
         boolean useUid = response.getUseUid();
         Long highestModSeq = response.getHighestModSeq();
         List<SearchResultOption> options = response.getSearchResultOptions();
@@ -66,9 +63,13 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         if (options.contains(SearchResultOption.COUNT)) {
             composer.message(SearchResultOption.COUNT.name()).message(count);
         }
-        if (all != null && all.length > 0 && options.contains(SearchResultOption.ALL)) {
+        if (!useUid && all != null && all.length > 0 && options.contains(SearchResultOption.ALL)) {
             composer.message(SearchResultOption.ALL.name());
             composer.sequenceSet(all);
+        }
+        if (useUid && allUids != null && allUids.length > 0 && options.contains(SearchResultOption.ALL)) {
+            composer.message(SearchResultOption.ALL.name());
+            composer.sequenceSet(allUids);
         }
         
         // Add the MODSEQ to the response if needed. 

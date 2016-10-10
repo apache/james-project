@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
 import org.junit.Before;
@@ -51,11 +52,11 @@ public class SortToComparatorConvertorTest {
     public void setup() throws IOException {
         MessageResult firstMessageResult = mock(MessageResult.class);
         when(firstMessageResult.getInternalDate()).thenReturn(DATE_2017);
-        when(firstMessageResult.getUid()).thenReturn(1L);
+        when(firstMessageResult.getUid()).thenReturn(MessageUid.of(1));
         firstMessage = new Entry(mailboxPath, firstMessageResult);
         MessageResult secondMessageResult = mock(MessageResult.class);
         when(secondMessageResult.getInternalDate()).thenReturn(DATE_2018);
-        when(secondMessageResult.getUid()).thenReturn(2L);
+        when(secondMessageResult.getUid()).thenReturn(MessageUid.of(2));
         secondMessage = new Entry(mailboxPath, secondMessageResult);
         messages = Lists.newArrayList(firstMessage, secondMessage);
     }
@@ -92,7 +93,7 @@ public class SortToComparatorConvertorTest {
     public void comparatorForShouldChainComparatorsWhenOnlyMultipleElementInList() throws IOException {
         MessageResult thirdMessageResult = mock(MessageResult.class);
         when(thirdMessageResult.getInternalDate()).thenReturn(DATE_2018);
-        when(thirdMessageResult.getUid()).thenReturn(3L);
+        when(thirdMessageResult.getUid()).thenReturn(MessageUid.of(3));
         Entry thirdMessage = new Entry(mailboxPath, thirdMessageResult);
         messages.add(thirdMessage);
 

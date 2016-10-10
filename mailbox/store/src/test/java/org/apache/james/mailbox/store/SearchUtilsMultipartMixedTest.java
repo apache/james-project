@@ -26,6 +26,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
@@ -109,7 +110,7 @@ public class SearchUtilsMultipartMixedTest {
     MailboxMessage row;
 
 
-    Collection<Long> recent;
+    Collection<MessageUid> recent;
     @Before
     public void setUp() throws Exception {
         final MessageBuilder builder = new MessageBuilder();
@@ -121,7 +122,7 @@ public class SearchUtilsMultipartMixedTest {
         builder.header("Content-Type", "multipart/mixed;boundary=1729");
         builder.body = Charset.forName("us-ascii").encode(BODY).array();
         row = builder.build();
-        recent = new ArrayList<Long>();
+        recent = new ArrayList<MessageUid>();
     }
     
 

@@ -16,20 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox;
 
-package org.apache.james.mailbox.store.json;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.store.TestIdDeserializer;
-import org.apache.james.mailbox.store.event.EventSerializer;
-import org.apache.james.mailbox.store.json.event.EventConverter;
-import org.apache.james.mailbox.store.json.event.MailboxConverter;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-public class MailboxMessagePackEventSerializerTest extends EventSerializerTest {
+public class MessageUidTest {
 
-    @Override
-    EventSerializer createSerializer() {
-        return new MessagePackEventSerializer(
-            new EventConverter(
-                new MailboxConverter(new TestIdDeserializer())));
+    @Rule public ExpectedException exception = ExpectedException.none();
+    
+    private static final MessageUid _1 = MessageUid.of(1);
+    private static final MessageUid _2 = MessageUid.of(2);
+    private static final MessageUid _3 = MessageUid.of(3);
+    private static final MessageUid _4 = MessageUid.of(4);
+
+    @Test
+    public void distanceShouldReturnZeroWhenSameValue() {
+        assertThat(_1.distance(_1)).isEqualTo(0);
+    }
+
+    @Test
+    public void distanceShouldThrowWhenNullArgument() {
+        exception.expect(NullPointerException.class);
+        _1.distance(null);
+    }
+
+
+    @Test
+    public void distanceShouldReturnPositiveDistanceWhenGreaterArgument() {
+        assertThat(_1.distance(_4)).isEqualTo(3);
+    }
+    
+    @Test
+    public void distanceShouldReturnNegativeDistanceWhenSmallerArgument() {
+        assertThat(_3.distance(_2)).isEqualTo(-1);
     }
 }

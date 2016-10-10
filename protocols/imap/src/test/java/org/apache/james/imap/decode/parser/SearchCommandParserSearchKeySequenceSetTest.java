@@ -28,9 +28,11 @@ import java.util.Arrays;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.mailbox.MessageUid;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -58,35 +60,72 @@ public class SearchCommandParserSearchKeySequenceSetTest {
     }
     
     @Test
-    public void testAllNumbers() throws Exception {
+    public void testAllNumbersSequence() throws Exception {
 
         IdRange[] range = { new IdRange(2), new IdRange(4), new IdRange(9),
                 new IdRange(16), new IdRange(25), new IdRange(36),
                 new IdRange(49), new IdRange(64), new IdRange(81),
                 new IdRange(100) };
-        check("2,4,9,16,25,36,49,64,81,100", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        checkSequence("2,4,9,16,25,36,49,64,81,100", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
     }
 
     @Test
-    public void testEndStar() throws Exception {
+    public void testEndStarSequence() throws Exception {
         IdRange[] range = { new IdRange(8), new IdRange(10,11),
                 new IdRange(17), new IdRange(100, Long.MAX_VALUE) };
-        check("8,10:11,17,100:*", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        checkSequence("8,10:11,17,100:*", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
     }
 
     @Test
-    public void testStartStar() throws Exception {
-        IdRange[] range = { new IdRange(9,Long.MAX_VALUE), new IdRange(15),
-                new IdRange(799, 820) };
-        check("*:9,15,799:820", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+    public void testStartStarSequence() throws Exception {
+        IdRange[] range = { 
+                new IdRange(9,Long.MAX_VALUE), 
+                new IdRange(15),
+                new IdRange(799, 820) 
+                };
+        checkSequence("*:9,15,799:820", IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
     }
 
-    private void check(String sequence, IdRange[] range) throws Exception {
-        checkUid(sequence, range);
-        checkSequence(sequence, range);
+
+    @Test
+    public void testAllNumbersUids() throws Exception {
+
+        UidRange[] range = { 
+                new UidRange(MessageUid.of(2)),
+                new UidRange(MessageUid.of(4)),
+                new UidRange(MessageUid.of(9)),
+                new UidRange(MessageUid.of(16)), 
+                new UidRange(MessageUid.of(25)), 
+                new UidRange(MessageUid.of(36)),
+                new UidRange(MessageUid.of(49)), 
+                new UidRange(MessageUid.of(64)), 
+                new UidRange(MessageUid.of(81)),
+                new UidRange(MessageUid.of(100)) };
+        checkUid("2,4,9,16,25,36,49,64,81,100", UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
     }
 
-    private void checkUid(String sequence, IdRange[] range) throws Exception {
+    @Test
+    public void testEndStarUids() throws Exception {
+        UidRange[] range = { 
+                new UidRange(MessageUid.of(8)), 
+                new UidRange(MessageUid.of(10),MessageUid.of(11)),
+                new UidRange(MessageUid.of(17)), 
+                new UidRange(MessageUid.of(100), MessageUid.MAX_VALUE) };
+        checkUid("8,10:11,17,100:*", UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+    }
+
+    @Test
+    public void testStartStarUids() throws Exception {
+        UidRange[] range = { 
+                new UidRange(MessageUid.of(9), MessageUid.MAX_VALUE), 
+                new UidRange(MessageUid.of(15)),
+                new UidRange(MessageUid.of(799), MessageUid.of(820)) 
+                };
+        checkUid("*:9,15,799:820", UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
+    }
+
+    
+    private void checkUid(String sequence, UidRange[] range) throws Exception {
         SearchKey key = SearchKey.buildUidSet(range);
         checkValid("UID " + sequence, key);
         checkValid("uid " + sequence, key);

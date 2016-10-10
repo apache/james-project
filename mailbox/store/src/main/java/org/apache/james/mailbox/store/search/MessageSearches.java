@@ -40,13 +40,14 @@ import java.util.TreeSet;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.model.MessageResult.Header;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
-import org.apache.james.mailbox.model.SearchQuery.NumericRange;
+import org.apache.james.mailbox.model.SearchQuery.UidRange;
 import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
@@ -74,7 +75,7 @@ import com.google.common.collect.Lists;
 /**
  * Utility methods to help perform search operations.
  */
-public class MessageSearches implements Iterable<Long> {
+public class MessageSearches implements Iterable<MessageUid> {
 
     private Iterator<MailboxMessage> messages;
     private SearchQuery query;
@@ -92,7 +93,7 @@ public class MessageSearches implements Iterable<Long> {
     public MessageSearches() {
     }
 
-    private Collection<Long> search() {
+    private Set<MessageUid> search() {
         TreeSet<MailboxMessage> matched = new TreeSet<MailboxMessage>(CombinedComparator.create(query.getSorts()));
         while (messages.hasNext()) {
             MailboxMessage m = messages.next();
@@ -106,7 +107,7 @@ public class MessageSearches implements Iterable<Long> {
                 }
             }
         }
-        Set<Long> uids = new HashSet<Long>();
+        Set<MessageUid> uids = new HashSet<MessageUid>();
         Iterator<MailboxMessage> matchedIt = matched.iterator();
         while (matchedIt.hasNext()) {
             uids.add(matchedIt.next().getUid());
@@ -127,7 +128,7 @@ public class MessageSearches implements Iterable<Long> {
      */
     private boolean isMatch(SearchQuery query, MailboxMessage message) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = query.getCriterias();
-        final Collection<Long> recentMessageUids = query.getRecentMessageUids();
+        final Collection<MessageUid> recentMessageUids = query.getRecentMessageUids();
         boolean result = true;
         if (criteria != null) {
             for (SearchQuery.Criterion criterion : criteria) {
@@ -154,7 +155,7 @@ public class MessageSearches implements Iterable<Long> {
      * @throws MailboxException
      */
     public boolean isMatch(SearchQuery.Criterion criterion, MailboxMessage message,
-            final Collection<Long> recentMessageUids) throws MailboxException {
+            final Collection<MessageUid> recentMessageUids) throws MailboxException {
         final boolean result;
         if (criterion instanceof SearchQuery.InternalDateCriterion) {
             result = matches((SearchQuery.InternalDateCriterion) criterion, message);
@@ -264,7 +265,7 @@ public class MessageSearches implements Iterable<Long> {
         }
     }
     private boolean matches(SearchQuery.ConjunctionCriterion criterion, MailboxMessage message,
-            final Collection<Long> recentMessageUids) throws MailboxException {
+            final Collection<MessageUid> recentMessageUids) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = criterion.getCriteria();
         switch (criterion.getType()) {
         case NOR:
@@ -279,7 +280,7 @@ public class MessageSearches implements Iterable<Long> {
     }
 
     private boolean and(List<SearchQuery.Criterion> criteria, MailboxMessage message,
-            final Collection<Long> recentMessageUids) throws MailboxException {
+            final Collection<MessageUid> recentMessageUids) throws MailboxException {
         boolean result = true;
         for (SearchQuery.Criterion criterion : criteria) {
             boolean matches = isMatch(criterion, message, recentMessageUids);
@@ -292,7 +293,7 @@ public class MessageSearches implements Iterable<Long> {
     }
 
     private boolean or(List<SearchQuery.Criterion> criteria, MailboxMessage message,
-            final Collection<Long> recentMessageUids) throws MailboxException {
+            final Collection<MessageUid> recentMessageUids) throws MailboxException {
         boolean result = false;
         for (SearchQuery.Criterion criterion : criteria) {
             boolean matches = isMatch(criterion, message, recentMessageUids);
@@ -305,7 +306,7 @@ public class MessageSearches implements Iterable<Long> {
     }
 
     private boolean nor(List<SearchQuery.Criterion> criteria, MailboxMessage message,
-            final Collection<Long> recentMessageUids) throws MailboxException {
+            final Collection<MessageUid> recentMessageUids) throws MailboxException {
         boolean result = true;
         for (SearchQuery.Criterion criterion : criteria) {
             boolean matches = isMatch(criterion, message, recentMessageUids);
@@ -318,7 +319,7 @@ public class MessageSearches implements Iterable<Long> {
     }
 
     private boolean matches(SearchQuery.FlagCriterion criterion, MailboxMessage message,
-            Collection<Long> recentMessageUids) {
+            Collection<MessageUid> recentMessageUids) {
         SearchQuery.BooleanOperator operator = criterion.getOperator();
         boolean isSet = operator.isSet();
         Flags.Flag flag = criterion.getFlag();
@@ -332,8 +333,8 @@ public class MessageSearches implements Iterable<Long> {
         } else if (flag == Flags.Flag.FLAGGED) {
             result = isSet == message.isFlagged();
         } else if (flag == Flags.Flag.RECENT) {
-            final long uid = message.getUid();
-            result = isSet == recentMessageUids.contains(Long.valueOf(uid));
+            final MessageUid uid = message.getUid();
+            result = isSet == recentMessageUids.contains(uid);
         } else if (flag == Flags.Flag.DELETED) {
             result = isSet == message.isDeleted();
         } else {
@@ -343,7 +344,7 @@ public class MessageSearches implements Iterable<Long> {
     }
 
     private boolean matches(SearchQuery.CustomFlagCriterion criterion, MailboxMessage message,
-            Collection<Long> recentMessageUids) {
+            Collection<MessageUid> recentMessageUids) {
         SearchQuery.BooleanOperator operator = criterion.getOperator();
         boolean isSet = operator.isSet();
         String flag = criterion.getFlag();
@@ -351,11 +352,11 @@ public class MessageSearches implements Iterable<Long> {
     }
 
     private boolean matches(SearchQuery.UidCriterion criterion, MailboxMessage message) {
-        SearchQuery.InOperator operator = criterion.getOperator();
-        NumericRange[] ranges = operator.getRange();
-        long uid = message.getUid();
+        SearchQuery.UidInOperator operator = criterion.getOperator();
+        UidRange[] ranges = operator.getRange();
+        MessageUid uid = message.getUid();
         boolean result = false;
-        for (NumericRange numericRange : ranges) {
+        for (UidRange numericRange : ranges) {
             if (numericRange.isIn(uid)) {
                 result = true;
                 break;
@@ -630,7 +631,7 @@ public class MessageSearches implements Iterable<Long> {
      * according to the SearchQuery
      * 
      */
-    public Iterator<Long> iterator() {
+    public Iterator<MessageUid> iterator() {
         return search().iterator();
     }
 

@@ -41,6 +41,7 @@ import org.apache.james.imap.message.request.MoveRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -50,6 +51,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 public class CopyProcessorTest {
@@ -91,17 +93,17 @@ public class CopyProcessorTest {
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
-        when(selectedMailbox.getLastUid()).thenReturn(8L);
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
         when(mockMailboxManager.mailboxExists(inbox, mockMailboxSession)).thenReturn(true);
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(inbox, mockMailboxSession)).thenReturn(targetMessageManager);
-        when(targetMessageManager.getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, 18L, 8L, 8L, 8L, 8L, true, true, null));
+        when(targetMessageManager.getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
-        when(mockMailboxManager.moveMessages(MessageRange.range(4, 6), selected, inbox, mockMailboxSession)).thenReturn(Lists.<MessageRange>newArrayList(MessageRange.range(4, 6)));
+        when(mockMailboxManager.moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mockMailboxSession)).thenReturn(Lists.<MessageRange>newArrayList(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
@@ -109,7 +111,7 @@ public class CopyProcessorTest {
         verify(mockMailboxManager).endProcessingRequest(mockMailboxSession);
         verify(mockMailboxManager).mailboxExists(inbox, mockMailboxSession);
         verify(mockMailboxManager).getMailbox(inbox, mockMailboxSession);
-        verify(mockMailboxManager).copyMessages(MessageRange.range(4, 6), selected, inbox, mockMailboxSession);
+        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mockMailboxSession);
         verify(targetMessageManager).getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
         verify(mockResponder).respond(okResponse);
         verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
@@ -130,14 +132,14 @@ public class CopyProcessorTest {
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
-        when(selectedMailbox.getLastUid()).thenReturn(8L);
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
         when(mockMailboxManager.mailboxExists(inbox, mockMailboxSession)).thenReturn(true);
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(inbox, mockMailboxSession)).thenReturn(targetMessageManager);
-        when(targetMessageManager.getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, 18L, 8L, 8L, 8L, 8L, true, true, null));
+        when(targetMessageManager.getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
 
@@ -147,8 +149,8 @@ public class CopyProcessorTest {
         verify(mockMailboxManager).endProcessingRequest(mockMailboxSession);
         verify(mockMailboxManager).mailboxExists(inbox, mockMailboxSession);
         verify(mockMailboxManager).getMailbox(inbox, mockMailboxSession);
-        verify(mockMailboxManager).copyMessages(MessageRange.range(5, 6), selected, inbox, mockMailboxSession);
-        verify(mockMailboxManager).copyMessages(MessageRange.range(1, 3), selected, inbox, mockMailboxSession);
+        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(5), MessageUid.of(6)), selected, inbox, mockMailboxSession);
+        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(3)), selected, inbox, mockMailboxSession);
         verify(targetMessageManager).getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
         verify(mockResponder).respond(okResponse);
         verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
@@ -168,7 +170,7 @@ public class CopyProcessorTest {
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
-        when(selectedMailbox.getLastUid()).thenReturn(8L);
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
@@ -201,7 +203,7 @@ public class CopyProcessorTest {
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
-        when(selectedMailbox.getLastUid()).thenReturn(8L);
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);

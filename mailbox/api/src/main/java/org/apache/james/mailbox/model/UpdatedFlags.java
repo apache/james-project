@@ -24,6 +24,10 @@ import java.util.Iterator;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageUid;
+
+import com.google.common.base.Objects;
+
 /**
  * Represent a Flag update for a message
  * 
@@ -31,13 +35,13 @@ import javax.mail.Flags;
  */
 public class UpdatedFlags {
 
-    private final long uid;
+    private final MessageUid uid;
     private final Flags oldFlags;
     private final Flags newFlags;
     private final Flags modifiedFlags;
     private final long modSeq;
 
-    public UpdatedFlags(long uid, long modSeq, Flags oldFlags, Flags newFlags) {
+    public UpdatedFlags(MessageUid uid, long modSeq, Flags oldFlags, Flags newFlags) {
        this.uid = uid;
        this.modSeq = modSeq;
        this.oldFlags = oldFlags;
@@ -114,7 +118,7 @@ public class UpdatedFlags {
      * 
      * @return uid
      */
-    public long getUid() {
+    public MessageUid getUid() {
         return uid;
     }
    
@@ -179,7 +183,7 @@ public class UpdatedFlags {
 
         UpdatedFlags that = (UpdatedFlags) other;
 
-        if (uid != that.uid) {
+        if (!uid.equals(that.uid)) {
             return false;
         }
         if (modSeq != that.modSeq) {
@@ -194,10 +198,6 @@ public class UpdatedFlags {
 
     @Override
     public int hashCode() {
-        int result = (int) (uid ^ (uid >>> 32));
-        result = 31 * result + (oldFlags != null ? oldFlags.hashCode() : 0);
-        result = 31 * result + (newFlags != null ? newFlags.hashCode() : 0);
-        result = 31 * result + (int) (modSeq ^ (modSeq >>> 32));
-        return result;
+        return Objects.hashCode(uid, oldFlags, newFlags, modSeq);
     }
 }

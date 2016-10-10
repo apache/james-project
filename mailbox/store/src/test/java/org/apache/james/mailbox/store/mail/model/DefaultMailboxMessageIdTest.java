@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.TestId;
 import org.junit.Test;
 
@@ -29,12 +30,12 @@ public class DefaultMailboxMessageIdTest {
 
     @Test(expected=NullPointerException.class)
     public void constructorShouldThrowWhenNullMailboxId() {
-        new DefaultMessageId(null, 1);
+        new DefaultMessageId(null, MessageUid.of(1));
     }
 
     @Test
     public void serializeShouldFormatMailboxIdAndUid() {
-        DefaultMessageId id = new DefaultMessageId(TestId.of(12l), 1);
+        DefaultMessageId id = new DefaultMessageId(TestId.of(12l), MessageUid.of(1));
         assertThat(id.serialize()).isEqualTo("12-1");
     }
     

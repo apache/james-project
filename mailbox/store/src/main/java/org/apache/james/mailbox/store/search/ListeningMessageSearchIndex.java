@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -75,7 +76,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
                     final Mailbox mailbox = added.getMailbox();
 
-                    for (Long next : (Iterable<Long>) added.getUids()) {
+                    for (MessageUid next : (Iterable<MessageUid>) added.getUids()) {
                         Iterator<MailboxMessage> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, -1);
                         while (messages.hasNext()) {
                             MailboxMessage message = messages.next();
@@ -131,7 +132,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param expungedUids UIDS to be deleted
      * @throws MailboxException
      */
-    public abstract void delete(MailboxSession session, Mailbox mailbox, List<Long> expungedUids) throws MailboxException;
+    public abstract void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException;
 
     /**
      * Delete the messages contained in the given {@link Mailbox} from the index

@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -41,11 +42,11 @@ public abstract class AbstractLockingUidProvider implements UidProvider{
     }
     
     @Override
-    public long nextUid(final MailboxSession session, final Mailbox mailbox) throws MailboxException {
-        return locker.executeWithLock(session, new StoreMailboxPath(mailbox), new LockAwareExecution<Long>() {
+    public MessageUid nextUid(final MailboxSession session, final Mailbox mailbox) throws MailboxException {
+        return locker.executeWithLock(session, new StoreMailboxPath(mailbox), new LockAwareExecution<MessageUid>() {
 
             @Override
-            public Long execute() throws MailboxException {
+            public MessageUid execute() throws MailboxException {
                 return lockedNextUid(session, mailbox);
             }
         }, true);
@@ -53,12 +54,7 @@ public abstract class AbstractLockingUidProvider implements UidProvider{
     
     /**
      * Generate the next uid to use while the {@link Mailbox} is locked
-     * 
-     * @param session
-     * @param mailbox
-     * @return nextUid
-     * @throws MailboxException
      */
-    protected abstract long lockedNextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    protected abstract MessageUid lockedNextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
 
 }

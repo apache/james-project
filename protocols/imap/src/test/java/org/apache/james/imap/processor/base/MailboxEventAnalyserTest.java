@@ -47,6 +47,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
@@ -183,26 +184,27 @@ public class MailboxEventAnalyserTest {
                     return false;
                 }
 
-                
-                public Iterator<Long> search(SearchQuery searchQuery, MailboxSession mailboxSession) throws MailboxException {
+                @Override
+                public Iterator<MessageUid> search(SearchQuery searchQuery, MailboxSession mailboxSession) throws MailboxException {
+                    throw new UnsupportedOperationException("Not implemented");
+
+                }
+
+                @Override
+                public Iterator<MessageUid> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException {
                     throw new UnsupportedOperationException("Not implemented");
 
                 }
 
                 
-                public Iterator<Long> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException {
+                @Override
+                public Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode mode, MessageRange set, MailboxSession mailboxSession) throws MailboxException {
                     throw new UnsupportedOperationException("Not implemented");
 
                 }
 
                 
-                public Map<Long, Flags> setFlags(Flags flags, FlagsUpdateMode mode, MessageRange set, MailboxSession mailboxSession) throws MailboxException {
-                    throw new UnsupportedOperationException("Not implemented");
-
-                }
-
-                
-                public long appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException {
+                public MessageUid appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException {
                     throw new UnsupportedOperationException("Not implemented");
 
                 }
@@ -226,9 +228,9 @@ public class MailboxEventAnalyserTest {
                                     return 0;
                                 }
 
-                                
-                                public long getUid() {
-                                    return 1;
+                                @Override
+                                public MessageUid getUid() {
+                                    return MessageUid.of(1);
                                 }
 
                                 
@@ -410,7 +412,7 @@ public class MailboxEventAnalyserTest {
         }
 
         @Override
-        public Map<MailboxId, Collection<Long>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+        public Map<MailboxId, Collection<MessageUid>> search(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
             return null;
         }
 
@@ -598,7 +600,7 @@ public class MailboxEventAnalyserTest {
         
         SelectedMailboxImpl analyser = new SelectedMailboxImpl(mockManager, imapsession, mailboxPath);
         
-        analyser.event(new FakeMailboxListenerAdded(mSession, Arrays.asList(11L), mailboxPath));
+        analyser.event(new FakeMailboxListenerAdded(mSession, Arrays.asList(MessageUid.of(11)), mailboxPath));
         assertTrue(analyser.isSizeChanged());
     }
 
@@ -610,7 +612,7 @@ public class MailboxEventAnalyserTest {
         
         SelectedMailboxImpl analyser = new SelectedMailboxImpl(mockManager, imapsession, mailboxPath);
         
-        analyser.event(new FakeMailboxListenerAdded(mSession,  Arrays.asList(11L), mailboxPath));
+        analyser.event(new FakeMailboxListenerAdded(mSession,  Arrays.asList(MessageUid.of(11)), mailboxPath));
         analyser.resetEvents();
         assertFalse(analyser.isSizeChanged());
     }
@@ -624,7 +626,7 @@ public class MailboxEventAnalyserTest {
         SelectedMailboxImpl analyser = new SelectedMailboxImpl(mockManager, imapsession, mailboxPath);
         
         final FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(
-                mSession,  Arrays.asList(90L),  Arrays.asList(new UpdatedFlags(90, -1, new Flags(), new Flags())), mailboxPath);
+                mSession,  Arrays.asList(MessageUid.of(90L)),  Arrays.asList(new UpdatedFlags(MessageUid.of(90), -1, new Flags(), new Flags())), mailboxPath);
         analyser.event(update);
         assertNotNull(analyser.flagUpdateUids());
         assertFalse(analyser.flagUpdateUids().iterator().hasNext());
@@ -632,7 +634,7 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldSetUidWhenSystemFlagChange() throws Exception {
-        final long uid = 900L;
+        final MessageUid uid = MessageUid.of(900);
         MyMailboxSession mSession = new MyMailboxSession(11);
         
         MyImapSession imapsession = new MyImapSession(mSession);
@@ -642,16 +644,16 @@ public class MailboxEventAnalyserTest {
         final FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(
                 new MyMailboxSession(41), Arrays.asList(uid), Arrays.asList(new UpdatedFlags(uid, -1, new Flags(), new Flags(Flags.Flag.ANSWERED))), mailboxPath);
         analyser.event(update);
-        final Iterator<Long> iterator = analyser.flagUpdateUids().iterator();
+        final Iterator<MessageUid> iterator = analyser.flagUpdateUids().iterator();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
-        assertEquals(new Long(uid), iterator.next());
+        assertEquals(uid, iterator.next());
         assertFalse(iterator.hasNext());
     }
 
     @Test
     public void testShouldClearFlagUidsUponReset() throws Exception {
-        final long uid = 900L;
+        final MessageUid uid = MessageUid.of(900);
         MyMailboxSession mSession = new MyMailboxSession(11);
         MyImapSession imapsession = new MyImapSession(mSession);
         SelectedMailboxImpl analyser = new SelectedMailboxImpl(mockManager, imapsession, mailboxPath);
@@ -668,7 +670,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode()
             throws Exception {
-        final long uid = 900L;
+        final MessageUid uid = MessageUid.of(900);
         
         MyMailboxSession mSession = new MyMailboxSession(11);
         MyImapSession imapsession = new MyImapSession(mSession);
@@ -679,10 +681,10 @@ public class MailboxEventAnalyserTest {
         analyser.event(update);
         analyser.setSilentFlagChanges(true);
         analyser.event(update);
-        final Iterator<Long> iterator = analyser.flagUpdateUids().iterator();
+        final Iterator<MessageUid> iterator = analyser.flagUpdateUids().iterator();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
-        assertEquals(new Long(uid), iterator.next());
+        assertEquals(uid, iterator.next());
         assertFalse(iterator.hasNext());
     }
 
@@ -695,11 +697,11 @@ public class MailboxEventAnalyserTest {
         
         
         final FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(
-                mSession, Arrays.asList(345L), Arrays.asList(new UpdatedFlags(345, -1, new Flags(), new Flags())), mailboxPath);
+                mSession, Arrays.asList(MessageUid.of(345)), Arrays.asList(new UpdatedFlags(MessageUid.of(345), -1, new Flags(), new Flags())), mailboxPath);
         analyser.event(update);
         analyser.setSilentFlagChanges(true);
         analyser.event(update);
-        final Iterator<Long> iterator = analyser.flagUpdateUids().iterator();
+        final Iterator<MessageUid> iterator = analyser.flagUpdateUids().iterator();
         assertNotNull(iterator);
         assertFalse(iterator.hasNext());
     }
@@ -712,9 +714,9 @@ public class MailboxEventAnalyserTest {
         
         
         final FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(
-                mSession, Arrays.asList(886L), Arrays.asList(new UpdatedFlags(886, -1, new Flags(), new Flags(Flags.Flag.RECENT))), mailboxPath);
+                mSession, Arrays.asList(MessageUid.of(886)), Arrays.asList(new UpdatedFlags(MessageUid.of(886), -1, new Flags(), new Flags(Flags.Flag.RECENT))), mailboxPath);
         analyser.event(update);
-        final Iterator<Long> iterator = analyser.flagUpdateUids().iterator();
+        final Iterator<MessageUid> iterator = analyser.flagUpdateUids().iterator();
         assertNotNull(iterator);
         assertFalse(iterator.hasNext());
     }

@@ -29,6 +29,7 @@ import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
+import org.apache.james.mailbox.MessageUid;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -79,7 +80,7 @@ public class FetchResponseEncoderTest  {
 
     @Test
     public void testShouldEncodeUidResponse() throws Exception {
-        FetchResponse message = new FetchResponse(100, null, new Long(72), null,
+        FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
                 null, null, null, null, null, null); 
         encoder.doEncode(message, composer, new FakeImapSession());
         assertEquals("* 100 FETCH (UID 72)\r\n", writer.getString());
@@ -89,7 +90,7 @@ public class FetchResponseEncoderTest  {
 
     @Test
     public void testShouldEncodeAllResponse() throws Exception {
-        FetchResponse message = new FetchResponse(100, flags, new Long(72), null,
+        FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
         encoder.doEncode(message, composer, new FakeImapSession());
         assertEquals("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n", writer.getString());

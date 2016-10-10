@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 
 /**
  * Atom key used by a search. Build instances by factory methods.
@@ -31,8 +32,8 @@ import org.apache.james.imap.api.message.IdRange;
 public final class SearchKey {
 
     // NUMBERS
-    public static final int TYPE_SEQUENCE_SET = 1;
 
+    public static final int TYPE_SEQUENCE_SET = 1;
     public static final int TYPE_UID = 2;
 
     // NO PARAMETERS
@@ -118,41 +119,41 @@ public final class SearchKey {
 
     public static final int TYPE_MODSEQ = 40;
 
-    private static final SearchKey UNSEEN = new SearchKey(TYPE_UNSEEN, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey UNSEEN = new SearchKey(TYPE_UNSEEN, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey UNFLAGGED = new SearchKey(TYPE_UNFLAGGED, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey UNFLAGGED = new SearchKey(TYPE_UNFLAGGED, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey UNDRAFT = new SearchKey(TYPE_UNDRAFT, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey UNDRAFT = new SearchKey(TYPE_UNDRAFT, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey UNDELETED = new SearchKey(TYPE_UNDELETED, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey UNDELETED = new SearchKey(TYPE_UNDELETED, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey UNANSWERED = new SearchKey(TYPE_UNANSWERED, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey UNANSWERED = new SearchKey(TYPE_UNANSWERED, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey SEEN = new SearchKey(TYPE_SEEN, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey SEEN = new SearchKey(TYPE_SEEN, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey RECENT = new SearchKey(TYPE_RECENT, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey RECENT = new SearchKey(TYPE_RECENT, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey OLD = new SearchKey(TYPE_OLD, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey OLD = new SearchKey(TYPE_OLD, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey NEW = new SearchKey(TYPE_NEW, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey NEW = new SearchKey(TYPE_NEW, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey FLAGGED = new SearchKey(TYPE_FLAGGED, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey FLAGGED = new SearchKey(TYPE_FLAGGED, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey DRAFT = new SearchKey(TYPE_DRAFT, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey DRAFT = new SearchKey(TYPE_DRAFT, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey DELETED = new SearchKey(TYPE_DELETED, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey DELETED = new SearchKey(TYPE_DELETED, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey ANSWERED = new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey ANSWERED = new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, null, -1, -1);
 
-    private static final SearchKey ALL = new SearchKey(TYPE_ALL, null, null, 0, null, null, null, -1, -1);
+    private static final SearchKey ALL = new SearchKey(TYPE_ALL, null, null, 0, null, null, null, null, -1, -1);
 
     // NUMBERS
     public static SearchKey buildSequenceSet(IdRange[] ids) {
-        return new SearchKey(TYPE_SEQUENCE_SET, null, null, 0, null, null, ids, -1, -1);
+        return new SearchKey(TYPE_SEQUENCE_SET, null, null, 0, null, null, null, ids, -1, -1);
     }
 
-    public static SearchKey buildUidSet(IdRange[] ids) {
-        return new SearchKey(TYPE_UID, null, null, 0, null, null, ids, -1, -1);
+    public static SearchKey buildUidSet(UidRange[] ids) {
+        return new SearchKey(TYPE_UID, null, null, 0, null, null, ids, null, -1, -1);
     }
 
     // NO PARAMETERS
@@ -214,94 +215,94 @@ public final class SearchKey {
 
     // ONE VALUE
     public static SearchKey buildBcc(String value) {
-        return new SearchKey(TYPE_BCC, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_BCC, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildBody(String value) {
-        return new SearchKey(TYPE_BODY, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_BODY, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildCc(String value) {
-        return new SearchKey(TYPE_CC, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_CC, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildFrom(String value) {
-        return new SearchKey(TYPE_FROM, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_FROM, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildKeyword(String value) {
-        return new SearchKey(TYPE_KEYWORD, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_KEYWORD, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildSubject(String value) {
-        return new SearchKey(TYPE_SUBJECT, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_SUBJECT, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildText(String value) {
-        return new SearchKey(TYPE_TEXT, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_TEXT, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildTo(String value) {
-        return new SearchKey(TYPE_TO, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_TO, null, null, 0, null, value, null, null, -1, -1);
     }
 
     public static SearchKey buildUnkeyword(String value) {
-        return new SearchKey(TYPE_UNKEYWORD, null, null, 0, null, value, null, -1, -1);
+        return new SearchKey(TYPE_UNKEYWORD, null, null, 0, null, value, null, null, -1, -1);
     }
     // ONE DATE
     public static SearchKey buildYounger(long seconds) {
-        return new SearchKey(TYPE_YOUNGER, null, null, 0, null, null, null, seconds, -1);
+        return new SearchKey(TYPE_YOUNGER, null, null, 0, null, null, null, null, seconds, -1);
     }
 
     public static SearchKey buildOlder(long seconds) {
-        return new SearchKey(TYPE_OLDER, null, null, 0, null, null, null, seconds, -1);
+        return new SearchKey(TYPE_OLDER, null, null, 0, null, null, null, null, seconds, -1);
     }
 
     
     // ONE DATE
     public static SearchKey buildBefore(DayMonthYear date) {
-        return new SearchKey(TYPE_BEFORE, date, null, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_BEFORE, date, null, 0, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildOn(DayMonthYear date) {
-        return new SearchKey(TYPE_ON, date, null, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_ON, date, null, 0, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildSentBefore(DayMonthYear date) {
-        return new SearchKey(TYPE_SENTBEFORE, date, null, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_SENTBEFORE, date, null, 0, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildSentOn(DayMonthYear date) {
-        return new SearchKey(TYPE_SENTON, date, null, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_SENTON, date, null, 0, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildSentSince(DayMonthYear date) {
-        return new SearchKey(TYPE_SENTSINCE, date, null, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_SENTSINCE, date, null, 0, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildSince(DayMonthYear date) {
-        return new SearchKey(TYPE_SINCE, date, null, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_SINCE, date, null, 0, null, null, null, null, -1, -1);
     }
 
     // FIELD VALUE
     public static SearchKey buildHeader(String name, String value) {
-        return new SearchKey(TYPE_HEADER, null, null, 0, name, value, null, -1, -1);
+        return new SearchKey(TYPE_HEADER, null, null, 0, name, value, null, null, -1, -1);
     }
 
     // ONE NUMBER
     public static SearchKey buildLarger(long size) {
-        return new SearchKey(TYPE_LARGER, null, null, size, null, null, null, -1, -1);
+        return new SearchKey(TYPE_LARGER, null, null, size, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildSmaller(long size) {
-        return new SearchKey(TYPE_SMALLER, null, null, size, null, null, null, -1, -1);
+        return new SearchKey(TYPE_SMALLER, null, null, size, null, null, null, null, -1, -1);
     }
 
     // NOT
     public static SearchKey buildNot(SearchKey key) {
         final List<SearchKey> keys = new ArrayList<SearchKey>();
         keys.add(key);
-        return new SearchKey(TYPE_NOT, null, keys, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_NOT, null, keys, 0, null, null, null, null, -1, -1);
     }
 
     // OR
@@ -309,7 +310,7 @@ public final class SearchKey {
         final List<SearchKey> keys = new ArrayList<SearchKey>();
         keys.add(keyOne);
         keys.add(keyTwo);
-        return new SearchKey(TYPE_OR, null, keys, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_OR, null, keys, 0, null, null, null, null, -1, -1);
     }
 
     /**
@@ -320,11 +321,11 @@ public final class SearchKey {
      * @return <code>SearchKey</code>, not null
      */
     public static SearchKey buildAnd(List<SearchKey> keys) {
-        return new SearchKey(TYPE_AND, null, keys, 0, null, null, null, -1, -1);
+        return new SearchKey(TYPE_AND, null, keys, 0, null, null, null, null, -1, -1);
     }
 
     public static SearchKey buildModSeq(long modSeq) {
-        return new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, -1, modSeq);
+        return new SearchKey(TYPE_ANSWERED, null, null, 0, null, null, null, null, -1, modSeq);
     }
     private final int type;
 
@@ -339,24 +340,26 @@ public final class SearchKey {
     private final String value;
 
     private final IdRange[] sequence;
+    
+    private final UidRange[] uids;
 
     private final long seconds;
 
     private final long modSeq;
-
-    private SearchKey(int type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, IdRange[] sequence, long seconds, long modSeq) {
-        super();
+    
+    private SearchKey(int type, DayMonthYear date, List<SearchKey> keys, long number, String name, String value, UidRange[] uids, IdRange[] sequence, long seconds, long modSeq) {
         this.type = type;
         this.date = date;
         this.keys = keys;
         this.size = number;
         this.name = name;
         this.value = value;
-        this.sequence = sequence;
         this.seconds = seconds;
         this.modSeq = modSeq;
+        this.uids = uids;
+        this.sequence = sequence;
     }
-
+    
     /**
      * Gets a date value to be search upon.
      * 
@@ -387,6 +390,10 @@ public final class SearchKey {
         return sequence;
     }
 
+    public UidRange[] getUidRanges() {
+        return uids;
+    }
+    
     /**
      * Gets the field name.
      * 

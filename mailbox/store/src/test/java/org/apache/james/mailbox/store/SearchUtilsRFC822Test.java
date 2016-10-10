@@ -26,6 +26,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
@@ -48,11 +49,11 @@ public class SearchUtilsRFC822Test {
 
     MailboxMessage row;
 
-    Collection<Long> recent;
+    Collection<MessageUid> recent;
 
     @Before
     public void setUp() throws Exception {
-        recent = new ArrayList<Long>();
+        recent = new ArrayList<MessageUid>();
         MessageBuilder builder = new MessageBuilder();
         builder.header("From", "Alex <alex@example.org");
         builder.header("To", FROM_ADDRESS);

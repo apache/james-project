@@ -31,6 +31,7 @@ import java.util.Iterator;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -148,7 +149,7 @@ public class ReIndexerImplTest {
         when(user1MessageMapper.findInMailbox(user1Mailbox, MessageRange.all(), MessageMapper.FetchType.Full, ReIndexerImpl.NO_LIMIT))
             .thenReturn(ImmutableList.of(user1MailboxMessage).iterator());
         when(user1MailboxMessage.getUid())
-            .thenReturn(1l);
+            .thenReturn(MessageUid.of(1));
 
         when(mailboxManager.list(systemMailboxSession))
             .thenReturn(ImmutableList.of(user1MailboxPath));

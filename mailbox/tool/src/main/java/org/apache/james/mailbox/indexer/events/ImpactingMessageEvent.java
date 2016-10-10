@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.indexer.events;
 
+import org.apache.james.mailbox.MessageUid;
+
 public interface ImpactingMessageEvent extends ImpactingEvent {
 
-    long getUid();
+    MessageUid getUid();
 
 }

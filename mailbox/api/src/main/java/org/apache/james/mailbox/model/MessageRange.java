@@ -26,11 +26,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.james.mailbox.MessageUid;
+
+import com.google.common.base.Objects;
+
 /**
  * Used to define a range of messages by uid.<br>
  * The type of the set should be defined by using an appropriate constructor.
  */
-public class MessageRange implements Iterable<Long>{
+public class MessageRange implements Iterable<MessageUid>{
 
     public enum Type {
         /** All messages */
@@ -39,32 +43,25 @@ public class MessageRange implements Iterable<Long>{
         ONE,
         /** All messages with a uid equal or higher than */
         FROM,
-        /** All messagse within the given range of uids (inclusive) */
+        /** All messages within the given range of uids (inclusive) */
         RANGE
     }
-
-    public static final long NOT_A_UID = -1;
-
-    public static final long MAX_UID = Long.MAX_VALUE;
 
     /**
      * Constructs a range consisting of a single message only.
      * 
      * @param uid
      *            UID of the message
-     * @return not null
      */
-    public static MessageRange one(long uid) {
+    public static MessageRange one(MessageUid uid) {
         return new MessageRange(Type.ONE, uid, uid);
     }
 
     /**
      * Constructs a range consisting of all messages.
-     * 
-     * @return not null
      */
     public static MessageRange all() {
-        return new MessageRange(Type.ALL, NOT_A_UID, MAX_UID);
+        return new MessageRange(Type.ALL, MessageUid.MIN_VALUE, MessageUid.MAX_VALUE);
     }
 
     /**
@@ -75,20 +72,16 @@ public class MessageRange implements Iterable<Long>{
      *            first message UID
      * @param to
      *            last message UID
-     * @return not null
      */
-    public static MessageRange range(long from, long to) {
-        final MessageRange result;
-        if (to == Long.MAX_VALUE || to < from) {
-            to = NOT_A_UID;
-            result = from(from);
-        } else if (from == to) {
+    public static MessageRange range(MessageUid from, MessageUid to) {
+        if (to.equals(MessageUid.MAX_VALUE) || to.compareTo(from) < 0) {
+            return from(from);
+        } else if (from.equals(to)) {
             // from and to is the same so no need to construct a real range
-            result = one(from);
+            return one(from);
         } else {
-            result = new MessageRange(Type.RANGE, from, to);
+            return new MessageRange(Type.RANGE, from, to);
         }
-        return result;
     }
 
 
@@ -97,59 +90,54 @@ public class MessageRange implements Iterable<Long>{
      * 
      * @param from
      *            first message UID in range
-     * @return not null
      */
-    public static MessageRange from(long from) {
-        return new MessageRange(Type.FROM, from, MAX_UID);
+    public static MessageRange from(MessageUid from) {
+        return new MessageRange(Type.FROM, from, MessageUid.MAX_VALUE);
     }
 
 
     private final Type type;
+    private final MessageUid uidFrom;
+    private final MessageUid uidTo;
 
-    private final long uidFrom;
-
-    private final long uidTo;
-
-    protected MessageRange(Type type, long uidFrom, long uidTo) {
+    protected MessageRange(Type type, MessageUid minValue, MessageUid maxValue) {
         super();
         this.type = type;
-        this.uidFrom = uidFrom;
-        this.uidTo = uidTo;
+        this.uidFrom = minValue;
+        this.uidTo = maxValue;
     }
 
     public Type getType() {
         return type;
     }
 
-    public long getUidFrom() {
+    public MessageUid getUidFrom() {
         return uidFrom;
     }
 
-    public long getUidTo() {
+    public MessageUid getUidTo() {
         return uidTo;
     }
 
 
     /**
      * Return true if the uid is within the range
-     * 
-     * @param uid
-     * @return withinRange
      */
-    public boolean includes(long uid) {
+    public boolean includes(MessageUid uid) {
         switch (type) {
         case ALL:
             return true;
         case FROM:
-            if (uid > getUidFrom()) {
+            if (getUidFrom().compareTo(uid) <= 0) {
                 return true;
             }
         case RANGE:
-            if (uid >= getUidFrom() && uid <= getUidTo()) {
+            if (getUidFrom().compareTo(uid) <= 0 &&
+                    getUidTo().compareTo(uid) >= 0) {
                 return true;
             }
         case ONE:
-            if (getUidFrom() == uid) {
+            if (getUidFrom().equals(uid)) {
                 return true;
             }
         default:
@@ -169,35 +157,35 @@ public class MessageRange implements Iterable<Long>{
      *          collection of uids to convert
      * @return ranges
      */
-    public static List<MessageRange> toRanges(Collection<Long> uidsCol) {
+    public static List<MessageRange> toRanges(Collection<MessageUid> uidsCol) {
         List<MessageRange> ranges = new ArrayList<MessageRange>();
-        List<Long> uids = new ArrayList<Long>(uidsCol);
+        List<MessageUid> uids = new ArrayList<MessageUid>(uidsCol);
         Collections.sort(uids);
         
         long firstUid = 0;
         int a = 0;
         for (int i = 0; i < uids.size(); i++) {
-            long u = uids.get(i);
+            long u = uids.get(i).asLong();
             if (i == 0) {
                 firstUid =  u;
                 if (uids.size() == 1) {
-                    ranges.add(MessageRange.one(firstUid));
+                    ranges.add(MessageUid.of(firstUid).toRange());
                 }
             } else {
                 if ((firstUid + a +1) != u) {
-                    ranges.add(MessageRange.range(firstUid, firstUid + a));
+                    ranges.add(MessageRange.range(MessageUid.of(firstUid), MessageUid.of(firstUid + a)));
                     
                     // set the next first uid and reset the counter
                     firstUid = u;
                     a = 0;
                     if (uids.size() <= i +1) {
-                        ranges.add(MessageRange.one(firstUid));
+                        ranges.add(MessageUid.of(firstUid).toRange());
                     }
                 } else {
                     a++;
                     // Handle uids which are in sequence. See MAILBOX-56
                     if (uids.size() <= i +1) {
-                        ranges.add(MessageRange.range(firstUid, firstUid +a));
+                        ranges.add(MessageRange.range(MessageUid.of(firstUid), MessageUid.of(firstUid + a)));
                         break;
                     } 
                 }
@@ -208,35 +196,21 @@ public class MessageRange implements Iterable<Long>{
     
     
     /**
-     * Return a read-only {@link Iterator} which contains all uid which fail in the specified range.
-     * 
-     * @return rangeIt
+     * Return a read-only {@link Iterator} which contains all uid which fall in the specified range.
      */
     @Override
-    public Iterator<Long> iterator() {
-        long from = getUidFrom();
-        if (from == NOT_A_UID) {
-            from = 1;
-        }
-        long to = getUidTo();
-        if (to == NOT_A_UID) {
-            to = Long.MAX_VALUE;
-        }
-        return new RangeIterator(from, to);
+    public Iterator<MessageUid> iterator() {
+        return new RangeIterator(getUidFrom(), getUidTo());
     }
     
-    /**
-     * {@link Iterator} of a range of msn/uid
-     *
-     */
-    private final class RangeIterator implements Iterator<Long> {
+    private final class RangeIterator implements Iterator<MessageUid> {
 
         private final long to;
         private long current;
         
-        public RangeIterator(long from, long to) {
-            this.to = to;
-            this.current = from;
+        public RangeIterator(MessageUid from, MessageUid to) {
+            this.to = to.asLong();
+            this.current = from.asLong();
         }
         
         @Override
@@ -245,9 +219,9 @@ public class MessageRange implements Iterable<Long>{
         }
 
         @Override
-        public Long next() {
+        public MessageUid next() {
             if (hasNext()) {
-                return current++;
+                return MessageUid.of(current++);
             } else {
                 throw new NoSuchElementException("Max uid of " + to + " was reached before");
             }
@@ -265,15 +239,12 @@ public class MessageRange implements Iterable<Long>{
      * Tries to split the given {@link MessageRange} to a {@link List} of {@link MessageRange}'s which 
      * select only a max amount of items. This only work for {@link MessageRange}'s with {@link Type} of 
      * {@link Type#RANGE}.
-     * 
-     * @param maxItems
-     * @return ranges
      */
-    public List<MessageRange> split( int maxItems) {
+    public List<MessageRange> split(int maxItems) {
         List<MessageRange> ranges = new ArrayList<MessageRange>();
         if (getType() == Type.RANGE) {
-            long from = getUidFrom();
-            long to = getUidTo();
+            long from = getUidFrom().asLong();
+            long to = getUidTo().asLong();
             long realTo = to;
             while(from <= realTo) {
                 if (from + maxItems  -1 < realTo) {
@@ -282,9 +253,9 @@ public class MessageRange implements Iterable<Long>{
                     to = realTo;
                 }
                 if (from == to) {
-                    ranges.add(MessageRange.one(from));
+                    ranges.add(MessageUid.of(from).toRange());
                 } else {
-                    ranges.add(MessageRange.range(from, to));
+                    ranges.add(MessageRange.range(MessageUid.of(from), MessageUid.of(to)));
                 }
                 
                 from = to + 1;
@@ -297,29 +268,17 @@ public class MessageRange implements Iterable<Long>{
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        result = prime * result + (int) (uidFrom ^ (uidFrom >>> 32));
-        result = prime * result + (int) (uidTo ^ (uidTo >>> 32));
-        return result;
+        return Objects.hashCode(type, uidFrom, uidTo);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        MessageRange other = (MessageRange) obj;
-        if (type != other.type)
-            return false;
-        if (uidFrom != other.uidFrom)
-            return false;
-        if (uidTo != other.uidTo)
-            return false;
-        return true;
+        if (obj instanceof MessageRange) {
+            MessageRange other = (MessageRange) obj;
+            return Objects.equal(this.type, other.type) &&
+                    Objects.equal(this.uidFrom, other.uidFrom) &&
+                    Objects.equal(this.uidTo, other.uidTo);
+        }
+        return false;
     }
 }

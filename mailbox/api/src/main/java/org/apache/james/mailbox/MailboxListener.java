@@ -177,7 +177,7 @@ public interface MailboxListener {
          * 
          * @return message uids
          */
-        public abstract List<Long> getUids();
+        public abstract List<MessageUid> getUids();
     }
 
     abstract class MetaDataHoldingEvent extends MessageEvent {
@@ -191,7 +191,7 @@ public interface MailboxListener {
          *
          * @return flags
          */
-        public abstract MessageMetaData getMetaData(long uid);
+        public abstract MessageMetaData getMetaData(MessageUid uid);
 
     }
 
@@ -211,7 +211,7 @@ public interface MailboxListener {
          * 
          * @return flags
          */
-        public abstract MessageMetaData getMetaData(long uid);
+        public abstract MessageMetaData getMetaData(MessageUid uid);
     }
 
     /**
@@ -250,7 +250,7 @@ public interface MailboxListener {
          * 
          * @return flags
          */
-        public abstract MessageMetaData getMetaData(long uid);
+        public abstract MessageMetaData getMetaData(MessageUid uid);
         
     }
     

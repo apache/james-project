@@ -25,6 +25,7 @@ import java.util.NoSuchElementException;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
@@ -40,15 +41,17 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.google.common.base.Objects;
+
 public class StoreMessageResultIterator implements MessageResultIterator {
 
     private Iterator<MailboxMessage> next = null;
     private MailboxException exception;
     private final Mailbox mailbox;
     private final FetchGroup group;
-    private final long from;
-    private long cursor;
-    private final long to;
+    private final MessageUid from;
+    private MessageUid cursor;
+    private final MessageUid to;
     private final int batchSize;
     private final Type type;
     private final MessageMapper mapper;
@@ -116,7 +119,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
     @Override
     public boolean hasNext() {
-        if (cursor > to) 
+        if (cursor.compareTo(to) > 0) 
           return false;
 
         if (next == null || !next.hasNext()) {
@@ -167,7 +170,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             result = new UnloadedMessageResult(message, e);
         }
 
-        cursor++;
+        cursor = cursor.next();
         return result;
     }
 
@@ -188,7 +191,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
         private final long size;
 
-        private final long uid;
+        private final MessageUid uid;
 
         private final Flags flags;
 
@@ -224,26 +227,17 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             return size;
         }
 
-        public long getUid() {
+        public MessageUid getUid() {
             return uid;
         }
 
         public int compareTo(MessageResult that) {
-            // Java 1.5 return (int) Math.signum(uid - that.getUid());
-            long diff = uid - that.getUid();
-            return (int) diff == 0 ? 0 : diff > 0 ? 1 : -1;
+            return uid.compareTo(that.getUid());
         }
 
         @Override
         public int hashCode() {
-            int ret = 19 * 37;
-            ret = ret * 37 + exception.hashCode();
-            ret = ret * 37 + internalDate.hashCode();
-            ret = ret * 37 + (int)size;
-            ret = ret * 37 + (int)uid;
-            ret = ret * 37 + flags.hashCode();
-            ret = ret * 37 + (int)modSeq;
-            return ret;
+            return Objects.hashCode(exception, internalDate, size, uid, flags, modSeq);
         }
 
         @Override
@@ -253,7 +247,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             }
             if (obj instanceof UnloadedMessageResult) {
                 UnloadedMessageResult that = (UnloadedMessageResult)obj;
-                return (size == that.size) && (uid == that.uid) && (modSeq == that.modSeq) && exception.equals(that.exception)
+                return (size == that.size) && (uid.equals(that.uid)) && (modSeq == that.modSeq) && exception.equals(that.exception)
                         && internalDate.equals(that.internalDate) && flags.equals(that.flags);
             }
             return false;

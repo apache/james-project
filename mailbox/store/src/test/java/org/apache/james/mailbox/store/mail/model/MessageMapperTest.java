@@ -32,6 +32,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -57,6 +58,7 @@ import org.xenei.junit.contract.Contract;
 import org.xenei.junit.contract.ContractTest;
 import org.xenei.junit.contract.IProducer;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 @Contract(MapperProvider.class)
@@ -178,7 +180,7 @@ public class MessageMapperTest<T extends MapperProvider> {
     @ContractTest
     public void mailboxUnSeenCountShouldBeDecrementedAfterAMessageIsMarkedSeen() throws MailboxException {
         saveMessages();
-        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid())).hasNext();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), message1.getUid().toRange()).hasNext();
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(4);
     }
 
@@ -207,7 +209,7 @@ public class MessageMapperTest<T extends MapperProvider> {
     @ContractTest
     public void deletingUnExistingMessageShouldHaveNoSideEffect() throws MailboxException, IOException {
         saveMessages();
-        message6.setUid(messageMapper.getLastUid(benwaInboxMailbox) + 1);
+        message6.setUid(messageMapper.getLastUid(benwaInboxMailbox).get().next());
         messageMapper.delete(benwaInboxMailbox, message6);
         assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT))
             .containsOnly(message1, message2, message3, message4, message5);
@@ -215,7 +217,7 @@ public class MessageMapperTest<T extends MapperProvider> {
 
     @ContractTest
     public void noMessageShouldBeRetrievedInEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), MessageMapper.FetchType.Metadata, LIMIT)).isEmpty();
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(MessageUid.MIN_VALUE), MessageMapper.FetchType.Metadata, LIMIT)).isEmpty();
     }
 
     @ContractTest
@@ -487,25 +489,25 @@ public class MessageMapperTest<T extends MapperProvider> {
     }
 
     @ContractTest
-    public void getLastUidShouldReturn0OnEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isEqualTo(0);
+    public void getLastUidShouldReturnEmptyOnEmptyMailbox() throws MailboxException {
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isEqualTo(Optional.absent());
     }
 
     @ContractTest
     public void insertingAMessageShouldIncrementLastUid() throws MailboxException {
         messageMapper.add(benwaInboxMailbox, message1);
-        long uid = messageMapper.getLastUid(benwaInboxMailbox);
-        assertThat(uid).isGreaterThan(0);
+        Optional<MessageUid> uid = messageMapper.getLastUid(benwaInboxMailbox);
+        assertThat(uid).isNotEqualTo(Optional.absent());
         messageMapper.add(benwaInboxMailbox, message2);
-        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isGreaterThan(uid);
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox).get()).isGreaterThan(uid.get());
     }
 
     @ContractTest
     public void copyShouldIncrementUid() throws MailboxException, IOException {
         saveMessages();
-        long uid = messageMapper.getLastUid(benwaInboxMailbox);
+        MessageUid uid = messageMapper.getLastUid(benwaInboxMailbox).get();
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
-        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isGreaterThan(uid);
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox).get()).isGreaterThan(uid);
     }
 
     @ContractTest
@@ -536,16 +538,16 @@ public class MessageMapperTest<T extends MapperProvider> {
         MailboxMessage message7 = SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6);
         messageMapper.copy(benwaInboxMailbox, message7);
         message7.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
-        assertThat(messageMapper.getLastUid(benwaInboxMailbox)).isGreaterThan(message6.getUid());
+        assertThat(messageMapper.getLastUid(benwaInboxMailbox).get()).isGreaterThan(message6.getUid());
 
         MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox,
-            MessageRange.one(messageMapper.getLastUid(benwaInboxMailbox)),
+            MessageRange.one(messageMapper.getLastUid(benwaInboxMailbox).get()),
             MessageMapper.FetchType.Full,
             LIMIT)
             .next();
 
         MessageAssert.assertThat(result).isEqualToWithoutUid(message7, MessageMapper.FetchType.Full);
-        assertThat(result.getUid()).isEqualTo(messageMapper.getLastUid(benwaInboxMailbox));
+        assertThat(result.getUid()).isEqualTo(messageMapper.getLastUid(benwaInboxMailbox).get());
     }
 
     @ContractTest
@@ -743,7 +745,7 @@ public class MessageMapperTest<T extends MapperProvider> {
         MessageAssert.assertThat(retrieveMessageFromStorage(message)).hasFlags(new Flags(USER_FLAG));
     }
 
-    private Map<Long, MessageMetaData> markThenPerformExpunge(MessageRange range) throws MailboxException {
+    private Map<MessageUid, MessageMetaData> markThenPerformExpunge(MessageRange range) throws MailboxException {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
         return messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, range);

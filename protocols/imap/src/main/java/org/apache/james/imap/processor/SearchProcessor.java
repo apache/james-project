@@ -35,6 +35,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.request.SearchOperation;
@@ -52,6 +53,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -62,6 +64,8 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 
+import com.google.common.base.Optional;
+
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
 
     protected final static String SEARCH_MODSEQ = "SEARCH_MODSEQ";
@@ -71,14 +75,6 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         super(SearchRequest.class, next, mailboxManager, factory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor
-     * #doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
     protected void doProcess(SearchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final SearchOperation operation = request.getSearchOperation();
         final SearchKey searchKey = operation.getSearchKey();
@@ -91,24 +87,25 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
             final SearchQuery query = toQuery(searchKey, session);
             MailboxSession msession = ImapSessionUtils.getMailboxSession(session);
-            final Iterator<Long> it = mailbox.search(query, msession);
+            final Iterator<MessageUid> it = mailbox.search(query, msession);
             
             final Collection<Long> results = new TreeSet<Long>();
-            final Collection<Long> uids = new TreeSet<Long>();
+            final Collection<MessageUid> uids = new TreeSet<MessageUid>();
             
             while (it.hasNext()) {
-                final long uid = it.next();
+                final MessageUid uid = it.next();
                 final Long number;
                 if (useUids) {
-                    number = uid;
+                    uids.add(uid);
+                    results.add(uid.asLong());
                 } else {
                     final int msn = session.getSelected().msn(uid);
                     number = (long) msn;
+                    if (number == SelectedMailbox.NO_SUCH_MESSAGE == false) {
+                        results.add(number);
+                    }
                 }
-                if (number == SelectedMailbox.NO_SUCH_MESSAGE == false)
-                    results.add(number);
                 
-                uids.add(uid);
             }
             
             // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
@@ -131,17 +128,22 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             if (resultOptions == null || resultOptions.isEmpty()) {
                 response = new SearchResponse(ids, highestModSeq);
             } else {
-                IdRange[] idRanges;
                 List<Long> idList = new ArrayList<Long>(ids.length);
                 for (long id : ids) {
                     idList.add(id);
                 }
-                List<MessageRange> ranges = MessageRange.toRanges(idList);
-                idRanges = new IdRange[ranges.size()];
-                for (int i = 0 ; i <ranges.size(); i++) {
-                    MessageRange range = ranges.get(i);
-                    idRanges[i] = new IdRange(range.getUidFrom(), range.getUidTo());
+                
+                List<IdRange> idsAsRanges = new ArrayList<IdRange>();
+                for (Long id: idList) {
+                    idsAsRanges.add(new IdRange(id));
                 }
+                IdRange[] idRanges = IdRange.mergeRanges(idsAsRanges).toArray(new IdRange[0]);
+                
+                List<UidRange> uidsAsRanges = new ArrayList<UidRange>();
+                for (MessageUid uid: uids) {
+                    uidsAsRanges.add(new UidRange(uid));
+                }
+                UidRange[] uidRanges = UidRange.mergeRanges(uidsAsRanges).toArray(new UidRange[0]);
                 
                 boolean esearch = false;
                 for (SearchResultOption resultOption : resultOptions) {
@@ -180,7 +182,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                             SearchResUtil.saveSequenceSet(session, savedRanges.toArray(new IdRange[0]));
                         }
                     }
-                    response = new ESearchResponse(min, max, count, idRanges, highestModSeq, tag, useUids, resultOptions);
+                    response = new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, tag, useUids, resultOptions);
                 } else {
                     // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
                     SearchResUtil.saveSequenceSet(session, idRanges);
@@ -331,7 +333,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             Criterion afterCrit = SearchQuery.headerDateAfter(ImapConstants.RFC822_DATE, date.toDate(), DateResolution.Day);
             return SearchQuery.or(onCrit, afterCrit);
         case SearchKey.TYPE_SEQUENCE_SET:
-            return sequence(key.getSequenceNumbers(), session, true);
+            return sequence(key.getSequenceNumbers(), session);
         case SearchKey.TYPE_SINCE:
             // Include the date which is used as search param. See IMAP-293
             return SearchQuery.or(SearchQuery.internalDateOn(date.toDate(), DateResolution.Day), SearchQuery.internalDateAfter(date.toDate(), DateResolution.Day));
@@ -344,7 +346,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         case SearchKey.TYPE_TO:
             return SearchQuery.address(AddressType.To, key.getValue());
         case SearchKey.TYPE_UID:
-            return sequence(key.getSequenceNumbers(), session, false);
+            return uids(key.getUidRanges(), session);
         case SearchKey.TYPE_UNANSWERED:
             return SearchQuery.flagIsUnSet(Flag.ANSWERED);
         case SearchKey.TYPE_UNDELETED:
@@ -379,81 +381,96 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     /**
-     * Create a {@link Criterion} for the given sequence-sets. This include special handling which is needed for SEARCH to not return a BAD response on a invalid message-set. 
+     * Create a {@link Criterion} for the given sequence-sets. 
+     * This include special handling which is needed for SEARCH to not return a BAD response on a invalid message-set. 
      * See IMAP-292 for more details.
-     * 
-     * 
-     * @param sequenceNumbers
-     * @param session
-     * @param msn
-     * @return crit
-     * @throws MessageRangeException
      */
-    private Criterion sequence(IdRange[] sequenceNumbers, ImapSession session, boolean msn) throws MessageRangeException {
-        final List<SearchQuery.NumericRange> ranges = new ArrayList<SearchQuery.NumericRange>();
+    private Criterion sequence(IdRange[] sequenceNumbers, ImapSession session) throws MessageRangeException {
+        
         final SelectedMailbox selected = session.getSelected();
-        boolean useUids = !msn;
 
         // First of check if we have any messages in the mailbox
         // if not we don't need to go through all of this
+        final List<SearchQuery.UidRange> ranges = new ArrayList<SearchQuery.UidRange>();
         if (selected.existsCount() > 0) {
             for (IdRange range : sequenceNumbers) {
                 long lowVal = range.getLowVal();
                 long highVal = range.getHighVal();
-                if (useUids) {
-                    // Take care of "*" and "*:*" values by return the last
-                    // message in
-                    // the mailbox. See IMAP-289
-                    if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                        ranges.add(new SearchQuery.NumericRange(selected.getLastUid()));
-                    } else if (highVal == Long.MAX_VALUE && selected.getLastUid() < lowVal) {
-                        // Sequence uid ranges which use
-                        // *:<uid-higher-then-last-uid>
-                        // MUST return at least the highest uid in the mailbox
-                        // See IMAP-291
-                        ranges.add(new SearchQuery.NumericRange(selected.getLastUid()));
-                    } else {
-                        ranges.add(new SearchQuery.NumericRange(lowVal, highVal));
-                    }
+                // Take care of "*" and "*:*" values by return the last
+                // message in
+                // the mailbox. See IMAP-289
+                if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
+                    MessageUid highUid = selected.getLastUid().or(MessageUid.MIN_VALUE);
+
+                    ranges.add(new SearchQuery.UidRange(highUid));
                 } else {
-                    // Take care of "*" and "*:*" values by return the last
-                    // message in
-                    // the mailbox. See IMAP-289
-                    if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                        highVal = selected.getLastUid();
-
-                        ranges.add(new SearchQuery.NumericRange(highVal));
+                    Optional<MessageUid> lowUid;
+                    if (lowVal != Long.MIN_VALUE) {
+                        lowUid = selected.uid((int) lowVal);
                     } else {
-                        if (lowVal != Long.MIN_VALUE) {
-                            lowVal = selected.uid((int) lowVal);
-                        } else {
-                            lowVal = selected.getFirstUid();
-                        }
+                        lowUid = selected.getFirstUid();
+                    }
 
-                        // The lowVal should never be
-                        // SelectedMailbox.NO_SUCH_MESSAGE but we check for it
-                        // just to be safe
-                        if (lowVal != SelectedMailbox.NO_SUCH_MESSAGE) {
-                            if (highVal != Long.MAX_VALUE) {
-                                highVal = selected.uid((int) highVal);
-                                if (highVal == SelectedMailbox.NO_SUCH_MESSAGE) {
-                                    // we requested a message with a MSN higher
-                                    // then
-                                    // the current msg count. So just use the
-                                    // highest uid as max
-                                    highVal = selected.getLastUid();
-                                }
-                            } else {
-                                highVal = selected.getLastUid();
+                    // The lowVal should never be
+                    // SelectedMailbox.NO_SUCH_MESSAGE but we check for it
+                    // just to be safe
+                    if (lowUid.isPresent()) {
+                        Optional<MessageUid> highUid = Optional.absent();
+                        if (highVal != Long.MAX_VALUE) {
+                            highUid = selected.uid((int) highVal);
+                            if (!highUid.isPresent()) {
+                                // we requested a message with a MSN higher
+                                // then
+                                // the current msg count. So just use the
+                                // highest uid as max
+                                highUid = selected.getLastUid();
                             }
-                            ranges.add(new SearchQuery.NumericRange(lowVal, highVal));
+                        } else {
+                            highUid = selected.getLastUid();
                         }
+                        ranges.add(new SearchQuery.UidRange(lowUid.or(MessageUid.MIN_VALUE), highUid.or(MessageUid.MAX_VALUE)));
                     }
                 }
             }
         }
 
-        return SearchQuery.uid(ranges.toArray(new SearchQuery.NumericRange[0]));
+        return SearchQuery.uid(ranges.toArray(new SearchQuery.UidRange[0]));
+    }
+    
+    /**
+     * Create a {@link Criterion} for the given uid-sets. 
+     * This include special handling which is needed for SEARCH to not return a BAD response on a invalid message-set. 
+     * See IMAP-292 for more details.
+     */
+    private Criterion uids(UidRange[] uids, ImapSession session) throws MessageRangeException {
+        
+        final SelectedMailbox selected = session.getSelected();
+
+        // First of check if we have any messages in the mailbox
+        // if not we don't need to go through all of this
+        final List<SearchQuery.UidRange> ranges = new ArrayList<SearchQuery.UidRange>();
+        if (selected.existsCount() > 0) {
+            for (UidRange range : uids) {
+                MessageUid lowVal = range.getLowVal();
+                MessageUid highVal = range.getHighVal();
+                // Take care of "*" and "*:*" values by return the last
+                // message in
+                // the mailbox. See IMAP-289
+                if (lowVal.equals(MessageUid.MAX_VALUE) && highVal.equals(MessageUid.MAX_VALUE)) {
+                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().or(MessageUid.MIN_VALUE)));
+                } else if (highVal.equals(MessageUid.MAX_VALUE) && selected.getLastUid().or(MessageUid.MIN_VALUE).compareTo(lowVal) < 0) {
+                    // Sequence uid ranges which use
+                    // *:<uid-higher-then-last-uid>
+                    // MUST return at least the highest uid in the mailbox
+                    // See IMAP-291
+                    ranges.add(new SearchQuery.UidRange(selected.getLastUid().or(MessageUid.MIN_VALUE)));
+                } else {
+                    ranges.add(new SearchQuery.UidRange(lowVal, highVal));
+                }
+            }
+        }
+
+        return SearchQuery.uid(ranges.toArray(new SearchQuery.UidRange[0]));
     }
 
     private Criterion or(List<SearchKey> keys, ImapSession session) throws MessageRangeException {

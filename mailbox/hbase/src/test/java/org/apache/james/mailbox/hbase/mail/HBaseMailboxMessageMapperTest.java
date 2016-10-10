@@ -44,6 +44,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -192,8 +193,8 @@ public class HBaseMailboxMessageMapperTest {
      */
     private void testFindFirstUnseenMessageUid() throws Exception {
         LOG.info("findFirstUnseenMessageUid");
-        final long uid = messageMapper.findFirstUnseenMessageUid(MBOXES.get(1));
-        assertEquals(1, uid);
+        MessageUid uid = messageMapper.findFirstUnseenMessageUid(MBOXES.get(1));
+        assertEquals(MessageUid.of(1), uid);
     }
 
     /**
@@ -202,7 +203,7 @@ public class HBaseMailboxMessageMapperTest {
      */
     private void testFindRecentMessageUidsInMailbox() throws Exception {
         LOG.info("findRecentMessageUidsInMailbox");
-        List<Long> recentMessages = messageMapper.findRecentMessageUidsInMailbox(MBOXES.get(1));
+        List<MessageUid> recentMessages = messageMapper.findRecentMessageUidsInMailbox(MBOXES.get(1));
         assertEquals(MESSAGE_NO.size() - 1, recentMessages.size());
     }
 
@@ -222,8 +223,8 @@ public class HBaseMailboxMessageMapperTest {
      */
     private void testGetLastUid() throws Exception {
         LOG.info("getLastUid");
-        long lastUid = messageMapper.getLastUid(MBOXES.get(1));
-        assertEquals(MESSAGE_NO.size(), lastUid);
+        MessageUid lastUid = messageMapper.getLastUid(MBOXES.get(1)).get();
+        assertEquals(MessageUid.of(MESSAGE_NO.size()), lastUid);
     }
 
     /**

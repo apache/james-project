@@ -28,6 +28,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.response.Literal;
@@ -401,9 +402,18 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         }
     }
 
-    /**
-     * @see org.apache.james.imap.encode.ImapResponseComposer#sequenceSet(org.apache.james.imap.api.message.IdRange[])
-     */
+    public ImapResponseComposer sequenceSet(UidRange[] ranges) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0 ; i< ranges.length; i++) {
+            UidRange range = ranges[i];
+            sb.append(range.getFormattedString());
+            if (i + 1 < ranges.length) {
+                sb.append(",");
+            }
+        }
+        return message(sb.toString());
+    }
+
     public ImapResponseComposer sequenceSet(IdRange[] ranges) throws IOException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0 ; i< ranges.length; i++) {
@@ -415,6 +425,5 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         }
         return message(sb.toString());
     }
-
 
 }

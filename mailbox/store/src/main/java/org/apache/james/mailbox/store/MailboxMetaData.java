@@ -25,6 +25,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxACL;
 
 /**
@@ -33,22 +34,22 @@ import org.apache.james.mailbox.model.MailboxACL;
 public class MailboxMetaData implements MessageManager.MetaData {
 
     private final long recentCount;
-    private final List<Long> recent;
+    private final List<MessageUid> recent;
     private final Flags premanentFlags;
     private final long uidValidity;
-    private final long nextUid;
+    private final MessageUid nextUid;
     private final long messageCount;
     private final long unseenCount;
-    private final Long firstUnseen;
+    private final MessageUid firstUnseen;
     private final boolean writeable;
     private final long highestModSeq;
     private final boolean modSeqPermanent;
     private final MailboxACL acl;
 
-    public MailboxMetaData(List<Long> recent, Flags premanentFlags, long uidValidity, long nextUid, long highestModSeq, long messageCount, long unseenCount, Long firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
+    public MailboxMetaData(List<MessageUid> recent, Flags premanentFlags, long uidValidity, MessageUid uidNext, long highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         super();
         if (recent == null) {
-            this.recent = new ArrayList<Long>();
+            this.recent = new ArrayList<MessageUid>();
         } else {
             this.recent = recent;
 
@@ -58,7 +59,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
 
         this.premanentFlags = premanentFlags;
         this.uidValidity = uidValidity;
-        this.nextUid = nextUid;
+        this.nextUid = uidNext;
         this.messageCount = messageCount;
         this.unseenCount = unseenCount;
         this.firstUnseen = firstUnseen;
@@ -81,10 +82,8 @@ public class MailboxMetaData implements MessageManager.MetaData {
         return premanentFlags;
     }
 
-    /**
-     * @see MailboxMetaData#getRecent()
-     */
-    public List<Long> getRecent() {
+    @Override
+    public List<MessageUid> getRecent() {
         return recent;
     }
 
@@ -95,10 +94,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
         return uidValidity;
     }
 
-    /**
-     * @see MailboxMetaData#getUidNext()
-     */
-    public long getUidNext() {
+    public MessageUid getUidNext() {
         return nextUid;
     }
 
@@ -116,10 +112,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
         return unseenCount;
     }
 
-    /**
-     * @see MailboxMetaData#getFirstUnseen()
-     */
-    public Long getFirstUnseen() {
+    public MessageUid getFirstUnseen() {
         return firstUnseen;
     }
 

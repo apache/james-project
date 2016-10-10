@@ -24,21 +24,20 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
+import java.util.Date;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import javax.mail.Flags;
-import java.util.Date;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class ListeningCurrentQuotaUpdaterTest {
 
@@ -62,36 +61,11 @@ public class ListeningCurrentQuotaUpdaterTest {
     @Test
     public void addedEventShouldIncreaseCurrentQuotaValues() throws Exception {
         MailboxListener.Added added = mock(MailboxListener.Added.class);
-        when(added.getMetaData(36)).thenAnswer(new Answer<MessageMetaData>() {
-            @Override
-            public MessageMetaData answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new SimpleMessageMetaData(36,0,new Flags(), SIZE, new Date());
-            }
-        });
-        when(added.getMetaData(38)).thenAnswer(new Answer<MessageMetaData>() {
-            @Override
-            public MessageMetaData answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new SimpleMessageMetaData(38,0,new Flags(), SIZE, new Date());
-            }
-        });
-        when(added.getUids()).thenAnswer(new Answer<List<Long>>() {
-            @Override
-            public List<Long> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return Lists.newArrayList(36L, 38L);
-            }
-        });
-        when(added.getMailboxPath()).thenAnswer(new Answer<MailboxPath>() {
-            @Override
-            public MailboxPath answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return MAILBOX_PATH;
-            }
-        });
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
+        when(added.getMetaData(MessageUid.of(36))).thenReturn(new SimpleMessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date()));
+        when(added.getMetaData(MessageUid.of(38))).thenReturn(new SimpleMessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date()));
+        when(added.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
+        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         testee.event(added);
         verify(mockedCurrentQuotaManager).increase(QUOTA_ROOT, 2, 2 * SIZE);
     }
@@ -99,60 +73,20 @@ public class ListeningCurrentQuotaUpdaterTest {
     @Test
     public void expungedEventShouldDecreaseCurrentQuotaValues() throws Exception {
         MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);
-        when(expunged.getMetaData(36)).thenAnswer(new Answer<MessageMetaData>() {
-            @Override
-            public MessageMetaData answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new SimpleMessageMetaData(36,0,new Flags(), SIZE, new Date());
-            }
-        });
-        when(expunged.getMetaData(38)).thenAnswer(new Answer<MessageMetaData>() {
-            @Override
-            public MessageMetaData answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return new SimpleMessageMetaData(38,0,new Flags(), SIZE, new Date());
-            }
-        });
-        when(expunged.getUids()).thenAnswer(new Answer<List<Long>>() {
-            @Override
-            public List<Long> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return Lists.newArrayList(36L, 38L);
-            }
-        });
-        when(expunged.getMailboxPath()).thenAnswer(new Answer<MailboxPath>() {
-            @Override
-            public MailboxPath answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return MAILBOX_PATH;
-            }
-        });
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
+        when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new SimpleMessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date()));
+        when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new SimpleMessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date()));
+        when(expunged.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
+        when(expunged.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         testee.event(expunged);
         verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 2, 2 * SIZE);
     }
     @Test
     public void emptyExpungedEventShouldNotTriggerDecrease() throws Exception {
         MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);
-        when(expunged.getUids()).thenAnswer(new Answer<List<Long>>() {
-            @Override
-            public List<Long> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return Lists.newArrayList();
-            }
-        });
-        when(expunged.getMailboxPath()).thenAnswer(new Answer<MailboxPath>() {
-            @Override
-            public MailboxPath answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return MAILBOX_PATH;
-            }
-        });
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
+        when(expunged.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
+        when(expunged.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         testee.event(expunged);
         verify(mockedCurrentQuotaManager, never()).decrease(QUOTA_ROOT, 0, 0);
     }
@@ -160,24 +94,9 @@ public class ListeningCurrentQuotaUpdaterTest {
     @Test
     public void emptyAddedEventShouldNotTriggerDecrease() throws Exception {
         MailboxListener.Added added = mock(MailboxListener.Added.class);
-        when(added.getUids()).thenAnswer(new Answer<List<Long>>() {
-            @Override
-            public List<Long> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return Lists.newArrayList();
-            }
-        });
-        when(added.getMailboxPath()).thenAnswer(new Answer<MailboxPath>() {
-            @Override
-            public MailboxPath answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return MAILBOX_PATH;
-            }
-        });
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenAnswer(new Answer<QuotaRoot>() {
-            @Override
-            public QuotaRoot answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return QUOTA_ROOT;
-            }
-        });
+        when(added.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
+        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         testee.event(added);
         verify(mockedCurrentQuotaManager, never()).increase(QUOTA_ROOT, 0, 0);
     }

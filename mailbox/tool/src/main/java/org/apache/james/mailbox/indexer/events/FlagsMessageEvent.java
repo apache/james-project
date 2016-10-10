@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.indexer.events;
 
 import com.google.common.base.Objects;
+
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 
 import javax.mail.Flags;
@@ -27,17 +29,17 @@ import javax.mail.Flags;
 public class FlagsMessageEvent implements ImpactingMessageEvent {
 
     private final MailboxPath mailboxPath;
-    private final long uid;
+    private final MessageUid uid;
     private final Flags flags;
 
-    public FlagsMessageEvent(MailboxPath mailboxPath, long uid, Flags flags) {
+    public FlagsMessageEvent(MailboxPath mailboxPath, MessageUid uid, Flags flags) {
         this.mailboxPath = mailboxPath;
         this.uid = uid;
         this.flags = flags;
     }
 
     @Override
-    public long getUid() {
+    public MessageUid getUid() {
         return uid;
     }
 

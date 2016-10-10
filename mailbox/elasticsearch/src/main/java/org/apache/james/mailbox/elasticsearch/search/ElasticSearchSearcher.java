@@ -28,6 +28,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
@@ -71,7 +72,7 @@ public class ElasticSearchSearcher {
         this.mailboxIdFactory = mailboxIdFactory;
     }
     
-    public Multimap<MailboxId, Long> search(List<User> users, MultimailboxesSearchQuery query) throws MailboxException {
+    public Multimap<MailboxId, MessageUid> search(List<User> users, MultimailboxesSearchQuery query) throws MailboxException {
         return new ScrollIterable(client, getSearchRequestBuilder(client, users, query)).stream()
             .flatMap(this::transformResponseToUidStream)
             .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
@@ -91,19 +92,19 @@ public class ElasticSearchSearcher {
                 (partialResult1, partialResult2) -> partialResult1);
     }
 
-    private Stream<Pair<MailboxId, Long>> transformResponseToUidStream(SearchResponse searchResponse) {
+    private Stream<Pair<MailboxId, MessageUid>> transformResponseToUidStream(SearchResponse searchResponse) {
         return StreamSupport.stream(searchResponse.getHits().spliterator(), false)
             .map(this::extractContentFromHit)
             .filter(Optional::isPresent)
             .map(Optional::get);
     }
 
-    private Optional<Pair<MailboxId, Long>> extractContentFromHit(SearchHit hit) {
+    private Optional<Pair<MailboxId, MessageUid>> extractContentFromHit(SearchHit hit) {
         SearchHitField mailboxId = hit.field(JsonMessageConstants.MAILBOX_ID);
         SearchHitField uid = hit.field(JsonMessageConstants.ID);
         if (mailboxId != null && uid != null) {
             Number uidAsNumber = uid.getValue();
-            return Optional.of(Pair.of(mailboxIdFactory.fromString(mailboxId.getValue()), uidAsNumber.longValue()));
+            return Optional.of(Pair.of(mailboxIdFactory.fromString(mailboxId.getValue()), MessageUid.of(uidAsNumber.longValue())));
         } else {
             LOGGER.warn("Can not extract UID and/or MailboxId for search result " + hit.getId());
             return Optional.empty();

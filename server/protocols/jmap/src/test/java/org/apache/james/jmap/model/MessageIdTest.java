@@ -20,6 +20,7 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.MessageUid;
 import org.junit.Test;
 
 public class MessageIdTest {
@@ -55,8 +56,8 @@ public class MessageIdTest {
 
     @Test
     public void ofShouldWorkWhenMessageIdIsWellFormated() {
+        MessageId expected = new MessageId("username", "mailboxpath", MessageUid.of(321));
         String messageId = "username|mailboxpath|321";
-        MessageId expected = new MessageId("username", "mailboxpath", 321);
         
         MessageId actual = MessageId.of(messageId);
         
@@ -66,7 +67,7 @@ public class MessageIdTest {
     @Test
     public void ofShouldWorkWhenOnePartContainsAHyphen() {
         String messageId = "user-name|mailboxpath|321";
-        MessageId expected = new MessageId("user-name", "mailboxpath", 321);
+        MessageId expected = new MessageId("user-name", "mailboxpath", MessageUid.of(321));
         
         MessageId actual = MessageId.of(messageId);
         
@@ -76,7 +77,7 @@ public class MessageIdTest {
     @Test
     public void ofShouldWorkWhenSecondPartContainsAHyphen() {
         String messageId = "username|mailbox-path|321";
-        MessageId expected = new MessageId("username", "mailbox-path", 321);
+        MessageId expected = new MessageId("username", "mailbox-path", MessageUid.of(321));
         
         MessageId actual = MessageId.of(messageId);
         

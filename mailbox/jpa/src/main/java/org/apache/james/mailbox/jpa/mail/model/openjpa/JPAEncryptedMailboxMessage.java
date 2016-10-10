@@ -33,6 +33,7 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -79,7 +80,7 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         /**
          * Create a copy of the given message
          */
-        public JPAEncryptedMailboxMessage(JPAMailbox mailbox, long uid, long modSeq, MailboxMessage message) throws MailboxException{
+        public JPAEncryptedMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage message) throws MailboxException{
             super(mailbox, uid, modSeq, message);
             try {
                 this.body = IOUtils.toByteArray(message.getBodyContent());

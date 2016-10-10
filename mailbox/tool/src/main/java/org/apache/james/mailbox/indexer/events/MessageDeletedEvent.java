@@ -20,20 +20,22 @@
 package org.apache.james.mailbox.indexer.events;
 
 import com.google.common.base.Objects;
+
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class MessageDeletedEvent implements ImpactingMessageEvent {
 
     private final MailboxPath mailboxPath;
-    private final long uid;
+    private final MessageUid uid;
 
-    public MessageDeletedEvent(MailboxPath mailboxPath, long uid) {
+    public MessageDeletedEvent(MailboxPath mailboxPath, MessageUid uid) {
         this.mailboxPath = mailboxPath;
         this.uid = uid;
     }
 
     @Override
-    public long getUid() {
+    public MessageUid getUid() {
         return uid;
     }
 

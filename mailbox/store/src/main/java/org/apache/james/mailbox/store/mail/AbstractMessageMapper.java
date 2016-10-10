@@ -25,6 +25,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -33,6 +34,8 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
+
+import com.google.common.base.Optional;
 
 /**
  * Abstract base class for {@link MessageMapper} implementation
@@ -50,23 +53,17 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
         this.modSeqProvider = modSeqProvider;
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#getHighestModSeq(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
+    @Override
     public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.highestModSeq(mailboxSession, mailbox);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#getLastUid(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
-    public long getLastUid(Mailbox mailbox) throws MailboxException {
+    @Override
+    public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
         return uidProvider.lastUid(mailboxSession, mailbox);
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#updateFlags(org.apache.james.mailbox.store.mail.model.Mailbox, javax.mail.Flags, boolean, boolean, org.apache.james.mailbox.model.MessageRange)
-     */
+    @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<UpdatedFlags>();
         Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
@@ -100,9 +97,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#add(org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
-     */
+    @Override
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         message.setUid(uidProvider.nextUid(mailboxSession, mailbox));
         
@@ -117,11 +112,9 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     }
 
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#copy(org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
-     */
+    @Override
     public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        long uid = uidProvider.nextUid(mailboxSession, mailbox);
+        MessageUid uid = uidProvider.nextUid(mailboxSession, mailbox);
         long modSeq = -1;
         if (modSeqProvider != null) {
             modSeq = modSeqProvider.nextModSeq(mailboxSession, mailbox);
@@ -131,30 +124,15 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
         return metaData;
     }
 
-   
-    
-    
     /**
      * Save the {@link MailboxMessage} for the given {@link Mailbox} and return the {@link MessageMetaData}
-     * 
-     * @param mailbox
-     * @param message
-     * @return metaData
-     * @throws MailboxException
      */
     protected abstract MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException;
 
     
     /**
      * Copy the MailboxMessage to the Mailbox, using the given uid and modSeq for the new MailboxMessage
-     * 
-     * @param mailbox
-     * @param uid
-     * @param modSeq
-     * @param original
-     * @return metaData
-     * @throws MailboxException
      */
-    protected abstract MessageMetaData copy(Mailbox mailbox, long uid, long modSeq, MailboxMessage original) throws MailboxException;
+    protected abstract MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original) throws MailboxException;
     
 }

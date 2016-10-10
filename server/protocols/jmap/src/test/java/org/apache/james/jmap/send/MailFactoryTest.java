@@ -36,6 +36,7 @@ import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessageId;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.mailet.Mail;
@@ -64,7 +65,7 @@ public class MailFactoryTest {
         String content = headers
                 + "Hello! How are you?";
         message = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new FlagsBuilder().add(Flags.Flag.SEEN).build())
                 .size(content.length())
                 .internalDate(new Date())

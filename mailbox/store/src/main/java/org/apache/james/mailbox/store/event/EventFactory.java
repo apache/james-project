@@ -25,6 +25,7 @@ import java.util.SortedMap;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -41,20 +42,20 @@ public class EventFactory {
     }
 
     public final class AddedImpl extends MailboxListener.Added implements MailboxAware {
-        private final Map<Long, MessageMetaData> added;
+        private final Map<MessageUid, MessageMetaData> added;
         private final Mailbox mailbox;
 
-        public AddedImpl(MailboxSession session, Mailbox mailbox, SortedMap<Long, MessageMetaData> added) {
+        public AddedImpl(MailboxSession session, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids) {
             super(session, new StoreMailboxPath(mailbox));
-            this.added = ImmutableMap.copyOf(added);
+            this.added = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
         }
 
-        public List<Long> getUids() {
+        public List<MessageUid> getUids() {
             return ImmutableList.copyOf(added.keySet());
         }
 
-        public MessageMetaData getMetaData(long uid) {
+        public MessageMetaData getMetaData(MessageUid uid) {
             return added.get(uid);
         }
 
@@ -64,20 +65,20 @@ public class EventFactory {
     }
 
     public final class ExpungedImpl extends MailboxListener.Expunged implements MailboxAware {
-        private final Map<Long, MessageMetaData> uids;
+        private final Map<MessageUid, MessageMetaData> uids;
         private final Mailbox mailbox;
 
-        public ExpungedImpl(MailboxSession session, Mailbox mailbox,  Map<Long, MessageMetaData> uids) {
+        public ExpungedImpl(MailboxSession session, Mailbox mailbox,  Map<MessageUid, MessageMetaData> uids) {
             super(session,  new StoreMailboxPath(mailbox));
             this.uids = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
         }
 
-        public List<Long> getUids() {
+        public List<MessageUid> getUids() {
             return ImmutableList.copyOf(uids.keySet());
         }
 
-        public MessageMetaData getMetaData(long uid) {
+        public MessageMetaData getMetaData(MessageUid uid) {
             return uids.get(uid);
         }
 
@@ -87,20 +88,20 @@ public class EventFactory {
     }
 
     public final class FlagsUpdatedImpl extends MailboxListener.FlagsUpdated implements MailboxAware {
-        private final List<Long> uids;
+        private final List<MessageUid> uids;
 
         private final Mailbox mailbox;
 
         private final List<UpdatedFlags> uFlags;
 
-        public FlagsUpdatedImpl(MailboxSession session, Mailbox mailbox, List<Long> uids, List<UpdatedFlags> uFlags) {
+        public FlagsUpdatedImpl(MailboxSession session, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
             super(session, new StoreMailboxPath(mailbox));
             this.uids = ImmutableList.copyOf(uids);
             this.uFlags = ImmutableList.copyOf(uFlags);
             this.mailbox = mailbox;
         }
 
-        public List<Long> getUids() {
+        public List<MessageUid> getUids() {
             return uids;
         }
 
@@ -166,15 +167,15 @@ public class EventFactory {
         }
     }
 
-    public MailboxListener.Added added(MailboxSession session, SortedMap<Long, MessageMetaData> uids, Mailbox mailbox) {
+    public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         return new AddedImpl(session, mailbox, uids);
     }
 
-    public MailboxListener.Expunged expunged(MailboxSession session,  Map<Long, MessageMetaData> uids, Mailbox mailbox) {
+    public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         return new ExpungedImpl(session, mailbox, uids);
     }
 
-    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, List<Long> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
+    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
         return new FlagsUpdatedImpl(session, mailbox, uids, uflags);
     }
 

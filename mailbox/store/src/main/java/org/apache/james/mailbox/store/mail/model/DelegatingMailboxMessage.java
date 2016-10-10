@@ -26,12 +26,9 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.store.mail.model.impl.MessageUidComparator;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
-    private static final MessageUidComparator MESSAGE_UID_COMPARATOR = new MessageUidComparator();
-    
     private final Message message;
 
     protected DelegatingMailboxMessage(Message message) {
@@ -40,7 +37,7 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
     @Override
     public int compareTo(MailboxMessage other) {
-        return MESSAGE_UID_COMPARATOR.compare(this, other);
+        return this.getUid().compareTo(other.getUid());
     }
 
     @Override

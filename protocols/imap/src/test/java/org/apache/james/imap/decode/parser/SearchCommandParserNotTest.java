@@ -29,10 +29,12 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.mailbox.MessageUid;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
@@ -69,9 +71,13 @@ public class SearchCommandParserNotTest {
 
     @Test
     public void testShouldParseNotUid() throws Exception {
-        IdRange[] range = { new IdRange(100, Long.MAX_VALUE), new IdRange(110),
-                new IdRange(200, 201), new IdRange(400, Long.MAX_VALUE) };
-        SearchKey notdKey = SearchKey.buildUidSet(IdRange.mergeRanges(Arrays.asList(range)).toArray(new IdRange[0]));
+        UidRange[] range = { 
+                new UidRange(MessageUid.of(100), MessageUid.MAX_VALUE), 
+                new UidRange(MessageUid.of(110)),
+                new UidRange(MessageUid.of(200), MessageUid.of(201)), 
+                new UidRange(MessageUid.of(400), MessageUid.MAX_VALUE) 
+                };
+        SearchKey notdKey = SearchKey.buildUidSet(UidRange.mergeRanges(Arrays.asList(range)).toArray(new UidRange[0]));
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT UID *:100,110,200:201,400:*\r\n", key);
     }

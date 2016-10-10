@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
@@ -31,6 +32,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
+
+import com.google.common.base.Optional;
 
 /**
  * Maps {@link MailboxMessage} in a {@link org.apache.james.mailbox.MessageManager}. A {@link MessageMapper} has a lifecycle from the start of a request
@@ -55,12 +58,8 @@ public interface MessageMapper extends Mapper {
     /**
      * Return a {@link Iterator} which holds the uids for all deleted Messages for the given {@link MessageRange} which are marked for deletion
      * The list must be ordered
-     * @param mailbox
-     * @param set 
-     * @return uids
-     * @throws MailboxException
      */
-    Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(
+    Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(
             Mailbox mailbox, MessageRange set)
             throws MailboxException;
 
@@ -102,17 +101,13 @@ public interface MessageMapper extends Mapper {
      * @return uid or null
      * @throws StorageException
      */
-    Long findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException;
+    MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException;
 
     /**
      * Return a List of {@link MailboxMessage} which are recent.
      * The list must be ordered by the {@link MailboxMessage} uid.
-     * 
-     * @param mailbox
-     * @return recentList
-     * @throws StorageException
      */
-    List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException;
+    List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException;
 
 
     /**
@@ -161,21 +156,13 @@ public interface MessageMapper extends Mapper {
     
     
     /**
-     * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox}
-     * 
-     * @param mailbox
-     * @return lastUid
-     * @throws MailboxException
+     * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox} or null if no
      */
-    long getLastUid(Mailbox mailbox) throws MailboxException;
+    Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException;
 
 
     /**
      * Return the higest mod-sequence which were used for storing a MailboxMessage in the {@link Mailbox}
-     * 
-     * @param mailbox
-     * @return lastUid
-     * @throws MailboxException
      */
     long getHighestModSeq(Mailbox mailbox) throws MailboxException;
     

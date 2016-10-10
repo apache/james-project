@@ -32,6 +32,7 @@ import javax.mail.Flags.Flag;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
@@ -63,7 +64,7 @@ public class MessageFactoryTest {
     @Test
     public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new Flags(Flag.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
@@ -86,7 +87,7 @@ public class MessageFactoryTest {
         flags.add(Flag.FLAGGED);
         flags.add(Flag.DRAFT);
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(flags)
                 .size(0)
                 .internalDate(INTERNAL_DATE)
@@ -112,7 +113,7 @@ public class MessageFactoryTest {
                 + "In-Reply-To: <SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>\n"
                 + "Other-header: other header value";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new Flags(Flag.SEEN))
                 .size(headers.length())
                 .internalDate(INTERNAL_DATE)
@@ -168,7 +169,7 @@ public class MessageFactoryTest {
         String body = "Mail body";
         String mail = headers + "\n" + body;
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new Flags(Flag.SEEN))
                 .size(mail.length())
                 .internalDate(INTERNAL_DATE)
@@ -194,7 +195,7 @@ public class MessageFactoryTest {
         assertThat(expectedPreview.length()).isEqualTo(256);
         String mail = headers + "\n" + body300;
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new Flags(Flag.SEEN))
                 .size(mail.length())
                 .internalDate(INTERNAL_DATE)
@@ -210,7 +211,7 @@ public class MessageFactoryTest {
     @Test
     public void attachmentsShouldBeEmptyWhenNone() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new Flags(Flag.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)
@@ -236,7 +237,7 @@ public class MessageFactoryTest {
                 .isInline(true)
                 .build();
         MetaDataWithContent testMail = MetaDataWithContent.builder()
-                .uid(2)
+                .uid(MessageUid.of(2))
                 .flags(new Flags(Flag.SEEN))
                 .size(0)
                 .internalDate(INTERNAL_DATE)

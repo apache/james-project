@@ -77,6 +77,7 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MessageDeletedDuringFlagsUpdateException;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
@@ -175,7 +176,7 @@ public class CassandraMessageMapper implements MessageMapper {
             QueryBuilder.delete()
                 .from(TABLE_NAME)
                 .where(eq(MAILBOX_ID, mailboxId.asUuid()))
-                .and(eq(IMAP_UID, message.getUid())));
+                .and(eq(IMAP_UID, message.getUid().asLong())));
         decrementCount(mailboxId);
         if (!message.isSeen()) {
             decrementUnseen(mailboxId);
@@ -187,7 +188,7 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return CassandraUtils.convertToStream(session.execute(buildSelectQueryWithLimit(buildQuery(mailboxId, set, ftype), max)))
             .map(row -> message(row, ftype))
-            .sorted(Comparator.comparingLong(MailboxMessage::getUid))
+            .sorted(Comparator.comparing(MailboxMessage::getUid))
             .iterator();
     }
 
@@ -199,26 +200,28 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public List<Long> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
+    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return CassandraUtils.convertToStream(session.execute(selectAll(mailboxId, FetchType.Metadata).and((eq(RECENT, true)))))
             .map((row) -> row.getLong(IMAP_UID))
+            .map(MessageUid::of)
             .sorted()
             .collect(Collectors.toList());
     }
 
     @Override
-    public Long findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
+    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return CassandraUtils.convertToStream(session.execute(selectAll(mailboxId, FetchType.Metadata).and((eq(SEEN, false)))))
             .map((row) -> row.getLong(IMAP_UID))
+            .map(MessageUid::of)
             .sorted()
             .findFirst()
             .orElse(null);
     }
 
     @Override
-    public Map<Long, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set) throws MailboxException {
+    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return CassandraUtils.convertToStream(session.execute(buildQuery(mailboxId, set, FetchType.Metadata).and(eq(DELETED, true))))
             .map(row -> message(row, FetchType.Metadata))
@@ -280,7 +283,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public long getLastUid(Mailbox mailbox) throws MailboxException {
+    public com.google.common.base.Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
         return uidProvider.lastUid(mailboxSession, mailbox);
     }
 
@@ -315,7 +318,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 getPropertyBuilder(row),
                 CassandraId.of(row.getUUID(MAILBOX_ID)),
                 getAttachments(row, fetchType));
-        message.setUid(row.getLong(IMAP_UID));
+        message.setUid(MessageUid.of(row.getLong(IMAP_UID)));
         message.setModSeq(row.getLong(MOD_SEQ));
         return message;
     }
@@ -386,7 +389,7 @@ public class CassandraMessageMapper implements MessageMapper {
             CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
             session.execute(insertInto(TABLE_NAME)
                 .value(MAILBOX_ID, mailboxId.asUuid())
-                .value(IMAP_UID, message.getUid())
+                .value(IMAP_UID, message.getUid().asLong())
                 .value(MOD_SEQ, message.getModSeq())
                 .value(INTERNAL_DATE, message.getInternalDate())
                 .value(BODY_START_OCTET, message.getFullContentOctets() - message.getBodyOctets())
@@ -446,7 +449,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private Optional<UpdatedFlags> updateFlagsOnMessage(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, Row row) {
         return tryMessageFlagsUpdate(flagUpdateCalculator, mailbox, message(row, FetchType.Metadata))
             .map(Optional::of)
-            .orElse(handleRetries(mailbox, flagUpdateCalculator, row.getLong(IMAP_UID)));
+            .orElse(handleRetries(mailbox, flagUpdateCalculator, MessageUid.of(row.getLong(IMAP_UID))));
     }
 
     private Optional<UpdatedFlags> tryMessageFlagsUpdate(FlagsUpdateCalculator flagUpdateCalculator, Mailbox mailbox, MailboxMessage message) {
@@ -466,7 +469,7 @@ public class CassandraMessageMapper implements MessageMapper {
         }
     }
 
-    private Optional<UpdatedFlags> handleRetries(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, long uid) {
+    private Optional<UpdatedFlags> handleRetries(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageUid uid) {
         try {
             return Optional.of(
                 new FunctionRunnerWithRetry(maxRetries)
@@ -479,7 +482,7 @@ public class CassandraMessageMapper implements MessageMapper {
         }
     }
 
-    private Optional<UpdatedFlags> retryMessageFlagsUpdate(Mailbox mailbox, long uid, FlagsUpdateCalculator flagUpdateCalculator) {
+    private Optional<UpdatedFlags> retryMessageFlagsUpdate(Mailbox mailbox, MessageUid uid, FlagsUpdateCalculator flagUpdateCalculator) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return tryMessageFlagsUpdate(flagUpdateCalculator,
             mailbox,
@@ -501,7 +504,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .and(set(USER, message.createFlags().contains(Flag.USER)))
                 .and(set(USER_FLAGS, userFlagsSet(message)))
                 .and(set(MOD_SEQ, message.getModSeq()))
-                .where(eq(IMAP_UID, message.getUid()))
+                .where(eq(IMAP_UID, message.getUid().asLong()))
                 .and(eq(MAILBOX_ID, mailboxId.asUuid()))
                 .onlyIf(eq(MOD_SEQ, oldModSeq)));
         return resultSet.one().getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED);
@@ -531,26 +534,26 @@ public class CassandraMessageMapper implements MessageMapper {
             .where(eq(MAILBOX_ID, mailboxId.asUuid()));
     }
 
-    private Where selectFrom(CassandraId mailboxId, long uid, FetchType fetchType) {
+    private Where selectFrom(CassandraId mailboxId, MessageUid uid, FetchType fetchType) {
         return select(retrieveFields(fetchType))
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, mailboxId.asUuid()))
-            .and(gte(IMAP_UID, uid));
+            .and(gte(IMAP_UID, uid.asLong()));
     }
 
-    private Where selectRange(CassandraId mailboxId, long from, long to, FetchType fetchType) {
+    private Where selectRange(CassandraId mailboxId, MessageUid from, MessageUid to, FetchType fetchType) {
         return select(retrieveFields(fetchType))
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, mailboxId.asUuid()))
-            .and(gte(IMAP_UID, from))
-            .and(lte(IMAP_UID, to));
+            .and(gte(IMAP_UID, from.asLong()))
+            .and(lte(IMAP_UID, to.asLong()));
     }
 
-    private Where selectMessage(CassandraId mailboxId, long uid, FetchType fetchType) {
+    private Where selectMessage(CassandraId mailboxId, MessageUid uid, FetchType fetchType) {
         return select(retrieveFields(fetchType))
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, mailboxId.asUuid()))
-            .and(eq(IMAP_UID, uid));
+            .and(eq(IMAP_UID, uid.asLong()));
     }
 
     private String[] retrieveFields(FetchType fetchType) {

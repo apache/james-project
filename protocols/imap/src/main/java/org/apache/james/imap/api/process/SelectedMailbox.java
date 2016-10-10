@@ -23,7 +23,10 @@ import java.util.Collection;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
+
+import com.google.common.base.Optional;
 
 /**
  * Interface which represent a selected Mailbox during the selected state
@@ -40,43 +43,32 @@ public interface SelectedMailbox {
     /**
      * Return the msg index of the given uid or {@link #NO_SUCH_MESSAGE} if no
      * message with the given uid was found
-     * 
-     * @param uid
-     * @return index
      */
-    int msn(long uid);
+    int msn(MessageUid uid);
 
     /**
-     * Return the uid of the message for the given index or
-     * {@link #NO_SUCH_MESSAGE} if no message with the given index was found
-     * 
-     * @param index
-     * @return uid
+     * Return the uid of the message for the given index or empty if no message with the given index was found
      */
-    long uid(int index);
+    Optional<MessageUid> uid(int index);
 
     /**
      * Add a recent uid
      * 
-     * @param uid
      * @return true if it was successfully
      */
-    boolean addRecent(long uid);
+    boolean addRecent(MessageUid uid);
 
     /**
      * Remove a recent uid
      * 
-     * @param uid
      * @return true if it was successfully
      */
-    boolean removeRecent(long uid);
+    boolean removeRecent(MessageUid uid);
 
     /**
      * Return a Collection of all recent uids
-     * 
-     * @return recentUids
      */
-    Collection<Long> getRecent();
+    Collection<MessageUid> getRecent();
 
     /**
      * Return the count of all recent uids
@@ -102,10 +94,9 @@ public interface SelectedMailbox {
     /**
      * Is the given uid recent ?
      * 
-     * @param uid
      * @return true if the given uid is recent
      */
-    boolean isRecent(long uid);
+    boolean isRecent(MessageUid uid);
 
     /**
      * Is the mailbox deleted?
@@ -142,10 +133,8 @@ public interface SelectedMailbox {
 
     /**
      * Return a Collection which holds all uids which were expunged
-     * 
-     * @return expungedUids
      */
-    Collection<Long> expungedUids();
+    Collection<MessageUid> expungedUids();
 
     
     void resetExpungedUids();
@@ -159,31 +148,25 @@ public interface SelectedMailbox {
      *         {@link #NO_SUCH_MESSAGE} if no message with the given uid was
      *         found being expunged
      */
-    int remove(Long uid);
+    int remove(MessageUid uid);
 
     /**
      * Return a Collection which holds all uids reflecting the Messages which
      * flags were updated
-     * 
-     * @return flagsUids
      */
-    Collection<Long> flagUpdateUids();
+    Collection<MessageUid> flagUpdateUids();
 
     /**
-     * Return the uid of the first message in the mailbox or -1 if the mailbox
+     * Return the uid of the first message in the mailbox or empty if the mailbox
      * is empty
-     * 
-     * @return firstUid
      */
-    long getFirstUid();
+    Optional<MessageUid> getFirstUid();
 
     /**
-     * Return the uid of the last message in the mailbox or -1 if the mailbox is
+     * Return the uid of the last message in the mailbox or empty if the mailbox is
      * empty
-     * 
-     * @return lastUid
      */
-    long getLastUid();
+    Optional<MessageUid> getLastUid();
     
     /**
      * Return all applicable Flags for the selected mailbox

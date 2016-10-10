@@ -25,6 +25,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.TestId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -34,7 +35,7 @@ import org.junit.Test;
 public class MailboxMessageAssertTest {
 
     public static final TestId MAILBOX_ID = TestId.of(42L);
-    public static final long UID = 24L;
+    public static final MessageUid UID = MessageUid.of(24);
 
     @Test
     public void messageAssertShouldSucceedWithTwoEqualsMessages() throws IOException {

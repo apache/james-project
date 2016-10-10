@@ -20,6 +20,7 @@ package org.apache.james.jmap.model;
 
 import java.util.Objects;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -40,21 +41,21 @@ public class MessageId {
     @JsonCreator
     public static MessageId of(String id) {
         Triplet<String, String, String> parts = Triplet.fromIterable(Splitter.on(SEPARATOR).split(id));
-        return new MessageId(parts.getValue0(), parts.getValue1(), Long.valueOf(parts.getValue2()));
+        return new MessageId(parts.getValue0(), parts.getValue1(), MessageUid.of(Long.valueOf(parts.getValue2())));
     }
 
     private final String mailboxPath;
-    private final long uid;
+    private final MessageUid uid;
     private final String username;
 
-    public MessageId(User username, MailboxPath mailboxPath, long uid) {
+    public MessageId(User username, MailboxPath mailboxPath, MessageUid uid) {
         this.username = username.getUserName();
         this.mailboxPath = mailboxPath.getName();
         this.uid = uid;
     }
     
     @VisibleForTesting
-    MessageId(String username, String mailboxPath, long uid) {
+    MessageId(String username, String mailboxPath, MessageUid uid) {
         this.username = username;
         this.mailboxPath = mailboxPath;
         this.uid = uid;
@@ -64,7 +65,7 @@ public class MessageId {
         return username;
     }
     
-    public long getUid() {
+    public MessageUid getUid() {
         return uid;
     }
     
@@ -78,7 +79,7 @@ public class MessageId {
     
     @JsonValue
     public String serialize() {
-        return Joiner.on(SEPARATOR).join(username, mailboxPath, uid);
+        return Joiner.on(SEPARATOR).join(username, mailboxPath, uid.asLong());
     }
     
     @Override

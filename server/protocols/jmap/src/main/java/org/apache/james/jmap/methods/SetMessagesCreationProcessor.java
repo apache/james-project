@@ -58,6 +58,7 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -281,7 +282,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
         Flags flags = getMessageFlags(createdEntry.getValue());
 
-        long uid = outbox.appendMessage(content, internalDate, session, flags.contains(Flags.Flag.RECENT), flags);
+        MessageUid uid = outbox.appendMessage(content, internalDate, session, flags.contains(Flags.Flag.RECENT), flags);
 
         return MetaDataWithContent.builder()
                 .uid(uid)

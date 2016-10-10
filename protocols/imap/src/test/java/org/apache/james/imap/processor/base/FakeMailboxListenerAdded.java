@@ -26,35 +26,31 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 
 public class FakeMailboxListenerAdded extends MailboxListener.Added {
 
-    public List<Long> uids;
+    public List<MessageUid> uids;
 
-    public FakeMailboxListenerAdded(MailboxSession session, List<Long> uids, MailboxPath path) {
+    public FakeMailboxListenerAdded(MailboxSession session, List<MessageUid> uids, MailboxPath path) {
         super(session, path);
         this.uids = uids;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxListener.MessageEvent#getUids()
-     */
-    public List<Long> getUids() {
+    @Override
+    public List<MessageUid> getUids() {
         return uids;
     }
 
-
-    /**
-     * @see org.apache.james.mailbox.MailboxListener.Added#getMetaData(long)
-     */
-    public MessageMetaData getMetaData(long uid) {
+    @Override
+    public MessageMetaData getMetaData(MessageUid uid) {
         return new MessageMetaData() {
             
-            public long getUid() {
+            public MessageUid getUid() {
                 // TODO Auto-generated method stub
-                return 0;
+                return null;
             }
             
             public long getSize() {
