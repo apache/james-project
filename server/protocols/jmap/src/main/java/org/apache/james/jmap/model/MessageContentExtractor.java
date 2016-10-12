@@ -22,6 +22,9 @@ package org.apache.james.jmap.model;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mime4j.dom.Body;
@@ -33,7 +36,9 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 
 public class MessageContentExtractor {
-    
+
+    public static final String CONTENT_ID = "Content-ID";
+
     public MessageContent extract(org.apache.james.mime4j.dom.Message message) throws IOException {
         Body body = message.getBody();
         if (body instanceof TextBody) {
@@ -100,19 +105,32 @@ public class MessageContentExtractor {
     }
 
     private Optional<String> getFirstMatchingTextBody(Multipart multipart, String mimeType) throws IOException {
+        Optional<String> firstMatchingTextBody = getFirstMatchingTextBody(multipart, mimeType, this::isNotAttachment);
+        if (firstMatchingTextBody.isPresent()) {
+            return firstMatchingTextBody;
+        }
+        Optional<String> fallBackInlinedBodyWithoutCid = getFirstMatchingTextBody(multipart, mimeType, this::isInlinedWithoutCid);
+        return fallBackInlinedBodyWithoutCid;
+    }
+
+    private Optional<String> getFirstMatchingTextBody(Multipart multipart, String mimeType, Predicate<Entity> condition) {
         return multipart.getBodyParts()
-                .stream()
-                .filter(part -> mimeType.equals(part.getMimeType()))
-                .filter(this::isNotAttachment)
-                .map(Entity::getBody)
-                .filter(TextBody.class::isInstance)
-                .map(TextBody.class::cast)
-                .findFirst()
-                .map(Throwing.function(this::asString).sneakyThrow());
+            .stream()
+            .filter(part -> mimeType.equals(part.getMimeType()))
+            .filter(condition)
+            .map(Entity::getBody)
+            .filter(TextBody.class::isInstance)
+            .map(TextBody.class::cast)
+            .findFirst()
+            .map(Throwing.function(this::asString).sneakyThrow());
     }
 
     private boolean isNotAttachment(Entity part) {
         return part.getDispositionType() == null;
+    }
+
+    private boolean isInlinedWithoutCid(Entity part) {
+        return part.getDispositionType().equals(MimeMessage.INLINE) && part.getHeader().getField(CONTENT_ID) == null;
     }
 
     public static class MessageContent {

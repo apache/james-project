@@ -22,14 +22,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
+import javax.mail.internet.MimeMessage;
+
 import org.apache.james.jmap.model.MessageContentExtractor.MessageContent;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
+import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.message.MessageBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.util.ByteSequence;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,6 +46,23 @@ public class MessageContentExtractorTest {
     private static final String TEXT_CONTENT = "text content";
     private static final String HTML_CONTENT = "<b>html</b> content";
     private static final String ATTACHMENT_CONTENT = "attachment content";
+    private static final String ANY_VALUE = "anyValue";
+    private static final Field CONTENT_ID_FIELD = new Field() {
+        @Override
+        public String getName() {
+            return MessageContentExtractor.CONTENT_ID;
+        }
+
+        @Override
+        public String getBody() {
+            return ANY_VALUE;
+        }
+
+        @Override
+        public ByteSequence getRaw() {
+            return ByteSequence.EMPTY;
+        }
+    };
 
     private MessageContentExtractor testee;
 
@@ -217,5 +240,104 @@ public class MessageContentExtractorTest {
                 .build();
         MessageContent actual = testee.extract(message);
         assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+    }
+
+    @Test
+    public void extractShouldRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithoutCid() throws IOException {
+        //Given
+        BodyPart inlinedHTMLPart = BodyPartBuilder.create()
+            .setBody(HTML_CONTENT, "html", Charsets.UTF_8)
+            .build();
+        HeaderImpl inlinedHeader = new HeaderImpl();
+        inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
+        inlinedHeader.addField(Fields.contentType("text/html; charset=utf-8"));
+        inlinedHTMLPart.setHeader(inlinedHeader);
+        Multipart multipartAlternative = MultipartBuilder.create("alternative")
+            .addBodyPart(inlinedHTMLPart)
+            .build();
+        Message message = MessageBuilder.create()
+            .setBody(multipartAlternative)
+            .build();
+
+        //When
+        MessageContent actual = testee.extract(message);
+
+        //Then
+        assertThat(actual.getHtmlBody()).contains(HTML_CONTENT);
+    }
+
+    @Test
+    public void extractShouldNotRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithCid() throws IOException {
+        //Given
+        BodyPart inlinedHTMLPart = BodyPartBuilder.create()
+            .setBody(HTML_CONTENT, "html", Charsets.UTF_8)
+            .build();
+        HeaderImpl inlinedHeader = new HeaderImpl();
+        inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
+        inlinedHeader.addField(Fields.contentType("text/html; charset=utf-8"));
+        inlinedHeader.addField(CONTENT_ID_FIELD);
+        inlinedHTMLPart.setHeader(inlinedHeader);
+        Multipart multipartAlternative = MultipartBuilder.create("alternative")
+            .addBodyPart(inlinedHTMLPart)
+            .build();
+        Message message = MessageBuilder.create()
+            .setBody(multipartAlternative)
+            .build();
+
+        //When
+        MessageContent actual = testee.extract(message);
+
+        //Then
+        assertThat(actual.getHtmlBody()).isEmpty();
+    }
+
+
+    @Test
+    public void extractShouldRetrieveTextBodyWithOneInlinedTextAttachmentWithoutCid() throws IOException {
+        //Given
+        BodyPart inlinedTextPart = BodyPartBuilder.create()
+            .setBody(TEXT_CONTENT, "text", Charsets.UTF_8)
+            .build();
+        HeaderImpl inlinedHeader = new HeaderImpl();
+        inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
+        inlinedHeader.addField(Fields.contentType("text/plain; charset=utf-8"));
+        inlinedTextPart.setHeader(inlinedHeader);
+        Multipart multipartAlternative = MultipartBuilder.create("alternative")
+            .addBodyPart(inlinedTextPart)
+            .build();
+        Message message = MessageBuilder.create()
+            .setBody(multipartAlternative)
+            .build();
+
+        //When
+        MessageContent actual = testee.extract(message);
+
+        //Then
+        assertThat(actual.getTextBody()).contains(TEXT_CONTENT);
+    }
+
+    @Test
+    public void extractShouldNotRetrieveTextBodyWithOneInlinedTextAttachmentWithCid() throws IOException {
+        //Given
+        BodyPart inlinedTextPart = BodyPartBuilder.create()
+            .setBody(TEXT_CONTENT, "text", Charsets.UTF_8)
+            .build();
+        HeaderImpl inlinedHeader = new HeaderImpl();
+        inlinedHeader.addField(Fields.contentDisposition(MimeMessage.INLINE));
+        inlinedHeader.addField(Fields.contentType("text/plain; charset=utf-8"));
+        inlinedHeader.addField(CONTENT_ID_FIELD);
+        inlinedTextPart.setHeader(inlinedHeader);
+        Multipart multipartAlternative = MultipartBuilder.create("alternative")
+            .addBodyPart(inlinedTextPart)
+            .build();
+        Message message = MessageBuilder.create()
+            .setBody(multipartAlternative)
+            .build();
+
+        //When
+        MessageContent actual = testee.extract(message);
+
+        //Then
+        assertThat(actual.getTextBody()).isEmpty();
     }
 }
