@@ -199,3 +199,11 @@ Feature: GetMessages method
     And the preview of the message is "multipart/related content"
     And the property "textBody" of the message is null
     And the htmlBody of the message is "<html>multipart/related content</html>\n"
+
+  Scenario: Retrieving message should return textBody and htmlBody when incoming mail have an inlined HTML and text body without Content-ID
+    Given the user has a message in "inbox" mailbox, composed of a multipart with inlined text part and inlined html part
+    When the user ask for messages "["username@domain.tld|inbox|1"]"
+    Then no error is returned
+    And the list should contain 1 message
+    And the textBody of the message is "Hello text body\n"
+    And the htmlBody of the message is "<html>Hello html body</html>\n"

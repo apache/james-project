@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -93,6 +94,15 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message in \"([^\"]*)\" mailbox with subject \"([^\"]*)\" and content \"([^\"]*)\" with headers$")
     public void appendMessage(String mailbox, String subject, String content, DataTable headers) throws Throwable {
         appendMessage(mailbox, ContentType.noContentType(), subject, content, Optional.of(headers.asMap(String.class, String.class)));
+    }
+
+    @Given("^the user has a message in \"([^\"]*)\" mailbox, composed of a multipart with inlined text part and inlined html part$")
+    public void appendMessageFromFileInlinedMultipart(String mailbox) throws Throwable {
+        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
+        mainStepdefs.jmapServer.serverProbe().appendMessage(userStepdefs.lastConnectedUser,
+            new MailboxPath(MailboxConstants.USER_NAMESPACE, userStepdefs.lastConnectedUser, mailbox),
+            ClassLoader.getSystemResourceAsStream("eml/inlinedMultipart.eml"),
+            Date.from(dateTime.toInstant()), false, new Flags());
     }
 
     private void appendMessage(String mailbox, ContentType contentType, String subject, String content, Optional<Map<String, String>> headers) throws Exception {
