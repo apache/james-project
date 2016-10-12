@@ -141,17 +141,6 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         }
         return mapper;
     }
-
-    public abstract MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException;
-
-    public MessageIdMapper getMessageIdMapper(MailboxSession session) throws MailboxException {
-        MessageIdMapper mapper = (MessageIdMapper) session.getAttributes().get(MESSAGEIDMAPPER);
-        if (mapper == null) {
-            mapper = createMessageIdMapper(session);
-            session.getAttributes().put(MESSAGEIDMAPPER, mapper);
-        }
-        return mapper;
-    }
     
     /**
      * Create a {@link SubscriptionMapper} instance which will get reused during the whole {@link MailboxSession}

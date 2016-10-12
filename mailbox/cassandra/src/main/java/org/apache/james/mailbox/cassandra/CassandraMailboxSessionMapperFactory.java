@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
@@ -114,10 +113,5 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     public AnnotationMapper createAnnotationMapper(MailboxSession mailboxSession)
             throws MailboxException {
         return new CassandraAnnotationMapper(session);
-    }
-
-    @Override
-    public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
     }
 }

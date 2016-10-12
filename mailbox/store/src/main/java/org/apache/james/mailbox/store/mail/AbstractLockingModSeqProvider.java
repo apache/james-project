@@ -67,9 +67,4 @@ public abstract class AbstractLockingModSeqProvider implements ModSeqProvider{
      */
     protected abstract long lockedNextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
 
-
-    @Override
-    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        throw new NotImplementedException();
-    }
 }
