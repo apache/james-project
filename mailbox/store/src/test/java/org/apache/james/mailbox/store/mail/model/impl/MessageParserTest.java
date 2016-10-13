@@ -177,4 +177,11 @@ public class MessageParserTest {
         
         assertThat(attachments).hasSize(6);
     }
+
+    @Test
+    public void getAttachmentsShouldNotConsiderUnknownContentDispositionAsAttachments() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/unknownDisposition.eml"));
+
+        assertThat(attachments).hasSize(0);
+    }
 }

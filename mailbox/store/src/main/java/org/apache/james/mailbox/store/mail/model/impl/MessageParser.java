@@ -183,7 +183,7 @@ public class MessageParser {
                     public Boolean apply(String dispositionType) {
                         return ATTACHMENT_CONTENT_DISPOSITIONS.contains(dispositionType.toLowerCase());
                     }
-                }).isPresent();
+                }).or(false);
     }
 
     private boolean isTextPart(Entity part) {
