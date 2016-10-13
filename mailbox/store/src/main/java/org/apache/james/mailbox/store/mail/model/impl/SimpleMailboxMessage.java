@@ -44,6 +44,17 @@ import com.google.common.primitives.Ints;
 public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
+        return copy(mailboxId, original, original.getAttachments());
+    }
+
+    public static SimpleMailboxMessage cloneWithAttachments(MailboxMessage mailboxMessage, List<MessageAttachment> attachments) throws MailboxException {
+        SimpleMailboxMessage simpleMailboxMessage = copy(mailboxMessage.getMailboxId(), mailboxMessage, attachments);
+        simpleMailboxMessage.setUid(mailboxMessage.getUid());
+        simpleMailboxMessage.setModSeq(mailboxMessage.getModSeq());
+        return simpleMailboxMessage;
+    }
+
+    private static SimpleMailboxMessage copy(MailboxId mailboxId, MailboxMessage original, List<MessageAttachment> attachments) throws MailboxException {
         Date internalDate = original.getInternalDate();
         long size = original.getFullContentOctets();
         Flags flags = original.createFlags();
@@ -51,7 +62,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         int bodyStartOctet = Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets());
         PropertyBuilder pBuilder = new PropertyBuilder(original.getProperties());
         pBuilder.setTextualLineCount(original.getTextualLineCount());
-        return new SimpleMailboxMessage(original.getMessageId(), internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId, original.getAttachments());
+        return new SimpleMailboxMessage(original.getMessageId(), internalDate, size, bodyStartOctet, content, flags, pBuilder, mailboxId, attachments);
     }
 
     private static SharedByteArrayInputStream copyFullContent(MailboxMessage original) throws MailboxException {
