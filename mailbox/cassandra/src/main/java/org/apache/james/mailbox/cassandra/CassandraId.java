@@ -18,17 +18,19 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.datastax.driver.core.utils.UUIDs;
+import com.google.common.base.MoreObjects;
 
 public class CassandraId implements MailboxId {
 
     public static class Factory implements MailboxId.Factory {
         @Override
-        public MailboxId fromString(String serialized) {
+        public CassandraId fromString(String serialized) {
             return of(UUID.fromString(serialized));
         }
     }
@@ -55,30 +57,25 @@ public class CassandraId implements MailboxId {
     public UUID asUuid() {
         return id;
     }
-    
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        return result;
+    public final boolean equals(Object o) {
+        if (o instanceof CassandraId) {
+            CassandraId other = (CassandraId) o;
+            return Objects.equals(id, other.id);
+        }
+        return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        CassandraId other = (CassandraId) obj;
-        if (id == null) {
-            if (other.id != null)
-                return false;
-        } else if (!id.equals(other.id))
-            return false;
-        return true;
+    public final int hashCode() {
+        return Objects.hash(id);
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("id", id)
+            .toString();
+    }
 }
