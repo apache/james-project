@@ -36,9 +36,12 @@ import org.apache.james.backends.cassandra.components.CassandraIndex;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.mailbox.cassandra.table.CassandraMessageIds;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageTable;
+import org.apache.james.mailbox.cassandra.table.MessageIdToImapUid;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageModule implements CassandraModule {
 
@@ -47,7 +50,14 @@ public class CassandraMessageModule implements CassandraModule {
     private final List<CassandraType> types;
 
     public CassandraMessageModule() {
-        tables = Collections.singletonList(
+        tables = ImmutableList.of(
+            new CassandraTable(MessageIdToImapUid.TABLE_NAME,
+                SchemaBuilder.createTable(MessageIdToImapUid.TABLE_NAME)
+                    .ifNotExists()
+                    .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
+                    .addClusteringColumn(CassandraMessageIds.MAILBOX_ID, timeuuid())
+                    .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())),
+
             new CassandraTable(CassandraMessageTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
                     .ifNotExists()
