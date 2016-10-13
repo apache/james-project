@@ -68,8 +68,7 @@ public class CassandraMessageModule implements CassandraModule {
             new CassandraTable(CassandraMessageTable.TABLE_NAME,
                 SchemaBuilder.createTable(CassandraMessageTable.TABLE_NAME)
                     .ifNotExists()
-                    .addPartitionKey(CassandraMessageTable.MAILBOX_ID, timeuuid())
-                    .addClusteringColumn(CassandraMessageTable.IMAP_UID, bigint())
+                    .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
                     .addColumn(CassandraMessageTable.INTERNAL_DATE, timestamp())
                     .addColumn(CassandraMessageTable.BODY_START_OCTET, cint())
                     .addColumn(CassandraMessageTable.BODY_OCTECTS, bigint())
