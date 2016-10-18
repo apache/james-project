@@ -281,11 +281,11 @@ public class MessageFactoryTest {
 
         Message testee = messageFactory.fromMetaDataWithContent(testMail);
 
-        Emailer user = Emailer.builder().name("user").email("userdomain").buildInvalidAllowed();
-        Emailer user1 = Emailer.builder().name("user1").email("user1domain").buildInvalidAllowed();
-        Emailer user2 = Emailer.builder().name("user2").email("user2domain").buildInvalidAllowed();
-        Emailer usercc = Emailer.builder().name("usercc").email("userccdomain").buildInvalidAllowed();
-        Emailer userbcc = Emailer.builder().name("userbcc").email("userbccdomain").buildInvalidAllowed();
+        Emailer user = Emailer.builder().name("user").email("userdomain").allowInvalid().build();
+        Emailer user1 = Emailer.builder().name("user1").email("user1domain").allowInvalid().build();
+        Emailer user2 = Emailer.builder().name("user2").email("user2domain").allowInvalid().build();
+        Emailer usercc = Emailer.builder().name("usercc").email("userccdomain").allowInvalid().build();
+        Emailer userbcc = Emailer.builder().name("userbcc").email("userbccdomain").allowInvalid().build();
 
         assertThat(testee.getFrom()).contains(user);
         assertThat(testee.getTo()).contains(user1, user2);

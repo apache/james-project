@@ -33,7 +33,7 @@ import com.google.common.base.Strings;
 @JsonDeserialize(builder = Emailer.Builder.class)
 public class Emailer {
 
-    public static String INVALID = "invalid";
+    public static String INVALID = "";
 
     public static Builder builder() {
         return new Builder();
@@ -41,6 +41,9 @@ public class Emailer {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
+        private static final boolean DEFAULT_DISABLE = false;
+
+        private Optional<Boolean> allowInvalid = Optional.empty();
         private String name;
         private String email;
 
@@ -54,21 +57,34 @@ public class Emailer {
             return this;
         }
 
+        @JsonIgnore
+        public Builder allowInvalid() {
+            this.allowInvalid = Optional.of(true);
+            return this;
+        }
+
         public Emailer build() {
+            if (allowInvalid.orElse(DEFAULT_DISABLE)) {
+                return buildRelaxed();
+            } else {
+                return buildStrict();
+            }
+        }
+
+        private Emailer buildStrict() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(email), "'email' is mandatory");
             Preconditions.checkState(email.contains("@"), "'email' must contain '@' character");
             return new Emailer(name, email);
         }
 
-        @JsonIgnore
-        public Emailer buildInvalidAllowed() {
+        private Emailer buildRelaxed() {
             return new Emailer(replaceIfNeeded(name), replaceIfNeeded(email));
         }
 
         private String replaceIfNeeded(String value) {
             return Optional.ofNullable(value)
-                .filter(s -> !s.equals(""))
+                .filter(s -> !s.isEmpty())
                 .orElse(INVALID);
         }
     }
