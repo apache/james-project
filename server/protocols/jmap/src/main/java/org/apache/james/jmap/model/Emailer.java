@@ -20,7 +20,9 @@
 package org.apache.james.jmap.model;
 
 import java.util.Objects;
+import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -30,6 +32,8 @@ import com.google.common.base.Strings;
 
 @JsonDeserialize(builder = Emailer.Builder.class)
 public class Emailer {
+
+    public static String INVALID = "invalid";
 
     public static Builder builder() {
         return new Builder();
@@ -55,6 +59,17 @@ public class Emailer {
             Preconditions.checkState(!Strings.isNullOrEmpty(email), "'email' is mandatory");
             Preconditions.checkState(email.contains("@"), "'email' must contain '@' character");
             return new Emailer(name, email);
+        }
+
+        @JsonIgnore
+        public Emailer buildInvalidAllowed() {
+            return new Emailer(replaceIfNeeded(name), replaceIfNeeded(email));
+        }
+
+        private String replaceIfNeeded(String value) {
+            return Optional.ofNullable(value)
+                .filter(s -> !s.equals(""))
+                .orElse(INVALID);
         }
     }
 

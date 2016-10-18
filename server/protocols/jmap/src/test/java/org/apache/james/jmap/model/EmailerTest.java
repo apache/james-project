@@ -59,4 +59,50 @@ public class EmailerTest {
         assertThat(emailer).isEqualToComparingFieldByField(expected);
     }
 
+    @Test
+    public void buildInvalidAllowedShouldConsiderNullValuesAsInvalid() {
+        Emailer expected = new Emailer("invalid", "invalid");
+
+        Emailer actual = Emailer.builder()
+            .buildInvalidAllowed();
+
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void buildInvalidAllowedShouldConsiderEmptyValuesAsInvalid() {
+        Emailer expected = new Emailer("invalid", "invalid");
+
+        Emailer actual = Emailer.builder()
+            .name("")
+            .email("")
+            .buildInvalidAllowed();
+
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void buildInvalidAllowedShouldDeclareInvalidAddressesAsInvalid() {
+        Emailer expected = new Emailer("invalid", "invalidAddress");
+
+        Emailer actual = Emailer.builder()
+            .email("invalidAddress")
+            .buildInvalidAllowed();
+
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void buildInvalidAllowedShouldWork() {
+        String name = "bob";
+        String address = "me@apache.org";
+        Emailer expected = new Emailer(name, address);
+
+        Emailer actual = Emailer.builder()
+            .name(name)
+            .email(address)
+            .buildInvalidAllowed();
+
+        assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
 }

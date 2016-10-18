@@ -260,4 +260,36 @@ public class MessageFactoryTest {
         assertThat(testee.getAttachments()).hasSize(1);
         assertThat(testee.getAttachments().get(0)).isEqualToComparingFieldByField(expectedAttachment);
     }
+
+    @Test
+    public void invalidAddressesShouldBeAllowed() throws Exception {
+        String headers = "From: user <userdomain>\n"
+            + "To: user1 <user1domain>, user2 <user2domain>\n"
+            + "Cc: usercc <userccdomain>\n"
+            + "Bcc: userbcc <userbccdomain>\n"
+            + "Subject: test subject\n";
+        MetaDataWithContent testMail = MetaDataWithContent.builder()
+            .uid(MessageUid.of(2))
+            .flags(new Flags(Flag.SEEN))
+            .size(headers.length())
+            .internalDate(INTERNAL_DATE)
+            .content(new ByteArrayInputStream(headers.getBytes(Charsets.UTF_8)))
+            .attachments(ImmutableList.of())
+            .mailboxId(MAILBOX_ID)
+            .messageId(MessageId.of("user|box|2"))
+            .build();
+
+        Message testee = messageFactory.fromMetaDataWithContent(testMail);
+
+        Emailer user = Emailer.builder().name("user").email("userdomain").buildInvalidAllowed();
+        Emailer user1 = Emailer.builder().name("user1").email("user1domain").buildInvalidAllowed();
+        Emailer user2 = Emailer.builder().name("user2").email("user2domain").buildInvalidAllowed();
+        Emailer usercc = Emailer.builder().name("usercc").email("userccdomain").buildInvalidAllowed();
+        Emailer userbcc = Emailer.builder().name("userbcc").email("userbccdomain").buildInvalidAllowed();
+
+        assertThat(testee.getFrom()).contains(user);
+        assertThat(testee.getTo()).contains(user1, user2);
+        assertThat(testee.getCc()).contains(usercc);
+        assertThat(testee.getBcc()).contains(userbcc);
+    }
 }

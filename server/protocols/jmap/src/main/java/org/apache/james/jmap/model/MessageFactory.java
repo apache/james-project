@@ -146,9 +146,9 @@ public class MessageFactory {
     
     private Emailer fromMailbox(Mailbox mailbox) {
         return Emailer.builder()
-                    .name(getNameOrAddress(mailbox))
-                    .email(mailbox.getAddress())
-                    .build();
+            .name(getNameOrAddress(mailbox))
+            .email(mailbox.getAddress())
+            .buildInvalidAllowed();
     }
 
     private String getNameOrAddress(Mailbox mailbox) {
