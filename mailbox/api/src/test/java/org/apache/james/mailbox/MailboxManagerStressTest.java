@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.After;
@@ -114,10 +115,10 @@ public class MailboxManagerStressTest<T extends MailboxManager> {
 
                         mailboxManager.startProcessingRequest(session);
                         MessageManager m = mailboxManager.getMailbox(path, session);
-                        MessageUid uid = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
+                        ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), session, false, new Flags());
 
-                        System.out.println("Append message with uid=" + uid);
-                        if (uids.put(uid, new Object()) != null) {
+                        System.out.println("Append message with uid=" + messageId.getUid());
+                        if (uids.put(messageId.getUid(), new Object()) != null) {
                             fail.set(true);
                         }
                         mailboxManager.endProcessingRequest(session);

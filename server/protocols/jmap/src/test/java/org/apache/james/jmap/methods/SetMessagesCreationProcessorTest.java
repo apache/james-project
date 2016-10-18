@@ -63,7 +63,9 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -129,7 +131,11 @@ public class SetMessagesCreationProcessorTest {
         outbox = mock(MessageManager.class);
         when(outbox.getId()).thenReturn(OUTBOX_ID);
         when(outbox.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, OUTBOX));
-        when(outbox.appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class))).thenReturn(MessageUid.of(1));
+        
+        MessageUid messageUid = MessageUid.of(1);
+        when(outbox.appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class)))
+            .thenReturn(new ComposedMessageId(OUTBOX_ID, new DefaultMessageId(outbox.getId(), messageUid), messageUid));
+
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);
         when(drafts.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, DRAFTS));

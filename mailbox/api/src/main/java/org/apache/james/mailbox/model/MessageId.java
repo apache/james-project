@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model;
+
+package org.apache.james.mailbox.model;
 
 public interface MessageId {
     String serialize();

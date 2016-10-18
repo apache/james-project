@@ -41,9 +41,9 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 
@@ -134,9 +134,9 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             final SelectedMailbox selectedMailbox = session.getSelected();
             final MailboxManager mailboxManager = getMailboxManager();
             final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getPath().equals(mailboxPath);
-            final MessageUid uid = mailbox.appendMessage(message, datetime, mailboxSession, !isSelectedMailbox, flagsToBeSet);
+            final ComposedMessageId messageId = mailbox.appendMessage(message, datetime, mailboxSession, !isSelectedMailbox, flagsToBeSet);
             if (isSelectedMailbox) {
-                selectedMailbox.addRecent(uid);
+                selectedMailbox.addRecent(messageId.getUid());
             }
 
             // get folder UIDVALIDITY
@@ -146,7 +146,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
             // in case of MULTIAPPEND support we will push more then one UID
             // here
-            okComplete(command, tag, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(uid) }), responder);
+            okComplete(command, tag, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
         } catch (MailboxNotFoundException e) {
             // Indicates that the mailbox does not exist
             // So TRY CREATE

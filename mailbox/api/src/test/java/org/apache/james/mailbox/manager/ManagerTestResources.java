@@ -141,7 +141,7 @@ public class ManagerTestResources {
 
     public MessageUid appendMessage(MessageManager messageManager, MailboxSession session, Flags flags) throws MailboxException, UnsupportedEncodingException {
         return messageManager.appendMessage(new ByteArrayInputStream(MockMail.MAIL_TEXT_PLAIN.getBytes("UTF-8")),
-            Calendar.getInstance().getTime(), session, true, flags);
+            Calendar.getInstance().getTime(), session, true, flags).getUid();
     }
 
 }

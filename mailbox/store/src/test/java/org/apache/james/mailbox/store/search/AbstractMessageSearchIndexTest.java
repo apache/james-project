@@ -87,7 +87,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1388617200000L),
             session,
             true,
-            new Flags(Flags.Flag.DELETED));
+            new Flags(Flags.Flag.DELETED)).getUid();
         // sentDate: Thu, 4 Jun 2015 09:23:37 +0000
         // Internal date : 2014/02/02 00:00:00.000
         m2 = inboxMessageManager.appendMessage(
@@ -95,7 +95,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1391295600000L),
             session,
             true,
-            new Flags(Flags.Flag.ANSWERED));
+            new Flags(Flags.Flag.ANSWERED)).getUid();
         // sentDate: Thu, 4 Jun 2015 09:27:37 +0000
         // Internal date : 2014/03/02 00:00:00.000
         m3 = inboxMessageManager.appendMessage(
@@ -103,7 +103,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1393714800000L),
             session,
             true,
-            new Flags(Flags.Flag.DRAFT));
+            new Flags(Flags.Flag.DRAFT)).getUid();
         // sentDate: Tue, 2 Jun 2015 08:16:19 +0000
         // Internal date : 2014/05/02 00:00:00.000
         m4 = inboxMessageManager.appendMessage(
@@ -111,7 +111,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1398981600000L),
             session,
             true,
-            new Flags(Flags.Flag.RECENT));
+            new Flags(Flags.Flag.RECENT)).getUid();
         // sentDate: Fri, 15 May 2015 06:35:59 +0000
         // Internal date : 2014/04/02 00:00:00.000
         m5 = inboxMessageManager.appendMessage(
@@ -119,7 +119,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1396389600000L),
             session,
             true,
-            new Flags(Flags.Flag.FLAGGED));
+            new Flags(Flags.Flag.FLAGGED)).getUid();
         // sentDate: Wed, 03 Jun 2015 19:14:32 +0000
         // Internal date : 2014/06/02 00:00:00.000
         m6 = inboxMessageManager.appendMessage(
@@ -127,7 +127,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1401660000000L),
             session,
             true,
-            new Flags(Flags.Flag.SEEN));
+            new Flags(Flags.Flag.SEEN)).getUid();
         // sentDate: Thu, 04 Jun 2015 07:36:08 +0000
         // Internal date : 2014/07/02 00:00:00.000
         m7 = inboxMessageManager.appendMessage(
@@ -135,7 +135,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1404252000000L),
             session,
             false,
-            new Flags());
+            new Flags()).getUid();
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
         m8 = inboxMessageManager.appendMessage(
@@ -143,7 +143,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1406930400000L),
             session,
             true,
-            new Flags("Hello"));
+            new Flags("Hello")).getUid();
         // sentDate: Thu, 4 Jun 2015 06:08:41 +0200
         // Internal date : 2014/08/02 00:00:00.000
         myFolderMessageManager.appendMessage(
@@ -159,7 +159,7 @@ public abstract class AbstractMessageSearchIndexTest {
             new Date(1409608800000L),
             session,
             true,
-            new Flags("Hello you"));
+            new Flags("Hello you")).getUid();
         await();
     }
 

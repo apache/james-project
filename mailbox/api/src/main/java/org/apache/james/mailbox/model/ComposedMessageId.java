@@ -16,44 +16,33 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model;
+
+package org.apache.james.mailbox.model;
 
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageId;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-
-public class DefaultMessageId implements MessageId {
+public class ComposedMessageId {
 
     private final MailboxId mailboxId;
-    private final MessageUid messageUid;
+    private final MessageId messageId;
+    private final MessageUid uid;
 
-    public DefaultMessageId(MailboxId mailboxId, MessageUid messageUid) {
-        Preconditions.checkNotNull(mailboxId);
+    public ComposedMessageId(MailboxId mailboxId, MessageId messageId, MessageUid uid) {
         this.mailboxId = mailboxId;
-        this.messageUid = messageUid;
+        this.messageId = messageId;
+        this.uid = uid;
     }
-    
-    @Override
-    public String serialize() {
-        return String.format("%s-%d", mailboxId.serialize(), messageUid.asLong());
+
+    public MailboxId getMailboxId() {
+        return mailboxId;
     }
-    
-    @Override
-    public final boolean equals(Object obj) {
-        if (obj instanceof DefaultMessageId) {
-            DefaultMessageId other = (DefaultMessageId) obj;
-            return Objects.equal(mailboxId, other.mailboxId) &&
-                    Objects.equal(messageUid, other.messageUid);
-            
-        }
-        return false;
+
+    public MessageId getMessageId() {
+        return messageId;
     }
-    
-    @Override
-    public final int hashCode() {
-        return Objects.hashCode(mailboxId, messageUid);
+
+    public MessageUid getUid() {
+        return uid;
     }
+
 }

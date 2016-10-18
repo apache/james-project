@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 
 public interface Message {
 

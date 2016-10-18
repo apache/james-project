@@ -26,8 +26,8 @@ import java.util.List;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
-import org.apache.james.mailbox.store.mail.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Property;
 
 import com.google.common.collect.ImmutableList;
