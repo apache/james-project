@@ -369,8 +369,12 @@ public class MailboxEventAnalyserTest {
         
         public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
             throw new UnsupportedOperationException("Not implemented");
-
         }
+
+        public java.util.List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException {
+            throw new UnsupportedOperationException("Not implemented");
+        };
+        
         public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
             throw new UnsupportedOperationException("Not implemented");
 

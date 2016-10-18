@@ -578,6 +578,20 @@ public class StoreMailboxManager implements MailboxManager {
         final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
         final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
+        return copyMessages(set, session, toMailbox, fromMailbox);
+    }
+
+    @Override
+    public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, final MailboxSession session) throws MailboxException {
+        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+
+        return copyMessages(set, session, toMailbox, fromMailbox);
+    }
+
+    
+    private List<MessageRange> copyMessages(MessageRange set, final MailboxSession session,
+            final StoreMessageManager toMailbox, final StoreMessageManager fromMailbox) throws MailboxException {
         return copyBatcher.batchMessages(set, new MessageBatcher.BatchedOperation() {
             public List<MessageRange> execute(MessageRange messageRange) throws MailboxException {
                 return fromMailbox.copyTo(messageRange, toMailbox, session);

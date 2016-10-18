@@ -198,6 +198,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport {
      */
     List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
+    List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException;
+    
     /**
      * Move the given {@link MessageRange} from one Mailbox to the other. 
      * 

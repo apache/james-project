@@ -159,6 +159,12 @@ public class FirstUserConnectionFilterThreadTest {
         }
 
         @Override
+        public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session)
+                throws MailboxException {
+            return null;
+        }
+        
+        @Override
         public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
             return null;
         }
