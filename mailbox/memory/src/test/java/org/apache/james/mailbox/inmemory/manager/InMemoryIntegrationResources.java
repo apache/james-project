@@ -19,7 +19,14 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
+import java.util.List;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -30,6 +37,10 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -63,6 +74,32 @@ public class InMemoryIntegrationResources implements IntegrationResources {
         return manager;
     }
 
+    @Override
+    public MessageIdManager createMessageIdManager(MailboxManager mailboxManager) {
+        return new MessageIdManager() {
+            @Override
+            public void delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession)
+                    throws MailboxException {
+            }
+
+            @Override
+            public List<MessageResult> getMessages(List<MessageId> messageId, FetchGroup minimal,
+                    MailboxSession mailboxSession) throws MailboxException {
+                return null;
+            }
+            
+            @Override
+            public void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, MailboxId mailboxId,
+                    MailboxSession mailboxSession) throws MailboxException {
+            }
+            
+            @Override
+            public void setInMailboxes(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession)
+                    throws MailboxException {
+            }
+        };
+    }
+    
     @Override
     public QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, MailboxManager mailboxManager) throws Exception {
         StoreQuotaManager quotaManager = new StoreQuotaManager();
