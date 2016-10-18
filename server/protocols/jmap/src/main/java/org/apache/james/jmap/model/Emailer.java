@@ -23,17 +23,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 @JsonDeserialize(builder = Emailer.Builder.class)
 public class Emailer {
-
-    public static String INVALID = "";
 
     public static Builder builder() {
         return new Builder();
@@ -44,16 +42,30 @@ public class Emailer {
         private static final boolean DEFAULT_DISABLE = false;
 
         private Optional<Boolean> allowInvalid = Optional.empty();
-        private String name;
-        private String email;
+        private Optional<String> name = Optional.empty();
+        private Optional<String> email = Optional.empty();
 
-        public Builder name(String name) {
+        @JsonProperty("name")
+        public Builder name(Optional<String> name) {
             this.name = name;
             return this;
         }
 
-        public Builder email(String email) {
+        @JsonIgnore
+        public Builder name(String name) {
+            this.name = Optional.ofNullable(name);
+            return this;
+        }
+
+        @JsonProperty("email")
+        public Builder email(Optional<String> email) {
             this.email = email;
+            return this;
+        }
+
+        @JsonIgnore
+        public Builder email(String email) {
+            this.email = Optional.ofNullable(email);
             return this;
         }
 
@@ -72,9 +84,11 @@ public class Emailer {
         }
 
         private Emailer buildStrict() {
-            Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
-            Preconditions.checkState(!Strings.isNullOrEmpty(email), "'email' is mandatory");
-            Preconditions.checkState(email.contains("@"), "'email' must contain '@' character");
+            Preconditions.checkState(name.isPresent(), "'name' is mandatory");
+            Preconditions.checkState(email.isPresent(), "'email' is mandatory");
+            Preconditions.checkState(!name.get().isEmpty(), "'name' should not be empty");
+            Preconditions.checkState(!email.get().isEmpty(), "'email' should not be empty");
+            Preconditions.checkState(email.get().contains("@"), "'email' must contain '@' character");
             return new Emailer(name, email);
         }
 
@@ -82,26 +96,24 @@ public class Emailer {
             return new Emailer(replaceIfNeeded(name), replaceIfNeeded(email));
         }
 
-        private String replaceIfNeeded(String value) {
-            return Optional.ofNullable(value)
-                .filter(s -> !s.isEmpty())
-                .orElse(INVALID);
+        private Optional<String> replaceIfNeeded(Optional<String> value) {
+            return value.filter(s -> !s.isEmpty());
         }
     }
 
-    private final String name;
-    private final String email;
+    private final Optional<String> name;
+    private final Optional<String> email;
 
-    @VisibleForTesting Emailer(String name, String email) {
+    @VisibleForTesting Emailer(Optional<String> name, Optional<String> email) {
         this.name = name;
         this.email = email;
     }
 
-    public String getName() {
+    public Optional<String> getName() {
         return name;
     }
 
-    public String getEmail() {
+    public Optional<String> getEmail() {
         return email;
     }
 

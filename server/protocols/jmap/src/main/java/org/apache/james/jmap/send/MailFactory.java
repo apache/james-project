@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -61,8 +62,9 @@ public class MailFactory {
     }
 
     private MailAddress emailerToMailAddress(Emailer emailer) {
+        Preconditions.checkArgument(emailer.getEmail().isPresent(), "eMailer mail address should be present when sending a mail using JMAP");
         try {
-            return new MailAddress(emailer.getEmail());
+            return new MailAddress(emailer.getEmail().get());
         } catch (AddressException e) {
             LOGGER.error("Invalid mail address", emailer.getEmail());
             throw Throwables.propagate(e);
