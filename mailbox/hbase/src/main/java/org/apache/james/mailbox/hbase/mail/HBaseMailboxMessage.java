@@ -42,7 +42,6 @@ import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkInputStream;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -95,15 +94,17 @@ public class HBaseMailboxMessage implements MailboxMessage {
     /** Meta data for this message */
     private final List<Property> properties;
     private final List<String> userFlags;
+    private final MessageId messageId;
     
     /**
      * Create a copy of the given message.
      * All properties are cloned except mailbox and UID.
      */
-    public HBaseMailboxMessage(Configuration conf, HBaseId mailboxId, MessageUid uid, long modSeq, MailboxMessage original) throws MailboxException {
+    public HBaseMailboxMessage(Configuration conf, HBaseId mailboxId, MessageUid uid, MessageId messageId, long modSeq, MailboxMessage original) throws MailboxException {
         this.conf = conf;
         this.mailboxId = mailboxId;
         this.uid = uid;
+        this.messageId = messageId;
         this.modSeq = modSeq;
         this.userFlags = new ArrayList<String>();
         setFlags(original.createFlags());
@@ -122,10 +123,12 @@ public class HBaseMailboxMessage implements MailboxMessage {
         this.properties = original.getProperties();
     }
 
-    public HBaseMailboxMessage(Configuration conf, HBaseId mailboxId, Date internalDate, Flags flags, long contentOctets, int bodyStartOctet, PropertyBuilder propertyBuilder) {
+    public HBaseMailboxMessage(Configuration conf, HBaseId mailboxId, MessageId messageId,
+            Date internalDate, Flags flags, long contentOctets, int bodyStartOctet, PropertyBuilder propertyBuilder) {
         super();
         this.conf = conf;
         this.mailboxId = mailboxId;
+        this.messageId = messageId;
         this.internalDate = internalDate;
         userFlags = new ArrayList<String>();
 
@@ -235,7 +238,7 @@ public class HBaseMailboxMessage implements MailboxMessage {
 
     @Override
     public MessageId getMessageId() {
-        return new DefaultMessageId(getMailboxId(), getUid());
+        return messageId;
     }
 
     @Override

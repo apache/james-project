@@ -57,6 +57,8 @@ import org.apache.james.mailbox.model.MailboxACL.MailboxACLRights;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
@@ -70,7 +72,6 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -147,10 +148,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private final MessageParser messageParser;
 
+    private final Factory messageIdFactory;
+    
     private int fetchBatchSize;
 
-    public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver,
-            final GroupMembershipResolver groupMembershipResolver, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser) throws MailboxException {
+    public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
+            MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) throws MailboxException {
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
         this.mapperFactory = mapperFactory;
@@ -161,12 +165,17 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
         this.messageParser = messageParser;
+        this.messageIdFactory = messageIdFactory;
     }
 
     public void setFetchBatchSize(int fetchBatchSize) {
         this.fetchBatchSize = fetchBatchSize;
     }
 
+    protected Factory getMessageIdFactory() {
+        return messageIdFactory;
+    }
+    
     /**
      * Return the {@link MailboxPathLocker}
      * 
@@ -398,7 +407,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                     MailboxId mailboxId = getMailboxEntity().getMailboxId();
                     uids.put(messageUid, data);
                     dispatcher.added(mailboxSession, uids, getMailboxEntity());
-                    return new ComposedMessageId(mailboxId, new DefaultMessageId(mailboxId, messageUid), messageUid);
+                    return new ComposedMessageId(mailboxId, data.getMessageId(), messageUid);
                 }
             }, true);
 
@@ -435,18 +444,9 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     /**
      * Create a new {@link MailboxMessage} for the given data
-     * 
-     * @param internalDate
-     * @param size
-     * @param bodyStartOctet
-     * @param content
-     * @param flags
-     * @param attachments 
-     * @return membership
-     * @throws MailboxException
      */
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
-        return new SimpleMailboxMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
+        return new SimpleMailboxMessage(messageIdFactory.generate(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
     }
 
     /**

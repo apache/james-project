@@ -38,6 +38,7 @@ import org.apache.james.mailbox.mock.MockMailboxManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.Before;
 import org.junit.Test;
@@ -166,7 +167,8 @@ public class MailboxCopierTest {
             },
             aclResolver,
             groupMembershipResolver,
-            messageParser
+            messageParser,
+            new DefaultMessageId.Factory()
             );
     
     }

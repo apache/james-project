@@ -34,6 +34,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -71,6 +72,11 @@ public class MessageResultImpl implements MessageResult {
         return message.getUid();
     }
 
+    @Override
+    public MessageId getMessageId() {
+        return message.getMessageId();
+    }
+    
     @Override
     public Date getInternalDate() {
         return message.getInternalDate();

@@ -24,6 +24,7 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -36,17 +37,19 @@ public class SimpleMessageMetaData implements MessageMetaData{
     private final long size;
     private final Date internalDate;
     private final long modSeq;
+    private final MessageId messageId;
 
-    public SimpleMessageMetaData(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate) {
+    public SimpleMessageMetaData(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, MessageId messageId) {
         this.uid = uid;
         this.flags = flags;
         this.size = size;
         this.modSeq = modSeq;
         this.internalDate = internalDate;
+        this.messageId = messageId;
     }
     
     public SimpleMessageMetaData(MailboxMessage message) {
-        this(message.getUid(), message.getModSeq(), message.createFlags(), message.getFullContentOctets(), message.getInternalDate());
+        this(message.getUid(), message.getModSeq(), message.createFlags(), message.getFullContentOctets(), message.getInternalDate(), message.getMessageId());
     }
     
     @Override
@@ -69,6 +72,11 @@ public class SimpleMessageMetaData implements MessageMetaData{
         return uid;
     }
 
+    @Override
+    public MessageId getMessageId() {
+        return messageId;
+    }
+    
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof SimpleMessageMetaData) {

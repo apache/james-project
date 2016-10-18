@@ -34,6 +34,7 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -61,17 +62,20 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     		MessageSearchIndex index,MailboxEventDispatcher dispatcher, 
     		MailboxPathLocker locker, Mailbox mailbox, MailboxACLResolver aclResolver, 
     		GroupMembershipResolver groupMembershipResolver,
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser) throws MailboxException {
-        this(mapperFactory, index, dispatcher, locker,  mailbox, AdvancedFeature.None, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser);
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
+            MessageId.Factory messageIdFactory) throws MailboxException {
+        this(mapperFactory, index, dispatcher, locker,  mailbox, AdvancedFeature.None, aclResolver, 
+                groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory);
     }
 
     public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory, 
     		MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
     		MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f, 
     		MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser) throws MailboxException {
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
+            MessageId.Factory messageIdFactory) throws MailboxException {
     	
-        super(mapperFactory,  index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser);
+        super(mapperFactory,  index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser, messageIdFactory);
         this.feature = f;
     }
 

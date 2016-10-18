@@ -19,18 +19,19 @@
 
 package org.apache.james.mailbox.store.json.event.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageMetaDataDataTransferObject {
     @JsonProperty()
@@ -85,10 +86,10 @@ public class MessageMetaDataDataTransferObject {
     @JsonIgnore
     public SimpleMessageMetaData getMetadata() {
         try {
-            return new SimpleMessageMetaData(MessageUid.of(uid), modseq, flags.getFlags(), size, parse(date));
+            return new SimpleMessageMetaData(MessageUid.of(uid), modseq, flags.getFlags(), size, parse(date), new DefaultMessageId()); //FIXME
         } catch(ParseException parseException) {
             LOG.error("Parse exception while parsing date while deserializing metadata upon event serialization. Using nowadays date instead.");
-            return new SimpleMessageMetaData(MessageUid.of(uid), modseq, flags.getFlags(), size, new Date());
+            return new SimpleMessageMetaData(MessageUid.of(uid), modseq, flags.getFlags(), size, new Date(), new DefaultMessageId()); //FIXME
         }
 
     }

@@ -68,6 +68,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.hbase.HBaseId;
 import org.apache.james.mailbox.hbase.io.ChunkOutputStream;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -95,13 +97,17 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
     private final MailboxSession mailboxSession;
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
+    private final Factory messageIdFactory;
 
     public HBaseMessageMapper(MailboxSession session,
             final UidProvider uidProvider,
-            ModSeqProvider modSeqProvider, Configuration conf) {
+            ModSeqProvider modSeqProvider, 
+            MessageId.Factory messageIdFactory, 
+            Configuration conf) {
         this.mailboxSession = session;
         this.modSeqProvider = modSeqProvider;
         this.uidProvider = uidProvider;
+        this.messageIdFactory = messageIdFactory;
         this.conf = conf;
     }
 
@@ -159,7 +165,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         Result result;
         long count = batchSize > 0 ? batchSize : Long.MAX_VALUE;
         while (((result = scanner.next()) != null) && (count > 0)) {
-            messageList.add(messageMetaFromResult(conf, result));
+            messageList.add(messageMetaFromResult(conf, result, messageIdFactory));
             count--;
         }
         scanner.close();
@@ -186,7 +192,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         Result result = messages.get(get);
         MailboxMessage message = null;
         if (!result.isEmpty()) {
-            message = messageMetaFromResult(conf, result);
+            message = messageMetaFromResult(conf, result, messageIdFactory);
             messageList.add(message);
         }
         messages.close();
@@ -213,7 +219,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         Result result;
         long count = batchSize > 0 ? batchSize : Long.MAX_VALUE;
         while (((result = scanner.next()) != null) && (count > 0)) {
-            messageList.add(messageMetaFromResult(conf, result));
+            messageList.add(messageMetaFromResult(conf, result, messageIdFactory));
             count--;
         }
         scanner.close();
@@ -259,7 +265,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             if (count == 0) {
                 break;
             }
-            MailboxMessage message = messageMetaFromResult(conf, result);
+            MailboxMessage message = messageMetaFromResult(conf, result, messageIdFactory);
             messageList.add(message);
             count--;
         }
@@ -573,7 +579,7 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         //TODO: check if creating a HBase message is the right thing to do
         HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
         HBaseMailboxMessage message = new HBaseMailboxMessage(conf,
-                mailboxId, uid, modSeq, original);
+                mailboxId, uid, original.getMessageId(), modSeq, original);
         return save(mailboxId, message);
     }
 

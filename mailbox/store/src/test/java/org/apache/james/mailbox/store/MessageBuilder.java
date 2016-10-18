@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class MessageBuilder {
@@ -39,7 +40,7 @@ public class MessageBuilder {
     public int lineNumber = 0;
     
     public MailboxMessage build() throws Exception {
-        return new SimpleMailboxMembership(mailboxId, uid, -1,  internalDate, size, flags, body, headers);
+        return new SimpleMailboxMembership(new DefaultMessageId(), mailboxId, uid, -1,  internalDate, size, flags, body, headers);
     }
     
     public void header(String field, String value) {

@@ -29,6 +29,8 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMapper;
 import org.apache.james.mailbox.cassandra.user.CassandraSubscriptionMapper;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -50,13 +52,16 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
     private final CassandraTypesProvider typesProvider;
+    private final Factory messageIdFactory;
     private int maxRetry;
 
     @Inject
-    public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, Session session, CassandraTypesProvider typesProvider) {
+    public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, 
+            Session session, CassandraTypesProvider typesProvider, MessageId.Factory messageIdFactory) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         this.session = session;
+        this.messageIdFactory = messageIdFactory;
         this.maxRetry = DEFAULT_MAX_RETRY;
         this.typesProvider = typesProvider;
     }
@@ -67,7 +72,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     @Override
     public CassandraMessageMapper createMessageMapper(MailboxSession mailboxSession) {
-        return new CassandraMessageMapper(session, uidProvider, modSeqProvider, null, maxRetry, typesProvider, createAttachmentMapper(mailboxSession));
+        return new CassandraMessageMapper(session, uidProvider, modSeqProvider, null, maxRetry, 
+                typesProvider, createAttachmentMapper(mailboxSession), messageIdFactory);
     }
 
     @Override

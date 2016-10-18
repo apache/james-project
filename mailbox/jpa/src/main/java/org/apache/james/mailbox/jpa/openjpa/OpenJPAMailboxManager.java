@@ -29,6 +29,7 @@ import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.EncryptDecryptHelper;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMessageManager;
@@ -43,8 +44,10 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
 
     private final AdvancedFeature feature;
 
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, boolean useStreaming, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
-        super(mapperFactory, authenticator,  locker, aclResolver, groupMembershipResolver, messageParser);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+            MailboxPathLocker locker, boolean useStreaming, MailboxACLResolver aclResolver, 
+            GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        super(mapperFactory, authenticator,  locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
         if (useStreaming) {
             feature = AdvancedFeature.Streaming;
         } else {
@@ -52,8 +55,10 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
         }
     }
 
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker,  String encryptPass, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
-        super(mapperFactory, authenticator,  locker, aclResolver, groupMembershipResolver, messageParser);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+            MailboxPathLocker locker,  String encryptPass, MailboxACLResolver aclResolver, 
+            GroupMembershipResolver groupMembershipResolver, MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        super(mapperFactory, authenticator,  locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
         if (encryptPass != null) {
             EncryptDecryptHelper.init(encryptPass);
             feature = AdvancedFeature.Encryption;
@@ -62,8 +67,10 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
         }
     }
     
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
-        this(mapperFactory, authenticator, new JVMMailboxPathLocker(), false, aclResolver, groupMembershipResolver, messageParser);
+    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
+            MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        this(mapperFactory, authenticator, new JVMMailboxPathLocker(), false, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
     @Override
@@ -78,6 +85,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getGroupMembershipResolver(),
             getQuotaManager(),
             getQuotaRootResolver(),
-            getMessageParser());
+            getMessageParser(),
+            getMessageIdFactory());
     }
 }

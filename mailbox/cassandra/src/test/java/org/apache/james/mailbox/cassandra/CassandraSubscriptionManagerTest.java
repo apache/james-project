@@ -25,6 +25,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
@@ -40,7 +41,8 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 new CassandraUidProvider(cassandra.getConf()),
                 new CassandraModSeqProvider(cassandra.getConf()),
                 cassandra.getConf(),
-                cassandra.getTypesProvider()
+                cassandra.getTypesProvider(),
+                new DefaultMessageId.Factory()
             )
         );
     }

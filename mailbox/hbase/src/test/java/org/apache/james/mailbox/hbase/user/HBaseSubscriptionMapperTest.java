@@ -32,9 +32,11 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.mailbox.hbase.HBaseMailboxSessionMapperFactory;
+import org.apache.james.mailbox.model.MessageId;
 
 import static org.apache.james.mailbox.hbase.HBaseNames.*;
 
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 
@@ -65,7 +67,8 @@ public class HBaseSubscriptionMapperTest {
         ensureTables();
         clearTables();
         conf = CLUSTER.getConf();
-        mapperFactory = new HBaseMailboxSessionMapperFactory(conf, null, null);
+        MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
+        mapperFactory = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         mapper = new HBaseSubscriptionMapper(conf);
         fillSubscriptionList();
     }

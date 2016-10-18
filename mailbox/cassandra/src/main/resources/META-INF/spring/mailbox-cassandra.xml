@@ -33,12 +33,15 @@
         <constructor-arg index="0" ref="cassandra-sessionMapperFactory"/>
         <constructor-arg index="1" ref="authenticator"/>
         <constructor-arg index="2" ref="cassandra-locker"/>
+        <constructor-arg index="3" ref="cassandra-messageIdFactory" />
         <property name="messageSearchIndex" ref="elasticsearch-listener"/>
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
         <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
+
+    <bean id="cassandra-messageIdFactory" class="org.apache.james.mailbox.store.mail.model.DefaultMessageId.Factory" />
 
     <bean id ="cassandra-subscriptionManager"
           class="org.apache.james.mailbox.cassandra.CassandraSubscriptionManager"

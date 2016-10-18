@@ -46,7 +46,6 @@ import org.apache.james.mailbox.jcr.JCRImapConstants;
 import org.apache.james.mailbox.jcr.Persistent;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -69,6 +68,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     
     private JCRId mailboxUUID;
     private MessageUid uid;
+    private MessageId messageId;
     private Date internalDate;
     private long size;
     private boolean answered;
@@ -108,10 +108,11 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
         this.node = node;
     }
     
-    public JCRMailboxMessage(JCRId mailboxUUID, Date internalDate, int size, Flags flags, SharedInputStream content,
+    public JCRMailboxMessage(JCRId mailboxUUID, MessageId messageId, Date internalDate, int size, Flags flags, SharedInputStream content,
                              int bodyStartOctet, PropertyBuilder propertyBuilder, Logger logger) {
         super();
         this.mailboxUUID = mailboxUUID;
+        this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
         this.logger = logger;
@@ -133,8 +134,9 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
     /**
      * Create a copy of the given message
      */
-    public JCRMailboxMessage(JCRId mailboxUUID, MessageUid uid, long modSeq, JCRMailboxMessage message, Logger logger) throws MailboxException {
+    public JCRMailboxMessage(JCRId mailboxUUID, MessageUid uid, MessageId messageId, long modSeq, JCRMailboxMessage message, Logger logger) throws MailboxException {
         this.mailboxUUID = mailboxUUID;
+        this.messageId = messageId;
         this.internalDate = message.getInternalDate();
         this.size = message.getFullContentOctets();
         setFlags(message.createFlags());
@@ -376,7 +378,7 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
 
     @Override
     public MessageId getMessageId() {
-        return new DefaultMessageId(getMailboxId(), getUid());
+        return messageId;
     }
 
     @Override

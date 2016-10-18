@@ -30,6 +30,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
@@ -195,6 +196,8 @@ public class StoreMessageResultIterator implements MessageResultIterator {
 
         private final Flags flags;
 
+        private final MessageId messageId;
+
         private long modSeq = -1;
 
         public UnloadedMessageResult(MailboxMessage message, MailboxException exception) {
@@ -204,6 +207,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             uid = message.getUid();
             flags = message.createFlags();
             modSeq = message.getModSeq();
+            messageId = message.getMessageId();
             this.exception = exception;
         }
 
@@ -231,13 +235,18 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             return uid;
         }
 
+        @Override
+        public MessageId getMessageId() {
+            return messageId;
+        }
+        
         public int compareTo(MessageResult that) {
             return uid.compareTo(that.getUid());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(exception, internalDate, size, uid, flags, modSeq);
+            return Objects.hashCode(exception, internalDate, size, uid, flags, modSeq, messageId);
         }
 
         @Override

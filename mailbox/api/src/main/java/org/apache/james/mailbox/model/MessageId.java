@@ -20,5 +20,12 @@
 package org.apache.james.mailbox.model;
 
 public interface MessageId {
+
+    interface Factory {
+
+        MessageId generate();
+        
+    }
+    
     String serialize();
 }

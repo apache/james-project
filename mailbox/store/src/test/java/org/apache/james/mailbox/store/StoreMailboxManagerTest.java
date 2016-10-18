@@ -19,9 +19,10 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -32,6 +33,8 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -55,7 +58,10 @@ public class StoreMailboxManagerTest {
         mockedMailboxMapper = mock(MailboxMapper.class);
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
-        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, new FakeAuthenticator(), new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), new MessageParser());
+        Factory messageIdFactory = mock(MessageId.Factory.class);
+        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, new FakeAuthenticator(), 
+                new JVMMailboxPathLocker(), new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), 
+                new MessageParser(), messageIdFactory);
     }
 
     @Test

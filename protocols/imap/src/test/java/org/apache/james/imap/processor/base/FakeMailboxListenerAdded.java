@@ -28,6 +28,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 
 public class FakeMailboxListenerAdded extends MailboxListener.Added {
@@ -48,29 +49,34 @@ public class FakeMailboxListenerAdded extends MailboxListener.Added {
     public MessageMetaData getMetaData(MessageUid uid) {
         return new MessageMetaData() {
             
+            @Override
             public MessageUid getUid() {
-                // TODO Auto-generated method stub
                 return null;
             }
             
+            @Override
             public long getSize() {
-                // TODO Auto-generated method stub
                 return 0;
             }
             
+            @Override
             public Date getInternalDate() {
-                // TODO Auto-generated method stub
                 return null;
             }
             
+            @Override
             public Flags getFlags() {
-                // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public long getModSeq() {
-                // TODO Auto-generated method stub
                 return 0;
+            }
+            
+            @Override
+            public MessageId getMessageId() {
+                return null;
             }
         };
     }

@@ -41,7 +41,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
@@ -198,7 +197,7 @@ public class MessageFactory {
                     .build();
     }
 
-    public static class MetaDataWithContent implements MessageMetaData {
+    public static class MetaDataWithContent {
         public static Builder builder() {
             return new Builder();
         }
@@ -320,27 +319,22 @@ public class MessageFactory {
             this.messageId = messageId;
         }
 
-        @Override
         public MessageUid getUid() {
             return uid;
         }
 
-        @Override
         public long getModSeq() {
             return modSeq;
         }
 
-        @Override
         public Flags getFlags() {
             return flags;
         }
 
-        @Override
         public long getSize() {
             return size;
         }
 
-        @Override
         public Date getInternalDate() {
             return internalDate;
         }

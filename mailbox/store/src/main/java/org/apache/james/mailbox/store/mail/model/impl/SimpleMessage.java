@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 
 public class SimpleMessage implements Message {
 
+    private final MessageId messageId;
     private final String subType;
     private final String mediaType;
     private final SharedInputStream content;
@@ -44,7 +45,8 @@ public class SimpleMessage implements Message {
     private final List<Property> properties;
     private final List<MessageAttachment> attachments;
 
-    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachment> attachments) {
+    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties, List<MessageAttachment> attachments) {
+        this.messageId = messageId;
         this.subType = subType;
         this.mediaType = mediaType;
         this.content = content;
@@ -56,13 +58,13 @@ public class SimpleMessage implements Message {
         this.attachments = attachments;
     }
 
-    public SimpleMessage(SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties) {
-        this(content, size, internalDate, subType, mediaType, bodyStartOctet, textualLineCount, properties, ImmutableList.<MessageAttachment>of());
+    public SimpleMessage(MessageId messageId, SharedInputStream content, long size, Date internalDate, String subType, String mediaType, int bodyStartOctet, Long textualLineCount, List<Property> properties) {
+        this(messageId, content, size, internalDate, subType, mediaType, bodyStartOctet, textualLineCount, properties, ImmutableList.<MessageAttachment>of());
     }
 
     @Override
     public MessageId getMessageId() {
-        return null;
+        return messageId;
     }
 
     @Override

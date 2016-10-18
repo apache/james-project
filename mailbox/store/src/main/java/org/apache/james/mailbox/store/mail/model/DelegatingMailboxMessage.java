@@ -26,6 +26,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
@@ -106,8 +107,8 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public DefaultMessageId getMessageId() {
-        return new DefaultMessageId(getMailboxId(), getUid());
+    public MessageId getMessageId() {
+        return message.getMessageId();
     }
 
     public Message getMessage() {

@@ -27,6 +27,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -44,12 +45,16 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
 
     private final Logger logger = LoggerFactory.getLogger(JCRMailboxManager.class);
     
-    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
-	    this(mapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser);
+    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
+            MessageParser messageParser, MessageId.Factory messageIdFactory) {
+	    this(mapperFactory, authenticator, new JVMMailboxPathLocker(), aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
-    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
-        super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser);
+    public JCRMailboxManager(JCRMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+            MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, 
+            MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        super(mapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
     @Override
@@ -69,7 +74,8 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
             logger,
             getQuotaManager(),
             getQuotaRootResolver(),
-            getMessageParser());
+            getMessageParser(),
+            getMessageIdFactory());
     }
 
     @Override

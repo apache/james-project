@@ -132,9 +132,8 @@ public class SetMessagesCreationProcessorTest {
         when(outbox.getId()).thenReturn(OUTBOX_ID);
         when(outbox.getMailboxPath()).thenReturn(new MailboxPath(NAMESPACE, USER, OUTBOX));
         
-        MessageUid messageUid = MessageUid.of(1);
         when(outbox.appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class)))
-            .thenReturn(new ComposedMessageId(OUTBOX_ID, new DefaultMessageId(outbox.getId(), messageUid), messageUid));
+            .thenReturn(new ComposedMessageId(OUTBOX_ID, new DefaultMessageId(), MessageUid.of(1)));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);

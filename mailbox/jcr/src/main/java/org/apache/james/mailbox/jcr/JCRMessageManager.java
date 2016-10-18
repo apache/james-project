@@ -32,6 +32,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailboxMessage;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -52,8 +53,12 @@ public class JCRMessageManager extends StoreMessageManager {
     private final Logger log;
 
     public JCRMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, 
-            final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, JCRMailbox mailbox, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, Logger log, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser) throws MailboxException {
-        super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, quotaRootResolver, messageParser);
+            final MailboxEventDispatcher dispatcher, MailboxPathLocker locker, JCRMailbox mailbox, 
+            MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, Logger log, 
+            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory)
+                    throws MailboxException {
+        super(mapperFactory, index, dispatcher, locker, mailbox, aclResolver, groupMembershipResolver, quotaManager, 
+                quotaRootResolver, messageParser, messageIdFactory);
         this.log = log;
     }
 
@@ -61,7 +66,7 @@ public class JCRMessageManager extends StoreMessageManager {
     @Override
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException{
         JCRId mailboxId = (JCRId) getMailboxEntity().getMailboxId();
-        return new JCRMailboxMessage(mailboxId, internalDate,
+        return new JCRMailboxMessage(mailboxId, getMessageIdFactory().generate(), internalDate,
                 size, flags, content, bodyStartOctet, propertyBuilder, log);
     }
 

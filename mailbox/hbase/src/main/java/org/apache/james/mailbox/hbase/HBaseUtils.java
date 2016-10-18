@@ -74,6 +74,7 @@ import org.apache.james.mailbox.hbase.io.ChunkInputStream;
 import org.apache.james.mailbox.hbase.mail.HBaseMailboxMessage;
 import org.apache.james.mailbox.hbase.mail.model.HBaseMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -253,7 +254,7 @@ public class HBaseUtils {
      * @param result the result object containing message data
      * @return a HBaseMailboxMessage instance with message metadata.
      */
-    public static MailboxMessage messageMetaFromResult(Configuration conf, Result result) {
+    public static MailboxMessage messageMetaFromResult(Configuration conf, Result result, MessageId.Factory messageIdFactory) {
         HBaseMailboxMessage message = null;
         Flags flags = new Flags();
         List<Property> propList = new ArrayList<Property>();
@@ -323,7 +324,7 @@ public class HBaseUtils {
         PropertyBuilder props = new PropertyBuilder(propList);
         props.setMediaType(mediaType);
         props.setSubType(subType);
-        message = new HBaseMailboxMessage(conf, uuid, internalDate, flags, contentOctets, (int) (contentOctets - bodyOctets), props);
+        message = new HBaseMailboxMessage(conf, uuid, messageIdFactory.generate(), internalDate, flags, contentOctets, (int) (contentOctets - bodyOctets), props);
         message.setUid(uid);
         message.setModSeq(modSeq);
         message.setTextualLineCount(textualLineCount);

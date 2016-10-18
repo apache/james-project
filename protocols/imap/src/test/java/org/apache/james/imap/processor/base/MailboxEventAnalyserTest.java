@@ -64,9 +64,11 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MailboxQuery;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -234,6 +236,10 @@ public class MailboxEventAnalyserTest {
                                     return MessageUid.of(1);
                                 }
 
+                                @Override
+                                public MessageId getMessageId() {
+                                    return new DefaultMessageId();
+                                };
                                 
                                 public long getModSeq() {
                                     return 0;

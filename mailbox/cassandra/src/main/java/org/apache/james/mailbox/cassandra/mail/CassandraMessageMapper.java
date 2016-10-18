@@ -89,6 +89,8 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -129,8 +131,11 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraTypesProvider typesProvider;
     private final int maxRetries;
     private final AttachmentMapper attachmentMapper;
+    private final Factory messageIdFactory;
 
-    public CassandraMessageMapper(Session session, UidProvider uidProvider, ModSeqProvider modSeqProvider, MailboxSession mailboxSession, int maxRetries, CassandraTypesProvider typesProvider, AttachmentMapper attachmentMapper) {
+    public CassandraMessageMapper(Session session, UidProvider uidProvider, ModSeqProvider modSeqProvider, 
+            MailboxSession mailboxSession, int maxRetries, CassandraTypesProvider typesProvider, AttachmentMapper attachmentMapper,
+            MessageId.Factory messageIdFactory) {
         this.session = session;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -138,6 +143,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.maxRetries = maxRetries;
         this.typesProvider = typesProvider;
         this.attachmentMapper = attachmentMapper;
+        this.messageIdFactory = messageIdFactory;
     }
 
     @Override
@@ -310,6 +316,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private MailboxMessage message(Row row, FetchType fetchType) {
         SimpleMailboxMessage message =
             new SimpleMailboxMessage(
+                messageIdFactory.generate(),
                 row.getDate(INTERNAL_DATE),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),

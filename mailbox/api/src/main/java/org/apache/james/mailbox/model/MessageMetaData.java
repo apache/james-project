@@ -49,4 +49,6 @@ public interface MessageMetaData {
      * </p>
      */
     Date getInternalDate();
+    
+    MessageId getMessageId();
 }

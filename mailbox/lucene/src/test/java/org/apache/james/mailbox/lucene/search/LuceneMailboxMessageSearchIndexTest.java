@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.SimpleMailboxMembership;
 import org.apache.james.mailbox.store.TestId;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
@@ -106,23 +107,23 @@ public class LuceneMailboxMessageSearchIndexTest {
         headersTestSubject.put("Cc", "test211 <test21@localhost>, test6 <test6@foobar>");
         
         uid1 = MessageUid.of(1);
-        SimpleMailboxMembership m = new SimpleMailboxMembership(mailbox.getMailboxId(), uid1, 0, new Date(), 200, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
+        SimpleMailboxMembership m = new SimpleMailboxMembership(new DefaultMessageId(), mailbox.getMailboxId(), uid1, 0, new Date(), 200, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
         index.add(null, mailbox, m);
 
         uid2 = MessageUid.of(1);
-        SimpleMailboxMembership m2 = new SimpleMailboxMembership(mailbox2.getMailboxId(), uid2, 0, new Date(), 20, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
+        SimpleMailboxMembership m2 = new SimpleMailboxMembership(new DefaultMessageId(), mailbox2.getMailboxId(), uid2, 0, new Date(), 20, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
         index.add(null, mailbox2, m2);
         
         uid3 = MessageUid.of(2);
         Calendar cal = Calendar.getInstance();
         cal.set(1980, 2, 10);
-        SimpleMailboxMembership m3 = new SimpleMailboxMembership(mailbox.getMailboxId(), uid3, 0, cal.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody".getBytes(), headersTest);
+        SimpleMailboxMembership m3 = new SimpleMailboxMembership(new DefaultMessageId(), mailbox.getMailboxId(), uid3, 0, cal.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody".getBytes(), headersTest);
         index.add(null, mailbox, m3);
         
         uid4 = MessageUid.of(3);
         Calendar cal2 = Calendar.getInstance();
         cal2.set(8000, 2, 10);
-        SimpleMailboxMembership m4 = new SimpleMailboxMembership(mailbox.getMailboxId(), uid4, 0, cal2.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody2".getBytes(), headersTestSubject);
+        SimpleMailboxMembership m4 = new SimpleMailboxMembership(new DefaultMessageId(), mailbox.getMailboxId(), uid4, 0, cal2.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody2".getBytes(), headersTestSubject);
         index.add(null, mailbox, m4);
         
         uid5 = MessageUid.of(10);

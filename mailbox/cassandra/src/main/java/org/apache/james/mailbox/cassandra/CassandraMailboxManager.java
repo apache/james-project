@@ -30,6 +30,7 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SimpleMailboxACL;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -46,13 +47,15 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     private final MailboxPathLocker locker;
 
     @Inject
-    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, MailboxPathLocker locker, MessageParser messageParser) {
+    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, 
+            MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory) {
         super(mapperFactory,
             authenticator,
             locker,
             new UnionMailboxACLResolver(),
             new SimpleGroupMembershipResolver(),
-            messageParser);
+            messageParser,
+            messageIdFactory);
         this.locker = locker;
     }
 
@@ -88,7 +91,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             mailboxRow,
             getQuotaManager(),
             getQuotaRootResolver(),
-            getMessageParser());
+            getMessageParser(),
+            getMessageIdFactory());
     }
 
 }

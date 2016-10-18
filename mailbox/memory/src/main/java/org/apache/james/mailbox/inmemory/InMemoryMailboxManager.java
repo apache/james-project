@@ -28,6 +28,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -38,8 +39,10 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Inject
-    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver, MessageParser messageParser) {
-        super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser);
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, 
+            MailboxPathLocker locker, MailboxACLResolver aclResolver, GroupMembershipResolver groupMembershipResolver,
+            MessageParser messageParser, MessageId.Factory messageIdFactory) {
+        super(mailboxSessionMapperFactory, authenticator, locker, aclResolver, groupMembershipResolver, messageParser, messageIdFactory);
     }
 
     @Override
@@ -63,6 +66,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getGroupMembershipResolver(),
             getQuotaManager(),
             getQuotaRootResolver(),
-            getMessageParser());
+            getMessageParser(),
+            getMessageIdFactory());
     }
 }

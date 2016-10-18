@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -76,6 +77,7 @@ public class StoreMailboxManagerAnnotationTest {
     @Mock private Mailbox mailbox;
     @Mock private MessageParser messageParser;
     @Mock private MailboxId mailboxId;
+    @Mock private MessageId.Factory messageIdFactory;
 
     @InjectMocks
     private StoreMailboxManager storeMailboxManager;
@@ -90,7 +92,7 @@ public class StoreMailboxManagerAnnotationTest {
         when(mailbox.getMailboxId()).thenReturn(mailboxId);
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(mailbox);
 
-        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, messageParser));
+        storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, messageParser, messageIdFactory));
         storeMailboxManager.init();
     }
 

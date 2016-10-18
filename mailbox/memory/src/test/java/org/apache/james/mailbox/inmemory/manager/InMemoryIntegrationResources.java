@@ -47,6 +47,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
@@ -63,13 +64,15 @@ public class InMemoryIntegrationResources implements IntegrationResources {
         FakeAuthenticator mockAuthenticator = new FakeAuthenticator();
         mockAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        MessageId.Factory messageIdFactory = new DefaultMessageId.Factory();
         final StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             mockAuthenticator,
             new NoMailboxPathLocker(),
             new UnionMailboxACLResolver(),
             groupMembershipResolver,
-            new MessageParser());
+            new MessageParser(),
+            messageIdFactory);
         manager.init();
         return manager;
     }

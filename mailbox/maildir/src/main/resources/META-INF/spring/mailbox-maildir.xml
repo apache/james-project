@@ -40,12 +40,16 @@
         <constructor-arg index="3" ref="aclResolver"/>
         <constructor-arg index="4" ref="groupMembershipResolver"/>
         <constructor-arg index="5" ref="messageParser"/>
+        <constructor-arg index="6" ref="maildir-messageIdFactory" />
 <!--         <property name="messageSearchIndex" ref="lazyIndex"/> -->
         <property name="quotaManager" ref="quotaManager"/>
         <property name="quotaRootResolver" ref="quotaRootResolver"/>
         <property name="quotaUpdater" ref="quotaUpdater"/>
         <property name="delegatingMailboxListener" ref="delegating-listener"/>
     </bean>
+    
+    <bean id="maildir-messageIdFactory" class="org.apache.james.mailbox.store.mail.model.DefaultMessageId.Factory" />
+    
     <bean id ="maildir-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
     </bean>
