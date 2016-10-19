@@ -15,10 +15,7 @@ When try James by this way, you will use the last state of James.
 It will be configured to run with Cassandra & ElasticSearch.
 All those three components will be started with a single command.
 
-First, you need to build the image:
-$ docker-compose -f dockerfiles/run/docker-compose.yml build
-
-Then, you just have to start the services:
+You just have to start the services:
 $ docker-compose -f dockerfiles/run/docker-compose.yml up
 
 Wait a few seconds in order to have all those services up, you will see a such log when James is available:
