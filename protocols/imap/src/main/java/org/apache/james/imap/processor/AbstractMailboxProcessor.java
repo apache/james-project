@@ -40,6 +40,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.imap.main.DeniedAccessOnSharedMailboxException;
 import org.apache.james.imap.message.response.ExistsResponse;
 import org.apache.james.imap.message.response.ExpungeResponse;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -56,7 +57,6 @@ import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -77,6 +77,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         this.factory = factory;
     }
 
+    @Override
     protected final void doProcess(M acceptableMessage, Responder responder, ImapSession session) {
         process(acceptableMessage, responder, session);
     }
@@ -88,17 +89,21 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     final void doProcess(M message, ImapCommand command, String tag, Responder responder, ImapSession session) {
-        if (!command.validForState(session.getState())) {
-            ImapResponseMessage response = factory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
-            responder.respond(response);
+        try {
+            if (!command.validForState(session.getState())) {
+                ImapResponseMessage response = factory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
+                responder.respond(response);
 
-        } else {
-            getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
+            } else {
+                getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
-            doProcess(message, session, tag, command, responder);
+                doProcess(message, session, tag, command, responder);
 
-            getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
+                getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
+            }
+        } catch (DeniedAccessOnSharedMailboxException e) {
+            no(command, tag, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
         }
     }
 
