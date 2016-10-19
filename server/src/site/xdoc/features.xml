@@ -276,7 +276,15 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Alternate Queue</td>
+                    <td>ActiveMQ Queue</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>File Queue</td>
                     <td>Experimental</td>
                     <td>yes</td>
                     <td>no</td>
