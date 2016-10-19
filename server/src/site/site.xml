@@ -66,10 +66,6 @@
         <item name="IMAP4" href="/config-imap4.html" />
         <item name="Mailet Container" href="/config-mailetcontainer.html" />
         <item name="FetchMail" href="/config-fetchmail.html" />
-<!--        
-Removed from trunk for now.
-        <item name="List Manager" href="/config-listmanager.html" />
--->
         <item name="SSL/TLS" href="/config-ssl-tls.html" />
         <item name="Sieve" href="/config-sieve.html" />
         <item name="Anti Spam" href="/config-antispam.html" />
