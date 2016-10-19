@@ -60,6 +60,14 @@
                     <td>3.0</td>
                 </tr>
                 <tr>
+                    <td>JMAP</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0</td>
+                    <td>3.0</td>
+                </tr>
+                <tr>
                     <td>LMTP</td>
                     <td>Experimental</td>
                     <td>yes</td>
