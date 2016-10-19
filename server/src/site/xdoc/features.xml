@@ -300,12 +300,12 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Run-as-service scripts</td>
-                    <td>Stable</td>
+                    <td>SIEVE scripts</td>
+                    <td>Experimental</td>
                     <td>yes</td>
                     <td>no</td>
-                    <td></td>
-                    <td></td>
+                    <td>3.0.0</td>
+                    <td>3.0.0</td>
                 </tr>
                 <tr>
                     <td>Deployment in WEB container</td>
