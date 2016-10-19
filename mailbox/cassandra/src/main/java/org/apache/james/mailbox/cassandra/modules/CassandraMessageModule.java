@@ -71,22 +71,7 @@ public class CassandraMessageModule implements CassandraModule {
                     .addColumn(CassandraMessageTable.Flag.USER_FLAGS, set(text()))
                     .addUDTListColumn(CassandraMessageTable.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageTable.ATTACHMENTS))
                     .addUDTListColumn(CassandraMessageTable.PROPERTIES, SchemaBuilder.frozen(CassandraMessageTable.PROPERTIES))));
-        index = Arrays.asList(
-            new CassandraIndex(
-                SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraMessageTable.Flag.RECENT)
-                    .ifNotExists()
-                    .onTable(CassandraMessageTable.TABLE_NAME)
-                    .andColumn(CassandraMessageTable.Flag.RECENT)),
-            new CassandraIndex(
-                SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraMessageTable.Flag.SEEN)
-                    .ifNotExists()
-                    .onTable(CassandraMessageTable.TABLE_NAME)
-                    .andColumn(CassandraMessageTable.Flag.SEEN)),
-            new CassandraIndex(
-                SchemaBuilder.createIndex(CassandraIndex.INDEX_PREFIX + CassandraMessageTable.Flag.DELETED)
-                    .ifNotExists()
-                    .onTable(CassandraMessageTable.TABLE_NAME)
-                    .andColumn(CassandraMessageTable.Flag.DELETED)));
+        index = Collections.emptyList();
         types = Arrays.asList(
             new CassandraType(CassandraMessageTable.PROPERTIES,
                 SchemaBuilder.createType(CassandraMessageTable.PROPERTIES)
