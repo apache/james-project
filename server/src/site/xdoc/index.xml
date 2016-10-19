@@ -86,6 +86,12 @@
             </a>
           </span>
         </p>
+         <p>You can also have a look to the last stable version</p>
+         <span class="minibutton btn-download">
+             <a href="http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version">
+                 <span><span class="icon"></span>Download Stable James Server 2.3.2</span>
+             </a>
+         </span>
 	
         <p>Apache James Server 3.0 represents the leading edge of development. This codestream has many more
           features than the 2.3 code, but is not as well tested in production. Reasonable
