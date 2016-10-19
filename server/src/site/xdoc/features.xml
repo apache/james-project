@@ -244,14 +244,6 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Deployment in OSGI container</td>
-                    <td>Planned</td>
-                    <td>planned</td>
-                    <td>no</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
                     <td>Configuration Hot Reload</td>
                     <td>Planned</td>
                     <td>planned</td>
