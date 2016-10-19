@@ -26,6 +26,7 @@ import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.StatusRequest;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -51,7 +52,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
      * org.apache.james.imap.api.process.ImapProcessor.Responder)
      */
     protected void doProcess(StatusRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
-        final MailboxPath mailboxPath = buildFullPath(session, request.getMailboxName());
+        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         final StatusDataItems statusDataItems = request.getStatusDataItems();
         final Logger logger = session.getLog();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

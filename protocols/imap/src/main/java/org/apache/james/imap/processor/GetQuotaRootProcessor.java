@@ -26,6 +26,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.GetQuotaRootRequest;
 import org.apache.james.imap.message.response.QuotaRootResponse;
 import org.apache.james.imap.message.response.QuotaResponse;
@@ -66,7 +67,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final MailboxManager mailboxManager = getMailboxManager();
 
-        final MailboxPath mailboxPath = buildFullPath(session, message.getMailboxName());
+        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(message.getMailboxName());
 
         // First check mailbox exists
         try {

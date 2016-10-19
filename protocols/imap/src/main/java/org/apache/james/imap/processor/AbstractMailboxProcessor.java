@@ -351,44 +351,6 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
 
     protected abstract void doProcess(M message, ImapSession session, String tag, ImapCommand command, Responder responder);
 
-    public MailboxPath buildFullPath(ImapSession session, String mailboxName) {
-        String namespace = null;
-        String name = null;
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-
-        if (mailboxName == null || mailboxName.length() == 0) {
-            return new MailboxPath("", "", "");
-        }
-        if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-            int namespaceLength = mailboxName.indexOf(mailboxSession.getPathDelimiter());
-            if (namespaceLength > -1) {
-                namespace = mailboxName.substring(0, namespaceLength);
-                if (mailboxName.length() > namespaceLength)
-                    name = mailboxName.substring(++namespaceLength);
-            } else {
-                namespace = mailboxName;
-            }
-        } else {
-            namespace = MailboxConstants.USER_NAMESPACE;
-            name = mailboxName;
-        }
-        String user = null;
-        // we only use the user as part of the MailboxPath if its a private user
-        // namespace
-        if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
-            user = ImapSessionUtils.getUserName(session);
-        }
-        
-        // use uppercase for INBOX
-        //
-        // See IMAP-349
-        if (name.equalsIgnoreCase(MailboxConstants.INBOX)) {
-            name = MailboxConstants.INBOX;
-        }
-
-        return new MailboxPath(namespace, user, name);
-    }
-
     /**
      * Joins the elements of a mailboxPath together and returns them as a string
      * 

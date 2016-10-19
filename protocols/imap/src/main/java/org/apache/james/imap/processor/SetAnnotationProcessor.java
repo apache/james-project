@@ -29,6 +29,7 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -54,7 +55,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final String mailboxName = message.getMailboxName();
         try {
-            MailboxPath mailboxPath = buildFullPath(session, mailboxName);
+            MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
             mailboxManager.updateAnnotations(mailboxPath, mailboxSession, message.getMailboxAnnotations());
 
