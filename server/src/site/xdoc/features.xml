@@ -1,0 +1,293 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<document>
+
+    <properties>
+        <title>Apache James Server 3 - Features</title>
+    </properties>
+
+    <body>
+        <h1>Features</h1>
+        <p>
+            <table>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>3.0</th>
+                    <th>2.3.x</th>
+                    <th>Since</th>
+                    <th>First released</th>
+                </tr>
+                <tr>
+                    <td>SMTP</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.0</td>
+                    <td>0.95</td>
+                </tr>
+                <tr>
+                    <td>POP3</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.1</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td>IMAP</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0</td>
+                    <td>3.0</td>
+                </tr>
+                <tr>
+                    <td>LMTP</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>NNTP</td>
+                    <td>Experimental</td>
+                    <td>no</td>
+                    <td>yes</td>
+                    <td>1.2</td>
+                    <td>1.2</td>
+                </tr>
+                <tr>
+                    <td>TLS POP3/SMTP</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.2</td>
+                    <td>1.2</td>
+                </tr>
+                <tr>
+                    <td>Mailing List</td>
+                    <td>Experimental</td>
+                    <td>no</td>
+                    <td>yes</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>FetchMail</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>2.2</td>
+                    <td>2.2</td>
+                </tr>
+                <tr>
+                    <td>Mailet Container</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>2.3</td>
+                    <td>0.95</td>
+                </tr>
+                <tr>
+                    <td>Remote Manager</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.0</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td>Management via JMX</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>TLS Remote Manager</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.2</td>
+                    <td>1.2</td>
+                </tr>
+                <tr>
+                    <td>File Mail Store</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.2</td>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <td>JDBC Database Mail Store</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.2</td>
+                    <td>1.2</td>
+                </tr>
+                <tr>
+                    <td>JPA Database Mail Store</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>JCR (Jackrabbit) Database Mail Store</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Alternate Mail stores</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>JDBC Users</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.2.1</td>
+                    <td>1.2.1</td>
+                </tr>
+                <tr>
+                    <td>JPA Users</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>1.2.1</td>
+                    <td>1.2.1</td>
+                </tr>
+                <tr>
+                    <td>JCR Users</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>1.2.1</td>
+                    <td>1.2.1</td>
+                </tr>
+                <tr>
+                    <td>LDAP Users</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>1.2</td>
+                    <td>1.2</td>
+                </tr>
+                <tr>
+                    <td>Alternate User Stores</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Alternate Queue</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Integration with SpamAssassin</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>partial</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Run-as-service scripts</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Deployment in WEB container</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Deployment in OSGI container</td>
+                    <td>Planned</td>
+                    <td>planned</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Configuration Hot Reload</td>
+                    <td>Planned</td>
+                    <td>planned</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Monitoring via JMX</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>IP V6</td>
+                    <td>Experimental</td>
+                    <td>partial</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Java 1.6</td>
+                    <td><i>Requirement</i></td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+
+            </table>
+
+        </p>
+
+    </body>
+
+</document>

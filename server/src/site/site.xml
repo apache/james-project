@@ -43,7 +43,7 @@
     
     <menu name="User Manual">
       <item name="1. Quick Start" href="/quick-start.html" />
-      <item name="2. Features" href="" collapse="true" >
+      <item name="2. Features" href="/features.html" collapse="true" >
         <item name="Mailet Container" href="/feature-mailetcontainer.html" />
         <item name="Queue Priority" href="/feature-queue-priority.html" />
         <item name="Persistence" href="/feature-persistence.html" />
