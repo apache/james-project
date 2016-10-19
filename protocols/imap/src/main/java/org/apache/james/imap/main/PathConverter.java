@@ -19,13 +19,22 @@
 
 package org.apache.james.imap.main;
 
+import java.util.List;
+
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+
 public class PathConverter {
+
+    private static final int NAMESPACE = 0;
 
     public static PathConverter forSession(ImapSession session) {
         return new PathConverter(session);
@@ -33,46 +42,60 @@ public class PathConverter {
 
     private final ImapSession session;
 
-    public PathConverter(ImapSession session) {
+    private PathConverter(ImapSession session) {
         this.session = session;
     }
 
     public MailboxPath buildFullPath(String mailboxName) {
-        String namespace = null;
-        String name = null;
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-
-        if (mailboxName == null || mailboxName.length() == 0) {
-            return new MailboxPath("", "", "");
+        if (Strings.isNullOrEmpty(mailboxName)) {
+            return buildDefaultPath();
         }
-        if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-            int namespaceLength = mailboxName.indexOf(mailboxSession.getPathDelimiter());
-            if (namespaceLength > -1) {
-                namespace = mailboxName.substring(0, namespaceLength);
-                if (mailboxName.length() > namespaceLength)
-                    name = mailboxName.substring(++namespaceLength);
-            } else {
-                namespace = mailboxName;
-            }
+        if (isAbsolute(mailboxName)) {
+            return buildAbsolutePath(mailboxName);
         } else {
-            namespace = MailboxConstants.USER_NAMESPACE;
-            name = mailboxName;
+            return buildRelativePath(mailboxName);
         }
-        String user = null;
-        // we only use the user as part of the MailboxPath if its a private user
-        // namespace
+    }
+
+    private MailboxPath buildDefaultPath() {
+        return new MailboxPath("", "", "");
+    }
+
+    private boolean isAbsolute(String mailboxName) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName));
+        return mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR;
+    }
+
+    private MailboxPath buildRelativePath(String mailboxName) {
+        return buildMailboxPath(MailboxConstants.USER_NAMESPACE, ImapSessionUtils.getUserName(session), mailboxName);
+    }
+
+    private MailboxPath buildAbsolutePath(String absolutePath) {
+        char pathDelimiter = ImapSessionUtils.getMailboxSession(session).getPathDelimiter();
+        List<String> mailboxPathParts = Splitter.on(pathDelimiter).splitToList(absolutePath);
+        String namespace = mailboxPathParts.get(NAMESPACE);
+        String mailboxName = Joiner.on(pathDelimiter).join(Iterables.skip(mailboxPathParts, 1));
+        return buildMailboxPath(namespace, retrieveUserName(namespace), mailboxName);
+    }
+
+    private String retrieveUserName(String namespace) {
         if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
-            user = ImapSessionUtils.getUserName(session);
+            return ImapSessionUtils.getUserName(session);
         }
+        return null;
+    }
 
+    private MailboxPath buildMailboxPath(String namespace, String user, String mailboxName) {
+        return new MailboxPath(namespace, user, sanitizeMailboxName(mailboxName));
+    }
+
+    private String sanitizeMailboxName(String mailboxName) {
         // use uppercase for INBOX
-        //
         // See IMAP-349
-        if (name.equalsIgnoreCase(MailboxConstants.INBOX)) {
-            name = MailboxConstants.INBOX;
+        if (mailboxName.equalsIgnoreCase(MailboxConstants.INBOX)) {
+            return MailboxConstants.INBOX;
         }
-
-        return new MailboxPath(namespace, user, name);
+        return mailboxName;
     }
 
 }
