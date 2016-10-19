@@ -41,7 +41,6 @@
         <li>Four mail protocol services: SMTP, POP3, IMAP4 and LMTP.</li>
         <li>Support for SMTP Auth.</li>
         <li>A remote administration server.</li>
-  <!--      <li>an NNTP server,</li>-->
         <li>Support for TLS/SSL.</li>
         <li>A mail processing engine that supports the Mailet API.</li>
         <li>File-system message storage and a message storage interface to RDBMS's.</li>

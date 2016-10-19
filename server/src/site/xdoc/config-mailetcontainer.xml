@@ -38,13 +38,7 @@
       <li>Package prefixed custom mailet names will be searched across the entire applicable class path</li>
       <li>Composite matchers</li>
     </ul>
-<!-- 
-<matcher name="anyname" match="org.apache.james.mailetcontainer.lib.matcher.And">
-<matcher match="SenderIs...."/>
-<matcher match="SubjectStartsWith...."/>
-</matcher>
-<mailet match="anyname" class="MailetX"/>
--->
+
       <p>This configuration block is defined by the <strong>mailserver</strong> tag.  All administrators 
       need to adjust the <strong>mailserver</strong> block upon installation.</p>
 
@@ -61,71 +55,7 @@
       <dt><strong>spooler.threads</strong></dt>
       <dd>Number of simultaneous threads used to spool the mails.</dd>
       </dl>
-    
-<!--   
-    <p>The SpoolManager is controlled by a single configuration block in the mailetcontainer.xml.
-    The spoolmanager tag defines the boundaries of the configuration block.  The behavior of 
-    the SpoolManager, most importantly the routing of mail messages through the processor tree,
-    is controlled by this block.</p>
-    
-    <p>The spoolmanager tag has only one children.  It is:</p>
-    <ul>
-      <li><strong>threads</strong> - This is a required positive integer element.  It specifies 
-          the number of threads the SpoolManager will use to process messages in the spool.  This 
-          parameter tends to substantially impact performance, so it is advisable to tune it in production 
-          configurations.</li>
-    </ul>
 
-    <p>Spoolmanager depends on mailet and matcher packages, configured by these tags:</p>
-    <ul>
-      <li><strong>mailetpackages</strong> - This is a required container tag.  It contains some number 
-          of <strong>mailetpackage</strong> children.  The body of each of these <strong>mailetpackage</strong> 
-          elements is a Java package name.  It is these packages that contain the classes to be instantiated
-          as mailets.</li>
-      <li><strong>matcherpackages</strong> - This is a required container tag.  It contains some number 
-          of <strong>matcherpackage</strong> children.  The body of each of these <strong>matcherpackage</strong> 
-          elements is a Java package name.  It is these packages that contain the classes to be instantiated
-          as matchers.</li>
-    </ul>
-
-    <p>The remaining SpoolManager configuration elements are complex enough to require a more in-depth
-       discussion.</p>
-    
-    <subsection name="Processor Configuration">
-    
-      <p>In addition to the child elements discussed above, the SpoolManager tag can have several 
-      <strong>processor</strong> children.  It is these tags and their children that define the processor tree 
-      for the SpoolManager.</p>
-      
-      <p>Each processor has a required attribute, <strong>name</strong>.  The value of this attribute must be 
-      unique for each processor tag.  The name of a processor is significant.  Certain processors are required 
-      (specifically root and error).  The name "ghost" is forbidden as a processor name, as it is used to denote 
-      a message that should not undergo any further processing.</p>
-      
-      <p>The James SpoolManager creates a correspondance between processor names and the "state" of a mail as defined 
-      in the Mailet API.  Specifically, after each mailet processes a mail, the state of the message is examined.  If
-      the state has been changed, the message does not continue in the current processor.  If the new state is "ghost"
-      then processing of that message terminates completely.  If the new state is anything else, the message is 
-      re-routed to the processor with the name matching the new state.</p>
-      <p>The root processor is a required processor.  All new messages that the SpoolManager finds on the spool are 
-      directed to this processor.</p>
-      
-      <p>The error processor is another required processor.  Under certain circumstances James itself will redirect messages
-      to the error processor.  It is also the standard processor to which mailets redirect messages when an error
-      condition is encountered.</p>
-      
-      <p>The transport and spam processors are two useful, but optional, processors that are included in the out of
-      the box configuration.  These processors include logic for actual mail delivery and spam handling respectively.  More
-      information on these processors can be found in the default mailetcontainer.xml.</p>
-      
-      <p>Each processor element has zero or more <strong>mailet</strong> child elements.  Each of these elements describes a 
-      matcher/mailet pair.  The ordering of the <strong>mailet</strong> children is crucial to the configuration, as 
-      it is the order in which pairs will be traversed in the processor.</p>
-      
-      <p>It is this <strong>mailet</strong> element that is at the core of the SpoolManager configuration.</p>
-      
-    </subsection>
--->    
     <subsection name="The Mailet Tag">
     
       <p>Consider the following simple <strong>mailet</strong> tag:</p>

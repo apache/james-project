@@ -114,7 +114,7 @@
       a per user, limit.  If the value is zero then there is no limit.  If the tag isn't specified, the service will
       default to an unlimited message size.</dd>
       <dt><strong>handler.heloEhloEnforcement</strong></dt>
-      <dd>This sets wether to enforce the use of HELO/EHLO salutation before a 
+      <dd>This sets whether to enforce the use of HELO/EHLO salutation before a
          MAIL command is accepted. If unspecified, the value defaults to true.</dd>
       <dt><strong>handler.addressBracketsEnforcement</strong></dt>
       <dd>WARNING: This is Non-RFC compliant (default value: true)
@@ -171,7 +171,7 @@ Correct this.
       <p>Finally, you need to verify that your configuration was done correctly.  This step is 
          <strong>important</strong> and should not be skipped.</p>
       
-      <p>Verify that you have not inadvertantly configured your server as an open relay. This is most easily 
+      <p>Verify that you have not inadvertently configured your server as an open relay. This is most easily
          accomplished by using the service provided at <a href="http://www.abuse.net/relay.html">abuse.net</a>. abuse.net will 
          check your mail server and inform you if it is an open relay.</p>
       
@@ -201,7 +201,7 @@ Correct this.
     
     <p>The configuration is the same of for SMTP.</p>
     
-    <p>By default, it is desactivated. You can activate it with SMTP and bind for example on port 24.</p>
+    <p>By default, it is deactivated. You can activate it with SMTP and bind for example on port 24.</p>
 
   </section>
     

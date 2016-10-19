@@ -66,7 +66,7 @@
        other than what's been discussed here, it has no additional special requirements.</p>
     
     <p>James is configured to run with 512 MB RAM (-Xmx512M in the bat/sh) available, but may need more or 
-       less depending on the load. With the default configuraiton, JVM can use until 512M (It does not mean it will do).
+       less depending on the load. With the default configuration, JVM can use until 512M (It does not mean it will do).
        It really depends on your traffic, and also which mailbox you will use (you can save much memory 
        if you don't use the default embedded derby database but an external database of your choice).
        Work is still done to minimize the needed memory.
@@ -114,7 +114,7 @@
       </div>
   -->
     <p>After unpacking the binary, the next step is to adjust the initial configuration.  
-       All configuration files are embedded in jars. We ship in the conf foler template configuration files.
+       All configuration files are embedded in jars. We ship in the conf folder template configuration files.
     </p>
     
     <p>You can override the default configuration : copy the conf folder any ...-template... you need and update according to your needs.</p>

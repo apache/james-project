@@ -174,14 +174,14 @@
 
   <section name="Build James from NetBeans">
 
-      <p>This was done using NetBeans 7, which comes bundeled with Maven 3, needed to build James 3.
+      <p>This was done using NetBeans 7, which comes bundled with Maven 3, needed to build James 3.
       Older versions of NetBeans should be able to build James fine, provided that you configure them to use an instance of Maven 3, if they do not have it.
-      I used james 3.0-beta1 release and it builded in 7:40 min on my notebook running Debian Squeeze.
+      I used james 3.0-beta1 release and it builds in 7:40 min on my notebook running Debian Squeeze.
       </p>
 
       <subsection name="Getting the sources from the repository">
-          <p>Building James with NetBeans is very easy as it comes with Subersion and Maven support already build in.
-          Maven is bundeled with the IDE, but Subverion is not, so you will have to install Subversion yourself and NetBeans will be able to use it.
+          <p>Building James with NetBeans is very easy as it comes with Subversion and Maven support already build in.
+          Maven is bundled with the IDE, but Subversion is not, so you will have to install Subversion yourself and NetBeans will be able to use it.
           You can get more details on how to install and where to get Subversion from the NetBeans Help menu by clicking on <strong>Help Contents</strong> and from there go to the <strong>IDE Basics->Version Control and File Hierarchy->Subversion</strong> topic.
           </p>
           <p>For Linux users, Subversion is probably packaged by your distribution so use your distribution tools to install it (aptitude, yum, etc.)</p>
