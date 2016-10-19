@@ -244,6 +244,14 @@
                     <td>1.2.1</td>
                 </tr>
                 <tr>
+                    <td>Cassandra Users</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0.0</td>
+                    <td>3.0.0</td>
+                </tr>
+                <tr>
                     <td>JCR Users</td>
                     <td>Stable</td>
                     <td>yes</td>
