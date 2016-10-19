@@ -37,8 +37,8 @@
     <menu name="Overview">
       <item name="Introduction" href="/index.html"/>
       <item name="Release Notes" href="/release-notes.html"/>
-<!--       <item name="Sitemap" href="/sitemap.html"/> -->
-<!--      <item name="JIRA Report" href="/jira-report.html"/>-->
+      <item name="Javadoc" href="/apidocs/index.html" />
+      <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
     </menu>
     
     <menu name="User Manual">
@@ -103,11 +103,6 @@ Removed from trunk for now.
           <item name="SMTP Hooks" href="/dev-provided-smtp-hooks.html" />
         </item>
       </item>
-    </menu>
-
-    <menu name="References">
-      <item name="Javadoc" href="/apidocs/index.html" />
-      <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
     </menu>
 
   </body>  
