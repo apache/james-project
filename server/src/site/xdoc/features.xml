@@ -148,6 +148,46 @@
                     <td>1.2</td>
                 </tr>
                 <tr>
+                    <td>JPA Mailbox</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Cassandra Mailbox</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0.0</td>
+                    <td>3.0.0</td>
+                </tr>
+                <tr>
+                    <td>Lucene search</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>ElasticSearch search</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0.0</td>
+                    <td>3.0.0</td>
+                </tr>
+                <tr>
+                    <td>Simple search</td>
+                    <td>Stable</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0.0</td>
+                    <td>3.0.0</td>
+                </tr>
+                <tr>
                     <td>File Mail Store</td>
                     <td>Stable</td>
                     <td>yes</td>
