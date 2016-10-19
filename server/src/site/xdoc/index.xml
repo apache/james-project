@@ -94,8 +94,8 @@
         <p>Apache James Server 3.0 requires Java 1.5 but Java 1.6 is recommended. A migration guide for 
            users willing to upgrade from 2.3 to 3.0 is <a href="upgrade-2.3.html">available</a>.</p>
            
-         <p>The NNTP News server and the Mailing List Manager present in Apache James Server 2.3 have been 
-            temporary removed from the 3.0 release line.</p>
+         <p>The NNTP News server and the Mailing List Manager present in Apache James Server 2.3 have been
+             removed from the 3.0 release line.</p>
     
      </div>
      
