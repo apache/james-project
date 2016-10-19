@@ -68,6 +68,14 @@
                     <td></td>
                 </tr>
                 <tr>
+                    <td>ManageSieve</td>
+                    <td>Experimental</td>
+                    <td>yes</td>
+                    <td>no</td>
+                    <td>3.0.0</td>
+                    <td>3.0.0</td>
+                </tr>
+                <tr>
                     <td>NNTP</td>
                     <td>Experimental</td>
                     <td>no</td>
