@@ -29,7 +29,10 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class PathConverterTest {
 
@@ -39,6 +42,7 @@ public class PathConverterTest {
     private ImapSession imapSession;
     private MailboxSession mailboxSession;
     private PathConverter pathConverter;
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -71,6 +75,7 @@ public class PathConverterTest {
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
     }
 
+    @Ignore("Shared mailbox is not supported yet")
     @Test
     public void buildFullPathShouldAcceptNamespacePrefix() {
         assertThat(pathConverter.buildFullPath("#"))
@@ -83,6 +88,7 @@ public class PathConverterTest {
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, ""));
     }
 
+    @Ignore("Shared mailbox is not supported yet")
     @Test
     public void buildFullPathShouldAcceptNamespaceAlone() {
         String namespace = "#any";
@@ -96,6 +102,7 @@ public class PathConverterTest {
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, ""));
     }
 
+    @Ignore("Shared mailbox is not supported yet")
     @Test
     public void buildFullPathShouldAcceptNamespaceAndDelimiter() {
         String namespace = "#any";
@@ -110,6 +117,7 @@ public class PathConverterTest {
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
     }
 
+    @Ignore("Shared mailbox is not supported yet")
     @Test
     public void buildFullPathShouldAcceptFullAbsolutePath() {
         String namespace = "#any";
@@ -132,11 +140,18 @@ public class PathConverterTest {
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, mailboxName));
     }
 
+    @Ignore("Shared mailbox is not supported yet")
     @Test
     public void buildFullPathShouldAcceptAbsolutePathWithSubFolder() {
         String namespace = "#any";
         String mailboxName = "mailboxName.subFolder";
         assertThat(pathConverter.buildFullPath(namespace + PATH_DELIMITER + mailboxName))
             .isEqualTo(new MailboxPath(namespace, null, mailboxName));
+    }
+
+    @Test
+    public void buildFullPathShouldDenyMailboxPathNotBelongingToTheUser() {
+        expectedException.expect(DeniedAccessOnSharedMailboxException.class);
+        pathConverter.buildFullPath("#any");
     }
 }
