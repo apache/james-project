@@ -79,14 +79,6 @@
             </a>
           </span>
         </p>
-        <p>We also have snapshot builds for the braves (no guarantee!).</p>
-        <p>
-          <span class="minibutton btn-download">
-            <a href="http://people.apache.org/builds/james/nightly/">
-              <span><span class="icon"></span>Snapshot Apache James Server 3.0</span>
-            </a>
-          </span>
-        </p>
          <p>You can also have a look to the last stable version</p>
          <span class="minibutton btn-download">
              <a href="http://james.apache.org/download.cgi#Apache_James_2.3.2_is_the_stable_version">
