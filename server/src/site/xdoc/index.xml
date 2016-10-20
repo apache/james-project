@@ -36,7 +36,7 @@
     <div id="tabs" style="min-width:550px;">
     
       <ul>
-        <li><a href="#tabs-1">Apache James Server 3</a></li>
+        <li><a href="#tabs-1">Apache James Server</a></li>
         <li><a href="#tabs-2">Advantages</a></li>
         <li><a href="#tabs-3">Objectives</a></li>
       </ul>
@@ -55,7 +55,7 @@
 			</div>
 		</div>
       
-	    <p>The Apache Java Mail Server Version 3.0
+	    <p>The Apache Java Mail Server
 	      is a 100% pure Java SMTP, IMAP4 and POP3 Mail 
 	      server designed to be a complete and portable enterprise mail engine solution.  
 	      Apache James Server is based on currently available open protocols.</p>
@@ -94,11 +94,11 @@
              </a>
          </span>
 	
-        <p>Apache James Server 3.0 represents the leading edge of development. This codestream has many more
-          features than the 2.3 code, but is not as well tested in production. Reasonable
+        <p>Apache James Server 3.0 represents the leading edge of development. This code stream has many more
+          features than the 2.3 code, but is not be as well tested in production. Reasonable
           configuration compatibility has been retained with 2.3.2.</p>
           
-        <p>Apache James Server 3.0 requires Java 1.5 but Java 1.6 is recommended. A migration guide for 
+        <p>Apache James Server 3.0 requires Java 1.6. A migration guide for
            users willing to upgrade from 2.3 to 3.0 is <a href="upgrade-2.3.html">available</a>.</p>
            
          <p>The NNTP News server and the Mailing List Manager present in Apache James Server 2.3 have been
