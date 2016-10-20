@@ -89,32 +89,4 @@ public class MultimailboxesSearchQueryTest {
         assertThat(actual).isEqualToComparingFieldByField(expected);
     }
 
-    private static class TestId implements MailboxId {
-        private final String id;
-
-        public TestId(String id) {
-            this.id = id;
-        }
-
-        public static TestId of(String id) {
-            return new TestId(id);
-        }
-        
-        @Override
-        public String serialize() {
-            return id;
-        }
-        
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof TestId
-                    && id.equals(((TestId)other).id);
-        }
-        
-        @Override
-        public int hashCode() {
-            return id.hashCode();
-        };
-    }
-
 }
