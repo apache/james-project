@@ -40,6 +40,7 @@
       <item name="Javadoc" href="/apidocs/index.html" />
       <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
       <item name="Sources on GitHub" href="https://github.com/apache/james-project" />
+      <item name="RFCs" href="/rfcs.html"/>
     </menu>
     
     <menu name="User Manual">
