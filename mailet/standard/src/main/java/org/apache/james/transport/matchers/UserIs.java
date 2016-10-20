@@ -19,14 +19,12 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.mailet.base.GenericRecipientMatcher;
-import org.apache.mailet.MailAddress;
-
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.Vector;
 
 import javax.mail.MessagingException;
+
+import org.apache.mailet.MailAddress;
+import org.apache.mailet.base.GenericRecipientMatcher;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;

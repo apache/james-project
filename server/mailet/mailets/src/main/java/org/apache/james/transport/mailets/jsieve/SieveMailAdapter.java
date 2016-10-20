@@ -178,7 +178,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     {
         final List<Action> actions = getActions();
         for (final Action action: actions) {
-            getMailetContext().log("Executing action: " + action.toString());
+            getMailetContext().log(MailetContext.LogLevel.INFO, "Executing action: " + action.toString());
             try
             {
                 dispatcher.execute(action, getMail(), this);
@@ -231,9 +231,8 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         Set<String> headerNames = new HashSet<String>();
         try
         {
-            Enumeration allHeaders = getMessage().getAllHeaders();
-            while (allHeaders.hasMoreElements())
-            {
+            Enumeration<?> allHeaders = getMessage().getAllHeaders();
+            while (allHeaders.hasMoreElements()) {
                 headerNames.add(((Header) allHeaders.nextElement()).getName());
             }
             return new ArrayList<String>(headerNames);
@@ -445,7 +444,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         poster.post(uri, mail);
     }
     
-    public void post(MailAddress sender, Collection recipients, MimeMessage mail) throws MessagingException {
+    public void post(MailAddress sender, Collection<MailAddress> recipients, MimeMessage mail) throws MessagingException {
         getMailetContext().sendMail(sender, recipients, mail);
     }
 

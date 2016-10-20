@@ -42,7 +42,7 @@ public class ActionDispatcher {
      * handle the Action.
      * <Action, MailAction>
      */
-    private ConcurrentMap<Class, MailAction> fieldMailActionMap;
+    private ConcurrentMap<Class<?>, MailAction> fieldMailActionMap;
 
     /**
      * Constructor for ActionDispatcher.
@@ -73,7 +73,7 @@ public class ActionDispatcher {
      *
      * @return Map
      */
-    public ConcurrentMap<Class, MailAction> getMethodMap() {
+    public ConcurrentMap<Class<?>, MailAction> getMethodMap() {
         return fieldMailActionMap;
     }
 
@@ -82,8 +82,8 @@ public class ActionDispatcher {
      *
      * @return Map
      */
-    private ConcurrentMap<Class, MailAction> defaultMethodMap() {
-        final ConcurrentMap<Class, MailAction> actionMap = new ConcurrentHashMap<Class, MailAction>(4);
+    private ConcurrentMap<Class<?>, MailAction> defaultMethodMap() {
+        final ConcurrentMap<Class<?>, MailAction> actionMap = new ConcurrentHashMap<Class<?>, MailAction>(4);
         actionMap.put(ActionFileInto.class, new FileIntoAction());
         actionMap.put(ActionKeep.class, new KeepAction());
         actionMap.put(ActionRedirect.class, new RedirectAction());
@@ -97,7 +97,7 @@ public class ActionDispatcher {
      *
      * @param mailActionMap <Action, MailAction> not null
      */
-    protected void setMethodMap(ConcurrentMap<Class, MailAction> mailActionMap) {
+    protected void setMethodMap(ConcurrentMap<Class<?>, MailAction> mailActionMap) {
         fieldMailActionMap = mailActionMap;
     }
 }

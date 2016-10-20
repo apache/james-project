@@ -129,8 +129,6 @@ public class OnamiSuite extends Suite {
 
     private static final Logger LOGGER = Logger.getLogger(OnamiSuite.class.getName());
 
-    private Injector injector;
-
     private final List<Module> allModules;
 
     private final Map<Field, Object> mocked = new HashMap<Field, Object>(1);
@@ -195,7 +193,7 @@ public class OnamiSuite extends Suite {
             LOGGER.finer(" #### Creating injector ####");
         }
 
-        this.injector = createInjector(allModules);
+        createInjector(allModules);
         super.run(notifier);
         this.flush();
 
@@ -218,7 +216,6 @@ public class OnamiSuite extends Suite {
      * {@inheritDoc}
      */
     private void flush() {
-        this.injector = null;
         this.allModules.clear();
         this.mocked.clear();
     }
