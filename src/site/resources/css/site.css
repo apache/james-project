@@ -66,3 +66,7 @@
     border-width:medium;
     background-color: #cdd3d8;
 }
+.centered {
+    margin: auto;
+    display: block;
+}
