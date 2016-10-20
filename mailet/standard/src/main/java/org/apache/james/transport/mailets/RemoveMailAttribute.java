@@ -21,12 +21,14 @@
 
 package org.apache.james.transport.mailets;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 import javax.mail.MessagingException;
 
 /**
@@ -44,50 +46,38 @@ import javax.mail.MessagingException;
  * @since 2.2.0
  */
 public class RemoveMailAttribute extends GenericMailet {
-    
-    private final ArrayList<String> attributesToRemove = new ArrayList<String>();
-    
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+
+    private static final char ATTRIBUTE_SEPARATOR_CHAR = ',';
+    protected static final String MAILET_NAME_PARAMETER = "name";
+
+    private ImmutableList<String> attributesToRemove;
+
     public String getMailetInfo() {
         return "Remove Mail Attribute Mailet";
     }
 
-    /**
-     * Initialize the mailet
-     *
-     * @throws MailetException if the processor parameter is missing
-     */
-    public void init() throws MailetException
-    {
-        String name = getInitParameter("name");
+    @Override
+    public void init() throws MailetException {
+        String name = getInitParameter(MAILET_NAME_PARAMETER);
 
-        if (name != null) {
-            StringTokenizer st = new StringTokenizer(name, ",") ;
-            while (st.hasMoreTokens()) {
-                String attribute_name = st.nextToken().trim() ;
-                attributesToRemove.add(attribute_name);
-            }
-        } else {
+        if (Strings.isNullOrEmpty(name)) {
             throw new MailetException("Please configure at least one attribute to remove");
         }
+
+        attributesToRemove = getAttributes(name);
     }
 
-    /**
-     * Remove the configured attributes
-     *
-     * @param mail the mail to process
-     *
-     * @throws MessagingException in all cases
-     */
+    private ImmutableList<String> getAttributes(String name) {
+        return ImmutableList.copyOf(Splitter.on(ATTRIBUTE_SEPARATOR_CHAR)
+            .trimResults()
+            .split(name));
+    }
+
+    @Override
     public void service(Mail mail) throws MessagingException {
-        for (String anAttributesToRemove : attributesToRemove) {
-            mail.removeAttribute(anAttributesToRemove);
+        Preconditions.checkNotNull(mail);
+        for (String attributeToRemove : attributesToRemove) {
+            mail.removeAttribute(attributeToRemove);
         }
     }
-    
-
 }
