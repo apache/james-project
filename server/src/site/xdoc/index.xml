@@ -112,10 +112,10 @@
 	        <p>100% pure Java Mail server designed to be a complete and portable enterprise 
 	           mail engine solution.</p>
 	           
-	        <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3 and IMAP4.</p>
+	        <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3, IMAP4, ManageSIEVE. We also plan to support JMAP.</p>
 	         
 	        <p>Apache James Server is able to store user and message data either in a file-system (Maildir), 
-	           any JPA-compatible database and even JCR, allowing fast, reliable, 
+	           any JPA-compatible database and even Cassandra, allowing fast, reliable,
 	           even real-time replicated storage.</p>
 	         
 	        <p>Provides a powerful, flexible mail application engine through support for the Apache Mailet 
@@ -170,7 +170,8 @@
         
  	      <subsection name="Developer-Friendly">
 	    
-	        <p>Apache James Server 3.0 is now built on top of Spring 3.0 in replacement of trunk version of the <a href="http://avalon.apache.org/">Avalon</a> Application Framework.
+	        <p>Apache James Server 3.0 is now built on top of Spring 3.0 or Guice in replacement of
+                the <a href="http://avalon.apache.org/">Avalon</a> Application Framework.
 	           With Spring, We keep the good development practices introduced by Avalon such as 
 	           Component Oriented Programming and  Inversion of Control. The stable and robust 
 	           Spring container provides a strong foundation for the Apache James Server.</p>
@@ -186,7 +187,7 @@
 	
           <subsection name="Performant">
            
-            <p>A special focuss has been brought to the performance: Apache James Server can process more than
+            <p>A special focus has been brought to the performance: Apache James Server can process more than
                100 mails per second. Deployed in production environments and has proven itself 
                to be a robust  and high performance mail solution. Tests indicate that 
                version 3.0 is able to maintain a constant mail throughput rate of thousands of 
