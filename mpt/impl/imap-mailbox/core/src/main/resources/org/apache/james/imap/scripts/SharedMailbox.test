@@ -1,0 +1,50 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+S: \* OK IMAP4rev1 Server ready
+
+C: a001 LOGIN imapuser password
+S: a001 OK LOGIN completed.
+
+C: a002 CREATE test
+S: a002 OK CREATE completed.
+
+C: a003 CREATE #private.test2
+S: a003 OK CREATE completed.
+
+C: a004 CREATE #private.other.test3
+S: a004 OK CREATE completed.
+
+C: a005 CREATE #any.hello
+S: a005 NO CREATE You can not access a mailbox that does not belong to you
+
+C: a006 LIST "" %
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"INBOX\"
+S: \* LIST \(\\HasChildren\) \".\" \"other\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"test\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"test2\"
+}
+S: a006 OK LIST completed.
+
+C: a006 LIST "" other.%
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"other.test3\"
+}
+S: a006 OK LIST completed.
