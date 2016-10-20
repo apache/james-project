@@ -93,6 +93,9 @@
                  <span><span class="icon"></span>Download Stable James Server 2.3.2</span>
              </a>
          </span>
+
+         <p>The James team is working hard to release version 3.0. We currently do load testing, write more test, rework the website,
+             and started using James 3.0 in production.</p>
 	
         <p>Apache James Server 3.0 represents the leading edge of development. This code stream has many more
           features than the 2.3 code, but is not be as well tested in production. Reasonable
