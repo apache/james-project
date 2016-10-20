@@ -101,8 +101,7 @@
       </item>
     </menu>
 
-    <menu name="Documentation">
-      <item name="Server v3" href="/3/index.html" />
+    <menu name="Other versions documentation">
       <item name="Server v2" href="/2/index.html" />
       <item name="Archive" href="/archive/document_archive.html" />
     </menu>
