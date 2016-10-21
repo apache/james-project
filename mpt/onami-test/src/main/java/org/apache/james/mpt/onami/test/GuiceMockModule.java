@@ -93,6 +93,7 @@ public class GuiceMockModule extends AbstractModule {
             checkState(!isTypeConflicts, "   Found multiple annotation @%s for type: %s; binding skipped!.",
                 Mock.class.getSimpleName(), type);
             for (final Field field : fields) {
+                @SuppressWarnings("rawtypes")
                 final TypeLiteral literal = TypeLiteral.get(type);
                 final Mock annoBy = field.getAnnotation(Mock.class);
                 final Object mock = this.mockedFields.get(field);

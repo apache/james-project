@@ -224,7 +224,6 @@ public class SieveMailboxMailet extends GenericMailet {
      * @throws MessagingException
      *             if an error occurs while storing the mail
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void service(Mail mail) throws MessagingException {
         Collection<MailAddress> recipients = mail.getRecipients();
@@ -245,7 +244,7 @@ public class SieveMailboxMailet extends GenericMailet {
                             + ">"));
         }
 
-        Enumeration headers;
+        Enumeration<?> headers;
         InternetHeaders deliveredTo = new InternetHeaders();
         if (deliveryHeader != null) {
             // Copy any Delivered-To headers from the message
