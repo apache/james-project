@@ -12,8 +12,17 @@
                 </encoder>
         </appender>
 
+        <appender name="LOG_FILE" class="ch.qos.logback.core.FileAppender">
+                <file>/logs/james.log</file>
+                <encoder>
+                        <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
+                        <immediateFlush>false</immediateFlush>
+                </encoder>
+        </appender>
+
         <root level="INFO">
                 <appender-ref ref="CONSOLE" />
+                <appender-ref ref="LOG_FILE" />
         </root>
 
 </configuration>
