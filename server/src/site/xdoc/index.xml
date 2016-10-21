@@ -42,18 +42,6 @@
       </ul>
 
      <div id="tabs-1">
-     
-        <div class="ui-widget">
-			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
-				<p>
-                  <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
-				  <span style="font-weight:bold; color:white;">Hey! Apache James Server 3.0-beta4 is out - <a href="quick-start.html" style="color:white;">Click here to Quick Start Apache James Server!.</a>
-                  Some issues are identified in some use cases with clients such as Outlook Express,...
-                  You are kindly invited to report any issue on <a href="https://issues.apache.org/jira/browse/JAMES" style="color:white;">https://issues.apache.org/jira/browse/JAMES</a>
-                  or on our mailing list (<a href="http://james.apache.org/mail.html" style="color:white;">http://james.apache.org/mail.html</a>)</span>
-                </p>
-			</div>
-		</div>
       
 	    <p>The Apache Java Mail Server
 	      is a 100% pure Java Mail
