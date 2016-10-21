@@ -103,11 +103,6 @@
       </item>
     </menu>
 
-    <menu name="Other versions documentation">
-      <item name="Server v2" href="/2/index.html" />
-      <item name="Archive" href="/archive/document_archive.html" />
-    </menu>
-
   </body>  
 
 </project>
