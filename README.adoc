@@ -178,6 +178,8 @@ Where :
 
 You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
 
+To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
 Run James with Java 6 + Spring + JPA
 ====================================
 
