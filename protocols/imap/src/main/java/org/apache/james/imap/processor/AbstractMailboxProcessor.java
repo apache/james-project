@@ -40,6 +40,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.imap.main.DeniedAccessOnSharedMailboxException;
 import org.apache.james.imap.message.response.ExistsResponse;
 import org.apache.james.imap.message.response.ExpungeResponse;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -56,7 +57,6 @@ import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -77,6 +77,7 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         this.factory = factory;
     }
 
+    @Override
     protected final void doProcess(M acceptableMessage, Responder responder, ImapSession session) {
         process(acceptableMessage, responder, session);
     }
@@ -88,17 +89,21 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     final void doProcess(M message, ImapCommand command, String tag, Responder responder, ImapSession session) {
-        if (!command.validForState(session.getState())) {
-            ImapResponseMessage response = factory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
-            responder.respond(response);
+        try {
+            if (!command.validForState(session.getState())) {
+                ImapResponseMessage response = factory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
+                responder.respond(response);
 
-        } else {
-            getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
+            } else {
+                getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
-            doProcess(message, session, tag, command, responder);
+                doProcess(message, session, tag, command, responder);
 
-            getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
+                getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
+            }
+        } catch (DeniedAccessOnSharedMailboxException e) {
+            no(command, tag, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
         }
     }
 
@@ -350,44 +355,6 @@ abstract public class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     protected abstract void doProcess(M message, ImapSession session, String tag, ImapCommand command, Responder responder);
-
-    public MailboxPath buildFullPath(ImapSession session, String mailboxName) {
-        String namespace = null;
-        String name = null;
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-
-        if (mailboxName == null || mailboxName.length() == 0) {
-            return new MailboxPath("", "", "");
-        }
-        if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-            int namespaceLength = mailboxName.indexOf(mailboxSession.getPathDelimiter());
-            if (namespaceLength > -1) {
-                namespace = mailboxName.substring(0, namespaceLength);
-                if (mailboxName.length() > namespaceLength)
-                    name = mailboxName.substring(++namespaceLength);
-            } else {
-                namespace = mailboxName;
-            }
-        } else {
-            namespace = MailboxConstants.USER_NAMESPACE;
-            name = mailboxName;
-        }
-        String user = null;
-        // we only use the user as part of the MailboxPath if its a private user
-        // namespace
-        if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
-            user = ImapSessionUtils.getUserName(session);
-        }
-        
-        // use uppercase for INBOX
-        //
-        // See IMAP-349
-        if (name.equalsIgnoreCase(MailboxConstants.INBOX)) {
-            name = MailboxConstants.INBOX;
-        }
-
-        return new MailboxPath(namespace, user, name);
-    }
 
     /**
      * Joins the elements of a mailboxPath together and returns them as a string

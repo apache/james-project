@@ -26,6 +26,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.RenameRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -49,8 +50,9 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
      * org.apache.james.imap.api.process.ImapProcessor.Responder)
      */
     protected void doProcess(RenameRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
-        final MailboxPath existingPath = buildFullPath(session, request.getExistingName());
-        final MailboxPath newPath = buildFullPath(session, request.getNewName());
+        PathConverter pathConverter = PathConverter.forSession(session);
+        MailboxPath existingPath = pathConverter.buildFullPath(request.getExistingName());
+        MailboxPath newPath = pathConverter.buildFullPath(request.getNewName());
         try {
             final MailboxManager mailboxManager = getMailboxManager();
             MailboxSession mailboxsession = ImapSessionUtils.getMailboxSession(session);

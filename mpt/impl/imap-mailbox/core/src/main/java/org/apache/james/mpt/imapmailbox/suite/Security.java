@@ -37,6 +37,11 @@ public class Security extends BaseImapProtocol {
     }
 
     @Test
+    public void accessingOtherPeopleNamespaceShouldBeDenied() throws Exception {
+        scriptTest("SharedMailbox", Locale.US);
+    }
+
+    @Test
     public void testLoginThreeStrikesUS() throws Exception {
         scriptTest("LoginThreeStrikes", Locale.US);
     }

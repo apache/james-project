@@ -31,6 +31,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AbstractMessageRangeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -56,7 +57,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
 
     @Override
     protected void doProcess(M request, ImapSession session, String tag, ImapCommand command, Responder responder) {
-        final MailboxPath targetMailbox = buildFullPath(session, request.getMailboxName());
+        final MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();
         final SelectedMailbox currentMailbox = session.getSelected();

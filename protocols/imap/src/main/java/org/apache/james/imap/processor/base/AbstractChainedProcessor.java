@@ -45,6 +45,7 @@ abstract public class AbstractChainedProcessor<M extends ImapMessage> implements
      * org.apache.james.imap.api.process.ImapProcessor.Responder,
      * org.apache.james.imap.api.process.ImapSession)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void process(ImapMessage message, Responder responder, ImapSession session) {
         final boolean isAcceptable = isAcceptable(message);

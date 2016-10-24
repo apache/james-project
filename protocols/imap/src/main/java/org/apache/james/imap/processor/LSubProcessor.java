@@ -29,6 +29,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.LsubRequest;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -62,7 +63,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
         if (isRelative) {
             basePath = new MailboxPath(MailboxConstants.USER_NAMESPACE, mailboxSession.getUser().getUserName(), CharsetUtil.decodeModifiedUTF7(finalReferencename));
         } else {
-            basePath = buildFullPath(session, CharsetUtil.decodeModifiedUTF7(finalReferencename));
+            basePath = PathConverter.forSession(session).buildFullPath(CharsetUtil.decodeModifiedUTF7(finalReferencename));
         }
 
         final MailboxQuery expression = new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter());

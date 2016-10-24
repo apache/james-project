@@ -33,6 +33,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.api.process.MailboxTyper;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -169,7 +170,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 if (isRelative) {
                     basePath = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, finalReferencename);
                 } else {
-                    basePath = buildFullPath(session, finalReferencename);
+                    basePath = PathConverter.forSession(session).buildFullPath(finalReferencename);
                 }
 
                 results = getMailboxManager().search(new MailboxQuery(basePath, CharsetUtil.decodeModifiedUTF7(mailboxName), mailboxSession.getPathDelimiter()), mailboxSession);
