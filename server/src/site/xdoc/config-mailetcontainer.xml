@@ -27,17 +27,15 @@
 
   <section name="Mailet Container Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer-template.xml</a> in GIT to get some examples and hints.</p>
-    
-    <p>Changes between 3.0-M2 and 3.0-beta3:</p>
-    <ul>
-      <li>No more mailetpackage specification in mailetcontainer.xml</li>
-      <li>Exactly one standard package, hard-coded in source code</li>
-      <li>Standard package applied to mailet classnames without package prefix</li>
-      <li>All custom mailets must be specified with full package prefix</li>
-      <li>Package prefixed custom mailet names will be searched across the entire applicable class path</li>
-      <li>Composite matchers</li>
-    </ul>
+      <p>This documents explains how to configure Mail processing. Mails pass through the MailetContainer. The
+          MailetContainer is a Matchers (condition for executing a mailet) and Mailets (execution units that perform
+          actions based on incoming mail) pipeline arranged into processors (List of mailet/matcher pairs allowing
+          better logical organisation).</p>
+
+      <p>Apache James Server includes a number of pre-packaged <a href="dev-provided-mailets.html">Mailets</a> and
+        <a href="dev-provided-matchers.html">Matchers</a>.</p>
+
+      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer-template.xml">mailetcontainer-template.xml</a> in GIT to get some examples and hints.</p>
 
       <p>This configuration block is defined by the <strong>mailserver</strong> tag.  All administrators 
       need to adjust the <strong>mailserver</strong> block upon installation.</p>
@@ -78,9 +76,6 @@
       <p>So in the example above, a Matcher instance of RemoteAddrNotInNetwork would be instantiated, and the value "127.0.0.1" 
       would be passed to the matcher.  The Mailet of the pair will be an instance of ToProcessor, and it will be passed the (name, value) 
       pair of ("processor", "spam").</p>
-      
-      <p>Apache James Server includes a number of pre-packaged Mailets and Matchers.  A list of provided Mailets may be found 
-      <a href="dev-provided-mailets.html">here</a>.  A list of provided Matchers may be found <a href="dev-provided-matchers.html">here</a>.</p>
     
     </subsection>
   
