@@ -97,6 +97,10 @@ public class MessageMapperTest<T extends MapperProvider> {
         this.producer = producer;
         this.mapperProvider = producer.newInstance();
         this.mapperProvider.ensureMapperPrepared();
+
+        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MESSAGE));
+        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.ATTACHMENT));
+
         this.messageMapper = mapperProvider.createMessageMapper();
         this.attachmentMapper = mapperProvider.createAttachmentMapper();
 
@@ -129,7 +133,7 @@ public class MessageMapperTest<T extends MapperProvider> {
                         .cid(Cid.from("cid"))
                         .isInline(true)
                         .build()));
-        message8With2Attachments = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(), 
+        message8With2Attachments = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(),
                 ImmutableList.of(
                         MessageAttachment.builder()
                             .attachment(attachment)

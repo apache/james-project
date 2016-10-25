@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.util.List;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.mailbox.cassandra.CassandraId;
@@ -39,6 +41,8 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMapperProvider implements MapperProvider {
 
@@ -119,5 +123,10 @@ public class CassandraMapperProvider implements MapperProvider {
                 cassandra.getTypesProvider(),
                 new DefaultMessageId.Factory()
             ).getAnnotationMapper(new MockMailboxSession("benwa"));
+    }
+
+    @Override
+    public List<Capabilities> getNotImplemented() {
+        return ImmutableList.of();
     }
 }

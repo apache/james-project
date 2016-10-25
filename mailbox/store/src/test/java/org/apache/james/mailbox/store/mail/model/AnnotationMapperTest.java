@@ -27,6 +27,7 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.xenei.junit.contract.Contract;
@@ -64,6 +65,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
     @Contract.Inject
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         T newInstance = producer.newInstance();
+        Assume.assumeFalse(newInstance.getNotImplemented().contains(MapperProvider.Capabilities.ANNOTATION));
 
         this.producer = producer;
         this.annotationMapper = newInstance.createAnnotationMapper();

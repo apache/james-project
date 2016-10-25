@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import java.util.List;
+
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -28,6 +30,15 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
 public interface MapperProvider {
+    enum Capabilities {
+        MESSAGE,
+        MAILBOX,
+        ATTACHMENT,
+        ANNOTATION
+    }
+
+    List<Capabilities> getNotImplemented();
+
     MailboxMapper createMailboxMapper() throws MailboxException;
 
     MessageMapper createMessageMapper() throws MailboxException;

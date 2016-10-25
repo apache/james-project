@@ -38,6 +38,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.xenei.junit.contract.Contract;
@@ -70,6 +71,7 @@ public class MessageMoveTest<T extends MapperProvider> {
         this.mapperProvider = producer.newInstance();
         this.mapperProvider.ensureMapperPrepared();
         this.messageMapper = mapperProvider.createMessageMapper();
+        Assume.assumeNotNull(messageMapper);
 
         benwaInboxMailbox = createMailbox(new MailboxPath("#private", "benwa", "INBOX"));
         benwaWorkMailbox = createMailbox( new MailboxPath("#private", "benwa", "INBOX"+DELIMITER+"work"));

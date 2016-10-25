@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.xenei.junit.contract.Contract;
@@ -50,7 +51,9 @@ public class AttachmentMapperTest<T extends MapperProvider> {
     @Contract.Inject
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         this.producer = producer;
-        this.attachmentMapper = producer.newInstance().createAttachmentMapper();
+        T newInstance = producer.newInstance();
+        Assume.assumeFalse(newInstance.getNotImplemented().contains(MapperProvider.Capabilities.ATTACHMENT));
+        this.attachmentMapper = newInstance.createAttachmentMapper();
     }
 
     @After

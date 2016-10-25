@@ -1,5 +1,6 @@
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.util.List;
 import java.util.Random;
 
 import org.apache.james.mailbox.exception.MailboxException;
@@ -13,6 +14,8 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+
+import com.google.common.collect.ImmutableList;
 
 public class InMemoryMapperProvider implements MapperProvider {
 
@@ -67,5 +70,10 @@ public class InMemoryMapperProvider implements MapperProvider {
     @Override
     public MessageId generateMessageId() {
         return messageIdFactory.generate();
+    }
+
+    @Override
+    public List<Capabilities> getNotImplemented() {
+        return ImmutableList.of();
     }
 }

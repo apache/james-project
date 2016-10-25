@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.xenei.junit.contract.Contract;
@@ -89,6 +90,8 @@ public class MailboxMapperTest<T extends MapperProvider> {
     public final void setProducer(IProducer<T> producer) throws MailboxException {
         this.producer = producer;
         this.mapperProvider = producer.newInstance();
+        Assume.assumeFalse(mapperProvider.getNotImplemented().contains(MapperProvider.Capabilities.MAILBOX));
+
         this.mapperProvider.ensureMapperPrepared();
         this.mailboxMapper = mapperProvider.createMailboxMapper();
 
