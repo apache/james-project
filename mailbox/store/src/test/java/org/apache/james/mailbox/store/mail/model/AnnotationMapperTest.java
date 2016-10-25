@@ -116,7 +116,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
 
-        assertThat(annotationMapper.getAllAnnotations(mailboxId)).contains(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
+        assertThat(annotationMapper.getAllAnnotations(mailboxId)).containsOnly(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
     }
 
     @ContractTest
@@ -137,7 +137,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
         assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
-            .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION);
+            .containsOnly(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION);
     }
 
     @ContractTest
@@ -149,7 +149,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
         assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
-            .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
+            .containsOnly(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
     @ContractTest
@@ -160,7 +160,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
         assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
-            .contains(PRIVATE_CHILD_ANNOTATION);
+            .containsOnly(PRIVATE_CHILD_ANNOTATION);
     }
 
     @ContractTest
@@ -171,7 +171,7 @@ public class AnnotationMapperTest<T extends MapperProvider> {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
         assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, ImmutableSet.of(PRIVATE_KEY)))
-            .contains(PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
+            .containsOnly(PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
     }
 
     @ContractTest
