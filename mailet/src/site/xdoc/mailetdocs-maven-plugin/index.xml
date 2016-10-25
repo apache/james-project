@@ -31,11 +31,15 @@
                 <a href='http://james.apache.org/mailet/standard/mailet-report.html'>report</a>.
             </p>
             <subsection name='Goals Overview'>
-                <p>MailetDocs plugin has one goal:</p>
+                <p>MailetDocs plugin has two goals:</p>
                 <ul>
                     <li>
                         <a href='mailetdocs-mojo.html'>mailetdocs:mailetdocs</a>
-                        Generates catalog and reports on mailets and matchers
+                        Generates catalog and reports on mailets and matchers on a single maven project
+                    </li>
+                    <li>
+                        <a href='mailetdocs-mojo.html'>mailetdocs:aggregate</a>
+                        Generates catalog and reports on mailets and matchers on a maven project and all its subprojects
                     </li>
                 </ul>
             </subsection>

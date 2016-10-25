@@ -21,6 +21,8 @@ package org.apache.james.mailet;
 
 import java.util.List;
 
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 
@@ -31,10 +33,9 @@ import org.apache.maven.project.MavenProject;
  * <li>Should only used as a report.</li>
  * <li>Mailets are instantiated during report production. </li>
  * </ul>
- * @goal mailetdocs
- * @since 0.1
- * @requiresDependencyResolution compile
  */
+@Mojo(name = "mailetdocs", 
+    requiresDependencyResolution = ResolutionScope.COMPILE)
 public class MailetdocsReport extends AbstractMailetdocsReport {
 
     /**
