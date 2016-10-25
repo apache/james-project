@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -77,4 +78,11 @@ public class MailboxAnnotation {
         }
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("key", key.asString())
+            .add("value", value)
+            .toString();
+    }
 }
