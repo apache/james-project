@@ -46,11 +46,14 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.transaction.Mapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -91,6 +94,13 @@ public class StoreMailboxManagerAnnotationTest {
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);
         when(mailbox.getMailboxId()).thenReturn(mailboxId);
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(mailbox);
+        when(annotationMapper.execute(any(Mapper.Transaction.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                Mapper.Transaction transaction = (Mapper.Transaction) invocationOnMock.getArguments()[0];
+                return transaction.run();
+            }
+        });
 
         storeMailboxManager = spy(new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, aclResolver, groupMembershipResolver, messageParser, messageIdFactory));
         storeMailboxManager.init();

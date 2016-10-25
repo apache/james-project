@@ -786,33 +786,49 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
+        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.getAllAnnotations(mailboxId);
-    }
-
-    @Override
-    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys)
-            throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-
-        return annotationMapper.getAnnotationsByKeys(mailboxId, keys);
-    }
-
-    @Override
-    public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) 
-            throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
-        for (MailboxAnnotation annotation : mailboxAnnotations) {
-            if (annotation.isNil()) {
-                annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
-            } else {
-                annotationMapper.insertAnnotation(mailboxId, annotation);
+        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
+            @Override
+            public List<MailboxAnnotation> run() throws MailboxException {
+                return annotationMapper.getAllAnnotations(mailboxId);
             }
-        }
+        });
+    }
+
+    @Override
+    public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, final Set<MailboxAnnotationKey> keys)
+            throws MailboxException {
+        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
+
+        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
+            @Override
+            public List<MailboxAnnotation> run() throws MailboxException {
+                return annotationMapper.getAnnotationsByKeys(mailboxId, keys);
+            }
+        });
+    }
+
+    @Override
+    public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, final List<MailboxAnnotation> mailboxAnnotations)
+            throws MailboxException {
+        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
+
+        annotationMapper.execute(new Mapper.VoidTransaction() {
+            @Override
+            public void runVoid() throws MailboxException {
+                for (MailboxAnnotation annotation : mailboxAnnotations) {
+                    if (annotation.isNil()) {
+                        annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
+                    } else {
+                        annotationMapper.insertAnnotation(mailboxId, annotation);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -822,20 +838,30 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session,
-            Set<MailboxAnnotationKey> keys) throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
+            final Set<MailboxAnnotationKey> keys) throws MailboxException {
+        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, keys);
+        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
+            @Override
+            public List<MailboxAnnotation> run() throws MailboxException {
+                return annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, keys);
+            }
+        });
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
-            Set<MailboxAnnotationKey> keys) throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
+            final Set<MailboxAnnotationKey> keys) throws MailboxException {
+        final AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        final MailboxId mailboxId = getMailbox(mailboxPath, session).getId();
 
-        return annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, keys);
+        return annotationMapper.execute(new Mapper.Transaction<List<MailboxAnnotation>>() {
+            @Override
+            public List<MailboxAnnotation> run() throws MailboxException {
+                return annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, keys);
+            }
+        });
     }
 
     @Override
