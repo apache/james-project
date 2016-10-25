@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.redirect;
+package org.apache.james.transport.mailets.utils;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;

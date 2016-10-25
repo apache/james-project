@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.redirect;
+package org.apache.james.transport.mailets.utils;
 
 import static org.assertj.guava.api.Assertions.assertThat;
 

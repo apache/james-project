@@ -30,6 +30,7 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.RedirectMailetInitParameters;
 import org.apache.james.transport.mailets.redirect.TypeCode;
+import org.apache.james.transport.mailets.utils.MimeMessageModifier;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
 
@@ -412,10 +413,8 @@ public class Redirect extends AbstractRedirect {
 
     @Override
     protected void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException {
-        Optional<String> newSubject = getNewSubject(subjectPrefix, originalMail);
-        if (newSubject.isPresent()) {
-            changeSubject(newMail.getMessage(), newSubject.get());
-        }
+        new MimeMessageModifier(newMail.getMessage())
+            .setSubjectPrefix(newMail, subjectPrefix, originalMail, getInitParameters().getSubject());
     }
 
 }

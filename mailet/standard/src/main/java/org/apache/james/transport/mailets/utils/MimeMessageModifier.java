@@ -22,8 +22,12 @@ package org.apache.james.transport.mailets.utils;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.mailet.Mail;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 
 public class MimeMessageModifier {
 
@@ -34,7 +38,7 @@ public class MimeMessageModifier {
     }
 
     public void addSubjectPrefix(String subjectPrefix) throws MessagingException {
-        String newSubject = prefixSubject(message, subjectPrefix);
+        String newSubject = prefixSubject(message.getSubject(), subjectPrefix);
         replaceSubject(message, newSubject);
     }
     
@@ -42,14 +46,35 @@ public class MimeMessageModifier {
         message.setSubject(null);
         message.setSubject(newSubject, Charsets.UTF_8.displayName());
     }
-    
-    private String prefixSubject(MimeMessage message, String subjectPrefix) throws MessagingException {
-        String subject = message.getSubject();
-    
-        if (subject != null) {
+
+    private static String prefixSubject(String subject, String subjectPrefix) throws MessagingException {
+        if (!Strings.isNullOrEmpty(subject)) {
             return Joiner.on(' ').join(subjectPrefix, subject);
         } else {
             return subjectPrefix;
         }
+    }
+
+    public void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail, String subject) throws MessagingException {
+        Optional<String> newSubject = buildNewSubject(subjectPrefix, originalMail.getMessage().getSubject(), subject);
+        if (newSubject.isPresent()) {
+            replaceSubject(newMail.getMessage(), newSubject.get());
+        }
+    }
+
+    public static Optional<String> buildNewSubject(String subjectPrefix, String originalSubject, String subject) throws MessagingException {
+        String nullablePrefix = Strings.emptyToNull(subjectPrefix);
+        if (nullablePrefix == null && subject == null) {
+            return Optional.absent();
+        }
+        if (nullablePrefix == null) {
+            return Optional.of(subject);
+        }
+        String chosenSubject = chooseSubject(subject, originalSubject);
+        return Optional.of(prefixSubject(chosenSubject, nullablePrefix));
+    }
+
+    private static String chooseSubject(String newSubject, String originalSubject) {
+        return Optional.fromNullable(newSubject).or(originalSubject);
     }
 }

@@ -35,7 +35,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailImpl;
@@ -48,7 +47,6 @@ import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -475,28 +473,6 @@ public abstract class AbstractRedirect extends GenericMailet {
      */
     protected abstract void setSubjectPrefix(Mail newMail, String subjectPrefix, Mail originalMail) throws MessagingException;
 
-    protected Optional<String> getNewSubject(String subjectPrefix, Mail originalMail) throws MessagingException {
-        String subject = getInitParameters().getSubject();
-        if (!Strings.isNullOrEmpty(subjectPrefix) || subject != null) {
-            String newSubject = Strings.nullToEmpty(subject);
-            if (subject == null) {
-                newSubject = Strings.nullToEmpty(originalMail.getMessage().getSubject());
-            } else {
-                if (getInitParameters().isDebug()) {
-                    log("subject set to: " + subject);
-                }
-            }
-
-            if (subjectPrefix != null) {
-                newSubject = subjectPrefix + newSubject;
-                if (getInitParameters().isDebug()) {
-                    log("subjectPrefix set to: " + subjectPrefix);
-                }
-            }
-            return Optional.of(newSubject);
-        }
-        return Optional.absent();
-    }
     /**
      * Sets the "In-Reply-To:" header of <i>newMail</i> to the "Message-Id:" of
      * <i>originalMail</i>, if <i>isReply</i> is true.
@@ -864,58 +840,6 @@ public abstract class AbstractRedirect extends GenericMailet {
         return !getInitParameters().getFakeDomainCheck()
                 || mail.getSender() == null
                 || !getMailetContext().getMailServers(mail.getSender().getDomain()).isEmpty();
-    }
-
-    /**
-     * It changes the subject of the supplied message to to supplied value but
-     * it also tries to preserve the original charset information.<br>
-     * <p/>
-     * This method was needed to avoid sending the subject using a charset
-     * (usually the default charset on the server) which doesn't contain the
-     * characters in the subject, resulting in the loss of these characters. The
-     * most simple method would be to either send it in ASCII unencoded or in
-     * UTF-8 if non-ASCII characters are present but unfortunately UTF-8 is not
-     * yet a MIME standard and not all email clients are supporting it. The
-     * optimal method would be to determine the best charset by analyzing the
-     * actual characters. That would require much more work (exept if an open
-     * source library already exists for this). However there is nothing to stop
-     * somebody to add a detection algorithm for a specific charset. <br>
-     * <p/>
-     * The current algorithm works correctly if only ASCII characters are added
-     * to an existing subject.<br>
-     * <p/>
-     * If the new value is ASCII only, then it doesn't apply any encoding to the
-     * subject header. (This is provided by MimeMessage.setSubject()).<br>
-     * <p/>
-     * Possible enhancement: under java 1.4 java.nio the system can determine if
-     * the suggested charset fits or not (if there is untranslatable
-     * characters). If the charset doesn't fit the new value, it can fall back
-     * to UTF-8.<br>
-     *
-     * @param message  the message of which subject is changed
-     * @param newValue the new (unencoded) value of the subject. It must not be null.
-     * @throws MessagingException - according to the JavaMail doc most likely this is never
-     *                            thrown
-     */
-    public void changeSubject(MimeMessage message, String newValue) throws MessagingException {
-        String rawSubject = message.getHeader(RFC2822Headers.SUBJECT, null);
-        Optional<String> mimeCharset = new CharsetFromSubjectMailHeader().parse(rawSubject);
-        if (!mimeCharset.isPresent()) { // most likely ASCII
-            // it uses the system charset or the value of the
-            // mail.mime.charset property if set
-            message.setSubject(newValue);
-        } else { // original charset determined
-            try {
-                message.setSubject(newValue, MimeUtility.javaCharset(mimeCharset.get()));
-            } catch (MessagingException e) {
-                // known, but unsupported encoding
-                // this should be logged, the admin may setup a more i18n
-                // capable JRE, but the log API cannot be accessed from here
-                // if (charset != null) log(charset +
-                // " charset unsupported by the JRE, email subject may be damaged");
-                message.setSubject(newValue); // recover
-            }
-        }
     }
 
     /**
