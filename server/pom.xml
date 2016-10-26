@@ -34,7 +34,7 @@
 
     <name>Apache James :: Server</name>
     <description>Apache James Mail Server</description>
-    <url>http://james.apache.org/server/head/</url>
+    <url>http://james.apache.org/server/</url>
     <inceptionYear>2002</inceptionYear>
 
     <repositories>
