@@ -68,20 +68,8 @@
                 name="James"
                 href="http://james.apache.org/index.html" />
             <item
-                name="Server"
-                href="http://james.apache.org/server/index.html" />
-            <item
                 name="Hupa"
                 href="http://james.apache.org/hupa/index.html" />
-            <item
-                name="Protocols"
-                href="http://james.apache.org/protocols/index.html" />
-            <item
-                name="Mailets"
-                href="http://james.apache.org/mailet/index.html" />
-            <item
-                name="Mailbox"
-                href="http://james.apache.org/mailbox/index.html" />
             <item
                 name="Mime4J"
                 href="http://james.apache.org/mime4j/index.html" />
@@ -94,9 +82,6 @@
             <item
                 name="jDKIM"
                 href="http://james.apache.org/jdkim/index.html" />
-            <item
-                name="MPT"
-                href="http://james.apache.org/mpt/index.html" />
         </links>
 
         <menu name="James components">
