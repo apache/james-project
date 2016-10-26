@@ -33,22 +33,6 @@
   </bannerLeft>
 
   <body>
-  
-    <menu name="Documentation">
-      <item name="Introduction" href="/index.html" />
-      <item name="SMTP" href="/smtp.html" />
-      <item name="POP3" href="/pop3.html" />
-      <item name="IMAP4" href="/imap4.html" />
-      <item name="Source Code" href="/source-code.html" />
-    </menu>  
-     
-    <menu name="References">
-      <item name="Javadoc" href="/apidocs/index.html" />
-      <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/PROTOCOLS" />
-<!--      Changes are not updated in JIRA (missing version numbers,...) -->
-<!--      <item name="Changes" href="/changes.html" />-->
-<!--      <item name="JIRA Report" href="/jira-report.html" />-->
-    </menu>
 
   </body>  
 

@@ -34,35 +34,7 @@
   
   <body>
   
-    <menu name="Mailbox">
-      <item name="Introduction" href="/index.html" />
-      <item name="Source Code" href="/source-code.html" />
-    </menu>
-    <menu name="Framework">
-      <item name="Mailbox API" href="/mailbox-api.html" />
-      <item name="Mailbox Store" href="/mailbox-store.html" />
-      <item name="Mailbox Tool" href="/mailbox-tool.html" />
-    </menu>
-    <menu name="Implementations">
-      <item name="Mailbox Memory" href="/mailbox-memory.html" />
-      <item name="Mailbox Cassandra" href="/mailbox-cassandra.html" />
-      <item name="Mailbox Maildir" href="/mailbox-maildir.html" />
-      <item name="Mailbox JPA" href="/mailbox-jpa.html" />
-      <item name="Mailbox JCR" href="/mailbox-jcr.html" />
-      <item name="Mailbox HBase" href="/mailbox-hbase.html" />
-    </menu>
-    <menu name="Wiring">
-      <item name="Spring" href="/mailbox-spring.html" />
-    </menu>  
-     
-    <menu name="References">
-        <item name="Javadoc" href="/apidocs/index.html" />
-        <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MAILBOX" />
-<!--    Report link is unavailable on hudson-->
-<!--    <item name="Reports" href="https://hudson.apache.org/hudson/view/G-L/view/James/job/mailbox/site/" />-->
-<!--    <item name="Changes" href="/changes.html" />-->
-<!--    <item name="JIRA Report" href="/jira-report.html" />-->
-    </menu>
+
 
   </body>  
 

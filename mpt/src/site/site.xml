@@ -27,19 +27,6 @@
   </bannerLeft>
 
   <body>
-
-    <menu name="Mail Protocol Tester" inherit='bottom'>
-      <item name="Overview" href="http://james.apache.org/mpt/index.html"/>
-      <item name="Release Notes" href="/release-notes.html"/>
-      <item name='Main Library' href='http://james.apache.org/mpt/main'/>
-      <item name='AntLib' href='http://james.apache.org/mpt/antlib'/>
-      <item name='Application' href='http://james.apache.org/mpt/app'/>
-    </menu>
-    
-    <menu name="Releases" inherit='bottom'>
-        <item name='0.1 Documentation' href='http://james.apache.org/mpt/0.1'/>
-        <item name='0.1 Release Notes' href='http://james.apache.org/mpt/0.1/release-notes.html'/>
-    </menu>
     
   </body>
 </project>

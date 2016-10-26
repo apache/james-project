@@ -27,23 +27,6 @@
     </bannerLeft>
 
     <body>
-        <menu name="Mailet">
-            <item name="Mailet API" href="http://james.apache.org/mailet/api"/>
-            <item name="Mailet AI" href="http://james.apache.org/mailet/ai"/>
-            <item name="Basic Mailet Toolkit" href="http://james.apache.org/mailet/base"/>
-            <item name="Crypto Mailets" href="http://james.apache.org/mailet/crypto"/>
-            <item name="MailetDocs" href="http://james.apache.org/mailet/mailetdocs-maven-plugin"/>
-            <item name="Sieve Mailet" href='http://james.apache.org/jsieve/mailet/'/>
-            <item name="Standard Mailets" href="http://james.apache.org/mailet/standard"/>
-        </menu>
-
-        <menu name="Useful Information">
-            <item name="Java Docs" href="http://james.apache.org/mailet/apidocs"/>
-            <item name="Quick Start" href="quickstart.html"/>
-            <item name="Release Notes" href="release-notes.html"/>
-        </menu>
-
-        <menu ref="reports"/>
 
     </body>
 
