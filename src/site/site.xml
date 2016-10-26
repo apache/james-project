@@ -65,6 +65,9 @@
 
         <links>
             <item
+                name="Home"
+                href="http://james.apache.org/index.html" />
+            <item
                 name="James"
                 href="http://james.apache.org/index.html" />
             <item
