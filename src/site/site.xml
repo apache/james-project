@@ -97,9 +97,6 @@
             <item
                 name="MPT"
                 href="http://james.apache.org/mpt/index.html" />
-            <item
-                name="Postage"
-                href="http://james.apache.org/postage/index.html" />
         </links>
 
         <menu name="James components">
