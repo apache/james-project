@@ -102,157 +102,140 @@
                 href="http://james.apache.org/postage/index.html" />
         </links>
 
-        <menu name="About James" inherit="bottom">
-            <item name="Overview" href="/index.html" />
-            <item name="Mailing Lists" href="/mail.html" />
-            <item name="Contributing" href="/contribute.html" />
-            <item name="Guidelines" href="/guidelines.html" />
-            <item name="Wiki" href="http://wiki.apache.org/james" />
-            <item name="Issue tracker" href="https://issues.apache.org/jira/browse/JAMES" />
-            <item name="Who We Are" href="/team-list.html" />
-            <item name="License" href="/license.html" />
-            <item name="Thanks" href="/thanks.html" />
-            <item name="Professional support" href="/support.html" />
-            <item name="Download releases" href="http://james.apache.org/download.cgi" />
-        </menu>
-
-        <!-- Server -->
-
-        <menu name="Overview">
-            <item name="Introduction" href="/server/index.html"/>
-            <item name="User Manual" href="/server/quick-start.html">
-                <item name="1. Features" href="/server/features.html" collapse="true" >
-                    <item name="Mailet Container" href="//serverfeature-mailetcontainer.html" />
-                    <item name="Queue Priority" href="/server/feature-queue-priority.html" />
-                    <item name="Persistence" href="/server/feature-persistence.html" />
-                    <item name="Protocols" href="/server/feature-protocols.html" />
-                    <item name="SMTP Hooks" href="/server/feature-smtp-hooks.html" />
-                    <item name="Performance" href="/server/feature-performance.html" />
-                    <item name="Security" href="/server/feature-security.html" />
-                </item>
-                <item name="2. Install James" href="/server/install.html" />
-                <item name="3. Configure James" href="/server/config.html" collapse="true" >
-                    <item name="System" href="/server/config-system.html" />
-                    <item name="Domain List" href="/server/config-domainlist.html" />
-                    <item name="Users" href="/server/config-users.html" />
-                    <item name="Recipient Rewrite" href="/server/config-recipientrewritetable.html" />
-                    <item name="Mailbox" href="/server/config-mailbox.html" />
-                    <item name="Mail Repository Stores" href="/server/config-mailrepositorystore.html" />
-                    <item name="DNS Service" href="/server/config-dnsservice.html" />
-                    <item name="SMTP LMTP" href="/server/config-smtp-lmtp.html" />
-                    <item name="POP3" href="/server/config-pop3.html" />
-                    <item name="IMAP4" href="/server/config-imap4.html" />
-                    <item name="Mailet Container" href="/server/config-mailetcontainer.html" />
-                    <item name="FetchMail" href="/server/config-fetchmail.html" />
-                    <item name="SSL/TLS" href="/server/config-ssl-tls.html" />
-                    <item name="Sieve" href="/server/config-sieve.html" />
-                    <item name="Anti Spam" href="/server/config-antispam.html" />
-                </item>
-                <item name="4. Manage" href="/server/manage.html" collapse="true" >
-                    <item name="Domains" href="/server/manage-domains.html" />
-                    <item name="Users" href="/server/manage-users.html" />
-                    <item name="Recipient Rewrite" href="/server/manage-recipientrewrite.html" />
-                    <item name="Metrics" href="/metrics.html" />
-                </item>
-                <item name="5. Monitor" href="/server/monitor.html" collapse="true" >
-                    <item name="Logging" href="/server/monitor-logging.html" />
-                    <item name="JMX" href="/server/monitor-jmx.html" />
-                    <item name="Folders" href="/server/monitor-folders.html" />
-                </item>
-                <item name="6. Upgrade" href="/server/upgrade.html" collapse="true" >
-                    <item name="Upgrade from 2.3" href="/server/upgrade-2.3.html" />
-                    <item name="Upgrade database" href="/server/upgrade-database.html" />
-                </item>
-                <item name="7. Developers Corner" href="/server/dev.html" collapse="true" >
-                    <item name="Build from source" href="/server/dev-build.html" />
-                    <item name="Database Schema" href="/server/dev-database-schema.html" />
-                    <item name="Develop Extensions" href="/server/dev-extend.html" collapse="true" >
-                        <item name="Mailet" href="/server/dev-extend-mailet.html" />
-                        <item name="Matcher" href="/server/dev-extend-matcher.html" />
-                        <item name="SMTP Hook" href="/server/dev-extend-smtp-hook.html" />
+        <menu name="James components">
+            <item name="About James" href="/index.html" collapse="true">
+                <item name="Mailing Lists" href="/mail.html" />
+                <item name="Contributing" href="/contribute.html" />
+                <item name="Guidelines" href="/guidelines.html" />
+                <item name="Wiki" href="http://wiki.apache.org/james" />
+                <item name="Issue tracker" href="https://issues.apache.org/jira/browse/JAMES" />
+                <item name="Who We Are" href="/team-list.html" />
+                <item name="License" href="/license.html" />
+                <item name="Thanks" href="/thanks.html" />
+                <item name="Professional support" href="/support.html" />
+                <item name="Download releases" href="http://james.apache.org/download.cgi" />
+            </item>
+            <item name="Server" href="/server/index.html" collapse="true">
+                <item name="User Manual" href="/server/quick-start.html" collapse="true">
+                    <item name="1. Features" href="/server/features.html" collapse="true" >
+                        <item name="Mailet Container" href="/server/feature-mailetcontainer.html" />
+                        <item name="Queue Priority" href="/server/feature-queue-priority.html" />
+                        <item name="Persistence" href="/server/feature-persistence.html" />
+                        <item name="Protocols" href="/server/feature-protocols.html" />
+                        <item name="SMTP Hooks" href="/server/feature-smtp-hooks.html" />
+                        <item name="Performance" href="/server/feature-performance.html" />
+                        <item name="Security" href="/server/feature-security.html" />
                     </item>
-                    <item name="Provided Extensions" href="/server/dev-provided.html" collapse="true" >
-                        <item name="Mailets" href="/server/dev-provided-mailets.html" />
-                        <item name="Matchers" href="/server/dev-provided-matchers.html" />
-                        <item name="SMTP Hooks" href="/server/dev-provided-smtp-hooks.html" />
+                    <item name="2. Install James" href="/server/install.html" />
+                    <item name="3. Configure James" href="/server/config.html" collapse="true" >
+                        <item name="System" href="/server/config-system.html" />
+                        <item name="Domain List" href="/server/config-domainlist.html" />
+                        <item name="Users" href="/server/config-users.html" />
+                        <item name="Recipient Rewrite" href="/server/config-recipientrewritetable.html" />
+                        <item name="Mailbox" href="/server/config-mailbox.html" />
+                        <item name="Mail Repository Stores" href="/server/config-mailrepositorystore.html" />
+                        <item name="DNS Service" href="/server/config-dnsservice.html" />
+                        <item name="SMTP LMTP" href="/server/config-smtp-lmtp.html" />
+                        <item name="POP3" href="/server/config-pop3.html" />
+                        <item name="IMAP4" href="/server/config-imap4.html" />
+                        <item name="Mailet Container" href="/server/config-mailetcontainer.html" />
+                        <item name="FetchMail" href="/server/config-fetchmail.html" />
+                        <item name="SSL/TLS" href="/server/config-ssl-tls.html" />
+                        <item name="Sieve" href="/server/config-sieve.html" />
+                        <item name="Anti Spam" href="/server/config-antispam.html" />
+                    </item>
+                    <item name="4. Manage" href="/server/manage.html" collapse="true" >
+                        <item name="Domains" href="/server/manage-domains.html" />
+                        <item name="Users" href="/server/manage-users.html" />
+                        <item name="Recipient Rewrite" href="/server/manage-recipientrewrite.html" />
+                        <item name="Metrics" href="/metrics.html" />
+                    </item>
+                    <item name="5. Monitor" href="/server/monitor.html" collapse="true" >
+                        <item name="Logging" href="/server/monitor-logging.html" />
+                        <item name="JMX" href="/server/monitor-jmx.html" />
+                        <item name="Folders" href="/server/monitor-folders.html" />
+                    </item>
+                    <item name="6. Upgrade" href="/server/upgrade.html" collapse="true" >
+                        <item name="Upgrade from 2.3" href="/server/upgrade-2.3.html" />
+                        <item name="Upgrade database" href="/server/upgrade-database.html" />
+                    </item>
+                    <item name="7. Developers Corner" href="/server/dev.html" collapse="true" >
+                        <item name="Build from source" href="/server/dev-build.html" />
+                        <item name="Database Schema" href="/server/dev-database-schema.html" />
+                        <item name="Develop Extensions" href="/server/dev-extend.html" collapse="true" >
+                            <item name="Mailet" href="/server/dev-extend-mailet.html" />
+                            <item name="Matcher" href="/server/dev-extend-matcher.html" />
+                            <item name="SMTP Hook" href="/server/dev-extend-smtp-hook.html" />
+                        </item>
+                        <item name="Provided Extensions" href="/server/dev-provided.html" collapse="true" >
+                            <item name="Mailets" href="/server/dev-provided-mailets.html" />
+                            <item name="Matchers" href="/server/dev-provided-matchers.html" />
+                            <item name="SMTP Hooks" href="/server/dev-provided-smtp-hooks.html" />
+                        </item>
                     </item>
                 </item>
+                <item name="Mailing Lists" href="http://james.apache.org/mail.html#James_Mailing_lists" />
+                <item name="Release Notes" href="/server/release-notes.html"/>
+                <item name="Javadoc" href="/server/apidocs/index.html" />
+                <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
+                <item name="Sources on GitHub" href="https://github.com/apache/james-project" />
+                <item name="RFCs" href="/server/rfcs.html"/>
+                <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_James_Server" />
             </item>
-            <item name="Mailing Lists" href="http://james.apache.org/mail.html#James_Mailing_lists" />
-            <item name="Release Notes" href="/server/release-notes.html"/>
-            <item name="Javadoc" href="/server/apidocs/index.html" />
-            <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
-            <item name="Sources on GitHub" href="https://github.com/apache/james-project" />
-            <item name="RFCs" href="/server/rfcs.html"/>
-            <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_James_Server" />
-        </menu>
-
-        <!-- Mailets -->
-
-        <menu name="Mailet">
-            <item name="Overview" href="/mailet/index.html"/>
-            <item name="Quick Start" href="quickstart.html"/>
-            <item name="Mailet API" href="/mailet/api"/>
-            <item name="Mailet AI" href="/mailet/ai"/>
-            <item name="Basic Mailet Toolkit" href="/mailet/base"/>
-            <item name="Crypto Mailets" href="/mailet/crypto"/>
-            <item name="MailetDocs" href="/mailet/mailetdocs-maven-plugin"/>
-            <item name="Standard Mailets" href="/mailet/standard"/>
-            <item name="Mailing Lists" href="/mail.html#Mailet_API_List" />
-            <item name="Release Notes" href="/mailet/release-notes.html"/>
-            <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MAILET" />
-            <item name="Java Docs" href="/mailet/apidocs"/>
-            <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_Mailet" />
-        </menu>
-
-        <!-- Mailbox -->
-        <menu name="Mailbox">
-            <item name="Overview" href="/mailbox/index.html" />
-            <item name="Source Code" href="/mailbox/source-code.html" />
-            <item name="Javadoc" href="/mailbox/apidocs/index.html" />
-            <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MAILBOX" />
-            <item name="Framework" href="/mailbox/mailbox-api.html">
-                <item name="Mailbox Store" href="/mailbox/mailbox-store.html" />
-                <item name="Mailbox Tool" href="/mailbox/mailbox-tool.html" />
+            <item name="Mailets" href="/mailet/index.html" collapse="true">
+                <item name="Quick Start" href="quickstart.html"/>
+                <item name="Mailet API" href="/mailet/api"/>
+                <item name="Mailet AI" href="/mailet/ai"/>
+                <item name="Basic Mailet Toolkit" href="/mailet/base"/>
+                <item name="Crypto Mailets" href="/mailet/crypto"/>
+                <item name="MailetDocs" href="/mailet/mailetdocs-maven-plugin"/>
+                <item name="Standard Mailets" href="/mailet/standard"/>
+                <item name="Mailing Lists" href="/mail.html#Mailet_API_List" />
+                <item name="Release Notes" href="/mailet/release-notes.html"/>
+                <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MAILET" />
+                <item name="Java Docs" href="/mailet/apidocs"/>
+                <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_Mailet" />
             </item>
-            <item name="Implementations" href="/mailbox/index.html">
-                <item name="Mailbox Memory" href="/mailbox/mailbox-memory.html" />
-                <item name="Mailbox Cassandra" href="/mailbox/mailbox-cassandra.html" />
-                <item name="Mailbox Maildir" href="/mailbox/mailbox-maildir.html" />
-                <item name="Mailbox JPA" href="/mailbox/mailbox-jpa.html" />
-                <item name="Mailbox JCR" href="/mailbox/mailbox-jcr.html" />
-                <item name="Mailbox HBase" href="/mailbox/mailbox-hbase.html" />
+            <item name="Mailbox" href="/mailbox/index.html" collapse="true">
+                <item name="Source Code" href="/mailbox/source-code.html" />
+                <item name="Javadoc" href="/mailbox/apidocs/index.html" />
+                <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MAILBOX" />
+                <item name="Framework" href="/mailbox/mailbox-api.html">
+                    <item name="Mailbox Store" href="/mailbox/mailbox-store.html" />
+                    <item name="Mailbox Tool" href="/mailbox/mailbox-tool.html" />
+                </item>
+                <item name="Implementations" href="/mailbox/index.html">
+                    <item name="Mailbox Memory" href="/mailbox/mailbox-memory.html" />
+                    <item name="Mailbox Cassandra" href="/mailbox/mailbox-cassandra.html" />
+                    <item name="Mailbox Maildir" href="/mailbox/mailbox-maildir.html" />
+                    <item name="Mailbox JPA" href="/mailbox/mailbox-jpa.html" />
+                    <item name="Mailbox JCR" href="/mailbox/mailbox-jcr.html" />
+                    <item name="Mailbox HBase" href="/mailbox/mailbox-hbase.html" />
+                </item>
+                <item name="Wiring" href="/mailbox/mailbox-spring.html" />
+                <item name="Download releases" href="http://james.apache.org/download.cgi" />
             </item>
-            <item name="Wiring" href="/mailbox/mailbox-spring.html" />
-            <item name="Download releases" href="http://james.apache.org/download.cgi" />
-        </menu>
-
-        <!-- Protocol -->
-
-        <menu name="Overview">
-            <item name="Introduction" href="/protocols/index.html" />
-            <item name="SMTP" href="/protocols/smtp.html" />
-            <item name="POP3" href="/protocols/pop3.html" />
-            <item name="IMAP4" href="/protocols/imap4.html" />
-            <item name="Source Code" href="/protocols/source-code.html" />
-            <item name="Javadoc" href="/protocols/apidocs/index.html" />
-            <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/PROTOCOLS" />
-        </menu>
-
-        <!-- MPT -->
-
-        <menu name="Mail Protocol Tester" inherit='bottom'>
-            <item name="Overview" href="/mpt/index.html"/>
-            <item name="Releases" href="/mpt/release-notes.html">
-                <item name='0.1 Documentation' href='/mpt/0.1'/>
-                <item name='0.1 Release Notes' href='/mpt/0.1/release-notes.html'/>
+            <item name="Protocols" href="/protocols/index.html" collapse="true">
+                <item name="SMTP" href="/protocols/smtp.html" />
+                <item name="POP3" href="/protocols/pop3.html" />
+                <item name="IMAP4" href="/protocols/imap4.html" />
+                <item name="Source Code" href="/protocols/source-code.html" />
+                <item name="Javadoc" href="/protocols/apidocs/index.html" />
+                <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/PROTOCOLS" />
             </item>
-            <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MPT" />
-            <item name='Main Library' href='/mpt/main'/>
-            <item name='AntLib' href='/mpt/antlib'/>
-            <item name='Application' href='/mpt/app'/>
-            <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_MPT" />
+            <item name="MPT" href="/mpt/index.html" collapse="true">
+                <item name="Releases" href="/mpt/release-notes.html">
+                    <item name='0.1 Documentation' href='/mpt/0.1'/>
+                    <item name='0.1 Release Notes' href='/mpt/0.1/release-notes.html'/>
+                </item>
+                <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MPT" />
+                <item name='Main Library' href='/mpt/main'/>
+                <item name='AntLib' href='/mpt/antlib'/>
+                <item name='Application' href='/mpt/app'/>
+                <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_MPT" />
+            </item>
         </menu>
+
 
     </body>
 
