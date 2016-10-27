@@ -18,21 +18,19 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.delivery;
 
-import com.google.common.collect.Iterators;
+import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.ResourceLocatorImpl;
+import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
-import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.GenericMailet;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
-import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * Receives a Mail from the Queue and takes care to deliver the message
@@ -74,34 +72,37 @@ public class ToRecipientFolder extends GenericMailet {
         this.usersRepository = usersRepository;
     }
 
-    private SieveMailet sieveMailet;  // Mailet that actually stores the message
+    private MailDispatcher mailDispatcher;
 
-    /**
-     * Delivers a mail to a local mailbox in a given folder.
-     * 
-     * @see org.apache.mailet.base.GenericMailet#service(org.apache.mailet.Mail)
-     */
     @Override
     public void service(Mail mail) throws MessagingException {
         if (!mail.getState().equals(Mail.GHOST)) {
-            sieveMailet.service(mail);
+            mailDispatcher.dispatch(mail);
         }
     }
 
     @Override
-    public void init(MailetConfig mailetConfig) throws MessagingException {
-        super.init(mailetConfig);
-        sieveMailet = SieveMailet.builder()
-            .mailboxManager(mailboxManager)
-            .userRepository(usersRepository)
-            .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
-            .mailetContext(getMailetContext())
-            .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
-            .consume(getInitParameter(CONSUME_PARAMETER, false))
-            .verbose(getInitParameter("verbose", false))
+    public void init() throws MessagingException {
+        Log log = CommonsLoggingAdapter.builder()
+            .mailet(this)
             .quiet(getInitParameter("quiet", true))
+            .verbose(getInitParameter("verbose", false))
             .build();
-        sieveMailet.init(mailetConfig);
+        String folder = getInitParameter(FOLDER_PARAMETER, "INBOX");
+        mailDispatcher = MailDispatcher.builder()
+            .mailStorer(SieveMailStorer.builder()
+                .sievePoster(new SievePoster(mailboxManager, folder, usersRepository, getMailetContext()))
+                .usersRepository(usersRepository)
+                .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
+                .mailetContext(getMailetContext())
+                .mailboxManager(mailboxManager)
+                .folder(folder)
+                .log(log)
+                .build())
+            .consume(getInitParameter(CONSUME_PARAMETER, false))
+            .mailetContext(getMailetContext())
+            .log(log)
+            .build();
     }
 
     @Override

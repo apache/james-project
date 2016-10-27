@@ -21,11 +21,54 @@ package org.apache.james.transport.mailets.jsieve;
 import org.apache.commons.logging.Log;
 import org.apache.mailet.base.GenericMailet;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+
 /**
  * Adapts commons logging to mailet logging.
  */
 public class CommonsLoggingAdapter implements Log {
-    
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Optional<Boolean> verbose = Optional.absent();
+        private Optional<Boolean> quiet = Optional.absent();
+        private GenericMailet genericMailet;
+
+        public Builder mailet(GenericMailet genericMailet) {
+            this.genericMailet = genericMailet;
+            return this;
+        }
+
+        public Builder verbose(boolean verbose) {
+            this.verbose = Optional.of(verbose);
+            return this;
+        }
+
+        public Builder quiet(boolean quiet) {
+            this.quiet = Optional.of(quiet);
+            return this;
+        }
+
+        public CommonsLoggingAdapter build() {
+            Preconditions.checkNotNull(genericMailet);
+            return new CommonsLoggingAdapter(genericMailet, computeLogLevel(quiet.or(false), verbose.or(false)));
+        }
+
+        private int computeLogLevel(boolean quiet, boolean verbose) {
+            if (verbose) {
+                return CommonsLoggingAdapter.TRACE;
+            } else if (quiet) {
+                return CommonsLoggingAdapter.FATAL;
+            } else {
+                return CommonsLoggingAdapter.WARN;
+            }
+        }
+    }
+
     public static final int TRACE = 6;
     public static final int DEBUG = 5;
     public static final int INFO = 4;
