@@ -78,7 +78,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
         private String folder;
         private ResourceLocator resourceLocator;
         private String deliveryHeader;
-        private boolean resetReturnPath;
         private boolean consume;
         private Optional<Boolean> verbose = Optional.absent();
         private Optional<Boolean> quiet = Optional.absent();
@@ -108,11 +107,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
             return this;
         }
 
-        public Builder resetReturnPath(boolean resetReturnPath) {
-            this.resetReturnPath = resetReturnPath;
-            return this;
-        }
-
         public Builder verbose(boolean verbose) {
             this.verbose = Optional.of(verbose);
             return this;
@@ -132,7 +126,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
             if (resourceLocator == null) {
                 throw new MailetException("Not initialised. Please ensure that the mailet container supports either setter or constructor injection");
             }
-            return new SieveMailet(usersRepos,mailboxManager, resourceLocator, folder, deliveryHeader, resetReturnPath, consume, verbose.or(false), quiet.or(false));
+            return new SieveMailet(usersRepos, mailboxManager, resourceLocator, folder, deliveryHeader, consume, verbose.or(false), quiet.or(false));
         }
 
     }
@@ -142,7 +136,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private final String folder;
     private final ResourceLocator resourceLocator;
     private final String deliveryHeader;
-    private final boolean resetReturnPath;
     private final boolean isInfo;
     private final boolean verbose;
     private final boolean consume;
@@ -151,7 +144,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private final Log log;
 
     private SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder, String deliveryHeader,
-                       boolean resetReturnPath, boolean consume, boolean verbose, boolean quiet) throws MessagingException {
+                        boolean consume, boolean verbose, boolean quiet) throws MessagingException {
 
         this.usersRepos = usersRepos;
         this.resourceLocator = resourceLocator;
@@ -159,7 +152,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
         this.folder = folder;
         this.actionDispatcher = new ActionDispatcher();
         this.deliveryHeader = deliveryHeader;
-        this.resetReturnPath = resetReturnPath;
         this.consume = consume;
         this.isInfo = verbose || !quiet;
         this.verbose = verbose;
@@ -342,20 +334,15 @@ public class SieveMailet  extends GenericMailet implements Poster {
         Collection<MailAddress> recipients = mail.getRecipients();
         Collection<MailAddress> errors = new Vector<MailAddress>();
 
-        MimeMessage message = null;
-        if (deliveryHeader != null || resetReturnPath) {
-            message = mail.getMessage();
-        }
+        MimeMessage message = mail.getMessage();
 
-        if (resetReturnPath) {
-            // Set Return-Path and remove all other Return-Path headers from the
-            // message
-            // This only works because there is a placeholder inserted by
-            // MimeMessageWrapper
-            message.setHeader(RFC2822Headers.RETURN_PATH,
-                (mail.getSender() == null ? "<>" : "<" + mail.getSender()
-                    + ">"));
-        }
+        // Set Return-Path and remove all other Return-Path headers from the
+        // message
+        // This only works because there is a placeholder inserted by
+        // MimeMessageWrapper
+        message.setHeader(RFC2822Headers.RETURN_PATH,
+            (mail.getSender() == null ? "<>" : "<" + mail.getSender()
+                + ">"));
 
         Enumeration headers;
         InternetHeaders deliveredTo = new InternetHeaders();

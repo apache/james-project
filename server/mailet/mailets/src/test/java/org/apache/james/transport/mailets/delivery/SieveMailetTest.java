@@ -109,7 +109,6 @@ public class SieveMailetTest {
             .resourceLocator(resourceLocator)
             .folder("INBOX")
             .deliveryHeader("DELIVERY_HEADER")
-            .resetReturnPath(true)
             .consume(true)
             .build();
     }
