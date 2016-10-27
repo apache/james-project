@@ -108,7 +108,6 @@ public class SieveMailetTest {
             .mailboxManager(mailboxManager)
             .resourceLocator(resourceLocator)
             .folder("INBOX")
-            .deliveryHeader("DELIVERY_HEADER")
             .consume(true)
             .build();
     }

@@ -118,7 +118,6 @@ public class LocalDelivery extends GenericMailet {
             .userRepository(usersRepository)
             .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
             .consume(getInitParameter("consume", true))
-            .deliveryHeader("Delivered-To")
             .quiet(getInitParameter("quiet", false))
             .verbose(getInitParameter("verbose", false))
             .folder("INBOX")

@@ -68,6 +68,8 @@ import com.google.common.base.Optional;
  */
 public class SieveMailet  extends GenericMailet implements Poster {
 
+    public static final String DELIVERED_TO = "Delivered-To";
+
     public static Builder builder() {
         return new Builder();
     }
@@ -77,7 +79,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
         private MailboxManager mailboxManager;
         private String folder;
         private ResourceLocator resourceLocator;
-        private String deliveryHeader;
         private boolean consume;
         private Optional<Boolean> verbose = Optional.absent();
         private Optional<Boolean> quiet = Optional.absent();
@@ -102,11 +103,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
             return this;
         }
 
-        public Builder deliveryHeader(String deliveryHeader) {
-            this.deliveryHeader = deliveryHeader;
-            return this;
-        }
-
         public Builder verbose(boolean verbose) {
             this.verbose = Optional.of(verbose);
             return this;
@@ -126,7 +122,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
             if (resourceLocator == null) {
                 throw new MailetException("Not initialised. Please ensure that the mailet container supports either setter or constructor injection");
             }
-            return new SieveMailet(usersRepos, mailboxManager, resourceLocator, folder, deliveryHeader, consume, verbose.or(false), quiet.or(false));
+            return new SieveMailet(usersRepos, mailboxManager, resourceLocator, folder, consume, verbose.or(false), quiet.or(false));
         }
 
     }
@@ -135,7 +131,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private final MailboxManager mailboxManager;
     private final String folder;
     private final ResourceLocator resourceLocator;
-    private final String deliveryHeader;
     private final boolean isInfo;
     private final boolean verbose;
     private final boolean consume;
@@ -143,7 +138,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private final ActionDispatcher actionDispatcher;
     private final Log log;
 
-    private SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder, String deliveryHeader,
+    private SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder,
                         boolean consume, boolean verbose, boolean quiet) throws MessagingException {
 
         this.usersRepos = usersRepos;
@@ -151,7 +146,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
         this.mailboxManager = mailboxManager;
         this.folder = folder;
         this.actionDispatcher = new ActionDispatcher();
-        this.deliveryHeader = deliveryHeader;
         this.consume = consume;
         this.isInfo = verbose || !quiet;
         this.verbose = verbose;
@@ -346,37 +340,33 @@ public class SieveMailet  extends GenericMailet implements Poster {
 
         Enumeration headers;
         InternetHeaders deliveredTo = new InternetHeaders();
-        if (deliveryHeader != null) {
-            // Copy any Delivered-To headers from the message
-            headers = message
-                .getMatchingHeaders(new String[] { deliveryHeader });
-            while (headers.hasMoreElements()) {
-                Header header = (Header) headers.nextElement();
-                deliveredTo.addHeader(header.getName(), header.getValue());
-            }
+
+        // Copy any Delivered-To headers from the message
+        headers = message
+            .getMatchingHeaders(new String[] { DELIVERED_TO });
+        while (headers.hasMoreElements()) {
+            Header header = (Header) headers.nextElement();
+            deliveredTo.addHeader(header.getName(), header.getValue());
         }
+
 
         for (Iterator<MailAddress> i = recipients.iterator(); i.hasNext();) {
             MailAddress recipient = i.next();
             try {
-                if (deliveryHeader != null) {
-                    // Add qmail's de facto standard Delivered-To header
-                    message.addHeader(deliveryHeader, recipient.toString());
-                }
+                // Add qmail's de facto standard Delivered-To header
+                message.addHeader(DELIVERED_TO, recipient.toString());
 
                 storeMail(mail.getSender(), recipient, mail);
 
-                if (deliveryHeader != null) {
-                    if (i.hasNext()) {
-                        // Remove headers but leave all placeholders
-                        message.removeHeader(deliveryHeader);
-                        headers = deliveredTo.getAllHeaders();
-                        // And restore any original Delivered-To headers
-                        while (headers.hasMoreElements()) {
-                            Header header = (Header) headers.nextElement();
-                            message.addHeader(header.getName(), header
-                                .getValue());
-                        }
+                if (i.hasNext()) {
+                    // Remove headers but leave all placeholders
+                    message.removeHeader(DELIVERED_TO);
+                    headers = deliveredTo.getAllHeaders();
+                    // And restore any original Delivered-To headers
+                    while (headers.hasMoreElements()) {
+                        Header header = (Header) headers.nextElement();
+                        message.addHeader(header.getName(), header
+                            .getValue());
                     }
                 }
             } catch (Exception ex) {
