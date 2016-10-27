@@ -49,7 +49,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.transport.mailets.SieveMailet;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.transport.mailets;
+package org.apache.james.transport.mailets.delivery;
 
 import java.util.Date;
 

@@ -48,7 +48,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
