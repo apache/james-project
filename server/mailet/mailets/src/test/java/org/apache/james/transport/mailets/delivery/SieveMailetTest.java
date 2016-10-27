@@ -107,6 +107,7 @@ public class SieveMailetTest {
             .userRepository(usersRepository)
             .mailboxManager(mailboxManager)
             .resourceLocator(resourceLocator)
+            .mailetContext(fakeMailContext)
             .folder("INBOX")
             .consume(true)
             .build();

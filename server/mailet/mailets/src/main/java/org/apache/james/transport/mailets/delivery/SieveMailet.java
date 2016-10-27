@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.delivery;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -31,20 +30,11 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.logging.Log;
-import org.apache.james.core.MimeMessageInputStream;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
-import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
-import org.apache.james.transport.util.MailetContextLog;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.ConfigurationManager;
@@ -55,6 +45,7 @@ import org.apache.jsieve.parser.generated.ParseException;
 import org.apache.jsieve.parser.generated.TokenMgrError;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -64,7 +55,7 @@ import com.google.common.base.Optional;
 /**
  * Contains resource bindings.
  */
-public class SieveMailet  extends GenericMailet implements Poster {
+public class SieveMailet  extends GenericMailet {
 
     public static final String DELIVERED_TO = "Delivered-To";
 
@@ -77,6 +68,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
         private MailboxManager mailboxManager;
         private String folder;
         private ResourceLocator resourceLocator;
+        private MailetContext mailetContext;
         private boolean consume;
         private Optional<Boolean> verbose = Optional.absent();
         private Optional<Boolean> quiet = Optional.absent();
@@ -116,17 +108,22 @@ public class SieveMailet  extends GenericMailet implements Poster {
             return this;
         }
 
+        public Builder mailetContext(MailetContext mailetContext) {
+            this.mailetContext = mailetContext;
+            return this;
+        }
+
         public SieveMailet build() throws MessagingException {
             if (resourceLocator == null) {
                 throw new MailetException("Not initialised. Please ensure that the mailet container supports either setter or constructor injection");
             }
-            return new SieveMailet(usersRepos, mailboxManager, resourceLocator, folder, consume, verbose.or(false), quiet.or(false));
+            return new SieveMailet(usersRepos, mailboxManager, resourceLocator, mailetContext, folder, consume, verbose.or(false), quiet.or(false));
         }
 
     }
 
     private final UsersRepository usersRepos;
-    private final MailboxManager mailboxManager;
+    private final SievePoster sievePoster;
     private final String folder;
     private final ResourceLocator resourceLocator;
     private final boolean isInfo;
@@ -136,12 +133,11 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private final ActionDispatcher actionDispatcher;
     private final Log log;
 
-    private SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder,
+    private SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, MailetContext mailetContext, String folder,
                         boolean consume, boolean verbose, boolean quiet) throws MessagingException {
-
+        this.sievePoster = new SievePoster(mailboxManager, folder, usersRepos, mailetContext);
         this.usersRepos = usersRepos;
         this.resourceLocator = resourceLocator;
-        this.mailboxManager = mailboxManager;
         this.folder = folder;
         this.actionDispatcher = new ActionDispatcher();
         this.consume = consume;
@@ -202,112 +198,6 @@ public class SieveMailet  extends GenericMailet implements Poster {
             return  "<" + mailAddress.toString() + ">";
         } else {
             return  "<>";
-        }
-    }
-
-    @Override
-    public void post(String url, MimeMessage mail) throws MessagingException {
-
-        final int endOfScheme = url.indexOf(':');
-
-        if (endOfScheme < 0) {
-            throw new MessagingException("Malformed URI");
-        }
-
-        else {
-
-            final String scheme = url.substring(0, endOfScheme);
-            if ("mailbox".equals(scheme)) {
-                int startOfUser = endOfScheme + 3;
-                int endOfUser = url.indexOf('@', startOfUser);
-                if (endOfUser < 0) {
-                    // TODO: When user missing, append to a default location
-                    throw new MessagingException("Shared mailbox is not supported");
-                } else {
-                    // lowerCase the user - see
-                    // https://issues.apache.org/jira/browse/JAMES-1369
-                    String user = url.substring(startOfUser, endOfUser).toLowerCase();
-                    int startOfHost = endOfUser + 1;
-                    int endOfHost = url.indexOf('/', startOfHost);
-                    String host = url.substring(startOfHost, endOfHost);
-                    String urlPath;
-                    int length = url.length();
-                    if (endOfHost + 1 == length) {
-                        urlPath = this.folder;
-                    } else {
-                        urlPath = url.substring(endOfHost, length);
-                    }
-
-                    // Check if we should use the full email address as username
-                    try {
-                        if (usersRepos.supportVirtualHosting()) {
-                            user = user + "@" + host;
-                        }
-                    } catch (UsersRepositoryException e) {
-                        throw new MessagingException("Unable to accessUsersRepository", e);
-                    }
-
-                    MailboxSession session;
-                    try {
-                        session = mailboxManager.createSystemSession(user, new MailetContextLog(getMailetContext()));
-                    } catch (BadCredentialsException e) {
-                        throw new MessagingException("Unable to authenticate to mailbox", e);
-                    } catch (MailboxException e) {
-                        throw new MessagingException("Can not access mailbox", e);
-                    }
-
-                    // Start processing request
-                    mailboxManager.startProcessingRequest(session);
-
-                    // This allows Sieve scripts to use a standard delimiter
-                    // regardless of mailbox implementation
-                    String destination = urlPath.replace('/', session.getPathDelimiter());
-
-                    if (destination == null || "".equals(destination)) {
-                        destination = this.folder;
-                    }
-                    if (destination.startsWith(session.getPathDelimiter() + ""))
-                        destination = destination.substring(1);
-
-                    // Use the MailboxSession to construct the MailboxPath - See
-                    // JAMES-1326
-                    final MailboxPath path = new MailboxPath(MailboxConstants.USER_NAMESPACE, user, destination);
-                    try {
-                        if (this.folder.equalsIgnoreCase(destination) && !(mailboxManager.mailboxExists(path, session))) {
-                            mailboxManager.createMailbox(path, session);
-                        }
-                        final MessageManager mailbox = mailboxManager.getMailbox(path, session);
-                        if (mailbox == null) {
-                            final String error = "Mailbox for user " + user + " was not found on this server.";
-                            throw new MessagingException(error);
-                        }
-
-                        mailbox.appendMessage(new MimeMessageInputStream(mail), new Date(), session, true, null);
-
-                    } catch (MailboxException e) {
-                        throw new MessagingException("Unable to access mailbox.", e);
-                    } finally {
-                        session.close();
-                        try {
-                            mailboxManager.logout(session, true);
-                        } catch (MailboxException e) {
-                            throw new MessagingException("Can logout from mailbox", e);
-                        }
-
-                        // Stop processing request
-                        mailboxManager.endProcessingRequest(session);
-
-                    }
-                }
-
-            }
-
-            else {
-                // TODO: add support for more protocols
-                // TODO: - for example mailto: for forwarding over SMTP
-                // TODO: - for example xmpp: for forwarding over Jabber
-                throw new MessagingException("Unsupported protocol");
-            }
         }
     }
 
@@ -388,7 +278,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private void sieveMessageEvaluate(MailAddress recipient, Mail aMail, ResourceLocator.UserSieveInformation userSieveInformation) throws MessagingException, IOException {
         try {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
-                getMailetContext(), actionDispatcher, this, userSieveInformation.getScriptActivationDate(),
+                getMailetContext(), actionDispatcher, sievePoster, userSieveInformation.getScriptActivationDate(),
                 userSieveInformation.getScriptInterpretationDate(), recipient);
             aMailAdapter.setLog(log);
             // This logging operation is potentially costly
@@ -410,7 +300,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
     }
 
     protected void storeMessageInbox(String username, MimeMessage message) throws MessagingException {
-        post("mailbox://" + username + "/", message);
+        sievePoster.post("mailbox://" + username + "/", message);
     }
 
 

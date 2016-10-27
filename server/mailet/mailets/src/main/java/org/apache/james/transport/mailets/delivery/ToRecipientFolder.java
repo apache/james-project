@@ -95,6 +95,7 @@ public class ToRecipientFolder extends GenericMailet {
             .mailboxManager(mailboxManager)
             .userRepository(usersRepository)
             .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
+            .mailetContext(getMailetContext())
             .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
             .consume(getInitParameter(CONSUME_PARAMETER, false))
             .verbose(getInitParameter("verbose", false))
