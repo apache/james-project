@@ -51,6 +51,7 @@ import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 /**
  * Contains resource bindings.
@@ -178,14 +179,8 @@ public class SieveMailet  extends GenericMailet {
     }
 
     public void storeMail(MailAddress sender, MailAddress recipient, Mail mail) throws MessagingException {
-        if (recipient == null) {
-            throw new IllegalArgumentException(
-                "Recipient for mail to be spooled cannot be null.");
-        }
-        if (mail.getMessage() == null) {
-            throw new IllegalArgumentException(
-                "Mail message to be spooled cannot be null.");
-        }
+        Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
+        Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
 
         sieveMessage(recipient, mail);
         // If no exception was thrown the message was successfully stored in the mailbox
