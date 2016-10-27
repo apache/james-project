@@ -41,15 +41,4 @@ git checkout $SHA1
 
 mvn clean install -DskipTests
 mvn clean site:site -Dmaven.javadoc.skip=true
-
-# Retrieve result
-
-if [ $? -eq 0 ]; then
-   cp -r target/site/* $DESTINATION/
-   cp -r server/target/site $DESTINATION/server
-   cp -r mailbox/target/site $DESTINATION/mailbox
-   cp -r protocols/target/site $DESTINATION/protocols
-   cp -r mailet/target/site $DESTINATION/mailet
-   cp -r mpt/target/site $DESTINATION/mpt
- 
-fi
+mvn site:stage -DstagingDirectory=$DESTINATION/
