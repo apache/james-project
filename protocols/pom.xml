@@ -315,11 +315,4 @@
         </plugins>
     </build>
 
-    <distributionManagement>
-        <site>
-            <id>server-trunk-website</id>
-            <url>scpexe://people.apache.org/www/james.apache.org/protocols/</url>
-        </site>
-    </distributionManagement>
-
 </project>

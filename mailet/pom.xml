@@ -317,21 +317,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.doxia</groupId>
-                        <artifactId>doxia-module-markdown</artifactId>
-                        <version>1.3</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <inputEncoding>UTF-8</inputEncoding>
-                    <outputEncoding>UTF-8</outputEncoding>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -367,12 +352,5 @@
     <issueManagement>
         <url>http://issues.apache.org/jira/browse/MAILET</url>
     </issueManagement>
-
-    <distributionManagement>
-        <site>
-            <id>mailet-umbrella-website</id>
-            <url>scpexe://people.apache.org/www/james.apache.org/mailet/</url>
-        </site>
-    </distributionManagement>
 
 </project>

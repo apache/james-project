@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+  <properties>
+    <title>Apache James Server 3 - Performance</title>
+  </properties>
+
+<body>
+
+  <section name="Performance">
+
+    <p>James can spool more than 100 mails per second (configured with Maildir mail storage).</p>
+    
+    <p>We ran following command (from postfix distribution) with only 10 dequeue threads.</p>
+
+    <source>time smtp-source -A -C1500 -l 100 -m 100000 -s 500 -d -c -f user@domain.net -t te localhost:25 100000</source>
+
+    <p>The result was:</p>
+    <ol> 
+      <li>The queuing of the 100000 emails took 8 minutes.</li>
+      <li>The dequeueing of the 100000 emails took 16 minutes.</li>
+    </ol>
+
+    <p>We thus have a throughput of more than <b>100 mails/second</b>.</p>
+
+    <p>These numbers are obtained with the out-of-the-box configuration (not optimized).
+       I you run for example (depends on JVM) with <code>-XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods</code>,
+       you may have 10000 mails enqueued in 38 seconds, which represents <b>263 mails per second</b>.</p>
+
+  </section>
+
+</body>
+
+</document>

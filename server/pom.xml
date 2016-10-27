@@ -115,13 +115,6 @@
         <module>testing</module>
     </modules>
 
-    <distributionManagement>
-        <site>
-            <id>server-trunk-website</id>
-            <url>scpexe://people.apache.org/www/james.apache.org/server/</url>
-        </site>
-    </distributionManagement>
-
     <properties>
         <productName>Apache-James Mail Server</productName>
 

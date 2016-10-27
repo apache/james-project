@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+
+<document>
+
+ <properties>
+  <title>Apache James Mailbox Introduction</title>
+  <author email="server-dev@james.apache.org">Apache James Mailbox</author>
+ </properties>
+
+<body>
+
+  <section name="What Is Apache James Mailbox?">
+    <p>The Apache James Mailbox is a library providing a flexible Mailbox storage accessible by mail 
+       protocols (IMAP4, POP3, SMTP,...) and other protocols.
+    </p>
+    <p>It can also be embedded into your application to implement for example 
+       the <a href="http://www.mindspring.com/~mgrand/pattern_synopses3.htm#Mailbox">Mailbox Pattern</a>.
+    </p>
+    <p>The prime usage of this library is clearly to serve as mailbox persistence 
+       for IMAP protocol. The API and implementations rely on  
+       <a href='http://james.apache.org/server/rfclist/imap4/rfc2060.txt'>RFC 2060 IMAP4rev1</a>
+       definitions and requirements but can perfectly be used in any other (non mail server) context. 
+    </p>
+    <p>The mailbox library supports different persistence 
+       mechanisms: MailDir, SQL Database via Apache OpenJPA, JCR (Java Content Repository based on Apache Jackrabbit) 
+       and Apache HBase.
+    </p>
+    <p>You can <a href="http://james.apache.org/download.cgi">download</a> current 0.4 release. 
+       The <a href="apidocs/">API</a> as the schemas for the different implementations are susceptible to evolve.
+    </p>
+      <ul>Here are the different implementations of the mailbox we propose :
+          <li><a href="mailbox-memory.html">Memory</a> for testing purposes</li>
+          <li><a href="mailbox-cassandra.html">Cassandra</a></li>
+          <li><a href="mailbox-maildir.html">Maildir</a></li>
+          <li><a href="mailbox-jpa.html">JPA</a> </li>
+          <li><a href="mailbox-jcr.html">JCR</a> </li>
+          <li><a href="mailbox-hbase.html">HBase</a>)</li>
+      </ul>
+  </section>
+
+  <section name="Apache James Mailbox in Server">
+    <p><a href="http://james.apache.org/server/3">Apache James Server 3</a> uses this library to implement its user mailboxes.</p>
+    <p>Apache James Mailbox is tested and fully compatible with other Apache James libraries
+       such as the <a href="http://james.apache.org/imap">Apache James IMAP</a> 
+       (see <a href="http://james.apache.org/mpt/index.html">this link</a> 
+       for the Mailbox/IMAP integration tests source code) </p>
+  </section>
+
+  <section name="Develop on Apache James Mailbox">
+    <p>Go to the <a href="source-code.html">source code</a> page to get more information on how to 
+       develop on Apache James Mailbox.</p>
+    <img src="images/uml/org-apache-james-mailbox-package.png"/>
+  </section>
+  
+  <section name="Apache James Mailbox logging">
+    <p>Apache James Mailbox uses <a href="http://slf4j.org/">SLF4J</a> as logging facade. For specific bindings one needs to add
+    a particular <a href="http://slf4j.org/faq.html#where_is_binding">SLF4J binding</a>.</p>
+  </section>
+  
+</body>
+
+</document>

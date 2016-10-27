@@ -52,37 +52,7 @@
         <url>http://issues.apache.org/jira/browse/MPT</url>
     </issueManagement>
 
-    <distributionManagement>
-        <site>
-            <id>${james.www.id}</id>
-            <url>${james.mpt.www}</url>
-        </site>
-    </distributionManagement>
-
     <properties>
-        <!--
-            The website is committed to subversion. This property can be overriden
-            to upload the site to a local staging location.
-            For example, adding the following to ~/.m2/settings.xml will upload
-            to localhost:
-
-            <profiles>
-            <profile>
-            <id>main</id>
-            <activation>
-            <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-            <james.www>scp://localhost/www</james.www>
-            <james.www.id>localhost</james.www.id>
-            ...
-        -->
-        <!-- General location for site stage -->
-        <james.www>scpexe://people.apache.org/www/james.apache.org/</james.www>
-        <!-- Project specific location, allowing specific override -->
-        <james.mpt.www>${james.www}/mpt/</james.mpt.www>
-        <!-- Overridding this value allows single set of loopback settings to be maintained -->
-        <james.www.id>mpt-website</james.www.id>
         <target.jdk>1.5</target.jdk>
 
         <commons-io.version>2.4</commons-io.version>
@@ -539,35 +509,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
-                <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-doap-plugin</artifactId>
-                <executions>
-                <execution>
-                <id>site</id>
-                <phase>site</phase>
-                <goals>
-                <goal>generate</goal>
-                </goals>
-                </execution>
-                </executions>
-                <configuration>
-                <doapOptions>
-                <programmingLanguage>java</programmingLanguage>
-                <category>mail</category>
-                <download-page>http://james.apache.org/download.cgi</download-page>
-                </doapOptions>
-
-                <asfExtOptions>
-                <included>true</included>
-                <pmc>http://james.apache.org</pmc>
-                <name>Apache James</name>
-                </asfExtOptions>
-
-                </configuration>
-                </plugin>
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>

@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Monitor Folders</title>
+ </properties>
+
+<body>
+
+  <section name="Monitor Folders">
+  
+    <subsection name="Monitor ./var Folder Usage">
+    
+    <p>The directory structure in ./var is shown hereafter.</p>
+  
+<source>
+mail
++-error
++-address-error
++-relay-denied
++-spam
+
+store
++-maildir
++-derby
++-jackrabbit
++-activemq
+  +-brokers
+    +-james
+  +-blob-transfer
+    +-outgoing
+    +-spool
+</source>
+
+      <p>The $JAMES_ROOT/var folder is the place where James Server writes and reads the
+         files it needs to achieve its functions.</p>
+
+      <p>There should be two folders in var:</p>
+      <ul>
+        <li>mail</li>
+        <li>store</li>
+      </ul>
+
+      <p>The mail folder does NOT contain the users mails
+         (look at store folder (or your external database) to find the mailboxes).
+         The mail folder contains the mails rejected during the spooling (depending on 
+         mailetcontainer.xml configuration). Sub folders of 
+         var/mail can be address-error, error, relay-denied, spam</p>
+      
+       <p>The store folder contains the files related to database, jcr, activemq,... needed by James.
+         James Server default settings comes with a embedded Derby database that stores the 
+         users, domains and mailboxes (the user mails) (see store/derby folder).</p>
+         
+       <p>Of course, if you changed database.properties and still use a database for the mailboxes,
+          you will have to look for the users, domains and mailboxes in your database, whatever,
+          wherever it is.</p>
+     
+        <p>You can find in store folder sub-folders such as:</p>
+     
+<source>
+activemq
++-brokers
+  +-james
++-blob-transfer
+  +-outgoing
+  +-spool
+</source>
+          
+          <p>The activemq component is configured to use this folder
+             for queue (and topics if any) processing.</p>
+     
+<source>
+maildir
+</source>     
+         
+         <p>You can configure James to use MailDir as storage for the user
+            mailboxes. Use var/store/maildir folder to contain the user's
+            mails.</p>
+
+<source>
+jackrabbit
+</source>
+     
+         <p>You can configure James to use JCR (Java Content Repository, based
+            on Apache Jackrabbit) as storage for the user mailboxes. Use 
+            var/store/jackrabbit folder to contain the user's mails.</p>
+ 
+    </subsection>
+
+    <subsection name="Monitor tmp Folder Usage">
+    
+      <p>For some certain functions, James uses the system temporary folder (/tmp on linux).
+         The system temp can be populated with some temporary files, but James should remove
+         them after a short time.</p>
+    
+    </subsection>
+  
+  </section>
+
+</body>
+
+</document>

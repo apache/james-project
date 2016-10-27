@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+  <properties>
+     <title>Apache James Server 3 - James - Extend James - SMTP Hooks</title>
+  </properties>
+
+<body>
+
+  <section name="Custom SMTP Hooks Implementations">
+
+    <subsection name="Why a Custom SMTP Hook">
+
+      <p>What to do if the Hook API is not enough for you ? You want for example 
+         to write a code which handles a new command like "YOURCOOLCOMMAND: whatever@example".</p>
+    
+      <p>For this kind of needs you should implement the CommandHandler interface. 
+         This gives you a lower-level API to handle this kind of tasks. If you want 
+         to support a custom Hook in your <code>CommandHandler</code> its the best
+         to just extend <code>AbstractHookableCmdHandler</code>.</p>
+         
+    </subsection>
+
+    <subsection name="Things to Remember ">
+
+      <p>Be aware that your implementation needs to be thread-safe as it will get used as singleton. 
+         If you need to store temporary informations within the SMTP Transaction/Session you should
+         use the <code>SMTPSession.getState().put(...)</code> 
+         and <code>SMTPSession.getConnectionState().put(...)</code> methods.</p>
+ 
+      <p>For a more explanation see the <a href="http://james.apache.org/protocols/apidocs/index.html">apidocs</a> 
+        for the protocols library which is used by James SMTP Server.</p>
+
+    </subsection>
+
+    <subsection name="Get your Hook implementations loaded">
+  
+      <p>Just create a jar file which contains your code and put it in /path/to/james/conf/lib/ 
+      folder. The jar will get picked up by the ClassLoader automatic then.</p>
+    
+      <p>After that open the smtpserver.xml file and add your hook to the <code>&lt;handlers&gt;&lt;/handlers&gt;</code> block in the order you 
+       want to have it executed. So if you have 2 MailHook implementation make sure the first one 
+       which is listed in smtpserver.xml is the one you want to call first.</p>
+
+    </subsection>
+
+    <subsection name="Return-Codes">
+
+      <p>Each of the Hooks need to return a HookResult to tell the SMTPServer 
+        if the next registered Hook should get called or not.</p>
+    
+      <p>For this the HookReturnCode is used.</p>
+
+    </subsection>
+    
+  </section>
+ 
+</body>
+
+</document>
