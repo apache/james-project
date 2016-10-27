@@ -116,6 +116,8 @@
                 <item name="Download releases" href="http://james.apache.org/download.cgi" />
             </item>
             <item name="Server" href="/server/index.html" collapse="true">
+                <item name="Advantages" href="/server/advantages.html"/>
+                <item name="Objectives" href="/server/objectives.html"/>
                 <item name="User Manual" href="/server/quick-start.html" collapse="true">
                     <item name="1. Features" href="/server/features.html" collapse="true" >
                         <item name="Mailet Container" href="/server/feature-mailetcontainer.html" />
@@ -180,6 +182,7 @@
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
                 <item name="Sources on GitHub" href="https://github.com/apache/james-project" />
                 <item name="RFCs" href="/server/rfcs.html"/>
+                <item name="Other versions" href="other-versions.html"/>
                 <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_James_Server" />
             </item>
             <item name="Mailets" href="/mailet/index.html" collapse="true">

@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Advantages</title>
+ </properties>
+
+<body>
+
+  <section name="Advantages">
+
+    <table>
+
+      <tr><td width="50%">
+
+        <subsection name="Standard">
+
+          <p>100% pure Java Mail server designed to be a complete and portable enterprise
+            mail engine solution.</p>
+
+          <p>Supports currently available IETF protocols, including SMTP, LMTP, POP3, IMAP4, ManageSIEVE. We also plan to support JMAP.</p>
+
+          <p>Apache James Server is able to store user and message data either in any JPA-compatible database,
+            in Cassandra (allowing fast, reliable, even real-time replicated storage) and on a file-system (Maildir).</p>
+
+          <p>Provides a powerful, flexible mail application engine through support for the Apache Mailet
+            API.  With its Mailet pipeline architecture, Apache James Server can be used not only to provide standard e-mail
+            services, but also to implement custom e-mail applications.</p>
+
+        </subsection>
+
+      </td><td width="50%">
+
+        <subsection name="Configurable">
+
+          <p>Configure the stores,...</p>
+          <p>via the well-known Spring framework - <a href="config.html">read more</a>.</p>
+
+          <p><img src="images/conf/config-example.png" /></p>
+
+          <p>or via the Guice module - <a href="config-guice.html">read more</a>.</p>
+        </subsection>
+
+      </td></tr>
+
+      <tr><td width="50%">
+
+        <subsection name="Manageable">
+
+          <p>Manage domains, users,... via well-known JMX tools - <a href="manage.html">read more</a>.</p>
+
+          <p><img src="images/jmx-management/jmx-user-part.png" /></p>
+
+        </subsection>
+
+      </td><td width="50%">
+
+        <subsection name="Extensible">
+
+          <p>Apache James Server serves as a mail application platform.</p>
+
+          <p>The Apache James Project hosts the Apache Mailet API,
+            and provides the Mailet container. These features makes it easy
+            to design, write, and deploy custom applications for mail processing.</p>
+
+          <p>This modularity and ease of customization is one of Apache James'
+            strengths, and can allow administrators to produce powerful
+            applications surprisingly easily. - <a href="dev-extend.html">read more</a></p>
+
+        </subsection>
+
+      </td></tr>
+
+      <tr><td width="50%">
+
+        <subsection name="Developer-Friendly">
+
+          <p>Apache James Server 3.0 is now built on top of Spring 3.0 or Guice in replacement of
+            the <a href="http://avalon.apache.org/">Avalon</a> Application Framework.
+            With Spring, We keep the good development practices introduced by Avalon such as
+            Component Oriented Programming and  Inversion of Control. The stable and robust
+            Spring container provides a strong foundation for the Apache James Server.</p>
+
+          <p>The internal and exposed APIs for this 3.0-beta4 release are under current validation and are
+            expected to be subject to change - <a href="dev.html">read more</a>.</p>
+
+          <p><img src="images/uml/org.apache.james-package-small.png" width="400px" /></p>
+
+        </subsection>
+
+      </td><td width="50%">
+
+        <subsection name="Performant">
+
+          <p>A special focus has been brought to the performance: Apache James Server can process more than
+            100 mails per second. Deployed in production environments and has proven itself
+            to be a robust  and high performance mail solution. Tests indicate that
+            version 3.0 is able to maintain a constant mail throughput rate of thousands of
+            messages/minute for continuous periods  - <a href="feature-performance.html">read more</a></p>
+
+          <p><img src="images/jmx-monitoring/jmx-process-root.png"/></p>
+
+        </subsection>
+
+      </td></tr>
+
+      <tr><td width="50%">
+
+        <subsection name="Secured">
+
+          <p>Apache James Server is a secured mail server by default - <a href="feature-security.html">read more</a>.</p>
+
+        </subsection>
+
+      </td><td width="50%">
+
+      </td></tr>
+
+    </table>
+
+  </section>
+
+</body>
+
+</document>
