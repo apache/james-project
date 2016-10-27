@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.logging.Log;
 import org.apache.james.mailbox.MailboxManager;
@@ -309,44 +307,9 @@ public class SieveMailet  extends GenericMailet {
         return "//" + getUsername(m) + "/sieve";
     }
 
-    /**
-     * Deliver the original mail as an attachment with the main part being an error report.
-     *
-     * @param recipient
-     * @param aMail
-     * @param ex
-     * @throws MessagingException
-     * @throws IOException
-     */
-    protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex)
-        throws MessagingException, IOException {
+    protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
         String user = getUsername(recipient);
-
-        MimeMessage originalMessage = aMail.getMessage();
-        MimeMessage message = new MimeMessage(originalMessage);
-        MimeMultipart multipart = new MimeMultipart();
-
-        MimeBodyPart noticePart = new MimeBodyPart();
-        noticePart.setText("An error was encountered while processing this mail with the active sieve script for user \""
-            + user + "\". The error encountered was:\r\n" + ex.getLocalizedMessage() + "\r\n");
-        multipart.addBodyPart(noticePart);
-
-        MimeBodyPart originalPart = new MimeBodyPart();
-        originalPart.setContent(originalMessage, "message/rfc822");
-        if ((originalMessage.getSubject() != null) && (!originalMessage.getSubject().trim().isEmpty())) {
-            originalPart.setFileName(originalMessage.getSubject().trim());
-        } else {
-            originalPart.setFileName("No Subject");
-        }
-        originalPart.setDisposition(MimeBodyPart.INLINE);
-        multipart.addBodyPart(originalPart);
-
-        message.setContent(multipart);
-        message.setSubject("[SIEVE ERROR] " + originalMessage.getSubject());
-        message.setHeader("X-Priority", "1");
-        message.saveChanges();
-
-        storeMessageInbox(user, message);
+        storeMessageInbox(user, SieveFailureMessageComposer.composeMessage(aMail, ex, user));
     }
 
 }
