@@ -107,46 +107,24 @@ public class LocalDelivery extends GenericMailet {
     /**
      * @see org.apache.mailet.base.GenericMailet#init()
      */
-    public void init() throws MessagingException {
-        
-        super.init();
-
+    public void init(MailetConfig mailetConfig) throws MessagingException {
+        super.init(mailetConfig);
         recipientRewriteTable = new RecipientRewriteTable();
         recipientRewriteTable.setDomainList(domainList);
         recipientRewriteTable.setRecipientRewriteTable(rrt);
         recipientRewriteTable.init(getMailetConfig());
-        sieveMailet = new SieveMailet(usersRepository,
-            mailboxManager,
-            ResourceLocatorImpl.instanciate(usersRepository, sieveRepository),
-            "INBOX");
-        sieveMailet.init(new MailetConfig() {
-            public String getInitParameter(String name) {
-                if ("addDeliveryHeader".equals(name)) {
-                    return "Delivered-To";
-                } else if ("resetReturnPath".equals(name)) {
-                    return "true";
-                } else {
-                    return getMailetConfig().getInitParameter(name);
-                }
-            }
-
-            public Iterator<String> getInitParameterNames() {
-                return Iterators.concat(
-                        getMailetConfig().getInitParameterNames(), 
-                        Lists.newArrayList("addDeliveryHeader", "resetReturnPath").iterator());
-            }
-            
-            public MailetContext getMailetContext() {
-                return getMailetConfig().getMailetContext();
-            }
-
-            public String getMailetName() {
-                return getMailetConfig().getMailetName();
-            }
-
-        });
-        // Override the default value of "quiet"
-        sieveMailet.setQuiet(getInitParameter("quiet", true));
+        sieveMailet = SieveMailet.builder()
+            .mailboxManager(mailboxManager)
+            .userRepository(usersRepository)
+            .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
+            .consume(getInitParameter("consume", true))
+            .deliveryHeader("Delivered-To")
+            .resetReturnPath(true)
+            .quiet(getInitParameter("quiet", false))
+            .verbose(getInitParameter("verbose", false))
+            .folder("INBOX")
+            .build();
+        sieveMailet.init(mailetConfig);
     }
 
 }

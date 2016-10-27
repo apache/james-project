@@ -89,41 +89,20 @@ public class ToRecipientFolder extends GenericMailet {
     }
 
     @Override
-    public void init() throws MessagingException {
-        super.init();
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, ResourceLocatorImpl.instanciate(usersRepository, sieveRepository), getInitParameter(FOLDER_PARAMETER, "INBOX"));
-        sieveMailet.init(new MailetConfig() {
-            
-            @Override
-            public String getInitParameter(String name) {
-                if ("addDeliveryHeader".equals(name)) {
-                    return "Delivered-To";
-                } else if ("resetReturnPath".equals(name)) {
-                    return "true";
-                } else {
-                    return getMailetConfig().getInitParameter(name);
-                }
-            }
-
-            @Override
-            public Iterator<String> getInitParameterNames() {
-                return Iterators.concat(getMailetConfig().getInitParameterNames(),
-                        Arrays.asList("addDeliveryHeader", "resetReturnPath").iterator());
-            }
-            
-            @Override
-            public MailetContext getMailetContext() {
-                return getMailetConfig().getMailetContext();
-            }
-
-            @Override
-            public String getMailetName() {
-                return getMailetConfig().getMailetName();
-            }
-
-        });
-        sieveMailet.setQuiet(getInitParameter("quiet", true));
-        sieveMailet.setConsume(getInitParameter(CONSUME_PARAMETER, false));
+    public void init(MailetConfig mailetConfig) throws MessagingException {
+        super.init(mailetConfig);
+        sieveMailet = SieveMailet.builder()
+            .mailboxManager(mailboxManager)
+            .userRepository(usersRepository)
+            .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
+            .deliveryHeader("Delivered-To")
+            .folder(getInitParameter(FOLDER_PARAMETER, "INBOX"))
+            .resetReturnPath(true)
+            .consume(getInitParameter(CONSUME_PARAMETER, false))
+            .verbose(getInitParameter("verbose", false))
+            .quiet(getInitParameter("quiet", true))
+            .build();
+        sieveMailet.init(mailetConfig);
     }
 
     @Override

@@ -102,7 +102,16 @@ public class SieveMailetTest {
         mailboxManager = mock(MailboxManager.class);
         fakeMailContext = FakeMailContext.defaultContext();
         fakeMailetConfig = new FakeMailetConfig("sieveMailet", fakeMailContext);
-        sieveMailet = new SieveMailet(usersRepository, mailboxManager, resourceLocator, "INBOX");
+
+        sieveMailet = SieveMailet.builder()
+            .userRepository(usersRepository)
+            .mailboxManager(mailboxManager)
+            .resourceLocator(resourceLocator)
+            .folder("INBOX")
+            .deliveryHeader("DELIVERY_HEADER")
+            .resetReturnPath(true)
+            .consume(true)
+            .build();
     }
 
     @Test

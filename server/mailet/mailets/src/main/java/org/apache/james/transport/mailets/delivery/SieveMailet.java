@@ -57,67 +57,115 @@ import org.apache.jsieve.parser.generated.ParseException;
 import org.apache.jsieve.parser.generated.TokenMgrError;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailAddress;
-import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
+
+import com.google.common.base.Optional;
 
 /**
  * Contains resource bindings.
  */
 public class SieveMailet  extends GenericMailet implements Poster {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private UsersRepository usersRepos;
+        private MailboxManager mailboxManager;
+        private String folder;
+        private ResourceLocator resourceLocator;
+        private String deliveryHeader;
+        private boolean resetReturnPath;
+        private boolean consume;
+        private Optional<Boolean> verbose = Optional.absent();
+        private Optional<Boolean> quiet = Optional.absent();
+
+        public Builder userRepository(UsersRepository usersRepository) {
+            this.usersRepos = usersRepository;
+            return this;
+        }
+
+        public Builder mailboxManager(MailboxManager mailboxManager) {
+            this.mailboxManager = mailboxManager;
+            return this;
+        }
+
+        public Builder folder(String folder) {
+            this.folder = folder;
+            return this;
+        }
+
+        public Builder resourceLocator(ResourceLocator resourceLocator) {
+            this.resourceLocator = resourceLocator;
+            return this;
+        }
+
+        public Builder deliveryHeader(String deliveryHeader) {
+            this.deliveryHeader = deliveryHeader;
+            return this;
+        }
+
+        public Builder resetReturnPath(boolean resetReturnPath) {
+            this.resetReturnPath = resetReturnPath;
+            return this;
+        }
+
+        public Builder verbose(boolean verbose) {
+            this.verbose = Optional.of(verbose);
+            return this;
+        }
+
+        public Builder consume(boolean consume) {
+            this.consume = consume;
+            return this;
+        }
+
+        public Builder quiet(boolean quiet) {
+            this.quiet = Optional.of(quiet);
+            return this;
+        }
+
+        public SieveMailet build() throws MessagingException {
+            if (resourceLocator == null) {
+                throw new MailetException("Not initialised. Please ensure that the mailet container supports either setter or constructor injection");
+            }
+            return new SieveMailet(usersRepos,mailboxManager, resourceLocator, folder, deliveryHeader, resetReturnPath, consume, verbose.or(false), quiet.or(false));
+        }
+
+    }
+
     private final UsersRepository usersRepos;
     private final MailboxManager mailboxManager;
     private final String folder;
     private final ResourceLocator resourceLocator;
-    private String deliveryHeader;
-    private boolean resetReturnPath;
-    private Poster poster;
-    private ResourceLocator locator;
-    private boolean verbose = false;
-    private boolean consume = true;
-    private boolean quiet = true;
-    private SieveFactory factory;
-    private ActionDispatcher actionDispatcher;
-    private Log log;
+    private final String deliveryHeader;
+    private final boolean resetReturnPath;
+    private final boolean isInfo;
+    private final boolean verbose;
+    private final boolean consume;
+    private final SieveFactory factory;
+    private final ActionDispatcher actionDispatcher;
+    private final Log log;
 
-    public SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder) {
+    private SieveMailet(UsersRepository usersRepos, MailboxManager mailboxManager, ResourceLocator resourceLocator, String folder, String deliveryHeader,
+                       boolean resetReturnPath, boolean consume, boolean verbose, boolean quiet) throws MessagingException {
+
         this.usersRepos = usersRepos;
         this.resourceLocator = resourceLocator;
         this.mailboxManager = mailboxManager;
         this.folder = folder;
-    }
-
-    @Override
-    public void init() throws MessagingException {
-
-        this.deliveryHeader = getInitParameter("addDeliveryHeader");
-        this.resetReturnPath = getInitParameter("resetReturnPath", true);
-        this.consume = getInitParameter("consume", true);
-        this.verbose = getInitParameter("verbose", false);
-        this.quiet = getInitParameter("quiet", false);
-
-        actionDispatcher = new ActionDispatcher();
-
-        setLocator(resourceLocator);
-        setPoster(this);
-
-        if (poster == null || locator == null) {
-            throw new MailetException("Not initialised. Please ensure that the mailet container supports either" +
-                " setter or constructor injection");
-        }
-
+        this.actionDispatcher = new ActionDispatcher();
+        this.deliveryHeader = deliveryHeader;
+        this.resetReturnPath = resetReturnPath;
+        this.consume = consume;
+        this.isInfo = verbose || !quiet;
+        this.verbose = verbose;
+        this.log = new CommonsLoggingAdapter(this, computeLogLevel(quiet, verbose));
         try {
             final ConfigurationManager configurationManager = new ConfigurationManager();
-            final int logLevel;
-            if (verbose) {
-                logLevel = CommonsLoggingAdapter.TRACE;
-            } else if (quiet) {
-                logLevel = CommonsLoggingAdapter.FATAL;
-            } else {
-                logLevel = CommonsLoggingAdapter.WARN;
-            }
-            log = new CommonsLoggingAdapter(this, logLevel);
             configurationManager.setLog(log);
             factory = configurationManager.build();
         } catch (SieveConfigurationException e) {
@@ -125,48 +173,14 @@ public class SieveMailet  extends GenericMailet implements Poster {
         }
     }
 
-    public ResourceLocator getLocator() {
-        return locator;
-    }
-
-    public void setLocator(ResourceLocator locator) {
-        this.locator = locator;
-    }
-
-    public Poster getPoster() {
-        return poster;
-    }
-
-    public void setPoster(Poster poster) {
-        this.poster = poster;
-    }
-
-    public boolean isConsume() {
-        return consume;
-    }
-
-    public void setConsume(boolean consume) {
-        this.consume = consume;
-    }
-
-    public boolean isVerbose() {
-        return verbose;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
-    }
-
-    public boolean isQuiet() {
-        return quiet;
-    }
-
-    public void setQuiet(boolean quiet) {
-        this.quiet = quiet;
-    }
-
-    public boolean isInfoLoggingOn() {
-        return verbose || !quiet;
+    private int computeLogLevel(boolean quiet, boolean verbose) {
+        if (verbose) {
+            return CommonsLoggingAdapter.TRACE;
+        } else if (quiet) {
+            return CommonsLoggingAdapter.FATAL;
+        } else {
+            return CommonsLoggingAdapter.WARN;
+        }
     }
 
     protected String getUsername(MailAddress m) {
@@ -177,7 +191,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
                 return m.getLocalPart() + "@localhost";
             }
         } catch (UsersRepositoryException e) {
-            log("Unable to access UsersRepository", e);
+            log.error("Unable to access UsersRepository", e);
             return m.getLocalPart() + "@localhost";
 
         }
@@ -202,7 +216,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
         }
         // If no exception was thrown the message was successfully stored in the
         // mailbox
-        log("Local delivered mail " + mail.getName() + " sucessfully from " + s + " to " + recipient.toString()
+        log.info("Local delivered mail " + mail.getName() + " sucessfully from " + s + " to " + recipient.toString()
                 + " in folder " + this.folder);
     }
 
@@ -379,7 +393,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
                     }
                 }
             } catch (Exception ex) {
-                log("Error while storing mail.", ex);
+                log.error("Error while storing mail.", ex);
                 errors.add(recipient);
             }
         }
@@ -404,15 +418,15 @@ public class SieveMailet  extends GenericMailet implements Poster {
     protected void sieveMessage(MailAddress recipient, Mail aMail) throws MessagingException {
         String username = getUsername(recipient);
         try {
-            final ResourceLocator.UserSieveInformation userSieveInformation = locator.get(getScriptUri(recipient));
+            final ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(getScriptUri(recipient));
             sieveMessageEvaluate(recipient, aMail, userSieveInformation);
         } catch (Exception ex) {
             // SIEVE is a mail filtering protocol.
             // Rejecting the mail because it cannot be filtered
             // seems very unfriendly.
             // So just log and store in INBOX
-            if (isInfoLoggingOn()) {
-                log("Cannot evaluate Sieve script. Storing mail in user INBOX.", ex);
+            if (isInfo) {
+                log.error("Cannot evaluate Sieve script. Storing mail in user INBOX.", ex);
             }
             storeMessageInbox(username, aMail.getMessage());
         }
@@ -421,12 +435,12 @@ public class SieveMailet  extends GenericMailet implements Poster {
     private void sieveMessageEvaluate(MailAddress recipient, Mail aMail, ResourceLocator.UserSieveInformation userSieveInformation) throws MessagingException, IOException {
         try {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
-                getMailetContext(), actionDispatcher, poster, userSieveInformation.getScriptActivationDate(),
+                getMailetContext(), actionDispatcher, this, userSieveInformation.getScriptActivationDate(),
                 userSieveInformation.getScriptInterpretationDate(), recipient);
             aMailAdapter.setLog(log);
             // This logging operation is potentially costly
             if (verbose) {
-                log("Evaluating " + aMailAdapter.toString() + "against \""
+                log.error("Evaluating " + aMailAdapter.toString() + "against \""
                     + getScriptUri(recipient) + "\"");
             }
             factory.evaluate(aMailAdapter, factory.parse(userSieveInformation.getScriptContent()));
@@ -443,8 +457,7 @@ public class SieveMailet  extends GenericMailet implements Poster {
     }
 
     protected void storeMessageInbox(String username, MimeMessage message) throws MessagingException {
-        String url = "mailbox://" + username + "/";
-        poster.post(url, message);
+        post("mailbox://" + username + "/", message);
     }
 
 
