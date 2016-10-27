@@ -19,6 +19,10 @@
 
 package org.apache.james.transport.mailets.delivery;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.mail.MessagingException;
+
 import org.apache.commons.logging.Log;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
@@ -28,12 +32,7 @@ import org.apache.james.transport.mailets.ResourceLocatorImpl;
 import org.apache.james.transport.mailets.jsieve.CommonsLoggingAdapter;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.GenericMailet;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.mail.MessagingException;
 
 /**
  * Receives a Mail from the Queue and takes care of delivery of the
@@ -105,7 +104,6 @@ public class LocalDelivery extends GenericMailet {
             .mailStorer(SieveMailStorer.builder()
                 .sievePoster(new SievePoster(mailboxManager, folder, usersRepository, getMailetContext()))
                 .usersRepository(usersRepository)
-                .mailboxManager(mailboxManager)
                 .resourceLocator(ResourceLocatorImpl.instanciate(usersRepository, sieveRepository))
                 .mailetContext(getMailetContext())
                 .folder(folder)
